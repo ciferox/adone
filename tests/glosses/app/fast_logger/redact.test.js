@@ -4,7 +4,7 @@ const {
     app: { fastLogger }
 } = adone;
 
-describe("app", "fastLogger", "redact", () => {
+describe("fastLogger", "redact", () => {
     it("redact option – throws if not array", () => {
         assert.throws(() => {
             fastLogger({ redact: "req.headers.cookie" });

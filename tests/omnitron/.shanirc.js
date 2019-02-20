@@ -18,10 +18,10 @@ export default async (ctx) => {
         });
 
         const name = std.path.basename(realmPath);
-        const cwd = std.path.dirname(realmPath);
+        const basePath = std.path.dirname(realmPath);
 
         const observer = await runtimeRealmManager.forkRealm({
-            cwd,
+            basePath,
             name
         });
         await observer.result;

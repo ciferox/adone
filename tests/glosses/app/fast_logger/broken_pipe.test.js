@@ -19,7 +19,7 @@ const test = (file) => {
 };
 
 
-describe("app", "fast logger", "broken pipe", () => {
+describe("fast logger", "broken pipe", () => {
     test("basic.js");
     test("destination.js");
     test("extreme.js");

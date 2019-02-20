@@ -1,0 +1,13 @@
+{
+    "name": "test2",
+    "description": "Tesk project 2",
+    "type": "application",
+    "main": "lib",
+    "struct": {
+        "src": {
+            "task": "transpile",
+            "src": "src/**/*",
+            "dst": "lib"
+        }
+    }
+}

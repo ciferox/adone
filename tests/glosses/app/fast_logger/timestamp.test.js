@@ -4,7 +4,7 @@ const {
     app: { fastLogger }
 } = adone;
 
-describe("app", "fastLogger", "timestamp", () => {
+describe("fastLogger", "timestamp", () => {
     it("pino exposes standard time functions", async () => {
         assert.ok(fastLogger.stdTimeFunctions);
         assert.ok(fastLogger.stdTimeFunctions.epochTime);

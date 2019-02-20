@@ -155,7 +155,7 @@
     "yargs-promise": "^1.1.0"
   },
   "optionalDependencies": {
-    "fsevents": "^1.0.0"
+    "fsevents": "^1.2.7"
   },
   "engines": {
     "node": ">=10.8.0"

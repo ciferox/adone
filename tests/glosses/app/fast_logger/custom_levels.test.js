@@ -4,7 +4,7 @@ const {
     app: { fastLogger }
 } = adone;
 
-describe("app", "fast logger", "custom levels", () => {
+describe("fast logger", "custom levels", () => {
     it("adds additional levels", async () => {
         const stream = sink();
         const logger = fastLogger({

@@ -52,7 +52,7 @@ export default class RealmManager extends app.Subsystem {
         try {
             const realmManager = await this.getRealm();
             await realmManager.runAndWait("forkRealm", {
-                cwd: opts.get("path"),
+                basePath: opts.get("path"),
                 name: args.get("name"),
                 bits: opts.get("bits"),
                 withSrc: opts.has("withSrc"),

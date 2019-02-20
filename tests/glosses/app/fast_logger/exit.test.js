@@ -5,7 +5,7 @@ const {
     std: { path: { join } }
 } = adone;
 
-describe("app", "fast logger", "exit", () => {
+describe("fast logger", "exit", () => {
 // https://github.com/pinojs/pino/issues/542
     it("pino.destination log everything when calling process.exit(0)", async () => {
         let actual = "";

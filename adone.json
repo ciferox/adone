@@ -1021,7 +1021,16 @@
                     "task": "transpile",
                     "src": "src/project/**/*.js",
                     "dst": "lib/project",
-                    "namespace": "project"
+                    "namespace": "project",
+                    "struct": {
+                        "task": {
+                            "description": "Default tasks for project management",
+                            "namespace": "task",
+                            "task": "transpile",
+                            "src": "src/project/tasks/**/*.js",
+                            "dst": "lib/project/tasks"
+                        }
+                    }
                 },
                 "shani": {
                     "description": "Testing framework",

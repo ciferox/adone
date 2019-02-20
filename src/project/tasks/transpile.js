@@ -1,4 +1,4 @@
-export default class TranspileTask extends adone.project.task.Transform {
+export default class TranspileTask extends adone.project.TransformTask {
     transform(stream, params) {
         const transpileOptions = {
             sourceMap: true,

@@ -8,7 +8,7 @@ const {
 const { pid } = process;
 const hostname = os.hostname();
 
-describe("app", "fast report", "http", () => {
+describe("fast report", "http", () => {
     it("http request support", async () => {
         let originalReq;
         const instance = fastLogger(sink((chunk, enc) => {

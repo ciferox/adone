@@ -5,7 +5,7 @@ const {
     std: { path: { join } }
 } = adone;
 
-describe("app", "fastLogger", "stdout protection", () => {
+describe("fastLogger", "stdout protection", () => {
     it("do not use SonicBoom is someone tampered with process.stdout.write", async () => {
         let actual = "";
         const child = forkProcess(join(__dirname, "fixtures", "stdout_hack_protection.js"), [], { silent: true });

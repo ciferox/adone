@@ -5,7 +5,7 @@ const {
     std
 } = adone;
 
-export default class NCleanTask extends adone.project.task.Base {
+export default class NCleanTask extends adone.project.BaseTask {
     async main(params) {
         if (is.string(params.native.type) && params.native.type === "gyp") {
             await fs.rm(params.native.dst, {

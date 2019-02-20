@@ -2,7 +2,7 @@ const {
     app: { fastLogger }
 } = adone;
 
-describe("app", "fastLogger", "is level enabled", () => {
+describe("fastLogger", "is level enabled", () => {
     it("can check if current level enabled", async () => {
         const log = fastLogger({ level: "debug" });
         assert.strictEqual(true, log.isLevelEnabled("debug"));

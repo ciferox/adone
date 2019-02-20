@@ -106,7 +106,7 @@ export default class Configuration extends adone.configuration.Generic {
 
     getMainPath(absolute) {
         const path = is.string(this.raw.main) ? this.raw.main : "";
-        return adone.std.path.normalize(is.string(absolute)
+        return std.path.normalize(is.string(absolute)
             ? std.path.join(absolute, path)
             : absolute === true
                 ? std.path.join(this.getCwd(), path)
@@ -114,7 +114,7 @@ export default class Configuration extends adone.configuration.Generic {
     }
 
     getCliMainPath(absolute) {
-        return adone.std.path.normalize(is.string(this.raw.cliMain)
+        return std.path.normalize(is.string(this.raw.cliMain)
             ? is.string(absolute)
                 ? std.path.join(absolute, this.raw.cliMain)
                 : absolute === true

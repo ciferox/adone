@@ -5,7 +5,7 @@ const {
 
 const fixture = std.path.join.bind(std.path, __dirname, "fixtures");
 
-describe("application", "Application", () => {
+describe("Application", () => {
     it("by default should use script name as application name", async () => {
         const result = await forkProcess(fixture("test_name.js"));
         assert.equal(result.stdout, "test_name");

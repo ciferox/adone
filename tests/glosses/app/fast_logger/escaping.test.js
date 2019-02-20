@@ -28,7 +28,7 @@ const testEscape = function (ch, key) {
     });
 };
 
-describe("app", "fast logger", "escaping", () => {
+describe("fast logger", "escaping", () => {
     testEscape("\\n", "\n");
     testEscape("\\/", "/");
     testEscape("\\\\", "\\");

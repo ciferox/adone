@@ -99,7 +99,8 @@ export default class Application extends app.Subsystem {
         const lockFiles = Object.keys(locks);
         for (const file of lockFiles) {
             try {
-                await locks[file].options.fs.rm(app.lockfile.getLockFile(file)); // eslint-disable-line
+                const options = locks[file].options;
+                await locks[file].options.fs.rm(app.lockfile.getLockFile(file, options)); // eslint-disable-line
             } catch (e) {
                 //
             }
@@ -151,9 +152,9 @@ export default class Application extends app.Subsystem {
     }
 
     // Helper methods used in bootstraping code.
-    
+
     _setAsMain() {
-        this[IS_MAIN] = true;        
+        this[IS_MAIN] = true;
     }
 
     _setHandlers(handlers) {

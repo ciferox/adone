@@ -10,7 +10,7 @@ const hostname = os.hostname();
 const level = 50;
 const name = "error";
 
-describe("app", "fast loggers", "error", () => {
+describe("fast loggers", "error", () => {
     it("err is serialized with additional properties set on the Error object", async () => {
         const stream = sink();
         const err = Object.assign(new Error("myerror"), { foo: "bar" });

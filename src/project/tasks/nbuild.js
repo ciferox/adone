@@ -6,7 +6,7 @@ const {
     std
 } = adone;
 
-export default class NBuildTask extends adone.project.task.Base {
+export default class NBuildTask extends adone.project.BaseTask {
     async main(params) {
         if (is.string(params.native.type) && params.native.type === "gyp") {
             const tmp = new fs.Directory(await fs.tmpName({

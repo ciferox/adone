@@ -4,7 +4,7 @@ const {
     std: { path, fs: stdFs }
 } = adone;
 
-describe("application", "lockfile", () => {
+describe("lock file", () => {
     const tmpFileRealPath = path.join(__dirname, "tmp");
     const tmpFile = path.relative(process.cwd(), tmpFileRealPath);
     const tmpFileLock = `${tmpFileRealPath}.lock`;
@@ -82,6 +82,29 @@ describe("application", "lockfile", () => {
         it("should create the lockfile", async () => {
             await lockfile.create(tmpFile);
             assert.true(fs.existsSync(tmpFileLock));
+        });
+
+        it("should create the lockfile inside a folder", async () => {
+            const lockPath = path.join(__dirname, "tmp1");
+            
+            try {
+                await fs.mkdir(lockPath);
+            } catch (err) {
+                await fs.rm(lockPath);
+                await fs.mkdir(lockPath);
+            }
+            const lockfilePath = adone.std.path.join(lockPath, "dir.lock");
+
+            const options = {
+                lockfilePath
+            };
+            await lockfile.create(lockPath, options);
+
+            assert.true(await fs.isDirectory(lockPath));
+            assert.true(await fs.exists(lockfilePath));
+            lockfile.release(lockPath, options);
+
+            await fs.rm(lockPath);
         });
 
         it("should fail if already locked", async () => {

@@ -364,7 +364,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         multi: "./glosses/multi",
         net: "./glosses/net",
         netron: "./glosses/netron",
-        netscan: "./glosses/netscan",
         notifier: "./glosses/notifier",
         odm: "./glosses/odm",
         orm: "./glosses/orm",

@@ -4,7 +4,7 @@ const {
     app: { fastLogger }
 } = adone;
 
-describe("app", "fastLogger", "levels", () => {
+describe("fastLogger", "levels", () => {
     it("set the level by string", async () => {
         const expected = [{
             level: 50,

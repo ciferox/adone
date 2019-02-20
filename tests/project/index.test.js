@@ -1,20 +1,277 @@
 const {
     is,
     fs,
-    project: { Manager },
+    project,
     std,
     text,
     error,
     util
 } = adone;
 
+const {
+    Manager
+} = project;
+
 const FIXTURES_PATH = std.path.join(__dirname, "fixtures");
 const fixture = (...args) => std.path.join(FIXTURES_PATH, ...args);
+const projectPath = (...args) => std.path.join(__dirname, "projects", ...args);
+
+const DEFAULT_TASKS = [];
+
+for (const name of Object.keys(project.task)) {
+    DEFAULT_TASKS.push(adone.text.toCamelCase(name));
+}
 
 describe("project", function () {
     this.timeout(90000);
 
-    describe("generator", () => {
+    const createManagerFor = async (name, shouldLoad = true) => {
+        const manager = new Manager({
+            cwd: projectPath(name)
+        });
+        shouldLoad && await manager.load();
+        return manager;
+    };
+
+    let projectCounter = 1;
+    const getProjectName = () => `project${projectCounter++}`;
+
+    it("load project twice should be throw", async () => {
+        const proj = await createManagerFor("no_tasks");
+        const err = await assert.throws(async () => {
+            await proj.load("no_tasks");
+        });
+        assert.instanceOf(err, error.IllegalStateException);
+        assert.equal(err.message, "Project already loaded");
+    });
+
+    it("should throw when try to get name of unloaded project", async () => {
+        const proj = await createManagerFor("no_tasks", false);
+        assert.throws(async () => {
+            console.log(proj.name);
+        }, "Project is not loaded");
+    });
+
+    it("should throw when try to set name of unloaded project", async () => {
+        const proj = await createManagerFor("no_tasks", false);
+        assert.throws(async () => {
+            proj.name = "a";
+        }, "Project is not loaded");
+    });
+
+    it("change project name for loaded project", async () => {
+        const proj = await createManagerFor("no_tasks");
+        assert.equal(proj.name, "test");
+
+        proj.name = "new_name1";
+
+        assert.equal(proj.config.raw.name, "new_name1");
+    });
+
+    it("load project (without custom tasks)", async () => {
+        const proj = await createManagerFor("no_tasks");
+
+        assert.strictEqual(proj.config.raw.name, "test");
+        assert.strictEqual(proj.config.raw.description, "Tesk project");
+        assert.strictEqual(proj.config.raw.type, "application");
+        assert.strictEqual(proj.config.raw.main, "lib");
+
+        assert.equal(proj.name, "test");
+
+        assert.sameMembers(proj.getTaskNames(), DEFAULT_TASKS);
+    });
+
+    it("load project (with custom tasks)", async () => {
+        const proj = await createManagerFor("with_tasks");
+
+        assert.strictEqual(proj.config.raw.name, "test2");
+        assert.strictEqual(proj.config.raw.description, "Tesk project 2");
+        assert.strictEqual(proj.config.raw.type, "application");
+        assert.strictEqual(proj.config.raw.main, "lib");
+
+        assert.sameMembers(proj.getTaskNames(), ["task1", "task2"].concat(DEFAULT_TASKS));
+    });
+
+    it("subclass project manager", async () => {
+        class CustomTask extends project.TransformTask {
+        }
+
+        class ExManager extends project.Manager {
+            async loadCustomTasks() {
+                await this.addTask("task3", CustomTask);
+            }
+        }
+
+        const proj = new ExManager({
+            cwd: std.path.join(__dirname, "projects", "with_tasks")
+        });
+        await proj.load();
+
+        assert.sameMembers(proj.getTaskNames(), ["task1", "task2", "task3"].concat(DEFAULT_TASKS));
+    });
+
+    describe.only("initialize projects", () => {
+        const basePath = fixture("empty_projects");
+
+        before(async () => {
+            await fs.mkdir(basePath);
+        });
+
+        after(async () => {
+            // await fs.rm(basePath);
+        });
+
+        it("init project without name should be thrown", async () => {
+            const proj = await project.getDefaultManager();
+
+            await assert.throws(async () => {
+                await proj.createProject();
+            }, error.InvalidArgumentException);
+        });
+
+        it("init project with default 'basePath' should be thrown", async () => {
+            const proj = await project.getDefaultManager();
+
+            await assert.throws(async () => {
+                await proj.createProject({
+                    name: "project1"
+                });
+            }, error.InvalidArgumentException);
+        });
+
+        it("init project at existing location should be thrown", async () => {
+            const proj = await project.getDefaultManager();
+
+            const projPath = fixture("project1");
+            try {
+                await fs.mkdirp(projPath);
+            } catch (err) {
+                //
+            }
+
+            await assert.throws(async () => {
+                await proj.createProject({
+                    name: "no_tasks",
+                    basePath: projectPath()
+                });
+            }, error.ExistsException);
+
+            await fs.rm(projPath);
+        });
+
+        it("init empty project", async () => {
+            const proj = await project.getDefaultManager();
+
+            const name = getProjectName();
+            
+            const info = {
+                name,
+                description: "Sample project",
+                basePath
+            };
+
+            await proj.createProject(info);
+
+            assert.equal(info.cwd, std.path.join(basePath, info.name));
+            assert.true(await fs.exists(info.cwd));
+            assert.true(await fs.isFile(std.path.join(info.cwd, "adone.json")));
+            assert.true(await fs.isFile(std.path.join(info.cwd, ".gitignore")));
+            assert.true(await fs.isDirectory(std.path.join(info.cwd, ".git")));
+            assert.true(await fs.isFile(std.path.join(info.cwd, ".eslintrc.js")));
+            assert.true(await fs.isFile(std.path.join(info.cwd, "jsconfig.json")));
+
+            const adoneConfig = await adone.configuration.Adone.load({
+                cwd: info.cwd
+            });
+
+            assert.equal(adoneConfig.raw.name, name);
+            assert.equal(adoneConfig.raw.description, "Sample project");
+            assert.equal(std.path.basename(info.cwd), name);
+        });
+
+        it("init empty project with 'dirName'", async () => {
+            const proj = await project.getDefaultManager();
+
+            const name = "myproject";
+            const dirName = getProjectName();
+            
+            const info = {
+                name,
+                dirName,
+                basePath
+            };
+
+            await proj.createProject(info);
+
+            assert.equal(info.cwd, std.path.join(basePath, info.dirName));
+
+            const adoneConfig = await adone.configuration.Adone.load({
+                cwd: info.cwd
+            });
+            
+            assert.equal(adoneConfig.raw.name, name);
+            assert.equal(std.path.basename(info.cwd), dirName);
+        });
+
+        it("init empty project without git initialization", async () => {
+            const proj = await project.getDefaultManager();
+
+            const name = getProjectName();
+            
+            const info = {
+                name,
+                skipGit: true,
+                basePath
+            };
+
+            await proj.createProject(info);
+
+            assert.true(await fs.exists(std.path.join(info.cwd, ".eslintrc.js")));
+            assert.true(await fs.isFile(std.path.join(info.cwd, "jsconfig.json")));
+            assert.false(await fs.exists(std.path.join(info.cwd, ".gitignore")));
+            assert.false(await fs.exists(std.path.join(info.cwd, ".git")));
+        });
+
+        it("init empty project without eslint initialization", async () => {
+            const proj = await project.getDefaultManager();
+
+            const name = getProjectName();
+            
+            const info = {
+                name,
+                skipEslint: true,
+                basePath
+            };
+
+            await proj.createProject(info);
+
+            assert.false(await fs.exists(std.path.join(info.cwd, ".eslintrc.js")));
+            assert.true(await fs.isFile(std.path.join(info.cwd, "jsconfig.json")));
+            assert.true(await fs.exists(std.path.join(info.cwd, ".gitignore")));
+            assert.true(await fs.exists(std.path.join(info.cwd, ".git")));
+        });
+
+        it("init empty project without jsconfig initialization", async () => {
+            const proj = await project.getDefaultManager();
+
+            const name = getProjectName();
+            
+            const info = {
+                name,
+                skipJsconfig: true,
+                basePath
+            };
+
+            await proj.createProject(info);
+
+            assert.false(await fs.exists(std.path.join(info.cwd, "jsconfig.json")));
+            assert.true(await fs.isFile(std.path.join(info.cwd, ".eslintrc.js")));
+            assert.true(await fs.isFile(std.path.join(info.cwd, ".gitignore")));
+            assert.true(await fs.exists(std.path.join(info.cwd, ".git")));
+        });
+    });
+
+    describe.skip("generator", () => {
         const paths = [];
 
         const getPathFor = (...args) => {

@@ -9,7 +9,7 @@ const { pid } = process;
 const hostname = os.hostname();
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-describe("app", "fast logger", "basic", () => {
+describe("fast logger", "basic", () => {
     const levelTest = function (name, level) {
         it(`${name} logs as ${level}`, async () => {
             const stream = sink();

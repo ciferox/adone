@@ -8,7 +8,7 @@ const {
 
 const fixture = (name) => std.path.join(__dirname, "fixtures", name);
 
-describe("application", "report", () => {
+describe("report", () => {
     let oldCwd;
     let reports;
 

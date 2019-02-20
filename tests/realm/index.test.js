@@ -74,7 +74,7 @@ describe("realm", () => {
         });
     });
 
-    it("fork without 'cwd' should throw", async () => {
+    it("fork without 'basePath' should throw", async () => {
         const observer = await runtimeRealmManager.forkRealm({
             name: "test"
         });
@@ -88,7 +88,7 @@ describe("realm", () => {
         });
 
         const observer = await runtimeRealmManager.forkRealm({
-            cwd: realmPath
+            basePath: realmPath
         });
         const err = await assert.throws(async () => observer.result);
         assert.instanceOf(err, adone.error.NotValidException);
@@ -106,10 +106,10 @@ describe("realm", () => {
         // });
 
         const name = std.path.basename(realmPath);
-        const cwd = std.path.dirname(realmPath);
+        const basePath = std.path.dirname(realmPath);
 
         const observer = await runtimeRealmManager.forkRealm({
-            cwd,
+            basePath,
             name
         });
         const destPath = await observer.result;
@@ -135,7 +135,7 @@ describe("realm", () => {
             "lib",
             "package.json",
             "packages",
-            "runtime",
+            // "runtime",
             "var"
         ]);
 
@@ -146,11 +146,16 @@ describe("realm", () => {
     });
 
     it("lock/unlock", async () => {
-        const lockPath = std.path.join(realmManager.config.RUNTIME_PATH, "realm");
+        const options = {
+            lockfilePath: adone.std.path.join(realmManager.config.ROOT_PATH, "realm.lock")
+        };
+
         await realmManager.lock();
-        assert.true(await adone.app.lockfile.check(lockPath));
+        assert.true(await fs.exists(options.lockfilePath));
+        assert.true(await adone.app.lockfile.check(realmManager.config.ROOT_PATH, options));
         await realmManager.unlock();
-        assert.false(await adone.app.lockfile.check(lockPath));
+        assert.false(await fs.exists(options.lockfilePath));
+        assert.false(await adone.app.lockfile.check(realmManager.config.ROOT_PATH, options));
     });
 
     it("default tasks", async () => {
@@ -172,8 +177,8 @@ describe("realm", () => {
         ]);
     });
 
-    describe("install/uninstall packages", () => {
-        it("bad install argument", async () => {
+    describe.skip("install/uninstall packages", () => {
+        it("invalid install argument", async () => {
             const err = await assert.throws(async () => {
                 const observer = await realmManager.install(std.path.join(__dirname));
                 return observer.result;

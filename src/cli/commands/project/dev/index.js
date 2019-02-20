@@ -23,11 +23,11 @@ export default class extends Subsystem {
     })
     async devCommand(args, opts) {
         try {
-            logger.watching({
+            adone.runtime.logger.watching({
                 message: `${args.has("path") ? args.get("path") : "whole project"}`
             });
 
-            const path = this.resolvePath(args, opts);
+            const path = this.parent.resolvePath(args, opts);
             const manager = await project.Manager.load();
             const observer = await manager.watch(path);
             await observer.result;

@@ -5,7 +5,7 @@ const {
     std: { fs }
 } = adone;
 
-describe("app", "fast logger", "final", () => {
+describe("fast logger", "final", () => {
     it("replaces onTerminated option", async () => {
         assert.throws(() => {
             fastLogger({

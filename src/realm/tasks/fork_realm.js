@@ -32,20 +32,20 @@ export default class ForkRealmTask extends task.Task {
         }
     }
 
-    async run({ cwd, name, bits = 2048, withSrc = false, clean = false, compress = false, keys = false } = {}) {
+    async run({ basePath, name, bits = 2048, withSrc = false, clean = false, compress = false, keys = false } = {}) {
         this.manager.notify(this, "progress", {
             message: "checking"
         });
 
-        if (!is.string(cwd)) {
-            throw new error.NotValidException(`Invalid type of 'cwd': ${adone.meta.typeOf(cwd)}`);
+        if (!is.string(basePath)) {
+            throw new error.NotValidException(`Invalid type of 'basePath': ${adone.meta.typeOf(basePath)}`);
         }
 
         if (!is.string(name)) {
             throw new error.NotValidException(`Invalid type of 'name': ${adone.meta.typeOf(name)}`);
         }
 
-        this.destPath = compress ? cwd : std.path.resolve(cwd, name);
+        this.destPath = compress ? basePath : std.path.resolve(basePath, name);
 
         if (await fs.exists(this.destPath) && !compress) {
             throw new error.ExistsException(`Path '${this.destPath}' already exists`);
@@ -66,21 +66,20 @@ export default class ForkRealmTask extends task.Task {
         }
 
         const CWD = this.destPath;
-        const RUNTIME_PATH = join(CWD, "runtime");
+        // const RUNTIME_PATH = join(CWD, "runtime");
         const VAR_PATH = join(CWD, "var");
         const ADONE_SPECIAL_PATH = join(CWD, ".adone");
         const CONFIGS_PATH = join(CWD, "configs");
         const LOGS_PATH = join(VAR_PATH, "logs");
         const KEYS_PATH = join(CWD, "keys");
         const PACKAGES_PATH = join(CWD, "packages");
-        const LOCKFILE_PATH = join(RUNTIME_PATH, "realm");
+        // const LOCKFILE_PATH = join(CWD, "realm.lock");
 
         // runtime dir + lockfile
-        if (!(await fs.exists(LOCKFILE_PATH))) {
-            // Create lockfile
-            await fs.mkdirp(RUNTIME_PATH);
-            await fs.writeFile(LOCKFILE_PATH, "");
-        }
+        // if (!(await fs.exists(LOCKFILE_PATH))) {
+        //     // Create lockfile
+        //     await fs.writeFile(LOCKFILE_PATH, "");
+        // }
 
         // var dir
         if (!(await fs.exists(VAR_PATH))) {
@@ -237,10 +236,10 @@ export default class ForkRealmTask extends task.Task {
                 recursive: true
             }), { base: adone.rootPath })
                 .archive(format, fileName)
-                .dest(cwd);
+                .dest(basePath);
 
             await fs.rm(this.destPath);
-            this.destPath = std.path.join(cwd, fileName);
+            this.destPath = std.path.join(basePath, fileName);
         }
 
         this.manager.notify(this, "progress", {

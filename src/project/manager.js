@@ -1,9 +1,11 @@
 const {
+    error,
     configuration,
     is,
     fs,
     std,
     task,
+    text,
     project,
     runtime: { term }
 } = adone;
@@ -23,23 +25,27 @@ const checkEntry = (entry) => {
 export default class ProjectManager extends task.Manager {
     constructor({ cwd = process.cwd() } = {}) {
         super();
-        this.name = null;
         this.cwd = cwd;
         this.config = null;
         this._loaded = false;
-        this.GeneratorClass = project.generator.Manager;
-        this.generator = null;
+    }
+
+    get name() {
+        if (!this._loaded) {
+            throw new error.IllegalStateException("Project is not loaded");
+        }
+        return this.config.raw.name;
+    }
+
+    set name(newName) {
+        if (!this._loaded) {
+            throw new error.IllegalStateException("Project is not loaded");
+        }
+        this.config.set("name", newName);
     }
 
     async onNotification(selector, observer) {
         await super.onNotification(selector, observer);
-
-        const generator = await this.getGenerator();
-        await generator.onNotification(selector, observer);
-    }
-
-    useGenerator(GeneratorClass) {
-        this.GeneratorClass = GeneratorClass;
     }
 
     getVersion() {
@@ -48,24 +54,22 @@ export default class ProjectManager extends task.Manager {
 
     async load() {
         if (this._loaded) {
-            throw new adone.error.IllegalStateException("Project already loaded");
+            throw new error.IllegalStateException("Project already loaded");
         }
+        this._loaded = true;
 
         this.config = await configuration.Adone.load({
             cwd: this.cwd
         });
 
-        // Add default tasks
-        await this.addTask("clean", project.task.Clean);
-        await this.addTask("copy", project.task.Copy);
-        await this.addTask("transpile", project.task.Transpile);
-        await this.addTask("transpileExe", project.task.TranspileExe);
-        await this.addTask("watch", project.task.Watch);
-        await this.addTask("incver", project.task.IncreaseVersion);
-        await this.addTask("nbuild", project.task.NBuild);
-        await this.addTask("nclean", project.task.NClean);
+        this.name = this.config.raw.name;
 
-        // Load custom tasks
+        // Add default tasks
+        for (const [name, Class] of Object.entries(project.task)) {
+            await this.addTask(adone.text.toCamelCase(name), Class); // eslint-disable-line
+        }
+    
+        // Load custom tasks from `.adone/tasks.js`.
         const tasksPath = std.path.join(this.cwd, ".adone", "tasks.js");
         if (await fs.exists(tasksPath)) {
             let customTasks = adone.require(tasksPath);
@@ -78,29 +82,26 @@ export default class ProjectManager extends task.Manager {
             }
         }
 
-        this._loaded = true;
+        // Load other custom tasks.
+        await this.loadCustomTasks();
+        
+        
     }
 
-    async createProject(info) {
-        const generator = await this.getGenerator();
-        const context = await generator.createProject({
-            ...info,
-            cwd: this.cwd
-        });
+    async createProject(info = {}) {
+        await this._checkAndCreateProject(info);
 
-        await this.load();
+        // await this.load();
 
         this.notify(this, "progress", {
             message: `project ${term.theme.primary.bold(info.name)} successfully created`,
             status: true
         });
-        return context;
     }
 
     async createSubProject(info) {
         this._checkLoaded();
-        const generator = await this.getGenerator();
-        const context = await generator.createSubProject(info);
+        const context = await this._createSubProject(info);
         await this.config.load();
 
         this.notify(this, "progress", {
@@ -110,9 +111,69 @@ export default class ProjectManager extends task.Manager {
         return context;
     }
 
+    async _createSubProject(info) {
+        const cwd = std.path.join(this.owner.cwd, info.dirName || info.name);
+        const context = {};
+
+        await this._checkAndCreateProject({
+            name: this.owner.config.raw.name,
+            description: this.owner.config.raw.description,
+            version: this.owner.config.raw.version,
+            author: this.owner.config.raw.author,
+            ...info,
+            cwd,
+            skipGit: true,
+            skipJsconfig: true
+        }, context);
+
+        this.contexts.set(cwd, context);
+
+        // Adone parent adone.json
+        const subName = info.dirName || info.name;
+        this.owner.config.set(["struct", subName], std.path.relative(this.owner.cwd, cwd));
+        await this.owner.config.save();
+
+        if (is.string(info.type)) {
+            // Update parent jsconfig.json if it exists
+            if (await fs.exists(std.path.join(this.owner.cwd, configuration.Jsconfig.configName))) {
+                await this.runAndWait("jsconfig", {
+                    cwd: this.owner.cwd,
+                    include: [std.path.relative(this.owner.cwd, std.path.join(cwd, "src"))]
+                }, this.contexts.get(this.owner.cwd));
+            }
+        }
+
+        return context;
+    }
+
+    async _checkAndCreateProject(info) {
+        if (!is.string(info.name)) {
+            throw new error.InvalidArgumentException("Invalid name of project");
+        }
+
+        if (!is.string(info.basePath)) {
+            throw new error.InvalidArgumentException("Invalid base path");
+        }
+
+        if (!(await fs.exists(info.basePath))) {
+            await fs.mkdirp(info.cwd);
+        }
+
+        const cwd = std.path.join(info.basePath, info.dirName || info.name);
+        if (await fs.exists(cwd)) {
+            throw new error.ExistsException(`Path '${cwd}' already exists`);
+        }
+        info.cwd = cwd;
+
+        try {
+            await this.runAndWait(`${is.string(info.type) ? text.toCamelCase(info.type) : "empty"}Project`, info);
+        } catch (err) {
+            await fs.rm(cwd);
+        }
+    }
+
     async createFile(input) {
-        const generator = await this.getGenerator();
-        return generator.createFile(input);
+        return this._createFile(input);
     }
 
     getProjectEntries({ path, onlyNative = false } = {}) {
@@ -211,17 +272,15 @@ export default class ProjectManager extends task.Manager {
 
     _checkLoaded() {
         if (!this._loaded) {
-            throw new adone.error.IllegalStateException("Project is not loaded");
+            throw new error.IllegalStateException("Project is not loaded");
         }
     }
 
-    async getGenerator() {
-        if (is.null(this.generator)) {
-            this.generator = new this.GeneratorClass(this);
-            await this.generator.useDefaultTasks();
-            await this.generator.loadCustomTasks();
-        }
-        return this.generator;
+    async loadCustomTasks() {
+    }
+
+    async _createFile(input) {
+        return this.runAndWait(text.toCamelCase(input.type), input);
     }
 
     static async load(options) {

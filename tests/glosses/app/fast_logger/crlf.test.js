@@ -13,7 +13,7 @@ const capture = function () {
     return ws;
 };
 
-describe("app", "fast logger", "crlf", () => {
+describe("fast logger", "crlf", () => {
     it("pino uses LF by default", async () => {
         const stream = capture();
         const logger = fastLogger(stream);

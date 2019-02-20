@@ -6,7 +6,7 @@ const {
 const { pid } = process;
 const hostname = os.hostname();
 
-describe("app", "fastLogger", "metadata", () => {
+describe("fastLogger", "metadata", () => {
     it("metadata works", async () => {
         const now = Date.now();
         const instance = fastLogger({}, {

@@ -263,9 +263,9 @@ const _bootstrapApp = async (app, {
             ({ command, errors, rest, match } = await appHelper.parseArgs());
 
             if (errors.length) {
-                console.log(`${escape(command.getUsageMessage())}\n`);
+                console.log(`${command.getUsageMessage()}\n`);
                 for (const error of errors) {
-                    console.log(escape(error.message));
+                    console.log(error.message);
                 }
                 await app.exit(app.EXIT_ERROR);
             }

@@ -5,7 +5,7 @@ const {
     std: { os, path: { join }, fs: { createWriteStream } }
 } = adone;
 
-describe("app", "fast logger", "extreme", () => {
+describe("fast logger", "extreme", () => {
     let now;
     let hostname;
     let proc;

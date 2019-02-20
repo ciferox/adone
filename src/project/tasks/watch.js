@@ -4,7 +4,7 @@ const {
     std
 } = adone;
 
-export default class WatchTask extends adone.project.task.Transform {
+export default class WatchTask extends adone.project.TransformTask {
     streamOptions() {
         return {
             ...super.streamOptions(),

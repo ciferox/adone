@@ -4,7 +4,7 @@ const {
     std
 } = adone;
 
-export default class AdoneDotCompilerTask extends project.task.Transform {
+export default class AdoneDotCompilerTask extends project.TransformTask {
     async initialize(params) {
         this.defs = (await fast.src(std.path.join(adone.util.globParent(params.src), "*.def"), {
             cwd: this.manager.path

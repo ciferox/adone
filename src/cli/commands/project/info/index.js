@@ -104,7 +104,7 @@ export default class extends Subsystem {
 
             return 0;
         } catch (err) {
-            term.print(`{red-fg}${err.message}{/}`);
+            term.print(`{red-fg}${err.stack}{/}`);
             return 1;
         }
     }

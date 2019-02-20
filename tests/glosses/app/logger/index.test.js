@@ -25,7 +25,7 @@ const {
     tailFile
 } = logger;
 
-describe("app", "logger", () => {
+describe("logger", () => {
     describe("transports", () => {
         it("common", () => {
             assert.true(is.object(logger.transport));

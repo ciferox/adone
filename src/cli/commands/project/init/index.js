@@ -48,8 +48,8 @@ export default class extends Subsystem {
             {
                 name: "--type",
                 type: String,
-                default: "default",
-                choices: ["empty", "gloss", "application", "cli.application", "cli.command", "omnitron.service"],
+                default: "empty",
+                choices: ["empty", "application", "cli.application", "cli.command", "omnitron.service"],
                 help: "Type of project"
             },
             {
@@ -119,15 +119,15 @@ export default class extends Subsystem {
                             value: "empty"
                         },
                         {
-                            name: "Adone gloss",
-                            value: "gloss"
-                        },
-                        {
                             name: "Adone application",
                             value: "application"
                         },
                         {
-                            name: "Adone cli subcommand",
+                            name: "Adone CLI application",
+                            value: "cli.application"
+                        },
+                        {
+                            name: "Adone CLI command",
                             value: "cli.command"
                         },
                         {

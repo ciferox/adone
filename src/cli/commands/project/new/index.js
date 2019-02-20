@@ -18,7 +18,7 @@ export default class extends Subsystem {
                 name: ["-t", "--type"],
                 type: String,
                 default: "application",
-                choices: ["application", "cli.application", "cli.command", "omnitron.service"],
+                choices: ["application", "cli.command", "omnitron.service"],
                 help: "Type of file"
             },
             {

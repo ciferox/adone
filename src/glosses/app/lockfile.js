@@ -11,7 +11,7 @@ adone.asNamespace(exports);
 
 const isLockStale = (stat, options) => stat.mtime.getTime() < Date.now() - options.stale;
 
-export const getLockFile = (file) => `${file}.lock`;
+export const getLockFile = (file, options) => options.lockfilePath || `${file}.lock`;
 
 const canonicalPath = (file, options) => {
     if (!options.realpath) {
@@ -25,7 +25,7 @@ const canonicalPath = (file, options) => {
 const acquireLock = async (file, options) => {
     // Use mkdir to create the lockfile (atomic operation)
     try {
-        await options.fs.mkdir(getLockFile(file));
+        await options.fs.mkdir(getLockFile(file, options));
     } catch (err) {
         // If error is not EEXIST then some other error occurred while locking
         if (err.code !== "EEXIST") {
@@ -34,12 +34,12 @@ const acquireLock = async (file, options) => {
 
         // Otherwise, check if lock is stale by analyzing the file mtime
         if (options.stale <= 0) {
-            throw Object.assign(new Error("Lock file is already being hold"), { code: "ELOCKED", file });
+            throw Object.assign(new Error("Lock file is already being held"), { code: "ELOCKED", file });
         }
 
         let stat;
         try {
-            stat = await options.fs.stat(getLockFile(file));
+            stat = await options.fs.stat(getLockFile(file, options));
         } catch (err1) {
             // Retry if the lockfile has been removed (meanwhile)
             // Skip stale check to avoid recursiveness
@@ -56,7 +56,7 @@ const acquireLock = async (file, options) => {
 
         // If it's stale, remove it and try again!
         // Skip stale check to avoid recursiveness
-        await options.fs.rm(getLockFile(file));
+        await options.fs.rm(getLockFile(file, options));
 
         return acquireLock(file, Object.assign({}, options, { stale: 0 }));
     }
@@ -89,7 +89,7 @@ const updateLock = (file, options) => {
         lock.updateTimeout = null;
         let error = null;
         try {
-            await options.fs.utimes(getLockFile(file), mtime, mtime);
+            await options.fs.utimes(getLockFile(file, options), mtime, mtime);
         } catch (err) {
             error = err;
         }
@@ -159,7 +159,7 @@ export const release = async (file, options) => {
     lock.released = true; // Signal the lock has been released
     delete locks[realFile]; // Delete from locks
 
-    return options.fs.rm(getLockFile(realFile));
+    return options.fs.rm(getLockFile(realFile, options));
 };
 
 export const create = async (file, options, compromised = (err) => {
@@ -232,7 +232,7 @@ export const check = async (file, options) => {
     const realFile = await canonicalPath(file, options);
 
     try {
-        const stat = await options.fs.stat(getLockFile(realFile));
+        const stat = await options.fs.stat(getLockFile(realFile, options));
 
         return (options.stale <= 0) ? true : !isLockStale(stat, options);
     } catch (err) {

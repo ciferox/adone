@@ -6,7 +6,7 @@ const {
 
 const fixture = (name) => std.path.join(__dirname, "fixtures", name);
 
-describe("application", "Subsystem", () => {
+describe("Subsystem", () => {
     const create = (name) => new Subsystem({ name });
     it("default initialization", () => {
         const ss = create();

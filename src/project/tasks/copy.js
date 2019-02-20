@@ -1,2 +1,2 @@
-export default class CopyTask extends adone.project.task.Transform {
+export default class CopyTask extends adone.project.TransformTask {
 }

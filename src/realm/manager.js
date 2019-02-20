@@ -29,7 +29,7 @@ export default class RealmManager extends task.Manager {
         const omnitronDataPath = join(omnitronVarPath, "data");
         const LOGS_PATH = join(VAR_PATH, "logs");
         const omnitronLogsPath = join(LOGS_PATH, "omnitron");
-        
+
         this.cwd = cwd;
         this.config = {
             ROOT_PATH,
@@ -39,9 +39,9 @@ export default class RealmManager extends task.Manager {
             LOGS_PATH,
             KEYS_PATH: join(ROOT_PATH, "keys"),
             PACKAGES_PATH: join(ROOT_PATH, "packages"),
-            LOCKFILE_PATH: join(RUNTIME_PATH, "realm"),
+            LOCKFILE_PATH: join(ROOT_PATH, "realm.lock"),
             devmntPath: join(CONFIGS_PATH, "devmnt.json"),
-        
+
             omnitron: {
                 LOGS_PATH: omnitronLogsPath,
                 LOGFILE_PATH: join(omnitronLogsPath, "omnitron.log"),
@@ -130,9 +130,6 @@ export default class RealmManager extends task.Manager {
     }
 
     async install(options) {
-        if (!is.plainObject(options) || !is.string(options.name)) {
-            throw new adone.error.InvalidArgumentException("Install options is not valid");
-        }
         return this.runGraceful("install", options);
     }
 
@@ -168,12 +165,17 @@ export default class RealmManager extends task.Manager {
     // }
 
     async lock() {
-        return lockfile.create(this.config.LOCKFILE_PATH);
+        return lockfile.create(this.config.ROOT_PATH, {
+            lockfilePath: this.config.LOCKFILE_PATH
+        });
     }
 
     async unlock() {
-        if (await lockfile.check(this.config.LOCKFILE_PATH)) {
-            return lockfile.release(this.config.LOCKFILE_PATH);
+        const options = {
+            lockfilePath: this.config.LOCKFILE_PATH
+        };
+        if (await lockfile.check(this.config.ROOT_PATH, options)) {
+            return lockfile.release(this.config.ROOT_PATH, options);
         }
     }
 }

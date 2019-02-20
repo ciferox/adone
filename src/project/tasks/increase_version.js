@@ -8,8 +8,8 @@ const {
 
 const VERSION_PARTS = ["major", "minor", "patch", "premajor", "preminor", "prepatch", "prerelease"];
 
-export default class IncverTask extends task.Task {
-    async run({ part = "minor", preid = undefined, loose = false } = {}) {
+export default class IncverTask extends adone.project.BaseTask {
+    async main({ part = "minor", preid = undefined, loose = false } = {}) {
         const config = this.manager.config;
         const prevVersion = config.raw.version;
         const cwd = this.manager.cwd;
