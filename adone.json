@@ -353,6 +353,20 @@
                                 "dst": "lib/glosses/databases/redis/__/redis/libparser/native",
                                 "type": "gyp"
                             }
+                        },
+                        "odm": {
+                            "description": "Object document mapper",
+                            "task": "transpile",
+                            "src": "src/glosses/databases/odm/**/*.js",
+                            "dst": "lib/glosses/databases/odm",
+                            "namespace": "odm"
+                        },
+                        "orm": {
+                            "description": "ORM implementation",
+                            "task": "transpile",
+                            "src": "src/glosses/databases/orm/**/*.js",
+                            "dst": "lib/glosses/databases/orm",
+                            "namespace": "orm"
                         }
                     }
                 },
@@ -730,20 +744,6 @@
                     "src": "src/glosses/notifier/**/*.js",
                     "dst": "lib/glosses/notifier",
                     "namespace": "notifier"
-                },
-                "odm": {
-                    "description": "Object document mapper",
-                    "task": "transpile",
-                    "src": "src/glosses/odm/**/*.js",
-                    "dst": "lib/glosses/odm",
-                    "namespace": "odm"
-                },
-                "orm": {
-                    "description": "ORM implementation",
-                    "task": "transpile",
-                    "src": "src/glosses/orm/**/*.js",
-                    "dst": "lib/glosses/orm",
-                    "namespace": "orm"
                 },
                 "pretty": {
                     "description": "Useful prettiers/pretty-printers",
