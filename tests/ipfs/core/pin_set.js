@@ -8,7 +8,7 @@ const {
 } = require("ipld-dag-pb");
 const CID = require("cids");
 
-const createPinSet = require(adone.std.path.join(adone.runtime.config.ROOT_PATH, "lib/ipfs/core/components/pin-set"));
+const createPinSet = require(adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/core/components/pin-set"));
 const createTempRepo = require("../utils/create-repo-nodejs");
 
 const {

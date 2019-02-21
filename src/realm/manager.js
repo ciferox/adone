@@ -24,7 +24,7 @@ export default class RealmManager extends task.Manager {
         const ROOT_PATH = cwd;
         const RUNTIME_PATH = join(ROOT_PATH, "runtime");
         const VAR_PATH = join(ROOT_PATH, "var");
-        const CONFIGS_PATH = join(ROOT_PATH, "configs");
+        const ETC_PATH = join(ROOT_PATH, "etc");
         const omnitronVarPath = join(VAR_PATH, "omnitron");
         const omnitronDataPath = join(omnitronVarPath, "data");
         const LOGS_PATH = join(VAR_PATH, "logs");
@@ -34,13 +34,15 @@ export default class RealmManager extends task.Manager {
         this.config = {
             ROOT_PATH,
             RUNTIME_PATH,
-            CONFIGS_PATH,
+            ETC_PATH,
+            ETC_ADONE_PATH: join(ETC_PATH, "adone"),
             VAR_PATH,
+            SHARE_PATH: join(ROOT_PATH, "share"),
             LOGS_PATH,
             KEYS_PATH: join(ROOT_PATH, "keys"),
             PACKAGES_PATH: join(ROOT_PATH, "packages"),
             LOCKFILE_PATH: join(ROOT_PATH, "realm.lock"),
-            devmntPath: join(CONFIGS_PATH, "devmnt.json"),
+            devmntPath: join(ETC_PATH, "adone", "devmnt.json"),
 
             omnitron: {
                 LOGS_PATH: omnitronLogsPath,
@@ -55,7 +57,7 @@ export default class RealmManager extends task.Manager {
         };
 
         adone.lazify({
-            identity: std.path.join(this.config.CONFIGS_PATH, "identity.json")
+            identity: std.path.join(this.config.ETC_ADONE_PATH, "identity.json")
         }, this.config);
 
         this.typeHandler = null;

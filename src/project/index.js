@@ -5,7 +5,7 @@ const {
 export const getDefaultManager = async () => {
     if (is.undefined(adone.runtime.adoneProjectManager)) {
         const project = new adone.project.Manager({
-            cwd: adone.runtime.config.ROOT_PATH
+            cwd: adone.ROOT_PATH
         });
         await project.load();
         adone.runtime.adoneProjectManager = project;

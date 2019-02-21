@@ -50,7 +50,7 @@ export default class GitTask extends project.BaseTask {
                 name: "ADONE",
                 email: "info@adone.io"
             },
-            message: `initial commit from adone/cli v${adone.package.version}:\n\n${adone.adoneLogo}`
+            message: `initial commit from adone/cli v${adone.package.version}:\n\n${adone.LOGO}`
         });
 
         return sha;

@@ -1,12 +1,15 @@
-const { is } = adone;
-/*
-based on: http://geeksretreat.wordpress.com/2012/04/26/html5s-canvas-lets-draw-the-world/
-*/
+const {
+    is,
+    std
+} = adone;
+/**
+ * based on: http://geeksretreat.wordpress.com/2012/04/26/html5s-canvas-lets-draw-the-world/
+ */
 
 const mapData = adone.lazify({
-    world: "../../../../etc/terminal/maps/world.json",
-    antartica: "../../../../etc/terminal/maps/antartica.json",
-    us: "../../../../etc/terminal/maps/us.json"
+    world: std.path.join(adone.runtime.config.SHARE_PATH, "term/maps/world.json"),
+    antartica: std.path.join(adone.runtime.config.SHARE_PATH, "term/maps/antartica.json"),
+    us: std.path.join(adone.runtime.config.SHARE_PATH, "term/maps/us.json")
 }, null, require);
 
 class InnerMap {

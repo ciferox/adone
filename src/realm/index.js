@@ -12,7 +12,7 @@ export const getManager = () => {
     if (is.undefined(adone.runtime.realm.manager)) {
         // const id = adone.crypto.hash.sha256(`${await adone.util.machineId(true)}${realm.config.realm}`, "hex");
         const defaultManager = new realm.Manager({
-            cwd: adone.ROOT_PATH
+            cwd: adone.std.path.join(__dirname, "..", "..")
         });
 
         // Load default tasks and handlers

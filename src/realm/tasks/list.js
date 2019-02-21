@@ -55,7 +55,7 @@ export default class ListTask extends task.Task {
 
         // Reading commands from cli configuration and check
         const cliConfig = await adone.cli.Configuration.load({
-            cwd: this.manager.config.CONFIGS_PATH
+            cwd: this.manager.config.ETC_ADONE_PATH
         });
 
         for (const cmd of cliConfig.raw.commands) {

@@ -73,7 +73,7 @@ export default class InstallTask extends task.Task {
         if (is.plainObject(this.rollbackData)) {
             if (is.array(this.rollbackData.subProjects)) {
                 const cliConfig = await adone.cli.Configuration.load({
-                    cwd: this.manager.config.CONFIGS_PATH
+                    cwd: this.manager.config.ETC_ADONE_PATH
                 });
                 for (const subInfo of this.rollbackData.subProjects) {
                     cliConfig.deleteCommand(subInfo.adoneConf.raw.name);

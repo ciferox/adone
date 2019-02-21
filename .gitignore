@@ -17,8 +17,7 @@ test-resources/
 **/native/build/**/*
 
 # realm files/dirs
-/configs/*
-!/configs/realm.js
+/etc/adone/*
 /packages/
 /runtime/
 /var/

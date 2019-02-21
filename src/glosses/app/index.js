@@ -186,9 +186,6 @@ const _bootstrapApp = async (app, {
 
         app._setAsMain();
 
-        // Setup realm runtime info.
-        adone.realm.getManager();
-
         // Track cursor if interactive application (by default) and if tty mode
         if (app.isInteractiveModeEnabled && adone.runtime.term.output.isTTY) {
             await new Promise((resolve) => adone.runtime.term.trackCursor(resolve));
@@ -301,6 +298,9 @@ const _bootstrapApp = async (app, {
 export const run = async (App, {
     useArgs = false
 } = {}) => {
+    // Setup realm runtime info.
+    adone.realm.getManager();
+    
     if (is.null(adone.runtime.app) && is.class(App)) {
         if (useArgs) {
             // mark the default main as internal to be able to distinguish internal from user-defined handlers

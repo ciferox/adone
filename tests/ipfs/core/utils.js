@@ -3,7 +3,7 @@ const fromB58String = require("multihashes").fromB58String;
 
 // This gets replaced by `create-repo-browser.js` in the browser
 const createTempRepo = require("../utils/create-repo-nodejs.js");
-const utils = require(adone.std.path.join(adone.runtime.config.ROOT_PATH, "lib/ipfs/core/utils"));
+const utils = require(adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/core/utils"));
 
 const {
     ipfs: { IPFS }

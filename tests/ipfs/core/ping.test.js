@@ -5,10 +5,10 @@ const series = require("async/series");
 const DaemonFactory = require("ipfsd-ctl");
 const isNode = require("detect-node");
 
-const df = DaemonFactory.create({ exec: adone.std.path.join(adone.runtime.config.ROOT_PATH, "lib/ipfs/cli/bin.js") });
+const df = DaemonFactory.create({ exec: adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/cli/bin.js") });
 
 const dfProc = DaemonFactory.create({
-    exec: adone.std.path.join(adone.runtime.config.ROOT_PATH, "lib/ipfs/core/index.js"),
+    exec: adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/core/index.js"),
     type: "proc"
 });
 

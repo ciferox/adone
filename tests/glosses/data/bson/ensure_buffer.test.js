@@ -1,4 +1,4 @@
-const ensureBuffer = require(adone.std.path.join(adone.runtime.config.ROOT_PATH, "lib", "glosses", "data", "bson", "ensure_buffer"));
+const ensureBuffer = require(adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "data", "bson", "ensure_buffer"));
 
 describe("ensureBuffer tests", () => {
     it("should be a function", () => {

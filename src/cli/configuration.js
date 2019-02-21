@@ -1,5 +1,6 @@
 const {
-    is
+    is,
+    std
 } = adone;
 
 const CONFIG_NAME = "cli.json";
@@ -9,7 +10,7 @@ export default class CliConfiguration extends adone.configuration.Generic {
      * Returns absolute path of configuration.
      */
     getPath() {
-        return adone.std.path.join(this.getCwd(), CONFIG_NAME);
+        return std.path.join(this.getCwd(), CONFIG_NAME);
     }
 
     getGroups() {
@@ -112,8 +113,7 @@ export default class CliConfiguration extends adone.configuration.Generic {
 
     static async load({ cwd } = {}) {
         if (!is.string(cwd)) {
-            const realmManager = adone.realm.getManager();
-            cwd = realmManager.config.CONFIGS_PATH;
+            cwd = adone.runtime.config.ETC_ADONE_PATH;
         }
 
         const config = new CliConfiguration({

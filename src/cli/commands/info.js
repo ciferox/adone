@@ -230,7 +230,7 @@ export default class Info extends Subsystem {
                         info: sysInfo
                     },
                     {
-                        logo: adone.terminal.gradient.create("#8BC34A", "#673AB7").multiline(adone.adoneLogo),
+                        logo: adone.terminal.gradient.create("#8BC34A", "#673AB7").multiline(adone.LOGO),
                         info: adoneInfo
                     }
                 ], {
@@ -254,7 +254,7 @@ export default class Info extends Subsystem {
 
                 console.log(leftTable);
                 // const table = pretty.table([
-                //     [adone.adoneLogo, "overlord@Hyper8"]
+                //     [adone.LOGO, "overlord@Hyper8"]
                 // ], {
                 //     noHeader: true,
                 //     style: {

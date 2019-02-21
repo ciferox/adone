@@ -8,7 +8,7 @@ export default class ValidateRealmTask extends task.Task {
             this.manager.config.RUNTIME_PATH,
             this.manager.config.VAR_PATH,
             this.manager.config.PACKAGES_PATH,
-            this.manager.config.CONFIGS_PATH
+            this.manager.config.ETC_PATH
         ];
 
         for (const p of REQUIRED_PATHS) {

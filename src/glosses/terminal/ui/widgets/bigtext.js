@@ -1,10 +1,13 @@
 
-const { fs } = adone.std;
+const {
+    fs,
+    std: { path }
+} = adone.std;
 
 export default class BigText extends adone.terminal.ui.widget.Element {
     constructor(options = {}) {
-        options.font = options.font || adone.getAssetAbsolutePath("terminal/fonts/ter-u14n.json");
-        options.fontBold = options.font || adone.getAssetAbsolutePath("terminal/fonts/ter-u14b.json");
+        options.font = options.font || path.join(adone.runtime.config.SHARE_PATH, "terminal/fonts/ter-u14n.json");
+        options.fontBold = options.font || path.join(adone.runtime.config.SHARE_PATH, "terminal/fonts/ter-u14b.json");
         super(options);
         this.fch = options.fch;
         this.ratio = {};

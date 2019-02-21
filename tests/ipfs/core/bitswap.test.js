@@ -58,7 +58,7 @@ let nodes = [];
 
 const addNode = function (fDaemon, inProcNode, callback) {
     fDaemon.spawn({
-        exec: adone.std.path.join(adone.runtime.config.ROOT_PATH, "lib/ipfs/cli/bin.js"),
+        exec: adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/cli/bin.js"),
         initOptions: { bits: 512 },
         config: {
             Addresses: {

@@ -69,7 +69,8 @@ export default class ForkRealmTask extends task.Task {
         // const RUNTIME_PATH = join(CWD, "runtime");
         const VAR_PATH = join(CWD, "var");
         const ADONE_SPECIAL_PATH = join(CWD, ".adone");
-        const CONFIGS_PATH = join(CWD, "configs");
+        const ETC_PATH = join(CWD, "etc");
+        const ETC_ADONE_PATH = join(ETC_PATH, "adone");
         const LOGS_PATH = join(VAR_PATH, "logs");
         const KEYS_PATH = join(CWD, "keys");
         const PACKAGES_PATH = join(CWD, "packages");
@@ -106,7 +107,7 @@ export default class ForkRealmTask extends task.Task {
 
         if (!clean) {
             const identityConfig = new adone.configuration.Generic({
-                cwd: CONFIGS_PATH
+                cwd: ETC_ADONE_PATH
             });
 
             try {

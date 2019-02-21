@@ -33,7 +33,7 @@ describe("fast logger", "extreme", () => {
         };
         Date.now = () => 1459875739796;
         os.hostname = () => "abcdefghijklmnopqr";
-        const loggerPath = adone.std.path.join(adone.runtime.config.ROOT_PATH, "lib/glosses/app/fast_logger");
+        const loggerPath = adone.std.path.join(adone.ROOT_PATH, "lib/glosses/app/fast_logger");
         delete require.cache[loggerPath];
         const fastLogger = require(loggerPath);
         let expected = "";
@@ -80,7 +80,7 @@ describe("fast logger", "extreme", () => {
             return "abcdefghijklmnopqr";
         };
 
-        const loggerPath = adone.std.path.join(adone.runtime.config.ROOT_PATH, "lib/glosses/app/fast_logger");
+        const loggerPath = adone.std.path.join(adone.ROOT_PATH, "lib/glosses/app/fast_logger");
         delete require.cache[loggerPath];
         const fastLogger = require(loggerPath);
         // delete require.cache[require.resolve("../")];

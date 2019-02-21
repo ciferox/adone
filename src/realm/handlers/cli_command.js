@@ -26,7 +26,7 @@ export default class CliCommandHandler extends realm.TypeHandler {
         }
 
         const cliConfig = await adone.cli.Configuration.load({
-            cwd: this.manager.config.CONFIGS_PATH
+            cwd: this.manager.config.ETC_ADONE_PATH
         });
         if (!is.array(cliConfig.raw.commands)) {
             cliConfig.raw.commands = [];
@@ -53,7 +53,7 @@ export default class CliCommandHandler extends realm.TypeHandler {
 
     async unregister(adoneConf) {
         const cliConfig = await adone.cli.Configuration.load({
-            cwd: this.manager.config.CONFIGS_PATH
+            cwd: this.manager.config.ETC_ADONE_PATH
         });
         const index = cliConfig.raw.commands.findIndex((x) => adoneConf.raw.name === x.name);
         if (index >= 0) {
@@ -65,7 +65,7 @@ export default class CliCommandHandler extends realm.TypeHandler {
     async list() {
         const result = [];
         const cliConfig = await adone.cli.Configuration.load({
-            cwd: this.manager.config.CONFIGS_PATH
+            cwd: this.manager.config.ETC_ADONE_PATH
         });
         const commands = cliConfig.raw.commands;
 
@@ -77,7 +77,7 @@ export default class CliCommandHandler extends realm.TypeHandler {
 
     async checkAndRemove(name) {
         const cliConfig = await adone.cli.Configuration.load({
-            cwd: this.manager.config.CONFIGS_PATH
+            cwd: this.manager.config.ETC_ADONE_PATH
         });
         if (!is.array(cliConfig.raw.commands)) {
             cliConfig.raw.commands = [];

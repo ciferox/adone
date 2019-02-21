@@ -3,6 +3,7 @@
     "description": "The generalized core for building of Cyber Fractal Systems Infrastructures ~ CFSI",
     "version": "0.6.74",
     "author": "Adone Core Team <info@adone.io>",
+    "type": "core",
     "struct": {
         "assets": {
             "description": "Assets",

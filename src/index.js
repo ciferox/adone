@@ -149,10 +149,9 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         nativeAddon: (path) => {
             return require(adone.std.path.isAbsolute(path) ? path : adone.std.path.resolve(__dirname, "./native", path));
         },
-        getAssetAbsolutePath: (relPath) => adone.std.path.resolve(__dirname, "..", "etc", adone.std.path.normalize(relPath)),
-        loadAsset: (relPath) => {
-            const extName = adone.std.path.extname(relPath);
-            const buf = adone.std.fs.readFileSync(adone.getAssetAbsolutePath(relPath));
+        loadAsset: (path) => {
+            const extName = adone.std.path.extname(path);
+            const buf = adone.std.fs.readFileSync(adone.std.path.normalize(path));
             switch (extName) {
                 case ".json": {
                     return JSON.parse(buf.toString("utf8"));
@@ -234,7 +233,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
 
         // Adone info/package
         package: "../package.json",
-        adoneLogo: () => adone.fs.readFileSync(adone.std.path.join(adone.ETC_PATH, "media", "adone.txt"), { encoding: "utf8" }),
         // Runtime stuff
         runtime: () => {
             const runtime = Object.create(null, {
@@ -285,9 +283,9 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             return runtime;
         },
         ROOT_PATH: () => adone.std.path.join(__dirname, ".."),
-        ETC_PATH: () => adone.std.path.join(adone.ROOT_PATH, "etc"),
-
         EMPTY_BUFFER: () => Buffer.allocUnsafe(0),
+        LOGO: () => adone.fs.readFileSync(adone.std.path.join(adone.runtime.config.SHARE_PATH, "media", "adone.txt"), { encoding: "utf8" }),
+
         assert: () => adone.assertion.loadAssertInterface().assert,
         expect: () => adone.assertion.loadExpectInterface().expect,
 

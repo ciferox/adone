@@ -7,7 +7,7 @@
 
 
 const waitFor = require("../utils/wait_for");
-const mfsPreload = require(adone.std.path.join(adone.runtime.config.ROOT_PATH, "lib/ipfs/core/mfs-preload"));
+const mfsPreload = require(adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/core/mfs-preload"));
 
 const createMockFilesStat = (cids = []) => {
     let n = 0;
