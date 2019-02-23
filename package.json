@@ -1,9 +1,18 @@
 {
   "name": "adone",
   "description": "The generalized core for building of Cyber Fractal Systems Infrastructures ~ CFSI",
-  "version": "0.6.74",
-  "author": "Adone Core Team <info@adone.io>",
+  "version": "0.6.75",
+  "author": "ADONE Core Team <info@adone.io>",
   "license": "Apache-2.0",
+  "bin": "./bin/adone.js",
+  "main": "lib",
+  "repository": "https://github.com/ciferox/adone",
+  "engines": {
+    "node": ">=11.10.0"
+  },
+  "adone": {
+    "type": "core"
+  },
   "devDependencies": {
     "@nodeutils/defaults-deep": "^1.1.0",
     "@types/adone": "^0.6.23",
@@ -161,13 +170,5 @@
   },
   "optionalDependencies": {
     "fsevents": "^1.2.7"
-  },
-  "engines": {
-    "node": ">=10.8.0"
-  },
-  "main": "lib",
-  "repository": "https://github.com/ciferox/adone",
-  "bin": {
-    "adone": "./bin/adone.js"
   }
 }

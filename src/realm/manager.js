@@ -1,77 +1,76 @@
 const {
     app: { lockfile },
+    error,
     is,
+    realm: { Configuration },
     task,
     std
 } = adone;
 
-const {
-    join
-} = require("path");
+const INITIALIZED = Symbol();
 
-const __ = adone.lazify({
-    task: "./tasks"
-}, null, require);
+const checkEntry = (entry) => {
+    if (is.nil(entry.dst)) {
+        return false;
+    }
+
+    if (!is.string(entry.task)) {
+        entry.task = "copy";
+    }
+
+    return true;
+};
 
 export default class RealmManager extends task.Manager {
-    constructor({ cwd }) {
+    constructor({ cwd = process.cwd() } = {}) {
         super();
 
         if (!is.string(cwd)) {
-            throw new adone.error.NotValidException(`Invalid type of cwd: ${adone.meta.typeOf(cwd)}`);
+            throw new error.NotValidException(`Invalid type of cwd: ${adone.meta.typeOf(cwd)}`);
         }
-
-        const ROOT_PATH = cwd;
-        const RUNTIME_PATH = join(ROOT_PATH, "runtime");
-        const VAR_PATH = join(ROOT_PATH, "var");
-        const ETC_PATH = join(ROOT_PATH, "etc");
-        const omnitronVarPath = join(VAR_PATH, "omnitron");
-        const omnitronDataPath = join(omnitronVarPath, "data");
-        const LOGS_PATH = join(VAR_PATH, "logs");
-        const omnitronLogsPath = join(LOGS_PATH, "omnitron");
-
         this.cwd = cwd;
-        this.config = {
-            ROOT_PATH,
-            RUNTIME_PATH,
-            ETC_PATH,
-            ETC_ADONE_PATH: join(ETC_PATH, "adone"),
-            VAR_PATH,
-            SHARE_PATH: join(ROOT_PATH, "share"),
-            LOGS_PATH,
-            KEYS_PATH: join(ROOT_PATH, "keys"),
-            PACKAGES_PATH: join(ROOT_PATH, "packages"),
-            LOCKFILE_PATH: join(ROOT_PATH, "realm.lock"),
-            devmntPath: join(ETC_PATH, "adone", "devmnt.json"),
-
-            omnitron: {
-                LOGS_PATH: omnitronLogsPath,
-                LOGFILE_PATH: join(omnitronLogsPath, "omnitron.log"),
-                ERRORLOGFILE_PATH: join(omnitronLogsPath, "omnitron-err.log"),
-                PIDFILE_PATH: join(RUNTIME_PATH, "omnitron.pid"),
-                VAR_PATH: omnitronVarPath,
-                DATA_PATH: omnitronDataPath,
-                SERVICES_PATH: join(omnitronVarPath, "services"),
-                DB_PATH: join(omnitronVarPath, "db")
-            }
-        };
 
         adone.lazify({
-            identity: std.path.join(this.config.ETC_ADONE_PATH, "identity.json")
-        }, this.config);
+            config: () => Configuration.loadSync({
+                cwd
+            }),
+            package: std.path.join(cwd, "package.json"),
+            tasks: std.path.join(cwd, ".adone", "tasks"),
+            env: std.path.join(cwd, ".adone", "env"),
+            identity: std.path.join(cwd, ".adone", "identity.json")
+        }, this, adone.require);
+
+        if (is.object(this.package.adone)) {
+            this.fullName = is.string(this.package.adone.type) ? `${this.package.adone.type}.${this.package.name}` : this.package.name;
+        } else {
+            this.fullName = this.package.name;
+        }
 
         this.typeHandler = null;
-        this.peerInfo = null;
+        // this.peerInfo = null;
+        this[INITIALIZED] = false;
+    }
+
+    get initialized() {
+        return this[INITIALIZED];
     }
 
     async initialize() {
-        await this.addTask("install", __.task.Install);
-        await this.addTask("uninstall", __.task.Uninstall);
-        await this.addTask("mount", __.task.Mount);
-        await this.addTask("unmount", __.task.Unmount);
-        await this.addTask("list", __.task.List);
-        await this.addTask("forkRealm", __.task.ForkRealm);
-        await this.addTask("validateRealm", __.task.ValidateRealm);
+        if (this[INITIALIZED]) {
+            throw new error.IllegalStateException("Realm manager already initialized");
+        }
+        this[INITIALIZED] = true;
+
+        // Load realm tasks
+        try {
+            const tasks = this.tasks;
+            for (const [name, TaskClass] of Object.entries(tasks)) {
+                // eslint-disable-next-line no-await-in-loop
+                await this.addTask(name, TaskClass);
+            }
+        } catch (err) {
+            //
+        }
 
         // Add default type handlers
         const handlerNames = (await adone.fs.readdir(std.path.join(__dirname, "handlers"))).filter((name) => name.endsWith(".js"));
@@ -84,6 +83,25 @@ export default class RealmManager extends task.Manager {
         this.typeHandler = adone.lazify(handlers, null, require);
     }
 
+    getEntries({ path, onlyNative = false, excludeVirtual = true } = {}) {
+        let entries = this.config.getEntries(path);
+
+        if (onlyNative) {
+            const result = [];
+            for (const entry of entries) {
+                if (is.plainObject(entry.native)) {
+                    result.push(entry);
+                }
+            }
+
+            entries = result;
+        }
+
+        return excludeVirtual
+            ? entries.filter(checkEntry)
+            : entries;
+    }
+
     addTypeHandler(typeName, handler) {
     }
 
@@ -91,7 +109,7 @@ export default class RealmManager extends task.Manager {
         const HandlerClass = this.typeHandler[typeName];
 
         if (!is.class(HandlerClass)) {
-            throw new adone.error.NotSupportedException(`Unsupported type: ${typeName}`);
+            throw new error.NotSupportedException(`Unsupported type: ${typeName}`);
         }
 
         return new HandlerClass(this);
@@ -112,72 +130,25 @@ export default class RealmManager extends task.Manager {
         return this.getTypeHandler(adoneConf.raw.type).unregister(adoneConf);
     }
 
-    async runGraceful(name, ...args) {
+    async runSafe(name, ...args) {
         await this.lock();
         const observer = await this.run(name, ...args);
         await observer.finally(() => this.unlock());
         return observer;
     }
 
-    async forkRealm(options) {
-        return this.runGraceful("forkRealm", options);
-    }
-
-    async createRealm(options) {
-        return this.runGraceful("createRealm", options);
-    }
-
-    async validateRealm(options) {
-        return this.runGraceful("validateRealm", options);
-    }
-
-    async install(options) {
-        return this.runGraceful("install", options);
-    }
-
-    async uninstall(options) {
-        return this.runGraceful("uninstall", options);
-    }
-
-    async mount(options) {
-        return this.runGraceful("mount", options);
-    }
-
-    async unmount(options) {
-        return this.runGraceful("unmount", options);
-    }
-
-    async list(options) {
-        return this.runGraceful("list", options);
-    }
-
-    async snapshot(options) {
-
-    }
-
-    // listFiles({ adone = true, extensions = true, apps = true, configs = true, data = true, logs = true } = {}) {
-    //     const srcPaths = [];
-    //     if (configs) {
-    //         srcPaths.push(std.path.join(this.config.configsPath, "**/*"));
-    //     }
-
-    //     if (adone) {
-
-    //     }
-    // }
-
     async lock() {
-        return lockfile.create(this.config.ROOT_PATH, {
-            lockfilePath: this.config.LOCKFILE_PATH
+        return lockfile.create(this.env.ROOT_PATH, {
+            lockfilePath: this.env.LOCKFILE_PATH
         });
     }
 
     async unlock() {
         const options = {
-            lockfilePath: this.config.LOCKFILE_PATH
+            lockfilePath: this.env.LOCKFILE_PATH
         };
-        if (await lockfile.check(this.config.ROOT_PATH, options)) {
-            return lockfile.release(this.config.ROOT_PATH, options);
+        if (await lockfile.check(this.env.ROOT_PATH, options)) {
+            return lockfile.release(this.env.ROOT_PATH, options);
         }
     }
 }

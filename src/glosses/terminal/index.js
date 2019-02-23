@@ -516,21 +516,21 @@ export class Terminfo {
     }
 
     _useXtermCap() {
-        return this.injectTermcap(adone.std.path.join(adone.runtime.config.SHARE_PATH, "term", "xterm.termcap"));
+        return this.injectTermcap(adone.std.path.join(adone.runtime.realm.env.SHARE_PATH, "term", "xterm.termcap"));
     }
 
     _useXtermInfo() {
-        return this.injectTerminfo(adone.std.path.join(adone.runtime.config.SHARE_PATH, "term", "xterm"));
+        return this.injectTerminfo(adone.std.path.join(adone.runtime.realm.env.SHARE_PATH, "term", "xterm"));
     }
 
     _useInternalInfo(name) {
         name = adone.std.path.basename(name);
-        return this.injectTerminfo(adone.std.path.join(adone.runtime.config.SHARE_PATH, "term", name));
+        return this.injectTerminfo(adone.std.path.join(adone.runtime.realm.env.SHARE_PATH, "term", name));
     }
 
     _useInternalCap(name) {
         name = adone.std.path.basename(name);
-        return this.injectTermcap(adone.std.path.join(adone.runtime.config.SHARE_PATH, "term", `${name}.termcap`));
+        return this.injectTermcap(adone.std.path.join(adone.runtime.realm.env.SHARE_PATH, "term", `${name}.termcap`));
     }
 
     readTerminfo(term) {

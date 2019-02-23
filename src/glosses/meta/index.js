@@ -16,7 +16,7 @@ adone.lazify({
     nsNames: () => adone.meta.namespaces.map((ns) => ns.name).sort((a, b) => a.localeCompare(b))
 }, adone.asNamespace(exports), require);
 
-const adoneConf = adone.configuration.Adone.loadSync({
+const adoneConf = adone.realm.Configuration.loadSync({
     cwd: adone.ROOT_PATH
 });
 

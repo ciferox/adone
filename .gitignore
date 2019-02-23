@@ -19,6 +19,5 @@ test-resources/
 # realm files/dirs
 /etc/adone/*
 /packages/
-/runtime/
+/run/
 /var/
-/platform/zero/build/

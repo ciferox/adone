@@ -113,7 +113,7 @@ export default class CliConfiguration extends adone.configuration.Generic {
 
     static async load({ cwd } = {}) {
         if (!is.string(cwd)) {
-            cwd = adone.runtime.config.ETC_ADONE_PATH;
+            cwd = adone.runtime.realm.env.ETC_ADONE_PATH;
         }
 
         const config = new CliConfiguration({
@@ -137,20 +137,12 @@ export default class CliConfiguration extends adone.configuration.Generic {
     static default = {
         groups: [
             {
+                name: "common",
+                description: "Common"
+            },
+            {
                 name: "subsystem",
-                description: "Subsystems"
-            },
-            {
-                name: "cli",
-                description: "Adone cli specific"
-            },
-            {
-                name: "realm",
-                description: "Code, packages and realm management"
-            },
-            {
-                name: "dev",
-                description: "Development and inspection"
+                description: "Еhird party commands"
             }
         ]
     };

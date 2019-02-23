@@ -207,7 +207,7 @@ export default class Info extends Subsystem {
     })
     async command(args, opts) {
         try {
-            console.log(chalk.bold.red(" WIP".repeat(adone.runtime.term.stats.cols / 4)));
+            // console.log(chalk.bold.red(" WIP".repeat(adone.runtime.term.stats.cols / 4)));
             const name = args.get("name");
             if (name.length === 0) {
                 const sysinfoRenderer = new SystemInfoRenderer();

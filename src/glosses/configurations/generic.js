@@ -13,7 +13,7 @@ const PATHS = Symbol();
 export default class Generic extends adone.configuration.Base {
     constructor({ cwd = process.cwd() } = {}) {
         super();
-        this[CWD_PATH] = cwd;
+        this[CWD_PATH] = std.path.resolve(cwd);
         this[SERIALIZER] = adone.lazify({
             ".js": () => ({
                 encode: null,
@@ -114,7 +114,7 @@ export default class Generic extends adone.configuration.Base {
                     key: correctName
                 }, options));
             } catch (err) {
-                adone.logError(err);
+                console.error(err);
                 if (err instanceof SyntaxError) {
                     throw new error.NotValidException("Config is not valid");
                 }
@@ -192,7 +192,7 @@ export default class Generic extends adone.configuration.Base {
         if (std.path.isAbsolute(confPath)) {
             path = confPath;
         } else {
-            path = std.path.resolve(this[CWD_PATH], confPath);
+            path = std.path.join(this[CWD_PATH], confPath);
         }
 
         let ext = null;

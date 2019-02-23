@@ -248,12 +248,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                     writable: true,
                     value: {}
                 },
-                // Realm configuration (same as 'adone.runtime.realm.config')
-                config: {
-                    enumerable: true,
-                    writable: true,
-                    value: null
-                },
                 // true - if omnitron process
                 isOmnitron: {
                     enumerable: true,
@@ -275,7 +269,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                 netron: () => {
                     const peerInfo = adone.runtime.isOmnitron
                         ? adone.omnitron.LOCAL_PEER_INFO
-                        : adone.net.p2p.PeerInfo.create(adone.runtime.config.identity.client);
+                        : adone.net.p2p.PeerInfo.create(adone.runtime.realm.identity.client);
                     return new adone.netron.Netron(peerInfo);
                 }
             }, runtime);
@@ -284,7 +278,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         },
         ROOT_PATH: () => adone.std.path.join(__dirname, ".."),
         EMPTY_BUFFER: () => Buffer.allocUnsafe(0),
-        LOGO: () => adone.fs.readFileSync(adone.std.path.join(adone.runtime.config.SHARE_PATH, "media", "adone.txt"), { encoding: "utf8" }),
+        LOGO: () => adone.fs.readFileSync(adone.std.path.join(adone.runtime.realm.env.SHARE_PATH, "media", "adone.txt"), { encoding: "utf8" }),
 
         assert: () => adone.assertion.loadAssertInterface().assert,
         expect: () => adone.assertion.loadExpectInterface().expect,
@@ -396,7 +390,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         lodash: "./lodash",
         // napa: "./napa",
         omnitron: "./omnitron",
-        project: "./project",
         realm: "./realm",
         shani: "./shani",
         specter: "./specter",

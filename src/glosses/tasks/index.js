@@ -17,7 +17,7 @@ adone.definePredicates({
     taskManager: "TASK_MANAGER"
 });
 
-const __ = adone.lazify({
+adone.lazify({
     Manager: "./manager",
     Task: ["./task", (mod) => mod.Task],
     TaskObserver: ["./task", (mod) => mod.TaskObserver],
@@ -29,5 +29,3 @@ adone.lazifyPrivate({
     MANAGER_SYMBOL: () => Symbol(),
     OBSERVER_SYMBOL: () => Symbol()
 }, exports, require);
-
-export const run = (task, ...args) => __.manager.runOnce(task, ...args);

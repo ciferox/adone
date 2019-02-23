@@ -298,8 +298,8 @@ const _bootstrapApp = async (app, {
 export const run = async (App, {
     useArgs = false
 } = {}) => {
-    // Setup realm runtime info.
-    adone.realm.getManager();
+    // Setup runtime info for core realm.
+    adone.realm.getCoreManager();
     
     if (is.null(adone.runtime.app) && is.class(App)) {
         if (useArgs) {

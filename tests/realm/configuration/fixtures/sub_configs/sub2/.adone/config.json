@@ -1,0 +1,16 @@
+{
+    "struct": {
+        "js": {
+            "task": "transpile",
+            "src": "src/**/*.js",
+            "dst": "lib"
+        },
+        "other": {
+            "src": [
+                "!src/**/*.js",
+                "src/**/*"
+            ],
+            "dst": "lib"
+        }
+    }
+}

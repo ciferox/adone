@@ -1,0 +1,8 @@
+{
+    "name": "test2",
+    "description": "Tesk project 2",
+    "adone":{
+        "type": "app"
+    },
+    "main": "lib"
+}
