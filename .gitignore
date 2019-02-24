@@ -17,6 +17,7 @@ test-resources/
 **/native/build/**/*
 
 # realm files/dirs
+/.adone/identity.json
 /etc/adone/*
 /packages/
 /run/
