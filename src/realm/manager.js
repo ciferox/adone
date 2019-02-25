@@ -40,11 +40,7 @@ export default class RealmManager extends task.Manager {
             identity: std.path.join(cwd, ".adone", "identity.json")
         }, this, adone.require);
 
-        if (is.object(this.package.adone)) {
-            this.fullName = is.string(this.package.adone.type) ? `${this.package.adone.type}.${this.package.name}` : this.package.name;
-        } else {
-            this.fullName = this.package.name;
-        }
+        this.fullName = is.string(this.package.realmType) ? `${this.package.realmType}.${this.package.name}` : this.package.name;
 
         this.typeHandler = null;
         // this.peerInfo = null;

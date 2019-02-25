@@ -130,10 +130,10 @@ export default class extends Subsystem {
             });
         }
 
-        if (is.object(manager.package.adone) && is.string(manager.package.adone.type)) {
+        if (is.object(manager.package.realmType) && is.string(manager.package.realmType)) {
             info.push({
                 key: "Type:",
-                value: manager.package.adone.type
+                value: manager.package.realmType
             });
         }
 

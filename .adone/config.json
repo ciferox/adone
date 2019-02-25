@@ -50,10 +50,6 @@
                     "namespace": "dev",
                     "virtual": true
                 },
-                "vendor": {
-                    "namespace": "vendor",
-                    "virtual": true
-                },
                 "cli": {
                     "description": "Adone CLI stuff",
                     "src": [
@@ -947,12 +943,6 @@
                     "dst": "lib/bundle",
                     "namespace": "bundle"
                 },
-                "npm": {
-                    "description": "Adone based npm packages",
-                    "src": "src/npm/**/*.js",
-                    "dst": "lib/npm",
-                    "namespace": "npm"
-                },
                 "fast": {
                     "description": "File automation streaming templates/transforms",
                     "task": "transpile",
@@ -1024,6 +1014,16 @@
                     "src": "src/specter/**/*.js",
                     "dst": "lib/specter",
                     "namespace": "specter"
+                },
+                "vendor": {
+                    "description": "Third party libraries mapped to adone namespace",
+                    "task": "copy",
+                    "src": [
+                        "src/vendor/**/*.js",
+                        "!src/vendor/**/LICENSE",
+                        "!src/vendor/**/README.md"
+                    ],
+                    "dst": "lib/vendor"
                 }
             }
         }

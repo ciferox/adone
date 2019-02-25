@@ -378,8 +378,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         web: "./glosses/web",
 
         // components
-        async: "./async",
-        benchmark: "./benchmark",
         // bundle: "./bundle",
         cli: "./cli",
         cmake: "./cmake",
@@ -387,12 +385,16 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         ipfs: "./ipfs",
         isolatedVm: "./isolated_vm",
         gyp: "./gyp",
-        lodash: "./lodash",
         // napa: "./napa",
         omnitron: "./omnitron",
         realm: "./realm",
         shani: "./shani",
         specter: "./specter",
+
+        // Third party libraries
+        async: "./vendor/async",
+        benchmark: "./vendor/benchmark",
+        lodash: "./vendor/lodash",
 
         // third parties
         dev: () => {
@@ -404,12 +406,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             }
 
             return adone.asNamespace(adone.lazify(mounts, null));
-        },
-        vendor: () => {
-            // TODO
-            return {};
-        },
-        npm: "./npm"
+        }
     }, adone);
     if (process.env.ADONE_SOURCEMAPS) {
         adone.sourcemap.support(Error).install();

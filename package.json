@@ -10,9 +10,7 @@
   "engines": {
     "node": ">=11.10.0"
   },
-  "adone": {
-    "type": "core"
-  },
+  "realmType": "core",
   "devDependencies": {
     "@nodeutils/defaults-deep": "^1.1.0",
     "@types/adone": "^0.6.23",

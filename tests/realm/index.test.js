@@ -1,4 +1,5 @@
 const {
+    configuration,
     is,
     fs,
     error,
@@ -82,7 +83,7 @@ describe("realm", () => {
 
         assert.strictEqual(mgr.package.name, "test");
         assert.strictEqual(mgr.package.description, "Tesk project");
-        assert.strictEqual(mgr.package.adone.type, "app");
+        assert.strictEqual(mgr.package.realmType, "app");
         assert.strictEqual(mgr.package.main, "lib");
         assert.equal(mgr.fullName, "app.test");
 
@@ -96,7 +97,7 @@ describe("realm", () => {
 
         assert.strictEqual(mgr.package.name, "test2");
         assert.strictEqual(mgr.package.description, "Tesk project 2");
-        assert.strictEqual(mgr.package.adone.type, "app");
+        assert.strictEqual(mgr.package.realmType, "app");
         assert.strictEqual(mgr.package.main, "lib");
         assert.equal(mgr.fullName, "app.test2");
 
@@ -186,18 +187,19 @@ describe("realm", () => {
 
             assert.equal(info.cwd, std.path.join(newRealmsPath, info.name));
             assert.true(await fs.exists(info.cwd));
-            assert.true(await fs.isFile(std.path.join(info.cwd, "adone.json")));
+            assert.true(await fs.isFile(std.path.join(info.cwd, realm.Configuration.configName)));
+            assert.true(await fs.isFile(std.path.join(info.cwd, configuration.Npm.configName)));
             assert.true(await fs.isFile(std.path.join(info.cwd, ".gitignore")));
             assert.true(await fs.isDirectory(std.path.join(info.cwd, ".git")));
             assert.true(await fs.isFile(std.path.join(info.cwd, ".eslintrc.js")));
             assert.true(await fs.isFile(std.path.join(info.cwd, "jsconfig.json")));
 
-            const adoneConfig = await adone.configuration.Adone.load({
+            const packageConfig = await configuration.Npm.load({
                 cwd: info.cwd
             });
 
-            assert.equal(adoneConfig.raw.name, name);
-            assert.equal(adoneConfig.raw.description, "Sample project");
+            assert.equal(packageConfig.raw.name, name);
+            assert.equal(packageConfig.raw.description, "Sample project");
             assert.equal(std.path.basename(info.cwd), name);
         });
 
@@ -215,11 +217,11 @@ describe("realm", () => {
 
             assert.equal(info.cwd, std.path.join(newRealmsPath, info.dirName));
 
-            const adoneConfig = await adone.configuration.Adone.load({
+            const packageConfig = await configuration.Npm.load({
                 cwd: info.cwd
             });
             
-            assert.equal(adoneConfig.raw.name, name);
+            assert.equal(packageConfig.raw.name, name);
             assert.equal(std.path.basename(info.cwd), dirName);
         });
 
@@ -275,7 +277,7 @@ describe("realm", () => {
         });
     });
 
-    describe("fork realm", () => {
+    describe.skip("fork realm", () => {
         it("fork without 'basePath' should be thrown", async () => {
             const observer = await runtimeRealmManager.runSafe("forkRealm", {
                 name: "test"
@@ -398,7 +400,7 @@ describe("realm", () => {
         //                     let observer = await realmManager.install(installOptions);
         //                     await observer.result;
 
-        //                     const config = await adone.configuration.Adone.load({
+        //                     const config = await realm.Configuration.load({
         //                         cwd: cliCommandPath
         //                     });
 
@@ -450,7 +452,7 @@ describe("realm", () => {
         //                 it(`should rollback installation of invalid cli command${symlink ? " with symlink " : " "}(${name})`, async () => {
         //                     const cliCommandPath = std.path.join(__dirname, "packages", `cli_command_${name}`);
 
-        //                     const config = await adone.configuration.Adone.load({
+        //                     const config = await realm.Configuration.load({
         //                         cwd: cliCommandPath
         //                     });
 
@@ -497,7 +499,7 @@ describe("realm", () => {
         //         it("install/uninstall with inactive omnitron", async () => {
         //             const omnitronServicePath = std.path.join(__dirname, "packages", "omnitron_service_good");
 
-        //             const config = await adone.configuration.Adone.load({
+        //             const config = await realm.Configuration.load({
         //                 cwd: omnitronServicePath
         //             });
 
@@ -531,7 +533,7 @@ describe("realm", () => {
 
         //             const omnitronServicePath = std.path.join(__dirname, "packages", "omnitron_service_good");
 
-        //             const config = await adone.configuration.Adone.load({
+        //             const config = await realm.Configuration.load({
         //                 cwd: omnitronServicePath
         //             });
 
@@ -566,7 +568,7 @@ describe("realm", () => {
 
         //             const omnitronServicePath = std.path.join(__dirname, "packages", "omnitron_service_good");
 
-        //             const config = await adone.configuration.Adone.load({
+        //             const config = await realm.Configuration.load({
         //                 cwd: omnitronServicePath
         //             });
 

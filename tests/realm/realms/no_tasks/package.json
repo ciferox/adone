@@ -1,8 +1,6 @@
 {
     "name": "test",
     "description": "Tesk project",
-    "adone": {
-        "type": "app"
-    },
+    "realmType": "app",
     "main": "lib"
 }

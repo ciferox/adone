@@ -1,16 +1,17 @@
 const {
     error,
+    configuration,
     is,
     fs,
     std,
-    realm: { BaseTask },
+    realm,
 } = adone;
 
 const __ = adone.lazify({
     helper: "./helpers"
 }, null, require);
 
-export default class extends BaseTask {
+export default class extends realm.BaseTask {
     async run(info = {}) {        
         if (!is.string(info.basePath)) {
             throw new error.InvalidArgumentException("Invalid base path");
@@ -35,11 +36,19 @@ export default class extends BaseTask {
             message: "initialize {bold}empty project{/bold}"
         });
 
+        await fs.mkdirp(std.path.join(cwd, ".adone"));
+
         this.manager.notify(this, "progress", {
-            message: "creating {bold}adone.json{/bold}"
+            message: `creating {bold}${configuration.Npm.configName}{/bold}`
         });
         
-        await __.helper.adoneConfig.create(info);
+        await __.helper.packageConfig.create(info);
+
+        this.manager.notify(this, "progress", {
+            message: `creating realm {bold}${realm.Configuration.configName}{/bold}`
+        });
+        
+        await __.helper.realmConfig.create(info);
 
         info = adone.lodash.defaults(info, {
             skipGit: false,

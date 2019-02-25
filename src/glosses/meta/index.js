@@ -16,16 +16,11 @@ adone.lazify({
     nsNames: () => adone.meta.namespaces.map((ns) => ns.name).sort((a, b) => a.localeCompare(b))
 }, adone.asNamespace(exports), require);
 
-const adoneConf = adone.realm.Configuration.loadSync({
+const realmConf = adone.realm.Configuration.loadSync({
     cwd: adone.ROOT_PATH
 });
 
-const metaNamespace = adoneConf.getNamespace();
-
-// Add global namespace
-metaNamespace.global = metaNamespace.adone.namespace.global = {
-    description: "Global namespace"
-};
+const metaNamespace = realmConf.getNamespace();
 
 const isNamespace = (name) => {
     if (name === "global.adone") {

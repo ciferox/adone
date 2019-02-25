@@ -1,5 +1,6 @@
 adone.lazify({
-    adoneConfig: "./adone_config",
+    realmConfig: "./realm_config",
+    packageConfig: "./package_config",
     jsconfig: "./jsconfig",
     eslintrc: "./eslintrc",
     git: "./git",
