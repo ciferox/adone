@@ -1,13 +1,14 @@
-
-
 const rimraf = require("rimraf");
-const fs = require("fs");
+
+const {
+    std: { fs }
+} = adone;
 
 module.exports = (dir) => {
     try {
         fs.accessSync(dir);
     } catch (err) {
-    // Does not exist so all good
+        // Does not exist so all good
         return;
     }
 

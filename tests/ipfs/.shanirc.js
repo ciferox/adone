@@ -6,6 +6,7 @@ const MockPreloadNode = require(adone.std.path.join(__dirname, "./utils/mock_pre
 const preloadNode = MockPreloadNode.createNode();
 
 export default async (ctx) => {
+    ctx.timeout(10000);
     ctx.before((done) => {
         preloadNode.start(done);
     });

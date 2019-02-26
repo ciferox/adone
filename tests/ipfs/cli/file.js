@@ -1,12 +1,8 @@
-/**
- * eslint-env mocha
- */
-
-
-const expect = require("chai").expect;
-const runOnAndOff = require("../utils/on-and-off");
+const runOnAndOff = require("../utils/on_and_off");
 const file = "QmR56UJmAaZLXLdTT1ALrE9vVqV8soUEekm9BMd4FnuYqV";
 const dir = "Qmaj2NmcyAXT8dFmZRRytE12wpcaHADzbChKToMEjBsj5Z";
+
+const fixturePath = (...args) => adone.std.path.join(__dirname, "..", "fixtures", ...args);
 
 describe("file ls", () => runOnAndOff((thing) => {
     let ipfs;
@@ -14,7 +10,7 @@ describe("file ls", () => runOnAndOff((thing) => {
     before(function () {
         this.timeout(50 * 1000);
         ipfs = thing.ipfs;
-        return ipfs("add -r test/fixtures/test-data/recursive-get-dir");
+        return ipfs(`add -r ${fixturePath("test-data/recursive-get-dir")}`);
     });
 
     it("prints a filename", () => {

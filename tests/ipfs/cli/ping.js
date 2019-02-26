@@ -1,20 +1,11 @@
-/**
- * eslint max-nested-callbacks: ["error", 8]
- */
-/**
- * eslint-env mocha
- */
-
-
-const chai = require("chai");
-const dirtyChai = require("dirty-chai");
 const series = require("async/series");
-const DaemonFactory = require("ipfsd-ctl");
-const ipfsExec = require("../utils/ipfs-exec");
+const ipfsExec = require("../utils/ipfs_exec");
 
-const df = DaemonFactory.create({ type: "js" });
-const expect = chai.expect;
-chai.use(dirtyChai);
+const {
+    ipfs: { ipfsdCtl }
+} = adone;
+
+const df = ipfsdCtl.create({ type: "js" });
 
 const config = {
     Bootstrap: [],
@@ -39,7 +30,7 @@ describe("ping", function () {
         series([
             (cb) => {
                 df.spawn({
-                    exec: "./src/cli/bin.js",
+                    exec: adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/ipfs/cli/bin.js"),
                     config,
                     initOptions: { bits: 512 }
                 }, (err, _ipfsd) => {
@@ -63,7 +54,7 @@ describe("ping", function () {
         this.timeout(60 * 1000);
 
         df.spawn({
-            exec: "./src/cli/bin.js",
+            exec: adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/ipfs/cli/bin.js"),
             config,
             initoptions: { bits: 512 }
         }, (err, _ipfsd) => {

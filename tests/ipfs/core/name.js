@@ -5,17 +5,14 @@ const parallel = require("async/parallel");
 const series = require("async/series");
 
 const isNode = require("detect-node");
-const ipnsPath = require(adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/core/ipns/path"));
+const ipnsPath = require(adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/ipfs/core/ipns/path"));
 const { Key } = require("interface-datastore");
 
-const DaemonFactory = require("ipfsd-ctl");
-
 const {
-    ipfs: { IPFS }
+    ipfs: { IPFS, ipfsdCtl }
 } = adone;
 
-
-const df = DaemonFactory.create({ type: "proc" });
+const df = ipfsdCtl.create({ type: "proc" });
 
 const ipfsRef = "/ipfs/QmPFVLPmp9zv5Z5KUqLhe2EivAGccQW2r7M7jhVJGLZoZU";
 
@@ -46,7 +43,7 @@ describe("name", () => {
             this.timeout(50 * 1000);
             df.spawn({
                 exec: IPFS,
-                args: [`--pass ${hat()}`],
+                args: [`--pass ${hat()}`, "--offline"],
                 config: { Bootstrap: [] }
             }, (err, _ipfsd) => {
                 expect(err).to.not.exist();
@@ -148,7 +145,7 @@ describe("name", () => {
             this.timeout(40 * 1000);
             df.spawn({
                 exec: IPFS,
-                args: [`--pass ${hat()}`],
+                args: [`--pass ${hat()}`, "--offline"],
                 config: { Bootstrap: [] }
             }, (err, _ipfsd) => {
                 expect(err).to.not.exist();
@@ -159,40 +156,39 @@ describe("name", () => {
             });
         });
 
-        let s;
-
         afterEach(() => {
-            s.restore();
+            // sinon.restore();
         });
 
         after((done) => ipfsd.stop(done));
 
         it("should republish entries after 60 seconds", function (done) {
             this.timeout(120 * 1000);
-            s = spy(node._ipns.republisher, "_republishEntries");
+            const s =/*sinon.*/spy(node._ipns.republisher, "_republishEntries");
 
             setTimeout(() => {
                 expect(node._ipns.republisher._republishEntries.calledOnce).to.equal(true);
+                s.restore();
                 done();
             }, 60 * 1000);
         });
 
         it("should error if run republish again", function (done) {
             this.timeout(120 * 1000);
-            s = spy(node._ipns.republisher, "_republishEntries");
+            const s = /*sinon.*/spy(node._ipns.republisher, "_republishEntries");
 
             try {
                 node._ipns.republisher.start();
             } catch (err) {
                 expect(err).to.exist();
                 expect(err.code).to.equal("ERR_REPUBLISH_ALREADY_RUNNING"); // already runs when starting
+                s.restore();
                 done();
             }
         });
     });
 
-    // TODO: unskip when https://github.com/ipfs/js-ipfs/pull/856 is merged
-    describe.skip("work with dht", () => {
+    describe("work with dht", () => {
         let nodes;
         let nodeA;
         let nodeB;
@@ -202,8 +198,18 @@ describe("name", () => {
         const createNode = (callback) => {
             df.spawn({
                 exec: IPFS,
-                args: [`--pass ${hat()}`, "--enable-dht-experiment"],
-                config: { Bootstrap: [] }
+                args: [`--pass ${hat()}`],
+                config: {
+                    Bootstrap: [],
+                    Discovery: {
+                        MDNS: {
+                            Enabled: false
+                        },
+                        webRTCStar: {
+                            Enabled: false
+                        }
+                    }
+                }
             }, callback);
         };
 
@@ -231,7 +237,8 @@ describe("name", () => {
                     idA = ids[0];
                     parallel([
                         (cb) => nodeC.swarm.connect(ids[0].addresses[0], cb), // C => A
-                        (cb) => nodeC.swarm.connect(ids[1].addresses[0], cb) // C => B
+                        (cb) => nodeC.swarm.connect(ids[1].addresses[0], cb), // C => B
+                        (cb) => nodeA.swarm.connect(ids[1].addresses[0], cb) // A => B
                     ], done);
                 });
             });
@@ -244,12 +251,12 @@ describe("name", () => {
         });
 
         it("should publish and then resolve correctly with the default options", function (done) {
-            this.timeout(90 * 1000);
+            this.timeout(380 * 1000);
             publishAndResolve(nodeA, nodeB, ipfsRef, { resolve: false }, idA.id, {}, done);
         });
 
         it("should recursively resolve to an IPFS hash", function (done) {
-            this.timeout(180 * 1000);
+            this.timeout(360 * 1000);
             const keyName = hat();
 
             nodeA.key.gen(keyName, { type: "rsa", size: 2048 }, (err, key) => {
@@ -268,8 +275,8 @@ describe("name", () => {
         });
     });
 
-    describe("errors",fixtures
-        if (!isNode) {fixtures
+    describe("errors", () => {
+        if (!isNode) {
             return;
         }
 
@@ -277,12 +284,22 @@ describe("name", () => {
         let nodeId;
         let ipfsd;
 
-        before(functiofixtures
-            this.timeofixtures
-            df.spawn({fixtures
+        before(function (done) {
+            this.timeout(40 * 1000);
+            df.spawn({
                 exec: IPFS,
                 args: [`--pass ${hat()}`],
-                config: { Bootstrap: [] }
+                config: {
+                    Bootstrap: [],
+                    Discovery: {
+                        MDNS: {
+                            Enabled: false
+                        },
+                        webRTCStar: {
+                            Enabled: false
+                        }
+                    }
+                }
             }, (err, _ipfsd) => {
                 expect(err).to.not.exist();
                 ipfsd = _ipfsd;
@@ -315,7 +332,7 @@ describe("name", () => {
         });
 
         it("should error to publish if _updateOrCreateRecord fails", (done) => {
-            const stb = stub(node._ipns.publisher, "_updateOrCreateRecord").callsArgWith(4, "error");
+            const stb = /*sinon.*/stub(node._ipns.publisher, "_updateOrCreateRecord").callsArgWith(4, "error");
 
             node.name.publish(ipfsRef, { resolve: false }, (err) => {
                 expect(err).to.exist();
@@ -333,7 +350,7 @@ describe("name", () => {
         });
 
         it("should error to publish if receives an invalid datastore key", (done) => {
-            const stb = stub(Key, "isKey").returns(false);
+            const stb = /*sinon.*/stub(Key, "isKey").returns(false);
 
             node.name.publish(ipfsRef, { resolve: false }, (err) => {
                 expect(err).to.exist();
@@ -345,7 +362,7 @@ describe("name", () => {
         });
 
         it("should error to publish if we receive a unexpected error getting from datastore", (done) => {
-            const stb = stub(node._ipns.publisher._datastore, "get").callsArgWith(1, "error-unexpected");
+            const stb = /*sinon.*/stub(node._ipns.publisher._datastore, "get").callsArgWith(1, "error-unexpected");
 
             node.name.publish(ipfsRef, { resolve: false }, (err) => {
                 expect(err).to.exist();
@@ -357,7 +374,7 @@ describe("name", () => {
         });
 
         it("should error to publish if we receive a unexpected error putting to datastore", (done) => {
-            const stb = stub(node._ipns.publisher._datastore, "put").callsArgWith(2, "error-unexpected");
+            const stb = /*sinon.*/stub(node._ipns.publisher._datastore, "put").callsArgWith(2, "error-unexpected");
 
             node.name.publish(ipfsRef, { resolve: false }, (err) => {
                 expect(err).to.exist();
@@ -385,7 +402,7 @@ describe("name", () => {
         });
 
         it("should publish and then fail to resolve if receive error getting from datastore", (done) => {
-            const stb = stub(node._ipns.resolver._routing, "get").callsArgWith(1, "error-unexpected");
+            const stb = /*sinon.*/stub(node._ipns.resolver._routing, "get").callsArgWith(1, "error-unexpected");
 
             node.name.publish(ipfsRef, { resolve: false }, (err, res) => {
                 expect(err).to.not.exist();
@@ -401,7 +418,7 @@ describe("name", () => {
         });
 
         it("should publish and then fail to resolve if does not find the record", (done) => {
-            const stb = stub(node._ipns.resolver._routing, "get").callsArgWith(1, { code: "ERR_NOT_FOUND" });
+            const stb = /*sinon.*/stub(node._ipns.resolver._routing, "get").callsArgWith(1, { code: "ERR_NOT_FOUND" });
 
             node.name.publish(ipfsRef, { resolve: false }, (err, res) => {
                 expect(err).to.not.exist();
@@ -417,7 +434,7 @@ describe("name", () => {
         });
 
         it("should publish and then fail to resolve if does not receive a buffer", (done) => {
-            const stb = stub(node._ipns.resolver._routing, "get").callsArgWith(1, undefined, "data");
+            const stb = /*sinon.*/stub(node._ipns.resolver._routing, "get").callsArgWith(1, undefined, "data");
 
             node.name.publish(ipfsRef, { resolve: false }, (err, res) => {
                 expect(err).to.not.exist();
@@ -452,8 +469,18 @@ describe("name", () => {
             this.timeout(40 * 1000);
             df.spawn({
                 exec: IPFS,
-                args: [`--pass ${hat()}`],
-                config: { Bootstrap: [] }
+                args: [`--pass ${hat()}`, "--offline"],
+                config: {
+                    Bootstrap: [],
+                    Discovery: {
+                        MDNS: {
+                            Enabled: false
+                        },
+                        webRTCStar: {
+                            Enabled: false
+                        }
+                    }
+                }
             }, (err, _ipfsd) => {
                 expect(err).to.not.exist();
                 node = _ipfsd.api;

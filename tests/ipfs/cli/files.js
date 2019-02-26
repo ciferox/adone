@@ -1,18 +1,12 @@
-/**
- * eslint-env mocha
- */
-
-
 const fs = require("fs");
 const os = require("os");
-const expect = require("chai").expect;
 const path = require("path");
 const hat = require("hat");
 const compareDir = require("dir-compare").compareSync;
 const rimraf = require("rimraf").sync;
 const CID = require("cids");
 const mh = require("multihashes");
-const runOnAndOff = require("../utils/on-and-off");
+const runOnAndOff = require("../utils/on_and_off");
 const clean = require("../utils/clean");
 
 // TODO: Test against all algorithms Object.keys(mh.names)
@@ -27,9 +21,12 @@ const HASH_ALGS = [
     "keccak-512"
 ];
 
+const initFilesPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/ipfs/init-files", ...args);
+const fixturePath = (...args) => adone.std.path.join(__dirname, "..", "fixtures", ...args);
+
 describe("files", () => runOnAndOff((thing) => {
     let ipfs;
-    const readme = fs.readFileSync(path.join(process.cwd(), "/src/init-files/init-docs/readme"))
+    const readme = fs.readFileSync(path.join(adone.ROOT_PATH, "lib/ipfs/ipfs/init-files/init-docs/readme"))
         .toString("utf-8");
 
     const recursiveGetDirResults = [
@@ -128,7 +125,7 @@ describe("files", () => runOnAndOff((thing) => {
     it("add with progress", function () {
         this.timeout(30 * 1000);
 
-        return ipfs("add -p src/init-files/init-docs/readme")
+        return ipfs(`add -p ${initFilesPath("init-docs/readme")}`)
             .then((out) => {
                 expect(out)
                     .to.eql("added QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB readme\n");
@@ -138,7 +135,7 @@ describe("files", () => runOnAndOff((thing) => {
     it("add", function () {
         this.timeout(30 * 1000);
 
-        return ipfs("add src/init-files/init-docs/readme")
+        return ipfs(`add ${initFilesPath("init-docs/readme")}`)
             .then((out) => {
                 expect(out)
                     .to.eql("added QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB readme\n");
@@ -148,7 +145,7 @@ describe("files", () => runOnAndOff((thing) => {
     it("add multiple", function () {
         this.timeout(30 * 1000);
 
-        return ipfs("add", "src/init-files/init-docs/readme", "test/fixtures/odd-name-[v0]/odd name [v1]/hello", "--wrap-with-directory")
+        return ipfs("add", initFilesPath("init-docs/readme"), fixturePath("odd-name-[v0]/odd name [v1]/hello"), "--wrap-with-directory")
             .then((out) => {
                 expect(out)
                     .to.include("added QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB readme\n");
@@ -160,7 +157,7 @@ describe("files", () => runOnAndOff((thing) => {
     it("add alias", function () {
         this.timeout(30 * 1000);
 
-        return ipfs("add src/init-files/init-docs/readme")
+        return ipfs(`add ${initFilesPath("init-docs/readme")}`)
             .then((out) => {
                 expect(out)
                     .to.eql("added QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB readme\n");
@@ -170,7 +167,7 @@ describe("files", () => runOnAndOff((thing) => {
     it("add recursively test", function () {
         this.timeout(60 * 1000);
 
-        return ipfs("add -r test/fixtures/test-data/recursive-get-dir")
+        return ipfs(`add -r ${fixturePath("test-data/recursive-get-dir")}`)
             .then((out) => {
                 expect(out).to.eql(`${recursiveGetDirResults.join("\n")}\n`);
             });
@@ -179,7 +176,7 @@ describe("files", () => runOnAndOff((thing) => {
     it("add directory with trailing slash test", function () {
         this.timeout(30 * 1000);
 
-        return ipfs("add -r test/fixtures/test-data/recursive-get-dir/")
+        return ipfs(`add -r ${fixturePath("test-data/recursive-get-dir/")}`)
             .then((out) => {
                 expect(out).to.eql(`${recursiveGetDirResults.join("\n")}\n`);
             });
@@ -193,7 +190,7 @@ describe("files", () => runOnAndOff((thing) => {
             "added QmXJGoo27bg7ExNAtr9vRcivxDwcfHtkxatGno9HrUdR16 odd-name-[v0]"
         ];
 
-        return ipfs("add -r test/fixtures/odd-name-[v0]")
+        return ipfs(`add -r ${fixturePath("odd-name-[v0]")}`)
             .then((out) => {
                 expect(out).to.eql(`${expected.join("\n")}\n`);
             });
@@ -202,7 +199,7 @@ describe("files", () => runOnAndOff((thing) => {
     it("add and wrap with a directory", function () {
         this.timeout(30 * 1000);
 
-        return ipfs("add -w src/init-files/init-docs/readme").then((out) => {
+        return ipfs(`add -w ${initFilesPath("init-docs/readme")}`).then((out) => {
             expect(out).to.be.eql(`${[
                 "added QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB readme",
                 "added QmapdaVPjHXdcswef82FnGQUauMNpk9xYFkLDZKgAxhMwq"
@@ -213,7 +210,7 @@ describe("files", () => runOnAndOff((thing) => {
     it("add with cid-version=0", function () {
         this.timeout(30 * 1000);
 
-        return ipfs("add src/init-files/init-docs/readme --cid-version=0").then((out) => {
+        return ipfs(`add ${initFilesPath("init-docs/readme")} --cid-version=0`).then((out) => {
             expect(out)
                 .to.eql("added QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB readme\n");
         });
@@ -222,7 +219,7 @@ describe("files", () => runOnAndOff((thing) => {
     it("add with cid-version=1 < default max chunk size", function () {
         this.timeout(30 * 1000);
 
-        return ipfs("add test/fixtures/less-than-default-max-chunk-size --cid-version=1")
+        return ipfs(`add ${fixturePath("less-than-default-max-chunk-size")} --cid-version=1`)
             .then((out) => {
                 expect(out)
                     .to.eql("added zb2rhh5LdXumxQfNZCqV8pmcC56LX71ERgf2qCNQsmZnwYYx9 less-than-default-max-chunk-size\n");
@@ -232,17 +229,17 @@ describe("files", () => runOnAndOff((thing) => {
     it("add with cid-version=1 > default max chunk size", function () {
         this.timeout(30 * 1000);
 
-        return ipfs("add test/fixtures/greater-than-default-max-chunk-size --cid-version=1")
+        return ipfs(`add ${fixturePath("greater-than-default-max-chunk-size")} --cid-version=1`)
             .then((out) => {
                 expect(out)
-                    .to.eql("added zdj7WbyyZoWVifUHUe58SNS184PpN8qAuCP6HpAY91iA8CveT greater-than-default-max-chunk-size\n");
+                    .to.eql("added zdj7We8b7taMubqinMgnZ9HFUiv17bm5zjJkYnqpfxXhqx5sY greater-than-default-max-chunk-size\n");
             });
     });
 
     it("add with cid-version=1 and raw-leaves=false < default max chunk size", function () {
         this.timeout(30 * 1000);
 
-        return ipfs("add test/fixtures/less-than-default-max-chunk-size --cid-version=1 --raw-leaves=false")
+        return ipfs(`add ${fixturePath("less-than-default-max-chunk-size")} --cid-version=1 --raw-leaves=false`)
             .then((out) => {
                 expect(out)
                     .to.eql("added zdj7WWPWpmpFkrWJBhUEZ4QkGumsFsEdkaaEGs7U4dzJraogp less-than-default-max-chunk-size\n");
@@ -252,17 +249,17 @@ describe("files", () => runOnAndOff((thing) => {
     it("add with cid-version=1 and raw-leaves=false > default max chunk size", function () {
         this.timeout(30 * 1000);
 
-        return ipfs("add test/fixtures/greater-than-default-max-chunk-size --cid-version=1 --raw-leaves=false")
+        return ipfs(`add ${fixturePath("greater-than-default-max-chunk-size")} --cid-version=1 --raw-leaves=false`)
             .then((out) => {
                 expect(out)
-                    .to.eql("added zdj7WmYojH6vMkDQFNDNwUy2ZawrggqAhS6jjRJwb1C4KXZni greater-than-default-max-chunk-size\n");
+                    .to.eql("added zdj7WW4sSVxNKLJXQSzy3RD7msG3SS4WgdGEdJzDZ7swYv65p greater-than-default-max-chunk-size\n");
             });
     });
 
     it("add with cid-version=1 and raw-leaves=true < default max chunk size", function () {
         this.timeout(30 * 1000);
 
-        return ipfs("add test/fixtures/less-than-default-max-chunk-size --cid-version=1 --raw-leaves=true")
+        return ipfs(`add ${fixturePath("less-than-default-max-chunk-size")} --cid-version=1 --raw-leaves=true`)
             .then((out) => {
                 expect(out)
                     .to.eql("added zb2rhh5LdXumxQfNZCqV8pmcC56LX71ERgf2qCNQsmZnwYYx9 less-than-default-max-chunk-size\n");
@@ -272,10 +269,10 @@ describe("files", () => runOnAndOff((thing) => {
     it("add with cid-version=1 and raw-leaves=true > default max chunk size", function () {
         this.timeout(30 * 1000);
 
-        return ipfs("add test/fixtures/greater-than-default-max-chunk-size --cid-version=1 --raw-leaves=true")
+        return ipfs(`add ${fixturePath("greater-than-default-max-chunk-size")} --cid-version=1 --raw-leaves=true`)
             .then((out) => {
                 expect(out)
-                    .to.eql("added zdj7WbyyZoWVifUHUe58SNS184PpN8qAuCP6HpAY91iA8CveT greater-than-default-max-chunk-size\n");
+                    .to.eql("added zdj7We8b7taMubqinMgnZ9HFUiv17bm5zjJkYnqpfxXhqx5sY greater-than-default-max-chunk-size\n");
             });
     });
 
@@ -293,7 +290,7 @@ describe("files", () => runOnAndOff((thing) => {
     it("add --quiet", function () {
         this.timeout(30 * 1000);
 
-        return ipfs("add -q src/init-files/init-docs/readme")
+        return ipfs(`add -q ${initFilesPath("init-docs/readme")}`)
             .then((out) => {
                 expect(out)
                     .to.eql("QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB\n");
@@ -303,7 +300,7 @@ describe("files", () => runOnAndOff((thing) => {
     it("add --quieter", function () {
         this.timeout(30 * 1000);
 
-        return ipfs("add -Q -w test/fixtures/test-data/hello")
+        return ipfs(`add -Q -w ${fixturePath("test-data/hello")}`)
             .then((out) => {
                 expect(out)
                     .to.eql("QmYRMUVULBfj7WrdPESnwnyZmtayN6Sdrwh1nKcQ9QgQeZ\n");
@@ -313,7 +310,7 @@ describe("files", () => runOnAndOff((thing) => {
     it("add --silent", function () {
         this.timeout(30 * 1000);
 
-        return ipfs("add --silent src/init-files/init-docs/readme")
+        return ipfs(`add --silent ${initFilesPath("init-docs/readme")}`)
             .then((out) => {
                 expect(out)
                     .to.eql("");
@@ -321,7 +318,7 @@ describe("files", () => runOnAndOff((thing) => {
     });
 
     it("add --only-hash outputs correct hash", () => {
-        return ipfs("add --only-hash src/init-files/init-docs/readme")
+        return ipfs(`add --only-hash ${initFilesPath("init-docs/readme")}`)
             .then((out) =>
                 expect(out)
                     .to.eql("added QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB readme\n")
@@ -330,7 +327,7 @@ describe("files", () => runOnAndOff((thing) => {
 
     it("add --only-hash does not add a file to the datastore", function () {
         this.timeout(30 * 1000);
-        this.slow(10 * 1000);
+        // this.slow(10 * 1000);
         const content = String(Math.random());
         const filepath = path.join(os.tmpdir(), `${content}.txt`);
         fs.writeFileSync(filepath, content);
@@ -379,7 +376,7 @@ describe("files", () => runOnAndOff((thing) => {
         it(`add with hash=${name} and raw-leaves=false`, function () {
             this.timeout(30 * 1000);
 
-            return ipfs(`add src/init-files/init-docs/readme --hash=${name} --raw-leaves=false`)
+            return ipfs(`add ${initFilesPath("init-docs/readme")} --hash=${name} --raw-leaves=false`)
                 .then((out) => {
                     const hash = out.split(" ")[1];
                     const cid = new CID(hash);
@@ -391,7 +388,7 @@ describe("files", () => runOnAndOff((thing) => {
     it("should add and print CID encoded in specified base", function () {
         this.timeout(30 * 1000);
 
-        return ipfs("add test/fixtures/test-data/hello --cid-base=base64")
+        return ipfs(`add ${fixturePath("test-data/hello")} --cid-base=base64`)
             .then((out) => {
                 expect(out).to.eql("added mAXASIEbUSBS5xa8UHDqqt8BdxehE6tX5HxKFiwIeukV2i0wO hello\n");
             });
@@ -486,7 +483,7 @@ describe("files", () => runOnAndOff((thing) => {
                 );
 
                 const outDir = path.join(process.cwd(), "Qmaj2NmcyAXT8dFmZRRytE12wpcaHADzbChKToMEjBsj5Z");
-                const expectedDir = path.join(process.cwd(), "test", "fixtures", "test-data", "recursive-get-dir");
+                const expectedDir = fixturePath("test-data", "recursive-get-dir");
 
                 const compareResult = compareDir(outDir, expectedDir, {
                     compareContent: true,

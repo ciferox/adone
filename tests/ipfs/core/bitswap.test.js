@@ -2,19 +2,16 @@ const _ = require("lodash");
 const series = require("async/series");
 const waterfall = require("async/waterfall");
 const parallel = require("async/parallel");
-const Block = require("ipfs-block");
 const multiaddr = require("multiaddr");
 const isNode = require("detect-node");
 const multihashing = require("multihashing-async");
 const CID = require("cids");
 
-const IPFSFactory = require("ipfsd-ctl");
-
 const {
-    ipfs: { IPFS }
+    ipfs: { Block, IPFS, ipfsdCtl }
 } = adone;
 
-const makeBlock = function (callback) {
+function makeBlock(callback) {
     const d = Buffer.from(`IPFS is awesome ${Math.random()}`);
 
     multihashing(d, "sha2-256", (err, multihash) => {
@@ -23,9 +20,9 @@ const makeBlock = function (callback) {
         }
         callback(null, new Block(d, new CID(multihash)));
     });
-};
+}
 
-const wire = function (targetNode, dialerNode, callback) {
+function wire(targetNode, dialerNode, callback) {
     targetNode.id((err, identity) => {
         expect(err).to.not.exist();
         const addr = identity.addresses
@@ -43,22 +40,22 @@ const wire = function (targetNode, dialerNode, callback) {
 
         dialerNode.swarm.connect(targetAddr, callback);
     });
-};
+}
 
-const connectNodes = function (remoteNode, inProcNode, callback) {
+function connectNodes(remoteNode, inProcNode, callback) {
     series([
         (cb) => wire(remoteNode, inProcNode, cb),
         // need timeout so we wait for identify to happen.
         // This call is just to ensure identify happened
         (cb) => setTimeout(() => wire(inProcNode, remoteNode, cb), 500)
     ], callback);
-};
+}
 
 let nodes = [];
 
-const addNode = function (fDaemon, inProcNode, callback) {
+function addNode(fDaemon, inProcNode, callback) {
     fDaemon.spawn({
-        exec: adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/cli/bin.js"),
+        exec: adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/ipfs/cli/bin.js"),
         initOptions: { bits: 512 },
         config: {
             Addresses: {
@@ -76,7 +73,7 @@ const addNode = function (fDaemon, inProcNode, callback) {
         nodes.push(ipfsd);
         connectNodes(ipfsd.api, inProcNode, (err) => callback(err, ipfsd.api));
     });
-};
+}
 
 describe("bitswap", function () {
     this.timeout(80 * 1000);
@@ -86,8 +83,8 @@ describe("bitswap", function () {
     let fInProc;
 
     before(() => {
-        fDaemon = IPFSFactory.create({ type: "js" });
-        fInProc = IPFSFactory.create({ type: "proc" });
+        fDaemon = ipfsdCtl.create({ type: "js" });
+        fInProc = ipfsdCtl.create({ type: "proc" });
     });
 
     beforeEach(function (done) {

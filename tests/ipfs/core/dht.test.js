@@ -1,21 +1,22 @@
-const IPFSFactory = require("ipfsd-ctl");
-
 const {
-    ipfs: { IPFS }
+    ipfs: { IPFS, ipfsdCtl }
 } = adone;
 
 describe("dht", () => {
-    let ipfsd; let ipfs;
+    let ipfsd;
+    let ipfs;
 
     before(function (done) {
         this.timeout(30 * 1000);
 
-        const factory = IPFSFactory.create({ type: "proc" });
+        const factory = ipfsdCtl.create({ type: "proc" });
 
         factory.spawn({
             exec: IPFS,
             initOptions: { bits: 512 },
-            config: { Bootstrap: [] }
+            config: {
+                Bootstrap: []
+            }
         }, (err, _ipfsd) => {
             expect(err).to.not.exist();
             ipfsd = _ipfsd;
@@ -34,7 +35,7 @@ describe("dht", () => {
 
     describe("findprovs", () => {
         it("should callback with error for invalid CID input", (done) => {
-            ipfs.dht.findprovs("INVALID CID", (err) => {
+            ipfs.dht.findProvs("INVALID CID", (err) => {
                 expect(err).to.exist();
                 expect(err.code).to.equal("ERR_INVALID_CID");
                 done();

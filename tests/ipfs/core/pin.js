@@ -1,11 +1,13 @@
-const createTempRepo = require("../utils/create-repo-nodejs");
-const expectTimeout = require("../utils/expect-timeout");
+const createTempRepo = require("../utils/create_repo_nodejs");
+const expectTimeout = require("../utils/expect_timeout");
 
 const {
     is,
     ipfs: { IPFS },
-    std: { fs }
+    std: { fs, path }
 } = adone;
+
+const fixturePath = (...args) => path.join(__dirname, "..", "fixtures", ...args);
 
 // fixture structure:
 //  planets/
@@ -25,12 +27,10 @@ const pinTypes = {
     all: "all"
 };
 
-const fixture = (name) => adone.std.path.join(__dirname, "..", "fixtures", name);
-
 describe("pin", () => {
     const fixtures = [
-        fixture("planets/mercury/wiki.md"),
-        fixture("planets/solar-system.md")
+        fixturePath("planets/mercury/wiki.md"),
+        fixturePath("planets/solar-system.md")
     ].map((path) => ({
         path,
         content: fs.readFileSync(path)
@@ -40,7 +40,7 @@ describe("pin", () => {
     let pin;
     let repo;
 
-    function expectPinned(hash, type, pinned = true) {
+    const expectPinned = function (hash, type, pinned = true) {
         if (is.boolean(type)) {
             pinned = type;
             type = undefined;
@@ -48,9 +48,9 @@ describe("pin", () => {
 
         return pin._isPinnedWithType(hash, type || pinTypes.all)
             .then((result) => expect(result.pinned).to.eql(pinned));
-    }
+    };
 
-    function clearPins() {
+    const clearPins = function () {
         return pin.ls()
             .then((ls) => {
                 const pinsToRemove = ls
@@ -65,12 +65,17 @@ describe("pin", () => {
                     .map((out) => pin.rm(out.hash));
                 return Promise.all(pinsToRemove);
             });
-    }
+    };
 
     before(function (done) {
         this.timeout(20 * 1000);
         repo = createTempRepo();
-        ipfs = new IPFS({ repo });
+        ipfs = new IPFS({
+            repo,
+            config: {
+                Bootstrap: []
+            }
+        });
         ipfs.on("ready", () => {
             pin = ipfs.pin;
             ipfs.add(fixtures, done);

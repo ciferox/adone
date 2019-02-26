@@ -1,17 +1,14 @@
-/**
- * eslint-env mocha
- */
+const runOnAndOff = require("../utils/on_and_off");
 
-
-const expect = require("chai").expect;
-const runOnAndOff = require("../utils/on-and-off");
+const initFilesPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/ipfs/init-files", ...args);
+const fixturePath = (...args) => adone.std.path.join(__dirname, "..", "fixtures", ...args);
 
 describe("ls", () => runOnAndOff((thing) => {
     let ipfs;
 
     before(() => {
         ipfs = thing.ipfs;
-        return ipfs("add -r test/fixtures/test-data/recursive-get-dir");
+        return ipfs(`add -r ${fixturePath("test-data/recursive-get-dir")}`);
     });
 
     it("prints added files", function () {
@@ -72,7 +69,7 @@ describe("ls", () => runOnAndOff((thing) => {
     });
 
     it("recursively follows folders, -r", function () {
-        this.slow(2000);
+        // this.slow(2000);
         this.timeout(20 * 1000);
 
         return ipfs("ls -r /ipfs/Qmaj2NmcyAXT8dFmZRRytE12wpcaHADzbChKToMEjBsj5Z/init-docs")

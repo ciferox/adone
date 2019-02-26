@@ -1,18 +1,17 @@
 const hat = require("hat");
 
-const IPFSFactory = require("ipfsd-ctl");
-
 const {
-    ipfs: { IPFS }
+    ipfs: { IPFS, ipfsdCtl }
 } = adone;
 
 describe("block", () => {
-    let ipfsd; let ipfs;
+    let ipfsd;
+    let ipfs;
 
     before(function (done) {
         this.timeout(20 * 1000);
 
-        const factory = IPFSFactory.create({ type: "proc" });
+        const factory = ipfsdCtl.create({ type: "proc" });
 
         factory.spawn({
             exec: IPFS,

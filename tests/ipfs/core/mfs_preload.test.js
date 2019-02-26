@@ -1,13 +1,5 @@
-/**
- * eslint max-nested-callbacks: ["error", 8]
- */
-/**
- * eslint-env mocha
- */
-
-
 const waitFor = require("../utils/wait_for");
-const mfsPreload = require(adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/core/mfs-preload"));
+const mfsPreload = require(adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/ipfs/core/mfs-preload"));
 
 const createMockFilesStat = (cids = []) => {
     let n = 0;
@@ -62,7 +54,7 @@ describe("MFS preload", () => {
                 // Slice off any extra CIDs it processed
                 const cids = mockPreload.cids.slice(0, expectedPreloadCids.length);
                 if (cids.length !== expectedPreloadCids.length) {
-                    return cb(null, false);
+                    return cb(null, false); 
                 }
                 cb(null, cids.every((cid, i) => cid === expectedPreloadCids[i]));
             };

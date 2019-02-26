@@ -1,0 +1,31 @@
+const {
+    ipfs: { isIPFS }
+} = adone;
+
+const debug = require('debug')
+const log = debug('jsipfs:ipns:path')
+log.error = debug('jsipfs:ipns:path:error')
+
+// resolves the given path by parsing out protocol-specific entries
+// (e.g. /ipns/<node-key>) and then going through the /ipfs/ entries and returning the final node
+const resolvePath = (ipfsNode, name, callback) => {
+    // ipns path
+    if (isIPFS.ipnsPath(name)) {
+        log(`resolve ipns path ${name}`)
+
+        return ipfsNode._ipns.resolve(name, callback)
+    }
+
+    // ipfs path
+    ipfsNode.dag.get(name.substring('/ipfs/'.length), (err, value) => {
+        if (err) {
+            return callback(err)
+        }
+
+        return callback(null, value)
+    })
+}
+
+module.exports = {
+    resolvePath
+}

@@ -2,13 +2,15 @@ const pull = require("pull-stream/pull");
 const drain = require("pull-stream/sinks/drain");
 const parallel = require("async/parallel");
 const series = require("async/series");
-const DaemonFactory = require("ipfsd-ctl");
 const isNode = require("detect-node");
 
-const df = DaemonFactory.create({ exec: adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/cli/bin.js") });
+const {
+    ipfs: { ipfsdCtl }
+} = adone;
 
-const dfProc = DaemonFactory.create({
-    exec: adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/core/index.js"),
+const df = ipfsdCtl.create({ exec: adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/ipfs/cli/bin.js") });
+const dfProc = ipfsdCtl.create({
+    exec: adone.ipfs.IPFS,
     type: "proc"
 });
 
@@ -23,7 +25,7 @@ const config = {
 };
 
 const spawnNode = function ({ dht = false, type = "js" }, cb) {
-    const args = dht ? ["--enable-dht-experiment"] : [];
+    const args = dht ? [] : ["--offline"];
     const factory = type === "js" ? df : dfProc;
     factory.spawn({
         args,

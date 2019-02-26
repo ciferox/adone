@@ -1,10 +1,4 @@
-/**
- * eslint-env mocha
- */
-
-
-const expect = require("chai").expect;
-const runOnAndOff = require("../utils/on-and-off");
+const runOnAndOff = require("../utils/on_and_off");
 
 describe("general cli options", () => runOnAndOff.off((thing) => {
     it("should handle --silent flag", () => {

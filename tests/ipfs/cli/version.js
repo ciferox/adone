@@ -1,16 +1,10 @@
-/**
- * eslint max-nested-callbacks: ["error", 5]
- */
-/**
- * eslint-env mocha
- */
-
-
 const os = require("os");
-const expect = require("chai").expect;
-const repoVersion = require("ipfs-repo").repoVersion;
-const pkgversion = require("../../package.json").version;
-const runOnAndOff = require("../utils/on-and-off");
+const pkgversion = adone.package.version;
+const runOnAndOff = require("../utils/on_and_off");
+
+const {
+    ipfs: { Repo: { repoVersion } }
+} = adone;
 
 describe("version", () => runOnAndOff((thing) => {
     let ipfs;

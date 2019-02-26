@@ -1,10 +1,4 @@
-/**
- * eslint-env mocha
- */
-
-
-const expect = require("chai").expect;
-const runOnAndOff = require("../utils/on-and-off");
+const runOnAndOff = require("../utils/on_and_off");
 
 describe("id", () => runOnAndOff((thing) => {
     let ipfs;

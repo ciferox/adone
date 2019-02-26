@@ -1,12 +1,6 @@
-/**
- * eslint-env mocha
- */
+const { repoVersion } = adone.ipfs.Repo;
 
-
-const expect = require("chai").expect;
-const repoVersion = require("ipfs-repo").repoVersion;
-
-const runOnAndOff = require("../utils/on-and-off");
+const runOnAndOff = require("../utils/on_and_off");
 
 describe("repo", () => runOnAndOff((thing) => {
     let ipfs;

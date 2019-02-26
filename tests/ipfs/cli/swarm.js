@@ -1,29 +1,20 @@
-/**
- * eslint max-nested-callbacks: ["error", 8]
- */
-/**
- * eslint-env mocha
- */
-
-
-const chai = require("chai");
-const dirtyChai = require("dirty-chai");
-const expect = chai.expect;
-chai.use(dirtyChai);
 const series = require("async/series");
-const ipfsExec = require("../utils/ipfs-exec");
+const ipfsExec = require("../utils/ipfs_exec");
 
 const parallel = require("async/parallel");
 
-const DaemonFactory = require("ipfsd-ctl");
-const df = DaemonFactory.create({ type: "js" });
+const {
+    ipfs: { ipfsdCtl }
+} = adone;
+
+const df = ipfsdCtl.create({ type: "js" });
 
 const config = {
     Bootstrap: [],
     Discovery: {
         MDNS: {
             Enabled:
-        false
+                false
         }
     }
 };
@@ -34,14 +25,14 @@ describe("swarm", () => {
 
     const nodes = [];
     before(function (done) {
-    // CI takes longer to instantiate the daemon, so we need to increase the
-    // timeout for the before step
+        // CI takes longer to instantiate the daemon, so we need to increase the
+        // timeout for the before step
         this.timeout(80 * 1000);
 
         series([
             (cb) => {
                 df.spawn({
-                    exec: "./src/cli/bin.js",
+                    exec: adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/ipfs/cli/bin.js"),
                     config,
                     initOptions: { bits: 512 }
                 }, (err, node) => {
@@ -53,7 +44,7 @@ describe("swarm", () => {
             },
             (cb) => {
                 df.spawn({
-                    exec: "./src/cli/bin.js",
+                    exec: adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/ipfs/cli/bin.js"),
                     config,
                     initOptions: { bits: 512 }
                 }, (err, node) => {

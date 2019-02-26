@@ -1,27 +1,29 @@
-const tests = require("interface-ipfs-core");
-const CommonFactory = require("../utils/interface-common-factory");
+const tests = require("../interface");
+const CommonFactory = require("../utils/interface_common_factory");
 const isNode = require("detect-node");
-// const dnsFetchStub = require("../utils/dns-fetch-stub");
+const dnsFetchStub = require("../utils/dns_fetch_stub");
 
 const {
     is
 } = adone;
 
-describe("interface-ipfs-core tests", () => {
+describe("interface-ipfs-core tests", function () {
+    this.timeout(20 * 1000);
+
     // ipfs.dns in the browser calls out to https://ipfs.io/api/v0/dns.
     // The following code stubs self.fetch to return a static CID for calls
     // to https://ipfs.io/api/v0/dns?arg=ipfs.io.
-    // if (!isNode) {
-    //     const fetch = self.fetch;
+    if (!isNode) {
+        const fetch = self.fetch;
 
-    //     before(() => {
-    //         self.fetch = dnsFetchStub(fetch);
-    //     });
+        before(() => {
+            self.fetch = dnsFetchStub(fetch);
+        });
 
-    //     after(() => {
-    //         self.fetch = fetch;
-    //     });
-    // }
+        after(() => {
+            self.fetch = fetch;
+        });
+    }
 
     const defaultCommonFactory = CommonFactory.create();
 
@@ -35,20 +37,29 @@ describe("interface-ipfs-core tests", () => {
 
     tests.dag(defaultCommonFactory);
 
-    const dhtCommonFactory = CommonFactory.create({
+    tests.dht(CommonFactory.create({
         spawnOptions: {
-            initOptions: { bits: 512 },
-            EXPERIMENTAL: {
-                dht: true
-            },
             config: {
-                Bootstrap: []
-            }
+                Bootstrap: [],
+                Discovery: {
+                    MDNS: {
+                        Enabled: false
+                    },
+                    webRTCStar: {
+                        Enabled: false
+                    }
+                }
+            },
+            initOptions: { bits: 512 }
         }
-    });
-
-    tests.dht(dhtCommonFactory, {
-        skip: { reason: "TODO: unskip when https://github.com/ipfs/js-ipfs/pull/856 is merged" }
+    }), {
+        skip: isNode ? [
+            // dht.get
+            {
+                name: "should get a value after it was put on another node",
+                reason: "Needs https://github.com/ipfs/interface-ipfs-core/pull/383"
+            }
+        ] : true
     });
 
     tests.filesRegular(defaultCommonFactory, {
@@ -92,15 +103,37 @@ describe("interface-ipfs-core tests", () => {
 
     tests.name(CommonFactory.create({
         spawnOptions: {
-            args: ["--pass ipfs-is-awesome-software"],
-            initOptions: { bits: 512 }
+            args: ["--pass ipfs-is-awesome-software", "--offline"],
+            initOptions: { bits: 512 },
+            config: {
+                Bootstrap: [],
+                Discovery: {
+                    MDNS: {
+                        Enabled: false
+                    },
+                    webRTCStar: {
+                        Enabled: false
+                    }
+                }
+            }
         }
     }));
 
     tests.namePubsub(CommonFactory.create({
         spawnOptions: {
             args: ["--enable-namesys-pubsub"],
-            initOptions: { bits: 1024 }
+            initOptions: { bits: 1024 },
+            config: {
+                Bootstrap: [],
+                Discovery: {
+                    MDNS: {
+                        Enabled: false
+                    },
+                    webRTCStar: {
+                        Enabled: false
+                    }
+                }
+            }
         }
     }));
 
@@ -151,10 +184,6 @@ describe("interface-ipfs-core tests", () => {
                             cb = config;
                             config = null;
                         }
-
-                        config = config || {
-                            Bootstrap: []
-                        };
 
                         const spawnOptions = { repoPath, config, initOptions: { bits: 512 } };
 

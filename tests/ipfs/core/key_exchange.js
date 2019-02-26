@@ -1,11 +1,11 @@
 const hat = require("hat");
 
-// This gets replaced by `create-repo-browser.js` in the browser
-const createTempRepo = require("../utils/create-repo-nodejs.js");
-
 const {
     ipfs: { IPFS }
 } = adone;
+
+// This gets replaced by `create-repo-browser.js` in the browser
+const createTempRepo = require("../utils/create_repo_nodejs.js");
 
 describe("key exchange", () => {
     let ipfs;

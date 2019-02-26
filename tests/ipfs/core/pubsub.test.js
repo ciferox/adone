@@ -1,13 +1,9 @@
-/**
- * eslint max-nested-callbacks: ["error", 8]
- */
-
-
 const hat = require("hat");
-const createTempRepo = require("../utils/create-repo-nodejs");
+
+const createTempRepo = require("../utils/create_repo_nodejs");
 
 const {
-    ifps: { IPFS }
+    ipfs: { IPFS }
 } = adone;
 
 describe("pubsub disabled", () => {
@@ -54,7 +50,7 @@ describe("pubsub disabled", () => {
         try {
             const topic = hat();
             const handler = () => {
-                throw new Error("unexpected message"); 
+                throw new Error("unexpected message");
             };
             await ipfs.pubsub.subscribe(topic, handler);
         } catch (err) {
@@ -77,7 +73,7 @@ describe("pubsub disabled", () => {
         try {
             const topic = hat();
             const handler = () => {
-                throw new Error("unexpected message"); 
+                throw new Error("unexpected message");
             };
             await ipfs.pubsub.unsubscribe(topic, handler);
         } catch (err) {

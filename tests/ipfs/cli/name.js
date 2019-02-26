@@ -1,23 +1,15 @@
-/**
- * eslint max-nested-callbacks: ["error", 6]
- */
-/**
- * eslint-env mocha
- */
-
-
-const chai = require("chai");
-const dirtyChai = require("dirty-chai");
-const expect = chai.expect;
-chai.use(dirtyChai);
-
 const hat = require("hat");
-const ipfsExec = require("../utils/ipfs-exec");
+const ipfsExec = require("../utils/ipfs_exec");
 
-const DaemonFactory = require("ipfsd-ctl");
-const df = DaemonFactory.create({ type: "js" });
+const {
+    ipfs: { ipfsdCtl }
+} = adone;
+const df = ipfsdCtl.create({ type: "js" });
 
 const checkAll = (bits) => (string) => bits.every((bit) => string.includes(bit));
+
+const initFilesPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/ipfs/init-files", ...args);
+
 
 describe("name", () => {
     describe("working locally", () => {
@@ -36,7 +28,7 @@ describe("name", () => {
             this.timeout(80 * 1000);
 
             df.spawn({
-                exec: "./src/cli/bin.js",
+                exec: adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/ipfs/cli/bin.js"),
                 config: {
                     Bootstrap: []
                 },
@@ -60,7 +52,7 @@ describe("name", () => {
                         expect(id).to.have.property("id");
                         nodeId = id.id;
 
-                        return ipfs("add src/init-files/init-docs/readme");
+                        return ipfs(`add ${initFilesPath("init-docs/readme")}`);
                     })
                     .then((out) => {
                         cidAdded = out.split(" ")[1];
@@ -185,7 +177,7 @@ describe("name", () => {
         });
     });
 
-    describe.skip("using dht", () => {
+    describe("using dht", () => {
         const passPhrase = hat();
         const pass = `--pass ${passPhrase}`;
         const name = `test-key-${hat()}`;
@@ -201,11 +193,19 @@ describe("name", () => {
             this.timeout(80 * 1000);
 
             df.spawn({
-                exec: "./src/cli/bin.js",
+                exec: adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/ipfs/cli/bin.js"),
                 config: {
-                    Bootstrap: []
+                    Bootstrap: [],
+                    Discovery: {
+                        MDNS: {
+                            Enabled: false
+                        },
+                        webRTCStar: {
+                            Enabled: false
+                        }
+                    }
                 },
-                args: ["--pass", passPhrase, "--enable-dht-experiment"],
+                args: ["--pass", passPhrase],
                 initOptions: { bits: 512 }
             }, (err, _ipfsd) => {
                 expect(err).to.not.exist();
@@ -225,7 +225,7 @@ describe("name", () => {
                         expect(id).to.have.property("id");
                         nodeId = id.id;
 
-                        return ipfs("add src/init-files/init-docs/readme");
+                        return ipfs(`add ${initFilesPath("init-docs/readme")}`);
                     })
                     .then((out) => {
                         cidAdded = out.split(" ")[1];

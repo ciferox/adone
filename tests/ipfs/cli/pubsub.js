@@ -1,30 +1,26 @@
-/**
- * eslint max-nested-callbacks: ["error", 8]
- */
-/**
- * eslint-env mocha
- */
-
-
-const chai = require("chai");
-const dirtyChai = require("dirty-chai");
-const expect = chai.expect;
-chai.use(dirtyChai);
 const delay = require("delay");
 const series = require("async/series");
-const ipfsExec = require("../utils/ipfs-exec");
-const IPFS = require("../../src");
+const ipfsExec = require("../utils/ipfs_exec");
 
-const DaemonFactory = require("ipfsd-ctl");
-const df = DaemonFactory.create({ type: "js" });
+const {
+    ipfs: { IPFS, ipfsdCtl }
+} = adone;
+
+const df = ipfsdCtl.create({ type: "js" });
 
 const config = {
     Bootstrap: [],
     Discovery: {
         MDNS: {
             Enabled:
-        false
+                false
         }
+    }
+};
+
+const ignoreKill = function (err) {
+    if (!err.killed) {
+        throw err;
     }
 };
 
@@ -44,7 +40,7 @@ describe("pubsub", function () {
     before(function (done) {
         this.timeout(60 * 1000);
 
-        DaemonFactory
+        ipfsdCtl
             .create({ type: "proc" })
             .spawn({
                 exec: IPFS,
@@ -65,7 +61,7 @@ describe("pubsub", function () {
         df.spawn({
             initOptions: { bits: 512 },
             args: ["--enable-pubsub-experiment"],
-            exec: "./src/cli/bin.js",
+            exec: adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/ipfs/cli/bin.js"),
             config
         }, (err, _ipfsd) => {
             expect(err).to.not.exist();
@@ -150,21 +146,15 @@ describe("pubsub", function () {
             (cb) => node.swarm.connect(peerAddress, cb),
             (cb) => node.pubsub.subscribe(topicC, handler, cb)
         ],
-        (err) => {
-            expect(err).to.not.exist();
-            sub = cli(`pubsub sub ${topicC}`);
+            (err) => {
+                expect(err).to.not.exist();
+                sub = cli(`pubsub sub ${topicC}`);
 
-            return Promise.all([
-                sub.catch(ignoreKill),
-                delay(1000)
-                    .then(() => cli(`pubsub pub ${topicC} world`))
-            ]);
-        });
+                return Promise.all([
+                    sub.catch(ignoreKill),
+                    delay(1000)
+                        .then(() => cli(`pubsub pub ${topicC} world`))
+                ]);
+            });
     });
 });
-
-function ignoreKill(err) {
-    if (!err.killed) {
-        throw err;
-    }
-}

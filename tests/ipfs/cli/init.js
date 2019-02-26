@@ -1,15 +1,13 @@
-/**
- * eslint-env mocha
- */
-
-
-const expect = require("chai").expect;
 const path = require("path");
 const fs = require("fs");
 const clean = require("../utils/clean");
 const hat = require("hat");
-const ipfsExec = require("../utils/ipfs-exec");
+const ipfsExec = require("../utils/ipfs_exec");
 const os = require("os");
+
+const initFilesPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/ipfs/init-files", ...args);
+const fixturePath = (...args) => adone.std.path.join(__dirname, "..", "fixtures", ...args);
+
 
 describe("init", function () {
     this.timeout(40 * 1000);
@@ -17,7 +15,7 @@ describe("init", function () {
     let repoPath;
     let ipfs;
 
-    const readme = fs.readFileSync(path.join(process.cwd(), "/src/init-files/init-docs/readme"))
+    const readme = fs.readFileSync(initFilesPath("init-docs/readme"))
         .toString("utf-8");
 
     const repoExistsSync = (p) => fs.existsSync(path.join(repoPath, p));

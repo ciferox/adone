@@ -1,18 +1,14 @@
-/**
- * eslint-env browser
- */
-
 const http = require("http");
 const toUri = require("multiaddr-to-uri");
 const URL = require("url").URL || self.URL;
 const errCode = require("err-code");
 
-const defaultPort = 1138;
-const defaultAddr = `/dnsaddr/localhost/tcp/${defaultPort}`;
-
 const {
     is
 } = adone;
+
+const defaultPort = 1138;
+const defaultAddr = `/dnsaddr/localhost/tcp/${defaultPort}`;
 
 module.exports.defaultAddr = defaultAddr;
 
@@ -33,6 +29,7 @@ module.exports.createNode = () => {
             res.end();
             return;
         }
+
         if (req.url.startsWith("/api/v0/refs")) {
             const arg = new URL(`https://ipfs.io${req.url}`).searchParams.get("arg");
             cids = cids.concat(arg);
@@ -90,7 +87,7 @@ const getPreloadCids = (addr, cb) => {
 
         res.on("error", cb);
         res.on("data", (chunk) => {
-            data += chunk; 
+            data += chunk;
         });
 
         res.on("end", () => {
@@ -157,7 +154,7 @@ module.exports.waitForCids = (cids, opts, cb) => {
     const checkForCid = () => {
         getPreloadCids(opts.addr, (err, preloadCids) => {
             if (err) {
-                return cb(err);
+                return cb(err); 
             }
 
             // See if our cached preloadCids includes all the cids we're looking for.

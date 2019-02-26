@@ -1,7 +1,10 @@
-const runOn = require("../utils/on-and-off").on;
-const PeerId = require("peer-id");
+const runOn = require("../utils/on_and_off").on;
 const CID = require("cids");
 const waitFor = require("../utils/wait_for");
+
+const {
+    ipfs: { libp2p: { PeerId } }
+} = adone;
 
 describe("bitswap", () => runOn((thing) => {
     let ipfs;

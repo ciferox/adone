@@ -4,15 +4,12 @@ const waterfall = require("async/waterfall");
 const multiaddr = require("multiaddr");
 const crypto = require("crypto");
 
-const DaemonFactory = require("ipfsd-ctl");
-
 const {
-    ipfs: { IPFS },
-    is
+    is,
+    ipfs: { IPFS, ipfsdCtl }
 } = adone;
 
-const procDf = DaemonFactory.create({ type: "proc", exec: IPFS });
-
+const procDf = ipfsdCtl.create({ type: "proc", exec: IPFS });
 
 const baseConf = {
     Bootstrap: [],

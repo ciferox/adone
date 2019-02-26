@@ -1,4 +1,6 @@
-
+const {
+    is
+} = adone;
 
 // Wait for async function `test` to callback(null, true) or timeout after
 // options.timeout milliseconds.

@@ -1,17 +1,18 @@
 const series = require("async/series");
 const waterfall = require("async/waterfall");
 const parallel = require("async/parallel");
+const os = require("os");
+const path = require("path");
 const hat = require("hat");
 
 const isNode = require("detect-node");
 
 const {
-    ipfs: { IPFS },
-    std: { path, os }
+    ipfs: { IPFS }
 } = adone;
 
 // This gets replaced by `create-repo-browser.js` in the browser
-const createTempRepo = require("../utils/create-repo-nodejs.js");
+const createTempRepo = require("../utils/create_repo_nodejs.js/index.js");
 
 describe("create node", () => {
     let tempRepo;
@@ -126,11 +127,9 @@ describe("create node", () => {
     });
 
     it("should be silent", function (done) {
-        this.timeout(10 * 1000);
+        this.timeout(30 * 1000);
 
-        /**
-         * const s =
-         */spy(console, "log");
+        spy(console, "log");
 
         const ipfs = new IPFS({
             silent: true,

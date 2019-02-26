@@ -1,15 +1,16 @@
-const fs = require("fs");
 const fromB58String = require("multihashes").fromB58String;
 
 // This gets replaced by `create-repo-browser.js` in the browser
-const createTempRepo = require("../utils/create-repo-nodejs.js");
-const utils = require(adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/core/utils"));
+const createTempRepo = require("../utils/create_repo_nodejs.js");
+const utils = require(adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/ipfs/core/utils"));
 
 const {
-    ipfs: { IPFS }
+    ipfs: { IPFS },
+    std: { fs, path }
 } = adone;
 
-const fixture = (name) => adone.std.path.join(__dirname, "..", "fixtures", name);
+const fixturePath = (...args) => path.join(__dirname, "..", "fixtures", ...args);
+
 
 describe("utils", () => {
     const rootHash = "QmTAMavb995EHErSrKo7mB8dYkpaSJxu6ys1a6XJyB2sys";
@@ -101,10 +102,10 @@ describe("utils", () => {
     });
 
     describe("resolvePath", function () {
-        this.timeout(80 * 1000);
+        this.timeout(100 * 1000);
         const fixtures = [
-            fixture("planets/mercury/wiki.md"),
-            fixture("planets/solar-system.md")
+            fixturePath("planets/mercury/wiki.md"),
+            fixturePath("planets/solar-system.md")
         ].map((path) => ({
             path,
             content: fs.readFileSync(path)
@@ -116,7 +117,10 @@ describe("utils", () => {
         before((done) => {
             repo = createTempRepo();
             node = new IPFS({
-                repo
+                repo,
+                config: {
+                    Bootstrap: []
+                }
             });
             node.once("ready", () => node.add(fixtures, done));
         });

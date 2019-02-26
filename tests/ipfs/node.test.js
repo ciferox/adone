@@ -1,4 +1,6 @@
-// require("./cli/index.test");
-// require("./http-api");
-// require("./gateway");
+
+
+require("./cli");
+require("./http_api");
+require("./gateway");
 require("./core/node.js");

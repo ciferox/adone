@@ -1,28 +1,26 @@
-/**
- * eslint-env mocha
- */
-
-
-const chai = require("chai");
-const dirtyChai = require("dirty-chai");
-const expect = chai.expect;
-chai.use(dirtyChai);
-const API = require("../../src/http");
-const loadFixture = require("aegir/fixtures");
-const os = require("os");
-const path = require("path");
+const loadFixture = require("../aegir/fixtures");
 const hat = require("hat");
 const fileType = require("file-type");
 
-const bigFile = loadFixture("js/test/fixtures/15mb.random", "interface-ipfs-core");
+const {
+    std: { os, path }
+} = adone;
+
+const HttpApi = require(path.join(adone.ROOT_PATH, "lib/ipfs/ipfs/http"));
+
+
+const interfaceFixturePath = (...args) => adone.std.path.join(__dirname, "..", "interface", "fixtures", ...args);
+const fixturePath = (...args) => adone.std.path.join(__dirname, "test_folder", ...args);
+
+const bigFile = loadFixture(interfaceFixturePath("15mb.random"));
 const directoryContent = {
-    "index.html": loadFixture("test/gateway/test-folder/index.html"),
-    "nested-folder/hello.txt": loadFixture("test/gateway/test-folder/nested-folder/hello.txt"),
-    "nested-folder/ipfs.txt": loadFixture("test/gateway/test-folder/nested-folder/ipfs.txt"),
-    "nested-folder/nested.html": loadFixture("test/gateway/test-folder/nested-folder/nested.html"),
-    "cat-folder/cat.jpg": loadFixture("test/gateway/test-folder/cat-folder/cat.jpg"),
-    "unsniffable-folder/hexagons-xml.svg": loadFixture("test/gateway/test-folder/unsniffable-folder/hexagons-xml.svg"),
-    "unsniffable-folder/hexagons.svg": loadFixture("test/gateway/test-folder/unsniffable-folder/hexagons.svg")
+    "index.html": loadFixture(fixturePath("index.html")),
+    "nested-folder/hello.txt": loadFixture(fixturePath("nested-folder/hello.txt")),
+    "nested-folder/ipfs.txt": loadFixture(fixturePath("nested-folder/ipfs.txt")),
+    "nested-folder/nested.html": loadFixture(fixturePath("nested-folder/nested.html")),
+    "cat-folder/cat.jpg": loadFixture(fixturePath("cat-folder/cat.jpg")),
+    "unsniffable-folder/hexagons-xml.svg": loadFixture(fixturePath("unsniffable-folder/hexagons-xml.svg")),
+    "unsniffable-folder/hexagons.svg": loadFixture(fixturePath("unsniffable-folder/hexagons.svg"))
 };
 
 describe("HTTP Gateway", function () {
@@ -35,7 +33,7 @@ describe("HTTP Gateway", function () {
         this.timeout(60 * 1000);
         const repoPath = path.join(os.tmpdir(), `/ipfs-${hat()}`);
 
-        http.api = new API({
+        http.api = new HttpApi({
             repo: repoPath,
             init: true,
             config: {

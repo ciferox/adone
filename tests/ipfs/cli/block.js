@@ -1,10 +1,6 @@
-/**
- * eslint-env mocha
- */
+const runOnAndOff = require("../utils/on_and_off");
 
-
-const expect = require("chai").expect;
-const runOnAndOff = require("../utils/on-and-off");
+const fixturePath = (...args) => adone.std.path.join(__dirname, "..", "fixtures", ...args);
 
 describe("block", () => runOnAndOff((thing) => {
     let ipfs;
@@ -15,7 +11,7 @@ describe("block", () => runOnAndOff((thing) => {
 
     it("put", function () {
         this.timeout(40 * 1000);
-        return ipfs("block put test/fixtures/test-data/hello").then((out) => {
+        return ipfs(`block put ${fixturePath("test-data/hello")}`).then((out) => {
             expect(out).to.eql("QmZjTnYw2TFhn9Nn7tjmPSoTBoY7YRkwPzwSrSbabY24Kp\n");
         });
     });
@@ -23,7 +19,7 @@ describe("block", () => runOnAndOff((thing) => {
     it("put with flags, format and mhtype", function () {
         this.timeout(40 * 1000);
 
-        return ipfs("block put --format eth-block --mhtype keccak-256 test/fixtures/test-data/eth-block")
+        return ipfs(`block put --format eth-block --mhtype keccak-256 ${fixturePath("test-data/eth-block")}`)
             .then((out) =>
                 expect(out).to.eql("z43AaGF23fmvRnDP56Ub9WcJCfzSfqtmzNCCvmz5eudT8dtdCDS\n"));
     });
@@ -31,7 +27,7 @@ describe("block", () => runOnAndOff((thing) => {
     it("should put and print CID encoded in specified base", function () {
         this.timeout(40 * 1000);
 
-        return ipfs("block put test/fixtures/test-data/hello --cid-base=base64").then((out) => {
+        return ipfs(`block put ${fixturePath("test-data/hello")} --cid-base=base64`).then((out) => {
             expect(out).to.eql("mAXASIKlIkE8vD0ebj4GXaUswGEsNLtHBzSoewPuF0pmhkqRH\n");
         });
     });
@@ -46,7 +42,7 @@ describe("block", () => runOnAndOff((thing) => {
     it("get block from file without a final newline", function () {
         this.timeout(40 * 1000);
 
-        return ipfs("block put test/fixtures/test-data/no-newline").then((out) => {
+        return ipfs(`block put ${fixturePath("test-data/no-newline")}`).then((out) => {
             expect(out).to.eql("QmTwbQs4sGcCiPxV97SpbHS7QgmVg9SiKxcG1AcF1Ly2SL\n");
             return ipfs("block get QmTwbQs4sGcCiPxV97SpbHS7QgmVg9SiKxcG1AcF1Ly2SL");
         })
@@ -68,7 +64,7 @@ describe("block", () => runOnAndOff((thing) => {
     it("should stat and print CID encoded in specified base", function () {
         this.timeout(80 * 1000);
 
-        return ipfs("block put test/fixtures/test-data/hello")
+        return ipfs(`block put ${fixturePath("test-data/hello")}`)
             .then((out) => {
                 expect(out).to.eql("QmZjTnYw2TFhn9Nn7tjmPSoTBoY7YRkwPzwSrSbabY24Kp\n");
                 return ipfs("block stat QmZjTnYw2TFhn9Nn7tjmPSoTBoY7YRkwPzwSrSbabY24Kp --cid-base=base64");

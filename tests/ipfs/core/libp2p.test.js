@@ -1,16 +1,14 @@
 const MemoryStore = require("interface-datastore").MemoryDatastore;
-const PeerInfo = require("peer-info");
-const PeerBook = require("peer-book");
-const WebSocketStar = require("libp2p-websocket-star");
-const Multiplex = require("libp2p-mplex");
-const SECIO = require("libp2p-secio");
-const Libp2p = require("libp2p");
 
-const libp2pComponent = require(adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/core/components/libp2p"));
+const {
+    ipfs: { libp2p: { Multiplex, WebsocketStar, KadDHT, secio: SECIO, Node, PeerInfo, PeerBook } }
+} = adone;
+
+const libp2pComponent = require(adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/ipfs/core/components/libp2p"));
 
 describe("libp2p customization", function () {
     // Provide some extra time for ci since we're starting libp2p nodes in each test
-    this.timeout(15 * 1000);
+    this.timeout(25 * 1000);
 
     let datastore;
     let peerInfo;
@@ -18,7 +16,9 @@ describe("libp2p customization", function () {
     let testConfig;
     let _libp2p;
 
-    beforeEach((done) => {
+    before(function (done) {
+        this.timeout(25 * 1000);
+
         testConfig = {
             Addresses: {
                 Swarm: ["/ip4/0.0.0.0/tcp/4002"],
@@ -34,7 +34,6 @@ describe("libp2p customization", function () {
                 }
             },
             EXPERIMENTAL: {
-                dht: false,
                 pubsub: false
             }
         };
@@ -68,9 +67,9 @@ describe("libp2p customization", function () {
                 _print: console.log,
                 _options: {
                     libp2p: (opts) => {
-                        const wsstar = new WebSocketStar({ id: opts.peerInfo.id });
+                        const wsstar = new WebsocketStar({ id: opts.peerInfo.id });
 
-                        return new Libp2p({
+                        return new Node({
                             peerInfo: opts.peerInfo,
                             peerBook: opts.peerBook,
                             modules: {
@@ -85,7 +84,8 @@ describe("libp2p customization", function () {
                                 ],
                                 peerDiscovery: [
                                     wsstar.discovery
-                                ]
+                                ],
+                                dht: KadDHT
                             }
                         });
                     }
@@ -135,7 +135,6 @@ describe("libp2p customization", function () {
                         }
                     },
                     EXPERIMENTAL: {
-                        dht: false,
                         pubsub: false
                     }
                 });
@@ -145,7 +144,7 @@ describe("libp2p customization", function () {
         });
 
         it("should allow for overriding via options", (done) => {
-            const wsstar = new WebSocketStar({ id: peerInfo.id });
+            const wsstar = new WebsocketStar({ id: peerInfo.id });
 
             const ipfs = {
                 _repo: {
@@ -163,7 +162,6 @@ describe("libp2p customization", function () {
                         }
                     },
                     EXPERIMENTAL: {
-                        dht: false,
                         pubsub: true
                     },
                     libp2p: {
@@ -200,7 +198,6 @@ describe("libp2p customization", function () {
                         }
                     },
                     EXPERIMENTAL: {
-                        dht: false,
                         pubsub: true
                     }
                 });

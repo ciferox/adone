@@ -1,5 +1,4 @@
-
-const utils = require(adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/core/components/files-regular/utils"));
+const utils = require(adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/ipfs/core/components/files-regular/utils"));
 
 describe("files-regular/utils", () => {
     describe("parseChunkerString", () => {

@@ -1,19 +1,16 @@
-/**
- * eslint max-nested-callbacks: ["error", 8]
- */
-/**
- * eslint-env mocha
- */
-
-
-const expect = require("chai").expect;
-const runOnAndOff = require("../utils/on-and-off");
-const UnixFs = require("ipfs-unixfs");
+const runOnAndOff = require("../utils/on_and_off");
 const path = require("path");
 const fs = require("fs");
 const crypto = require("crypto");
 const os = require("os");
 const multibase = require("multibase");
+
+const {
+    ipfs: { UnixFs }
+} = adone;
+
+const fixturePath = (...args) => adone.std.path.join(__dirname, "..", "fixtures", ...args);
+
 
 describe("object", () => runOnAndOff((thing) => {
     let ipfs;
@@ -60,7 +57,7 @@ describe("object", () => runOnAndOff((thing) => {
 
         return ipfs("object new")
             .then((out) => out.trim())
-            .then((hash) => ipfs(`object patch set-data ${hash} test/fixtures/test-data/hello`))
+            .then((hash) => ipfs(`object patch set-data ${hash} ${fixturePath("test-data/hello")}`))
             .then((out) => out.trim())
             .then((hash) => ipfs(`object get ${hash}`))
             .then((out) => {
@@ -74,7 +71,7 @@ describe("object", () => runOnAndOff((thing) => {
 
         return ipfs("object new")
             .then((out) => out.trim())
-            .then((hash) => ipfs(`object patch set-data ${hash} test/fixtures/test-data/hello`))
+            .then((hash) => ipfs(`object patch set-data ${hash} ${fixturePath("test-data/hello")}`))
             .then((out) => out.trim())
             .then((hash) => ipfs(`object get --data-encoding=utf8 ${hash}`))
             .then((out) => {
@@ -84,7 +81,7 @@ describe("object", () => runOnAndOff((thing) => {
     });
 
     it("should get and print CIDs encoded in specified base", () => {
-        return ipfs("add test/fixtures/planets -r --cid-version=1")
+        return ipfs(`add ${fixturePath("planets")} -r --cid-version=1`)
             .then((out) => {
                 const lines = out.trim().split("\n");
                 return lines[lines.length - 1].split(" ")[1];
@@ -100,7 +97,7 @@ describe("object", () => runOnAndOff((thing) => {
     });
 
     it("put", () => {
-        return ipfs("object put test/fixtures/test-data/node.json").then((out) => {
+        return ipfs(`object put ${fixturePath("test-data/node.json")}`).then((out) => {
             expect(out).to.eql(
                 "added QmZZmY4KCu9r3e7M2Pcn46Fc5qbn6NpzaAGaYb22kbfTqm\n"
             );
@@ -109,7 +106,7 @@ describe("object", () => runOnAndOff((thing) => {
 
     // TODO: unskip after switch to v1 CIDs by default
     it.skip("should put and print CID encoded in specified base", () => {
-        return ipfs("object put test/fixtures/test-data/node.json --cid-base=base64")
+        return ipfs(`object put ${fixturePath("test-data/node.json")} --cid-base=base64`)
             .then((out) => {
                 expect(out).to.eql(
                     "added mAXASIKbM02Neyt6L1RRLYVEOuNlqDOzTvBboo3cI/u6f/+Vk\n"
@@ -167,7 +164,7 @@ describe("object", () => runOnAndOff((thing) => {
     });
 
     it("should get links and print CIDs encoded in specified base", () => {
-        return ipfs("add test/fixtures/planets -r --cid-version=1")
+        return ipfs(`add ${fixturePath("planets")} -r --cid-version=1`)
             .then((out) => {
                 const lines = out.trim().split("\n");
                 return lines[lines.length - 1].split(" ")[1];
@@ -185,7 +182,7 @@ describe("object", () => runOnAndOff((thing) => {
         this.timeout(40 * 1000);
 
         it("append-data", () => {
-            return ipfs("object patch append-data QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n test/fixtures/test-data/badconfig").then((out) => {
+            return ipfs(`object patch append-data QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n ${fixturePath("test-data/badconfig")}`).then((out) => {
                 expect(out).to.eql(
                     "QmfY37rjbPCZRnhvvJuQ46htW3VCAWziVB991P79h6WSv6\n"
                 );
@@ -194,7 +191,7 @@ describe("object", () => runOnAndOff((thing) => {
 
         // TODO: unskip after switch to v1 CIDs by default
         it.skip("should append-data and print CID encoded in specified base", () => {
-            return ipfs("object patch append-data QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n test/fixtures/test-data/badconfig --cid-base=base64").then((out) => {
+            return ipfs(`object patch append-data QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n ${fixturePath("test-data/badconfig")} --cid-base=base64`).then((out) => {
                 expect(out).to.eql(
                     "mAXASIP+BZ7jGtaTyLGOs0xYcQvH7K9kVKEbyzXAkwLoZwrRj\n"
                 );
@@ -202,7 +199,7 @@ describe("object", () => runOnAndOff((thing) => {
         });
 
         it("set-data", () => {
-            return ipfs("object patch set-data QmfY37rjbPCZRnhvvJuQ46htW3VCAWziVB991P79h6WSv6 test/fixtures/test-data/badconfig").then((out) => {
+            return ipfs(`object patch set-data QmfY37rjbPCZRnhvvJuQ46htW3VCAWziVB991P79h6WSv6 ${fixturePath("test-data/badconfig")}`).then((out) => {
                 expect(out).to.eql(
                     "QmfY37rjbPCZRnhvvJuQ46htW3VCAWziVB991P79h6WSv6\n"
                 );
@@ -211,7 +208,7 @@ describe("object", () => runOnAndOff((thing) => {
 
         // TODO: unskip after switch to v1 CIDs by default
         it.skip("should set-data and print CID encoded in specified base", () => {
-            return ipfs("object patch set-data QmfY37rjbPCZRnhvvJuQ46htW3VCAWziVB991P79h6WSv6 test/fixtures/test-data/badconfig --cid-base=base64").then((out) => {
+            return ipfs(`object patch set-data QmfY37rjbPCZRnhvvJuQ46htW3VCAWziVB991P79h6WSv6 ${fixturePath("test-data/badconfig")} --cid-base=base64`).then((out) => {
                 expect(out).to.eql(
                     "mAXASIP+BZ7jGtaTyLGOs0xYcQvH7K9kVKEbyzXAkwLoZwrRj\n"
                 );

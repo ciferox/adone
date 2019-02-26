@@ -1,12 +1,7 @@
-/**
- * eslint max-nested-callbacks: ["error", 8]
- */
-
 const pull = require("pull-stream");
-const IPFSFactory = require("ipfsd-ctl");
 
 const {
-    ipfs: { IPFS }
+    ipfs: { IPFS, ipfsdCtl }
 } = adone;
 
 describe("stats", () => {
@@ -15,7 +10,7 @@ describe("stats", () => {
     before(function (done) {
         this.timeout(20 * 1000);
 
-        const factory = IPFSFactory.create({ type: "proc" });
+        const factory = ipfsdCtl.create({ type: "proc" });
 
         factory.spawn({
             exec: IPFS,

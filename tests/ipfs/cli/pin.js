@@ -1,21 +1,12 @@
-/**
- * eslint-env mocha
- */
-/**
- * eslint max-nested-callbacks: ["error", 8]
- */
-
-
-const expect = require("chai").expect;
 const CID = require("cids");
-const runOnAndOff = require("../utils/on-and-off");
+const runOnAndOff = require("../utils/on_and_off");
 
 // fixture structure:
 //  planets/
 //   solar-system.md
 //   mercury/
 //    wiki.md
-const fixturePath = "test/fixtures/planets";
+const fixturePath = adone.std.path.join(__dirname, "..", "fixtures", "planets");
 const pins = {
     root: "QmTAMavb995EHErSrKo7mB8dYkpaSJxu6ys1a6XJyB2sys",
     solarWiki: "QmTMbkDfvHwq3Aup6Nxqn3KKw9YnoKzcZvuArAfQ9GF3QG",

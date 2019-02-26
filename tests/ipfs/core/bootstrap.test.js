@@ -1,11 +1,10 @@
 const isNode = require("detect-node");
 
-const DaemonFactory = require("ipfsd-ctl");
-const df = DaemonFactory.create({ type: "proc" });
-
 const {
-    ipfs: { IPFS }
+    ipfs: { IPFS, ipfsdCtl }
 } = adone;
+
+const df = ipfsdCtl.create({ type: "proc" });
 
 describe("bootstrap", () => {
     if (!isNode) {

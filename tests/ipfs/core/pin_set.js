@@ -1,23 +1,43 @@
 const parallelLimit = require("async/parallelLimit");
 const series = require("async/series");
+const CID = require("cids");
+
+const createPinSet = require(adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/ipfs/core/components/pin-set"));
+const createTempRepo = require("../utils/create_repo_nodejs");
+
+const {
+    is,
+    ipfs: { IPFS, ipld: { dagPb } }
+} = adone;
+
 const {
     util: {
         cid
     },
     DAGNode
-} = require("ipld-dag-pb");
-const CID = require("cids");
+} = dagPb;
 
-const createPinSet = require(adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/core/components/pin-set"));
-const createTempRepo = require("../utils/create-repo-nodejs");
-
-const {
-    is,
-    ipfs: { IPFS }
-} = adone;
 
 const defaultFanout = 256;
 const maxItems = 8192;
+
+/**
+ * Creates @param num DAGNodes, limited to 500 at a time to save memory
+ * @param  {[type]}   num      the number of nodes to create
+ * @param  {Function} callback node-style callback, result is an Array of all
+ *                              created nodes
+ * @return {void}
+ */
+const createNodes = function (num, callback) {
+    const items = [];
+    for (let i = 0; i < num; i++) {
+        items.push((cb) =>
+            createNode(String(i), (err, res) => cb(err, res.cid.toBaseEncodedString()))
+        );
+    }
+
+    parallelLimit(items, 500, callback);
+};
 
 const createNode = function (data, links = [], callback) {
     if (is.function(links)) {
@@ -39,24 +59,6 @@ const createNode = function (data, links = [], callback) {
     });
 };
 
-/**
- * Creates @param num DAGNodes, limited to 500 at a time to save memory
- * @param  {[type]}   num      the number of nodes to create
- * @param  {Function} callback node-style callback, result is an Array of all
- *                              created nodes
- * @return {void}
- */
-const createNodes = function (num, callback) {
-    const items = [];
-    for (let i = 0; i < num; i++) {
-        items.push((cb) =>
-            createNode(String(i), (err, res) => cb(err, res.cid.toBaseEncodedString()))
-        );
-    }
-
-    parallelLimit(items, 500, callback);
-};
-
 describe("pinSet", () => {
     let ipfs;
     let pinSet;
@@ -65,7 +67,17 @@ describe("pinSet", () => {
     before(function (done) {
         this.timeout(80 * 1000);
         repo = createTempRepo();
-        ipfs = new IPFS({ repo });
+        ipfs = new IPFS({
+            repo,
+            config: {
+                Bootstrap: [],
+                Discovery: {
+                    MDNS: {
+                        Enabled: false
+                    }
+                }
+            }
+        });
         ipfs.on("ready", () => {
             pinSet = createPinSet(ipfs.dag);
             done();
@@ -102,7 +114,7 @@ describe("pinSet", () => {
 
     describe("handles large sets", () => {
         it("handles storing items > maxItems", function (done) {
-            this.timeout(19 * 1000);
+            this.timeout(90 * 1000);
             const expectedHash = "QmbvhSy83QWfgLXDpYjDmLWBFfGc8utoqjcXHyj3gYuasT";
             const count = maxItems + 1;
             createNodes(count, (err, cids) => {

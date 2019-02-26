@@ -1,15 +1,6 @@
-/**
- * eslint-env mocha
- */
-
-
-const chai = require("chai");
-const dirtyChai = require("dirty-chai");
-const expect = chai.expect;
-chai.use(dirtyChai);
 const fs = require("fs");
 const path = require("path");
-const runOnAndOff = require("../utils/on-and-off");
+const runOnAndOff = require("../utils/on_and_off");
 
 describe("config", () => runOnAndOff((thing) => {
     let ipfs;
@@ -71,7 +62,7 @@ describe("config", () => runOnAndOff((thing) => {
 
         it("call config with no arguments", () => {
             return ipfs("config")
-                .then((out) => expect(out).to.include("bin.js config <key> [value]"));
+                .then((out) => expect(out).to.include("Not enough non-option arguments: got 0, need at least 1"));
         });
     });
 
