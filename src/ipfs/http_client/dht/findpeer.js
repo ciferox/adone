@@ -5,7 +5,7 @@ const multiaddr = require('multiaddr')
 const errcode = require('err-code')
 
 const {
-    ipfs: { libp2p: { PeerId, PeerInfo } }
+    p2p: { PeerId, PeerInfo }
 } = adone;
 
 module.exports = (send) => {

@@ -1,7 +1,5 @@
-'use strict'
-
-const Hapi = require('hapi')
-const routes = require('./routes')
+const Hapi = require("hapi");
+const routes = require("./routes");
 
 /**
  * Creates an instance of Server.
@@ -9,54 +7,52 @@ const routes = require('./routes')
  * @param {number} [options.port=43134] - Server port.
  */
 class Server {
-  constructor (options) {
-    options = options || { port: 43134 }
+    constructor(options) {
+        options = options || { port: 43134 };
 
-    this.server = null
-    this.port = options.port
-  }
+        this.server = null;
+        this.port = options.port;
+    }
 
-  /**
-   * Start the server
-   *
-   * @param {function(Error, Hapi.Server): void} cb
-   * @returns {void}
-   */
-  start (cb) {
-    cb = cb || (() => {})
+    /**
+     * Start the server
+     *
+     * @param {function(Error, Hapi.Server): void} cb
+     * @returns {void}
+     */
+    start(cb) {
+        cb = cb || (() => { });
 
-    this.server = new Hapi.Server()
+        this.server = new Hapi.Server({
+            port: this.port,
+            host: "localhost",
+            routes: {
+                cors: true
+            }
+        });
 
-    this.server.connection({
-      port: this.port,
-      host: 'localhost',
-      routes: {
-        cors: true
-      }
-    })
+        routes(this.server);
 
-    routes(this.server)
+        this.server.start().then((err) => {
+            if (err) {
+                return cb(err);
+            }
 
-    this.server.start((err) => {
-      if (err) {
-        return cb(err)
-      }
+            cb(null, this.server);
+        });
+    }
 
-      cb(null, this.server)
-    })
-  }
+    /**
+     * Stop the server
+     *
+     * @param {function(err: Error)} [cb] - {@link https://github.com/hapijs/hapi/blob/v16.6.2/API.md#serverstopoptions-callback Hapi docs}
+     * @returns {void}
+     */
+    stop(cb) {
+        cb = cb || (() => { });
 
-  /**
-   * Stop the server
-   *
-   * @param {function(err: Error)} [cb] - {@link https://github.com/hapijs/hapi/blob/v16.6.2/API.md#serverstopoptions-callback Hapi docs}
-   * @returns {void}
-   */
-  stop (cb) {
-    cb = cb || (() => {})
-
-    this.server.stop(cb)
-  }
+        this.server.stop(cb);
+    }
 }
 
-module.exports = Server
+module.exports = Server;

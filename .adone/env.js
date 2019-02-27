@@ -16,6 +16,7 @@ export default {
     RUNTIME_PATH,
     ETC_PATH,
     ETC_ADONE_PATH: join(ETC_PATH, "adone"),
+    OPT_PATH: join(ROOT_PATH, "opt"),
     VAR_PATH,
     SHARE_PATH: join(ROOT_PATH, "share"),
     LOGS_PATH,

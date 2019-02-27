@@ -737,6 +737,14 @@
                     "dst": "lib/glosses/notifier",
                     "namespace": "notifier"
                 },
+                "p2p": {
+                    "description": "Multipurpose P2P implementation (forked from libp2p)",
+                    "task": "transpile",
+                    "src": "src/glosses/p2p/**/*.js",
+                    "dst": "lib/glosses/p2p",
+                    "namespace": "p2p",
+                    "predecessor": "https://github.com/libp2p"
+                },
                 "pretty": {
                     "description": "Useful prettiers/pretty-printers",
                     "task": "transpile",

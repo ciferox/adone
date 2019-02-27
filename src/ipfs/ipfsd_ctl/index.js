@@ -1,12 +1,14 @@
-'use strict'
+const isNode = require("detect-node");
+const defaults = require("lodash.defaultsdeep");
 
-const isNode = require('detect-node')
-const defaults = require('lodash.defaultsdeep')
+const FactoryDaemon = require("./factory_daemon");
+const FactoryInProc = require("./factory_in_proc");
+const FactoryClient = require("./factory_client");
+const Server = require("./endpoint/server");
 
-const FactoryDaemon = require('./factory-daemon')
-const FactoryInProc = require('./factory-in-proc')
-const FactoryClient = require('./factory-client')
-const Server = require('./endpoint/server')
+const {
+    is
+} = adone;
 
 /**
  * Create a Factory
@@ -26,16 +28,15 @@ const Server = require('./endpoint/server')
  * @returns {(FactoryDaemon|FactoryClient|FactoryInProc)}
  */
 const create = (opts) => {
-  const options = defaults({}, opts, { remote: !isNode })
+    const options = defaults({}, opts, { remote: !isNode });
 
-  if (options.type === 'proc') {
-    return new FactoryInProc(options)
-  } else if (options.remote) {
-    return new FactoryClient(options)
-  } else {
-    return new FactoryDaemon(options)
-  }
-}
+    if (options.type === "proc") {
+        return new FactoryInProc(options);
+    } else if (options.remote) {
+        return new FactoryClient(options);
+    }
+    return new FactoryDaemon(options);
+};
 
 /**
  * Create a Endpoint Server
@@ -47,16 +48,16 @@ const create = (opts) => {
  * @returns {Server}
  */
 const createServer = (options) => {
-  if (typeof options === 'number') {
-    options = { port: options }
-  }
-  return new Server(options)
-}
+    if (is.number(options)) {
+        options = { port: options };
+    }
+    return new Server(options);
+};
 
 module.exports = {
-  create,
-  createServer
-}
+    create,
+    createServer
+};
 
 /**
  * @typedef {Object} SpawnOptions

@@ -1,5 +1,5 @@
 const {
-    ipfs: { libp2p: { PeerId, PeerInfo } }
+    p2p: { PeerId, PeerInfo }
 } = adone;
 
 const multiaddr = require("multiaddr");

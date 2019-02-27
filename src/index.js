@@ -357,6 +357,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         net: "./glosses/net",
         netron: "./glosses/netron",
         notifier: "./glosses/notifier",
+        p2p: "./glosses/p2p",
         pretty: "./glosses/pretty",
         promise: "./glosses/promise",
         punycode: "./glosses/punycode",

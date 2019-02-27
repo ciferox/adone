@@ -1,5 +1,6 @@
 const {
-    ipfs: { isIPFS, libp2p: { crypto } }
+    p2p: { crypto },
+    ipfs: { isIPFS }
 } = adone;
 
 const { getDescribe, getIt } = require("./utils/shani");

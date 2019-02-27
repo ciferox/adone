@@ -2,7 +2,7 @@ const promisify = require('promisify-es6')
 const multiaddr = require('multiaddr')
 
 const {
-    ipfs: { libp2p: { PeerId } }
+    p2p: { PeerId }
 } = adone;
 
 module.exports = (send) => {

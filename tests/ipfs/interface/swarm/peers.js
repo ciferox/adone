@@ -1,6 +1,6 @@
 const {
     is,
-    ipfs: { libp2p: { PeerId } },
+    p2p: { PeerId },
     std: { os, path }
 } = adone;
 

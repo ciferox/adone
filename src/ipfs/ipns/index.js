@@ -12,7 +12,7 @@ const { parseRFC3339 } = require('./utils')
 const ERRORS = require('./errors')
 
 const {
-    ipfs: { libp2p: { crypto, PeerId } }
+    p2p: { crypto, PeerId }
 } = adone;
 
 const ID_MULTIHASH_CODE = multihash.names.id

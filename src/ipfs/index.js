@@ -1,5 +1,6 @@
+export const version = "0.35.0";
+
 adone.lazify({
-    libp2p: "./libp2p",
     ipld: "./ipld",
     ipns: "./ipns",
     isIPFS: "./is_ipfs",
@@ -9,12 +10,14 @@ adone.lazify({
     Block: "./block",
     BlockService: "./block_service",
     Repo: "./repo",
-    IPFS: "./ipfs/core",
+    IPFS: "./main/core",
     ipfsdCtl: "./ipfsd_ctl",
     mfs: "./mfs",
     multipart: "./multipart",
 
     UnixFs: "./unixfs",
     unixfsImporter: "./unixfs_importer",
-    unixfsExporter: "./unixfs_exporter"
+    unixfsExporter: "./unixfs_exporter",
+
+    go: "./go_ipfs"
 }, adone.asNamespace(exports), require);

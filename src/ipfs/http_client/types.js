@@ -4,7 +4,7 @@ const multibase = require("multibase");
 const multihash = require("multihashes");
 
 const {
-    ipfs: { libp2p: { PeerId, PeerInfo } }
+    p2p: { PeerId, PeerInfo }
 } = adone;
 
 module.exports = () => ({

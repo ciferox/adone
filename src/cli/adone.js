@@ -9,8 +9,7 @@ const {
 } = adone;
 
 const {
-    ApplicationMeta,
-    CommandMeta
+    ApplicationMeta
 } = app;
 
 const command = (name) => std.path.join(__dirname, "..", "lib", "cli", "commands", name);

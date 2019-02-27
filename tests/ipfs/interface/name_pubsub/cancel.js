@@ -1,7 +1,7 @@
 const auto = require("async/auto");
 
 const {
-    ipfs: { libp2p: { PeerId } }
+    p2p: { PeerId }
 } = adone;
 
 const { spawnNodeWithId } = require("../utils/spawn");

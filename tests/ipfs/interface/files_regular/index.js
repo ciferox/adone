@@ -1,12 +1,10 @@
-
-
 const { createSuite } = require("../utils/suite");
 
 const tests = {
     add: require("./add"),
     addReadableStream: require("./add-readable-stream"),
     addPullStream: require("./add-pull-stream"),
-    addFromStream: require("./add-from-stream"),
+    addFromStream: require("./add_from_stream"),
     addFromURL: require("./add-from-url"),
     addFromFs: require("./add-from-fs"),
     cat: require("./cat"),
