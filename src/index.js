@@ -334,6 +334,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         compressor: "./glosses/compressors",
         configuration: "./glosses/configurations",
         crypto: "./glosses/crypto",
+        crypto2: "./glosses/crypto2",
         data: "./glosses/data",
         database: "./glosses/databases",
         datastore: "./glosses/datastores",

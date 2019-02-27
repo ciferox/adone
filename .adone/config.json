@@ -237,6 +237,14 @@
                         }
                     }
                 },
+                "crypto2": {
+                    "description": "Implementation of TLS and various other cryptographic tools",
+                    "src": "src/glosses/crypto2/**/*.js",
+                    "dst": "lib/glosses/crypto2",
+                    "task": "transpile",
+                    "namespace": "crypto2",
+                    "predecessor": "https://github.com/digitalbazaar/forge"
+                },
                 "data": {
                     "description": "Data generic manipulation utilites and serializers",
                     "src": "src/glosses/data/**/*.js",
