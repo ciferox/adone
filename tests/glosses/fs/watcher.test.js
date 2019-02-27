@@ -136,7 +136,6 @@ describe("fs", "watcher", function watcherTests() {
             });
 
             it("should emit `add` event when file was added", async () => {
-                const file = fixtures.getFile("add.txt");
                 const testFile = fixtures.getFile("add.txt");
                 const add = spy();
                 watcher.on("add", add);
@@ -145,11 +144,146 @@ describe("fs", "watcher", function watcherTests() {
                 }
                 await sleep();
                 const [, meta] = await Promise.all([
-                    file.write(Date.now()),
+                    testFile.write(Date.now()),
                     add.waitForCall()
                 ]);
                 expect(meta.args[0]).to.be.equal(testFile.path());
                 expect(meta.args[1]).to.be.ok(); // stats
+                expect(rawSpy.callCount).not.to.be.equal(0);
+            });
+
+            it("should emit nine `add` events when nine files were added in one directory", async () => {
+                const fileNames = [
+                    ["add1.txt"],
+                    ["add2.txt"],
+                    ["add3.txt"],
+                    ["add4.txt"],
+                    ["add5.txt", 200],
+                    ["add6.txt"],
+                    ["add7.txt"],
+                    ["add8.txt"],
+                    ["add9.txt"]
+                ];
+                const files = [];
+                const paths = [];
+
+                for (const [name] of fileNames) {
+                    const file = fixtures.getFile(name);
+                    files.push(file);
+                    paths.push(file.path());
+                }
+
+                const add = spy();
+
+                watcher.on("add", add);
+                if (readySpy.callCount === 0) {
+                    await readySpy.waitForCall();
+                }
+                await sleep();
+
+                let chain = Promise.resolve();
+                for (let i = 0; i < fileNames.length; i++) {
+                    const fileInfo = fileNames[i];
+                    if (fileInfo.length === 2) {
+                        chain = chain.then(() => sleep(fileInfo[1])).then(() => files[i].write(Date.now()));
+                    } else {
+                        chain = chain.then(() => files[i].write(Date.now()));
+                    }
+                }
+
+                const metas = await add.waitForNCalls(files.length);
+
+                assert.lengthOf(metas, files.length);
+
+                for (const meta of metas) {
+                    assert.include(paths, meta.args[0]);
+                    expect(meta.args[1]).to.be.ok(); // stats
+                }
+                expect(rawSpy.callCount).not.to.be.equal(0);
+            });
+
+            it("should emit thirtythree `add` events when thirtythree files were added in nine directories", async () => {
+                const dirNames = ["b", "c", "d", "e", "f", "g", "h", "i"];
+                const fileNames = [
+                    ["add1.txt"],
+                    ["add2.txt"],
+                    ["add3.txt"],
+                    ["add4.txt"],
+                    ["add5.txt", 200],
+                    ["add6.txt"],
+                    ["add7.txt"],
+                    ["add8.txt"],
+                    ["add9.txt"],
+                    ["b/add1.txt"],
+                    ["b/add2.txt"],
+                    ["b/add3.txt"],
+                    ["b/add4.txt"],
+                    ["b/add5.txt", 200],
+                    ["b/add6.txt"],
+                    ["b/add7.txt"],
+                    ["b/add8.txt"],
+                    ["b/add9.txt"],
+                    ["c/add1.txt"],
+                    ["c/add2.txt"],
+                    ["c/add3.txt"],
+                    ["c/add4.txt"],
+                    ["c/add5.txt", 150],
+                    ["c/add6.txt"],
+                    ["c/add7.txt"],
+                    ["c/add8.txt"],
+                    ["c/add9.txt"],
+                    ["d/add1.txt"],
+                    ["e/add1.txt"],
+                    ["f/add1.txt", 100],
+                    ["g/add1.txt"],
+                    ["h/add1.txt"],
+                    ["i/add1.txt"]
+                ];
+                const files = [];
+                const paths = [];
+
+                for (const name of dirNames) {
+                    const dir = fixtures.getDirectory(name);
+                    // eslint-disable-next-line no-await-in-loop
+                    await dir.create({
+                        mode: 0x1ed
+                    });
+                    // eslint-disable-next-line no-await-in-loop
+                    assert.true(await dir.exists());
+                }
+
+                for (const [name] of fileNames) {
+                    const file = fixtures.getFile(name);
+                    files.push(file);
+                    paths.push(file.path());
+                }
+
+                const add = spy();
+
+                watcher.on("add", add);
+                if (readySpy.callCount === 0) {
+                    await readySpy.waitForCall();
+                }
+                await sleep();
+
+                let chain = Promise.resolve();
+                for (let i = 0; i < fileNames.length; i++) {
+                    const fileInfo = fileNames[i];
+                    if (fileInfo.length === 2) {
+                        chain = chain.then(() => sleep(fileInfo[1])).then(() => files[i].write(Date.now()));
+                    } else {
+                        chain = chain.then(() => files[i].write(Date.now()));
+                    }
+                }
+
+                const metas = await add.waitForNCalls(files.length);
+
+                assert.lengthOf(metas, files.length);
+
+                for (const meta of metas) {
+                    assert.include(paths, meta.args[0]);
+                    expect(meta.args[1]).to.be.ok(); // stats
+                }
                 expect(rawSpy.callCount).not.to.be.equal(0);
             });
 
@@ -228,6 +362,33 @@ describe("fs", "watcher", function watcherTests() {
                 expect(meta.args[1]).not.to.be.ok(); // no stats
                 expect(rawSpy.callCount).not.to.be.equal(0);
                 expect(unlinkDir.callCount).to.be.equal(1);
+            });
+
+            it("should emit two `unlinkDir` event when two nested directories were removed", async () => {
+                const unlinkDir = spy();
+                const testDir = fixtures.getDirectory("subdir");
+                const testDir2 = fixtures.getDirectory("subdir/subdir2");
+                const testDir3 = fixtures.getDirectory("subdir/subdir2/subdir3");
+                await testDir.create({ mode: 0x1ed });
+                await testDir2.create({ mode: 0x1ed });
+                await testDir3.create({ mode: 0x1ed });
+                watcher.on("unlinkDir", unlinkDir);
+                if (!readySpy.callCount) {
+                    await readySpy.waitForCall();
+                }
+                await sleep();
+
+                sleep(50).then(() => testDir2.unlink());
+                const metas = await unlinkDir.waitForNCalls(2);
+
+                const paths = [testDir2.path(), testDir3.path()];
+                assert.include(paths, metas[0].args[0]);
+                assert.include(paths, metas[1].args[0]);
+                expect(metas[0].args[1]).to.not.be.ok; // no stats
+                expect(rawSpy.callCount).not.to.be.equal(0);
+                if (!osXFsWatch) {
+                    expect(unlinkDir.callCount).to.be.equal(2);
+                }
             });
 
             it("should emit `unlink` and `add` events when a file is renamed", async () => {
@@ -419,7 +580,7 @@ describe("fs", "watcher", function watcherTests() {
                     .on("ready", ready);
                 await ready.waitForCall();
 
-                
+
                 await sleep();
                 await Promise.all([
                     sleep().then(() => file.unlink()),
@@ -428,7 +589,7 @@ describe("fs", "watcher", function watcherTests() {
 
                 expect(unlink.callCount).to.be.equal(1);
                 expect(unlink.getCall(0).args[0]).to.be.equal(file.path());
-                
+
                 await sleep();
                 await Promise.all([
                     sleep().then(() => file.write("re-added")),

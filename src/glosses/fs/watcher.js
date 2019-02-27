@@ -465,7 +465,7 @@ const createFsWatchInstance = (path, options, listener, errHandler, emitRaw) => 
         listener(path);
         emitRaw(rawEvent, evPath, { watchedPath: path });
 
-        // emit based on events occuring for files from a directory's watcher in
+        // emit based on events occurring for files from a directory's watcher in
         // case the file's watcher misses it (and rely on throttling to de-dupe)
         if (evPath && path !== evPath) {
             fsWatchBroadcast(std.path.resolve(path, evPath), "listeners", std.path.join(path, evPath));
@@ -509,6 +509,7 @@ const setFsWatchListener = (path, fullPath, options, handlers) => {
         }
         const broadcastErr = (...args) => fsWatchBroadcast(fullPath, "errHandlers", ...args);
         watcher.on("error", (error) => {
+            container.watcherUnusable = true; // documented since Node 10.4.1
             // Workaround for https://github.com/joyent/node/issues/4337
             if (is.windows && error.code === "EPERM") {
                 std.fs.open(path, "r", (err, fd) => {
@@ -545,7 +546,9 @@ const setFsWatchListener = (path, fullPath, options, handlers) => {
         container.errHandlers.splice(container.errHandlers.indexOf(errHandler), 1);
         container.rawEmitters.splice(container.rawEmitters.indexOf(rawEmitter), 1);
         if (!container.listeners.length) {
-            container.watcher.close();
+            if (!container.watcherUnusable) {
+                container.watcher.close();
+            }
             FsWatchInstances.delete(fullPath);
         }
     };
@@ -1013,15 +1016,22 @@ export default class Watcher extends event.Emitter {
         const throttled = this._throttled.get(action);
         let timeoutObject = null;
         if (throttled.has(path)) {
+            throttled.get(path).count++;
             return false;
         }
         const clear = () => {
+            const count = throttled.has(path) ? throttled.get(path).count : 0;
             throttled.delete(path);
             clearTimeout(timeoutObject);
+            return count;
         };
 
         timeoutObject = setTimeout(clear, timeout);
-        const value = { timeoutObject, clear };
+        const value = {
+            timeoutObject,
+            clear,
+            count: 0
+        };
         throttled.set(path, value);
         return value;
     }
@@ -1443,11 +1453,17 @@ export default class Watcher extends event.Emitter {
         parentDir.add(std.path.basename(dir));
         this._getWatchedDir(dir);
 
-        let debouncedRead;
-
         const read = (directory, initialAdd, done) => {
             // Normalize the directory name on Windows
             directory = std.path.join(directory, "");
+
+            let throttler;
+            if (!wh.hasGlob) {
+                throttler = this._throttle("readdir", directory, 1000);
+                if (!throttler) {
+                    return;
+                }
+            }
 
             const previous = this._getWatchedDir(wh.path);
             const current = [];
@@ -1487,12 +1503,11 @@ export default class Watcher extends event.Emitter {
                 }).on("error", (err) => {
                     this._handleError(err);
                 }).done(() => {
+                    const wasThrottled = throttler ? throttler.clear() : false;
+
                     if (done) {
                         done();
                     }
-
-                    // Run any pending reads that may be queued
-                    debouncedRead.flush();
 
                     // Files that absent in current directory snapshot
                     // but present in previous emit `remove` event
@@ -1509,16 +1524,14 @@ export default class Watcher extends event.Emitter {
                     }).forEach((item) => {
                         this._remove(directory, item);
                     });
+
+                    // one more time for any missed in case changes came in extremely quickly
+                    if (wasThrottled) {
+                        read(directory, false);
+                    }
                 });
             });
         };
-
-        // Create a debounced version of read
-        debouncedRead = adone.lodash.debounce(read, 1000, {
-            leading: true,
-            trailing: true,
-            maxWait: 1000
-        });
 
         let closer;
 
@@ -1532,21 +1545,13 @@ export default class Watcher extends event.Emitter {
                     return;
                 }
 
-                debouncedRead(dirPath, false);
+                read(dirPath, false);
             });
         } else {
             callback();
         }
 
-        // Close function that calls fs closer and cancels any pending debounced reads
-        return function () {
-            if (closer) {
-                closer();
-            }
-
-            // Cancel any pending reads that may be queued
-            debouncedRead.cancel();
-        };
+        return closer;
     }
 
     /**
@@ -1603,6 +1608,8 @@ export default class Watcher extends event.Emitter {
         const dirname = std.path.dirname(file);
         const basename = std.path.basename(file);
         const parent = this._getWatchedDir(dirname);
+        // stats is always present
+        let prevStats = stats;
 
         // if the file is already being watched, do nothing
         if (parent.has(basename)) {
@@ -1620,12 +1627,24 @@ export default class Watcher extends event.Emitter {
                     if (error) {
                         this._remove(dirname, basename);
                     } else {
-                        this._emit("change", file, newStats);
+                        // Check that change event was not fired because of changed only accessTime.
+                        const at = newStats.atime.getTime();
+                        const mt = newStats.mtime.getTime();
+                        if (!at || at <= mt || mt !== prevStats.mtime.getTime()) {
+                            this._emit("change", file, newStats);
+                        }
+                        prevStats = newStats;
                     }
                 });
                 // add is about to be emitted if file not already tracked in parent
             } else if (parent.has(basename)) {
-                this._emit("change", file, newStats);
+                // Check that change event was not fired because of changed only accessTime.
+                const at = newStats.atime.getTime();
+                const mt = newStats.mtime.getTime();
+                if (!at || at <= mt || mt !== prevStats.mtime.getTime()) {
+                    this._emit("change", file, newStats);
+                }
+                prevStats = newStats;
             }
         });
 
