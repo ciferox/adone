@@ -10,7 +10,7 @@ const lazy = lazify({
 }, null, require);
 
 const throwYieldError = (proxy, text, args) => {
-    let msg = adone.util.functionName(proxy) + text;
+    let msg = adone.assertion.util.getName(proxy) + text;
     if (args.length) {
         msg += ` Received [${args.join(", ")}]`;
     }

@@ -174,7 +174,7 @@ const proto = {
         if (!is.function(func)) {
             func = function () { };
         } else {
-            name = adone.util.functionName(func);
+            name = adone.assertion.util.getName(func);
         }
 
         if (!spyLength) {

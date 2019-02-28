@@ -50,6 +50,21 @@
                     "namespace": "dev",
                     "virtual": true
                 },
+                "async": {
+                    "description": "Higher-order functions and common patterns for asynchronous code",
+                    "namespace": "async",
+                    "virtual": true
+                },
+                "benchmark": {
+                    "description": "A benchmarking library",
+                    "namespace": "benchmark",
+                    "virtual": true
+                },
+                "lodash": {
+                    "description": "Lodash - A modern JavaScript utility library delivering modularity, performance & extras",
+                    "namespace": "lodash",
+                    "virtual": true
+                },
                 "cli": {
                     "description": "Adone CLI stuff",
                     "src": [
@@ -112,13 +127,13 @@
                     "src": "src/glosses/assertion/**/*.js",
                     "dst": "lib/glosses/assertion",
                     "task": "transpile",
-                    "namespace": "assertion"
-                },
-                "async": {
-                    "description": "Higher-order functions and common patterns for asynchronous code",
-                    "src": "src/async/index.js",
-                    "dst": "lib/async",
-                    "namespace": "async"
+                    "namespace": "assertion",
+                    "predecessor": [
+                        "https://github.com/chaijs",
+                        "https://github.com/domenic/sinon-chai",
+                        "https://github.com/prodatakey/dirty-chai",
+                        "https://github.com/domenic/chai-as-promised"
+                    ]
                 },
                 "cmake": {
                     "description": "Node.js native addon build tool",
@@ -569,12 +584,6 @@
                         }
                     }
                 },
-                "lodash": {
-                    "description": "Lodash - A modern JavaScript utility library delivering modularity, performance & extras",
-                    "src": "src/lodash/index.js",
-                    "dst": "lib/lodash",
-                    "namespace": "lodash"
-                },
                 "math": {
                     "description": "Implementation of common math classes and primitives",
                     "task": "transpile",
@@ -946,12 +955,6 @@
                     "src": "src/glosses/web/**/*.js",
                     "dst": "lib/glosses/web",
                     "namespace": "web"
-                },
-                "benchmark": {
-                    "description": "A benchmarking library",
-                    "src": "src/benchmark/index.js",
-                    "dst": "lib/benchmark",
-                    "namespace": "benchmark"
                 },
                 "bundle": {
                     "task": "transpile",

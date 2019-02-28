@@ -1,37 +1,54 @@
-/*!
- * message composition utility
- * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
- * MIT Licensed
+/**
+ * !
+ * Module dependencies
  */
 
-/*!
- * Module dependancies
- */
-const { is, assertion: $assert } = adone;
-const { __: { util } } = $assert;
+const flag = require("./flag");
+const getActual = require("./get_actual");
+const objDisplay = require("./obj_display");
 
-export default function getMessage(obj, args) {
-    const negate = util.flag(obj, "negate");
-    const val = util.flag(obj, "object");
+/**
+ * ### .getMessage(object, message, negateMessage)
+ *
+ * Construct the error message based on flags
+ * and template tags. Template tags will return
+ * a stringified inspection of the object referenced.
+ *
+ * Message template tags:
+ * - `#{this}` current asserted object
+ * - `#{act}` actual value
+ * - `#{exp}` expected value
+ *
+ * @param {Object} object (constructed Assertion)
+ * @param {Arguments} chai.Assertion.prototype.assert arguments
+ * @namespace Utils
+ * @name getMessage
+ * @api public
+ */
+
+module.exports = function getMessage(obj, args) {
+    const negate = flag(obj, "negate");
+    const val = flag(obj, "object");
     const expected = args[3];
-    const actual = util.getActual(obj, args);
+    const actual = getActual(obj, args);
     let msg = negate ? args[2] : args[1];
-    const flagMsg = util.flag(obj, "message");
+    const flagMsg = flag(obj, "message");
 
-    if (is.function(msg)) {
+    // eslint-disable-next-line adone/no-typeof
+    if (typeof msg === "function") {
         msg = msg();
     }
     msg = msg || "";
     msg = msg
         .replace(/#\{this\}/g, () => {
-            return util.objDisplay(val);
+            return objDisplay(val);
         })
         .replace(/#\{act\}/g, () => {
-            return util.objDisplay(actual);
+            return objDisplay(actual);
         })
         .replace(/#\{exp\}/g, () => {
-            return util.objDisplay(expected);
+            return objDisplay(expected);
         });
 
     return flagMsg ? `${flagMsg}: ${msg}` : msg;
-}
+};

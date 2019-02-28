@@ -1,9 +1,46 @@
-const { is } = adone;
+/**
+ * eslint-disable adone/no-typeof
+ */
 
-export const compatibleInstance = (thrown, errorLike) => {
-    return errorLike instanceof Error && thrown === errorLike;
-};
+const getFunctionName = require("get-func-name");
+/**
+ * ### .checkError
+ *
+ * Checks that an error conforms to a given set of criteria and/or retrieves information about it.
+ *
+ * @api public
+ */
 
+/**
+ * ### .compatibleInstance(thrown, errorLike)
+ *
+ * Checks if two instances are compatible (strict equal).
+ * Returns false if errorLike is not an instance of Error, because instances
+ * can only be compatible if they're both error instances.
+ *
+ * @name compatibleInstance
+ * @param {Error} thrown error
+ * @param {Error|ErrorConstructor} errorLike object to compare against
+ * @namespace Utils
+ * @api public
+ */
+export const compatibleInstance = (thrown, errorLike) => errorLike instanceof Error && thrown === errorLike;
+
+/**
+ * ### .compatibleConstructor(thrown, errorLike)
+ *
+ * Checks if two constructors are compatible.
+ * This function can receive either an error constructor or
+ * an error instance as the `errorLike` argument.
+ * Constructors are compatible if they're the same or if one is
+ * an instance of another.
+ *
+ * @name compatibleConstructor
+ * @param {Error} thrown error
+ * @param {Error|ErrorConstructor} errorLike object to compare against
+ * @namespace Utils
+ * @api public
+ */
 export const compatibleConstructor = (thrown, errorLike) => {
     if (errorLike instanceof Error) {
         // If `errorLike` is an instance of any error we compare their constructors
@@ -16,28 +53,51 @@ export const compatibleConstructor = (thrown, errorLike) => {
     return false;
 };
 
+/**
+ * ### .compatibleMessage(thrown, errMatcher)
+ *
+ * Checks if an error's message is compatible with a matcher (String or RegExp).
+ * If the message contains the String or passes the RegExp test,
+ * it is considered compatible.
+ *
+ * @name compatibleMessage
+ * @param {Error} thrown error
+ * @param {String|RegExp} errMatcher to look for into the message
+ * @namespace Utils
+ * @api public
+ */
 export const compatibleMessage = (thrown, errMatcher) => {
-    const comparisonString = is.string(thrown) ? thrown : thrown.message;
+    const comparisonString = typeof thrown === "string" ? thrown : thrown.message;
     if (errMatcher instanceof RegExp) {
         return errMatcher.test(comparisonString);
-    } else if (is.string(errMatcher)) {
+    } else if (typeof errMatcher === "string") {
         return comparisonString.indexOf(errMatcher) !== -1; // eslint-disable-line no-magic-numbers
     }
 
     return false;
 };
 
+/**
+ * ### .getConstructorName(errorLike)
+ *
+ * Gets the constructor name for an Error instance or constructor itself.
+ *
+ * @name getConstructorName
+ * @param {Error|ErrorConstructor} errorLike
+ * @namespace Utils
+ * @api public
+ */
 export const getConstructorName = (errorLike) => {
     let constructorName = errorLike;
     if (errorLike instanceof Error) {
-        constructorName = adone.util.functionName(errorLike.constructor);
-    } else if (is.function(errorLike)) {
+        constructorName = getFunctionName(errorLike.constructor);
+    } else if (typeof errorLike === "function") {
         // If `err` is not an instance of Error it is an error constructor itself or another function.
         // If we've got a common function we get its name, otherwise we may need to create a new instance
-        // of the error just in case it's a poorly-constructed error.
-        constructorName = adone.util.functionName(errorLike);
+        // of the error just in case it's a poorly-constructed error. Please see chaijs/chai/issues/45 to know more.
+        constructorName = getFunctionName(errorLike);
         if (constructorName === "") {
-            const newConstructorName = adone.util.functionName(new errorLike()); // eslint-disable-line babel/new-cap
+            const newConstructorName = getFunctionName(new errorLike()); // eslint-disable-line new-cap
             constructorName = newConstructorName || constructorName;
         }
     }
@@ -45,11 +105,24 @@ export const getConstructorName = (errorLike) => {
     return constructorName;
 };
 
+/**
+ * ### .getMessage(errorLike)
+ *
+ * Gets the error message from an error.
+ * If `err` is a String itself, we return it.
+ * If the error has no message, we return an empty string.
+ *
+ * @name getMessage
+ * @param {Error|String} errorLike
+ * @namespace Utils
+ * @api public
+ */
+
 export const getMessage = (errorLike) => {
     let msg = "";
     if (errorLike && errorLike.message) {
         msg = errorLike.message;
-    } else if (is.string(errorLike)) {
+    } else if (typeof errorLike === "string") {
         msg = errorLike;
     }
 

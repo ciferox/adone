@@ -280,8 +280,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         EMPTY_BUFFER: () => Buffer.allocUnsafe(0),
         LOGO: () => adone.fs.readFileSync(adone.std.path.join(adone.runtime.realm.env.SHARE_PATH, "media", "adone.txt"), { encoding: "utf8" }),
 
-        assert: () => adone.assertion.loadAssertInterface().assert,
-        expect: () => adone.assertion.loadExpectInterface().expect,
+        assert: () => adone.assertion.assert,
 
         // Namespaces
 

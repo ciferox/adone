@@ -1,16 +1,53 @@
 export default function (lib, util) {
-    const { getAssertion, AssertionError } = lib;
+    const { Assertion } = lib;
     const { flag } = util;
-    const { is } = adone;
 
-    const assert = lib.assert = (value, mesasge) => {
-        const test = getAssertion(null, null, lib.assert, true);
-        test.assert(value, mesasge, "[ negation m unavailable ]");
+    /**
+     * ### assert(expression, message)
+     *
+     * Write your own test expressions.
+     *
+     *     assert('foo' !== 'bar', 'foo is not bar');
+     *     assert(Array.isArray([]), 'empty arrays are arrays');
+     *
+     * @param {Mixed} expression to test for truthiness
+     * @param {String} message to display on error
+     * @name assert
+     * @namespace Assert
+     * @api public
+     */
+
+    const assert = lib.assert = function (express, errmsg) {
+        const test = new Assertion(null, null, lib.assert, true);
+        test.assert(
+            express
+            , errmsg
+            , "[ negation message unavailable ]"
+        );
     };
 
     /**
-     * Throws an error, like node.js
+     * ### .fail([message])
+     * ### .fail(actual, expected, [message], [operator])
+     *
+     * Throw a failure. Node.js `assert` module-compatible.
+     *
+     *     assert.fail();
+     *     assert.fail("custom error message");
+     *     assert.fail(1, 2);
+     *     assert.fail(1, 2, "custom error message");
+     *     assert.fail(1, 2, "custom error message", ">");
+     *     assert.fail(1, 2, undefined, ">");
+     *
+     * @name fail
+     * @param {Mixed} actual
+     * @param {Mixed} expected
+     * @param {String} message
+     * @param {String} operator
+     * @namespace Assert
+     * @api public
      */
+
     assert.fail = function (actual, expected, message, operator) {
         if (arguments.length < 2) {
             // Comply with Node's fail([message]) interface
@@ -20,1059 +57,3060 @@ export default function (lib, util) {
         }
 
         message = message || "assert.fail()";
-
-        throw new AssertionError(message, { actual, expected, operator }, assert.fail);
-    };
-
-    /**
-     * Asserts that value is truthy
-     */
-    assert.ok = (value, message) => {
-        getAssertion(value, message, assert.ok, true).is.ok();
-    };
-
-    /**
-     * Asserts that value is not truthy
-     */
-    assert.notOk = (value, message) => {
-        getAssertion(value, message, assert.notOk, true).is.not.ok();
-    };
-
-    /**
-     * Asserts non-strict equality (==)
-     */
-    assert.equal = (actual, expected, message) => {
-        const test = getAssertion(actual, message, assert.equal, true);
-        test.assert(
-            expected == flag(test, "object"), // eslint-disable-line eqeqeq
-            "expected #{this} to equal #{exp}",
-            "expected #{this} to not equal #{act}",
-            expected,
+        throw new lib.AssertionError(message, {
             actual,
-            true
+            expected,
+            operator
+        }, assert.fail);
+    };
+
+    /**
+     * ### .isOk(object, [message])
+     *
+     * Asserts that `object` is truthy.
+     *
+     *     assert.isOk('everything', 'everything is ok');
+     *     assert.isOk(false, 'this will fail');
+     *
+     * @name isOk
+     * @alias ok
+     * @param {Mixed} object to test
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.isOk = function (val, msg) {
+        new Assertion(val, msg, assert.isOk, true).is.ok;
+    };
+
+    /**
+     * ### .isNotOk(object, [message])
+     *
+     * Asserts that `object` is falsy.
+     *
+     *     assert.isNotOk('everything', 'this will fail');
+     *     assert.isNotOk(false, 'this will pass');
+     *
+     * @name isNotOk
+     * @alias notOk
+     * @param {Mixed} object to test
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.isNotOk = function (val, msg) {
+        new Assertion(val, msg, assert.isNotOk, true).is.not.ok;
+    };
+
+    /**
+     * ### .equal(actual, expected, [message])
+     *
+     * Asserts non-strict equality (`==`) of `actual` and `expected`.
+     *
+     *     assert.equal(3, '3', '== coerces values to strings');
+     *
+     * @name equal
+     * @param {Mixed} actual
+     * @param {Mixed} expected
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.equal = function (act, exp, msg) {
+        const test = new Assertion(act, msg, assert.equal, true);
+
+        test.assert(
+            exp == flag(test, "object")
+            , "expected #{this} to equal #{exp}"
+            , "expected #{this} to not equal #{act}"
+            , exp
+            , act
+            , true
         );
     };
 
     /**
-     * Asserts non-struct inequality (!=)
+     * ### .notEqual(actual, expected, [message])
+     *
+     * Asserts non-strict inequality (`!=`) of `actual` and `expected`.
+     *
+     *     assert.notEqual(3, 4, 'these numbers are not equal');
+     *
+     * @name notEqual
+     * @param {Mixed} actual
+     * @param {Mixed} expected
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.notEqual = (actual, expected, message) => {
-        const test = getAssertion(actual, message, assert.notEqual, true);
+
+    assert.notEqual = function (act, exp, msg) {
+        const test = new Assertion(act, msg, assert.notEqual, true);
+
         test.assert(
-            expected != flag(test, "object"), // eslint-disable-line eqeqeq
-            "expected #{this} to not equal #{exp}",
-            "expected #{this} to equal #{act}",
-            expected,
-            actual,
-            true
+            exp != flag(test, "object")
+            , "expected #{this} to not equal #{exp}"
+            , "expected #{this} to equal #{act}"
+            , exp
+            , act
+            , true
         );
     };
 
     /**
-     * Asserts strict equality (==)
-     */
-    assert.strictEqual = (actual, expected, message) => {
-        getAssertion(actual, message, assert.strictEqual, true).to.equal(expected);
-    };
-
-    /**
-     * Asserts strict inequality (!==)
-     */
-    assert.notStrictEqual = (actual, expected, message) => {
-        getAssertion(actual, message, assert.notStrictEqual, true).to.not.equal(expected);
-    };
-
-    /**
-     * Asserts that actual is deeply equal to expected
-     */
-    assert.deepEqual = assert.deepStrictEqual = (actual, expected, message) => {
-        getAssertion(actual, message, assert.deepEqual, true).to.eql(expected);
-    };
-
-    /**
-     * Asserts that actual and expected have the same length and the same members (===)
-     */
-    assert.equalArrays = (actual, expected, message) => {
-        getAssertion(actual, message, assert.equalArrays, true).to.eqlArray(expected);
-    };
-
-    /**
-     * Asserts that actual is not deeply equal to expected
-     */
-    assert.notDeepEqual = (actual, expected, message) => {
-        getAssertion(actual, message, assert.notDeepEqual, true).to.not.eql(expected);
-    };
-
-    /**
-     * Asserts that value > above
-     */
-    assert.above = (value, above, message) => {
-        getAssertion(value, message, assert.above, true).to.be.above(above);
-    };
-
-    /**
-     * Asserts that value >= atLeast
-     */
-    assert.atLeast = (value, atLeast, message) => {
-        getAssertion(value, message, assert.atLeast, true).to.be.least(atLeast);
-    };
-
-    /**
-     * Asserts that value < below
-     */
-    assert.below = (value, below, message) => {
-        getAssertion(value, message, assert.below, true).to.be.below(below);
-    };
-
-    /**
-     * Asserts that value <= atMost
-     */
-    assert.atMost = (value, atMost, message) => {
-        getAssertion(value, message, assert.atMost, true).to.be.most(atMost);
-    };
-
-    /**
-     * Asserts that value is true
-     */
-    assert.true = (value, message) => {
-        getAssertion(value, message, assert.true, true).is.true();
-    };
-
-    /**
-     * Asserts that value is not true
-     */
-    assert.notTrue = (value, message) => {
-        getAssertion(value, message, assert.notTrue, true).to.not.equal(true);
-    };
-
-    /**
-     * Asserts that value is false
-     */
-    assert.false = (value, message) => {
-        getAssertion(value, message, assert.false, true).is.false();
-    };
-
-    /**
-     * Asserts that value is not false
-     */
-    assert.notFalse = (value, message) => {
-        getAssertion(value, message, assert.notFalse, true).to.not.equal(false);
-    };
-
-    /**
-     * Asserts that value is null
-     */
-    assert.null = (value, message) => {
-        getAssertion(value, message, assert.null, true).to.equal(null);
-    };
-
-    /**
-     * Asserts that value is not null
-     */
-    assert.notNull = (value, message) => {
-        getAssertion(value, message, assert.notNull, true).to.not.equal(null);
-    };
-
-    /**
-     * Asserts that value is NaN
-     */
-    assert.NaN = (value, message) => {
-        getAssertion(value, message, assert.NaN, true).to.be.NaN();
-    };
-
-    /**
-     * Asserts that value is not NaN
-     */
-    assert.notNaN = (value, message) => {
-        getAssertion(value, message, assert.notNaN, true).not.to.be.NaN();
-    };
-
-    /**
-     * Asserts that value neither null nor undefined
-     */
-    assert.exists = (value, message) => {
-        getAssertion(value, message, assert.exists, true).to.exist();
-    };
-
-    /**
-     * Asserts that value either null or undefined
-     */
-    assert.notExists = (value, message) => {
-        getAssertion(value, message, assert.notExists, true).to.not.exist();
-    };
-
-    /**
-     * Asserts that value is undefined
-     */
-    assert.undefined = (value, message) => {
-        getAssertion(value, message, assert.undefined, true).to.equal(undefined);
-    };
-
-    /**
-     * Asserts that value is not undefined
-     */
-    assert.defined = (value, message) => {
-        getAssertion(value, message, assert.defined, true).to.not.equal(undefined);
-    };
-
-    /**
-     * Asserts that value is a function
-     */
-    assert.function = (value, message) => {
-        getAssertion(value, message, assert.function, true).to.be.a("function");
-    };
-
-    /**
-     * Asserts that value is not a function
-     */
-    assert.notFunction = (value, message) => {
-        getAssertion(value, message, assert.notFunction, true).to.not.be.a("function");
+     * ### .strictEqual(actual, expected, [message])
+     *
+     * Asserts strict equality (`===`) of `actual` and `expected`.
+     *
+     *     assert.strictEqual(true, true, 'these booleans are strictly equal');
+     *
+     * @name strictEqual
+     * @param {Mixed} actual
+     * @param {Mixed} expected
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.strictEqual = function (act, exp, msg) {
+        new Assertion(act, msg, assert.strictEqual, true).to.equal(exp);
     };
 
     /**
-     * Asserts that value is an object of type Object
-     */
-    assert.object = (value, message) => {
-        getAssertion(value, message, assert.object, true).to.be.a("object");
+     * ### .notStrictEqual(actual, expected, [message])
+     *
+     * Asserts strict inequality (`!==`) of `actual` and `expected`.
+     *
+     *     assert.notStrictEqual(3, '3', 'no coercion for strict equality');
+     *
+     * @name notStrictEqual
+     * @param {Mixed} actual
+     * @param {Mixed} expected
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.notStrictEqual = function (act, exp, msg) {
+        new Assertion(act, msg, assert.notStrictEqual, true).to.not.equal(exp);
     };
 
     /**
-     * Asserts that value is not an object of type Object
-     */
-    assert.notObject = (value, message) => {
-        getAssertion(value, message, assert.notObject, true).to.not.be.a("object");
+     * ### .deepEqual(actual, expected, [message])
+     *
+     * Asserts that `actual` is deeply equal to `expected`.
+     *
+     *     assert.deepEqual({ tea: 'green' }, { tea: 'green' });
+     *
+     * @name deepEqual
+     * @param {Mixed} actual
+     * @param {Mixed} expected
+     * @param {String} message
+     * @alias deepStrictEqual
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.deepEqual = assert.deepStrictEqual = function (act, exp, msg) {
+        new Assertion(act, msg, assert.deepEqual, true).to.eql(exp);
     };
 
     /**
-     * Asserts that value is an array
-     */
-    assert.array = (value, message) => {
-        getAssertion(value, message, assert.array, true).to.be.an("array");
+     * ### .notDeepEqual(actual, expected, [message])
+     *
+     * Assert that `actual` is not deeply equal to `expected`.
+     *
+     *     assert.notDeepEqual({ tea: 'green' }, { tea: 'jasmine' });
+     *
+     * @name notDeepEqual
+     * @param {Mixed} actual
+     * @param {Mixed} expected
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.notDeepEqual = function (act, exp, msg) {
+        new Assertion(act, msg, assert.notDeepEqual, true).to.not.eql(exp);
     };
 
     /**
-     * Asserts that value is not an array
-     */
-    assert.notArray = (value, message) => {
-        getAssertion(value, message, assert.notArray, true).to.not.be.an("array");
+     * ### .isAbove(valueToCheck, valueToBeAbove, [message])
+     *
+     * Asserts `valueToCheck` is strictly greater than (>) `valueToBeAbove`.
+     *
+     *     assert.isAbove(5, 2, '5 is strictly greater than 2');
+     *
+     * @name isAbove
+     * @param {Mixed} valueToCheck
+     * @param {Mixed} valueToBeAbove
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.isAbove = function (val, abv, msg) {
+        new Assertion(val, msg, assert.isAbove, true).to.be.above(abv);
     };
 
     /**
-     * Asserts that value is a string
-     */
-    assert.string = (value, message) => {
-        getAssertion(value, message, assert.string, true).to.be.a("string");
-    };
+     * ### .isAtLeast(valueToCheck, valueToBeAtLeast, [message])
+     *
+     * Asserts `valueToCheck` is greater than or equal to (>=) `valueToBeAtLeast`.
+     *
+     *     assert.isAtLeast(5, 2, '5 is greater or equal to 2');
+     *     assert.isAtLeast(3, 3, '3 is greater or equal to 3');
+     *
+     * @name isAtLeast
+     * @param {Mixed} valueToCheck
+     * @param {Mixed} valueToBeAtLeast
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
 
-    /**
-     * Asserts that value is not a string
-     */
-    assert.notString = (value, message) => {
-        getAssertion(value, message, assert.notString, true).to.not.be.a("string");
+    assert.isAtLeast = function (val, atlst, msg) {
+        new Assertion(val, msg, assert.isAtLeast, true).to.be.least(atlst);
     };
 
     /**
-     * Asserts that value is a number
+     * ### .isBelow(valueToCheck, valueToBeBelow, [message])
+     *
+     * Asserts `valueToCheck` is strictly less than (<) `valueToBeBelow`.
+     *
+     *     assert.isBelow(3, 6, '3 is strictly less than 6');
+     *
+     * @name isBelow
+     * @param {Mixed} valueToCheck
+     * @param {Mixed} valueToBeBelow
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.number = (value, message) => {
-        getAssertion(value, message, assert.number, true).to.be.a("number");
-    };
 
-    /**
-     * Asserts that value is not a number
-     */
-    assert.notNumber = (value, message) => {
-        getAssertion(value, message, assert.notNumber, true).to.not.be.a("number");
+    assert.isBelow = function (val, blw, msg) {
+        new Assertion(val, msg, assert.isBelow, true).to.be.below(blw);
     };
 
     /**
-     * Asserts that value is a finite number
+     * ### .isAtMost(valueToCheck, valueToBeAtMost, [message])
+     *
+     * Asserts `valueToCheck` is less than or equal to (<=) `valueToBeAtMost`.
+     *
+     *     assert.isAtMost(3, 6, '3 is less than or equal to 6');
+     *     assert.isAtMost(4, 4, '4 is less than or equal to 4');
+     *
+     * @name isAtMost
+     * @param {Mixed} valueToCheck
+     * @param {Mixed} valueToBeAtMost
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.finite = (value, message) => {
-        getAssertion(value, message, assert.finite, true).to.be.finite();
-    };
 
-    /**
-     * Asserts that value is a boolean
-     */
-    assert.boolean = (value, message) => {
-        getAssertion(value, message, assert.boolean, true).to.be.a("boolean");
+    assert.isAtMost = function (val, atmst, msg) {
+        new Assertion(val, msg, assert.isAtMost, true).to.be.most(atmst);
     };
 
     /**
-     * Asserts that value is not a boolean
+     * ### .isTrue(value, [message])
+     *
+     * Asserts that `value` is true.
+     *
+     *     var teaServed = true;
+     *     assert.isTrue(teaServed, 'the tea has been served');
+     *
+     * @name isTrue
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.notBoolean = (value, message) => {
-        getAssertion(value, message, assert.notBoolean, true).to.not.be.a("boolean");
-    };
 
-    /**
-     * Asserts that value's type is `type`
-     */
-    assert.typeOf = (value, type, message) => {
-        getAssertion(value, message, assert.typeOf, true).to.be.a(type);
+    assert.isTrue = function (val, msg) {
+        new Assertion(val, msg, assert.isTrue, true).is.true;
     };
 
     /**
-     * Assert that value's type is not `type`
+     * ### .isNotTrue(value, [message])
+     *
+     * Asserts that `value` is not true.
+     *
+     *     var tea = 'tasty chai';
+     *     assert.isNotTrue(tea, 'great, time for tea!');
+     *
+     * @name isNotTrue
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.notTypeOf = (value, type, message) => {
-        getAssertion(value, message, assert.notTypeOf, true).to.not.be.a(type);
-    };
 
-    /**
-     * Asserts that value is an instance of constructor
-     */
-    assert.instanceOf = (value, type, message) => {
-        getAssertion(value, message, assert.instanceOf, true).to.be.instanceOf(type);
+    assert.isNotTrue = function (val, msg) {
+        new Assertion(val, msg, assert.isNotTrue, true).to.not.equal(true);
     };
 
     /**
-     * Asserts that value is not an instance of constructor
+     * ### .isFalse(value, [message])
+     *
+     * Asserts that `value` is false.
+     *
+     *     var teaServed = false;
+     *     assert.isFalse(teaServed, 'no tea yet? hmm...');
+     *
+     * @name isFalse
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.notInstanceOf = (value, type, message) => {
-        getAssertion(value, message, assert.notInstanceOf, true).to.not.be.instanceOf(type);
-    };
 
-    /**
-     * Asserts that expected includes value
-     */
-    assert.include = (expected, value, message) => {
-        getAssertion(expected, message, assert.include, true).include(value);
+    assert.isFalse = function (val, msg) {
+        new Assertion(val, msg, assert.isFalse, true).is.false;
     };
 
     /**
-     * Asserts that expected does not include value
+     * ### .isNotFalse(value, [message])
+     *
+     * Asserts that `value` is not false.
+     *
+     *     var tea = 'tasty chai';
+     *     assert.isNotFalse(tea, 'great, time for tea!');
+     *
+     * @name isNotFalse
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.notInclude = (expected, value, message) => {
-        getAssertion(expected, message, assert.notInclude, true).not.include(value);
-    };
 
-    /**
-     * Asserts that expected includes value
-     */
-    assert.deepInclude = (expected, value, message) => {
-        getAssertion(expected, message, assert.deepInclude, true).deep.include(value);
+    assert.isNotFalse = function (val, msg) {
+        new Assertion(val, msg, assert.isNotFalse, true).to.not.equal(false);
     };
 
     /**
-     * Asserts that expected does not include value
+     * ### .isNull(value, [message])
+     *
+     * Asserts that `value` is null.
+     *
+     *     assert.isNull(err, 'there was no error');
+     *
+     * @name isNull
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.notDeepInclude = (expecte, include, message) => {
-        getAssertion(expecte, message, assert.notDeepInclude, true).not.deep.include(include);
-    };
 
-    /**
-     * Asserts that expected includes value
-     * Enables the use of dot- and bracket-notation for referencing nested properties
-     */
-    assert.nestedInclude = (expected, value, message) => {
-        getAssertion(expected, message, assert.nestedInclude, true).nested.include(value);
+    assert.isNull = function (val, msg) {
+        new Assertion(val, msg, assert.isNull, true).to.equal(null);
     };
 
     /**
-     * Asserts that expected does not include inc
-     * Enables the use of dot- and bracket-notation for referencing nested properties
+     * ### .isNotNull(value, [message])
+     *
+     * Asserts that `value` is not null.
+     *
+     *     var tea = 'tasty chai';
+     *     assert.isNotNull(tea, 'great, time for tea!');
+     *
+     * @name isNotNull
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.notNestedInclude = (expected, value, message) => {
-        getAssertion(expected, message, assert.notNestedInclude, true).not.nested.include(value);
-    };
 
-    /**
-     * Assert that expected includes value
-     */
-    assert.deepNestedInclude = (expected, value, message) => {
-        getAssertion(expected, message, assert.deepNestedInclude, true).deep.nested.include(value);
+    assert.isNotNull = function (val, msg) {
+        new Assertion(val, msg, assert.isNotNull, true).to.not.equal(null);
     };
 
     /**
-     * Assert that expected includes value
+     * ### .isNaN
+     *
+     * Asserts that value is NaN.
+     *
+     *     assert.isNaN(NaN, 'NaN is NaN');
+     *
+     * @name isNaN
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.notDeepNestedInclude = (expected, value, message) => {
-        getAssertion(expected, message, assert.notDeepNestedInclude, true).not.deep.nested.include(value);
-    };
 
-    /**
-     * Assert that expected includes value
-     */
-    assert.ownInclude = (expected, value, message) => {
-        getAssertion(expected, message, assert.ownInclude, true).own.include(value);
+    assert.isNaN = function (val, msg) {
+        new Assertion(val, msg, assert.isNaN, true).to.be.NaN;
     };
 
     /**
-     * Assert that expected does not include value
+     * ### .isNotNaN
+     *
+     * Asserts that value is not NaN.
+     *
+     *     assert.isNotNaN(4, '4 is not NaN');
+     *
+     * @name isNotNaN
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.notOwnInclude = (expected, value, message) => {
-        getAssertion(expected, message, assert.notOwnInclude, true).not.own.include(value);
+    assert.isNotNaN = function (val, msg) {
+        new Assertion(val, msg, assert.isNotNaN, true).not.to.be.NaN;
     };
 
     /**
-     * Assert that expected includes value
+     * ### .exists
+     *
+     * Asserts that the target is neither `null` nor `undefined`.
+     *
+     *     var foo = 'hi';
+     *
+     *     assert.exists(foo, 'foo is neither `null` nor `undefined`');
+     *
+     * @name exists
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.deepOwnInclude = (expected, value, message) => {
-        getAssertion(expected, message, assert.deepOwnInclude, true).deep.own.include(value);
-    };
 
-    /**
-     * Assert that expected does not include value
-     */
-    assert.notDeepOwnInclude = (expected, value, message) => {
-        getAssertion(expected, message, assert.notDeepOwnInclude, true).not.deep.own.include(value);
+    assert.exists = function (val, msg) {
+        new Assertion(val, msg, assert.exists, true).to.exist;
     };
 
     /**
-     * Asserts that expected matches the regular expression regExp
+     * ### .notExists
+     *
+     * Asserts that the target is either `null` or `undefined`.
+     *
+     *     var bar = null
+     *       , baz;
+     *
+     *     assert.notExists(bar);
+     *     assert.notExists(baz, 'baz is either null or undefined');
+     *
+     * @name notExists
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.match = (expected, regExp, message) => {
-        getAssertion(expected, message, assert.match, true).to.match(regExp);
-    };
 
-    /**
-     * Asserts that expected does not match the regular expression regExp
-     */
-    assert.notMatch = (expected, regExp, message) => {
-        getAssertion(expected, message, assert.notMatch, true).to.not.match(regExp);
+    assert.notExists = function (val, msg) {
+        new Assertion(val, msg, assert.notExists, true).to.not.exist;
     };
 
     /**
-     * Asserts that object has a property named `property`
+     * ### .isUndefined(value, [message])
+     *
+     * Asserts that `value` is `undefined`.
+     *
+     *     var tea;
+     *     assert.isUndefined(tea, 'no tea defined');
+     *
+     * @name isUndefined
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.property = (object, property, message) => {
-        getAssertion(object, message, assert.property, true).to.have.property(property);
-    };
 
-    /**
-     * Asserts that object does not have a property named `property`
-     */
-    assert.notProperty = (object, property, message) => {
-        getAssertion(object, message, assert.notProperty, true).to.not.have.property(property);
+    assert.isUndefined = function (val, msg) {
+        new Assertion(val, msg, assert.isUndefined, true).to.equal(undefined);
     };
 
     /**
-     * Asserts that object has a property named `property` with value `value` (===)
+     * ### .isDefined(value, [message])
+     *
+     * Asserts that `value` is not `undefined`.
+     *
+     *     var tea = 'cup of chai';
+     *     assert.isDefined(tea, 'tea has been defined');
+     *
+     * @name isDefined
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.propertyVal = (object, property, value, message) => {
-        getAssertion(object, message, assert.propertyVal, true).to.have.property(property, value);
-    };
 
-    /**
-     * Asserts that object does not have a property named `property` with value `value` (===)
-     */
-    assert.notPropertyVal = (object, property, value, message) => {
-        getAssertion(object, message, assert.notPropertyVal, true).to.not.have.property(property, value);
+    assert.isDefined = function (val, msg) {
+        new Assertion(val, msg, assert.isDefined, true).to.not.equal(undefined);
     };
 
     /**
-     * Asserts that object has a property named `property` with a value `value`
+     * ### .isFunction(value, [message])
+     *
+     * Asserts that `value` is a function.
+     *
+     *     function serveTea() { return 'cup of tea'; };
+     *     assert.isFunction(serveTea, 'great, we can have tea now');
+     *
+     * @name isFunction
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.deepPropertyVal = (object, property, value, message) => {
-        getAssertion(object, message, assert.deepPropertyVal, true).to.have.deep.property(property, value);
-    };
 
-    /**
-     * Asserts that object does not have a property named `property` with value `value`
-     */
-    assert.notDeepPropertyVal = (object, property, value, message) => {
-        getAssertion(object, message, assert.notDeepPropertyVal, true).to.not.have.deep.property(property, value);
+    assert.isFunction = function (val, msg) {
+        new Assertion(val, msg, assert.isFunction, true).to.be.a("function");
     };
 
     /**
-     * Asserts that object has an owned property named `property`
+     * ### .isNotFunction(value, [message])
+     *
+     * Asserts that `value` is _not_ a function.
+     *
+     *     var serveTea = [ 'heat', 'pour', 'sip' ];
+     *     assert.isNotFunction(serveTea, 'great, we have listed the steps');
+     *
+     * @name isNotFunction
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.ownProperty = (object, proeprty, message) => {
-        getAssertion(object, message, assert.ownProperty, true).to.have.own.property(proeprty);
-    };
 
-    /**
-     * Asserts that object does not have an owned property named `property`
-     */
-    assert.notOwnProperty = (object, property, message) => {
-        getAssertion(object, message, assert.notOwnProperty, true).to.not.have.own.property(property);
+    assert.isNotFunction = function (val, msg) {
+        new Assertion(val, msg, assert.isNotFunction, true).to.not.be.a("function");
     };
 
     /**
-     * Asserts that object has an owned property named `property` with value `value`(===)
+     * ### .isObject(value, [message])
+     *
+     * Asserts that `value` is an object of type 'Object' (as revealed by `Object.prototype.toString`).
+     * _The assertion does not match subclassed objects._
+     *
+     *     var selection = { name: 'Chai', serve: 'with spices' };
+     *     assert.isObject(selection, 'tea selection is an object');
+     *
+     * @name isObject
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.ownPropertyVal = (object, property, value, message) => {
-        getAssertion(object, message, assert.ownPropertyVal, true).to.have.own.property(property, value);
-    };
 
-    /**
-     * Asserts that object does not have an owned property named `property` with value `value`(===)
-     */
-    assert.notOwnPropertyVal = (object, property, value, message) => {
-        getAssertion(object, message, assert.notOwnPropertyVal, true).to.not.have.own.property(property, value);
+    assert.isObject = function (val, msg) {
+        new Assertion(val, msg, assert.isObject, true).to.be.a("object");
     };
 
     /**
-     * Asserts that object has an owned property named `property` with value `value`
+     * ### .isNotObject(value, [message])
+     *
+     * Asserts that `value` is _not_ an object of type 'Object' (as revealed by `Object.prototype.toString`).
+     *
+     *     var selection = 'chai'
+     *     assert.isNotObject(selection, 'tea selection is not an object');
+     *     assert.isNotObject(null, 'null is not an object');
+     *
+     * @name isNotObject
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.deepOwnPropertyVal = (object, property, value, message) => {
-        getAssertion(object, message, assert.deepOwnPropertyVal, true).to.have.deep.own.property(property, value);
-    };
 
-    /**
-     * Asserts that object does not have an owned property named `property` with value `value`(===)
-     */
-    assert.notDeepOwnPropertyVal = (object, property, value, message) => {
-        getAssertion(object, message, assert.notDeepOwnPropertyVal, true).to.not.have.deep.own.property(property, value);
+    assert.isNotObject = function (val, msg) {
+        new Assertion(val, msg, assert.isNotObject, true).to.not.be.a("object");
     };
 
     /**
-     * Asserts that object has a property named `property`
+     * ### .isArray(value, [message])
+     *
+     * Asserts that `value` is an array.
+     *
+     *     var menu = [ 'green', 'chai', 'oolong' ];
+     *     assert.isArray(menu, 'what kind of tea do we want?');
+     *
+     * @name isArray
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.nestedProperty = (object, property, message) => {
-        getAssertion(object, message, assert.nestedProperty, true).to.have.nested.property(property);
-    };
 
-    /**
-     * Asserts that object does not have a property named `property`
-     */
-    assert.notNestedProperty = (object, property, message) => {
-        getAssertion(object, message, assert.notNestedProperty, true).to.not.have.nested.property(property);
+    assert.isArray = function (val, msg) {
+        new Assertion(val, msg, assert.isArray, true).to.be.an("array");
     };
 
     /**
-     * Asserts that object has a property named `property` with value `value`(===)
+     * ### .isNotArray(value, [message])
+     *
+     * Asserts that `value` is _not_ an array.
+     *
+     *     var menu = 'green|chai|oolong';
+     *     assert.isNotArray(menu, 'what kind of tea do we want?');
+     *
+     * @name isNotArray
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.nestedPropertyVal = (object, property, value, message) => {
-        getAssertion(object, message, assert.nestedPropertyVal, true).to.have.nested.property(property, value);
-    };
 
-    /**
-     * Asserts that object does not have a property named `property` with value `value`(===)
-     */
-    assert.notNestedPropertyVal = (object, property, value, message) => {
-        getAssertion(object, message, assert.notNestedPropertyVal, true).to.not.have.nested.property(property, value);
+    assert.isNotArray = function (val, msg) {
+        new Assertion(val, msg, assert.isNotArray, true).to.not.be.an("array");
     };
 
     /**
-     * Asserts that object has a property named `property` with value `value`
+     * ### .isString(value, [message])
+     *
+     * Asserts that `value` is a string.
+     *
+     *     var teaOrder = 'chai';
+     *     assert.isString(teaOrder, 'order placed');
+     *
+     * @name isString
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.deepNestedPropertyVal = (object, property, value, message) => {
-        getAssertion(object, message, assert.deepNestedPropertyVal, true).to.have.deep.nested.property(property, value);
-    };
 
-    /**
-     * Asserts that object does not have a property named `property` with value `value`
-     */
-    assert.notDeepNestedPropertyVal = (object, property, value, message) => {
-        getAssertion(object, message, assert.notDeepNestedPropertyVal, true).to.not.have.deep.nested.property(property, value);
+    assert.isString = function (val, msg) {
+        new Assertion(val, msg, assert.isString, true).to.be.a("string");
     };
 
     /**
-     * Asserts that expected has a length property with value `length`
+     * ### .isNotString(value, [message])
+     *
+     * Asserts that `value` is _not_ a string.
+     *
+     *     var teaOrder = 4;
+     *     assert.isNotString(teaOrder, 'order placed');
+     *
+     * @name isNotString
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.lengthOf = (expected, length, message) => {
-        getAssertion(expected, message, assert.lengthOf, true).to.have.lengthOf(length);
-    };
 
-    /**
-     * Asserts that object has at least one key from `keys`
-     */
-    assert.hasAnyKeys = (object, keys, message) => {
-        getAssertion(object, message, assert.hasAnyKeys, true).to.have.any.keys(keys);
+    assert.isNotString = function (val, msg) {
+        new Assertion(val, msg, assert.isNotString, true).to.not.be.a("string");
     };
 
     /**
-     * Asserts that object has all and only all of the keys provided
+     * ### .isNumber(value, [message])
+     *
+     * Asserts that `value` is a number.
+     *
+     *     var cups = 2;
+     *     assert.isNumber(cups, 'how many cups');
+     *
+     * @name isNumber
+     * @param {Number} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.hasAllKeys = (object, keys, message) => {
-        getAssertion(object, message, assert.hasAllKeys, true).to.have.all.keys(keys);
-    };
 
-    /**
-     * Asserts that object has all the keys provided but maybe more
-     */
-    assert.containsAllKeys = (object, keys, message) => {
-        getAssertion(object, message, assert.containsAllKeys, true).to.contain.all.keys(keys);
+    assert.isNumber = function (val, msg) {
+        new Assertion(val, msg, assert.isNumber, true).to.be.a("number");
     };
 
     /**
-     * Asserts that object does not have any provided key
+     * ### .isNotNumber(value, [message])
+     *
+     * Asserts that `value` is _not_ a number.
+     *
+     *     var cups = '2 cups please';
+     *     assert.isNotNumber(cups, 'how many cups');
+     *
+     * @name isNotNumber
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.doesNotHaveAnyKeys = (object, keys, message) => {
-        getAssertion(object, message, assert.doesNotHaveAnyKeys, true).to.not.have.any.keys(keys);
-    };
 
-    /**
-     * Asserts that object does not have all the keys provided
-     */
-    assert.doesNotHaveAllKeys = (object, keys, message) => {
-        getAssertion(object, message, assert.doesNotHaveAllKeys, true).to.not.have.all.keys(keys);
+    assert.isNotNumber = function (val, msg) {
+        new Assertion(val, msg, assert.isNotNumber, true).to.not.be.a("number");
     };
 
     /**
-     * Asserts that object has at least one of the keys provided
+     * ### .isFinite(value, [message])
+     *
+     * Asserts that `value` is a finite number. Unlike `.isNumber`, this will fail for `NaN` and `Infinity`.
+     *
+     *     var cups = 2;
+     *     assert.isFinite(cups, 'how many cups');
+     *
+     *     assert.isFinite(NaN); // throws
+     *
+     * @name isFinite
+     * @param {Number} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.hasAnyDeepKeys = (object, keys, message) => {
-        getAssertion(object, message, assert.hasAnyDeepKeys, true).to.have.any.deep.keys(keys);
-    };
 
-    /**
-     * Asserts that object has all and only all of the keys provided
-     */
-    assert.hasAllDeepKeys = (object, keys, message) => {
-        getAssertion(object, message, assert.hasAllDeepKeys, true).to.have.all.deep.keys(keys);
+    assert.isFinite = function (val, msg) {
+        new Assertion(val, msg, assert.isFinite, true).to.be.finite;
     };
 
     /**
-     * Asserts that object has all the keys provided but maybe more
+     * ### .isBoolean(value, [message])
+     *
+     * Asserts that `value` is a boolean.
+     *
+     *     var teaReady = true
+     *       , teaServed = false;
+     *
+     *     assert.isBoolean(teaReady, 'is the tea ready');
+     *     assert.isBoolean(teaServed, 'has tea been served');
+     *
+     * @name isBoolean
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.containsAllDeepKeys = (object, keys, message) => {
-        getAssertion(object, message, assert.containsAllDeepKeys, true).to.contain.all.deep.keys(keys);
-    };
 
-    /**
-     * Asserts that object does not have any provided key
-     */
-    assert.doesNotHaveAnyDeepKeys = (object, keys, message) => {
-        getAssertion(object, message, assert.doesNotHaveAnyDeepKeys, true).to.not.have.any.deep.keys(keys);
+    assert.isBoolean = function (val, msg) {
+        new Assertion(val, msg, assert.isBoolean, true).to.be.a("boolean");
     };
 
-    /**
-     * Asserts that object does not have all the keys provided
+    /**
+     * ### .isNotBoolean(value, [message])
+     *
+     * Asserts that `value` is _not_ a boolean.
+     *
+     *     var teaReady = 'yep'
+     *       , teaServed = 'nope';
+     *
+     *     assert.isNotBoolean(teaReady, 'is the tea ready');
+     *     assert.isNotBoolean(teaServed, 'has tea been served');
+     *
+     * @name isNotBoolean
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.doesNotHaveAllDeepKeys = (object, keys, message) => {
-        getAssertion(object, message, assert.doesNotHaveAllDeepKeys, true).to.not.have.all.deep.keys(keys);
-    };
 
-    /**
-     * Asserts that a function or an async functions throws an error
-     */
-    assert.throws = (fn, errorLike, errMsgMatcher, message) => {
-        if (is.string(errorLike) || is.regexp(errorLike)) {
+    assert.isNotBoolean = function (val, msg) {
+        new Assertion(val, msg, assert.isNotBoolean, true).to.not.be.a("boolean");
+    };
+
+    /**
+     * ### .typeOf(value, name, [message])
+     *
+     * Asserts that `value`'s type is `name`, as determined by
+     * `Object.prototype.toString`.
+     *
+     *     assert.typeOf({ tea: 'chai' }, 'object', 'we have an object');
+     *     assert.typeOf(['chai', 'jasmine'], 'array', 'we have an array');
+     *     assert.typeOf('tea', 'string', 'we have a string');
+     *     assert.typeOf(/tea/, 'regexp', 'we have a regular expression');
+     *     assert.typeOf(null, 'null', 'we have a null');
+     *     assert.typeOf(undefined, 'undefined', 'we have an undefined');
+     *
+     * @name typeOf
+     * @param {Mixed} value
+     * @param {String} name
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.typeOf = function (val, type, msg) {
+        new Assertion(val, msg, assert.typeOf, true).to.be.a(type);
+    };
+
+    /**
+     * ### .notTypeOf(value, name, [message])
+     *
+     * Asserts that `value`'s type is _not_ `name`, as determined by
+     * `Object.prototype.toString`.
+     *
+     *     assert.notTypeOf('tea', 'number', 'strings are not numbers');
+     *
+     * @name notTypeOf
+     * @param {Mixed} value
+     * @param {String} typeof name
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.notTypeOf = function (val, type, msg) {
+        new Assertion(val, msg, assert.notTypeOf, true).to.not.be.a(type);
+    };
+
+    /**
+     * ### .instanceOf(object, constructor, [message])
+     *
+     * Asserts that `value` is an instance of `constructor`.
+     *
+     *     var Tea = function (name) { this.name = name; }
+     *       , chai = new Tea('chai');
+     *
+     *     assert.instanceOf(chai, Tea, 'chai is an instance of tea');
+     *
+     * @name instanceOf
+     * @param {Object} object
+     * @param {Constructor} constructor
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.instanceOf = function (val, type, msg) {
+        new Assertion(val, msg, assert.instanceOf, true).to.be.instanceOf(type);
+    };
+
+    /**
+     * ### .notInstanceOf(object, constructor, [message])
+     *
+     * Asserts `value` is not an instance of `constructor`.
+     *
+     *     var Tea = function (name) { this.name = name; }
+     *       , chai = new String('chai');
+     *
+     *     assert.notInstanceOf(chai, Tea, 'chai is not an instance of tea');
+     *
+     * @name notInstanceOf
+     * @param {Object} object
+     * @param {Constructor} constructor
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.notInstanceOf = function (val, type, msg) {
+        new Assertion(val, msg, assert.notInstanceOf, true)
+            .to.not.be.instanceOf(type);
+    };
+
+    /**
+     * ### .include(haystack, needle, [message])
+     *
+     * Asserts that `haystack` includes `needle`. Can be used to assert the
+     * inclusion of a value in an array, a substring in a string, or a subset of
+     * properties in an object.
+     *
+     *     assert.include([1,2,3], 2, 'array contains value');
+     *     assert.include('foobar', 'foo', 'string contains substring');
+     *     assert.include({ foo: 'bar', hello: 'universe' }, { foo: 'bar' }, 'object contains property');
+     *
+     * Strict equality (===) is used. When asserting the inclusion of a value in
+     * an array, the array is searched for an element that's strictly equal to the
+     * given value. When asserting a subset of properties in an object, the object
+     * is searched for the given property keys, checking that each one is present
+     * and strictly equal to the given property value. For instance:
+     *
+     *     var obj1 = {a: 1}
+     *       , obj2 = {b: 2};
+     *     assert.include([obj1, obj2], obj1);
+     *     assert.include({foo: obj1, bar: obj2}, {foo: obj1});
+     *     assert.include({foo: obj1, bar: obj2}, {foo: obj1, bar: obj2});
+     *
+     * @name include
+     * @param {Array|String} haystack
+     * @param {Mixed} needle
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.include = function (exp, inc, msg) {
+        new Assertion(exp, msg, assert.include, true).include(inc);
+    };
+
+    /**
+     * ### .notInclude(haystack, needle, [message])
+     *
+     * Asserts that `haystack` does not include `needle`. Can be used to assert
+     * the absence of a value in an array, a substring in a string, or a subset of
+     * properties in an object.
+     *
+     *     assert.notInclude([1,2,3], 4, "array doesn't contain value");
+     *     assert.notInclude('foobar', 'baz', "string doesn't contain substring");
+     *     assert.notInclude({ foo: 'bar', hello: 'universe' }, { foo: 'baz' }, 'object doesn't contain property');
+     *
+     * Strict equality (===) is used. When asserting the absence of a value in an
+     * array, the array is searched to confirm the absence of an element that's
+     * strictly equal to the given value. When asserting a subset of properties in
+     * an object, the object is searched to confirm that at least one of the given
+     * property keys is either not present or not strictly equal to the given
+     * property value. For instance:
+     *
+     *     var obj1 = {a: 1}
+     *       , obj2 = {b: 2};
+     *     assert.notInclude([obj1, obj2], {a: 1});
+     *     assert.notInclude({foo: obj1, bar: obj2}, {foo: {a: 1}});
+     *     assert.notInclude({foo: obj1, bar: obj2}, {foo: obj1, bar: {b: 2}});
+     *
+     * @name notInclude
+     * @param {Array|String} haystack
+     * @param {Mixed} needle
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.notInclude = function (exp, inc, msg) {
+        new Assertion(exp, msg, assert.notInclude, true).not.include(inc);
+    };
+
+    /**
+     * ### .deepInclude(haystack, needle, [message])
+     *
+     * Asserts that `haystack` includes `needle`. Can be used to assert the
+     * inclusion of a value in an array or a subset of properties in an object.
+     * Deep equality is used.
+     *
+     *     var obj1 = {a: 1}
+     *       , obj2 = {b: 2};
+     *     assert.deepInclude([obj1, obj2], {a: 1});
+     *     assert.deepInclude({foo: obj1, bar: obj2}, {foo: {a: 1}});
+     *     assert.deepInclude({foo: obj1, bar: obj2}, {foo: {a: 1}, bar: {b: 2}});
+     *
+     * @name deepInclude
+     * @param {Array|String} haystack
+     * @param {Mixed} needle
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.deepInclude = function (exp, inc, msg) {
+        new Assertion(exp, msg, assert.deepInclude, true).deep.include(inc);
+    };
+
+    /**
+     * ### .notDeepInclude(haystack, needle, [message])
+     *
+     * Asserts that `haystack` does not include `needle`. Can be used to assert
+     * the absence of a value in an array or a subset of properties in an object.
+     * Deep equality is used.
+     *
+     *     var obj1 = {a: 1}
+     *       , obj2 = {b: 2};
+     *     assert.notDeepInclude([obj1, obj2], {a: 9});
+     *     assert.notDeepInclude({foo: obj1, bar: obj2}, {foo: {a: 9}});
+     *     assert.notDeepInclude({foo: obj1, bar: obj2}, {foo: {a: 1}, bar: {b: 9}});
+     *
+     * @name notDeepInclude
+     * @param {Array|String} haystack
+     * @param {Mixed} needle
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.notDeepInclude = function (exp, inc, msg) {
+        new Assertion(exp, msg, assert.notDeepInclude, true).not.deep.include(inc);
+    };
+
+    /**
+     * ### .nestedInclude(haystack, needle, [message])
+     *
+     * Asserts that 'haystack' includes 'needle'.
+     * Can be used to assert the inclusion of a subset of properties in an
+     * object.
+     * Enables the use of dot- and bracket-notation for referencing nested
+     * properties.
+     * '[]' and '.' in property names can be escaped using double backslashes.
+     *
+     *     assert.nestedInclude({'.a': {'b': 'x'}}, {'\\.a.[b]': 'x'});
+     *     assert.nestedInclude({'a': {'[b]': 'x'}}, {'a.\\[b\\]': 'x'});
+     *
+     * @name nestedInclude
+     * @param {Object} haystack
+     * @param {Object} needle
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.nestedInclude = function (exp, inc, msg) {
+        new Assertion(exp, msg, assert.nestedInclude, true).nested.include(inc);
+    };
+
+    /**
+     * ### .notNestedInclude(haystack, needle, [message])
+     *
+     * Asserts that 'haystack' does not include 'needle'.
+     * Can be used to assert the absence of a subset of properties in an
+     * object.
+     * Enables the use of dot- and bracket-notation for referencing nested
+     * properties.
+     * '[]' and '.' in property names can be escaped using double backslashes.
+     *
+     *     assert.notNestedInclude({'.a': {'b': 'x'}}, {'\\.a.b': 'y'});
+     *     assert.notNestedInclude({'a': {'[b]': 'x'}}, {'a.\\[b\\]': 'y'});
+     *
+     * @name notNestedInclude
+     * @param {Object} haystack
+     * @param {Object} needle
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.notNestedInclude = function (exp, inc, msg) {
+        new Assertion(exp, msg, assert.notNestedInclude, true)
+            .not.nested.include(inc);
+    };
+
+    /**
+     * ### .deepNestedInclude(haystack, needle, [message])
+     *
+     * Asserts that 'haystack' includes 'needle'.
+     * Can be used to assert the inclusion of a subset of properties in an
+     * object while checking for deep equality.
+     * Enables the use of dot- and bracket-notation for referencing nested
+     * properties.
+     * '[]' and '.' in property names can be escaped using double backslashes.
+     *
+     *     assert.deepNestedInclude({a: {b: [{x: 1}]}}, {'a.b[0]': {x: 1}});
+     *     assert.deepNestedInclude({'.a': {'[b]': {x: 1}}}, {'\\.a.\\[b\\]': {x: 1}});
+     *
+     * @name deepNestedInclude
+     * @param {Object} haystack
+     * @param {Object} needle
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.deepNestedInclude = function (exp, inc, msg) {
+        new Assertion(exp, msg, assert.deepNestedInclude, true)
+            .deep.nested.include(inc);
+    };
+
+    /**
+     * ### .notDeepNestedInclude(haystack, needle, [message])
+     *
+     * Asserts that 'haystack' does not include 'needle'.
+     * Can be used to assert the absence of a subset of properties in an
+     * object while checking for deep equality.
+     * Enables the use of dot- and bracket-notation for referencing nested
+     * properties.
+     * '[]' and '.' in property names can be escaped using double backslashes.
+     *
+     *     assert.notDeepNestedInclude({a: {b: [{x: 1}]}}, {'a.b[0]': {y: 1}})
+     *     assert.notDeepNestedInclude({'.a': {'[b]': {x: 1}}}, {'\\.a.\\[b\\]': {y: 2}});
+     *
+     * @name notDeepNestedInclude
+     * @param {Object} haystack
+     * @param {Object} needle
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.notDeepNestedInclude = function (exp, inc, msg) {
+        new Assertion(exp, msg, assert.notDeepNestedInclude, true)
+            .not.deep.nested.include(inc);
+    };
+
+    /**
+     * ### .ownInclude(haystack, needle, [message])
+     *
+     * Asserts that 'haystack' includes 'needle'.
+     * Can be used to assert the inclusion of a subset of properties in an
+     * object while ignoring inherited properties.
+     *
+     *     assert.ownInclude({ a: 1 }, { a: 1 });
+     *
+     * @name ownInclude
+     * @param {Object} haystack
+     * @param {Object} needle
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.ownInclude = function (exp, inc, msg) {
+        new Assertion(exp, msg, assert.ownInclude, true).own.include(inc);
+    };
+
+    /**
+     * ### .notOwnInclude(haystack, needle, [message])
+     *
+     * Asserts that 'haystack' includes 'needle'.
+     * Can be used to assert the absence of a subset of properties in an
+     * object while ignoring inherited properties.
+     *
+     *     Object.prototype.b = 2;
+     *
+     *     assert.notOwnInclude({ a: 1 }, { b: 2 });
+     *
+     * @name notOwnInclude
+     * @param {Object} haystack
+     * @param {Object} needle
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.notOwnInclude = function (exp, inc, msg) {
+        new Assertion(exp, msg, assert.notOwnInclude, true).not.own.include(inc);
+    };
+
+    /**
+     * ### .deepOwnInclude(haystack, needle, [message])
+     *
+     * Asserts that 'haystack' includes 'needle'.
+     * Can be used to assert the inclusion of a subset of properties in an
+     * object while ignoring inherited properties and checking for deep equality.
+     *
+     *      assert.deepOwnInclude({a: {b: 2}}, {a: {b: 2}});
+     *
+     * @name deepOwnInclude
+     * @param {Object} haystack
+     * @param {Object} needle
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.deepOwnInclude = function (exp, inc, msg) {
+        new Assertion(exp, msg, assert.deepOwnInclude, true)
+            .deep.own.include(inc);
+    };
+
+    /**
+     * ### .notDeepOwnInclude(haystack, needle, [message])
+     *
+     * Asserts that 'haystack' includes 'needle'.
+     * Can be used to assert the absence of a subset of properties in an
+     * object while ignoring inherited properties and checking for deep equality.
+     *
+     *      assert.notDeepOwnInclude({a: {b: 2}}, {a: {c: 3}});
+     *
+     * @name notDeepOwnInclude
+     * @param {Object} haystack
+     * @param {Object} needle
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.notDeepOwnInclude = function (exp, inc, msg) {
+        new Assertion(exp, msg, assert.notDeepOwnInclude, true)
+            .not.deep.own.include(inc);
+    };
+
+    /**
+     * ### .match(value, regexp, [message])
+     *
+     * Asserts that `value` matches the regular expression `regexp`.
+     *
+     *     assert.match('foobar', /^foo/, 'regexp matches');
+     *
+     * @name match
+     * @param {Mixed} value
+     * @param {RegExp} regexp
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.match = function (exp, re, msg) {
+        new Assertion(exp, msg, assert.match, true).to.match(re);
+    };
+
+    /**
+     * ### .notMatch(value, regexp, [message])
+     *
+     * Asserts that `value` does not match the regular expression `regexp`.
+     *
+     *     assert.notMatch('foobar', /^foo/, 'regexp does not match');
+     *
+     * @name notMatch
+     * @param {Mixed} value
+     * @param {RegExp} regexp
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.notMatch = function (exp, re, msg) {
+        new Assertion(exp, msg, assert.notMatch, true).to.not.match(re);
+    };
+
+    /**
+     * ### .property(object, property, [message])
+     *
+     * Asserts that `object` has a direct or inherited property named by
+     * `property`.
+     *
+     *     assert.property({ tea: { green: 'matcha' }}, 'tea');
+     *     assert.property({ tea: { green: 'matcha' }}, 'toString');
+     *
+     * @name property
+     * @param {Object} object
+     * @param {String} property
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.property = function (obj, prop, msg) {
+        new Assertion(obj, msg, assert.property, true).to.have.property(prop);
+    };
+
+    /**
+     * ### .notProperty(object, property, [message])
+     *
+     * Asserts that `object` does _not_ have a direct or inherited property named
+     * by `property`.
+     *
+     *     assert.notProperty({ tea: { green: 'matcha' }}, 'coffee');
+     *
+     * @name notProperty
+     * @param {Object} object
+     * @param {String} property
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.notProperty = function (obj, prop, msg) {
+        new Assertion(obj, msg, assert.notProperty, true)
+            .to.not.have.property(prop);
+    };
+
+    /**
+     * ### .propertyVal(object, property, value, [message])
+     *
+     * Asserts that `object` has a direct or inherited property named by
+     * `property` with a value given by `value`. Uses a strict equality check
+     * (===).
+     *
+     *     assert.propertyVal({ tea: 'is good' }, 'tea', 'is good');
+     *
+     * @name propertyVal
+     * @param {Object} object
+     * @param {String} property
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.propertyVal = function (obj, prop, val, msg) {
+        new Assertion(obj, msg, assert.propertyVal, true)
+            .to.have.property(prop, val);
+    };
+
+    /**
+     * ### .notPropertyVal(object, property, value, [message])
+     *
+     * Asserts that `object` does _not_ have a direct or inherited property named
+     * by `property` with value given by `value`. Uses a strict equality check
+     * (===).
+     *
+     *     assert.notPropertyVal({ tea: 'is good' }, 'tea', 'is bad');
+     *     assert.notPropertyVal({ tea: 'is good' }, 'coffee', 'is good');
+     *
+     * @name notPropertyVal
+     * @param {Object} object
+     * @param {String} property
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.notPropertyVal = function (obj, prop, val, msg) {
+        new Assertion(obj, msg, assert.notPropertyVal, true)
+            .to.not.have.property(prop, val);
+    };
+
+    /**
+     * ### .deepPropertyVal(object, property, value, [message])
+     *
+     * Asserts that `object` has a direct or inherited property named by
+     * `property` with a value given by `value`. Uses a deep equality check.
+     *
+     *     assert.deepPropertyVal({ tea: { green: 'matcha' } }, 'tea', { green: 'matcha' });
+     *
+     * @name deepPropertyVal
+     * @param {Object} object
+     * @param {String} property
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.deepPropertyVal = function (obj, prop, val, msg) {
+        new Assertion(obj, msg, assert.deepPropertyVal, true)
+            .to.have.deep.property(prop, val);
+    };
+
+    /**
+     * ### .notDeepPropertyVal(object, property, value, [message])
+     *
+     * Asserts that `object` does _not_ have a direct or inherited property named
+     * by `property` with value given by `value`. Uses a deep equality check.
+     *
+     *     assert.notDeepPropertyVal({ tea: { green: 'matcha' } }, 'tea', { black: 'matcha' });
+     *     assert.notDeepPropertyVal({ tea: { green: 'matcha' } }, 'tea', { green: 'oolong' });
+     *     assert.notDeepPropertyVal({ tea: { green: 'matcha' } }, 'coffee', { green: 'matcha' });
+     *
+     * @name notDeepPropertyVal
+     * @param {Object} object
+     * @param {String} property
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.notDeepPropertyVal = function (obj, prop, val, msg) {
+        new Assertion(obj, msg, assert.notDeepPropertyVal, true)
+            .to.not.have.deep.property(prop, val);
+    };
+
+    /**
+     * ### .ownProperty(object, property, [message])
+     *
+     * Asserts that `object` has a direct property named by `property`. Inherited
+     * properties aren't checked.
+     *
+     *     assert.ownProperty({ tea: { green: 'matcha' }}, 'tea');
+     *
+     * @name ownProperty
+     * @param {Object} object
+     * @param {String} property
+     * @param {String} message
+     * @api public
+     */
+
+    assert.ownProperty = function (obj, prop, msg) {
+        new Assertion(obj, msg, assert.ownProperty, true)
+            .to.have.own.property(prop);
+    };
+
+    /**
+     * ### .notOwnProperty(object, property, [message])
+     *
+     * Asserts that `object` does _not_ have a direct property named by
+     * `property`. Inherited properties aren't checked.
+     *
+     *     assert.notOwnProperty({ tea: { green: 'matcha' }}, 'coffee');
+     *     assert.notOwnProperty({}, 'toString');
+     *
+     * @name notOwnProperty
+     * @param {Object} object
+     * @param {String} property
+     * @param {String} message
+     * @api public
+     */
+
+    assert.notOwnProperty = function (obj, prop, msg) {
+        new Assertion(obj, msg, assert.notOwnProperty, true)
+            .to.not.have.own.property(prop);
+    };
+
+    /**
+     * ### .ownPropertyVal(object, property, value, [message])
+     *
+     * Asserts that `object` has a direct property named by `property` and a value
+     * equal to the provided `value`. Uses a strict equality check (===).
+     * Inherited properties aren't checked.
+     *
+     *     assert.ownPropertyVal({ coffee: 'is good'}, 'coffee', 'is good');
+     *
+     * @name ownPropertyVal
+     * @param {Object} object
+     * @param {String} property
+     * @param {Mixed} value
+     * @param {String} message
+     * @api public
+     */
+
+    assert.ownPropertyVal = function (obj, prop, value, msg) {
+        new Assertion(obj, msg, assert.ownPropertyVal, true)
+            .to.have.own.property(prop, value);
+    };
+
+    /**
+     * ### .notOwnPropertyVal(object, property, value, [message])
+     *
+     * Asserts that `object` does _not_ have a direct property named by `property`
+     * with a value equal to the provided `value`. Uses a strict equality check
+     * (===). Inherited properties aren't checked.
+     *
+     *     assert.notOwnPropertyVal({ tea: 'is better'}, 'tea', 'is worse');
+     *     assert.notOwnPropertyVal({}, 'toString', Object.prototype.toString);
+     *
+     * @name notOwnPropertyVal
+     * @param {Object} object
+     * @param {String} property
+     * @param {Mixed} value
+     * @param {String} message
+     * @api public
+     */
+
+    assert.notOwnPropertyVal = function (obj, prop, value, msg) {
+        new Assertion(obj, msg, assert.notOwnPropertyVal, true)
+            .to.not.have.own.property(prop, value);
+    };
+
+    /**
+     * ### .deepOwnPropertyVal(object, property, value, [message])
+     *
+     * Asserts that `object` has a direct property named by `property` and a value
+     * equal to the provided `value`. Uses a deep equality check. Inherited
+     * properties aren't checked.
+     *
+     *     assert.deepOwnPropertyVal({ tea: { green: 'matcha' } }, 'tea', { green: 'matcha' });
+     *
+     * @name deepOwnPropertyVal
+     * @param {Object} object
+     * @param {String} property
+     * @param {Mixed} value
+     * @param {String} message
+     * @api public
+     */
+
+    assert.deepOwnPropertyVal = function (obj, prop, value, msg) {
+        new Assertion(obj, msg, assert.deepOwnPropertyVal, true)
+            .to.have.deep.own.property(prop, value);
+    };
+
+    /**
+     * ### .notDeepOwnPropertyVal(object, property, value, [message])
+     *
+     * Asserts that `object` does _not_ have a direct property named by `property`
+     * with a value equal to the provided `value`. Uses a deep equality check.
+     * Inherited properties aren't checked.
+     *
+     *     assert.notDeepOwnPropertyVal({ tea: { green: 'matcha' } }, 'tea', { black: 'matcha' });
+     *     assert.notDeepOwnPropertyVal({ tea: { green: 'matcha' } }, 'tea', { green: 'oolong' });
+     *     assert.notDeepOwnPropertyVal({ tea: { green: 'matcha' } }, 'coffee', { green: 'matcha' });
+     *     assert.notDeepOwnPropertyVal({}, 'toString', Object.prototype.toString);
+     *
+     * @name notDeepOwnPropertyVal
+     * @param {Object} object
+     * @param {String} property
+     * @param {Mixed} value
+     * @param {String} message
+     * @api public
+     */
+
+    assert.notDeepOwnPropertyVal = function (obj, prop, value, msg) {
+        new Assertion(obj, msg, assert.notDeepOwnPropertyVal, true)
+            .to.not.have.deep.own.property(prop, value);
+    };
+
+    /**
+     * ### .nestedProperty(object, property, [message])
+     *
+     * Asserts that `object` has a direct or inherited property named by
+     * `property`, which can be a string using dot- and bracket-notation for
+     * nested reference.
+     *
+     *     assert.nestedProperty({ tea: { green: 'matcha' }}, 'tea.green');
+     *
+     * @name nestedProperty
+     * @param {Object} object
+     * @param {String} property
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.nestedProperty = function (obj, prop, msg) {
+        new Assertion(obj, msg, assert.nestedProperty, true)
+            .to.have.nested.property(prop);
+    };
+
+    /**
+     * ### .notNestedProperty(object, property, [message])
+     *
+     * Asserts that `object` does _not_ have a property named by `property`, which
+     * can be a string using dot- and bracket-notation for nested reference. The
+     * property cannot exist on the object nor anywhere in its prototype chain.
+     *
+     *     assert.notNestedProperty({ tea: { green: 'matcha' }}, 'tea.oolong');
+     *
+     * @name notNestedProperty
+     * @param {Object} object
+     * @param {String} property
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.notNestedProperty = function (obj, prop, msg) {
+        new Assertion(obj, msg, assert.notNestedProperty, true)
+            .to.not.have.nested.property(prop);
+    };
+
+    /**
+     * ### .nestedPropertyVal(object, property, value, [message])
+     *
+     * Asserts that `object` has a property named by `property` with value given
+     * by `value`. `property` can use dot- and bracket-notation for nested
+     * reference. Uses a strict equality check (===).
+     *
+     *     assert.nestedPropertyVal({ tea: { green: 'matcha' }}, 'tea.green', 'matcha');
+     *
+     * @name nestedPropertyVal
+     * @param {Object} object
+     * @param {String} property
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.nestedPropertyVal = function (obj, prop, val, msg) {
+        new Assertion(obj, msg, assert.nestedPropertyVal, true)
+            .to.have.nested.property(prop, val);
+    };
+
+    /**
+     * ### .notNestedPropertyVal(object, property, value, [message])
+     *
+     * Asserts that `object` does _not_ have a property named by `property` with
+     * value given by `value`. `property` can use dot- and bracket-notation for
+     * nested reference. Uses a strict equality check (===).
+     *
+     *     assert.notNestedPropertyVal({ tea: { green: 'matcha' }}, 'tea.green', 'konacha');
+     *     assert.notNestedPropertyVal({ tea: { green: 'matcha' }}, 'coffee.green', 'matcha');
+     *
+     * @name notNestedPropertyVal
+     * @param {Object} object
+     * @param {String} property
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.notNestedPropertyVal = function (obj, prop, val, msg) {
+        new Assertion(obj, msg, assert.notNestedPropertyVal, true)
+            .to.not.have.nested.property(prop, val);
+    };
+
+    /**
+     * ### .deepNestedPropertyVal(object, property, value, [message])
+     *
+     * Asserts that `object` has a property named by `property` with a value given
+     * by `value`. `property` can use dot- and bracket-notation for nested
+     * reference. Uses a deep equality check.
+     *
+     *     assert.deepNestedPropertyVal({ tea: { green: { matcha: 'yum' } } }, 'tea.green', { matcha: 'yum' });
+     *
+     * @name deepNestedPropertyVal
+     * @param {Object} object
+     * @param {String} property
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.deepNestedPropertyVal = function (obj, prop, val, msg) {
+        new Assertion(obj, msg, assert.deepNestedPropertyVal, true)
+            .to.have.deep.nested.property(prop, val);
+    };
+
+    /**
+     * ### .notDeepNestedPropertyVal(object, property, value, [message])
+     *
+     * Asserts that `object` does _not_ have a property named by `property` with
+     * value given by `value`. `property` can use dot- and bracket-notation for
+     * nested reference. Uses a deep equality check.
+     *
+     *     assert.notDeepNestedPropertyVal({ tea: { green: { matcha: 'yum' } } }, 'tea.green', { oolong: 'yum' });
+     *     assert.notDeepNestedPropertyVal({ tea: { green: { matcha: 'yum' } } }, 'tea.green', { matcha: 'yuck' });
+     *     assert.notDeepNestedPropertyVal({ tea: { green: { matcha: 'yum' } } }, 'tea.black', { matcha: 'yum' });
+     *
+     * @name notDeepNestedPropertyVal
+     * @param {Object} object
+     * @param {String} property
+     * @param {Mixed} value
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.notDeepNestedPropertyVal = function (obj, prop, val, msg) {
+        new Assertion(obj, msg, assert.notDeepNestedPropertyVal, true)
+            .to.not.have.deep.nested.property(prop, val);
+    };
+
+    /**
+     * ### .lengthOf(object, length, [message])
+     *
+     * Asserts that `object` has a `length` or `size` with the expected value.
+     *
+     *     assert.lengthOf([1,2,3], 3, 'array has length of 3');
+     *     assert.lengthOf('foobar', 6, 'string has length of 6');
+     *     assert.lengthOf(new Set([1,2,3]), 3, 'set has size of 3');
+     *     assert.lengthOf(new Map([['a',1],['b',2],['c',3]]), 3, 'map has size of 3');
+     *
+     * @name lengthOf
+     * @param {Mixed} object
+     * @param {Number} length
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.lengthOf = function (exp, len, msg) {
+        new Assertion(exp, msg, assert.lengthOf, true).to.have.lengthOf(len);
+    };
+
+    /**
+     * ### .hasAnyKeys(object, [keys], [message])
+     *
+     * Asserts that `object` has at least one of the `keys` provided.
+     * You can also provide a single object instead of a `keys` array and its keys
+     * will be used as the expected set of keys.
+     *
+     *     assert.hasAnyKeys({foo: 1, bar: 2, baz: 3}, ['foo', 'iDontExist', 'baz']);
+     *     assert.hasAnyKeys({foo: 1, bar: 2, baz: 3}, {foo: 30, iDontExist: 99, baz: 1337});
+     *     assert.hasAnyKeys(new Map([[{foo: 1}, 'bar'], ['key', 'value']]), [{foo: 1}, 'key']);
+     *     assert.hasAnyKeys(new Set([{foo: 'bar'}, 'anotherKey']), [{foo: 'bar'}, 'anotherKey']);
+     *
+     * @name hasAnyKeys
+     * @param {Mixed} object
+     * @param {Array|Object} keys
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.hasAnyKeys = function (obj, keys, msg) {
+        new Assertion(obj, msg, assert.hasAnyKeys, true).to.have.any.keys(keys);
+    };
+
+    /**
+     * ### .hasAllKeys(object, [keys], [message])
+     *
+     * Asserts that `object` has all and only all of the `keys` provided.
+     * You can also provide a single object instead of a `keys` array and its keys
+     * will be used as the expected set of keys.
+     *
+     *     assert.hasAllKeys({foo: 1, bar: 2, baz: 3}, ['foo', 'bar', 'baz']);
+     *     assert.hasAllKeys({foo: 1, bar: 2, baz: 3}, {foo: 30, bar: 99, baz: 1337]);
+     *     assert.hasAllKeys(new Map([[{foo: 1}, 'bar'], ['key', 'value']]), [{foo: 1}, 'key']);
+     *     assert.hasAllKeys(new Set([{foo: 'bar'}, 'anotherKey'], [{foo: 'bar'}, 'anotherKey']);
+     *
+     * @name hasAllKeys
+     * @param {Mixed} object
+     * @param {String[]} keys
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.hasAllKeys = function (obj, keys, msg) {
+        new Assertion(obj, msg, assert.hasAllKeys, true).to.have.all.keys(keys);
+    };
+
+    /**
+     * ### .containsAllKeys(object, [keys], [message])
+     *
+     * Asserts that `object` has all of the `keys` provided but may have more keys not listed.
+     * You can also provide a single object instead of a `keys` array and its keys
+     * will be used as the expected set of keys.
+     *
+     *     assert.containsAllKeys({foo: 1, bar: 2, baz: 3}, ['foo', 'baz']);
+     *     assert.containsAllKeys({foo: 1, bar: 2, baz: 3}, ['foo', 'bar', 'baz']);
+     *     assert.containsAllKeys({foo: 1, bar: 2, baz: 3}, {foo: 30, baz: 1337});
+     *     assert.containsAllKeys({foo: 1, bar: 2, baz: 3}, {foo: 30, bar: 99, baz: 1337});
+     *     assert.containsAllKeys(new Map([[{foo: 1}, 'bar'], ['key', 'value']]), [{foo: 1}]);
+     *     assert.containsAllKeys(new Map([[{foo: 1}, 'bar'], ['key', 'value']]), [{foo: 1}, 'key']);
+     *     assert.containsAllKeys(new Set([{foo: 'bar'}, 'anotherKey'], [{foo: 'bar'}]);
+     *     assert.containsAllKeys(new Set([{foo: 'bar'}, 'anotherKey'], [{foo: 'bar'}, 'anotherKey']);
+     *
+     * @name containsAllKeys
+     * @param {Mixed} object
+     * @param {String[]} keys
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.containsAllKeys = function (obj, keys, msg) {
+        new Assertion(obj, msg, assert.containsAllKeys, true)
+            .to.contain.all.keys(keys);
+    };
+
+    /**
+     * ### .doesNotHaveAnyKeys(object, [keys], [message])
+     *
+     * Asserts that `object` has none of the `keys` provided.
+     * You can also provide a single object instead of a `keys` array and its keys
+     * will be used as the expected set of keys.
+     *
+     *     assert.doesNotHaveAnyKeys({foo: 1, bar: 2, baz: 3}, ['one', 'two', 'example']);
+     *     assert.doesNotHaveAnyKeys({foo: 1, bar: 2, baz: 3}, {one: 1, two: 2, example: 'foo'});
+     *     assert.doesNotHaveAnyKeys(new Map([[{foo: 1}, 'bar'], ['key', 'value']]), [{one: 'two'}, 'example']);
+     *     assert.doesNotHaveAnyKeys(new Set([{foo: 'bar'}, 'anotherKey'], [{one: 'two'}, 'example']);
+     *
+     * @name doesNotHaveAnyKeys
+     * @param {Mixed} object
+     * @param {String[]} keys
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.doesNotHaveAnyKeys = function (obj, keys, msg) {
+        new Assertion(obj, msg, assert.doesNotHaveAnyKeys, true)
+            .to.not.have.any.keys(keys);
+    };
+
+    /**
+     * ### .doesNotHaveAllKeys(object, [keys], [message])
+     *
+     * Asserts that `object` does not have at least one of the `keys` provided.
+     * You can also provide a single object instead of a `keys` array and its keys
+     * will be used as the expected set of keys.
+     *
+     *     assert.doesNotHaveAllKeys({foo: 1, bar: 2, baz: 3}, ['one', 'two', 'example']);
+     *     assert.doesNotHaveAllKeys({foo: 1, bar: 2, baz: 3}, {one: 1, two: 2, example: 'foo'});
+     *     assert.doesNotHaveAllKeys(new Map([[{foo: 1}, 'bar'], ['key', 'value']]), [{one: 'two'}, 'example']);
+     *     assert.doesNotHaveAllKeys(new Set([{foo: 'bar'}, 'anotherKey'], [{one: 'two'}, 'example']);
+     *
+     * @name doesNotHaveAllKeys
+     * @param {Mixed} object
+     * @param {String[]} keys
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.doesNotHaveAllKeys = function (obj, keys, msg) {
+        new Assertion(obj, msg, assert.doesNotHaveAllKeys, true)
+            .to.not.have.all.keys(keys);
+    };
+
+    /**
+     * ### .hasAnyDeepKeys(object, [keys], [message])
+     *
+     * Asserts that `object` has at least one of the `keys` provided.
+     * Since Sets and Maps can have objects as keys you can use this assertion to perform
+     * a deep comparison.
+     * You can also provide a single object instead of a `keys` array and its keys
+     * will be used as the expected set of keys.
+     *
+     *     assert.hasAnyDeepKeys(new Map([[{one: 'one'}, 'valueOne'], [1, 2]]), {one: 'one'});
+     *     assert.hasAnyDeepKeys(new Map([[{one: 'one'}, 'valueOne'], [1, 2]]), [{one: 'one'}, {two: 'two'}]);
+     *     assert.hasAnyDeepKeys(new Map([[{one: 'one'}, 'valueOne'], [{two: 'two'}, 'valueTwo']]), [{one: 'one'}, {two: 'two'}]);
+     *     assert.hasAnyDeepKeys(new Set([{one: 'one'}, {two: 'two'}]), {one: 'one'});
+     *     assert.hasAnyDeepKeys(new Set([{one: 'one'}, {two: 'two'}]), [{one: 'one'}, {three: 'three'}]);
+     *     assert.hasAnyDeepKeys(new Set([{one: 'one'}, {two: 'two'}]), [{one: 'one'}, {two: 'two'}]);
+     *
+     * @name doesNotHaveAllKeys
+     * @param {Mixed} object
+     * @param {Array|Object} keys
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.hasAnyDeepKeys = function (obj, keys, msg) {
+        new Assertion(obj, msg, assert.hasAnyDeepKeys, true)
+            .to.have.any.deep.keys(keys);
+    };
+
+    /**
+     * ### .hasAllDeepKeys(object, [keys], [message])
+     *
+     * Asserts that `object` has all and only all of the `keys` provided.
+     * Since Sets and Maps can have objects as keys you can use this assertion to perform
+     * a deep comparison.
+     * You can also provide a single object instead of a `keys` array and its keys
+     * will be used as the expected set of keys.
+     *
+     *     assert.hasAllDeepKeys(new Map([[{one: 'one'}, 'valueOne']]), {one: 'one'});
+     *     assert.hasAllDeepKeys(new Map([[{one: 'one'}, 'valueOne'], [{two: 'two'}, 'valueTwo']]), [{one: 'one'}, {two: 'two'}]);
+     *     assert.hasAllDeepKeys(new Set([{one: 'one'}]), {one: 'one'});
+     *     assert.hasAllDeepKeys(new Set([{one: 'one'}, {two: 'two'}]), [{one: 'one'}, {two: 'two'}]);
+     *
+     * @name hasAllDeepKeys
+     * @param {Mixed} object
+     * @param {Array|Object} keys
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.hasAllDeepKeys = function (obj, keys, msg) {
+        new Assertion(obj, msg, assert.hasAllDeepKeys, true)
+            .to.have.all.deep.keys(keys);
+    };
+
+    /**
+     * ### .containsAllDeepKeys(object, [keys], [message])
+     *
+     * Asserts that `object` contains all of the `keys` provided.
+     * Since Sets and Maps can have objects as keys you can use this assertion to perform
+     * a deep comparison.
+     * You can also provide a single object instead of a `keys` array and its keys
+     * will be used as the expected set of keys.
+     *
+     *     assert.containsAllDeepKeys(new Map([[{one: 'one'}, 'valueOne'], [1, 2]]), {one: 'one'});
+     *     assert.containsAllDeepKeys(new Map([[{one: 'one'}, 'valueOne'], [{two: 'two'}, 'valueTwo']]), [{one: 'one'}, {two: 'two'}]);
+     *     assert.containsAllDeepKeys(new Set([{one: 'one'}, {two: 'two'}]), {one: 'one'});
+     *     assert.containsAllDeepKeys(new Set([{one: 'one'}, {two: 'two'}]), [{one: 'one'}, {two: 'two'}]);
+     *
+     * @name containsAllDeepKeys
+     * @param {Mixed} object
+     * @param {Array|Object} keys
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.containsAllDeepKeys = function (obj, keys, msg) {
+        new Assertion(obj, msg, assert.containsAllDeepKeys, true)
+            .to.contain.all.deep.keys(keys);
+    };
+
+    /**
+     * ### .doesNotHaveAnyDeepKeys(object, [keys], [message])
+     *
+     * Asserts that `object` has none of the `keys` provided.
+     * Since Sets and Maps can have objects as keys you can use this assertion to perform
+     * a deep comparison.
+     * You can also provide a single object instead of a `keys` array and its keys
+     * will be used as the expected set of keys.
+     *
+     *     assert.doesNotHaveAnyDeepKeys(new Map([[{one: 'one'}, 'valueOne'], [1, 2]]), {thisDoesNot: 'exist'});
+     *     assert.doesNotHaveAnyDeepKeys(new Map([[{one: 'one'}, 'valueOne'], [{two: 'two'}, 'valueTwo']]), [{twenty: 'twenty'}, {fifty: 'fifty'}]);
+     *     assert.doesNotHaveAnyDeepKeys(new Set([{one: 'one'}, {two: 'two'}]), {twenty: 'twenty'});
+     *     assert.doesNotHaveAnyDeepKeys(new Set([{one: 'one'}, {two: 'two'}]), [{twenty: 'twenty'}, {fifty: 'fifty'}]);
+     *
+     * @name doesNotHaveAnyDeepKeys
+     * @param {Mixed} object
+     * @param {Array|Object} keys
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.doesNotHaveAnyDeepKeys = function (obj, keys, msg) {
+        new Assertion(obj, msg, assert.doesNotHaveAnyDeepKeys, true)
+            .to.not.have.any.deep.keys(keys);
+    };
+
+    /**
+     * ### .doesNotHaveAllDeepKeys(object, [keys], [message])
+     *
+     * Asserts that `object` does not have at least one of the `keys` provided.
+     * Since Sets and Maps can have objects as keys you can use this assertion to perform
+     * a deep comparison.
+     * You can also provide a single object instead of a `keys` array and its keys
+     * will be used as the expected set of keys.
+     *
+     *     assert.doesNotHaveAllDeepKeys(new Map([[{one: 'one'}, 'valueOne'], [1, 2]]), {thisDoesNot: 'exist'});
+     *     assert.doesNotHaveAllDeepKeys(new Map([[{one: 'one'}, 'valueOne'], [{two: 'two'}, 'valueTwo']]), [{twenty: 'twenty'}, {one: 'one'}]);
+     *     assert.doesNotHaveAllDeepKeys(new Set([{one: 'one'}, {two: 'two'}]), {twenty: 'twenty'});
+     *     assert.doesNotHaveAllDeepKeys(new Set([{one: 'one'}, {two: 'two'}]), [{one: 'one'}, {fifty: 'fifty'}]);
+     *
+     * @name doesNotHaveAllDeepKeys
+     * @param {Mixed} object
+     * @param {Array|Object} keys
+     * @param {String} message
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.doesNotHaveAllDeepKeys = function (obj, keys, msg) {
+        new Assertion(obj, msg, assert.doesNotHaveAllDeepKeys, true)
+            .to.not.have.all.deep.keys(keys);
+    };
+
+    /**
+     * ### .throws(fn, [errorLike/string/regexp], [string/regexp], [message])
+     *
+     * If `errorLike` is an `Error` constructor, asserts that `fn` will throw an error that is an
+     * instance of `errorLike`.
+     * If `errorLike` is an `Error` instance, asserts that the error thrown is the same
+     * instance as `errorLike`.
+     * If `errMsgMatcher` is provided, it also asserts that the error thrown will have a
+     * message matching `errMsgMatcher`.
+     *
+     *     assert.throws(fn, 'Error thrown must have this msg');
+     *     assert.throws(fn, /Error thrown must have a msg that matches this/);
+     *     assert.throws(fn, ReferenceError);
+     *     assert.throws(fn, errorInstance);
+     *     assert.throws(fn, ReferenceError, 'Error thrown must be a ReferenceError and have this msg');
+     *     assert.throws(fn, errorInstance, 'Error thrown must be the same errorInstance and have this msg');
+     *     assert.throws(fn, ReferenceError, /Error thrown must be a ReferenceError and match this/);
+     *     assert.throws(fn, errorInstance, /Error thrown must be the same errorInstance and match this/);
+     *
+     * @name throws
+     * @alias throw
+     * @alias Throw
+     * @param {Function} fn
+     * @param {ErrorConstructor|Error} errorLike
+     * @param {RegExp|String} errMsgMatcher
+     * @param {String} message
+     * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error#Error_types
+     * @namespace Assert
+     * @api public
+     */
+
+    assert.throws = function (fn, errorLike, errMsgMatcher, msg) {
+        // eslint-disable-next-line yoda
+        if ("string" === typeof errorLike || errorLike instanceof RegExp) {
             errMsgMatcher = errorLike;
             errorLike = null;
         }
-        const assertErr = getAssertion(fn, message, assert.throws, true).to.throw(errorLike, errMsgMatcher);
-        return flag(assertErr, "object"); // maybe promise
+
+        const assertErr = new Assertion(fn, msg, assert.throws, true)
+            .to.throw(errorLike, errMsgMatcher);
+        return flag(assertErr, "object");
     };
 
     /**
-     * Asserts that a function or an async function does not throw an error
+     * ### .doesNotThrow(fn, [errorLike/string/regexp], [string/regexp], [message])
+     *
+     * If `errorLike` is an `Error` constructor, asserts that `fn` will _not_ throw an error that is an
+     * instance of `errorLike`.
+     * If `errorLike` is an `Error` instance, asserts that the error thrown is _not_ the same
+     * instance as `errorLike`.
+     * If `errMsgMatcher` is provided, it also asserts that the error thrown will _not_ have a
+     * message matching `errMsgMatcher`.
+     *
+     *     assert.doesNotThrow(fn, 'Any Error thrown must not have this message');
+     *     assert.doesNotThrow(fn, /Any Error thrown must not match this/);
+     *     assert.doesNotThrow(fn, Error);
+     *     assert.doesNotThrow(fn, errorInstance);
+     *     assert.doesNotThrow(fn, Error, 'Error must not have this message');
+     *     assert.doesNotThrow(fn, errorInstance, 'Error must not have this message');
+     *     assert.doesNotThrow(fn, Error, /Error must not match this/);
+     *     assert.doesNotThrow(fn, errorInstance, /Error must not match this/);
+     *
+     * @name doesNotThrow
+     * @param {Function} fn
+     * @param {ErrorConstructor} errorLike
+     * @param {RegExp|String} errMsgMatcher
+     * @param {String} message
+     * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error#Error_types
+     * @namespace Assert
+     * @api public
      */
-    assert.doesNotThrow = (fn, errorLike, errMsgMatcher, message) => {
-        if (is.string(errorLike) || is.regexp(errorLike)) {
+
+    assert.doesNotThrow = function (fn, errorLike, errMsgMatcher, msg) {
+        // eslint-disable-next-line yoda
+        if ("string" === typeof errorLike || errorLike instanceof RegExp) {
             errMsgMatcher = errorLike;
             errorLike = null;
         }
-        const _assert = getAssertion(fn, message, assert.doesNotThrow, true).to.not.throw(errorLike, errMsgMatcher);
-        return flag(_assert, "object"); // maybe promise
+
+        new Assertion(fn, msg, assert.doesNotThrow, true)
+            .to.not.throw(errorLike, errMsgMatcher);
     };
 
     /**
-     * Compares two values using operator
+     * ### .operator(val1, operator, val2, [message])
+     *
+     * Compares two values using `operator`.
+     *
+     *     assert.operator(1, '<', 2, 'everything is ok');
+     *     assert.operator(1, '>', 2, 'this will fail');
+     *
+     * @name operator
+     * @param {Mixed} val1
+     * @param {String} operator
+     * @param {Mixed} val2
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.operator = (a, operator, b, message) => {
+
+    assert.operator = function (val, operator, val2, msg) {
         let ok;
         switch (operator) {
-            case "==": {
-                ok = a == b; // eslint-disable-line eqeqeq
+            case "==":
+                ok = val == val2;
                 break;
-            }
-            case "===": {
-                ok = a === b;
+            case "===":
+                ok = val === val2;
                 break;
-            }
-            case ">": {
-                ok = a > b;
+            case ">":
+                ok = val > val2;
                 break;
-            }
-            case ">=": {
-                ok = a >= b;
+            case ">=":
+                ok = val >= val2;
                 break;
-            }
-            case "<": {
-                ok = a < b;
+            case "<":
+                ok = val < val2;
                 break;
-            }
-            case "<=": {
-                ok = a <= b;
+            case "<=":
+                ok = val <= val2;
                 break;
-            }
-            case "!=": {
-                ok = a !== b;
+            case "!=":
+                ok = val != val2;
                 break;
-            }
-            case "!==": {
-                ok = a !== b;
+            case "!==":
+                ok = val !== val2;
                 break;
-            }
-            default: {
-                message = message ? `${message}: ` : message;
-                throw new AssertionError(`${message}Invalid operator "${operator}"`, undefined, assert.operator);
-            }
+            default:
+                msg = msg ? `${msg}: ` : msg;
+                throw new lib.AssertionError(
+                    `${msg}Invalid operator "${operator}"`,
+                    undefined,
+                    assert.operator
+                );
         }
-        const test = getAssertion(ok, message, assert.operator, true);
+        const test = new Assertion(ok, msg, assert.operator, true);
         test.assert(
-            flag(test, "object") === true,
-            `expected ${util.inspect(a)} to be ${operator} ${util.inspect(b)}`,
-            `expected ${util.inspect(a)} to not be ${operator} ${util.inspect(b)}`
-        );
+            flag(test, "object") === true
+            , `expected ${util.inspect(val)} to be ${operator} ${util.inspect(val2)}`
+            , `expected ${util.inspect(val)} to not be ${operator} ${util.inspect(val2)}`);
     };
 
     /**
-     * Asserts that actual is expected +/- delta
+     * ### .closeTo(actual, expected, delta, [message])
+     *
+     * Asserts that the target is equal `expected`, to within a +/- `delta` range.
+     *
+     *     assert.closeTo(1.5, 1, 0.5, 'numbers are close');
+     *
+     * @name closeTo
+     * @param {Number} actual
+     * @param {Number} expected
+     * @param {Number} delta
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.closeTo = (actual, expected, delta, message) => {
-        getAssertion(actual, message, assert.closeTo, true).to.be.closeTo(expected, delta);
+
+    assert.closeTo = function (act, exp, delta, msg) {
+        new Assertion(act, msg, assert.closeTo, true).to.be.closeTo(exp, delta);
     };
 
     /**
-     * Asserts that actual is expect +/- delta
+     * ### .approximately(actual, expected, delta, [message])
+     *
+     * Asserts that the target is equal `expected`, to within a +/- `delta` range.
+     *
+     *     assert.approximately(1.5, 1, 0.5, 'numbers are close');
+     *
+     * @name approximately
+     * @param {Number} actual
+     * @param {Number} expected
+     * @param {Number} delta
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.approximately = (actual, expected, delta, message) => {
-        getAssertion(actual, message, assert.approximately, true).to.be.approximately(expected, delta);
+
+    assert.approximately = function (act, exp, delta, msg) {
+        new Assertion(act, msg, assert.approximately, true)
+            .to.be.approximately(exp, delta);
     };
 
     /**
-     * Asserts that arrays have the same members in any order (===)
+     * ### .sameMembers(set1, set2, [message])
+     *
+     * Asserts that `set1` and `set2` have the same members in any order. Uses a
+     * strict equality check (===).
+     *
+     *     assert.sameMembers([ 1, 2, 3 ], [ 2, 1, 3 ], 'same members');
+     *
+     * @name sameMembers
+     * @param {Array} set1
+     * @param {Array} set2
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.sameMembers = (set1, set2, message) => {
-        getAssertion(set1, message, assert.sameMembers, true).to.have.same.members(set2);
+
+    assert.sameMembers = function (set1, set2, msg) {
+        new Assertion(set1, msg, assert.sameMembers, true)
+            .to.have.same.members(set2);
     };
 
     /**
-     * Asserts that arrays do not have the same members in any order (===)
+     * ### .notSameMembers(set1, set2, [message])
+     *
+     * Asserts that `set1` and `set2` don't have the same members in any order.
+     * Uses a strict equality check (===).
+     *
+     *     assert.notSameMembers([ 1, 2, 3 ], [ 5, 1, 3 ], 'not same members');
+     *
+     * @name notSameMembers
+     * @param {Array} set1
+     * @param {Array} set2
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.notSameMembers = (set1, set2, message) => {
-        getAssertion(set1, message, assert.notSameMembers, true).to.not.have.same.members(set2);
+
+    assert.notSameMembers = function (set1, set2, msg) {
+        new Assertion(set1, msg, assert.notSameMembers, true)
+            .to.not.have.same.members(set2);
     };
 
     /**
-     * Asserts that arrays have the same members in any order
+     * ### .sameDeepMembers(set1, set2, [message])
+     *
+     * Asserts that `set1` and `set2` have the same members in any order. Uses a
+     * deep equality check.
+     *
+     *     assert.sameDeepMembers([ { a: 1 }, { b: 2 }, { c: 3 } ], [{ b: 2 }, { a: 1 }, { c: 3 }], 'same deep members');
+     *
+     * @name sameDeepMembers
+     * @param {Array} set1
+     * @param {Array} set2
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.sameDeepMembers = (set1, set2, message) => {
-        getAssertion(set1, message, assert.sameDeepMembers, true).to.have.same.deep.members(set2);
+
+    assert.sameDeepMembers = function (set1, set2, msg) {
+        new Assertion(set1, msg, assert.sameDeepMembers, true)
+            .to.have.same.deep.members(set2);
     };
 
     /**
-     * Asserts that arrays do not have the same members in any order
+     * ### .notSameDeepMembers(set1, set2, [message])
+     *
+     * Asserts that `set1` and `set2` don't have the same members in any order.
+     * Uses a deep equality check.
+     *
+     *     assert.notSameDeepMembers([ { a: 1 }, { b: 2 }, { c: 3 } ], [{ b: 2 }, { a: 1 }, { f: 5 }], 'not same deep members');
+     *
+     * @name notSameDeepMembers
+     * @param {Array} set1
+     * @param {Array} set2
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.notSameDeepMembers = (set1, set2, message) => {
-        getAssertion(set1, message, assert.notSameDeepMembers, true).to.not.have.same.deep.members(set2);
+
+    assert.notSameDeepMembers = function (set1, set2, msg) {
+        new Assertion(set1, msg, assert.notSameDeepMembers, true)
+            .to.not.have.same.deep.members(set2);
     };
 
     /**
-     * Asserts that arrays have the same members in the same order (===)
+     * ### .sameOrderedMembers(set1, set2, [message])
+     *
+     * Asserts that `set1` and `set2` have the same members in the same order.
+     * Uses a strict equality check (===).
+     *
+     *     assert.sameOrderedMembers([ 1, 2, 3 ], [ 1, 2, 3 ], 'same ordered members');
+     *
+     * @name sameOrderedMembers
+     * @param {Array} set1
+     * @param {Array} set2
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.sameOrderedMembers = (set1, set2, message) => {
-        getAssertion(set1, message, assert.sameOrderedMembers, true).to.have.same.ordered.members(set2);
+
+    assert.sameOrderedMembers = function (set1, set2, msg) {
+        new Assertion(set1, msg, assert.sameOrderedMembers, true)
+            .to.have.same.ordered.members(set2);
     };
 
     /**
-     * Asserts that arrays do not have the same members in the same order (===)
+     * ### .notSameOrderedMembers(set1, set2, [message])
+     *
+     * Asserts that `set1` and `set2` don't have the same members in the same
+     * order. Uses a strict equality check (===).
+     *
+     *     assert.notSameOrderedMembers([ 1, 2, 3 ], [ 2, 1, 3 ], 'not same ordered members');
+     *
+     * @name notSameOrderedMembers
+     * @param {Array} set1
+     * @param {Array} set2
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.notSameOrderedMembers = (set1, set2, message) => {
-        getAssertion(set1, message, assert.notSameOrderedMembers, true).to.not.have.same.ordered.members(set2);
+
+    assert.notSameOrderedMembers = function (set1, set2, msg) {
+        new Assertion(set1, msg, assert.notSameOrderedMembers, true)
+            .to.not.have.same.ordered.members(set2);
     };
 
     /**
-     * Asserts that arrays have the same members in the same order
+     * ### .sameDeepOrderedMembers(set1, set2, [message])
+     *
+     * Asserts that `set1` and `set2` have the same members in the same order.
+     * Uses a deep equality check.
+     *
+     * assert.sameDeepOrderedMembers([ { a: 1 }, { b: 2 }, { c: 3 } ], [ { a: 1 }, { b: 2 }, { c: 3 } ], 'same deep ordered members');
+     *
+     * @name sameDeepOrderedMembers
+     * @param {Array} set1
+     * @param {Array} set2
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.sameDeepOrderedMembers = (set1, set2, message) => {
-        getAssertion(set1, message, assert.sameDeepOrderedMembers, true).to.have.same.deep.ordered.members(set2);
+
+    assert.sameDeepOrderedMembers = function (set1, set2, msg) {
+        new Assertion(set1, msg, assert.sameDeepOrderedMembers, true)
+            .to.have.same.deep.ordered.members(set2);
     };
 
     /**
-     * Asserts that arrays do not have the same members in the same order
+     * ### .notSameDeepOrderedMembers(set1, set2, [message])
+     *
+     * Asserts that `set1` and `set2` don't have the same members in the same
+     * order. Uses a deep equality check.
+     *
+     * assert.notSameDeepOrderedMembers([ { a: 1 }, { b: 2 }, { c: 3 } ], [ { a: 1 }, { b: 2 }, { z: 5 } ], 'not same deep ordered members');
+     * assert.notSameDeepOrderedMembers([ { a: 1 }, { b: 2 }, { c: 3 } ], [ { b: 2 }, { a: 1 }, { c: 3 } ], 'not same deep ordered members');
+     *
+     * @name notSameDeepOrderedMembers
+     * @param {Array} set1
+     * @param {Array} set2
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.notSameDeepOrderedMembers = (set1, set2, message) => {
-        getAssertion(set1, message, assert.notSameDeepOrderedMembers, true).to.not.have.same.deep.ordered.members(set2);
+
+    assert.notSameDeepOrderedMembers = function (set1, set2, msg) {
+        new Assertion(set1, msg, assert.notSameDeepOrderedMembers, true)
+            .to.not.have.same.deep.ordered.members(set2);
     };
 
     /**
-     * Asserts that subset is included in superset in any order (===)
+     * ### .includeMembers(superset, subset, [message])
+     *
+     * Asserts that `subset` is included in `superset` in any order. Uses a
+     * strict equality check (===). Duplicates are ignored.
+     *
+     *     assert.includeMembers([ 1, 2, 3 ], [ 2, 1, 2 ], 'include members');
+     *
+     * @name includeMembers
+     * @param {Array} superset
+     * @param {Array} subset
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.includeMembers = (superset, subset, message) => {
-        getAssertion(superset, message, assert.includeMembers, true).to.include.members(subset);
+
+    assert.includeMembers = function (superset, subset, msg) {
+        new Assertion(superset, msg, assert.includeMembers, true)
+            .to.include.members(subset);
     };
 
     /**
-     * Asserts that subset is not included in superset in any order (===)
+     * ### .notIncludeMembers(superset, subset, [message])
+     *
+     * Asserts that `subset` isn't included in `superset` in any order. Uses a
+     * strict equality check (===). Duplicates are ignored.
+     *
+     *     assert.notIncludeMembers([ 1, 2, 3 ], [ 5, 1 ], 'not include members');
+     *
+     * @name notIncludeMembers
+     * @param {Array} superset
+     * @param {Array} subset
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.notIncludeMembers = (superset, subset, message) => {
-        getAssertion(superset, message, assert.notIncludeMembers, true).to.not.include.members(subset);
+
+    assert.notIncludeMembers = function (superset, subset, msg) {
+        new Assertion(superset, msg, assert.notIncludeMembers, true)
+            .to.not.include.members(subset);
     };
 
     /**
-     * Asserts that subset is included in superset in any order
+     * ### .includeDeepMembers(superset, subset, [message])
+     *
+     * Asserts that `subset` is included in `superset` in any order. Uses a deep
+     * equality check. Duplicates are ignored.
+     *
+     *     assert.includeDeepMembers([ { a: 1 }, { b: 2 }, { c: 3 } ], [ { b: 2 }, { a: 1 }, { b: 2 } ], 'include deep members');
+     *
+     * @name includeDeepMembers
+     * @param {Array} superset
+     * @param {Array} subset
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.includeDeepMembers = (superset, subset, message) => {
-        getAssertion(superset, message, assert.includeDeepMembers, true).to.include.deep.members(subset);
+
+    assert.includeDeepMembers = function (superset, subset, msg) {
+        new Assertion(superset, msg, assert.includeDeepMembers, true)
+            .to.include.deep.members(subset);
     };
 
     /**
-     * Asserts that subset is not included in superset in any order
+     * ### .notIncludeDeepMembers(superset, subset, [message])
+     *
+     * Asserts that `subset` isn't included in `superset` in any order. Uses a
+     * deep equality check. Duplicates are ignored.
+     *
+     *     assert.notIncludeDeepMembers([ { a: 1 }, { b: 2 }, { c: 3 } ], [ { b: 2 }, { f: 5 } ], 'not include deep members');
+     *
+     * @name notIncludeDeepMembers
+     * @param {Array} superset
+     * @param {Array} subset
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.notIncludeDeepMembers = (superset, subset, message) => {
-        getAssertion(superset, message, assert.notIncludeDeepMembers, true).to.not.include.deep.members(subset);
+
+    assert.notIncludeDeepMembers = function (superset, subset, msg) {
+        new Assertion(superset, msg, assert.notIncludeDeepMembers, true)
+            .to.not.include.deep.members(subset);
     };
 
     /**
-     * Asserts that subset is included in superset in the same order (===)
+     * ### .includeOrderedMembers(superset, subset, [message])
+     *
+     * Asserts that `subset` is included in `superset` in the same order
+     * beginning with the first element in `superset`. Uses a strict equality
+     * check (===).
+     *
+     *     assert.includeOrderedMembers([ 1, 2, 3 ], [ 1, 2 ], 'include ordered members');
+     *
+     * @name includeOrderedMembers
+     * @param {Array} superset
+     * @param {Array} subset
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.includeOrderedMembers = (superset, subset, message) => {
-        getAssertion(superset, message, assert.includeOrderedMembers, true).to.include.ordered.members(subset);
+
+    assert.includeOrderedMembers = function (superset, subset, msg) {
+        new Assertion(superset, msg, assert.includeOrderedMembers, true)
+            .to.include.ordered.members(subset);
     };
 
     /**
-     * Asserts that subset is not included in superset in the same order (===)
+     * ### .notIncludeOrderedMembers(superset, subset, [message])
+     *
+     * Asserts that `subset` isn't included in `superset` in the same order
+     * beginning with the first element in `superset`. Uses a strict equality
+     * check (===).
+     *
+     *     assert.notIncludeOrderedMembers([ 1, 2, 3 ], [ 2, 1 ], 'not include ordered members');
+     *     assert.notIncludeOrderedMembers([ 1, 2, 3 ], [ 2, 3 ], 'not include ordered members');
+     *
+     * @name notIncludeOrderedMembers
+     * @param {Array} superset
+     * @param {Array} subset
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.notIncludeOrderedMembers = (superset, subset, message) => {
-        getAssertion(superset, message, assert.notIncludeOrderedMembers, true).to.not.include.ordered.members(subset);
+
+    assert.notIncludeOrderedMembers = function (superset, subset, msg) {
+        new Assertion(superset, msg, assert.notIncludeOrderedMembers, true)
+            .to.not.include.ordered.members(subset);
     };
 
     /**
-     * Asserts that subset is included in superset in the same order
+     * ### .includeDeepOrderedMembers(superset, subset, [message])
+     *
+     * Asserts that `subset` is included in `superset` in the same order
+     * beginning with the first element in `superset`. Uses a deep equality
+     * check.
+     *
+     *     assert.includeDeepOrderedMembers([ { a: 1 }, { b: 2 }, { c: 3 } ], [ { a: 1 }, { b: 2 } ], 'include deep ordered members');
+     *
+     * @name includeDeepOrderedMembers
+     * @param {Array} superset
+     * @param {Array} subset
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.includeDeepOrderedMembers = (superset, subset, message) => {
-        getAssertion(superset, message, assert.includeDeepOrderedMembers, true).to.include.deep.ordered.members(subset);
+
+    assert.includeDeepOrderedMembers = function (superset, subset, msg) {
+        new Assertion(superset, msg, assert.includeDeepOrderedMembers, true)
+            .to.include.deep.ordered.members(subset);
     };
 
     /**
-     * Asserts that subset is not included in superset in the same order
+     * ### .notIncludeDeepOrderedMembers(superset, subset, [message])
+     *
+     * Asserts that `subset` isn't included in `superset` in the same order
+     * beginning with the first element in `superset`. Uses a deep equality
+     * check.
+     *
+     *     assert.notIncludeDeepOrderedMembers([ { a: 1 }, { b: 2 }, { c: 3 } ], [ { a: 1 }, { f: 5 } ], 'not include deep ordered members');
+     *     assert.notIncludeDeepOrderedMembers([ { a: 1 }, { b: 2 }, { c: 3 } ], [ { b: 2 }, { a: 1 } ], 'not include deep ordered members');
+     *     assert.notIncludeDeepOrderedMembers([ { a: 1 }, { b: 2 }, { c: 3 } ], [ { b: 2 }, { c: 3 } ], 'not include deep ordered members');
+     *
+     * @name notIncludeDeepOrderedMembers
+     * @param {Array} superset
+     * @param {Array} subset
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.notIncludeDeepOrderedMembers = (superset, subset, message) => {
-        getAssertion(superset, message, assert.notIncludeDeepOrderedMembers, true).
-            to.not.include.deep.ordered.members(subset);
+
+    assert.notIncludeDeepOrderedMembers = function (superset, subset, msg) {
+        new Assertion(superset, msg, assert.notIncludeDeepOrderedMembers, true)
+            .to.not.include.deep.ordered.members(subset);
     };
 
     /**
-     * Asserts that list includes value
+     * ### .oneOf(inList, list, [message])
+     *
+     * Asserts that non-object, non-array value `inList` appears in the flat array `list`.
+     *
+     *     assert.oneOf(1, [ 2, 1 ], 'Not found in list');
+     *
+     * @name oneOf
+     * @param {*} inList
+     * @param {Array<*>} list
+     * @param {String} message
+     * @namespace Assert
+     * @api public
      */
-    assert.oneOf = (value, list, message) => {
-        getAssertion(value, message, assert.oneOf, true).to.be.oneOf(list);
+
+    assert.oneOf = function (inList, list, msg) {
+        new Assertion(inList, msg, assert.oneOf, true).to.be.oneOf(list);
     };
 
     /**
-     * Asserts that a function changes the value of a property
+     * ### .changes(function, object, property, [message])
+     *
+     * Asserts that a function changes the value of a property.
+     *
+     *     var obj = { val: 10 };
+     *     var fn = function() { obj.val = 22 };
+     *     assert.changes(fn, obj, 'val');
+     *
+     * @name changes
+     * @param {Function} modifier function
+     * @param {Object} object or getter function
+     * @param {String} property name _optional_
+     * @param {String} message _optional_
+     * @namespace Assert
+     * @api public
      */
-    assert.changes = (fn, object, property, message = adone.null) => {
-        if (message === adone.null && is.function(object)) {
-            [message, property] = [property, null];
+
+    assert.changes = function (fn, obj, prop, msg) {
+        // eslint-disable-next-line adone/no-typeof
+        if (arguments.length === 3 && typeof obj === "function") {
+            msg = prop;
+            prop = null;
         }
-        getAssertion(fn, message, assert.changes, true).to.change(object, property);
+
+        new Assertion(fn, msg, assert.changes, true).to.change(obj, prop);
     };
 
     /**
-     * Asserts that a function changes the value of a property by delta
+     * ### .changesBy(function, object, property, delta, [message])
+     *
+     * Asserts that a function changes the value of a property by an amount (delta).
+     *
+     *     var obj = { val: 10 };
+     *     var fn = function() { obj.val += 2 };
+     *     assert.changesBy(fn, obj, 'val', 2);
+     *
+     * @name changesBy
+     * @param {Function} modifier function
+     * @param {Object} object or getter function
+     * @param {String} property name _optional_
+     * @param {Number} change amount (delta)
+     * @param {String} message _optional_
+     * @namespace Assert
+     * @api public
      */
-    assert.changesBy = (fn, object, property, delta = adone.null, message = adone.null) => {
-        if (delta === adone.null) {
-            if (message === adone.null) {
-                [delta, property] = [property, null];
-            } else if (is.function(object)) {
-                [delta, property] = [property, delta];
-            }
+
+    assert.changesBy = function (fn, obj, prop, delta, msg) {
+        // eslint-disable-next-line adone/no-typeof
+        if (arguments.length === 4 && typeof obj === "function") {
+            const tmpMsg = delta;
+            delta = prop;
+            msg = tmpMsg;
+        } else if (arguments.length === 3) {
+            delta = prop;
+            prop = null;
         }
-        getAssertion(fn, message, assert.changesBy, true).to.change(object, property).by(delta);
+
+        new Assertion(fn, msg, assert.changesBy, true)
+            .to.change(obj, prop).by(delta);
     };
 
     /**
-     * Asserts that a function does not changes the value of a property
+     * ### .doesNotChange(function, object, property, [message])
+     *
+     * Asserts that a function does not change the value of a property.
+     *
+     *     var obj = { val: 10 };
+     *     var fn = function() { console.log('foo'); };
+     *     assert.doesNotChange(fn, obj, 'val');
+     *
+     * @name doesNotChange
+     * @param {Function} modifier function
+     * @param {Object} object or getter function
+     * @param {String} property name _optional_
+     * @param {String} message _optional_
+     * @namespace Assert
+     * @api public
      */
-    assert.doesNotChange = (fn, object, property, message = adone.null) => {
-        if (message === adone.null && is.function(object)) {
-            [message, property] = [property, null];
+
+    assert.doesNotChange = function (fn, obj, prop, msg) {
+        // eslint-disable-next-line adone/no-typeof
+        if (arguments.length === 3 && typeof obj === "function") {
+            msg = prop;
+            prop = null;
         }
-        getAssertion(fn, message, assert.doesNotChange, true).to.not.change(object, property);
+
+        return new Assertion(fn, msg, assert.doesNotChange, true)
+            .to.not.change(obj, prop);
     };
 
     /**
-     * Asserts that a function does not change the value of a property or of a function’s return value by delta
+     * ### .changesButNotBy(function, object, property, delta, [message])
+     *
+     * Asserts that a function does not change the value of a property or of a function's return value by an amount (delta)
+     *
+     *     var obj = { val: 10 };
+     *     var fn = function() { obj.val += 10 };
+     *     assert.changesButNotBy(fn, obj, 'val', 5);
+     *
+     * @name changesButNotBy
+     * @param {Function} modifier function
+     * @param {Object} object or getter function
+     * @param {String} property name _optional_
+     * @param {Number} change amount (delta)
+     * @param {String} message _optional_
+     * @namespace Assert
+     * @api public
      */
-    assert.changesButNotBy = (fn, object, property, delta = adone.null, message = adone.null) => {
-        if (delta === adone.null) {
-            if (message === adone.null) {
-                [delta, property] = [property, null];
-            } else if (is.function(object)) {
-                [delta, property] = [property, delta];
-            }
+
+    assert.changesButNotBy = function (fn, obj, prop, delta, msg) {
+        // eslint-disable-next-line adone/no-typeof
+        if (arguments.length === 4 && typeof obj === "function") {
+            const tmpMsg = delta;
+            delta = prop;
+            msg = tmpMsg;
+        } else if (arguments.length === 3) {
+            delta = prop;
+            prop = null;
         }
-        getAssertion(fn, message, assert.changesButNotBy, true).to.change(object, property).but.not.by(delta);
+
+        new Assertion(fn, msg, assert.changesButNotBy, true)
+            .to.change(obj, prop).but.not.by(delta);
     };
 
     /**
-     * Asserts that a function increases a numeric object property
+     * ### .increases(function, object, property, [message])
+     *
+     * Asserts that a function increases a numeric object property.
+     *
+     *     var obj = { val: 10 };
+     *     var fn = function() { obj.val = 13 };
+     *     assert.increases(fn, obj, 'val');
+     *
+     * @name increases
+     * @param {Function} modifier function
+     * @param {Object} object or getter function
+     * @param {String} property name _optional_
+     * @param {String} message _optional_
+     * @namespace Assert
+     * @api public
      */
-    assert.increases = (fn, object, property, message = adone.null) => {
-        if (message === adone.null && is.function(object)) {
-            [message, property] = [property, null];
+
+    assert.increases = function (fn, obj, prop, msg) {
+        // eslint-disable-next-line adone/no-typeof
+        if (arguments.length === 3 && typeof obj === "function") {
+            msg = prop;
+            prop = null;
         }
-        getAssertion(fn, message, assert.increases, true).to.increase(object, property);
+
+        return new Assertion(fn, msg, assert.increases, true)
+            .to.increase(obj, prop);
     };
 
     /**
-     * Asserts that a function increases a numeric object property or a function’s return value by delta
+     * ### .increasesBy(function, object, property, delta, [message])
+     *
+     * Asserts that a function increases a numeric object property or a function's return value by an amount (delta).
+     *
+     *     var obj = { val: 10 };
+     *     var fn = function() { obj.val += 10 };
+     *     assert.increasesBy(fn, obj, 'val', 10);
+     *
+     * @name increasesBy
+     * @param {Function} modifier function
+     * @param {Object} object or getter function
+     * @param {String} property name _optional_
+     * @param {Number} change amount (delta)
+     * @param {String} message _optional_
+     * @namespace Assert
+     * @api public
      */
-    assert.increasesBy = (fn, object, property, delta = adone.null, message = adone.null) => {
-        if (delta === adone.null) {
-            if (message === adone.null) {
-                [delta, property] = [property, null];
-            } else if (is.function(object)) {
-                [delta, property] = [property, delta];
-            }
+
+    assert.increasesBy = function (fn, obj, prop, delta, msg) {
+        // eslint-disable-next-line adone/no-typeof
+        if (arguments.length === 4 && typeof obj === "function") {
+            const tmpMsg = delta;
+            delta = prop;
+            msg = tmpMsg;
+        } else if (arguments.length === 3) {
+            delta = prop;
+            prop = null;
         }
-        getAssertion(fn, message, assert.increasesBy, true).to.increase(object, property).by(delta);
+
+        new Assertion(fn, msg, assert.increasesBy, true)
+            .to.increase(obj, prop).by(delta);
     };
 
     /**
-     * Asserts that a function does not increase a numeric object property
+     * ### .doesNotIncrease(function, object, property, [message])
+     *
+     * Asserts that a function does not increase a numeric object property.
+     *
+     *     var obj = { val: 10 };
+     *     var fn = function() { obj.val = 8 };
+     *     assert.doesNotIncrease(fn, obj, 'val');
+     *
+     * @name doesNotIncrease
+     * @param {Function} modifier function
+     * @param {Object} object or getter function
+     * @param {String} property name _optional_
+     * @param {String} message _optional_
+     * @namespace Assert
+     * @api public
      */
-    assert.doesNotIncrease = (fn, object, property, message) => {
-        if (message === adone.null && is.function(object)) {
-            [message, property] = [property, null];
+
+    assert.doesNotIncrease = function (fn, obj, prop, msg) {
+        // eslint-disable-next-line adone/no-typeof
+        if (arguments.length === 3 && typeof obj === "function") {
+            msg = prop;
+            prop = null;
         }
-        getAssertion(fn, message, assert.doesNotIncrease, true).to.not.increase(object, property);
+
+        return new Assertion(fn, msg, assert.doesNotIncrease, true)
+            .to.not.increase(obj, prop);
     };
 
     /**
-     * Asserts that a function does not increase a numeric object property or function’s return value by delta
+     * ### .increasesButNotBy(function, object, property, [message])
+     *
+     * Asserts that a function does not increase a numeric object property or function's return value by an amount (delta).
+     *
+     *     var obj = { val: 10 };
+     *     var fn = function() { obj.val = 15 };
+     *     assert.increasesButNotBy(fn, obj, 'val', 10);
+     *
+     * @name increasesButNotBy
+     * @param {Function} modifier function
+     * @param {Object} object or getter function
+     * @param {String} property name _optional_
+     * @param {Number} change amount (delta)
+     * @param {String} message _optional_
+     * @namespace Assert
+     * @api public
      */
-    assert.increasesButNotBy = (fn, object, property, delta = adone.null, message = adone.null) => {
-        if (delta === adone.null) {
-            if (message === adone.null) {
-                [delta, property] = [property, null];
-            } else if (is.function(object)) {
-                [delta, property] = [property, delta];
-            }
+
+    assert.increasesButNotBy = function (fn, obj, prop, delta, msg) {
+        // eslint-disable-next-line adone/no-typeof
+        if (arguments.length === 4 && typeof obj === "function") {
+            const tmpMsg = delta;
+            delta = prop;
+            msg = tmpMsg;
+        } else if (arguments.length === 3) {
+            delta = prop;
+            prop = null;
         }
-        getAssertion(fn, message, assert.increasesButNotBy, true).to.increase(object, property).but.not.by(delta);
+
+        new Assertion(fn, msg, assert.increasesButNotBy, true)
+            .to.increase(obj, prop).but.not.by(delta);
     };
 
     /**
-     * Asserts that a function decreases the value of a property
+     * ### .decreases(function, object, property, [message])
+     *
+     * Asserts that a function decreases a numeric object property.
+     *
+     *     var obj = { val: 10 };
+     *     var fn = function() { obj.val = 5 };
+     *     assert.decreases(fn, obj, 'val');
+     *
+     * @name decreases
+     * @param {Function} modifier function
+     * @param {Object} object or getter function
+     * @param {String} property name _optional_
+     * @param {String} message _optional_
+     * @namespace Assert
+     * @api public
      */
-    assert.decreases = (fn, object, property, message = adone.null) => {
-        if (message === adone.null && is.function(object)) {
-            [message, property] = [property, null];
+
+    assert.decreases = function (fn, obj, prop, msg) {
+        // eslint-disable-next-line adone/no-typeof
+        if (arguments.length === 3 && typeof obj === "function") {
+            msg = prop;
+            prop = null;
         }
-        getAssertion(fn, message, assert.decreases, true).to.decrease(object, property);
+
+        return new Assertion(fn, msg, assert.decreases, true)
+            .to.decrease(obj, prop);
     };
 
     /**
-     * Asserts that a function decreases the value of a property by delta
+     * ### .decreasesBy(function, object, property, delta, [message])
+     *
+     * Asserts that a function decreases a numeric object property or a function's return value by an amount (delta)
+     *
+     *     var obj = { val: 10 };
+     *     var fn = function() { obj.val -= 5 };
+     *     assert.decreasesBy(fn, obj, 'val', 5);
+     *
+     * @name decreasesBy
+     * @param {Function} modifier function
+     * @param {Object} object or getter function
+     * @param {String} property name _optional_
+     * @param {Number} change amount (delta)
+     * @param {String} message _optional_
+     * @namespace Assert
+     * @api public
      */
-    assert.decreasesBy = (fn, object, property, delta = adone.null, message = adone.null) => {
-        if (delta === adone.null) {
-            if (message === adone.null) {
-                [delta, property] = [property, null];
-            } else if (is.function(object)) {
-                [delta, property] = [property, delta];
-            }
+
+    assert.decreasesBy = function (fn, obj, prop, delta, msg) {
+        // eslint-disable-next-line adone/no-typeof
+        if (arguments.length === 4 && typeof obj === "function") {
+            const tmpMsg = delta;
+            delta = prop;
+            msg = tmpMsg;
+        } else if (arguments.length === 3) {
+            delta = prop;
+            prop = null;
         }
-        getAssertion(fn, message, assert.decreases, true).to.decrease(object, property).by(delta);
+
+        new Assertion(fn, msg, assert.decreasesBy, true)
+            .to.decrease(obj, prop).by(delta);
     };
 
     /**
-     * Asserts that a function does not decrease the value of a property
+     * ### .doesNotDecrease(function, object, property, [message])
+     *
+     * Asserts that a function does not decreases a numeric object property.
+     *
+     *     var obj = { val: 10 };
+     *     var fn = function() { obj.val = 15 };
+     *     assert.doesNotDecrease(fn, obj, 'val');
+     *
+     * @name doesNotDecrease
+     * @param {Function} modifier function
+     * @param {Object} object or getter function
+     * @param {String} property name _optional_
+     * @param {String} message _optional_
+     * @namespace Assert
+     * @api public
      */
-    assert.doesNotDecrease = (fn, object, property, message = adone.null) => {
-        if (message === adone.null && is.function(object)) {
-            [message, property] = [property, null];
+
+    assert.doesNotDecrease = function (fn, obj, prop, msg) {
+        // eslint-disable-next-line adone/no-typeof
+        if (arguments.length === 3 && typeof obj === "function") {
+            msg = prop;
+            prop = null;
         }
-        getAssertion(fn, message, assert.doesNotDecrease, true).to.not.decrease(object, property);
+
+        return new Assertion(fn, msg, assert.doesNotDecrease, true)
+            .to.not.decrease(obj, prop);
     };
 
     /**
-     * Asserts that a function does not decrease the value of a property or a function's return value by delta
+     * ### .doesNotDecreaseBy(function, object, property, delta, [message])
+     *
+     * Asserts that a function does not decreases a numeric object property or a function's return value by an amount (delta)
+     *
+     *     var obj = { val: 10 };
+     *     var fn = function() { obj.val = 5 };
+     *     assert.doesNotDecreaseBy(fn, obj, 'val', 1);
+     *
+     * @name doesNotDecrease
+     * @param {Function} modifier function
+     * @param {Object} object or getter function
+     * @param {String} property name _optional_
+     * @param {Number} change amount (delta)
+     * @param {String} message _optional_
+     * @namespace Assert
+     * @api public
      */
-    assert.doesNotDecreaseBy = (fn, object, property, delta = adone.null, message = adone.null) => {
-        if (delta === adone.null) {
-            if (message === adone.null) {
-                [delta, property] = [property, null];
-            } else if (is.function(object)) {
-                [delta, property] = [property, delta];
-            }
+
+    assert.doesNotDecreaseBy = function (fn, obj, prop, delta, msg) {
+        // eslint-disable-next-line adone/no-typeof
+        if (arguments.length === 4 && typeof obj === "function") {
+            const tmpMsg = delta;
+            delta = prop;
+            msg = tmpMsg;
+        } else if (arguments.length === 3) {
+            delta = prop;
+            prop = null;
         }
-        getAssertion(fn, message, assert.doesNotDecreaseBy, true).to.not.decrease(object, property).by(delta);
+
+        return new Assertion(fn, msg, assert.doesNotDecreaseBy, true)
+            .to.not.decrease(obj, prop).by(delta);
     };
 
     /**
-     * Asserts that a function does not decreases a numeric object property or a function’s return value by delta
+     * ### .decreasesButNotBy(function, object, property, delta, [message])
+     *
+     * Asserts that a function does not decreases a numeric object property or a function's return value by an amount (delta)
+     *
+     *     var obj = { val: 10 };
+     *     var fn = function() { obj.val = 5 };
+     *     assert.decreasesButNotBy(fn, obj, 'val', 1);
+     *
+     * @name decreasesButNotBy
+     * @param {Function} modifier function
+     * @param {Object} object or getter function
+     * @param {String} property name _optional_
+     * @param {Number} change amount (delta)
+     * @param {String} message _optional_
+     * @namespace Assert
+     * @api public
      */
-    assert.decreasesButNotBy = (fn, object, property, delta = adone.null, message = adone.null) => {
-        if (delta === adone.null) {
-            if (message === adone.null) {
-                [delta, property] = [property, null];
-            } else if (is.function(object)) {
-                [delta, property] = [property, delta];
-            }
+
+    assert.decreasesButNotBy = function (fn, obj, prop, delta, msg) {
+        // eslint-disable-next-line adone/no-typeof
+        if (arguments.length === 4 && typeof obj === "function") {
+            const tmpMsg = delta;
+            delta = prop;
+            msg = tmpMsg;
+        } else if (arguments.length === 3) {
+            delta = prop;
+            prop = null;
         }
-        getAssertion(fn, message, assert.decreasesButNotBy, true).to.decrease(object, property).but.not.by(delta);
+
+        new Assertion(fn, msg, assert.decreasesButNotBy, true)
+            .to.decrease(obj, prop).but.not.by(delta);
     };
 
     /**
-     * Throws an error if value is truthy
+     * !
+     * ### .ifError(object)
+     *
+     * Asserts if value is not a false value, and throws if it is a true value.
+     * This is added to allow for chai to be a drop-in replacement for Node's
+     * assert class.
+     *
+     *     var err = new Error('I am a custom error');
+     *     assert.ifError(err); // Rethrows err!
+     *
+     * @name ifError
+     * @param {Object} object
+     * @namespace Assert
+     * @api public
      */
-    assert.ifError = (value) => {
-        if (value) {
-            throw (value);
+
+    assert.ifError = function (val) {
+        if (val) {
+            throw (val);
         }
     };
 
     /**
-     * Asserts that object is extensible
+     * ### .isExtensible(object)
+     *
+     * Asserts that `object` is extensible (can have new properties added to it).
+     *
+     *     assert.isExtensible({});
+     *
+     * @name isExtensible
+     * @alias extensible
+     * @param {Object} object
+     * @param {String} message _optional_
+     * @namespace Assert
+     * @api public
      */
-    assert.extensible = (object, message) => {
-        getAssertion(object, message, assert.extensible, true).to.be.extensible();
+
+    assert.isExtensible = function (obj, msg) {
+        new Assertion(obj, msg, assert.isExtensible, true).to.be.extensible;
     };
 
     /**
-     * Asserts that object is not extensible
+     * ### .isNotExtensible(object)
+     *
+     * Asserts that `object` is _not_ extensible.
+     *
+     *     var nonExtensibleObject = Object.preventExtensions({});
+     *     var sealedObject = Object.seal({});
+     *     var frozenObject = Object.freeze({});
+     *
+     *     assert.isNotExtensible(nonExtensibleObject);
+     *     assert.isNotExtensible(sealedObject);
+     *     assert.isNotExtensible(frozenObject);
+     *
+     * @name isNotExtensible
+     * @alias notExtensible
+     * @param {Object} object
+     * @param {String} message _optional_
+     * @namespace Assert
+     * @api public
      */
-    assert.notExtensible = (object, message) => {
-        getAssertion(object, message, assert.notExtensible, true).to.not.be.extensible();
+
+    assert.isNotExtensible = function (obj, msg) {
+        new Assertion(obj, msg, assert.isNotExtensible, true).to.not.be.extensible;
     };
 
     /**
-     * Asserts that object is sealed
+     * ### .isSealed(object)
+     *
+     * Asserts that `object` is sealed (cannot have new properties added to it
+     * and its existing properties cannot be removed).
+     *
+     *     var sealedObject = Object.seal({});
+     *     var frozenObject = Object.seal({});
+     *
+     *     assert.isSealed(sealedObject);
+     *     assert.isSealed(frozenObject);
+     *
+     * @name isSealed
+     * @alias sealed
+     * @param {Object} object
+     * @param {String} message _optional_
+     * @namespace Assert
+     * @api public
      */
-    assert.sealed = (object, message) => {
-        getAssertion(object, message, assert.sealed, true).to.be.sealed();
+
+    assert.isSealed = function (obj, msg) {
+        new Assertion(obj, msg, assert.isSealed, true).to.be.sealed;
     };
 
     /**
-     * Asserts that object is not sealed
+     * ### .isNotSealed(object)
+     *
+     * Asserts that `object` is _not_ sealed.
+     *
+     *     assert.isNotSealed({});
+     *
+     * @name isNotSealed
+     * @alias notSealed
+     * @param {Object} object
+     * @param {String} message _optional_
+     * @namespace Assert
+     * @api public
      */
-    assert.notSealed = (object, message) => {
-        getAssertion(object, message, assert.notSealed, true).to.not.be.sealed();
+
+    assert.isNotSealed = function (obj, msg) {
+        new Assertion(obj, msg, assert.isNotSealed, true).to.not.be.sealed;
     };
 
     /**
-     * Asserts that object is frozen
+     * ### .isFrozen(object)
+     *
+     * Asserts that `object` is frozen (cannot have new properties added to it
+     * and its existing properties cannot be modified).
+     *
+     *     var frozenObject = Object.freeze({});
+     *     assert.frozen(frozenObject);
+     *
+     * @name isFrozen
+     * @alias frozen
+     * @param {Object} object
+     * @param {String} message _optional_
+     * @namespace Assert
+     * @api public
      */
-    assert.frozen = (object, message) => {
-        getAssertion(object, message, assert.frozen, true).to.be.frozen();
+
+    assert.isFrozen = function (obj, msg) {
+        new Assertion(obj, msg, assert.isFrozen, true).to.be.frozen;
     };
 
     /**
-     * Asserts that object is not frozen
+     * ### .isNotFrozen(object)
+     *
+     * Asserts that `object` is _not_ frozen.
+     *
+     *     assert.isNotFrozen({});
+     *
+     * @name isNotFrozen
+     * @alias notFrozen
+     * @param {Object} object
+     * @param {String} message _optional_
+     * @namespace Assert
+     * @api public
      */
-    assert.notFrozen = (object, message) => {
-        getAssertion(object, message, assert.notFrozen, true).to.not.be.frozen();
+
+    assert.isNotFrozen = function (obj, msg) {
+        new Assertion(obj, msg, assert.isNotFrozen, true).to.not.be.frozen;
     };
 
     /**
-     * Asserts that value is empty
+     * ### .isEmpty(target)
+     *
+     * Asserts that the target does not contain any values.
+     * For arrays and strings, it checks the `length` property.
+     * For `Map` and `Set` instances, it checks the `size` property.
+     * For non-function objects, it gets the count of own
+     * enumerable string keys.
+     *
+     *     assert.isEmpty([]);
+     *     assert.isEmpty('');
+     *     assert.isEmpty(new Map);
+     *     assert.isEmpty({});
+     *
+     * @name isEmpty
+     * @alias empty
+     * @param {Object|Array|String|Map|Set} target
+     * @param {String} message _optional_
+     * @namespace Assert
+     * @api public
      */
-    assert.empty = (value, message) => {
-        getAssertion(value, message, assert.empty, true).to.be.empty();
+
+    assert.isEmpty = function (val, msg) {
+        new Assertion(val, msg, assert.isEmpty, true).to.be.empty;
     };
 
     /**
-     * Asserts that value is not empty
+     * ### .isNotEmpty(target)
+     *
+     * Asserts that the target contains values.
+     * For arrays and strings, it checks the `length` property.
+     * For `Map` and `Set` instances, it checks the `size` property.
+     * For non-function objects, it gets the count of own
+     * enumerable string keys.
+     *
+     *     assert.isNotEmpty([1, 2]);
+     *     assert.isNotEmpty('34');
+     *     assert.isNotEmpty(new Set([5, 6]));
+     *     assert.isNotEmpty({ key: 7 });
+     *
+     * @name isNotEmpty
+     * @alias notEmpty
+     * @param {Object|Array|String|Map|Set} target
+     * @param {String} message _optional_
+     * @namespace Assert
+     * @api public
      */
-    assert.notEmpty = (value, message) => {
-        getAssertion(value, message, assert.notEmpty, true).to.not.be.empty();
+
+    assert.isNotEmpty = function (val, msg) {
+        new Assertion(val, msg, assert.isNotEmpty, true).to.not.be.empty;
     };
 
-    for (const [name, alias] of [
-        ["throws", "throw"],
-        ["throws", "Throw"],
-    ]) {
-        assert[alias] = assert[name];
-    }
+    /**
+     * !
+     * Aliases.
+     */
+
+    (function alias(name, as) {
+        assert[as] = assert[name];
+        return alias;
+    })
+        ("isOk", "ok")
+        ("isNotOk", "notOk")
+        ("throws", "throw")
+        ("throws", "Throw")
+        ("isExtensible", "extensible")
+        ("isNotExtensible", "notExtensible")
+        ("isSealed", "sealed")
+        ("isNotSealed", "notSealed")
+        ("isFrozen", "frozen")
+        ("isNotFrozen", "notFrozen")
+        ("isEmpty", "empty")
+        ("isNotEmpty", "notEmpty");
 }

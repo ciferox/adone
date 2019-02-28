@@ -5,7 +5,7 @@ const {
     std: { path }
 } = adone;
 
-const validateConfig = require(path.join(adone.ROOT_PATH, "lib/ipfs/libp2p/node/config")).validate;
+const validateConfig = require(path.join(adone.ROOT_PATH, "lib/glosses/p2p/node/config")).validate;
 
 describe("configuration", () => {
     let peerInfo;

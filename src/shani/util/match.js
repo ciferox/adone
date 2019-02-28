@@ -79,7 +79,7 @@ const matchObject = (expectation, actual) => {
 const TYPE_MAP = {
     function(m, expectation, message) {
         m.test = expectation;
-        m.message = message || `match(${adone.util.functionName(expectation)})`;
+        m.message = message || `match(${adone.assertion.util.getName(expectation)})`;
     },
     number(m, expectation) {
         m.test = (actual) => {
@@ -92,7 +92,7 @@ const TYPE_MAP = {
 
         if (is.function(expectation.test)) {
             m.test = (actual) => expectation.test(actual) === true;
-            m.message = `match(${adone.util.functionName(expectation.test)})`;
+            m.message = `match(${adone.assertion.util.getName(expectation.test)})`;
             return m;
         }
 
@@ -176,7 +176,7 @@ match.instanceOf = function (type) {
     assertMethodExists(type, Symbol.hasInstance, "type", "[Symbol.hasInstance]");
     return match((actual) => {
         return actual instanceof type;
-    }, `instanceOf(${adone.util.functionName(type) || Object.prototype.toString.call(type)})`);
+    }, `instanceOf(${adone.assertion.util.getName(type) || Object.prototype.toString.call(type)})`);
 };
 
 const createPropertyMatcher = (propertyTest, messagePrefix) => {

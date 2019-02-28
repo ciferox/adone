@@ -51,7 +51,7 @@ class Server {
     stop(cb) {
         cb = cb || (() => { });
 
-        this.server.stop(cb);
+        this.server.stop().then(cb);
     }
 }
 

@@ -2,45 +2,35 @@ const { lazify } = adone;
 
 const assertion = lazify({
     AssertionError: "./assertion_error",
-    config: "./config"
+    config: "./config",
+    util: "./__/utils"
 }, adone.asNamespace(exports), require);
 
-export const __ = lazify({
-    util: "./__/utils",
+const __ = lazify({
     assertion: "./__/assertion",
     core: "./__/core/assertions",
-    assertInterface: "./__/interface/assert",
-    expectInterface: "./__/interface/expect",
-    mockInterface: "./__/interface/mock"
+    assert: "./__/interface/assert",
+    expect: "./__/interface/expect"
 }, null, require);
 
-export const used = new Set();
+export const extension = lazify({
+    dirty: "./extensions/dirty",
+    mock: "./extensions/mock",
+    promise: "./extensions/promise"
+}, null, require);
+
+const used = new Set();
 
 export const use = (fn) => {
     if (!used.has(fn)) {
-        fn(assertion, __.util);
+        fn(assertion, assertion.util);
         used.add(fn);
     }
     return assertion;
 };
 
-export const loadMockInterface = () => {
-    return assertion
-        .use(__.assertion)
-        .use(__.core)
-        .use(__.mockInterface);
-};
-
-export const loadAssertInterface = () => {
-    return assertion
-        .use(__.assertion)
-        .use(__.core)
-        .use(__.assertInterface);
-};
-
-export const loadExpectInterface = () => {
-    return assertion
-        .use(__.assertion)
-        .use(__.core)
-        .use(__.expectInterface);
-};
+assertion
+    .use(__.assertion)
+    .use(__.core)
+    .use(__.expect)
+    .use(__.assert);

@@ -268,17 +268,6 @@ export const normalizePath = (str, stripTrailing = false) => {
     return str;
 };
 
-export const functionName = (fn) => {
-    if (!is.function(fn)) {
-        return null;
-    }
-
-    let fnName = fn.displayName || fn.name || (/function ([^(]+)?\(/.exec(fn.toString()) || [])[1] || null;
-    fnName = fnName ? fnName.replace(/^bound/, "") : "";
-    fnName = fnName ? fnName.trim() : "";
-    return fnName;
-};
-
 export const pluralizeWord = (str, plural, count) => {
     if (is.number(plural)) {
         count = plural;

@@ -27,7 +27,11 @@ adone.lazify({
     WebRTCStar: "./webrtc_star",
     WebsocketStar: "./websocket_star",
     WebsocketStarMulti: "./websocket_star_multi",
+    
     // transports
     TCP: "./tcp",
-    WS: "./websockets"
+    WS: "./websockets",
+
+    // multiplexors
+    spdy: "./spdy"
 }, adone.asNamespace(exports), require);

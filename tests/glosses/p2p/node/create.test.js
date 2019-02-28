@@ -1,104 +1,97 @@
-/* eslint-env mocha */
-'use strict'
+const series = require("async/series");
+const createNode = require("./utils/create_node");
 
-const chai = require('chai')
-chai.use(require('dirty-chai'))
-const expect = chai.expect
-const series = require('async/series')
-const createNode = require('./utils/create-node')
-const sinon = require('sinon')
+describe("libp2p creation", () => {
+    it("should be able to start and stop successfully", (done) => {
+        createNode([], {
+            config: {
+                EXPERIMENTAL: {
+                    pubsub: true
+                },
+                dht: {
+                    enabled: true
+                }
+            }
+        }, (err, node) => {
+            expect(err).to.not.exist();
 
-describe('libp2p creation', () => {
-  it('should be able to start and stop successfully', (done) => {
-    createNode([], {
-      config: {
-        EXPERIMENTAL: {
-          pubsub: true
-        },
-        dht: {
-          enabled: true
-        }
-      }
-    }, (err, node) => {
-      expect(err).to.not.exist()
+            const sw = node._switch;
+            const cm = node.connectionManager;
+            const dht = node._dht;
+            const pub = node._floodSub;
 
-      let sw = node._switch
-      let cm = node.connectionManager
-      let dht = node._dht
-      let pub = node._floodSub
+            sinon.spy(sw, "start");
+            sinon.spy(cm, "start");
+            sinon.spy(dht, "start");
+            sinon.spy(dht.randomWalk, "start");
+            sinon.spy(pub, "start");
+            sinon.spy(sw, "stop");
+            sinon.spy(cm, "stop");
+            sinon.spy(dht, "stop");
+            sinon.spy(dht.randomWalk, "stop");
+            sinon.spy(pub, "stop");
+            sinon.spy(node, "emit");
 
-      sinon.spy(sw, 'start')
-      sinon.spy(cm, 'start')
-      sinon.spy(dht, 'start')
-      sinon.spy(dht.randomWalk, 'start')
-      sinon.spy(pub, 'start')
-      sinon.spy(sw, 'stop')
-      sinon.spy(cm, 'stop')
-      sinon.spy(dht, 'stop')
-      sinon.spy(dht.randomWalk, 'stop')
-      sinon.spy(pub, 'stop')
-      sinon.spy(node, 'emit')
+            series([
+                (cb) => node.start(cb),
+                (cb) => {
+                    expect(sw.start.calledOnce).to.equal(true);
+                    expect(cm.start.calledOnce).to.equal(true);
+                    expect(dht.start.calledOnce).to.equal(true);
+                    expect(dht.randomWalk.start.calledOnce).to.equal(true);
+                    expect(pub.start.calledOnce).to.equal(true);
+                    expect(node.emit.calledWith("start")).to.equal(true);
 
-      series([
-        (cb) => node.start(cb),
-        (cb) => {
-          expect(sw.start.calledOnce).to.equal(true)
-          expect(cm.start.calledOnce).to.equal(true)
-          expect(dht.start.calledOnce).to.equal(true)
-          expect(dht.randomWalk.start.calledOnce).to.equal(true)
-          expect(pub.start.calledOnce).to.equal(true)
-          expect(node.emit.calledWith('start')).to.equal(true)
+                    cb();
+                },
+                (cb) => node.stop(cb)
+            ], (err) => {
+                expect(err).to.not.exist();
 
-          cb()
-        },
-        (cb) => node.stop(cb)
-      ], (err) => {
-        expect(err).to.not.exist()
+                expect(sw.stop.calledOnce).to.equal(true);
+                expect(cm.stop.calledOnce).to.equal(true);
+                expect(dht.stop.calledOnce).to.equal(true);
+                expect(dht.randomWalk.stop.called).to.equal(true);
+                expect(pub.stop.calledOnce).to.equal(true);
+                expect(node.emit.calledWith("stop")).to.equal(true);
 
-        expect(sw.stop.calledOnce).to.equal(true)
-        expect(cm.stop.calledOnce).to.equal(true)
-        expect(dht.stop.calledOnce).to.equal(true)
-        expect(dht.randomWalk.stop.called).to.equal(true)
-        expect(pub.stop.calledOnce).to.equal(true)
-        expect(node.emit.calledWith('stop')).to.equal(true)
+                done();
+            });
+        });
+    });
 
-        done()
-      })
-    })
-  })
+    it("should not create disabled modules", (done) => {
+        createNode([], {
+            config: {
+                EXPERIMENTAL: {
+                    pubsub: false
+                }
+            }
+        }, (err, node) => {
+            expect(err).to.not.exist();
+            expect(node._floodSub).to.not.exist();
+            done();
+        });
+    });
 
-  it('should not create disabled modules', (done) => {
-    createNode([], {
-      config: {
-        EXPERIMENTAL: {
-          pubsub: false
-        }
-      }
-    }, (err, node) => {
-      expect(err).to.not.exist()
-      expect(node._floodSub).to.not.exist()
-      done()
-    })
-  })
+    it("should not throw errors from switch if node has no error listeners", (done) => {
+        createNode([], {}, (err, node) => {
+            expect(err).to.not.exist();
 
-  it('should not throw errors from switch if node has no error listeners', (done) => {
-    createNode([], {}, (err, node) => {
-      expect(err).to.not.exist()
+            node._switch.emit("error", new Error("bad things"));
+            done();
+        });
+    });
 
-      node._switch.emit('error', new Error('bad things'))
-      done()
-    })
-  })
-
-  it('should emit errors from switch if node has error listeners', (done) => {
-    const error = new Error('bad things')
-    createNode([], {}, (err, node) => {
-      expect(err).to.not.exist()
-      node.once('error', (err) => {
-        expect(err).to.eql(error)
-        done()
-      })
-      node._switch.emit('error', error)
-    })
-  })
-})
+    it("should emit errors from switch if node has error listeners", (done) => {
+        const error = new Error("bad things");
+        createNode([], {}, (err, node) => {
+            expect(err).to.not.exist();
+            node.once("error", (err) => {
+                expect(err).to.eql(error);
+                done();
+            });
+            node._switch.emit("error", error);
+        });
+    });
+});

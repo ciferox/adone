@@ -23,31 +23,32 @@ module.exports = (send) => {
         }
 
         const handleResult = (res, callback) => {
-            // Inconsistent return values in the browser vs node
-            if (Array.isArray(res)) {
-                res = res[0]
-            }
+            // // Inconsistent return values in the browser vs node
+            // if (Array.isArray(res)) {
+            //     res = res[0]
+            // }
 
-            // Type 4 keys
-            if (res.Type !== 4) {
-                const errMsg = `key was not found (type 4)`
+            // // Type 4 keys
+            // if (res.Type !== 4) {
+            //     const errMsg = `key was not found (type 4)`
 
-                return callback(errcode(new Error(errMsg), 'ERR_KEY_TYPE_4_NOT_FOUND'))
-            }
+            //     return callback(errcode(new Error(errMsg), 'ERR_KEY_TYPE_4_NOT_FOUND'))
+            // }
 
-            const responses = res.Responses.map((r) => {
-                const peerInfo = new PeerInfo(PeerId.createFromB58String(r.ID))
+            // const responses = res.Responses.map((r) => {
+            //     const peerInfo = new PeerInfo(PeerId.createFromB58String(r.ID))
 
-                r.Addrs.forEach((addr) => {
-                    const ma = multiaddr(addr)
+            //     r.Addrs.forEach((addr) => {
+            //         const ma = multiaddr(addr)
 
-                    peerInfo.multiaddrs.add(ma)
-                })
+            //         peerInfo.multiaddrs.add(ma)
+            //     })
 
-                return peerInfo
-            })
+            //     return peerInfo
+            // })
 
-            callback(null, responses)
+            // callback(null, responses)
+            callback(null, res);
         }
 
         send({

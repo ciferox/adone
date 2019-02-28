@@ -47,9 +47,9 @@ const getCallbackError = (behavior, func, args) => {
         let msg;
 
         if (behavior.callArgProp) {
-            msg = `${adone.util.functionName(behavior.stub)} expected to yield to '${__.util.valueToString(behavior.callArgProp)}', but no object with such a property was passed.`;
+            msg = `${adone.assertion.util.getName(behavior.stub)} expected to yield to '${__.util.valueToString(behavior.callArgProp)}', but no object with such a property was passed.`;
         } else {
-            msg = `${adone.util.functionName(behavior.stub)} expected to yield, but no callback was passed.`;
+            msg = `${adone.assertion.util.getName(behavior.stub)} expected to yield, but no callback was passed.`;
         }
 
         if (args.length > 0) {

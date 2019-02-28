@@ -1545,7 +1545,7 @@ export class Engine {
                 }
                 return transpiledCache.get(filename);
             };
-            adone.assertion.loadMockInterface();
+            adone.assertion.use(adone.assertion.extension.mock);
 
             // stub all the log functions to see the source
 
@@ -1633,8 +1633,8 @@ export class Engine {
 
                 global.$ = {};
                 adone.lazify({
-                    expect: () => adone.expect,
-                    assert: () => adone.assert,
+                    expect: () => adone.assertion.expect,
+                    assert: () => adone.assertion.assert,
                     spy: () => shani.util.spy,
                     stub: () => shani.util.stub,
                     mock: () => shani.util.mock,

@@ -1,40 +1,52 @@
-const { is, assertion: $assert } = adone;
-const { __: { util } } = $assert;
+const {
+    assertion: { config, util }
+} = adone;
 
 const formatPrimitive = (ctx, value) => {
     switch (typeof value) {
-        case "undefined": {
+        case "undefined":
             return ctx.stylize("undefined", "undefined");
-        }
+
         case "string": {
             const simple = `'${JSON.stringify(value).replace(/^"|"$/g, "")
                 .replace(/'/g, "\\'")
-                .replace(/\\"/g, "\"")}'`;
-            const stylized = ctx.stylize(simple, "string");
-            if (!ctx.quoteStrings) {
-                return stylized.slice(1, -1);
-            }
-            return stylized;
+                .replace(/\\"/g, '"')}'`;
+            return ctx.stylize(simple, "string");
         }
-        case "number": {
+        case "number":
             if (value === 0 && (1 / value) === -Infinity) {
                 return ctx.stylize("-0", "number");
             }
-            return ctx.stylize(String(value), "number");
-        }
-        case "boolean": {
+            return ctx.stylize(`${value}`, "number");
+
+        case "boolean":
             return ctx.stylize(`${value}`, "boolean");
-        }
-        case "symbol": {
+
+        case "symbol":
             return ctx.stylize(value.toString(), "symbol");
-        }
     }
     // For some reason typeof null is "object", so special case here.
-    if (is.null(value)) {
+    // eslint-disable-next-line adone/no-null-comp
+    if (value === null) {
         return ctx.stylize("null", "null");
     }
-    return null;
 };
+
+// Returns true if object is a DOM element.
+const isDOMElement = function (object) {
+    // eslint-disable-next-line adone/no-typeof
+    if (typeof HTMLElement === "object") {
+        return object instanceof HTMLElement;
+    }
+    return object &&
+        // eslint-disable-next-line adone/no-typeof
+        typeof object === "object" &&
+        "nodeType" in object &&
+        object.nodeType === 1 &&
+        // eslint-disable-next-line adone/no-typeof
+        typeof object.nodeName === "string";
+};
+
 
 const formatError = (value) => `[${Error.prototype.toString.call(value)}]`;
 
@@ -61,11 +73,10 @@ const formatProperty = (ctx, value, recurseTimes, visibleKeys, key, array) => {
     }
     if (!str) {
         if (ctx.seen.indexOf(value[key]) < 0) {
-            if (is.null(recurseTimes)) {
-                // eslint-disable-next-line no-use-before-define
+            // eslint-disable-next-line adone/no-null-comp
+            if (recurseTimes === null) {
                 str = formatValue(ctx, value[key], null);
             } else {
-                // eslint-disable-next-line no-use-before-define
                 str = formatValue(ctx, value[key], recurseTimes - 1);
             }
             if (str.indexOf("\n") > -1) {
@@ -75,7 +86,7 @@ const formatProperty = (ctx, value, recurseTimes, visibleKeys, key, array) => {
                     }).join("\n").substr(2);
                 } else {
                     str = `\n${str.split("\n").map((line) => {
-                        return `${" ".repeat(3)}${line}`;
+                        return `   ${line}`;
                     }).join("\n")}`;
                 }
             }
@@ -83,7 +94,8 @@ const formatProperty = (ctx, value, recurseTimes, visibleKeys, key, array) => {
             str = ctx.stylize("[Circular]", "special");
         }
     }
-    if (is.undefined(name)) {
+    // eslint-disable-next-line adone/no-typeof
+    if (typeof name === "undefined") {
         if (array && key.match(/^\d+$/)) {
             return str;
         }
@@ -93,7 +105,7 @@ const formatProperty = (ctx, value, recurseTimes, visibleKeys, key, array) => {
             name = ctx.stylize(name, "name");
         } else {
             name = name.replace(/'/g, "\\'")
-                .replace(/\\"/g, "\"")
+                .replace(/\\"/g, '"')
                 .replace(/(^"|"$)/g, "'");
             name = ctx.stylize(name, "string");
         }
@@ -126,7 +138,7 @@ const formatTypedArray = (value) => {
     let str = "[ ";
 
     for (let i = 0; i < value.length; ++i) {
-        if (str.length >= $assert.config.truncateThreshold - 7) {
+        if (str.length >= config.truncateThreshold - 7) {
             str += "...";
             break;
         }
@@ -163,19 +175,44 @@ const objectToString = (o) => {
 const isTypedArray = (ar) => {
     // Unfortunately there's no way to check if an object is a TypedArray
     // We have to check if it's one of these types
-    return (is.object(ar) && /\w+Array]$/.test(objectToString(ar)));
+    // eslint-disable-next-line adone/no-typeof
+    return (typeof ar === "object" && /\w+Array]$/.test(objectToString(ar)));
+};
+
+const isArray = function (ar) {
+    // eslint-disable-next-line adone/no-array-isarray
+    return Array.isArray(ar) ||
+        // eslint-disable-next-line adone/no-typeof
+        (typeof ar === "object" && objectToString(ar) === "[object Array]");
+};
+
+const isRegExp = function (re) {
+    // eslint-disable-next-line adone/no-typeof
+    return typeof re === "object" && objectToString(re) === "[object RegExp]";
+};
+
+const isDate = function (d) {
+    // eslint-disable-next-line adone/no-typeof
+    return typeof d === "object" && objectToString(d) === "[object Date]";
+};
+
+const isError = function (e) {
+    // eslint-disable-next-line adone/no-typeof
+    return typeof e === "object" && objectToString(e) === "[object Error]";
 };
 
 const formatValue = (ctx, value, recurseTimes) => {
     // Provide a hook for user-specified inspect functions.
     // Check that value is an object with an inspect function on it
-    if (value && is.function(value.inspect) &&
+    // eslint-disable-next-line adone/no-typeof
+    if (value && typeof value.inspect === "function" &&
         // Filter out the util module, it's inspect function is special
         value.inspect !== exports.inspect &&
         // Also filter out any prototype objects using the circular check.
         !(value.constructor && value.constructor.prototype === value)) {
         let ret = value.inspect(recurseTimes, ctx);
-        if (!is.string(ret)) {
+        // eslint-disable-next-line adone/no-typeof
+        if (typeof ret !== "string") {
             ret = formatValue(ctx, ret, recurseTimes);
         }
         return ret;
@@ -183,38 +220,69 @@ const formatValue = (ctx, value, recurseTimes) => {
 
     // Primitive types cannot have properties
     const primitive = formatPrimitive(ctx, value);
-    if (!is.null(primitive)) {
+    if (primitive) {
         return primitive;
     }
 
-    ctx.quoteStrings = true;
+    // If this is a DOM element, try to get the outer HTML.
+    if (isDOMElement(value)) {
+        if ("outerHTML" in value) {
+            return value.outerHTML;
+            // This value does not have an outerHTML attribute,
+            //   it could still be an XML element
+        }
+        // Attempt to serialize it
+        try {
+            if (document.xmlVersion) {
+                const xmlSerializer = new XMLSerializer();
+                return xmlSerializer.serializeToString(value);
+            }
+            // Firefox 11- do not support outerHTML
+            //   It does, however, support innerHTML
+            //   Use the following to render the element
+            const ns = "http://www.w3.org/1999/xhtml";
+            const container = document.createElementNS(ns, "_");
+
+            container.appendChild(value.cloneNode(false));
+            const html = container.innerHTML
+                .replace("><", `>${value.innerHTML}<`);
+            container.innerHTML = "";
+            return html;
+
+        } catch (err) {
+            // This could be a non-native DOM implementation,
+            //   continue with the normal flow:
+            //   printing the element as if it is an object.
+        }
+
+    }
 
     // Look up the keys of the object.
     const visibleKeys = util.getEnumerableProperties(value);
     const keys = ctx.showHidden ? util.getProperties(value) : visibleKeys;
 
-    let name;
-    let nameSuffix;
+    let name; let nameSuffix;
 
-    // Some type of object without properties can be shortcutted.
+    // Some type of object without properties can be shortcut.
     // In IE, errors have a single `stack` property, or if they are vanilla `Error`,
     // a `stack` plus `description` property; ignore those for consistency.
-    if (keys.length === 0 || (is.error(value) && (
+    if (keys.length === 0 || (isError(value) && (
         (keys.length === 1 && keys[0] === "stack") ||
         (keys.length === 2 && keys[0] === "description" && keys[1] === "stack")
     ))) {
-        if (is.function(value)) {
-            name = adone.util.functionName(value);
+        // eslint-disable-next-line adone/no-typeof
+        if (typeof value === "function") {
+            name = util.getName(value);
             nameSuffix = name ? `: ${name}` : "";
             return ctx.stylize(`[Function${nameSuffix}]`, "special");
         }
-        if (is.regexp(value)) {
+        if (isRegExp(value)) {
             return ctx.stylize(RegExp.prototype.toString.call(value), "regexp");
         }
-        if (is.date(value)) {
+        if (isDate(value)) {
             return ctx.stylize(Date.prototype.toUTCString.call(value), "date");
         }
-        if (is.error(value)) {
+        if (isError(value)) {
             return formatError(value);
         }
     }
@@ -229,39 +297,41 @@ const formatValue = (ctx, value, recurseTimes) => {
         braces = ["[", "]"];
     }
 
-    if (is.array(value)) {
+    // Make Array say that they are Array
+    if (isArray(value)) {
         array = true;
         braces = ["[", "]"];
     }
 
     // Make functions say that they are functions
-    if (is.function(value)) {
-        name = adone.util.functionName(value);
+    // eslint-disable-next-line adone/no-typeof
+    if (typeof value === "function") {
+        name = util.getName(value);
         nameSuffix = name ? `: ${name}` : "";
         base = ` [Function${nameSuffix}]`;
     }
 
     // Make RegExps say that they are RegExps
-    if (is.regexp(value)) {
+    if (isRegExp(value)) {
         base = ` ${RegExp.prototype.toString.call(value)}`;
     }
 
     // Make dates with properties first say the date
-    if (is.date(value)) {
+    if (isDate(value)) {
         base = ` ${Date.prototype.toUTCString.call(value)}`;
     }
 
     // Make error with message first say the error
-    if (is.error(value)) {
+    if (isError(value)) {
         return formatError(value);
     }
 
-    if (keys.length === 0 && (!array || value.length === 0)) {
+    if (keys.length === 0 && (!array || value.length == 0)) {
         return braces[0] + base + braces[1];
     }
 
     if (recurseTimes < 0) {
-        if (is.regexp(value)) {
+        if (isRegExp(value)) {
             return ctx.stylize(RegExp.prototype.toString.call(value), "regexp");
         }
         return ctx.stylize("[Object]", "special");
@@ -275,8 +345,6 @@ const formatValue = (ctx, value, recurseTimes) => {
         output = formatArray(ctx, value, recurseTimes, visibleKeys, keys);
     } else if (typedArray) {
         return formatTypedArray(value);
-    } else if (is.function(value.toString) && value.toString !== Object.prototype.toString) {
-        return value.toString();
     } else {
         output = keys.map((key) => {
             return formatProperty(ctx, value, recurseTimes, visibleKeys, key, array);
@@ -288,16 +356,32 @@ const formatValue = (ctx, value, recurseTimes) => {
     return reduceToSingleString(output, base, braces);
 };
 
-export default function inspect(obj, {
-    showHidden = false,
-    depth = 2,
-    quoteStrings = true
-} = {}) {
+/**
+ * ### .inspect(obj, [showHidden], [depth], [colors])
+ *
+ * Echoes the value of a value. Tries to print the value out
+ * in the best way possible given the different types.
+ *
+ * @param {Object} obj The object to print out.
+ * @param {Boolean} showHidden Flag that shows hidden (not enumerable)
+ *    properties of objects. Default is false.
+ * @param {Number} depth Depth in which to descend in object. Default is 2.
+ * @param {Boolean} colors Flag to turn on ANSI escape codes to color the
+ *    output. Default is false (no coloring).
+ * @namespace Utils
+ * @name inspect
+ */
+const inspect = function (obj, showHidden, depth, colors) {
     const ctx = {
-        quoteStrings,
         showHidden,
         seen: [],
-        stylize: (str) => str
+        stylize(str) {
+            return str;
+        }
     };
-    return formatValue(ctx, obj, depth);
-}
+    // eslint-disable-next-line adone/no-typeof
+    return formatValue(ctx, obj, (typeof depth === "undefined" ? 2 : depth));
+};
+
+module.exports = inspect;
+

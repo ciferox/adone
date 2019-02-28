@@ -1,30 +1,52 @@
-const { assertion: $assert } = adone;
-const { __: { util } } = $assert;
+const {
+    assertion: { AssertionError }
+} = adone;
 
-const vowels = new Set(["a", "e", "i", "o", "u"]);
+/**
+ * ### .expectTypes(obj, types)
+ *
+ * Ensures that the object being tested against is of a valid type.
+ *
+ *     utils.expectTypes(this, ['array', 'object', 'string']);
+ *
+ * @param {Mixed} obj constructed Assertion
+ * @param {Array} type A list of allowed types for this assertion
+ * @namespace Utils
+ * @name expectTypes
+ * @api public
+ */
 
-export default function expectTypes(obj, types) {
-    let flagMsg = util.flag(obj, "message");
-    const ssfi = util.flag(obj, "ssfi");
+const flag = require("./flag");
+const type = require("type-detect");
+
+module.exports = function expectTypes(obj, types) {
+    let flagMsg = flag(obj, "message");
+    const ssfi = flag(obj, "ssfi");
+
     flagMsg = flagMsg ? `${flagMsg}: ` : "";
-    obj = util.flag(obj, "object");
-    types = types.map((t) => t.toLowerCase());
+
+    obj = flag(obj, "object");
+    types = types.map((t) => {
+        return t.toLowerCase();
+    });
     types.sort();
 
-    // Transforms ['lorem', 'ipsum'] into 'a lirum, or an ipsum'
+    // Transforms ['lorem', 'ipsum'] into 'a lorem, or an ipsum'
     const str = types.map((t, index) => {
-        const art = vowels.has(t.charAt(0)) ? "an" : "a";
+        const art = ~["a", "e", "i", "o", "u"].indexOf(t.charAt(0)) ? "an" : "a";
         const or = types.length > 1 && index === types.length - 1 ? "or " : "";
         return `${or + art} ${t}`;
     }).join(", ");
 
-    const objType = adone.meta.typeOf(obj).toLowerCase();
+    const objType = type(obj).toLowerCase();
 
-    if (!types.some((expected) => objType === expected)) {
-        throw new $assert.AssertionError(
+    if (!types.some((expected) => {
+        return objType === expected;
+    })) {
+        throw new AssertionError(
             `${flagMsg}object tested must be ${str}, but ${objType} given`,
             undefined,
             ssfi
         );
     }
-}
+};

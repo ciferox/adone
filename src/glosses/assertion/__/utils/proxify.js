@@ -1,19 +1,83 @@
 const {
-    is,
-    assertion: $assert
+    assertion: { config }
 } = adone;
-const {
-    config, __: {
-        util
+
+const flag = require("./flag");
+const getProperties = require("./get_properties");
+const isProxyEnabled = require("./is_proxy_enabled");
+
+/**
+ * # stringDistanceCapped(strA, strB, cap)
+ * Return the Levenshtein distance between two strings, but no more than cap.
+ * @param {string} strA
+ * @param {string} strB
+ * @param {number} number
+ * @return {number} min(string distance between strA and strB, cap)
+ * @api private
+ */
+
+const stringDistanceCapped = function (strA, strB, cap) {
+    if (Math.abs(strA.length - strB.length) >= cap) {
+        return cap;
     }
-} = $assert;
+
+    const memo = [];
+    // `memo` is a two-dimensional array containing distances.
+    // memo[i][j] is the distance between strA.slice(0, i) and
+    // strB.slice(0, j).
+    for (let i = 0; i <= strA.length; i++) {
+        memo[i] = Array(strB.length + 1).fill(0);
+        memo[i][0] = i;
+    }
+    for (let j = 0; j < strB.length; j++) {
+        memo[0][j] = j;
+    }
+
+    for (let i = 1; i <= strA.length; i++) {
+        const ch = strA.charCodeAt(i - 1);
+        for (let j = 1; j <= strB.length; j++) {
+            if (Math.abs(i - j) >= cap) {
+                memo[i][j] = cap;
+                continue;
+            }
+            memo[i][j] = Math.min(
+                memo[i - 1][j] + 1,
+                memo[i][j - 1] + 1,
+                memo[i - 1][j - 1] +
+                (ch === strB.charCodeAt(j - 1) ? 0 : 1)
+            );
+        }
+    }
+
+    return memo[strA.length][strB.length];
+};
+
+/**
+ * ### .proxify(object)
+ *
+ * Return a proxy of given object that throws an error when a non-existent
+ * property is read. By default, the root cause is assumed to be a misspelled
+ * property, and thus an attempt is made to offer a reasonable suggestion from
+ * the list of existing properties. However, if a nonChainableMethodName is
+ * provided, then the root cause is instead a failure to invoke a non-chainable
+ * method prior to reading the non-existent property.
+ *
+ * If proxies are unsupported or disabled via the user's Chai config, then
+ * return object without modification.
+ *
+ * @param {Object} obj
+ * @param {String} nonChainableMethodName
+ * @namespace Utils
+ * @name proxify
+ */
 
 const builtins = ["__flags", "__methods", "_obj", "assert"];
 
-export default function proxify(obj, nonChainableMethodName) {
-    if (!util.isProxyEnabled()) {
+module.exports = function proxify(obj, nonChainableMethodName) {
+    if (!isProxyEnabled()) {
         return obj;
     }
+
     return new Proxy(obj, {
         // eslint-disable-next-line func-name-matching
         get: function proxyGetter(target, property) {
@@ -21,11 +85,15 @@ export default function proxify(obj, nonChainableMethodName) {
             // such as `Symbol.toStringTag`.
             // The values for which an error should be thrown can be configured using
             // the `config.proxyExcludedKeys` setting.
-            if (adone.is.string(property) && config.proxyExcludedKeys.indexOf(property) === -1 &&
+            // eslint-disable-next-line adone/no-typeof
+            if (typeof property === "string" &&
+                config.proxyExcludedKeys.indexOf(property) === -1 &&
                 !Reflect.has(target, property)) {
                 // Special message for invalid property access of non-chainable methods.
                 if (nonChainableMethodName) {
-                    throw Error(`Invalid property: ${nonChainableMethodName}.${property}. See docs for proper usage of "${nonChainableMethodName}".`);
+                    throw Error(`Invalid Chai property: ${nonChainableMethodName}.${
+                        property}. See docs for proper usage of "${
+                        nonChainableMethodName}".`);
                 }
 
                 // If the property is reasonably close to an existing Chai property,
@@ -33,12 +101,12 @@ export default function proxify(obj, nonChainableMethodName) {
                 // distance less than 4.
                 let suggestion = null;
                 let suggestionDistance = 4;
-                util.getProperties(target).forEach((prop) => {
+                getProperties(target).forEach((prop) => {
                     if (
-                        !Object.prototype.hasOwnProperty(prop)
-                        && builtins.indexOf(prop) === -1
+                        !Object.prototype.hasOwnProperty(prop) &&
+                        builtins.indexOf(prop) === -1
                     ) {
-                        const dist = adone.text.stringDistanceCapped(
+                        const dist = stringDistanceCapped(
                             property,
                             prop,
                             suggestionDistance
@@ -50,10 +118,11 @@ export default function proxify(obj, nonChainableMethodName) {
                     }
                 });
 
-                if (!is.null(suggestion)) {
-                    throw Error(`Invalid property: ${property}. Did you mean "${suggestion}"?`);
+                // eslint-disable-next-line adone/no-null-comp
+                if (suggestion !== null) {
+                    throw Error(`Invalid Chai property: ${property}. Did you mean "${suggestion}"?`);
                 } else {
-                    throw Error(`Invalid property: ${property}`);
+                    throw Error(`Invalid Chai property: ${property}`);
                 }
             }
 
@@ -69,12 +138,11 @@ export default function proxify(obj, nonChainableMethodName) {
             // if the `lockSsfi` flag is set, thus indicating that this assertion is
             // being called from within another assertion. In that case, the `ssfi`
             // flag is already set to the outer assertion's starting point.
-            if (builtins.indexOf(property) === -1 && !util.flag(target, "lockSsfi")) {
-                util.flag(target, "ssfi", proxyGetter);
+            if (builtins.indexOf(property) === -1 && !flag(target, "lockSsfi")) {
+                flag(target, "ssfi", proxyGetter);
             }
 
             return Reflect.get(target, property);
         }
     });
-}
-
+};

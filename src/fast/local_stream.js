@@ -150,7 +150,7 @@ export const watchSource = (globs, {
     if (!base) {
         globsParents = globs.map((x) => adone.util.globParent(x));
     }
-
+    
     const stream = core.create(null, {
         flush: () => {
             // eslint-disable-next-line no-use-before-define
@@ -180,7 +180,12 @@ export const watchSource = (globs, {
         let _base = base;
         if (!_base) {
             const i = util.matchPath(globs, path, { index: true, dot: true });
-            _base = std.path.resolve(cwd, globsParents[i]);
+            if (i >= 0) {
+                _base = std.path.resolve(cwd, globsParents[i]);
+            }
+            if (!_base || std.path.relative(_base, path).startsWith("..")) {
+                return;
+            }
         }
         stream.write(new adone.fast.File({
             cwd,

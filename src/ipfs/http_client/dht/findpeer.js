@@ -23,28 +23,29 @@ module.exports = (send) => {
         }
 
         const handleResult = (res, callback) => {
-            // Inconsistent return values in the browser
-            if (Array.isArray(res)) {
-                res = res[0]
-            }
+            // // Inconsistent return values in the browser
+            // if (Array.isArray(res)) {
+            //     res = res[0]
+            // }
 
-            // Type 2 keys
-            if (res.Type !== 2) {
-                const errMsg = `key was not found (type 2)`
+            // // Type 2 keys
+            // if (res.Type !== 2) {
+            //     const errMsg = `key was not found (type 2)`
 
-                return callback(errcode(new Error(errMsg), 'ERR_KEY_TYPE_2_NOT_FOUND'))
-            }
+            //     return callback(errcode(new Error(errMsg), 'ERR_KEY_TYPE_2_NOT_FOUND'))
+            // }
 
-            const responseReceived = res.Responses[0]
-            const peerInfo = new PeerInfo(PeerId.createFromB58String(responseReceived.ID))
+            // const responseReceived = res.Responses[0]
+            // const peerInfo = new PeerInfo(PeerId.createFromB58String(responseReceived.ID))
 
-            responseReceived.Addrs.forEach((addr) => {
-                const ma = multiaddr(addr)
+            // responseReceived.Addrs.forEach((addr) => {
+            //     const ma = multiaddr(addr)
 
-                peerInfo.multiaddrs.add(ma)
-            })
+            //     peerInfo.multiaddrs.add(ma)
+            // })
 
-            callback(null, peerInfo)
+            // callback(null, peerInfo)
+            callback(null, res);
         }
 
         send({

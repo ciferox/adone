@@ -1,6 +1,5 @@
-const { lazify } = adone;
-
-const util = lazify({
+const util = adone.lazify({
+    isNaN: "./is_nan",
     pathval: "./pathval",
     test: "./test",
     expectTypes: "./expect_types",
@@ -16,6 +15,7 @@ const util = lazify({
     addChainableMethod: "./add_chainable_method",
     overwriteChainableMethod: "./overwrite_chainable_method",
     compareByInspect: "./compare_by_inspect",
+    getName: "./get_func_name",
     getOwnEnumerablePropertySymbols: "./get_own_enumerable_property_symbols",
     getOwnEnumerableProperties: "./get_own_enumerable_properties",
     getEnumerableProperties: "./get_enumerable_properties",
@@ -25,10 +25,11 @@ const util = lazify({
     isProxyEnabled: "./is_proxy_enabled",
     getActual: "./get_actual",
     getProperties: "./get_properties",
-    type: () => adone.meta.typeOf,
-    eql: () => adone.is.deepEqual,
+    type: "./type_detect",
+    eql: "./deep_eql",
     eqlArray: () => adone.is.equalArrays,
     getPathInfo: () => util.pathval.getPathInfo,
-    hasProperty: () => util.pathval.hasProperty,
-    getName: () => adone.util.functionName
-}, exports, require);
+    hasProperty: () => util.pathval.hasProperty
+}, exports, require, {
+    writable: true
+});

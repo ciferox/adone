@@ -1,4 +1,27 @@
-export default function transferFlags(assertion, object, includeAll) {
+/**
+ * ### .transferFlags(assertion, object, includeAll = true)
+ *
+ * Transfer all the flags for `assertion` to `object`. If
+ * `includeAll` is set to `false`, then the base Chai
+ * assertion flags (namely `object`, `ssfi`, `lockSsfi`,
+ * and `message`) will not be transferred.
+ *
+ *
+ *     var newAssertion = new Assertion();
+ *     utils.transferFlags(assertion, newAssertion);
+ *
+ *     var anotherAssertion = new Assertion(myObj);
+ *     utils.transferFlags(assertion, anotherAssertion, false);
+ *
+ * @param {Assertion} assertion the assertion to transfer the flags from
+ * @param {Object} object the object to transfer the flags to; usually a new assertion
+ * @param {Boolean} includeAll
+ * @namespace Utils
+ * @name transferFlags
+ * @api private
+ */
+
+module.exports = function transferFlags(assertion, object, includeAll) {
     const flags = assertion.__flags || (assertion.__flags = Object.create(null));
 
     if (!object.__flags) {
@@ -9,8 +32,8 @@ export default function transferFlags(assertion, object, includeAll) {
 
     for (const flag in flags) {
         if (includeAll ||
-            (flag !== "object" && flag !== "ssfi" && flag !== "lockSsfi" && flag !== "message")) {
+            (flag !== "object" && flag !== "ssfi" && flag !== "lockSsfi" && flag != "message")) {
             object.__flags[flag] = flags[flag];
         }
     }
-}
+};

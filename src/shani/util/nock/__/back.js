@@ -83,7 +83,7 @@ const fixtureExists = (fixture) => {
 
 const assertScopes = (scopes, fixture) => {
     scopes.forEach((scope) => {
-        adone.expect(scope.isDone()).to.be.equal(
+        adone.assertion.expect(scope.isDone()).to.be.equal(
             true,
             format("%j was not used, consider removing %s to rerecord fixture", scope.pendingMocks(), fixture)
         );
