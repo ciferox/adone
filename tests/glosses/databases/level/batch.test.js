@@ -73,7 +73,7 @@ describe("batch()", () => {
                     async.forEach(["2", "3", "bar", "baz"], (key, callback) => {
                         db.get(key, (err, value) => {
                             assert.notExists(err);
-                            assert.notNull(value);
+                            assert.isNotNull(value);
                             callback();
                         });
                     }, callback);
@@ -233,7 +233,7 @@ describe("batch()", () => {
                         async.forEach(["2", "3", "bar", "baz"], (key, callback) => {
                             db.get(key, (err, value) => {
                                 assert.notExists(err);
-                                assert.notNull(value);
+                                assert.isNotNull(value);
                                 callback();
                             });
                         }, callback);
@@ -269,7 +269,7 @@ describe("batch()", () => {
                     async.forEach(["2", "3"], (key, callback) => {
                         db.get(key, (err, value) => {
                             assert.notExists(err);
-                            assert.notNull(value);
+                            assert.isNotNull(value);
                             callback();
                         });
                     }, callback);

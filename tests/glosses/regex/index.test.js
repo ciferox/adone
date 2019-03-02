@@ -20,17 +20,17 @@ describe("regex", () => {
         ];
 
         for (let i = 0; i < invalids.length; i++) {
-            assert.true(regex.filename().test(valids[i]));
+            assert.isTrue(regex.filename().test(valids[i]));
         }
 
         for (let i = 0; i < invalids.length; i++) {
-            assert.false(regex.filename().test(invalids[i]));
+            assert.isFalse(regex.filename().test(invalids[i]));
         }
     });
 
     describe("shebang", () => {
         it("with", () => {
-            assert.true(regex.shebang().test('#!/usr/bin/env node\nconsole.log("unicorns");'));
+            assert.isTrue(regex.shebang().test('#!/usr/bin/env node\nconsole.log("unicorns");'));
             assert.equal(regex.shebang().exec("#!/usr/bin/env node")[1], "/usr/bin/env node");
         });
 
@@ -312,7 +312,7 @@ describe("regex", () => {
 
         it("ip", () => {
             for (const x of v4) {
-                assert.true(ip({ exact: true }).test(x));
+                assert.isTrue(ip({ exact: true }).test(x));
             }
 
             for (const x of v4) {
@@ -320,15 +320,15 @@ describe("regex", () => {
             }
 
             for (const x of v4) {
-                assert.false(ip().test(`foo${x}bar`));
+                assert.isFalse(ip().test(`foo${x}bar`));
             }
 
             for (const x of v4not) {
-                assert.false(ip({ exact: true }).test(x));
+                assert.isFalse(ip({ exact: true }).test(x));
             }
 
             for (const x of v6) {
-                assert.true(ip({ exact: true }).test(x));
+                assert.isTrue(ip({ exact: true }).test(x));
             }
 
             for (const x of v6) {
@@ -336,17 +336,17 @@ describe("regex", () => {
             }
 
             for (const x of v6) {
-                assert.false(ip().test(`foo${x}bar`));
+                assert.isFalse(ip().test(`foo${x}bar`));
             }
 
             for (const x of v6not) {
-                assert.false(ip({ exact: true }).test(x));
+                assert.isFalse(ip({ exact: true }).test(x));
             }
         });
 
         it("ip v4", () => {
             for (const x of v4) {
-                assert.true(ip4({ exact: true }).test(x));
+                assert.isTrue(ip4({ exact: true }).test(x));
             }
 
             for (const x of v4) {
@@ -354,17 +354,17 @@ describe("regex", () => {
             }
 
             for (const x of v4) {
-                assert.false(ip().test(`foo${x}bar`));
+                assert.isFalse(ip().test(`foo${x}bar`));
             }
 
             for (const x of v4not) {
-                assert.false(ip4({ exact: true }).test(x));
+                assert.isFalse(ip4({ exact: true }).test(x));
             }
         });
 
         it("ip v6", () => {
             for (const x of v6) {
-                assert.true(ip6({ exact: true }).test(x));
+                assert.isTrue(ip6({ exact: true }).test(x));
             }
 
             for (const x of v6) {
@@ -372,11 +372,11 @@ describe("regex", () => {
             }
 
             for (const x of v6) {
-                assert.false(ip().test(`foo${x}bar`));
+                assert.isFalse(ip().test(`foo${x}bar`));
             }
 
             for (const x of v6not) {
-                assert.false(ip6({ exact: true }).test(x));
+                assert.isFalse(ip6({ exact: true }).test(x));
             }
         });
     });

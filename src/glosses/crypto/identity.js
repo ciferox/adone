@@ -197,4 +197,3 @@ export default class Identity {
         return new Identity(id, null, pub);
     }
 }
-adone.tag.add(Identity, "CRYPTO_IDENTITY");

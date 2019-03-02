@@ -8,7 +8,7 @@ describe("cmake", "Dist", () => {
         this.timeout(60000);
         const dist = new Dist();
         await fs.rm(dist.internalPath);
-        assert.false(dist.downloaded);
+        assert.isFalse(dist.downloaded);
         await dist.ensureDownloaded();
     });
 });

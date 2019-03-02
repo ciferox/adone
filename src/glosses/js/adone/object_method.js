@@ -8,5 +8,3 @@ export default class XObjectMethod extends adone.js.adone.Base {
         return "ObjectMethod";
     }
 }
-adone.tag.define("CODEMOD_OBJECT_METHOD");
-adone.tag.add(XObjectMethod, "CODEMOD_OBJECT_METHOD");

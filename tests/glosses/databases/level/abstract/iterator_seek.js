@@ -109,8 +109,8 @@ export const seek = function (testCommon) {
             assert.equal(value.toString(), "2", "value matches");
             ite.next((err, key, value) => {
                 assert.notExists(err, "no error");
-                assert.undefined(key, "end of iterator");
-                assert.undefined(value, "end of iterator");
+                assert.isUndefined(key, "end of iterator");
+                assert.isUndefined(value, "end of iterator");
                 ite.end(done);
             });
         });

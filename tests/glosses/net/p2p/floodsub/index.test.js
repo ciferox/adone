@@ -108,7 +108,7 @@ describe("floodsub", () => {
                 const receivedMsg = function (msg) {
                     expect(msg.data.toString()).to.equal("banana");
                     expect(msg.from).to.be.eql(fsB.netCore.peerInfo.id.asBase58());
-                    assert.true(is.buffer(msg.seqno));
+                    assert.isTrue(is.buffer(msg.seqno));
                     expect(msg.topicIDs).to.be.eql(["Z"]);
 
                     if (++counter === 10) {
@@ -130,7 +130,7 @@ describe("floodsub", () => {
                 const receivedMsg = function (msg) {
                     expect(msg.data.toString()).to.equal("banana");
                     expect(msg.from).to.be.eql(fsB.netCore.peerInfo.id.asBase58());
-                    assert.true(is.buffer(msg.seqno));
+                    assert.isTrue(is.buffer(msg.seqno));
                     expect(msg.topicIDs).to.be.eql(["Z"]);
 
                     if (++counter === 10) {

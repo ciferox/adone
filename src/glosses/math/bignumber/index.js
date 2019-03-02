@@ -386,7 +386,5 @@ Object.keys(BigNumber.prototype).forEach((name) => {
     };
 });
 
-adone.tag.add(BigNumber, "BIGNUMBER");
-
 BigNumber.ZERO = new BigNumber(0);
 BigNumber.ONE = new BigNumber(1);

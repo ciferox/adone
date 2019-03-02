@@ -176,8 +176,8 @@ describe("shani", "util", "issues", () => {
         let s;
 
         const makeAssertions = (fake, expected) => {
-            assert.function(fake.then);
-            assert.function(fake.tap);
+            assert.isFunction(fake.then);
+            assert.isFunction(fake.tap);
 
             assert.equal(fake.tap(), expected);
         };
@@ -305,20 +305,20 @@ describe("shani", "util", "issues", () => {
             const spyFunc = s.spy(obj, "func");
             const spyProp = s.spy(obj, "prop", ["get"]);
 
-            assert.false(spyFunc.called);
-            assert.false(spyProp.get.called);
+            assert.isFalse(spyFunc.called);
+            assert.isFalse(spyProp.get.called);
 
             obj.func();
             //eslint-disable-next-line no-unused-expressions
             obj.prop;
 
-            assert.true(spyFunc.called);
-            assert.true(spyProp.get.called);
+            assert.isTrue(spyFunc.called);
+            assert.isTrue(spyProp.get.called);
 
             s.resetHistory();
 
-            assert.false(spyFunc.called);
-            assert.false(spyProp.get.called);
+            assert.isFalse(spyFunc.called);
+            assert.isFalse(spyProp.get.called);
         });
     });
 });

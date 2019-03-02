@@ -49,17 +49,17 @@ describe("fs", "rmEmpty", () => {
     it("should delete the given cwd if empty", async () => {
         const d = tmp.getDirectory("b");
         await rmEmpty(d.path());
-        assert.false(await d.exists());
+        assert.isFalse(await d.exists());
     });
 
     it("should delete nested directories", async () => {
         await rmEmpty(tmp.path());
-        assert.false(await tmp.getDirectory("a", "aa", "aaa").exists());
-        assert.true(await tmp.getDirectory("a", "aa").exists());
-        assert.true(await tmp.getDirectory("a").exists());
+        assert.isFalse(await tmp.getDirectory("a", "aa", "aaa").exists());
+        assert.isTrue(await tmp.getDirectory("a", "aa").exists());
+        assert.isTrue(await tmp.getDirectory("a").exists());
 
-        assert.false(await tmp.getDirectory("a", "b").exists());
-        assert.false(await tmp.getDirectory("a", "c").exists());
+        assert.isFalse(await tmp.getDirectory("a", "b").exists());
+        assert.isFalse(await tmp.getDirectory("a", "c").exists());
     });
 
     it("should return the array of deleted directories", async () => {

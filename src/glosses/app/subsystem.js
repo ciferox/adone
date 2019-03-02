@@ -2,7 +2,6 @@ const {
     is,
     fs,
     std,
-    tag,
     error,
     meta: { reflect },
     app: {
@@ -591,4 +590,3 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         await this._initialize();
     }
 }
-tag.add(Subsystem, "SUBSYSTEM");

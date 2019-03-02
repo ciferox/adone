@@ -75,7 +75,7 @@ describe("circuit", "listener", () => {
                 pull.values([protocol.CircuitRelay.encode(relayMsg)]),
                 pull.lengthPrefixed.encode(),
                 pull.collect((err, encoded) => {
-                    assert.null(err);
+                    assert.isNull(err);
                     encoded.forEach((e) => shake.write(e));
                 })
             );
@@ -112,7 +112,7 @@ describe("circuit", "listener", () => {
                 pull.values([protocol.CircuitRelay.encode(relayMsg)]),
                 pull.lengthPrefixed.encode(),
                 pull.collect((err, encoded) => {
-                    assert.null(err);
+                    assert.isNull(err);
                     encoded.forEach((e) => shake.write(e));
                 })
             );
@@ -149,7 +149,7 @@ describe("circuit", "listener", () => {
                 pull.values([protocol.CircuitRelay.encode(relayMsg)]),
                 pull.lengthPrefixed.encode(),
                 pull.collect((err, encoded) => {
-                    assert.null(err);
+                    assert.isNull(err);
                     encoded.forEach((e) => shake.write(e));
                 })
             );
@@ -174,11 +174,11 @@ describe("circuit", "listener", () => {
                 pull.values([Buffer.from([relayMsg])]),
                 pull.lengthPrefixed.encode(),
                 pull.collect((err, encoded) => {
-                    assert.null(err);
+                    assert.isNull(err);
                     encoded.forEach((e) => shake.write(e));
                 }),
                 pull.lengthPrefixed.decodeFromReader(shake, { maxLength: this.maxLength }, (err, msg) => {
-                    assert.null(err);
+                    assert.isNull(err);
                     expect(protocol.CircuitRelay.decode(msg).type).to.equal(protocol.CircuitRelay.Type.STATUS);
                     expect(protocol.CircuitRelay.decode(msg).code).to.equal(protocol.CircuitRelay.Status.MALFORMED_MESSAGE);
                     done();

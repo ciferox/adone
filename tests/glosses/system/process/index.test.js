@@ -13,10 +13,10 @@ describe("system", "process", () => {
             const binName = is.windows ? "node.exe" : "node";
             const result = await list();
 
-            assert.true(result.some((x) => x.name.includes(binName)));
-            assert.true(result.every((x) => is.number(x.pid) && is.string(x.name) && is.string(x.cmd)));
+            assert.isTrue(result.some((x) => x.name.includes(binName)));
+            assert.isTrue(result.every((x) => is.number(x.pid) && is.string(x.name) && is.string(x.cmd)));
 
-            (!is.windows) && assert.true(result.every((x) => is.string(x.cpu)));
+            (!is.windows) && assert.isTrue(result.every((x) => is.string(x.cpu)));
         });
     });
 
@@ -40,7 +40,7 @@ describe("system", "process", () => {
 
             let children = await getChildPids(parent.pid);
 
-            assert.true(children.length > 0);
+            assert.isTrue(children.length > 0);
             kill(parent.pid, {
                 force: is.windows
             });
@@ -131,7 +131,7 @@ describe("system", "process", () => {
             const [s1, s2] = [srv().listen(p1), srv().listen(p2)];
             const ports = await getPidsByPorts([p1, p2]);
 
-            assert.true(ports instanceof Map);
+            assert.isTrue(ports instanceof Map);
 
             for (const x of ports.values()) {
                 assert.equal(typeof x, "number");
@@ -143,7 +143,7 @@ describe("system", "process", () => {
 
         it("list", async () => {
             const list = await getAllPidsByPorts();
-            assert.true(list instanceof Map);
+            assert.isTrue(list instanceof Map);
             await getPidsByPorts(Array.from(list.keys()));
         });
     });

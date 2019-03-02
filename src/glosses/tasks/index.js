@@ -9,14 +9,6 @@ export const STATE = {
     COMPLETED: 7
 };
 
-// predicates
-adone.definePredicates({
-    task: "TASK",
-    flowTask: "FLOW_TASK",
-    taskObserver: "TASK_OBSERVER",
-    taskManager: "TASK_MANAGER"
-});
-
 adone.lazify({
     Manager: "./manager",
     Task: ["./task", (mod) => mod.Task],

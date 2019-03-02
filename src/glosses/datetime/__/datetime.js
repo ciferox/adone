@@ -891,8 +891,6 @@ export class Datetime {
     }
 }
 
-adone.tag.add(Datetime, "DATETIME");
-
 Datetime.prototype.isUTC = Datetime.prototype.isUtc;
 Datetime.prototype.add = createAdder(1, "add");
 Datetime.prototype.subtract = createAdder(-1, "subtract");

@@ -288,19 +288,16 @@ const _bootstrapApp = async (app, {
         await app.setState(STATE.RUNNING);
     } catch (err) {
         if (app._isAppErrorScope()) {
-            return app._fireException(err);
+            return app.fireException(err);
         }
-        console.error(err.stack || err.message || err);
+        console.error(adone.pretty.error(err));
         return app.exit(app.EXIT_ERROR);
     }
 };
 
 export const run = async (App, {
     useArgs = false
-} = {}) => {
-    // Setup runtime info for core realm.
-    adone.realm.getCoreManager();
-    
+} = {}) => {    
     if (is.null(adone.runtime.app) && is.class(App)) {
         if (useArgs) {
             // mark the default main as internal to be able to distinguish internal from user-defined handlers

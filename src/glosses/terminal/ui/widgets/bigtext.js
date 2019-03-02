@@ -6,8 +6,8 @@ const {
 
 export default class BigText extends adone.terminal.ui.widget.Element {
     constructor(options = {}) {
-        options.font = options.font || path.join(adone.runtime.realm.env.SHARE_PATH, "terminal/fonts/ter-u14n.json");
-        options.fontBold = options.font || path.join(adone.runtime.realm.env.SHARE_PATH, "terminal/fonts/ter-u14b.json");
+        options.font = options.font || path.join(adone.realm.getRootRealm().env.SHARE_PATH, "terminal/fonts/ter-u14n.json");
+        options.fontBold = options.font || path.join(adone.realm.getRootRealm().env.SHARE_PATH, "terminal/fonts/ter-u14b.json");
         super(options);
         this.fch = options.fch;
         this.ratio = {};

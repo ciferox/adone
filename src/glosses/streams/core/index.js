@@ -543,7 +543,6 @@ export class Stream extends event.Emitter {
         return src;
     }
 }
-adone.tag.add(Stream, "CORE_STREAM");
 
 export const create = (source, options) => new Stream(source, options);
 

@@ -16,5 +16,3 @@ export default class XFunction extends adone.js.adone.Base {
         return "Function";
     }
 }
-adone.tag.define("CODEMOD_FUNCTION");
-adone.tag.add(XFunction, "CODEMOD_FUNCTION");

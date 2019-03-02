@@ -2866,7 +2866,6 @@ export default class ByteArray {
         return bb;
     }
 }
-adone.tag.add(ByteArray, "BYTE_ARRAY");
 
 /**
  * Default initial capacity

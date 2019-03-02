@@ -18,7 +18,7 @@ describe("app", "fastLogger", "pretty", () => {
             cb();
         }));
         await once(child, "close");
-        assert.notNull(actual.match(/\(123456 on abcdefghijklmnopqr\): h/));
+        assert.isNotNull(actual.match(/\(123456 on abcdefghijklmnopqr\): h/));
     });
     
     it("can be enabled via exported pino function with pretty configuration", async () => {
@@ -30,7 +30,7 @@ describe("app", "fastLogger", "pretty", () => {
             cb();
         }));
         await once(child, "close");
-        assert.notNull(actual.match(/^INFO.*h/));
+        assert.isNotNull(actual.match(/^INFO.*h/));
     });
     
     it("can be enabled via exported pino function with prettifier", async () => {
@@ -43,7 +43,7 @@ describe("app", "fastLogger", "pretty", () => {
         }));
     
         await once(child, "close");
-        assert.notNull(actual.match(/^INFO.*h/));
+        assert.isNotNull(actual.match(/^INFO.*h/));
     });
     
     it("does not throw error when enabled with stream specified", async () => {
@@ -54,7 +54,7 @@ describe("app", "fastLogger", "pretty", () => {
         const dest = new Writable({
             objectMode: true,
             write(formatted, enc) {
-                assert.true(/^INFO.*foo\n$/.test(formatted));
+                assert.isTrue(/^INFO.*foo\n$/.test(formatted));
             }
         });
     
@@ -89,10 +89,10 @@ describe("app", "fastLogger", "pretty", () => {
             cb();
         }));
         await once(child, "close");
-        assert.notNull(actual.match(/\(123456 on abcdefghijklmnopqr\): h/));
-        assert.notNull(actual.match(/\(123456 on abcdefghijklmnopqr\): h2/));
-        assert.notNull(actual.match(/a: 1/));
-        assert.notNull(actual.match(/b: 2/));
+        assert.isNotNull(actual.match(/\(123456 on abcdefghijklmnopqr\): h/));
+        assert.isNotNull(actual.match(/\(123456 on abcdefghijklmnopqr\): h2/));
+        assert.isNotNull(actual.match(/a: 1/));
+        assert.isNotNull(actual.match(/b: 2/));
         assert.equal(actual.match(/a: 1/g).length, 3);
     });
     
@@ -105,8 +105,8 @@ describe("app", "fastLogger", "pretty", () => {
             cb();
         }));
         await once(child, "close");
-        assert.notNull(actual.match(/\(123456 on abcdefghijklmnopqr\): h/));
-        assert.notNull(actual.match(/foo: "bar"/));
+        assert.isNotNull(actual.match(/\(123456 on abcdefghijklmnopqr\): h/));
+        assert.isNotNull(actual.match(/foo: "bar"/));
     });
     
     it("applies redaction rules", async () => {
@@ -118,9 +118,9 @@ describe("app", "fastLogger", "pretty", () => {
             cb();
         }));
         await once(child, "close");
-        assert.notNull(actual.match(/\(123456 on abcdefghijklmnopqr\): h/));
-        assert.notNull(actual.match(/\[Redacted\]/));
-        assert.null(actual.match(/object/));
+        assert.isNotNull(actual.match(/\(123456 on abcdefghijklmnopqr\): h/));
+        assert.isNotNull(actual.match(/\[Redacted\]/));
+        assert.isNull(actual.match(/object/));
     });
     
     it("dateformat", async () => {
@@ -132,7 +132,7 @@ describe("app", "fastLogger", "pretty", () => {
             cb();
         }));
         await once(child, "close");
-        assert.notNull(actual.match(/\(123456 on abcdefghijklmnopqr\): h/));
+        assert.isNotNull(actual.match(/\(123456 on abcdefghijklmnopqr\): h/));
     });
     
     it("without timestamp", async () => {
@@ -168,9 +168,9 @@ describe("app", "fastLogger", "pretty", () => {
             cb();
         }));
         await once(child, "close");
-        assert.notNull(actual.match(/\(123456 on abcdefghijklmnopqr\): kaboom/));
-        assert.notNull(actual.match(/\(123456 on abcdefghijklmnopqr\): with a message/));
-        assert.notNull(actual.match(/.*error\.js.*/));
+        assert.isNotNull(actual.match(/\(123456 on abcdefghijklmnopqr\): kaboom/));
+        assert.isNotNull(actual.match(/\(123456 on abcdefghijklmnopqr\): with a message/));
+        assert.isNotNull(actual.match(/.*error\.js.*/));
     });
     
     it("errors with props", async () => {
@@ -182,10 +182,10 @@ describe("app", "fastLogger", "pretty", () => {
             cb();
         }));
         await once(child, "close");
-        assert.notNull(actual.match(/\(123456 on abcdefghijklmnopqr\): kaboom/));
-        assert.notNull(actual.match(/code: ENOENT/));
-        assert.notNull(actual.match(/errno: 1/));
-        assert.notNull(actual.match(/.*error_props\.js.*/));
+        assert.isNotNull(actual.match(/\(123456 on abcdefghijklmnopqr\): kaboom/));
+        assert.isNotNull(actual.match(/code: ENOENT/));
+        assert.isNotNull(actual.match(/errno: 1/));
+        assert.isNotNull(actual.match(/.*error_props\.js.*/));
     });
     
     it("final works with pretty", async () => {
@@ -197,8 +197,8 @@ describe("app", "fastLogger", "pretty", () => {
             cb();
         }));
         await once(child, "close");
-        assert.notNull(actual.match(/WARN\s+\(123456 on abcdefghijklmnopqr\): pino.final with prettyPrint does not support flushing/));
-        assert.notNull(actual.match(/INFO\s+\(123456 on abcdefghijklmnopqr\): beforeExit/));
+        assert.isNotNull(actual.match(/WARN\s+\(123456 on abcdefghijklmnopqr\): pino.final with prettyPrint does not support flushing/));
+        assert.isNotNull(actual.match(/INFO\s+\(123456 on abcdefghijklmnopqr\): beforeExit/));
     });
     
     it("final works when returning a logger", async () => {
@@ -210,8 +210,8 @@ describe("app", "fastLogger", "pretty", () => {
             cb();
         }));
         await once(child, "close");
-        assert.notNull(actual.match(/WARN\s+\(123456 on abcdefghijklmnopqr\): pino.final with prettyPrint does not support flushing/));
-        assert.notNull(actual.match(/INFO\s+\(123456 on abcdefghijklmnopqr\): after/));
+        assert.isNotNull(actual.match(/WARN\s+\(123456 on abcdefghijklmnopqr\): pino.final with prettyPrint does not support flushing/));
+        assert.isNotNull(actual.match(/INFO\s+\(123456 on abcdefghijklmnopqr\): after/));
     });
     
     it("final works without prior logging", async () => {
@@ -223,7 +223,7 @@ describe("app", "fastLogger", "pretty", () => {
             cb();
         }));
         await once(child, "close");
-        assert.notNull(actual.match(/WARN\s+: pino.final with prettyPrint does not support flushing/));
-        assert.notNull(actual.match(/INFO\s+\(123456 on abcdefghijklmnopqr\): beforeExit/));
+        assert.isNotNull(actual.match(/WARN\s+: pino.final with prettyPrint does not support flushing/));
+        assert.isNotNull(actual.match(/INFO\s+\(123456 on abcdefghijklmnopqr\): beforeExit/));
     });    
 });

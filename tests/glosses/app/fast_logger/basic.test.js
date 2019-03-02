@@ -26,7 +26,7 @@ describe("fast logger", "basic", () => {
             instance[name]({ hello: "world" });
 
             const result = await once(stream, "data");
-            assert.true(new Date(result.time) <= new Date(), "time is greater than Date.now()");
+            assert.isTrue(new Date(result.time) <= new Date(), "time is greater than Date.now()");
             assert.equal(result.pid, pid);
             assert.equal(result.hostname, hostname);
             assert.equal(result.level, level);
@@ -40,7 +40,7 @@ describe("fast logger", "basic", () => {
             instance.level = name;
             instance[name]({ hello: "world" }, "a string");
             const result = await once(stream, "data");
-            assert.true(new Date(result.time) <= new Date(), "time is greater than Date.now()");
+            assert.isTrue(new Date(result.time) <= new Date(), "time is greater than Date.now()");
             delete result.time;
             assert.deepEqual(result, {
                 pid,
@@ -72,7 +72,7 @@ describe("fast logger", "basic", () => {
             instance.level = name;
             instance[name]({ err });
             const result = await once(stream, "data");
-            assert.true(new Date(result.time) <= new Date(), "time is greater than Date.now()");
+            assert.isTrue(new Date(result.time) <= new Date(), "time is greater than Date.now()");
             delete result.time;
             assert.deepEqual(result, {
                 pid,
@@ -94,7 +94,7 @@ describe("fast logger", "basic", () => {
             const child = instance.child({ hello: "world" });
             child[name]("hello world");
             const result = await once(stream, "data");
-            assert.true(new Date(result.time) <= new Date(), "time is greater than Date.now()");
+            assert.isTrue(new Date(result.time) <= new Date(), "time is greater than Date.now()");
             delete result.time;
             assert.deepEqual(result, {
                 pid,
@@ -126,7 +126,7 @@ describe("fast logger", "basic", () => {
 
         instance.info({ test: "sensitive info" });
         const result = await once(stream, "data");
-        assert.true("test" in result);
+        assert.isTrue("test" in result);
     });
 
     it("does not explode with a circular ref", async () => {
@@ -147,7 +147,7 @@ describe("fast logger", "basic", () => {
         }, stream);
         instance.fatal("this is fatal");
         const result = await once(stream, "data");
-        assert.true(new Date(result.time) <= new Date(), "time is greater than Date.now()");
+        assert.isTrue(new Date(result.time) <= new Date(), "time is greater than Date.now()");
         delete result.time;
         assert.deepEqual(result, {
             pid,
@@ -168,7 +168,7 @@ describe("fast logger", "basic", () => {
         }, stream);
         instance.info(message);
         const result = await once(stream, "data");
-        assert.true(new Date(result.time) <= new Date(), "time is greater than Date.now()");
+        assert.isTrue(new Date(result.time) <= new Date(), "time is greater than Date.now()");
         delete result.time;
         assert.deepEqual(result, {
             pid,
@@ -184,7 +184,7 @@ describe("fast logger", "basic", () => {
         const instance = fastLogger(stream);
         instance.info({ hello: "world", property: undefined });
         const result = await once(stream, "data");
-        assert.true(new Date(result.time) <= new Date(), "time is greater than Date.now()");
+        assert.isTrue(new Date(result.time) <= new Date(), "time is greater than Date.now()");
         delete result.time;
         assert.deepEqual(result, {
             pid,
@@ -200,7 +200,7 @@ describe("fast logger", "basic", () => {
         const instance = fastLogger(stream);
         instance.info(Object.create({ hello: "world" }));
         const { hello } = await once(stream, "data");
-        assert.undefined(hello);
+        assert.isUndefined(hello);
     });
 
     it("set the base", async () => {
@@ -213,7 +213,7 @@ describe("fast logger", "basic", () => {
 
         instance.fatal("this is fatal");
         const result = await once(stream, "data");
-        assert.true(new Date(result.time) <= new Date(), "time is greater than Date.now()");
+        assert.isTrue(new Date(result.time) <= new Date(), "time is greater than Date.now()");
         delete result.time;
         assert.deepEqual(result, {
             a: "b",
@@ -230,7 +230,7 @@ describe("fast logger", "basic", () => {
         }, stream);
         instance.fatal("this is fatal");
         const result = await once(stream, "data");
-        assert.true(new Date(result.time) <= new Date(), "time is greater than Date.now()");
+        assert.isTrue(new Date(result.time) <= new Date(), "time is greater than Date.now()");
         delete result.time;
         assert.deepEqual(result, {
             level: 60,
@@ -328,7 +328,7 @@ describe("fast logger", "basic", () => {
             }
         });
         const result = await once(stream, "data");
-        assert.false("test" in result);
+        assert.isFalse("test" in result);
     });
 
     it("correctly supports stderr", async () => {
@@ -533,7 +533,7 @@ describe("fast logger", "basic", () => {
         instance.info(o);
 
         const { num } = await once(stream, "data");
-        assert.null(num);
+        assert.isNull(num);
     });
 
     it("correctly log -Infinity", async () => {
@@ -544,7 +544,7 @@ describe("fast logger", "basic", () => {
         instance.info(o);
 
         const { num } = await once(stream, "data");
-        assert.null(num);
+        assert.isNull(num);
     });
 
     it("correctly log NaN", async () => {
@@ -555,6 +555,6 @@ describe("fast logger", "basic", () => {
         instance.info(o);
 
         const { num } = await once(stream, "data");
-        assert.null(num);
+        assert.isNull(num);
     });
 });

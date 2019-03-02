@@ -32,7 +32,7 @@ describe("stream", "as", () => {
     setup.obj = makeSetup((data) => new Through(data, true));
 
     it("get stream as a buffer", async () => {
-        assert.true((await as.buffer(fs.createReadStream(fixture("as")))).equals(Buffer.from("unicorn\n")));
+        assert.isTrue((await as.buffer(fs.createReadStream(fixture("as")))).equals(Buffer.from("unicorn\n")));
     });
 
     it("get stream as an array", async () => {
@@ -58,7 +58,7 @@ describe("stream", "as", () => {
 
     it("getStream should not affect additional listeners attached to the stream", async () => {
         const fixture = new Through(["foo", "bar"]);
-        fixture.on("data", (chunk) => assert.true(is.buffer(chunk)));
+        fixture.on("data", (chunk) => assert.isTrue(is.buffer(chunk)));
         assert.equal(await as.string(fixture), "foobar");
     });
 

@@ -89,7 +89,7 @@ describe("app", "fastLogger", "serializers", "req", () => {
     it("req.id has a non-function value", () => {
         const handler = (req, res) => {
             const serialized = serialazersReq.reqSerializer(req);
-            assert.false(is.function(serialized.id));
+            assert.isFalse(is.function(serialized.id));
             res.end();
         };
 
@@ -121,7 +121,7 @@ describe("app", "fastLogger", "serializers", "req", () => {
                 return 42;
             };
             const serialized = serialazersReq.reqSerializer(req);
-            assert.false(is.function(serialized.id));
+            assert.isFalse(is.function(serialized.id));
             assert.equal(serialized.id, 42);
             res.end();
         };

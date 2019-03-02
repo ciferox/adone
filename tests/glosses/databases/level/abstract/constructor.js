@@ -4,7 +4,7 @@ module.exports = function (testCommon) {
     it("test database open method exists", () => {
         const db = testCommon.factory();
         assert.ok(db, "database object returned");
-        assert.function(db.open, "open() function exists");
+        assert.isFunction(db.open, "open() function exists");
     });
 
     it("tearDown", testCommon.tearDown);

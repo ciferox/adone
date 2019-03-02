@@ -16,7 +16,7 @@ describe("is", "safeRegexp", () => {
 
     specify("safe regex", () => {
         good.forEach((re) => {
-            assert.true(safeRegexp(re));
+            assert.isTrue(safeRegexp(re));
         });
     });
 
@@ -33,7 +33,7 @@ describe("is", "safeRegexp", () => {
 
     specify("unsafe regex", () => {
         bad.forEach((re) => {
-            assert.false(safeRegexp(re));
+            assert.isFalse(safeRegexp(re));
         });
     });
 
@@ -46,7 +46,7 @@ describe("is", "safeRegexp", () => {
 
     specify("invalid regex", () => {
         invalid.forEach((re) => {
-            assert.false(safeRegexp(re));
+            assert.isFalse(safeRegexp(re));
         });
     });
 });

@@ -27,9 +27,9 @@ describe("app", "logger", "TransportStream", () => {
     it("should have the appropriate methods defined", () => {
         const transport = new TransportStream();
         assert.instanceOf(transport, Writable);
-        assert.function(transport._write);
+        assert.isFunction(transport._write);
         // eslint-disable-next-line no-undefined
-        assert.undefined(transport.log);
+        assert.isUndefined(transport.log);
     });
 
     it("should accept a custom log function invoked on _write", () => {
@@ -131,7 +131,7 @@ describe("app", "logger", "TransportStream", () => {
                 level: "info",
                 log: logFor(testOrder.length, (err, infos) => {
                     // eslint-disable-next-line no-undefined
-                    assert.undefined(err);
+                    assert.isUndefined(err);
                     assert.strictEqual(infos.length, expected.length);
                     assert.sameDeepMembers(infos, expected);
                 })
@@ -157,7 +157,7 @@ describe("app", "logger", "TransportStream", () => {
                 const transport = new TransportStream({
                     log(info) {
                         // eslint-disable-next-line no-undefined
-                        assert.undefined(info.exception);
+                        assert.isUndefined(info.exception);
                         done();
                     }
                 });
@@ -346,7 +346,7 @@ describe("app", "logger", "TransportStream", () => {
 
             parent.pipe(transport);
             setImmediate(() => {
-                assert.undefined(transport.level);
+                assert.isUndefined(transport.level);
                 assert.deepEqual(transport.config, testLevels);
                 assert.equal(transport.parent, parent);
                 assert.equal(transport.parent.level, "info");
@@ -430,7 +430,7 @@ describe("app", "logger", "TransportStream", () => {
                 //
                 parent.unpipe(transport);
                 setImmediate(() => {
-                    assert.null(transport.parent);
+                    assert.isNull(transport.parent);
                     done();
                 });
             });
@@ -451,7 +451,7 @@ describe("app", "logger", "TransportStream", () => {
             // is invoked
             //
             transport.close = () => {
-                assert.null(transport.parent);
+                assert.isNull(transport.parent);
                 done();
             };
 
@@ -599,8 +599,8 @@ describe("app", "logger", "TransportStream", () => {
                     return info.message;
                 }),
                 log(info, callback) {
-                    assert.string(info.level);
-                    assert.string(info.message);
+                    assert.isString(info.level);
+                    assert.isString(info.message);
                     callback();
 
                     if (info.message === "safe") {
@@ -665,7 +665,7 @@ describe("app", "logger", "TransportStream", () => {
 
         it("{ silent: true } ensures ._accept(write) always returns false", () => {
             const accepted = silentTransport._accept({ chunk: {} });
-            assert.false(accepted);
+            assert.isFalse(accepted);
         });
     });
 });

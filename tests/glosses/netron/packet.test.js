@@ -11,8 +11,8 @@ describe("Packet", () => {
 
     it("initialization", () => {
         assert.equal(pkt.flags, 0);
-        assert.undefined(pkt.id);
-        assert.undefined(pkt.data);
+        assert.isUndefined(pkt.id);
+        assert.isUndefined(pkt.data);
     });
 
     it("set/get impulse bit", () => {

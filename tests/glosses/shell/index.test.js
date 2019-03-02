@@ -18,22 +18,22 @@ describe("shell", () => {
 
         it("no paths given", () => {
             const result = shell.cat();
-            assert.true(is.string(shell.error()));
+            assert.isTrue(is.string(shell.error()));
             assert.strictEqual(result.code, 1);
             assert.match(result.stderr, /cat: no paths given/);
         });
 
         it("nonexistent file", () => {
-            assert.false(fs.existsSync("/asdfasdf")); // sanity check
+            assert.isFalse(fs.existsSync("/asdfasdf")); // sanity check
             const result = shell.cat("/asdfasdf"); // file does not exist
-            assert.true(is.string(shell.error()));
+            assert.isTrue(is.string(shell.error()));
             assert.strictEqual(result.code, 1);
             assert.match(result.stderr, /cat: no such file or directory: \/asdfasdf/);
         });
 
         it("directory", () => {
             const result = shell.cat(fixture("cat"));
-            assert.true(is.string(shell.error()));
+            assert.isTrue(is.string(shell.error()));
             assert.strictEqual(result.code, 1);
             assert.match(result.stderr, /\/cat: Is a directory/);
         });
@@ -44,43 +44,43 @@ describe("shell", () => {
 
         it("simple", () => {
             const result = shell.cat(fixture("cat/file1"));
-            assert.null(shell.error());
+            assert.isNull(shell.error());
             assert.strictEqual(result.code, 0);
             assert.strictEqual(result.toString(), "test1\n");
         });
 
         it("multiple files", () => {
             const result = shell.cat(fixture("cat/file2"), fixture("cat/file1"));
-            assert.null(shell.error());
+            assert.isNull(shell.error());
             assert.strictEqual(result.code, 0);
             assert.strictEqual(result.toString(), "test2\ntest1\n");
         });
 
         it("multiple files, array syntax", () => {
             const result = shell.cat([fixture("cat/file2"), fixture("cat/file1")]);
-            assert.null(shell.error());
+            assert.isNull(shell.error());
             assert.strictEqual(result.code, 0);
             assert.strictEqual(result.toString(), "test2\ntest1\n");
         });
 
         it("glob", () => {
             const result = shell.cat(fixture("file*.txt"));
-            assert.null(shell.error());
+            assert.isNull(shell.error());
             assert.strictEqual(result.code, 0);
-            assert.true(result.search("test1") > -1); // file order might be random
-            assert.true(result.search("test2") > -1);
+            assert.isTrue(result.search("test1") > -1); // file order might be random
+            assert.isTrue(result.search("test2") > -1);
         });
 
         it("without EOF", () => {
             const result = shell.cat(fixture("cat/file3"));
-            assert.null(shell.error());
+            assert.isNull(shell.error());
             assert.strictEqual(result.code, 0);
             assert.strictEqual(result.toString(), "test3");
         });
 
         it("empty", () => {
             const result = shell.cat(fixture("cat/file5"));
-            assert.null(shell.error());
+            assert.isNull(shell.error());
             assert.strictEqual(result.code, 0);
             assert.strictEqual(result.toString(), "");
         });
@@ -91,35 +91,35 @@ describe("shell", () => {
 
         it("simple with numbers", () => {
             const result = shell.cat("-n", fixture("cat/file1"));
-            assert.null(shell.error());
+            assert.isNull(shell.error());
             assert.strictEqual(result.code, 0);
             assert.strictEqual(result.toString(), "     1\ttest1\n");
         });
 
         it("simple twelve lines file with numbers", () => {
             const result = shell.cat("-n", fixture("cat/file4"));
-            assert.null(shell.error());
+            assert.isNull(shell.error());
             assert.strictEqual(result.code, 0);
             assert.strictEqual(result.toString(), "     1\ttest4-01\n     2\ttest4-02\n     3\ttest4-03\n     4\ttest4-04\n     5\ttest4-05\n     6\ttest4-06\n     7\ttest4-07\n     8\ttest4-08\n     9\ttest4-09\n    10\ttest4-10\n    11\ttest4-11\n    12\ttest4-12\n");
         });
 
         it("multiple with numbers", () => {
             const result = shell.cat("-n", fixture("cat/file2"), fixture("cat/file1"));
-            assert.null(shell.error());
+            assert.isNull(shell.error());
             assert.strictEqual(result.code, 0);
             assert.strictEqual(result.toString(), "     1\ttest2\n     2\ttest1\n");
         });
 
         it("simple numbers without EOF", () => {
             const result = shell.cat("-n", fixture("cat/file3"));
-            assert.null(shell.error());
+            assert.isNull(shell.error());
             assert.strictEqual(result.code, 0);
             assert.strictEqual(result.toString(), "     1\ttest3");
         });
 
         it("multiple numbers without EOF", () => {
             const result = shell.cat("-n", fixture("cat/file3"), fixture("cat/file2"), fixture("cat/file1"));
-            assert.null(shell.error());
+            assert.isNull(shell.error());
             assert.strictEqual(result.code, 0);
             assert.strictEqual(result.toString(), "     1\ttest3test2\n     2\ttest1\n");
         });
@@ -146,24 +146,24 @@ describe("shell", () => {
         //
 
         it("nonexistent directory", () => {
-            assert.false(fs.existsSync("/asdfasdf"));
+            assert.isFalse(fs.existsSync("/asdfasdf"));
             const result = shell.cd("/asdfasdf"); // dir does not exist
-            assert.true(is.string(shell.error()));
+            assert.isTrue(is.string(shell.error()));
             assert.strictEqual(result.code, 1);
             assert.strictEqual(result.stderr, "cd: no such file or directory: /asdfasdf");
         });
 
         it("file not dir", () => {
-            assert.true(fs.existsSync(fixture("file1"))); // sanity check
+            assert.isTrue(fs.existsSync(fixture("file1"))); // sanity check
             const result = shell.cd(fixture("file1")); // file, not dir
-            assert.true(is.string(shell.error()));
+            assert.isTrue(is.string(shell.error()));
             assert.strictEqual(result.code, 1);
             assert.match(result.stderr, /cd: not a directory: /);
         });
 
         it("no previous dir", () => {
             const result = shell.cd("-"); // Haven't changed yet, so there is no previous directory
-            assert.true(is.string(shell.error()));
+            assert.isTrue(is.string(shell.error()));
             assert.strictEqual(result.code, 1);
             assert.strictEqual(result.stderr, "cd: could not find previous directory");
         });
@@ -174,14 +174,14 @@ describe("shell", () => {
 
         it("relative path", () => {
             const result = shell.cd(tmp);
-            assert.null(shell.error());
+            assert.isNull(shell.error());
             assert.strictEqual(result.code, 0);
             assert.strictEqual(path.basename(process.cwd()), path.basename(tmp));
         });
 
         it("absolute path", () => {
             const result = shell.cd("/");
-            assert.null(shell.error());
+            assert.isNull(shell.error());
             assert.strictEqual(result.code, 0);
             assert.strictEqual(process.cwd(), path.resolve("/"));
         });
@@ -189,23 +189,23 @@ describe("shell", () => {
         it("previous directory (-)", () => {
             shell.cd("/");
             const result = shell.cd("-");
-            assert.null(shell.error());
+            assert.isNull(shell.error());
             assert.strictEqual(result.code, 0);
             assert.strictEqual(process.cwd(), path.resolve(cur.toString()));
         });
 
         it("cd + other commands", () => {
-            assert.false(fs.existsSync(`${tmp}/file1`));
+            assert.isFalse(fs.existsSync(`${tmp}/file1`));
             let result = shell.cd(fixture());
-            assert.null(shell.error());
+            assert.isNull(shell.error());
             assert.strictEqual(result.code, 0);
             result = shell.cp("file1", tmp);
-            assert.null(shell.error());
+            assert.isNull(shell.error());
             assert.strictEqual(result.code, 0);
             result = shell.cd(tmp);
-            assert.null(shell.error());
+            assert.isNull(shell.error());
             assert.strictEqual(result.code, 0);
-            assert.true(fs.existsSync("file1"));
+            assert.isTrue(fs.existsSync("file1"));
         });
 
         it("Tilde expansion", () => {
@@ -219,7 +219,7 @@ describe("shell", () => {
 
         it("Goes to home directory if no arguments are passed", () => {
             const result = shell.cd();
-            assert.null(shell.error());
+            assert.isNull(shell.error());
             assert.strictEqual(result.code, 0);
             assert.strictEqual(process.cwd(), os.homedir());
         });
@@ -247,10 +247,10 @@ describe("shell", () => {
 
         it("invalid permissions", () => {
             let result = shell.chmod("blah");
-            assert.true(is.string(shell.error()));
+            assert.isTrue(is.string(shell.error()));
             assert.strictEqual(result.code, 1);
             result = shell.chmod("893", `${TMP}/chmod`); // invalid permissions - mode must be in octal
-            assert.true(is.string(shell.error()));
+            assert.isTrue(is.string(shell.error()));
             assert.strictEqual(result.code, 1);
         });
 
@@ -591,13 +591,13 @@ describe("shell", () => {
 
         it("no args", () => {
             shell.which();
-            assert.true(is.string(shell.error()));
+            assert.isTrue(is.string(shell.error()));
         });
 
         it("command does not exist in the path", () => {
             const result = shell.which("asdfasdfasdfasdfasdf"); // what are the odds...
-            assert.null(shell.error());
-            assert.null(result);
+            assert.isNull(shell.error());
+            assert.isNull(result);
         });
 
         //
@@ -608,9 +608,9 @@ describe("shell", () => {
         it("basic usage", () => {
             const git = shell.which("git");
             assert.strictEqual(git.code, 0);
-            assert.null(git.stderr);
-            assert.null(shell.error());
-            assert.true(fs.existsSync(git.toString()));
+            assert.isNull(git.stderr);
+            assert.isNull(shell.error());
+            assert.isTrue(fs.existsSync(git.toString()));
         });
 
         it("Windows can search with or without a .exe extension", () => {
@@ -618,7 +618,7 @@ describe("shell", () => {
                 // This should be equivalent on Windows
                 const node = shell.which("node");
                 const nodeExe = shell.which("node.exe");
-                assert.false(shell.error());
+                assert.isFalse(shell.error());
                 // If the paths are equal, then this file *should* exist, since that's
                 // already been checked.
                 assert.strictEqual(node.toString(), nodeExe.toString());
@@ -628,15 +628,15 @@ describe("shell", () => {
         it("Searching with -a flag returns an array", () => {
             const commandName = "node"; // Should be an existing command
             const result = shell.which("-a", commandName);
-            assert.null(shell.error());
-            assert.true(is.array(result));
+            assert.isNull(shell.error());
+            assert.isTrue(is.array(result));
             assert.notStrictEqual(result.length, 0);
         });
 
         it("Searching with -a flag for not existing command returns an empty array", () => {
             const notExist = "6ef25c13209cb28ae465852508cc3a8f3dcdc71bc7bcf8c38379ba38me";
             const result = shell.which("-a", notExist);
-            assert.null(shell.error());
+            assert.isNull(shell.error());
             assert.strictEqual(result.length, 0);
         });
 
@@ -644,9 +644,9 @@ describe("shell", () => {
             const commandName = "node"; // Should be an existing command
             const resultForWhich = shell.which(commandName);
             const resultForWhichA = shell.which("-a", commandName);
-            assert.null(shell.error());
+            assert.isNull(shell.error());
             assert.exists(resultForWhich);
-            assert.true(is.array(resultForWhichA));
+            assert.isTrue(is.array(resultForWhichA));
             assert.strictEqual(resultForWhich.toString(), resultForWhichA[0].toString());
         });
     });

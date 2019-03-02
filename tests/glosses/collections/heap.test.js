@@ -76,10 +76,10 @@ describe("colletion", "Heap", () => {
                 heap.push(v);
             }
             for (v = 1; v <= 5; v++) {
-                assert.true(heap.contains(v));
+                assert.isTrue(heap.contains(v));
             }
-            assert.false(heap.contains(0));
-            assert.false(heap.contains(6));
+            assert.isFalse(heap.contains(0));
+            assert.isFalse(heap.contains(6));
         })
     );
 

@@ -12,14 +12,14 @@ describe("maybeError() should be called async", () => {
     it("put()", (done) => {
         common.openTestDatabase((db) => {
             db.close(() => {
-                assert.true(db.isClosed(), "db is closed");
+                assert.isTrue(db.isClosed(), "db is closed");
                 let sync = false;
                 db.put("key", "value", {}, (err) => {
                     sync = true;
                     assert(err);
                     assert.equal(err.message, "Database is not open");
                 });
-                assert.false(sync, ".put cb called synchronously");
+                assert.isFalse(sync, ".put cb called synchronously");
                 done();
             });
         });
@@ -30,14 +30,14 @@ describe("maybeError() should be called async", () => {
             db.put("key", "value", {}, (err) => {
                 assert.notExists(err);
                 db.close(() => {
-                    assert.true(db.isClosed(), "db is closed");
+                    assert.isTrue(db.isClosed(), "db is closed");
                     let sync = false;
                     db.get("key", {}, (err, value) => {
                         sync = true;
                         assert(err);
                         assert.equal(err.message, "Database is not open");
                     });
-                    assert.false(sync, ".get cb called synchronously");
+                    assert.isFalse(sync, ".get cb called synchronously");
                     done();
                 });
             });
@@ -49,14 +49,14 @@ describe("maybeError() should be called async", () => {
             db.put("key", "value", {}, (err) => {
                 assert.notExists(err);
                 db.close(() => {
-                    assert.true(db.isClosed(), "db is closed");
+                    assert.isTrue(db.isClosed(), "db is closed");
                     let sync = false;
                     db.del("key", {}, (err) => {
                         sync = true;
                         assert(err);
                         assert.equal(err.message, "Database is not open");
                     });
-                    assert.false(sync, ".del cb called synchronously");
+                    assert.isFalse(sync, ".del cb called synchronously");
                     done();
                 });
             });
@@ -66,14 +66,14 @@ describe("maybeError() should be called async", () => {
     it("batch()", (done) => {
         common.openTestDatabase((db) => {
             db.close(() => {
-                assert.true(db.isClosed(), "db is closed");
+                assert.isTrue(db.isClosed(), "db is closed");
                 let sync = false;
                 db.batch([{ type: "put", key: "key" }], {}, (err) => {
                     sync = true;
                     assert(err);
                     assert.equal(err.message, "Database is not open");
                 });
-                assert.false(sync, ".batch cb called synchronously");
+                assert.isFalse(sync, ".batch cb called synchronously");
                 done();
             });
         });

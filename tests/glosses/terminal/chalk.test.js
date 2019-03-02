@@ -122,23 +122,23 @@ describe("terminal", "Chalk", () => {
         it("enable/disable colors based on overall chalk enabled property, not individual instances", () => {
             chalk.enabled = false;
             const red = chalk.red;
-            assert.false(red.enabled);
+            assert.isFalse(red.enabled);
             chalk.enabled = true;
-            assert.true(red.enabled);
+            assert.isTrue(red.enabled);
             chalk.enabled = true;
         });
 
         it("propagate enable/disable changes from child colors", () => {
             chalk.enabled = false;
             const red = chalk.red;
-            assert.false(red.enabled);
-            assert.false(chalk.enabled);
+            assert.isFalse(red.enabled);
+            assert.isFalse(chalk.enabled);
             red.enabled = true;
-            assert.true(red.enabled);
-            assert.true(chalk.enabled);
+            assert.isTrue(red.enabled);
+            assert.isTrue(chalk.enabled);
             chalk.enabled = false;
-            assert.false(red.enabled);
-            assert.false(chalk.enabled);
+            assert.isFalse(red.enabled);
+            assert.isFalse(chalk.enabled);
             chalk.enabled = true;
         });
     });

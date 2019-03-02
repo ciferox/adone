@@ -10,27 +10,27 @@ describe("shani", "util", "__", "util", "deepEqual", () => {
     });
 
     it("fails null and object", () => {
-        assert.false(deepEqual(null, {}));
+        assert.isFalse(deepEqual(null, {}));
     });
 
     it("fails object and null", () => {
-        assert.false(deepEqual({}, null));
+        assert.isFalse(deepEqual({}, null));
     });
 
     it("fails error and object", () => {
-        assert.false(deepEqual(new Error(), {}));
+        assert.isFalse(deepEqual(new Error(), {}));
     });
 
     it("fails object and error", () => {
-        assert.false(deepEqual({}, new Error()));
+        assert.isFalse(deepEqual({}, new Error()));
     });
 
     it("fails regexp and object", () => {
-        assert.false(deepEqual(/.*/, {}));
+        assert.isFalse(deepEqual(/.*/, {}));
     });
 
     it("fails object and regexp", () => {
-        assert.false(deepEqual({}, /.*/));
+        assert.isFalse(deepEqual({}, /.*/));
     });
 
     it("passes primitives", () => {
@@ -92,7 +92,7 @@ describe("shani", "util", "__", "util", "deepEqual", () => {
         arr1.foo = "bar";
         arr2.foo = "not bar";
 
-        assert.false(deepEqual(arr1, arr2));
+        assert.isFalse(deepEqual(arr1, arr2));
     });
 
     it("passes equal regexps", () => {
@@ -107,7 +107,7 @@ describe("shani", "util", "__", "util", "deepEqual", () => {
         const regexp1 = /foo/;
         const regexp2 = /bar/;
 
-        assert.false(deepEqual(regexp1, regexp2));
+        assert.isFalse(deepEqual(regexp1, regexp2));
 
     });
 
@@ -123,7 +123,7 @@ describe("shani", "util", "__", "util", "deepEqual", () => {
         const regexp1 = /foo/i;
         const regexp2 = /foo/;
 
-        assert.false(deepEqual(regexp1, regexp2));
+        assert.isFalse(deepEqual(regexp1, regexp2));
 
     });
 
@@ -139,7 +139,7 @@ describe("shani", "util", "__", "util", "deepEqual", () => {
         const regexp1 = /foo/m;
         const regexp2 = /foo/;
 
-        assert.false(deepEqual(regexp1, regexp2));
+        assert.isFalse(deepEqual(regexp1, regexp2));
     });
 
     it("passes equal regexps with same global flags", () => {
@@ -153,7 +153,7 @@ describe("shani", "util", "__", "util", "deepEqual", () => {
         const regexp1 = /foo/g;
         const regexp2 = /foo/;
 
-        assert.false(deepEqual(regexp1, regexp2));
+        assert.isFalse(deepEqual(regexp1, regexp2));
     });
 
     it("passes equal regexps with multiple flags", () => {
@@ -167,14 +167,14 @@ describe("shani", "util", "__", "util", "deepEqual", () => {
         const regexp1 = /bar/im;
         const regexp2 = /bar/ig;
 
-        assert.false(deepEqual(regexp1, regexp2));
+        assert.isFalse(deepEqual(regexp1, regexp2));
     });
 
     it("fails unequal errors", () => {
         const error1 = new Error();
         const error2 = new Error();
 
-        assert.false(deepEqual(error1, error2));
+        assert.isFalse(deepEqual(error1, error2));
     });
 
     it("passes NaN and NaN", () => {
@@ -192,14 +192,14 @@ describe("shani", "util", "__", "util", "deepEqual", () => {
         const obj1 = { a: 1, b: 2, c: 3 };
         const obj2 = { a: 1, b: 2, foo: undefined };
 
-        assert.false(deepEqual(obj1, obj2));
+        assert.isFalse(deepEqual(obj1, obj2));
     });
 
     it("fails unequal objects with undefined properties with different names (different arg order)", () => {
         const obj1 = { a: 1, b: 2, foo: undefined };
         const obj2 = { a: 1, b: 2, c: 3 };
 
-        assert.false(deepEqual(obj1, obj2));
+        assert.isFalse(deepEqual(obj1, obj2));
     });
 
     it("passes equal dates", () => {
@@ -213,7 +213,7 @@ describe("shani", "util", "__", "util", "deepEqual", () => {
         const date1 = new Date(2012, 3, 5);
         const date2 = new Date(2013, 3, 5);
 
-        assert.false(deepEqual(date1, date2));
+        assert.isFalse(deepEqual(date1, date2));
     });
 
     it("passes deep objects", () => {
@@ -322,6 +322,6 @@ describe("shani", "util", "__", "util", "deepEqual", () => {
         const duplicateA = matchA;
 
         assert(matchDeepEqual(matchA, duplicateA));
-        assert.false(matchDeepEqual(matchA, matchB));
+        assert.isFalse(matchDeepEqual(matchA, matchB));
     });
 });

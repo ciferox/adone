@@ -24,7 +24,7 @@ describe("get() / put() / del()", () => {
                     assert.instanceOf(err, NotFoundException);
                     // assert(err.notFound === true, "err.notFound is `true`");
                     // assert.equal(err.status, 404, "err.status is 404");
-                    assert.true(err.message.includes("[undefkey]"));
+                    assert.isTrue(err.message.includes("[undefkey]"));
                     done();
                 });
             });
@@ -38,7 +38,7 @@ describe("get() / put() / del()", () => {
                     assert.instanceOf(err, NotFoundException);
                     // assert(err.notFound === true, "err.notFound is `true`");
                     // assert.equal(err.status, 404, "err.status is 404");
-                    assert.true(err.message.includes("[undefkey]"));
+                    assert.isTrue(err.message.includes("[undefkey]"));
                     done();
                 });
             });

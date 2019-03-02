@@ -145,4 +145,3 @@ export default class Stub {
         return obj;
     }
 }
-adone.tag.add(Stub, "NETRON_STUB");

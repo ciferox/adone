@@ -611,14 +611,14 @@ describe("net", "ssh", "streams", "SFTP", () => {
                 filename: "/tmp/foo"
             };
             server.on("REALPATH", (id, path) => {
-                assert.true(++this.state.requests === 1, "Saw too many requests");
+                assert.isTrue(++this.state.requests === 1, "Saw too many requests");
                 assert(id === 0, `Wrong request id: ${id}`);
                 assert(path === path_, `Wrong path: ${path}`);
                 server.name(id, name_);
                 server.end();
             });
             client.realpath(path_, (err, name) => {
-                assert.true(++this.state.responses === 1, "Saw too many responses");
+                assert.isTrue(++this.state.responses === 1, "Saw too many responses");
                 assert(!err, `Unexpected realpath() error: ${err}`);
                 assert.deepEqual(name, name_.filename, "name mismatch");
             });
@@ -641,14 +641,14 @@ describe("net", "ssh", "streams", "SFTP", () => {
                 mtime: (Date.now() / 1000) | 0
             });
             server.on("STAT", (id, path) => {
-                assert.true(++this.state.requests === 1, "Saw too many requests");
+                assert.isTrue(++this.state.requests === 1, "Saw too many requests");
                 assert(id === 0, `Wrong request id: ${id}`);
                 assert(path === path_, `Wrong path: ${path}`);
                 server.attrs(id, attrs_);
                 server.end();
             });
             client.stat(path_, (err, attrs) => {
-                assert.true(++this.state.responses === 1, "Saw too many responses");
+                assert.isTrue(++this.state.responses === 1, "Saw too many responses");
                 assert(!err, `Unexpected stat() error: ${err}`);
                 assert.deepEqual(attrs, attrs_, "attrs mismatch");
             });
@@ -665,7 +665,7 @@ describe("net", "ssh", "streams", "SFTP", () => {
             const oldPath_ = "/foo/bar/baz";
             const newPath_ = "/tmp/foo";
             server.on("RENAME", (id, oldPath, newPath) => {
-                assert.true(++this.state.requests === 1, "Saw too many requests");
+                assert.isTrue(++this.state.requests === 1, "Saw too many requests");
                 assert(id === 0, `Wrong request id: ${id}`);
                 assert(oldPath === oldPath_, `Wrong old path: ${oldPath}`);
                 assert(newPath === newPath_, `Wrong new path: ${newPath}`);
@@ -673,7 +673,7 @@ describe("net", "ssh", "streams", "SFTP", () => {
                 server.end();
             });
             client.rename(oldPath_, newPath_, (err) => {
-                assert.true(++this.state.responses === 1, "Saw too many responses");
+                assert.isTrue(++this.state.responses === 1, "Saw too many responses");
                 assert(!err, `Unexpected rename() error: ${err}`);
             });
         };
@@ -691,14 +691,14 @@ describe("net", "ssh", "streams", "SFTP", () => {
                 filename: "/tmp/foo"
             };
             server.on("READLINK", (id, linkPath) => {
-                assert.true(++this.state.requests === 1, "Saw too many requests");
+                assert.isTrue(++this.state.requests === 1, "Saw too many requests");
                 assert(id === 0, `Wrong request id: ${id}`);
-                assert.true(linkPath === linkPath_, `Wrong link path: ${linkPath}`);
+                assert.isTrue(linkPath === linkPath_, `Wrong link path: ${linkPath}`);
                 server.name(id, name);
                 server.end();
             });
             client.readlink(linkPath_, (err, targetPath) => {
-                assert.true(++this.state.responses === 1, "Saw too many responses");
+                assert.isTrue(++this.state.responses === 1, "Saw too many responses");
                 assert(!err, `Unexpected readlink() error: ${err}`);
                 assert(targetPath === name.filename, `Wrong target path: ${targetPath}`);
             });
@@ -715,15 +715,15 @@ describe("net", "ssh", "streams", "SFTP", () => {
             const linkPath_ = "/foo/bar/baz";
             const targetPath_ = "/tmp/foo";
             server.on("SYMLINK", (id, linkPath, targetPath) => {
-                assert.true(++this.state.requests === 1, "Saw too many requests");
-                assert.true(id === 0, `Wrong request id: ${id}`);
-                assert.true(linkPath === linkPath_, `Wrong link path: ${linkPath}`);
-                assert.true(targetPath === targetPath_, `Wrong target path: ${targetPath}`);
+                assert.isTrue(++this.state.requests === 1, "Saw too many requests");
+                assert.isTrue(id === 0, `Wrong request id: ${id}`);
+                assert.isTrue(linkPath === linkPath_, `Wrong link path: ${linkPath}`);
+                assert.isTrue(targetPath === targetPath_, `Wrong target path: ${targetPath}`);
                 server.status(id, STATUS_CODE.OK);
                 server.end();
             });
             client.symlink(targetPath_, linkPath_, (err) => {
-                assert.true(++this.state.responses === 1, "Saw too many responses");
+                assert.isTrue(++this.state.responses === 1, "Saw too many responses");
                 assert(!err, `Unexpected symlink() error: ${err}`);
             });
         };

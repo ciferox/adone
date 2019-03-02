@@ -23,13 +23,13 @@ describe("app", "logger", "formats", () => {
             cli(),
             infoify({ level: "info", message: "whatever" }),
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
                 assert.equal(info.level, chalk.green("info"));
                 assert.equal(info.message, "     whatever");
 
-                assert.string(info[LEVEL]);
-                assert.string(info[MESSAGE]);
+                assert.isString(info[LEVEL]);
+                assert.isString(info[MESSAGE]);
                 assert.equal(info[LEVEL], "info");
                 assert.equal(info[MESSAGE], `${chalk.green("info")}:     whatever`);
             }
@@ -56,8 +56,8 @@ describe("app", "logger", "formats", () => {
             colorize(),
             infoify({ level: "info", message: "whatever" }),
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
                 assert.equal(info.level, chalk.green("info"));
                 assert.equal(info.message, "whatever");
             }
@@ -67,8 +67,8 @@ describe("app", "logger", "formats", () => {
             colorize({ level: true }),
             infoify({ level: "info", message: "whatever" }),
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
                 assert.equal(info.level, chalk.green("info"));
                 assert.equal(info.message, "whatever");
             }
@@ -78,8 +78,8 @@ describe("app", "logger", "formats", () => {
             colorize({ message: true }),
             infoify({ level: "info", message: "whatever" }),
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
                 assert.equal(info.level, "info");
                 assert.equal(info.message, chalk.green("whatever"));
             }
@@ -89,8 +89,8 @@ describe("app", "logger", "formats", () => {
             colorize({ level: true, message: true }),
             infoify({ level: "info", message: "whatever" }),
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
                 assert.equal(info.level, chalk.green("info"));
                 assert.equal(info.message, chalk.green("whatever"));
             }
@@ -100,8 +100,8 @@ describe("app", "logger", "formats", () => {
             colorize({ all: true }),
             infoify({ level: "info", message: "whatever" }),
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
                 assert.equal(info.level, chalk.green("info"));
                 assert.equal(info.message, chalk.green("whatever"));
             }
@@ -116,8 +116,8 @@ describe("app", "logger", "formats", () => {
                 [MESSAGE]: "[info] whatever custom"
             },
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
                 assert.equal(info[LEVEL], "info");
                 assert.equal(info.level, chalk.green("info"));
                 assert.equal(info.message, chalk.green("whatever"));
@@ -129,8 +129,8 @@ describe("app", "logger", "formats", () => {
             colorize(),
             { [LEVEL]: "info", level: "INFO", message: "whatever" },
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
                 assert.equal(info.level, chalk.green("INFO"));
             }
         ));
@@ -211,7 +211,7 @@ describe("app", "logger", "formats", () => {
         const { formats } = require("./helpers");
 
         it.skip("exposes the cascade function", () => {
-            assert.function(combine.cascade);
+            assert.isFunction(combine.cascade);
         });
 
         describe("combine(...formats)", () => {
@@ -221,7 +221,7 @@ describe("app", "logger", "formats", () => {
                     formats.identity()
                 );
 
-                assert.function(fmt.transform);
+                assert.isFunction(fmt.transform);
                 assert.deepEqual(fmt.options, {});
             });
 
@@ -231,8 +231,8 @@ describe("app", "logger", "formats", () => {
                     formats.identity()
                 );
 
-                assert.true(is.class(fmt.Format));
-                assert.function(fmt.Format.prototype.transform);
+                assert.isTrue(is.class(fmt.Format));
+                assert.isFunction(fmt.Format.prototype.transform);
             });
 
             it("throws an error when provided a non-format", () => {
@@ -260,7 +260,7 @@ describe("app", "logger", "formats", () => {
                 const actual = labelTimestamp.transform(Object.assign({}, info));
                 assert.strictEqual(actual.level, info.level);
                 assert.strictEqual(actual.message, info.message);
-                assert.string(actual.timestamp);
+                assert.isString(actual.timestamp);
                 assert.equal(actual.label, "testing");
             });
 
@@ -279,7 +279,7 @@ describe("app", "logger", "formats", () => {
                 const actual = assignedInfo.transform(Object.assign({}, info));
                 assert.strictEqual(actual.level, info.level);
                 assert.strictEqual(actual.message, info.message);
-                assert.string(actual.key);
+                assert.isString(actual.key);
             });
 
             it("{ false } when formats yield [false, obj, obj]", () => {
@@ -289,7 +289,7 @@ describe("app", "logger", "formats", () => {
                     formats.die()
                 );
 
-                assert.false(firstFalse.transform({
+                assert.isFalse(firstFalse.transform({
                     level: "info",
                     message: "lolwut"
                 }));
@@ -302,7 +302,7 @@ describe("app", "logger", "formats", () => {
                     formats.die()
                 );
 
-                assert.false(midFalse.transform({
+                assert.isFalse(midFalse.transform({
                     level: "info",
                     message: "lolwut"
                 }));
@@ -315,7 +315,7 @@ describe("app", "logger", "formats", () => {
                     formats.ignore()
                 );
 
-                assert.false(lastFalse.transform({
+                assert.isFalse(lastFalse.transform({
                     level: "info",
                     message: "lolwut"
                 }));
@@ -330,33 +330,33 @@ describe("app", "logger", "formats", () => {
         } = adone;
 
         it("has the expected default formats", () => {
-            assert.function(format);
-            assert.function(format.align);
-            assert.function(format.cli);
-            assert.function(format.colorize);
-            assert.function(format.combine);
-            assert.function(format.json);
-            assert.function(format.label);
-            assert.function(format.logstash);
-            assert.function(format.padLevels);
-            assert.function(format.prettyPrint);
-            assert.function(format.printf);
-            assert.function(format.splat);
-            assert.function(format.simple);
-            assert.function(format.timestamp);
-            assert.function(format.uncolorize);
+            assert.isFunction(format);
+            assert.isFunction(format.align);
+            assert.isFunction(format.cli);
+            assert.isFunction(format.colorize);
+            assert.isFunction(format.combine);
+            assert.isFunction(format.json);
+            assert.isFunction(format.label);
+            assert.isFunction(format.logstash);
+            assert.isFunction(format.padLevels);
+            assert.isFunction(format.prettyPrint);
+            assert.isFunction(format.printf);
+            assert.isFunction(format.splat);
+            assert.isFunction(format.simple);
+            assert.isFunction(format.timestamp);
+            assert.isFunction(format.uncolorize);
         });
 
         describe("format(fn)", () => {
             it("returns a function", () => {
                 const identity = format(formatFns.identity);
-                assert.function(identity);
+                assert.isFunction(identity);
             });
 
             it("exposes the Format prototype", () => {
                 const identity = format(formatFns.identity);
-                assert.true(is.class(identity.Format));
-                assert.function(identity.Format.prototype.transform);
+                assert.isTrue(is.class(identity.Format));
+                assert.isFunction(identity.Format.prototype.transform);
             });
 
             it("throws if provided a function of invalid length", () => {
@@ -370,14 +370,14 @@ describe("app", "logger", "formats", () => {
                 try {
                     format(formatFns.invalid);
                 } catch (ex) {
-                    assert.true(ex.message.includes(fnsig));
+                    assert.isTrue(ex.message.includes(fnsig));
                 }
             });
 
             it("format(fn)()", () => {
                 const identity = format(formatFns.identity);
                 const fmt = identity();
-                assert.function(fmt.transform);
+                assert.isFunction(fmt.transform);
                 assert.deepEqual(fmt.options, {});
             });
 
@@ -385,7 +385,7 @@ describe("app", "logger", "formats", () => {
                 const opts = { testing: true };
                 const identity = format(formatFns.identity);
                 const fmt = identity(opts);
-                assert.function(fmt.transform);
+                assert.isFunction(fmt.transform);
                 assert.deepEqual(fmt.options, opts);
             });
         });
@@ -402,8 +402,8 @@ describe("app", "logger", "formats", () => {
             json(),
             { level: "info", message: "whatever" },
             (info, expected) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
                 assert.equal(info.level, "info");
                 assert.equal(info.message, "whatever");
 
@@ -417,8 +417,8 @@ describe("app", "logger", "formats", () => {
             json({ space: 2 }),
             { level: "info", message: "2 spaces 4 lyfe" },
             (info, expected) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
                 assert.equal(info.level, "info");
                 assert.equal(info.message, "2 spaces 4 lyfe");
                 assert.strictEqual(info[MESSAGE], JSON.stringify(expected, null, 2));
@@ -437,9 +437,9 @@ describe("app", "logger", "formats", () => {
             { level: "info", message: "replacer", filtered: true },
             (info) => {
                 const { level, message } = info;
-                assert.string(info.level);
-                assert.string(info.message);
-                assert.true(info.filtered);
+                assert.isString(info.level);
+                assert.isString(info.message);
+                assert.isTrue(info.filtered);
                 assert.equal(info.level, "info");
                 assert.equal(info.message, "replacer");
                 assert.strictEqual(info[MESSAGE], JSON.stringify({ level, message }));
@@ -453,9 +453,9 @@ describe("app", "logger", "formats", () => {
 
             const fmt = json();
             const stream = writable((info) => {
-                assert.string(info.level);
-                assert.string(info.message);
-                assert.true(info.filtered);
+                assert.isString(info.level);
+                assert.isString(info.message);
+                assert.isTrue(info.filtered);
                 assert.equal(info.level, "info");
                 assert.equal(info.message, "has a circular ref ok!");
                 assert.strictEqual(info.self.circular, circular);
@@ -480,13 +480,13 @@ describe("app", "logger", "formats", () => {
             label({ label: "wow such impress" }),
             { level: "info", message: "label all the things" },
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
-                assert.string(info.label);
+                assert.isString(info.level);
+                assert.isString(info.message);
+                assert.isString(info.label);
                 assert.equal(info.level, "info");
                 assert.equal(info.message, "label all the things");
                 assert.equal(info.label, "wow such impress");
-                assert.undefined(info[MESSAGE]);
+                assert.isUndefined(info[MESSAGE]);
             }
         ));
 
@@ -494,11 +494,11 @@ describe("app", "logger", "formats", () => {
             label({ label: "wow such impress", message: true }),
             { level: "info", message: "label all the things" },
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
                 assert.equal(info.level, "info");
                 assert.equal(info.message, "[wow such impress] label all the things");
-                assert.undefined(info[MESSAGE]);
+                assert.isUndefined(info[MESSAGE]);
             }
         ));
     });
@@ -516,7 +516,7 @@ describe("app", "logger", "formats", () => {
             { level: "info", message: "whatever" },
             (info, expected) => {
                 assert.equal(info.level, "info");
-                assert.undefined(info.message);
+                assert.isUndefined(info.message);
                 assert.equal(info[MESSAGE], JSON.stringify({
                     "@message": expected.message,
                     "@fields": {
@@ -534,7 +534,7 @@ describe("app", "logger", "formats", () => {
             { level: "info", message: "whatever" },
             (info, expected) => {
                 assert.equal(info.level, "info");
-                assert.undefined(info.message);
+                assert.isUndefined(info.message);
                 assert.strictEqual(info[MESSAGE], JSON.stringify({
                     "@message": expected.message,
                     "@timestamp": info[TIMESTAMP],
@@ -566,11 +566,11 @@ describe("app", "logger", "formats", () => {
             metadata(),
             testInfoObject,
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
-                assert.object(info.metadata);
+                assert.isString(info.level);
+                assert.isString(info.message);
+                assert.isObject(info.metadata);
                 assert.equal(info.metadata.someKey, "someValue");
-                assert.object(info.metadata.someObject);
+                assert.isObject(info.metadata.someObject);
                 assert.equal(info.metadata.someObject.key, "value");
             }
         ));
@@ -579,7 +579,7 @@ describe("app", "logger", "formats", () => {
             metadata({ fillWith: ["level", "someObject"] }),
             testInfoObject,
             (info) => {
-                assert.object(info.metadata);
+                assert.isObject(info.metadata);
                 assert.equal(info.metadata.level, "info");
                 assert.equal(info.metadata.someObject.key, "value");
             }
@@ -590,9 +590,9 @@ describe("app", "logger", "formats", () => {
             testInfoObject,
             (info) => {
                 assert.equal(info.message, "whatever");
-                assert.object(info.someObject);
+                assert.isObject(info.someObject);
                 assert.equal(info.someObject.key, "value");
-                assert.object(info.metadata);
+                assert.isObject(info.metadata);
                 assert.equal(info.metadata.level, "info");
             }
         ));
@@ -611,7 +611,7 @@ describe("app", "logger", "formats", () => {
                 metadata({ fillWith: ["level", "someKey"], key: "myCustomKey" }),
                 testInfoObject,
                 (info) => {
-                    assert.object(info.myCustomKey);
+                    assert.isObject(info.myCustomKey);
                     assert.equal(info.message, "whatever");
                     assert.equal(info.myCustomKey.level, "info");
                 }
@@ -630,12 +630,12 @@ describe("app", "logger", "formats", () => {
             ms(),
             { level: "info", message: "time all the things" },
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
-                assert.string(info.ms);
+                assert.isString(info.level);
+                assert.isString(info.message);
+                assert.isString(info.ms);
                 assert.equal(info.level, "info");
                 assert.equal(info.message, "time all the things");
-                assert.undefined(info[MESSAGE]);
+                assert.isUndefined(info[MESSAGE]);
             }
         ));
     });
@@ -660,8 +660,8 @@ describe("app", "logger", "formats", () => {
                 padLevels(),
                 infoify({ level: "info", message: "pad all the things" }),
                 (info) => {
-                    assert.string(info.level);
-                    assert.string(info.message);
+                    assert.isString(info.level);
+                    assert.isString(info.message);
                     assert.equal(info.level, "info");
                     assert.equal(info.message, "     pad all the things");
                     assert.equal(info[MESSAGE], "     pad all the things");
@@ -672,8 +672,8 @@ describe("app", "logger", "formats", () => {
                 padLevels({ config: longLevels }),
                 infoify({ level: "info", message: "pad all the things" }),
                 (info) => {
-                    assert.string(info.level);
-                    assert.string(info.message);
+                    assert.isString(info.level);
+                    assert.isString(info.message);
                     assert.equal(info.level, "info");
 
                     assert.equal(info.message, "               pad all the things");
@@ -685,8 +685,8 @@ describe("app", "logger", "formats", () => {
                 padLevels({ config: config.npm, filler: "foo" }),
                 infoify({ level: "info", message: "pad all the things" }),
                 (info) => {
-                    assert.string(info.level);
-                    assert.string(info.message);
+                    assert.isString(info.level);
+                    assert.isString(info.message);
                     assert.equal(info.level, "info");
                     assert.equal(info.message, "foofpad all the things");
                     assert.equal(info[MESSAGE], "foofpad all the things");
@@ -714,7 +714,7 @@ describe("app", "logger", "formats", () => {
                 assert.sameDeepMembers(keys, expected);
 
                 const padding = paddings[keys.pop()];
-                assert.string(padding);
+                assert.isString(padding);
                 assert.equal(padding[0], " ");
             });
 
@@ -729,7 +729,7 @@ describe("app", "logger", "formats", () => {
                 assert.sameDeepMembers(keys, expected);
 
                 const padding = paddings[keys.pop()];
-                assert.string(padding);
+                assert.isString(padding);
                 assert.equal(padding[0], "f");
             });
         });
@@ -746,8 +746,8 @@ describe("app", "logger", "formats", () => {
             prettyPrint(),
             { level: "info", message: "yay template strings are fast" },
             (info, expected) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
                 assert.equal(info.level, "info");
                 assert.equal(info.message, "yay template strings are fast");
                 assert.equal(info[MESSAGE], util.inspect(expected));
@@ -768,8 +768,8 @@ describe("app", "logger", "formats", () => {
             printf((info) => `${info.level}: ${info.message}`),
             { level: "info", message: "yay template strings are fast" },
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
                 assert.equal(info.level, "info");
                 assert.equal(info.message, "yay template strings are fast");
                 assert.equal(info[MESSAGE], "info: yay template strings are fast");
@@ -787,8 +787,8 @@ describe("app", "logger", "formats", () => {
             simple(),
             { level: "info", message: "whatever" },
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
                 assert.equal(info.level, "info");
                 assert.equal(info.message, "whatever");
 
@@ -800,8 +800,8 @@ describe("app", "logger", "formats", () => {
             simple(),
             { level: "info", message: "whatever", splat: [1, 2, 3] },
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
                 assert.array(info.splat);
                 assert.equal(info.level, "info");
                 assert.equal(info.message, "whatever");
@@ -815,9 +815,9 @@ describe("app", "logger", "formats", () => {
             simple(),
             { level: "info", message: "whatever", rest: "something" },
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
-                assert.string(info.rest);
+                assert.isString(info.level);
+                assert.isString(info.message);
+                assert.isString(info.rest);
                 assert.equal(info.level, "info");
                 assert.equal(info.message, "whatever");
                 assert.equal(info.rest, "something");
@@ -843,8 +843,8 @@ describe("app", "logger", "formats", () => {
                 splat(),
                 { level: "info", message, [SPLAT]: spread },
                 (info) => {
-                    assert.string(info.level);
-                    assert.string(info.message);
+                    assert.isString(info.level);
+                    assert.isString(info.message);
                     assert.array(info[SPLAT]);
 
                     // Prefer any user-defined assertion (if provided).
@@ -877,7 +877,7 @@ describe("app", "logger", "formats", () => {
         it('balanced number of arguments to % | does not have "meta"', assumeSplat(
             "test %j", [{ number: 123 }], (info) => {
                 assert.equal(info.message, 'test {"number":123}');
-                assert.undefined(info.meta);
+                assert.isUndefined(info.meta);
             }
         ));
 
@@ -913,7 +913,7 @@ describe("app", "logger", "formats", () => {
         it("no % and no splat | returns the same info", assumeSplat(
             "nothing to see here", [], (info) => {
                 assert.equal(info.message, "nothing to see here");
-                assert.undefined(info.meta);
+                assert.isUndefined(info.meta);
             }
         ));
 
@@ -930,7 +930,7 @@ describe("app", "logger", "formats", () => {
             ["Hi", 42, "feeling", { today: true }],
             (info) => {
                 assert.equal(info.message, "Hi #42, how are you feeling");
-                assert.true(info.today);
+                assert.isTrue(info.today);
             }
         ));
 
@@ -939,9 +939,9 @@ describe("app", "logger", "formats", () => {
                 splat(),
                 { level: "info", message: "Why hello %s!" },
                 (info) => {
-                    assert.string(info.level);
-                    assert.string(info.message);
-                    assert.undefined(info[SPLAT]);
+                    assert.isString(info.level);
+                    assert.isString(info.message);
+                    assert.isUndefined(info[SPLAT]);
                     assert.equal(info.message, "Why hello %s!");
                 }
             );
@@ -956,8 +956,8 @@ describe("app", "logger", "formats", () => {
                     splat: [42]
                 },
                 (info) => {
-                    assert.string(info.level).is.a("string");
-                    assert.string(info.message).is.a("string");
+                    assert.isString(info.level).is.a("string");
+                    assert.isString(info.message).is.a("string");
 
                     assert.equal(info.message, "info: 42: The answer to life, the universe and everything");
                 }
@@ -977,11 +977,11 @@ describe("app", "logger", "formats", () => {
             timestamp(),
             { level: "info", message: "whatever", timestamp: new Date().toISOString() },
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
                 assert.equal(info.level, "info");
                 assert.equal(info.message, "whatever");
-                assert.string(info.timestamp);
+                assert.isString(info.timestamp);
             }
         ));
 
@@ -993,11 +993,11 @@ describe("app", "logger", "formats", () => {
             }),
             { level: "info", message: "whatever", timestamp: "test timestamp" },
             (info, expected) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
                 assert.equal(info.level, "info");
                 assert.equal(info.message, "whatever");
-                assert.string(info.timestamp);
+                assert.isString(info.timestamp);
                 assert.equal(info.timestamp, "test timestamp");
 
                 const raw = JSON.stringify(expected);
@@ -1011,11 +1011,11 @@ describe("app", "logger", "formats", () => {
             }),
             { level: "info", message: "whatever", timestamp: new Date().toISOString() },
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
                 assert.equal(info.level, "info");
                 assert.equal(info.message, "whatever");
-                assert.string(info.timestamp);
+                assert.isString(info.timestamp);
             }
         ));
 
@@ -1067,8 +1067,8 @@ describe("app", "logger", "formats", () => {
             addAndRemoveColors(),
             infoify({ level: "info", message: "whatever" }),
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
 
                 const colored = info[COLORED];
                 assert.equal(info.level, "info");
@@ -1096,8 +1096,8 @@ describe("app", "logger", "formats", () => {
             ),
             { [LEVEL]: "info", level: "info", message: "whatever" },
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
 
                 assert.equal(info.level, "INFO");
                 assert.equal(info.message, "whatever");
@@ -1108,8 +1108,8 @@ describe("app", "logger", "formats", () => {
             addAndRemoveColors({ level: false }),
             infoify({ level: "info", message: "whatever" }),
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
 
                 assert.equal(info.level, chalk.green("info"));
                 assert.equal(info.message, "whatever");
@@ -1121,8 +1121,8 @@ describe("app", "logger", "formats", () => {
             addAndRemoveColors({ message: false }),
             infoify({ level: "info", message: "whatever" }),
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
 
                 assert.equal(info.level, "info");
                 assert.equal(info.message, chalk.green("whatever"));
@@ -1134,8 +1134,8 @@ describe("app", "logger", "formats", () => {
             addAndRemoveColors({ raw: false }),
             infoify({ level: "info", message: "whatever" }),
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
 
                 assert.equal(info.level, "info");
                 assert.equal(info.message, "whatever");
@@ -1147,8 +1147,8 @@ describe("app", "logger", "formats", () => {
             addAndRemoveColors({ level: false, message: false }),
             infoify({ level: "info", message: "whatever" }),
             (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
+                assert.isString(info.level);
+                assert.isString(info.message);
 
                 assert.equal(info.level, chalk.green("info"));
                 assert.equal(info.message, chalk.green("whatever"));
@@ -1184,8 +1184,8 @@ describe("app", "logger", "formats", () => {
                 errors(),
                 { level: "info", message: "whatever" },
                 (info) => {
-                    assert.string(info.level);
-                    assert.string(info.message);
+                    assert.isString(info.level);
+                    assert.isString(info.message);
                     assert.equal(info.level, "info");
                     assert.equal(info.message, "whatever");
                 }
@@ -1195,8 +1195,8 @@ describe("app", "logger", "formats", () => {
                 errors(),
                 { level: "info", message: err },
                 (info) => {
-                    assert.string(info.level);
-                    assert.string(info.message);
+                    assert.isString(info.level);
+                    assert.isString(info.message);
                     assert.equal(info.level, "info");
                     assert.equal(info.message, err.message);
                     assert.equal(info[MESSAGE], err.message);
@@ -1207,8 +1207,8 @@ describe("app", "logger", "formats", () => {
                 errors({ stack: true }),
                 { level: "info", message: err },
                 (info) => {
-                    assert.string(info.level);
-                    assert.string(info.message);
+                    assert.isString(info.level);
+                    assert.isString(info.message);
                     assert.equal(info.level, "info");
                     assert.equal(info.message, err.message);
                     assert.equal(info[MESSAGE], err.message);
@@ -1220,12 +1220,12 @@ describe("app", "logger", "formats", () => {
                 errors(),
                 { level: "info", message: errProps },
                 (info) => {
-                    assert.string(info.level);
-                    assert.string(info.message);
+                    assert.isString(info.level);
+                    assert.isString(info.message);
                     assert.equal(info.level, "info");
                     assert.equal(info.message, errProps.message);
                     assert.equal(info[MESSAGE], errProps.message);
-                    assert.true(info.whatever);
+                    assert.isTrue(info.whatever);
                     assert.equal(info.wut, "some string");
                 }
             ));
@@ -1236,8 +1236,8 @@ describe("app", "logger", "formats", () => {
                 errors(),
                 errInfo,
                 (info) => {
-                    assert.string(info.level);
-                    assert.string(info.message);
+                    assert.isString(info.level);
+                    assert.isString(info.message);
                     assert.equal(info.level, errInfo.level);
                     assert.equal(info.message, errInfo.message);
                     assert.equal(info[MESSAGE], errInfo.message);
@@ -1249,8 +1249,8 @@ describe("app", "logger", "formats", () => {
                 errors({ stack: true }),
                 errInfo,
                 (info) => {
-                    assert.string(info.level);
-                    assert.string(info.message);
+                    assert.isString(info.level);
+                    assert.isString(info.message);
                     assert.equal(info.level, errInfo.level);
                     assert.equal(info.message, errInfo.message);
                     assert.equal(info[MESSAGE], errInfo.message);

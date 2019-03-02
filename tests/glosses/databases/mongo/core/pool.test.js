@@ -124,7 +124,7 @@ describe("database", "mongo", "core", function () {
                     _pool.write(query, (err, result) => {
                         assert(err);
                         assert.ok(err.message.match(/Pool was force destroyed/));
-                        assert.undefined(result);
+                        assert.isUndefined(result);
 
                         assert.equal(0, Object.keys(Connection.connections()).length);
                         Connection.disableConnectionAccounting();

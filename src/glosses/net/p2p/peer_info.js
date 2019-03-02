@@ -158,4 +158,3 @@ export default class PeerInfo {
         throw new adone.error.NotValidException(`Invalid type of input for PeerInfo: ${adone.meta.typeOf(val)}`);
     }
 }
-adone.tag.add(PeerInfo, "P2P_PEER_INFO");

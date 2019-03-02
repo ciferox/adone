@@ -19,10 +19,10 @@ describe("app", "fastLogger", "serializers", () => {
 
         parent.info({ err: new ReferenceError("test") });
         const o = await once(stream, "data");
-        assert.object(o.err);
+        assert.isObject(o.err);
         assert.equal(o.err.type, "ReferenceError");
         assert.equal(o.err.message, "test");
-        assert.string(o.err.stack);
+        assert.isString(o.err.stack);
     });
 
     it("custom serializer overrides default err namespace error serializer", async () => {
@@ -39,10 +39,10 @@ describe("app", "fastLogger", "serializers", () => {
 
         parent.info({ err: new ReferenceError("test") });
         const o = await once(stream, "data");
-        assert.object(o.err);
+        assert.isObject(o.err);
         assert.equal(o.err.t, "ReferenceError");
         assert.equal(o.err.m, "test");
-        assert.string(o.err.s);
+        assert.isString(o.err.s);
     });
 
     it("null overrides default err namespace error serializer", async () => {
@@ -51,10 +51,10 @@ describe("app", "fastLogger", "serializers", () => {
 
         parent.info({ err: new ReferenceError("test") });
         const o = await once(stream, "data");
-        assert.object(o.err);
-        assert.undefined(o.err.type);
-        assert.undefined(o.err.message);
-        assert.undefined(o.err.stack);
+        assert.isObject(o.err);
+        assert.isUndefined(o.err.type);
+        assert.isUndefined(o.err.message);
+        assert.isUndefined(o.err.stack);
     });
 
     it("undefined overrides default err namespace error serializer", async () => {
@@ -63,10 +63,10 @@ describe("app", "fastLogger", "serializers", () => {
 
         parent.info({ err: new ReferenceError("test") });
         const o = await once(stream, "data");
-        assert.object(o.err);
-        assert.undefined(o.err.type);
-        assert.undefined(o.err.message);
-        assert.undefined(o.err.stack);
+        assert.isObject(o.err);
+        assert.isUndefined(o.err.type);
+        assert.isUndefined(o.err.message);
+        assert.isUndefined(o.err.stack);
     });
 
     it("serializers override values", async () => {
@@ -228,8 +228,8 @@ describe("app", "fastLogger", "serializers", () => {
         const o3 = once(stream, "data");
         logger.info("message");
         assert.equal((await o3).lionel, "richie");
-        assert.false("pid" in (await o3));
-        assert.false("hostname" in (await o3));
+        assert.isFalse("pid" in (await o3));
+        assert.isFalse("hostname" in (await o3));
         assert.notSameMembers(Object.keys(await o3), ["pid", "hostname"]);
     });
 });

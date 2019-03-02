@@ -6,7 +6,7 @@ const {
     std: { fs, path }
 } = adone;
 
-const GO_IPFS_PATH = path.resolve(adone.runtime.realm.env.OPT_PATH, "go-ipfs");
+const GO_IPFS_PATH = path.resolve(adone.realm.getRootRealm().env.OPT_PATH, "go-ipfs");
 
 // These tests won't work with promises, wrap the download function to a callback
 const download = function (version, platform, arch, callback) {
@@ -44,9 +44,9 @@ describe("go executable", function () {
 
         download((err, res) => {
             assert.notExists(err);
-            assert.true(res.fileName.includes(`ipfs_v${go.defaultVersion}_${goenv.GOOS}-${goenv.GOARCH}`), "Returns the correct filename");
+            assert.isTrue(res.fileName.includes(`ipfs_v${go.defaultVersion}_${goenv.GOOS}-${goenv.GOARCH}`), "Returns the correct filename");
 
-            assert.true(res.installPath === path.resolve(adone.runtime.realm.env.OPT_PATH, "go-ipfs") + path.sep, "Returns the correct output path");
+            assert.isTrue(res.installPath === path.resolve(adone.realm.getRootRealm().env.OPT_PATH, "go-ipfs") + path.sep, "Returns the correct output path");
 
             fs.stat(GO_IPFS_PATH, (err, stats) => {
                 assert.notExists(err, "go-ipfs should stat without error");
@@ -61,8 +61,8 @@ describe("go executable", function () {
 
         download(`v${go.defaultVersion}`, "windows", (err, res) => {
             assert.notExists(err);
-            assert.true(res.fileName.includes(`ipfs_v${go.defaultVersion}_windows-${goenv.GOARCH}`), "Returns the correct filename");
-            assert.true(res.installPath === GO_IPFS_PATH + path.sep, "Returns the correct output path");
+            assert.isTrue(res.fileName.includes(`ipfs_v${go.defaultVersion}_windows-${goenv.GOARCH}`), "Returns the correct filename");
+            assert.isTrue(res.installPath === GO_IPFS_PATH + path.sep, "Returns the correct output path");
 
             fs.stat(GO_IPFS_PATH, (err, stats) => {
                 assert.notExists(err, "go-ipfs for windows should stat without error");
@@ -81,8 +81,8 @@ describe("go executable", function () {
         await adone.fs.rm(GO_IPFS_PATH);
         download(`v${go.defaultVersion}`, "linux", (err, res) => {
             assert.notExists(err);
-            assert.true(res.fileName.includes(`ipfs_v${go.defaultVersion}_linux-${goenv.GOARCH}`), "Returns the correct filename");
-            assert.true(res.installPath === GO_IPFS_PATH + path.sep, "Returns the correct output path");
+            assert.isTrue(res.fileName.includes(`ipfs_v${go.defaultVersion}_linux-${goenv.GOARCH}`), "Returns the correct filename");
+            assert.isTrue(res.installPath === GO_IPFS_PATH + path.sep, "Returns the correct output path");
 
             fs.stat(GO_IPFS_PATH, (err, stats) => {
                 assert.notExists(err, "go-ipfs for linux should stat without error");
@@ -101,8 +101,8 @@ describe("go executable", function () {
         await adone.fs.rm(GO_IPFS_PATH);
         download(`v${go.defaultVersion}`, "darwin", (err, res) => {
             assert.notExists(err);
-            assert.true(res.fileName.includes(`ipfs_v${go.defaultVersion}_darwin-${goenv.GOARCH}`), "Returns the correct filename");
-            assert.true(res.installPath === GO_IPFS_PATH + path.sep, "Returns the correct output path");
+            assert.isTrue(res.fileName.includes(`ipfs_v${go.defaultVersion}_darwin-${goenv.GOARCH}`), "Returns the correct filename");
+            assert.isTrue(res.installPath === GO_IPFS_PATH + path.sep, "Returns the correct output path");
 
             fs.stat(GO_IPFS_PATH, (err, stats) => {
                 assert.notExists(err, "go-ipfs for OSX should stat without error");
@@ -129,8 +129,8 @@ describe("go executable", function () {
 
         download((err, res) => {
             assert.notExists(err);
-            assert.true(res.fileName.includes(`ipfs_${process.env.TARGET_VERSION}_${process.env.TARGET_OS}-${process.env.TARGET_ARCH}`), "Returns the correct filename");
-            assert.true(res.installPath === GO_IPFS_PATH + path.sep, "Returns the correct output path");
+            assert.isTrue(res.fileName.includes(`ipfs_${process.env.TARGET_VERSION}_${process.env.TARGET_OS}-${process.env.TARGET_ARCH}`), "Returns the correct filename");
+            assert.isTrue(res.installPath === GO_IPFS_PATH + path.sep, "Returns the correct output path");
 
             fs.stat(GO_IPFS_PATH, (err, stats) => {
                 assert.notExists(err, "go-ipfs for windows should stat without error");

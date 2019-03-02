@@ -5,8 +5,8 @@ const {
 
 describe("globals", () => {
     it("main", () => {
-        assert.true(is.plainObject(globals));
-        assert.true(Object.keys(globals).length > 10 && Object.keys(globals).length < 1000);
+        assert.isTrue(is.plainObject(globals));
+        assert.isTrue(Object.keys(globals).length > 10 && Object.keys(globals).length < 1000);
     });
 
     it("ensure alphabetical order", () => {

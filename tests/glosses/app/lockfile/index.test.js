@@ -81,7 +81,7 @@ describe("lock file", () => {
 
         it("should create the lockfile", async () => {
             await lockfile.create(tmpFile);
-            assert.true(fs.existsSync(tmpFileLock));
+            assert.isTrue(fs.existsSync(tmpFileLock));
         });
 
         it("should create the lockfile inside a folder", async () => {
@@ -100,8 +100,8 @@ describe("lock file", () => {
             };
             await lockfile.create(lockPath, options);
 
-            assert.true(await fs.isDirectory(lockPath));
-            assert.true(await fs.exists(lockfilePath));
+            assert.isTrue(await fs.isDirectory(lockPath));
+            assert.isTrue(await fs.exists(lockfilePath));
             lockfile.release(lockPath, options);
 
             await fs.rm(lockPath);
@@ -337,7 +337,7 @@ describe("lock file", () => {
             }, async (err) => {
                 assert.instanceOf(err, Error);
                 assert.equal(err.code, "ECOMPROMISED");
-                assert.true(err.message.includes("ENOENT"));
+                assert.isTrue(err.message.includes("ENOENT"));
 
                 await lockfile.create(tmpFile);
                 done();
@@ -358,7 +358,7 @@ describe("lock file", () => {
                 stale: 5000
             }, (err) => {
                 assert.instanceOf(err, Error);
-                assert.true(err.message.includes("foo"));
+                assert.isTrue(err.message.includes("foo"));
                 assert.equal(err.code, "ECOMPROMISED");
 
                 done();
@@ -380,8 +380,8 @@ describe("lock file", () => {
             }, (err) => {
                 assert.instanceOf(err, Error);
                 assert.equal(err.code, "ECOMPROMISED");
-                assert.true(err.message.includes("threshold"));
-                assert.true(fs.existsSync(tmpFileLock));
+                assert.isTrue(err.message.includes("threshold"));
+                assert.isTrue(fs.existsSync(tmpFileLock));
 
                 done();
             });
@@ -402,7 +402,7 @@ describe("lock file", () => {
             }, (err) => {
                 assert.instanceOf(err, Error);
                 assert.equal(err.code, "ECOMPROMISED");
-                assert.true(fs.existsSync(tmpFileLock));
+                assert.isTrue(fs.existsSync(tmpFileLock));
 
                 done();
             });
@@ -518,10 +518,10 @@ describe("lock file", () => {
 
         it("should remove the lockfile", async () => {
             await lockfile.create(tmpFile);
-            assert.true(fs.existsSync(tmpFileLock));
+            assert.isTrue(fs.existsSync(tmpFileLock));
 
             await lockfile.release(tmpFile);
-            assert.false(fs.existsSync(tmpFileLock));
+            assert.isFalse(fs.existsSync(tmpFileLock));
         });
 
         it("should fail if removing the lockfile errors out", async () => {
@@ -552,7 +552,7 @@ describe("lock file", () => {
             await lockfile.release(tmpFile, {
                 fs: customFs
             });
-            assert.true(called);
+            assert.isTrue(called);
         });
 
         it("should stop updating the lockfile mtime", async (done) => {
@@ -612,7 +612,7 @@ describe("lock file", () => {
 
             await lockfile.create(tmpFile);
             await lockfile.release(tmpFile);
-            assert.false(stdFs.existsSync(tmpFileLock));
+            assert.isFalse(stdFs.existsSync(tmpFileLock));
         });
 
         it("should use the custom fs", async () => {
@@ -654,12 +654,12 @@ describe("lock file", () => {
         it("should callback with true if file is locked", async () => {
             await lockfile.create(tmpFile);
             const locked = await lockfile.check(tmpFile);
-            assert.true(locked);
+            assert.isTrue(locked);
         });
 
         it("should callback with false if file is not locked", async () => {
             const locked = await lockfile.check(tmpFile);
-            assert.false(locked);
+            assert.isFalse(locked);
         });
 
         it("should use the custom fs", async () => {
@@ -682,10 +682,10 @@ describe("lock file", () => {
 
             await lockfile.create(tmpFileSymlink);
             let locked = await lockfile.check(tmpFile);
-            assert.true(locked);
+            assert.isTrue(locked);
 
             locked = await lockfile.check(`${tmpFile}/../../lockfile/tmp`);
-            assert.true(locked);
+            assert.isTrue(locked);
         });
 
         it("should not resolve symlinks if realpath is false", async () => {
@@ -699,12 +699,12 @@ describe("lock file", () => {
             let locked = await lockfile.check(tmpFile, {
                 realpath: false
             });
-            assert.false(locked);
+            assert.isFalse(locked);
 
             locked = await lockfile.check(`${tmpFile}/../../lockfile/tmp`, {
                 realpath: false
             });
-            assert.false(locked);
+            assert.isFalse(locked);
         });
 
         it("should fail if stating the lockfile errors out when verifying staleness", async () => {
@@ -738,7 +738,7 @@ describe("lock file", () => {
 
             setTimeout(async () => {
                 const locked = await lockfile.check(tmpFile, { stale: 100 });
-                assert.false(locked);
+                assert.isFalse(locked);
                 done();
             }, 2200);
         });
@@ -756,7 +756,7 @@ describe("lock file", () => {
 
             setTimeout(async () => {
                 const locked = await lockfile.check(tmpFile, { stale: false });
-                assert.false(locked);
+                assert.isFalse(locked);
                 done();
             }, 2200);
         });
@@ -794,8 +794,8 @@ describe("lock file", () => {
                 throw new Error("Lock failed");
             }
 
-            assert.true(err.stderr.includes("Error: crashed"));
-            assert.false(await fs.exists(tmpFileLock));
+            assert.isTrue(err.stderr.includes("Error: crashed"));
+            assert.isFalse(await fs.exists(tmpFileLock));
         });
 
         it("should not hold the process if it has no more work to do", async () => {

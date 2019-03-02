@@ -78,7 +78,7 @@ describe("project", function () {
                 check: (moduleExport) => {
                     const Class = moduleExport.default;
                     const instance = new Class();
-                    assert.true(is.subsystem(instance));
+                    assert.isTrue(is.subsystem(instance));
                 }
             },
             {
@@ -90,8 +90,8 @@ describe("project", function () {
                             name: "test"
                         }
                     });
-                    assert.true(is.subsystem(instance));
-                    assert.true(is.omnitronService(instance));
+                    assert.isTrue(is.subsystem(instance));
+                    assert.isTrue(is.omnitronService(instance));
                 }
             }
         ];
@@ -111,10 +111,10 @@ describe("project", function () {
                         cwd: FIXTURES_PATH
                     });
 
-                    assert.true(await fs.exists(filePath));
+                    assert.isTrue(await fs.exists(filePath));
                     if (!["application", "cli.application"].includes(type.name)) {
                         const moduleExport = adone.require(filePath);
-                        assert.true(is.class(moduleExport.default));
+                        assert.isTrue(is.class(moduleExport.default));
                         assert.equal(moduleExport.default.name, text.capitalize(text.toCamelCase(name)));
                         await type.check(moduleExport);
                     }
@@ -140,10 +140,10 @@ describe("project", function () {
                             cwd: projectPath
                         });
 
-                        assert.true(await fs.exists(filePath));
+                        assert.isTrue(await fs.exists(filePath));
                         const moduleExport = adone.require(filePath);
-                        assert.true(is.class(moduleExport.default));
-                        assert.true(moduleExport.default.name.startsWith("_class") || moduleExport.default.name.startsWith("_default"));
+                        assert.isTrue(is.class(moduleExport.default));
+                        assert.isTrue(moduleExport.default.name.startsWith("_class") || moduleExport.default.name.startsWith("_default"));
                         await type.check(moduleExport);
                     }
                 });
@@ -181,10 +181,10 @@ describe("project", function () {
                         rewriteFile: true
                     });
 
-                    assert.true(await fs.exists(filePath));
+                    assert.isTrue(await fs.exists(filePath));
                     if (!["application", "cli.application"].includes(type.name)) {
                         const moduleExport = adone.require(filePath);
-                        assert.true(is.class(moduleExport.default));
+                        assert.isTrue(is.class(moduleExport.default));
                         assert.equal(moduleExport.default.name, text.capitalize(text.toCamelCase(name)));
                         await type.check(moduleExport);
                     }
@@ -257,7 +257,7 @@ describe("project", function () {
                     assert.deepEqual(util.pick(adoneConfig.raw, ["name", "description", "version", "author"]), util.pick(projectConfig, ["name", "description", "version", "author"]));
                     assert.sameMembers(await fs.readdir(cwd), files);
                     if (!skipGit) {
-                        assert.true(await fs.isDirectory(std.path.join(cwd, ".git")));
+                        assert.isTrue(await fs.isDirectory(std.path.join(cwd, ".git")));
                     }
 
                     if (await fs.exists(std.path.join(cwd, adone.configuration.Npm.name))) {
@@ -268,14 +268,14 @@ describe("project", function () {
                     }
 
                     // if (!skipEslint) {
-                    //     assert.true(is.configuration(context.config.eslint));
+                    //     assert.isTrue(is.configuration(context.config.eslint));
                     // }
 
                     if (!skipJsconfig) {
                         const jsconfig = await adone.configuration.Jsconfig.load({
                             cwd
                         });
-                        assert.false(is.propertyOwned(jsconfig.raw, "include"));
+                        assert.isFalse(is.propertyOwned(jsconfig.raw, "include"));
                     }
                 });
             }
@@ -313,13 +313,13 @@ describe("project", function () {
                     }
 
                     assert.sameMembers(await fs.readdir(cwd), ["adone.json", ".git", ".gitignore", ".eslintrc.js", "package.json", "package-lock.json", "node_modules", "jsconfig.json", "src"]);
-                    assert.true(await fs.isDirectory(std.path.join(cwd, ".git")));
-                    assert.true(await fs.isDirectory(std.path.join(cwd, "node_modules")));
-                    assert.true(await fs.isDirectory(std.path.join(cwd, "src")));
+                    assert.isTrue(await fs.isDirectory(std.path.join(cwd, ".git")));
+                    assert.isTrue(await fs.isDirectory(std.path.join(cwd, "node_modules")));
+                    assert.isTrue(await fs.isDirectory(std.path.join(cwd, "src")));
                     if (["cli.command", "omnitron.service"].includes(type)) {
-                        assert.true(await fs.exists(std.path.join(cwd, "src", "index.js")));
+                        assert.isTrue(await fs.exists(std.path.join(cwd, "src", "index.js")));
                     } else {
-                        assert.true(await fs.exists(std.path.join(cwd, "src", "app.js")));
+                        assert.isTrue(await fs.exists(std.path.join(cwd, "src", "app.js")));
                     }
 
                     const npmConfig = await adone.configuration.Npm.load({
@@ -327,12 +327,12 @@ describe("project", function () {
                     });
                     assert.deepEqual(util.pick(npmConfig.raw, ["name", "description", "version", "author"]), util.pick(projectConfig, ["name", "description", "version", "author"]));
 
-                    // assert.true(is.configuration(context.config.eslint));
+                    // assert.isTrue(is.configuration(context.config.eslint));
 
                     const jsconfig = await adone.configuration.Jsconfig.load({
                         cwd
                     });
-                    assert.true(is.array(jsconfig.raw.include));
+                    assert.isTrue(is.array(jsconfig.raw.include));
                 });
             }
 
@@ -375,8 +375,8 @@ describe("project", function () {
                         "package-lock.json",
                         "package.json"
                     ]);
-                    assert.true(await fs.isDirectory(std.path.join(subCwd, "src")));
-                    assert.true(await fs.exists(std.path.join(subCwd, "src", "index.js")));
+                    assert.isTrue(await fs.isDirectory(std.path.join(subCwd, "src")));
+                    assert.isTrue(await fs.exists(std.path.join(subCwd, "src", "index.js")));
 
                     assert.equal(manager.config.raw.struct.service, "service");
 
@@ -384,7 +384,7 @@ describe("project", function () {
                     const jsconfig = await adone.configuration.Jsconfig.load({
                         cwd
                     });
-                    assert.true(jsconfig.raw.include.includes(relativeDir));
+                    assert.isTrue(jsconfig.raw.include.includes(relativeDir));
                 });
             });
 

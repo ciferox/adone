@@ -1,23 +1,17 @@
 const {
     is,
-    error: { UnknownException },
+    error,
     app: {
         Subsystem,
         MainCommandMeta
     },
+    lodash: { get },
     meta,
+    pretty,
     runtime: { term }
 } = adone;
 
-const VIRTUAL_NAMESPACES = [
-    "global",
-    "std",
-    "dev",
-    "vendor",
-    "npm"
-];
-
-const ADONE_GLOBAL = ["adone", "global"];
+const GLOBALS = ["adone", "global"];
 
 const getOwnPropertyDescriptor = (obj, propName) => {
     let descr = Object.getOwnPropertyDescriptor(obj, propName);
@@ -38,6 +32,23 @@ const getOwnPropertyDescriptor = (obj, propName) => {
     }
 };
 
+const parseName = (name) => {
+    const namespaceParts = [];
+    const parts = name.split(".");
+
+    do {
+        if (!is.namespace(get(global, [...namespaceParts, parts[0]]))) {
+            break;
+        }
+        namespaceParts.push(parts.shift());
+    } while (parts.length > 0);
+
+    return {
+        namespace: namespaceParts.join("."),
+        objectPath: parts.join(".")
+    };
+};
+
 export default class Inspection extends Subsystem {
     @MainCommandMeta({
         arguments: [
@@ -52,6 +63,10 @@ export default class Inspection extends Subsystem {
             {
                 name: "--all",
                 help: "Show all properties"
+            },
+            {
+                name: ["--value", "-V"],
+                help: "Show value instead of description"
             },
             {
                 name: "--depth",
@@ -75,18 +90,18 @@ export default class Inspection extends Subsystem {
             let name = args.get("name");
 
             if (name.length === 0) {
-                console.log("Possible keys:");
-                console.log(adone.pretty.json([...VIRTUAL_NAMESPACES, "adone"].sort()));
+                console.log("Global namespaces:");
+                console.log(pretty.json(GLOBALS));
                 return 0;
             }
 
             const parts = name.split(".");
             let namespace;
-            let objectName;
+            let objectPath;
 
             // Reduce 'adone' + 'global' chain...
             while (parts.length > 1) {
-                if (ADONE_GLOBAL.includes(parts[0]) && ADONE_GLOBAL.includes(parts[1])) {
+                if (GLOBALS.includes(parts[0]) && GLOBALS.includes(parts[1])) {
                     parts.shift();
                     name = parts.join(".");
                 } else {
@@ -94,34 +109,34 @@ export default class Inspection extends Subsystem {
                 }
             }
 
-            const isVirtual = VIRTUAL_NAMESPACES.includes(parts[0]);
+            if (!GLOBALS.includes(parts[0])) {
+                throw new error.UnknownException(`Unknown namespace: ${name}`);
+            }
 
-            if (parts[0] === "adone" || isVirtual) {
-                if (isVirtual && parts[0] !== "adone") {
-                    name = `adone.${name}`;
-                }
-                const result = meta.parseName(name);
-                namespace = result.namespace;
-                objectName = result.objectName;
-            } else if (parts[0] in global) {
+            if (parts[0] === "global") {
                 namespace = "global";
-                objectName = (parts.length === 1)
-                    ? (parts[0] === "global" ? "" : parts[0])
-                    : parts[0] === "global"
-                        ? parts.slice(1).join(".")
-                        : parts.slice().join(".");
-            } else {
-                throw new UnknownException(`Unknown key: ${name}`);
+                objectPath = (parts.length === 1)
+                    ? ""
+                    : parts.slice(1).join(".");
+            } else if (parts[0] in global) {
+                const result = parseName(name);
+                namespace = result.namespace;
+                objectPath = result.objectPath;
             }
 
             let ns;
-            if (namespace === "global" || namespace === "") {
-                ns = global;
-            } else {
-                ns = (namespace === "adone") ? adone : adone.lodash.get(adone, namespace.substring("adone".length + 1));
+            switch (namespace) {
+                case "global":
+                    ns = global;
+                    break;
+                case "adone":
+                    ns = adone;
+                    break;
+                default:
+                    ns = get(global, namespace);
             }
 
-            if (objectName === "") {
+            if (objectPath === "") {
                 const { util } = adone;
 
                 const styleType = (type) => `{magenta-fg}${type}{/magenta-fg}`;
@@ -228,28 +243,39 @@ export default class Inspection extends Subsystem {
                 }
                 // console.log(meta.inspect(ns, inspectOptions));
             } else {
-                const parts = objectName.split(".");
+                const parts = objectPath.split(".");
 
                 let obj = ns;
                 for (const part of parts) {
                     const propDescr = getOwnPropertyDescriptor(obj, part);
                     if (is.undefined(propDescr)) {
-                        throw new UnknownException(`Unknown object: ${name}`);
+                        throw new error.UnknownException(`Unknown object: ${name}`);
                     }
                     obj = obj[part];
                 }
                 const type = meta.typeOf(obj);
 
-                if (type === "function") {
-                    console.log(adone.js.highlight(obj.toString()));
-                } else {
-                    console.log(meta.inspect(adone.lodash.get(ns, objectName), inspectOptions));
+                let result;
+                const showValue = opts.has("value");
+                switch (type) {
+                    case "function":
+                    case "class":
+                        result = showValue
+                            ? adone.js.highlight(obj.toString())
+                            : meta.inspect(get(ns, objectPath), inspectOptions);
+                        break;
+                    default:
+                        result = showValue
+                            ? obj
+                            : meta.inspect(get(ns, objectPath), inspectOptions);
                 }
+
+                console.log(result);
             }
 
             return 0;
         } catch (err) {
-            console.error(err/*.message*/);
+            console.log(pretty.error(err));
             return 1;
         }
     }

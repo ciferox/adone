@@ -41,7 +41,7 @@ describe("system", "process", "exec", () => {
 
     it("buffer", async () => {
         const { stdout } = await exec("noop", ["foo"], { encoding: null });
-        assert.true(is.buffer(stdout));
+        assert.isTrue(is.buffer(stdout));
         assert.equal(stdout.toString(), "foo");
     });
 
@@ -144,7 +144,7 @@ describe("system", "process", "exec", () => {
     });
 
     it.skip("preferLocal option", async () => {
-        assert.true((await exec("cat-names")).stdout.length > 2);
+        assert.isTrue((await exec("cat-names")).stdout.length > 2);
 
         if (is.windows) {
             // TODO: figure out how to make the below not hang on Windows
@@ -242,9 +242,9 @@ describe("system", "process", "exec", () => {
         const { code, failed } = await exec("noop", ["foo"]);
         const err = await assert.throws(async () => exec("exit", ["2"]));
         assert.equal(code, 0);
-        assert.false(failed);
+        assert.isFalse(failed);
         assert.equal(err.code, 2);
-        assert.true(err.failed);
+        assert.isTrue(err.failed);
     });
 
     it.skip("use relative path with '..' chars", async () => {
@@ -269,7 +269,7 @@ describe("system", "process", "exec", () => {
 
         const err = await assert.throws(async () => cp);
 
-        assert.true(err.killed);
+        assert.isTrue(err.killed);
     });
 
     // TODO: Should this really be the case, or should we improve on child_process?
@@ -282,14 +282,14 @@ describe("system", "process", "exec", () => {
 
         const err = await assert.throws(async () => cp);
 
-        assert.false(err.killed);
+        assert.isFalse(err.killed);
     });
 
     if (is.darwin) {
         it("sanity check: child_process.exec also has killed.false if killed indirectly", (done) => {
             const cp = adone.std.child_process.exec("forever", (err) => {
-                assert.true(err);
-                assert.false(err.killed);
+                assert.isTrue(err);
+                assert.isFalse(err.killed);
                 done();
             });
 
@@ -355,25 +355,25 @@ describe("system", "process", "exec", () => {
     it("timeout will kill the process early", async () => {
         const err = await assert.throws(async () => exec("delay", ["3000", "0"], { timeout: 1500 }));
 
-        assert.true(err.timedOut);
+        assert.isTrue(err.timedOut);
         assert.notEqual(err.code, 22);
     });
 
     it("timeout will not kill the process early", async () => {
         const err = await assert.throws(async () => exec("delay", ["3000", "22"], { timeout: 9000 }));
 
-        assert.false(err.timedOut);
+        assert.isFalse(err.timedOut);
         assert.equal(err.code, 22);
     });
 
     it("timedOut will be false if no timeout was set and zero exit code", async () => {
         const result = await exec("delay", ["1000", "0"]);
-        assert.false(result.timedOut);
+        assert.isFalse(result.timedOut);
     });
 
     it("timedOut will be false if no timeout was set and non-zero exit code", async () => {
         const err = await assert.throws(async () => exec("delay", ["1000", "3"]));
-        assert.false(err.timedOut);
+        assert.isFalse(err.timedOut);
     });
 
     const errorMessage = (expected, ...args) => {
@@ -421,7 +421,7 @@ describe("system", "process", "exec", () => {
             // Give everybody some time to breath and kill things
             await adone.promise.delay(200);
 
-            assert.false(await exists(cp.pid));
+            assert.isFalse(await exists(cp.pid));
             assert.equal(await exists(pid), !cleanup);
         });
     };
@@ -514,7 +514,7 @@ describe("system", "process", "exec", () => {
             child.on("exit", resolve);
         });
 
-        assert.false(ee.listeners("exit").includes(listener));
+        assert.isFalse(ee.listeners("exit").includes(listener));
     });
 
     it("stdio", () => {

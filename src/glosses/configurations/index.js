@@ -123,7 +123,6 @@ export class Base {
         return parts;
     }
 }
-adone.tag.add(Base, "CONFIGURATION");
 
 const lazy = adone.lazify({
     Generic: "./generic",

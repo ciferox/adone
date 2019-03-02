@@ -1860,8 +1860,8 @@ describe("object", () => {
             expect(() => model.object().with("a", "b", "c")).to.throw(message);
 
             const res = model.object().with("a", "b");
-            assert.true(is.object(res));
-            assert.true(res.isJoi === true);
+            assert.isTrue(is.object(res));
+            assert.isTrue(res.isJoi === true);
         });
 
         it("should validate correctly when key is an empty string", () => {
@@ -1927,8 +1927,8 @@ describe("object", () => {
             expect(() => model.object().without("a", "b", "c")).to.throw(message);
 
             const res = model.object().without("a", "b");
-            assert.true(is.object(res));
-            assert.true(res.isJoi === true);
+            assert.isTrue(is.object(res));
+            assert.isTrue(res.isJoi === true);
         });
 
         it("should validate correctly when key is an empty string", () => {

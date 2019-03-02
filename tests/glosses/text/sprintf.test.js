@@ -156,7 +156,7 @@ describe("sprintf", () => {
         try {
             sprintf(fmt, {});
         } catch (e) {
-            assert.true(e.message.includes("[sprintf]"));
+            assert.isTrue(e.message.includes("[sprintf]"));
         }
     });
 

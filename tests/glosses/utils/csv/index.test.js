@@ -39,7 +39,7 @@ describe("util", "csv", () => {
 
     it("simple csv", (done) => {
         const verify = (err, lines) => {
-            assert.false(err, "no err");
+            assert.isFalse(err, "no err");
             assert.deepEqual(lines[0], {
                 a: "1",
                 b: "2",
@@ -69,7 +69,7 @@ describe("util", "csv", () => {
 
     it("newlines in a cell", (done) => {
         const verify = (err, lines) => {
-            assert.false(err, "no err");
+            assert.isFalse(err, "no err");
             assert.deepEqual(lines[0], {
                 a: "1",
                 b: "2",
@@ -94,7 +94,7 @@ describe("util", "csv", () => {
 
     it("raw escaped quotes", (done) => {
         const verify = (err, lines) => {
-            assert.false(err, "no err");
+            assert.isFalse(err, "no err");
             assert.deepEqual(lines[0], {
                 a: "1",
                 b: 'ha "ha" ha'
@@ -116,7 +116,7 @@ describe("util", "csv", () => {
 
     it("raw escaped quotes and newlines", (done) => {
         const verify = (err, lines) => {
-            assert.false(err, "no err");
+            assert.isFalse(err, "no err");
             assert.deepEqual(lines[0], {
                 a: "1",
                 b: 'ha \n"ha" \nha'
@@ -240,7 +240,7 @@ describe("util", "csv", () => {
 
     it("geojson", (done) => {
         const verify = (err, lines) => {
-            assert.false(err, "no err");
+            assert.isFalse(err, "no err");
             const lineObj = {
                 type: "LineString",
                 coordinates: [[102.0, 0.0], [103.0, 1.0], [104.0, 0.0], [105.0, 1.0]]
@@ -254,13 +254,13 @@ describe("util", "csv", () => {
 
     it("empty_columns", (done) => {
         const verify = (err, lines) => {
-            assert.false(err, "no err");
+            assert.isFalse(err, "no err");
             const testLine = function (row) {
                 assert.strictEqual(Object.keys(row).length, 3, "Split into three columns");
-                assert.true(/^2007-01-0\d$/.test(row.a), "First column is a date");
-                assert.true(!is.undefined(row.b), "Empty column is in line");
+                assert.isTrue(/^2007-01-0\d$/.test(row.a), "First column is a date");
+                assert.isTrue(!is.undefined(row.b), "Empty column is in line");
                 assert.strictEqual(row.b.length, 0, "Empty column is empty");
-                assert.true(!is.undefined(row.c), "Empty column is in line");
+                assert.isTrue(!is.undefined(row.c), "Empty column is in line");
                 assert.strictEqual(row.c.length, 0, "Empty column is empty");
             };
             lines.forEach(testLine);
@@ -421,7 +421,7 @@ describe("util", "csv", () => {
 
     it("custom newline", (done) => {
         const verify = (err, lines) => {
-            assert.false(err, "no err");
+            assert.isFalse(err, "no err");
             assert.deepEqual(lines[0], {
                 a: "1",
                 b: "2",
@@ -477,7 +477,7 @@ describe("util", "csv", () => {
 
     it("custom quote character", (done) => {
         const verify = (err, lines) => {
-            assert.false(err, "no err");
+            assert.isFalse(err, "no err");
             assert.deepEqual(lines[0], {
                 a: "1",
                 b: "some value",
@@ -497,7 +497,7 @@ describe("util", "csv", () => {
 
     it("custom escape character", (done) => {
         const verify = (err, lines) => {
-            assert.false(err, "no err");
+            assert.isFalse(err, "no err");
             assert.deepEqual(lines[0], {
                 a: "1",
                 b: 'some "escaped" value',
@@ -522,7 +522,7 @@ describe("util", "csv", () => {
 
     it("custom quote and escape character", (done) => {
         const verify = (err, lines) => {
-            assert.false(err, "no err");
+            assert.isFalse(err, "no err");
             assert.deepEqual(lines[0], {
                 a: "1",
                 b: "some 'escaped' value",
@@ -547,7 +547,7 @@ describe("util", "csv", () => {
 
     it("custom quote character with default escaped value", (done) => {
         const verify = (err, lines) => {
-            assert.false(err, "no err");
+            assert.isFalse(err, "no err");
             assert.deepEqual(lines[0], {
                 a: "1",
                 b: "some 'escaped' value",
@@ -572,7 +572,7 @@ describe("util", "csv", () => {
 
     it("process all rows", (done) => {
         const verify = (err, lines) => {
-            assert.false(err, "no err");
+            assert.isFalse(err, "no err");
             assert.strictEqual(lines.length, 7268, "7268 rows");
             done();
         };
@@ -589,7 +589,7 @@ describe("util", "csv", () => {
         };
 
         const verify = (err, lines) => {
-            assert.false(err, "no err");
+            assert.isFalse(err, "no err");
             assert.deepEqual(lines[0], {
                 b: "2"
             }, "first row");
@@ -606,7 +606,7 @@ describe("util", "csv", () => {
             return headers[header];
         };
         const verify = (err, lines) => {
-            assert.false(err, "no err");
+            assert.isFalse(err, "no err");
             assert.deepEqual(lines[0], {
                 x: "1",
                 y: "2",
@@ -621,7 +621,7 @@ describe("util", "csv", () => {
 
     it("headers: false, numeric column names", (done) => {
         const verify = (err, lines) => {
-            assert.false(err, "no err");
+            assert.isFalse(err, "no err");
             assert.sameDeepMembers(lines, [
                 {
                     0: "a",
@@ -650,7 +650,7 @@ describe("util", "csv", () => {
         };
 
         const verify = (err, lines) => {
-            assert.false(err, "no err");
+            assert.isFalse(err, "no err");
             assert.deepEqual(lines[0], {
                 a: 1,
                 b: 2,
@@ -667,7 +667,7 @@ describe("util", "csv", () => {
 
     it("skip rows until", (done) => {
         const verify = (err, lines) => {
-            assert.false(err, "no err");
+            assert.isFalse(err, "no err");
             assert.strictEqual(JSON.stringify(lines[0]), JSON.stringify({ yes: "ok", yup: "ok", yeah: "ok!" }));
             done();
         };
@@ -684,7 +684,7 @@ describe("util", "csv", () => {
 
     it("backtick separator (#105)", (done) => {
         const verify = (err, lines) => {
-            assert.false(err, "no err");
+            assert.isFalse(err, "no err");
             assert.sameDeepMembers(lines, [
                 {
                     pokemon_id: "1",

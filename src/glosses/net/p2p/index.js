@@ -1,8 +1,3 @@
-adone.definePredicates({
-    p2pPeerInfo: "P2P_PEER_INFO",
-    p2pCore: "P2P_CORE"
-});
-
 adone.lazify({
     Connection: "./connection",
     CID: "./cid",

@@ -41,10 +41,10 @@ describe("KBucket", () => {
             assert.deepEqual(kBucket.root.contacts.length, 1);
             kBucket.add({ id: Buffer.from("b") });
             assert.deepEqual(kBucket.root.contacts.length, 2);
-            assert.true(kBucket.root.contacts[0] === contact); // least-recently-contacted end
+            assert.isTrue(kBucket.root.contacts[0] === contact); // least-recently-contacted end
             kBucket.add(contact);
             assert.deepEqual(kBucket.root.contacts.length, 2);
-            assert.true(kBucket.root.contacts[1] === contact); // most-recently-contacted end
+            assert.isTrue(kBucket.root.contacts[1] === contact); // most-recently-contacted end
         });
 
         it('adding contact to bucket that can\'t be split results in calling "ping" callback', (done) => {
@@ -55,7 +55,7 @@ describe("KBucket", () => {
                 // console.dir(kBucket.root.right.contacts[0])
                 for (let i = 0; i < kBucket.numberOfNodesToPing; ++i) {
                     // the least recently contacted end of the node should be pinged
-                    assert.true(contacts[i] === kBucket.root.right.contacts[i]);
+                    assert.isTrue(contacts[i] === kBucket.root.right.contacts[i]);
                 }
                 assert.deepEqual(replacement, { id: Buffer.from([0x80, j]) });
                 done();
@@ -108,7 +108,7 @@ describe("KBucket", () => {
             const kBucket = new KBucket();
             const contact = { id: Buffer.from("a") };
             kBucket.add(contact);
-            assert.true(kBucket.get(Buffer.from("a")).id.equals(Buffer.from("a")));
+            assert.isTrue(kBucket.get(Buffer.from("a")).id.equals(Buffer.from("a")));
         });
 
         it("get retrieves most recently added contact if same id", () => {
@@ -117,7 +117,7 @@ describe("KBucket", () => {
             const contact2 = { id: Buffer.from("a"), foo: "bar", vectorClock: 1 };
             kBucket.add(contact);
             kBucket.add(contact2);
-            assert.true(kBucket.get(Buffer.from("a")).id.equals(Buffer.from("a")));
+            assert.isTrue(kBucket.get(Buffer.from("a")).id.equals(Buffer.from("a")));
             assert.deepEqual(kBucket.get(Buffer.from("a")).foo, "bar");
             assert.deepEqual(kBucket.get(Buffer.from("a")).bar, undefined);
         });
@@ -165,7 +165,7 @@ describe("KBucket", () => {
             for (let i = 0; i < 1e3; ++i) {
                 kBucket.add({ id: Buffer.from([~~(i / 256), i % 256]) });
             }
-            assert.true(kBucket.closest(Buffer.from([0x80, 0x80])).length > 100);
+            assert.isTrue(kBucket.closest(Buffer.from([0x80, 0x80])).length > 100);
         });
 
         it("closest nodes are returned (including exact match)", () => {
@@ -256,15 +256,15 @@ describe("KBucket", () => {
     describe("createKBucket", () => {
         it("localNodeId should be a random SHA-1 if not provided", () => {
             const kBucket = new KBucket();
-            assert.true(kBucket.localNodeId instanceof Buffer);
+            assert.isTrue(kBucket.localNodeId instanceof Buffer);
             assert.deepEqual(kBucket.localNodeId.length, 20); // SHA-1 is 160 bits (20 bytes)
         });
 
         it("localNodeId is a Buffer populated from options if options.localNodeId Buffer is provided", () => {
             const localNodeId = Buffer.from("some length");
             const kBucket = new KBucket({ localNodeId });
-            assert.true(kBucket.localNodeId instanceof Buffer);
-            assert.true(kBucket.localNodeId.equals(localNodeId));
+            assert.isTrue(kBucket.localNodeId instanceof Buffer);
+            assert.isTrue(kBucket.localNodeId.equals(localNodeId));
         });
 
         it("throws error if options.localNodeId is a String", () => {
@@ -280,7 +280,7 @@ describe("KBucket", () => {
 
         it("inherits from event.Emitter", () => {
             const kBucket = new KBucket();
-            assert.true(kBucket instanceof event.Emitter);
+            assert.isTrue(kBucket instanceof event.Emitter);
         });
     });
 
@@ -415,7 +415,7 @@ describe("KBucket", () => {
             for (let i = 0; i < kBucket.numberOfNodesPerKBucket + 1; ++i) {
                 kBucket.add({ id: Buffer.from(String(i)) });
             }
-            assert.undefined(kBucket.bucket);
+            assert.isUndefined(kBucket.bucket);
             const contact = { id: Buffer.from("a") };
             kBucket.on("removed", (removedContact) => {
                 assert.deepEqual(removedContact, contact);
@@ -477,7 +477,7 @@ describe("KBucket", () => {
             };
             traverse(kBucket.root);
             Object.keys(foundContact).forEach((key) => {
-                assert.true(foundContact[key], key);
+                assert.isTrue(foundContact[key], key);
             });
             assert.deepEqual(kBucket.root.contacts, null);
 
@@ -499,9 +499,9 @@ describe("KBucket", () => {
                     traverse(node.right, true);
                 } else {
                     if (dontSplit) {
-                        assert.true(node.dontSplit);
+                        assert.isTrue(node.dontSplit);
                     } else {
-                        assert.false(node.dontSplit);
+                        assert.isFalse(node.dontSplit);
                     }
                 }
             };
@@ -576,7 +576,7 @@ describe("KBucket", () => {
             kBucket.add(contact);
             kBucket.add({ id: Buffer.from("b") });
             kBucket._update(kBucket.root, 0, { id: Buffer.from("a"), newer: "property", vectorClock: 4 });
-            assert.true(kBucket.root.contacts[1].id.equals(contact.id));
+            assert.isTrue(kBucket.root.contacts[1].id.equals(contact.id));
             assert.deepEqual(kBucket.root.contacts[1].vectorClock, 4);
             assert.deepEqual(kBucket.root.contacts[1].old, undefined);
             assert.deepEqual(kBucket.root.contacts[1].newer, "property");
@@ -603,7 +603,7 @@ describe("KBucket", () => {
             for (let i = 0; i < kBucket.numberOfNodesPerKBucket + 1; ++i) {
                 kBucket.add({ id: Buffer.from(`${i}`) });
             }
-            assert.undefined(kBucket.bucket);
+            assert.isUndefined(kBucket.bucket);
             const contact1 = { id: Buffer.from("a"), vectorClock: 1 };
             const contact2 = { id: Buffer.from("a"), vectorClock: 2 };
             kBucket.on("updated", (oldContact, newContact) => {

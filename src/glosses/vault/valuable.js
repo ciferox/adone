@@ -314,4 +314,3 @@ export default class Valuable {
         return this[VALUABLE_VAULT]._setMeta(this[VALUABLE_STR_ID], this[VALUABLE_META]);
     }
 }
-adone.tag.add(Valuable, "VAULT_VALUABLE");

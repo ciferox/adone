@@ -825,7 +825,6 @@ export default class Long {
         return Long.fromBits(lo, hi, unsigned);
     }
 }
-adone.tag.add(Long, "LONG");
 
 Long.MIN_VALUE = Long.fromBits(0, 0x80000000 | 0, false); // Minimum signed value
 Long.MAX_VALUE = Long.fromBits(0xFFFFFFFF | 0, 0x7FFFFFFF | 0, false); // Maximum signed value

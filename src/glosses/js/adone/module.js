@@ -859,5 +859,3 @@ export default class XModule extends adone.js.adone.Base {
         return result;
     }
 }
-adone.tag.define("CODEMOD_MODULE");
-adone.tag.add(XModule, "CODEMOD_MODULE");

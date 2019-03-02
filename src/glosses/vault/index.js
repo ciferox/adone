@@ -66,6 +66,3 @@ export const open = async (options) => {
 };
 
 export const slice = (valuable, prefix, separator) => new (__.SlicedValuable)(valuable, prefix, separator);
-
-// predicates
-adone.definePredicate("vaultValuable", "VAULT_VALUABLE");

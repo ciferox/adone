@@ -27,12 +27,12 @@ describe("fs", "is", () => {
 
         if (!is.windows) {
             it("meow async", async () => {
-                assert.true(await adone.fs.isExecutable(meow));
+                assert.isTrue(await adone.fs.isExecutable(meow));
             });
         }
 
         it("fail async", async () => {
-            assert.false(await adone.fs.isExecutable(fail));
+            assert.isFalse(await adone.fs.isExecutable(fail));
         });
 
         it("noent async", async () => {
@@ -64,24 +64,24 @@ describe("fs", "is", () => {
             assert.throws(() => adone.fs.isExecutableSync(noent, options));
 
             if (!options) {
-                assert.true(await adone.fs.isExecutable(meow));
+                assert.isTrue(await adone.fs.isExecutable(meow));
             } else {
-                assert.true(await adone.fs.isExecutable(meow, options));
+                assert.isTrue(await adone.fs.isExecutable(meow, options));
             }
 
-            assert.true(await adone.fs.isExecutable(mine, options));
+            assert.isTrue(await adone.fs.isExecutable(mine, options));
 
-            assert.true(await adone.fs.isExecutable(ours, options));
+            assert.isTrue(await adone.fs.isExecutable(ours, options));
 
             if (!options || !options.skipFail) {
-                assert.false(await adone.fs.isExecutable(fail, options));
+                assert.isFalse(await adone.fs.isExecutable(fail, options));
             }
 
             await assert.throws(async () => adone.fs.isExecutable(noent, options));
 
-            assert.false(await adone.fs.isExecutable(noent, optionsIgnore));
+            assert.isFalse(await adone.fs.isExecutable(noent, optionsIgnore));
 
-            assert.false(await adone.fs.isExecutable(__dirname, options));
+            assert.isFalse(await adone.fs.isExecutable(__dirname, options));
         };
 
         if (!is.windows) {
@@ -92,8 +92,8 @@ describe("fs", "is", () => {
             it("mode", async () => {
                 // delete fs.access;
                 // delete fs.accessSync;
-                assert.true(adone.fs.isExecutableSync(ours, { uid: 0, gid: 0 }));
-                assert.true(adone.fs.isExecutableSync(mine, { uid: 0, gid: 0 }));
+                assert.isTrue(adone.fs.isExecutableSync(ours, { uid: 0, gid: 0 }));
+                assert.isTrue(adone.fs.isExecutableSync(mine, { uid: 0, gid: 0 }));
                 await runTest();
             });
         } else {

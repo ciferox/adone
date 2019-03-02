@@ -7,9 +7,9 @@ const {
  */
 
 const mapData = adone.lazify({
-    world: std.path.join(adone.runtime.realm.env.SHARE_PATH, "term/maps/world.json"),
-    antartica: std.path.join(adone.runtime.realm.env.SHARE_PATH, "term/maps/antartica.json"),
-    us: std.path.join(adone.runtime.realm.env.SHARE_PATH, "term/maps/us.json")
+    world: std.path.join(adone.realm.getRootRealm().env.SHARE_PATH, "term/maps/world.json"),
+    antartica: std.path.join(adone.realm.getRootRealm().env.SHARE_PATH, "term/maps/antartica.json"),
+    us: std.path.join(adone.realm.getRootRealm().env.SHARE_PATH, "term/maps/us.json")
 }, null, require);
 
 class InnerMap {

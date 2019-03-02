@@ -119,37 +119,37 @@ describe("util", "analyzeGlob", () => {
     it("isGlob", () => {
         // should be true if it is a glob pattern
         ["*.js", "!*.js", "!foo", "!foo.js", "**/abc.js", "abc/*.js", "@.(?:abc)", "@.(?!abc)"].forEach((x) => {
-            assert.true($(x).isGlob);
+            assert.isTrue($(x).isGlob);
         });
 
         // should not match escaped globs
         ["\\!\\*.js", "\\!foo", "\\!foo.js", "\\*(foo).js", "\\*.js", "\\*\\*/abc.js", "abc/\\*.js"].forEach((x) => {
-            assert.false($(x).isGlob);
+            assert.isFalse($(x).isGlob);
         });
 
         // should be false if it is not a glob pattern
         ["", "~/abc", "~/abc", "~/(abc)", "+~(abc)", ".", "@.(abc)", "aa", "who?", "why!?", "where???", "abc!/def/!ghi.js", "abc.js", "abc/def/!ghi.js", "abc/def/ghi.js"].forEach((x) => {
-            assert.false($(x).isGlob);
+            assert.isFalse($(x).isGlob);
         });
 
         // should be true if the path has a regex capture group
         ["abc/(?!foo).js", "abc/(?:foo).js", "abc/(?=foo).js", "abc/(a|b).js", "abc/(a|b|c).js", "abc/(foo bar)/*.js"].forEach((x) => {
-            assert.true($(x).isGlob);
+            assert.isTrue($(x).isGlob);
         });
 
         // should be true if the path has parens but is not a valid capture group
         ["abc/(?foo).js", "abc/(a b c).js", "abc/(ab).js", "abc/(abc).js", "abc/(foo bar).js"].forEach((x) => {
-            //assert.true($(x).isGlob);
+            //assert.isTrue($(x).isGlob);
         });
 
         // should be false if the capture group is imbalanced
         ["abc/(?ab.js", "abc/(ab.js", "abc/(a|b.js", "abc/(a|b|c.js"].forEach((x) => {
-            assert.false($(x).isGlob);
+            assert.isFalse($(x).isGlob);
         });
 
         // should be false if the group is escaped
         ["abc/\\(a|b).js", "abc/\\(a|b|c).js"].forEach((x) => {
-            assert.false($(x).isGlob);
+            assert.isFalse($(x).isGlob);
         });
 
         // should be true if glob chars exist and `options.strict` is false
@@ -171,7 +171,7 @@ describe("util", "analyzeGlob", () => {
             "abc/{abc.js",
             "Who?.js"
         ].forEach((x) => {
-            assert.true($(x, { strict: false }).isGlob);
+            assert.isTrue($(x, { strict: false }).isGlob);
         });
 
         // should be false if the first delim is escaped and options.strict is false
@@ -183,39 +183,39 @@ describe("util", "analyzeGlob", () => {
             ["abc/\\[abc].js"],
             ["abc/\\[abc.js"]
         ].forEach(([x, y]) => {
-            assert.false($(x, { strict: y || false }).isGlob);
+            assert.isFalse($(x, { strict: y || false }).isGlob);
         });
 
         assert.exists($("abc/(a|b\\).js", { strict: false }));
 
         // should be true if the path has a regex character class
         ["abc/[abc].js", "abc/[^abc].js", "abc/[1-3].js"].forEach((x) => {
-            assert.true($(x).isGlob);
+            assert.isTrue($(x).isGlob);
         });
 
         // should be false if the character class is not balanced
         ["abc/[abc.js", "abc/[^abc.js", "abc/[1-3.js"].forEach((x) => {
-            assert.false($(x).isGlob);
+            assert.isFalse($(x).isGlob);
         });
 
         // should be false if the character class is escaped
         ["abc/\\[abc].js", "abc/\\[^abc].js", "abc/\\[1-3].js"].forEach((x) => {
-            assert.false($(x).isGlob);
+            assert.isFalse($(x).isGlob);
         });
 
         // should be true if the path has brace characters
         ["abc/{a,b}.js", "abc/{a..z}.js", "abc/{a..z..2}.js"].forEach((x) => {
-            assert.true($(x).isGlob);
+            assert.isTrue($(x).isGlob);
         });
 
         // should be false if (basic) braces are not balanced
         ["abc/\\{a,b}.js", "abc/\\{a..z}.js", "abc/\\{a..z..2}.js"].forEach((x) => {
-            assert.false($(x).isGlob);
+            assert.isFalse($(x).isGlob);
         });
 
         // should not be true if the path has regex characters
         ["$(abc)", "&(abc)", "Who?.js", "? (abc)", "?.js", "abc/?.js"].forEach((x) => {
-            assert.false($(x).isGlob);
+            assert.isFalse($(x).isGlob);
         });
 
         [
@@ -237,7 +237,7 @@ describe("util", "analyzeGlob", () => {
             "abc/{a..z..2}.js",
             "abc/{a..z}.js"
         ].forEach((x) => {
-            assert.true($(x).isGlob);
+            assert.isTrue($(x).isGlob);
         });
 
         // should be false if regex characters are escaped
@@ -251,7 +251,7 @@ describe("util", "analyzeGlob", () => {
             "abc/\\(aaa|bbb).js",
             "abc/\\?.js"
         ].forEach((x) => {
-            assert.false($(x).isGlob);
+            assert.isFalse($(x).isGlob);
         });
 
         // should be true if it has an extglob
@@ -269,7 +269,7 @@ describe("util", "analyzeGlob", () => {
             "abc/@(a).js",
             "abc/@(a|b).js"
         ].forEach((x) => {
-            assert.true($(x).isGlob);
+            assert.isTrue($(x).isGlob);
         });
 
         // should be false if extglob characters are escaped
@@ -282,7 +282,7 @@ describe("util", "analyzeGlob", () => {
             "abc/\\*(a).js",
             "abc/\\?(a).js"
         ].forEach((x) => {
-            assert.false($(x).isGlob);
+            assert.isFalse($(x).isGlob);
         });
 
         [
@@ -297,14 +297,14 @@ describe("util", "analyzeGlob", () => {
             "abc/\\*(a\\|b).js",
             "abc/\\?(a\\|b).js"
         ].forEach((x) => {
-            assert.true($(x).isGlob);
+            assert.isTrue($(x).isGlob);
         });
 
         // should not return true for non-extglob parens
-        assert.false($("C:/Program Files (x86)/").isGlob);
+        assert.isFalse($("C:/Program Files (x86)/").isGlob);
 
         // should be true if it has glob characters and is not a valid path
-        ["abc/[*].js", "abc/*.js"].forEach((x) => assert.true($(x).isGlob));
+        ["abc/[*].js", "abc/*.js"].forEach((x) => assert.isTrue($(x).isGlob));
 
         // should be false if it is a valid non-glob path
         [
@@ -313,7 +313,7 @@ describe("util", "analyzeGlob", () => {
             "abc/@.js",
             "abc/+.js"
         ].forEach((x) => {
-            assert.false($(x).isGlob);
+            assert.isFalse($(x).isGlob);
         });
 
         // should return true when the string has an extglob
@@ -334,7 +334,7 @@ describe("util", "analyzeGlob", () => {
             "*(abc|xyz)",
             "+(abc|xyz)"
         ].forEach((x) => {
-            assert.true($(x).isGlob);
+            assert.isTrue($(x).isGlob);
         });
 
         // should not match escaped extglobs
@@ -350,7 +350,7 @@ describe("util", "analyzeGlob", () => {
             "xyz/\\*(abc)/xyz",
             "xyz/\\+(abc)/xyz"
         ].forEach((x) => {
-            assert.false($(x).isGlob);
+            assert.isFalse($(x).isGlob);
         });
 
         // should detect when an glob is in the same pattern as an escaped glob
@@ -376,7 +376,7 @@ describe("util", "analyzeGlob", () => {
             "\\*(abc|xyz)/*(abc|xyz)",
             "\\+(abc|xyz)/+(abc|xyz)"
         ].forEach((x) => {
-            assert.true($(x).isGlob);
+            assert.isTrue($(x).isGlob);
         });
     });
 });

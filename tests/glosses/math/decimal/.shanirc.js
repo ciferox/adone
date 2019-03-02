@@ -12,7 +12,7 @@ export default (ctx) => {
     };
 
     ctx.runtime.assertEqual = (expected, actual) => {
-        assert.true(expected === actual || expected !== expected && actual !== actual);
+        assert.isTrue(expected === actual || expected !== expected && actual !== actual);
     };
 
     ctx.runtime.assertException = (func, msg) => {

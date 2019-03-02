@@ -462,4 +462,3 @@ export default class Core extends event.Emitter {
         return p;
     }
 }
-adone.tag.add(Core, "P2P_CORE");

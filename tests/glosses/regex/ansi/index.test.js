@@ -7,39 +7,39 @@ describe("regex", () => {
 
         // testing against codes found at: http://ascii-table.com/ansi-escape-sequences-vt-100.php
         it("match ansi code in a string", () => {
-            assert.true(regex.ansi().test("foo\u001b[4mcake\u001b[0m"));
-            assert.true(regex.ansi().test("\u001b[4mcake\u001b[0m"));
-            assert.true(regex.ansi().test("foo\u001b[4mcake\u001b[0m"));
-            assert.true(regex.ansi().test("\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b[24mfoo\u001b[0m"));
-            assert.true(regex.ansi().test("foo\u001b[mfoo"));
+            assert.isTrue(regex.ansi().test("foo\u001b[4mcake\u001b[0m"));
+            assert.isTrue(regex.ansi().test("\u001b[4mcake\u001b[0m"));
+            assert.isTrue(regex.ansi().test("foo\u001b[4mcake\u001b[0m"));
+            assert.isTrue(regex.ansi().test("\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b[24mfoo\u001b[0m"));
+            assert.isTrue(regex.ansi().test("foo\u001b[mfoo"));
         });
 
         it("match ansi code from ls command", () => {
-            assert.true(regex.ansi().test("\u001B[00;38;5;244m\u001B[m\u001B[00;38;5;33mfoo\u001B[0m"));
+            assert.isTrue(regex.ansi().test("\u001B[00;38;5;244m\u001B[m\u001B[00;38;5;33mfoo\u001B[0m"));
         });
 
         it("match reset;setfg;setbg;italics;strike;underline sequence in a string", () => {
-            assert.true(regex.ansi().test("\u001B[0;33;49;3;9;4mbar\u001B[0m"));
+            assert.isTrue(regex.ansi().test("\u001B[0;33;49;3;9;4mbar\u001B[0m"));
             assert.equal("foo\u001B[0;33;49;3;9;4mbar".match(regex.ansi())[0], "\u001B[0;33;49;3;9;4m");
         });
 
         it("match clear tabs sequence in a string", () => {
-            assert.true(regex.ansi().test("foo\u001B[0gbar"));
+            assert.isTrue(regex.ansi().test("foo\u001B[0gbar"));
             assert.equal("foo\u001B[0gbar".match(regex.ansi())[0], "\u001B[0g");
         });
 
         it("match clear line from cursor right in a string", () => {
-            assert.true(regex.ansi().test("foo\u001B[Kbar"));
+            assert.isTrue(regex.ansi().test("foo\u001B[Kbar"));
             assert.equal("foo\u001B[Kbar".match(regex.ansi())[0], "\u001B[K");
         });
 
         it("match clear screen in a string", () => {
-            assert.true(regex.ansi().test("foo\u001B[2Jbar"));
+            assert.isTrue(regex.ansi().test("foo\u001B[2Jbar"));
             assert.equal("foo\u001B[2Jbar".match(regex.ansi())[0], "\u001B[2J");
         });
         
         it.todo('match "change icon name and window title" in string', () => {
-            assert.true("\u001B]0;sg@tota:~/git/\u0007\u001B[01;32m[sg@tota\u001B[01;37m misc-tests\u001B[01;32m]$".match(regex.ansi())[0], "\u001B]0;sg@tota:~/git/\u0007");
+            assert.isTrue("\u001B]0;sg@tota:~/git/\u0007\u001B[01;32m[sg@tota\u001B[01;37m misc-tests\u001B[01;32m]$".match(regex.ansi())[0], "\u001B]0;sg@tota:~/git/\u0007");
         });
         
         // testing against extended codes (excluding codes ending in 0-9)
@@ -57,7 +57,7 @@ describe("regex", () => {
 
                     const string = `hel${ecode}lo`;
 
-                    assert.true(regex.ansi().test(string));
+                    assert.isTrue(regex.ansi().test(string));
                     assert.equal(string.match(regex.ansi())[0], ecode);
                     assert.equal(string.replace(regex.ansi(), ""), "hello");
                 });
@@ -71,7 +71,7 @@ describe("regex", () => {
                         const c = consumptionChars[i];
                         const string = ecode + c;
 
-                        assert.true(regex.ansi().test(string));
+                        assert.isTrue(regex.ansi().test(string));
                         assert.equal(string.match(regex.ansi())[0], ecode);
                         assert.equal(string.replace(regex.ansi(), ""), c);
                     }

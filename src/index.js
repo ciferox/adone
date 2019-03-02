@@ -11,34 +11,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         return obj;
     };
 
-    const TAG_MARKER = 777;
-    const tag = {
-        add(Class, tagName) {
-            Class.prototype[this[tagName]] = TAG_MARKER;
-        },
-        has(obj, tagName) {
-            return obj != null && typeof obj === "object" && this[tagName] !== undefined && obj[this[tagName]] === TAG_MARKER;
-        },
-        define(tagName) {
-            this[tagName] = Symbol();
-        },
-
-        // Common tags
-        EMITTER: Symbol(),
-        ASYNC_EMITTER: Symbol(),
-        SUBSYSTEM: Symbol(),
-        APPLICATION: Symbol(),
-        CONFIGURATION: Symbol(),
-        CORE_STREAM: Symbol(),
-        BYTE_ARRAY: Symbol(),
-        LONG: Symbol(),
-        BIGNUMBER: Symbol(),
-        DATETIME: Symbol(),
-        MULTI_ADDRESS: Symbol()
-    };
-
     const adone = Object.create({
-        [NAMESPACE_SYMBOL]: true,
         null: Symbol.for("adone::null"),
         noop: () => { },
         identity: (x) => x,
@@ -73,7 +46,11 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                         if (typeof value === "function") { // eslint-disable-line
                             mod = value(key);
                         } else if (typeof value === "string") { // eslint-disable-line
-                            mod = _require(value);
+                            try {
+                                mod = _require(value);
+                            } catch (err) {
+                                adone.runtime.app.fireException(err);
+                            }
                         } else if (Array.isArray(value) && value.length >= 1 && typeof value[0] === "string") { // eslint-disable-line
                             mod = value.reduce((mod, entry, i) => {
                                 if (typeof entry === "function") { // eslint-disable-line
@@ -123,28 +100,8 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
 
             return obj;
         },
-        definePredicate: (name, tagName) => {
-            Object.defineProperty(adone.is, name, {
-                enumerable: true,
-                value: (obj) => tag.has(obj, tagName)
-            });
-            tag.define(tagName);
-        },
-        definePredicates: (obj) => {
-            const entries = Object.entries(obj);
-            for (const [name, tagName] of entries) {
-                adone.definePredicate(name, tagName);
-            }
-        },
-        defineCustomPredicate: (name, value) => {
-            Object.defineProperty(adone.is, name, {
-                enumerable: true,
-                value
-            });
-        },
         private: (obj) => obj[PRIVATE_SYMBOL],
         asNamespace,
-        tag,
         // TODO: allow only absolute path
         nativeAddon: (path) => {
             return require(adone.std.path.isAbsolute(path) ? path : adone.std.path.resolve(__dirname, "./native", path));
@@ -162,7 +119,10 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         }
     });
 
-    exports.adone = adone;
+    // Mark adone as namespace
+    asNamespace(adone);
+    // Mark global as namespace
+    asNamespace(global);
 
     Object.defineProperty(global, "adone", {
         enumerable: true,
@@ -176,109 +136,16 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         },
         global: {
             enumerable: true,
-            value: asNamespace(global)
+            value: global
         }
     });
 
     adone.lazify({
-        // es2015 require
-        require: () => {
-            const plugins = [
-                "syntax.asyncGenerators",
-                "transform.flowStripTypes",
-                ["transform.decorators", {
-                    legacy: true
-                }],
-                ["transform.classProperties", { loose: true }],
-                "transform.modulesCommonjs",
-                "transform.functionBind",
-                "transform.objectRestSpread",
-                "transform.numericSeparator",
-                "transform.exponentiationOperator",
-                "transform.exportNamespaceFrom"
-            ];
-            if (process.env.ADONE_COVERAGE) {
-                plugins.unshift(
-                    "syntax.flow",
-                    "syntax.decorators",
-                    "syntax.classProperties",
-                    "syntax.objectRestSpread",
-                    "syntax.functionBind",
-                    "syntax.numericSeparator",
-                    "syntax.exponentiationOperator",
-                    "syntax.exportNamespaceFrom",
-                    adone.js.coverage.plugin
-                );
-            }
-            const options = {
-                compact: false,
-                only: [/\.js$/],
-                sourceMaps: "inline",
-                plugins
-            };
-            const module = new adone.js.Module(require.main ? require.main.filename : adone.std.path.join(process.cwd(), "index.js"), {
-                transform: adone.js.Module.transforms.transpile(options)
-            });
-            const $require = (path, { transpile = true, cache = true } = {}) => module.require(path, {
-                transform: transpile ? module.transform : null,
-                cache
-            });
-            $require.cache = module.cache;
-            $require.main = module;
-            $require.options = options;
-            $require.resolve = (request) => adone.js.Module._resolveFilename(request, module);
-            $require.unref = module.cache.unref.bind(module.cache);
-            return $require;
-        },
-
-        // Adone info/package
         package: "../package.json",
-        // Runtime stuff
-        runtime: () => {
-            const runtime = Object.create(null, {
-                // Main application instance
-                app: {
-                    enumerable: true,
-                    writable: true,
-                    value: null
-                },
-                // Realm instance
-                realm: {
-                    enumerable: true,
-                    writable: true,
-                    value: {}
-                },
-                // true - if omnitron process
-                isOmnitron: {
-                    enumerable: true,
-                    writable: true,
-                    value: false
-                }
-            });
-
-            adone.lazify({
-                term: () => new adone.terminal.Terminal(),
-                logger: () => {
-                    const defaultLogger = adone.app.logger.create({
-                        level: "info"
-                    });
-
-                    return defaultLogger;
-                },
-                // netron: () => new adone.netron.Netron(),
-                netron: () => {
-                    const peerInfo = adone.runtime.isOmnitron
-                        ? adone.omnitron.LOCAL_PEER_INFO
-                        : adone.net.p2p.PeerInfo.create(adone.runtime.realm.identity.client);
-                    return new adone.netron.Netron(peerInfo);
-                }
-            }, runtime);
-
-            return runtime;
-        },
+        
         ROOT_PATH: () => adone.std.path.join(__dirname, ".."),
         EMPTY_BUFFER: () => Buffer.allocUnsafe(0),
-        LOGO: () => adone.fs.readFileSync(adone.std.path.join(adone.runtime.realm.env.SHARE_PATH, "media", "adone.txt"), { encoding: "utf8" }),
+        LOGO: () => adone.fs.readFileSync(adone.std.path.join(adone.realm.getRootRealm().env.SHARE_PATH, "media", "adone.txt"), { encoding: "utf8" }),
 
         assert: () => adone.assertion.assert,
 
@@ -329,6 +196,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         app: "./glosses/app",
         archive: "./glosses/archives",
         assertion: "./glosses/assertion",
+        async: "./glosses/async",
         collection: "./glosses/collections",
         compressor: "./glosses/compressors",
         configuration: "./glosses/configurations",
@@ -342,6 +210,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         error: "./glosses/errors",
         event: "./glosses/events",
         fake: "./glosses/fake",
+        fast: "./glosses/fast",
         fs: "./glosses/fs",
         geoip: "./glosses/geoip",
         git: "./glosses/git",
@@ -349,6 +218,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         hardware: "./glosses/hardware",
         is: "./glosses/is",
         js: "./glosses/js",
+        lodash: "./glosses/lodash",
         math: "./glosses/math",
         meta: "./glosses/meta",
         metrics: "./glosses/metrics",
@@ -361,7 +231,10 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         pretty: "./glosses/pretty",
         promise: "./glosses/promise",
         punycode: "./glosses/punycode",
+        realm: "./glosses/realm",
         regex: "./glosses/regex",
+        require: "./glosses/require",
+        runtime: "./glosses/runtime",
         schema: "./glosses/schema",
         semver: "./glosses/semver",
         shell: "./glosses/shell",
@@ -377,41 +250,27 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         util: "./glosses/utils",
         vault: "./glosses/vault",
         web: "./glosses/web",
+        
+        benchmark: "./benchmark", // temporary here
 
         // components
         // bundle: "./bundle",
         cli: "./cli",
         cmake: "./cmake",
-        fast: "./fast",
         ipfs: "./ipfs",
-        isolatedVm: "./isolated_vm",
+        // isolatedVm: "./isolated_vm",
         gyp: "./gyp",
         // napa: "./napa",
         omnitron: "./omnitron",
-        realm: "./realm",
         shani: "./shani",
-        specter: "./specter",
-
-        // Third party libraries
-        async: "./vendor/async",
-        benchmark: "./vendor/benchmark",
-        lodash: "./vendor/lodash",
-
-        // third parties
-        dev: () => {
-            let mounts;
-            if (adone.fs.existsSync(adone.runtime.config.devmntPath)) {
-                mounts = require(adone.runtime.config.devmntPath);
-            } else {
-                mounts = {};
-            }
-
-            return adone.asNamespace(adone.lazify(mounts, null));
-        }
+        // specter: "./specter"
     }, adone);
+
     if (process.env.ADONE_SOURCEMAPS) {
         adone.sourcemap.support(Error).install();
     }
+
+    exports.adone = adone;
 } else {
     exports.adone = global.adone;
 }

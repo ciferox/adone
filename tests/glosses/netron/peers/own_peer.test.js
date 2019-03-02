@@ -6,7 +6,7 @@ const {
     netron: { Netron }
 } = adone;
 
-describe("netron", "OwnPeer", () => {
+describe("OwnPeer", () => {
     describe("specific", () => {
         let peerInfo;
         let netron;
@@ -22,7 +22,7 @@ describe("netron", "OwnPeer", () => {
         });
 
         it("isConnected() always return true", () => {
-            assert.true(peer.isConnected());
+            assert.isTrue(peer.isConnected());
         });
     });
 

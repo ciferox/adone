@@ -18,7 +18,7 @@ describe("null & undefined keys & values", () => {
             new DB(new Memory(), (err, db) => {
                 assert.notExists(err); // sanity
                 common.closeableDatabases.push(db);
-                assert.true(db.isOpen());
+                assert.isTrue(db.isOpen());
                 common.db = db;
                 done();
             });

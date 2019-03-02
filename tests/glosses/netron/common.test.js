@@ -17,39 +17,39 @@ describe("common stuff", () => {
 
     describe("predicates", () => {
         it("is.netron()", () => {
-            assert.true(is.netron(netron));
+            assert.isTrue(is.netron(netron));
         });
 
         it("is.netronOwnPeer()", () => {
-            assert.true(is.netronPeer(netron.peer));
-            assert.true(is.netronOwnPeer(netron.peer));
+            assert.isTrue(is.netronPeer(netron.peer));
+            assert.isTrue(is.netronOwnPeer(netron.peer));
         });
 
         it("is.netronRemotePeer()", () => {
             const rPeer = new RemotePeer(peerInfo, netron);
-            assert.true(is.netronPeer(rPeer));
-            assert.true(is.netronRemotePeer(rPeer));
+            assert.isTrue(is.netronPeer(rPeer));
+            assert.isTrue(is.netronRemotePeer(rPeer));
         });
 
         it("is.netronContext()", () => {
-            assert.true(is.netronContext(new A()));
+            assert.isTrue(is.netronContext(new A()));
         });
 
         it("is.netronStub()", () => {
-            assert.true(is.netronStub(new Stub(netron, Reflection.from(new A()))));
+            assert.isTrue(is.netronStub(new Stub(netron, Reflection.from(new A()))));
         });
 
         it("is.netronDefinition()", () => {
             const stub = new Stub(netron, Reflection.from(new A()));
-            assert.true(is.netronDefinition(stub.definition));
+            assert.isTrue(is.netronDefinition(stub.definition));
         });
 
         it("is.netronDefinitions()", () => {
-            assert.true(is.netronDefinitions(new Definitions()));
+            assert.isTrue(is.netronDefinitions(new Definitions()));
         });
 
         it("is.netronReference()", () => {
-            assert.true(is.netronReference(new Reference(1)));
+            assert.isTrue(is.netronReference(new Reference(1)));
         });
     });
 
@@ -61,17 +61,17 @@ describe("common stuff", () => {
                 assert.equal(generator.get(), i);
             }
 
-            assert.true(is.integer(generator.get()));
+            assert.isTrue(is.integer(generator.get()));
         });
 
         it("long-based/slow numeric generator", () => {
             const generator = new adone.netron.UniqueId();
 
             for (let i = 1; i < 1000; i++) {
-                assert.true(generator.get().equals(adone.math.Long.fromNumber(i)));
+                assert.isTrue(generator.get().equals(adone.math.Long.fromNumber(i)));
             }
 
-            assert.true(is.long(generator.get()));
+            assert.isTrue(is.long(generator.get()));
         });
     });
 });

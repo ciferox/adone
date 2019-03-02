@@ -30,7 +30,7 @@ describe("terminal", "gradient", "Color", () => {
 
         const obj = { h: 180, s: 0.5, l: 0.5 };
         const color = new Color(obj);
-        assert.true(obj.s === 0.5, "when given an object, the original object is not modified");
+        assert.isTrue(obj.s === 0.5, "when given an object, the original object is not modified");
     });
 
     it("Original input", () => {
@@ -41,13 +41,13 @@ describe("terminal", "gradient", "Color", () => {
         const inputObj = { r: 100, g: 100, b: 100 };
         // const r = new Color("red");
 
-        assert.true(new Color(colorRgbLow).getOriginalInput() === colorRgbLow, "original lowercase input is returned");
-        assert.true(new Color(colorRgbUp).getOriginalInput() === colorRgbUp, "original uppercase input is returned");
-        assert.true(new Color(colorRgbMix).getOriginalInput() === colorRgbMix, "original mixed input is returned");
-        // assert.true(new Color(tinycolorObj).getOriginalInput() === colorRgbMix, "when given a tinycolor instance, the color string is returned");
-        assert.true(new Color(inputObj).getOriginalInput() === inputObj, "when given an object, the object is returned");
-        assert.true(new Color("").getOriginalInput() === "", "when given an empty string, an empty string is returned");
-        assert.true(new Color(null).getOriginalInput() === "", "when given a null value, an empty string is returned");
+        assert.isTrue(new Color(colorRgbLow).getOriginalInput() === colorRgbLow, "original lowercase input is returned");
+        assert.isTrue(new Color(colorRgbUp).getOriginalInput() === colorRgbUp, "original uppercase input is returned");
+        assert.isTrue(new Color(colorRgbMix).getOriginalInput() === colorRgbMix, "original mixed input is returned");
+        // assert.isTrue(new Color(tinycolorObj).getOriginalInput() === colorRgbMix, "when given a tinycolor instance, the color string is returned");
+        assert.isTrue(new Color(inputObj).getOriginalInput() === inputObj, "when given an object, the object is returned");
+        assert.isTrue(new Color("").getOriginalInput() === "", "when given an empty string, an empty string is returned");
+        assert.isTrue(new Color(null).getOriginalInput() === "", "when given a null value, an empty string is returned");
     });
 
     it("Cloning color", () => {
@@ -55,11 +55,11 @@ describe("terminal", "gradient", "Color", () => {
         const originalColorRgbString = originalColor.toRgbString();
 
         const clonedColor = originalColor.clone();
-        assert.true(clonedColor.toRgbString() === originalColor.toRgbString(), "cloned color is identical");
+        assert.isTrue(clonedColor.toRgbString() === originalColor.toRgbString(), "cloned color is identical");
 
         clonedColor.setAlpha(0.5);
-        assert.true(clonedColor.toRgbString() !== originalColor.toRgbString(), "cloned color is changing independently from original color");
-        assert.true(originalColorRgbString === originalColor.toRgbString(), "original color was not changed by cloned color change");
+        assert.isTrue(clonedColor.toRgbString() !== originalColor.toRgbString(), "cloned color is changing independently from original color");
+        assert.isTrue(originalColorRgbString === originalColor.toRgbString(), "original color was not changed by cloned color change");
     });
 
 
@@ -69,23 +69,23 @@ describe("terminal", "gradient", "Color", () => {
                 const c = conversions[i];
                 const tiny = new Color(c.hex);
 
-                assert.true(true, tiny.isValid());
-                assert.true(true,
+                assert.isTrue(true, tiny.isValid());
+                assert.isTrue(true,
                     `Testing ${c.hex}: ${tiny.toRgbString()} ${tiny.toPercentageRgbString()} ${tiny.toHsvString()} ${tiny.toHslString()} ${tiny.toHexString()
                     }Original: ${JSON.stringify(c.rgb)} ${JSON.stringify(c.hsv)} ${JSON.stringify(c.hsl)}`
                 );
-                assert.true(Color.equals(c.rgb, c.hex), `RGB equals hex ${c.hex}`);
-                assert.true(Color.equals(c.rgb, c.hex8), `RGB equals hex ${c.hex}`);
-                assert.true(Color.equals(c.rgb, c.hsl), `RGB equals HSL ${c.hex}`);
-                assert.true(Color.equals(c.rgb, c.hsv), `RGB equals HSV ${c.hex}`);
-                assert.true(Color.equals(c.rgb, c.rgb), `RGB equals RGB ${c.hex}`);
+                assert.isTrue(Color.equals(c.rgb, c.hex), `RGB equals hex ${c.hex}`);
+                assert.isTrue(Color.equals(c.rgb, c.hex8), `RGB equals hex ${c.hex}`);
+                assert.isTrue(Color.equals(c.rgb, c.hsl), `RGB equals HSL ${c.hex}`);
+                assert.isTrue(Color.equals(c.rgb, c.hsv), `RGB equals HSV ${c.hex}`);
+                assert.isTrue(Color.equals(c.rgb, c.rgb), `RGB equals RGB ${c.hex}`);
 
-                assert.true(Color.equals(c.hex, c.hex), `hex equals hex ${c.hex}`);
-                assert.true(Color.equals(c.hex, c.hex8), `hex equals hex8 ${c.hex}`);
-                assert.true(Color.equals(c.hex, c.hsl), `hex equals HSL ${c.hex}`);
-                assert.true(Color.equals(c.hex, c.hsv), `hex equals HSV ${c.hex}`);
+                assert.isTrue(Color.equals(c.hex, c.hex), `hex equals hex ${c.hex}`);
+                assert.isTrue(Color.equals(c.hex, c.hex8), `hex equals hex8 ${c.hex}`);
+                assert.isTrue(Color.equals(c.hex, c.hsl), `hex equals HSL ${c.hex}`);
+                assert.isTrue(Color.equals(c.hex, c.hsv), `hex equals HSV ${c.hex}`);
 
-                assert.true(Color.equals(c.hsl, c.hsv), `HSL equals HSV ${c.hex}`);
+                assert.isTrue(Color.equals(c.hsl, c.hsv), `HSL equals HSV ${c.hex}`);
             }
         });
     });
@@ -114,19 +114,19 @@ describe("terminal", "gradient", "Color", () => {
             assert.equal(new Color({ r: 255, g: 0, b: 0 }).toHexString(), "#ff0000", "object input");
             assert.deepEqual(new Color({ r: 255, g: 0, b: 0 }).toRgb(), { r: 255, g: 0, b: 0, a: 1 }, "object input and compare");
 
-            assert.true(Color.equals({ r: 200, g: 100, b: 0 }, "rgb(200, 100, 0)"));
-            assert.true(Color.equals({ r: 200, g: 100, b: 0 }, "rgb 200 100 0"));
-            assert.true(Color.equals({ r: 200, g: 100, b: 0 }, "rgb 200 100 0"));
-            assert.true(Color.equals({ r: 200, g: 100, b: 0, a: 0.4 }, "rgba 200 100 0 .4"));
-            assert.true(!Color.equals({ r: 199, g: 100, b: 0 }, "rgba 200 100 0 1"));
+            assert.isTrue(Color.equals({ r: 200, g: 100, b: 0 }, "rgb(200, 100, 0)"));
+            assert.isTrue(Color.equals({ r: 200, g: 100, b: 0 }, "rgb 200 100 0"));
+            assert.isTrue(Color.equals({ r: 200, g: 100, b: 0 }, "rgb 200 100 0"));
+            assert.isTrue(Color.equals({ r: 200, g: 100, b: 0, a: 0.4 }, "rgba 200 100 0 .4"));
+            assert.isTrue(!Color.equals({ r: 199, g: 100, b: 0 }, "rgba 200 100 0 1"));
 
-            assert.true(!Color.equals({ r: 199, g: 100, b: 0 }, "rgb(200, 100, 0)"));
-            assert.true(!Color.equals({ r: 199, g: 100, b: 0 }, "rgb 200 100 0"));
-            assert.true(!Color.equals({ r: 199, g: 100, b: 0 }, "rgb 200 100 0"));
+            assert.isTrue(!Color.equals({ r: 199, g: 100, b: 0 }, "rgb(200, 100, 0)"));
+            assert.isTrue(!Color.equals({ r: 199, g: 100, b: 0 }, "rgb 200 100 0"));
+            assert.isTrue(!Color.equals({ r: 199, g: 100, b: 0 }, "rgb 200 100 0"));
 
-            assert.true(Color.equals(new Color({ r: 200, g: 100, b: 0 }), "rgb(200, 100, 0)"));
-            assert.true(Color.equals(new Color({ r: 200, g: 100, b: 0 }), "rgb 200 100 0"));
-            assert.true(Color.equals(new Color({ r: 200, g: 100, b: 0 }), "rgb 200 100 0"));
+            assert.isTrue(Color.equals(new Color({ r: 200, g: 100, b: 0 }), "rgb(200, 100, 0)"));
+            assert.isTrue(Color.equals(new Color({ r: 200, g: 100, b: 0 }), "rgb 200 100 0"));
+            assert.isTrue(Color.equals(new Color({ r: 200, g: 100, b: 0 }), "rgb 200 100 0"));
         });
 
         it("Percentage RGB Text Parsing", () => {
@@ -137,20 +137,20 @@ describe("terminal", "gradient", "Color", () => {
             assert.deepEqual(new Color({ r: "100%", g: "0%", b: "0%" }).toRgb(), { r: 255, g: 0, b: 0, a: 1 }, "object input and compare");
 
 
-            assert.true(Color.equals({ r: "90%", g: "45%", b: "0%" }, "rgb(90%, 45%, 0%)"));
-            assert.true(Color.equals({ r: "90%", g: "45%", b: "0%" }, "rgb 90% 45% 0%"));
-            assert.true(Color.equals({ r: "90%", g: "45%", b: "0%" }, "rgb 90% 45% 0%"));
-            assert.true(Color.equals({ r: "90%", g: "45%", b: "0%", a: 0.4 }, "rgba 90% 45% 0% .4"));
-            assert.true(!Color.equals({ r: "89%", g: "45%", b: "0%" }, "rgba 90% 45% 0% 1"));
+            assert.isTrue(Color.equals({ r: "90%", g: "45%", b: "0%" }, "rgb(90%, 45%, 0%)"));
+            assert.isTrue(Color.equals({ r: "90%", g: "45%", b: "0%" }, "rgb 90% 45% 0%"));
+            assert.isTrue(Color.equals({ r: "90%", g: "45%", b: "0%" }, "rgb 90% 45% 0%"));
+            assert.isTrue(Color.equals({ r: "90%", g: "45%", b: "0%", a: 0.4 }, "rgba 90% 45% 0% .4"));
+            assert.isTrue(!Color.equals({ r: "89%", g: "45%", b: "0%" }, "rgba 90% 45% 0% 1"));
 
-            assert.true(!Color.equals({ r: "89%", g: "45%", b: "0%" }, "rgb(90%, 45%, 0%)"));
-            assert.true(!Color.equals({ r: "89%", g: "45%", b: "0%" }, "rgb 90% 45% 0%"));
-            assert.true(!Color.equals({ r: "89%", g: "45%", b: "0%" }, "rgb 90% 45% 0%"));
+            assert.isTrue(!Color.equals({ r: "89%", g: "45%", b: "0%" }, "rgb(90%, 45%, 0%)"));
+            assert.isTrue(!Color.equals({ r: "89%", g: "45%", b: "0%" }, "rgb 90% 45% 0%"));
+            assert.isTrue(!Color.equals({ r: "89%", g: "45%", b: "0%" }, "rgb 90% 45% 0%"));
 
 
-            assert.true(Color.equals(new Color({ r: "90%", g: "45%", b: "0%" }), "rgb(90%, 45%, 0%)"));
-            assert.true(Color.equals(new Color({ r: "90%", g: "45%", b: "0%" }), "rgb 90% 45% 0%"));
-            assert.true(Color.equals(new Color({ r: "90%", g: "45%", b: "0%" }), "rgb 90% 45% 0%"));
+            assert.isTrue(Color.equals(new Color({ r: "90%", g: "45%", b: "0%" }), "rgb(90%, 45%, 0%)"));
+            assert.isTrue(Color.equals(new Color({ r: "90%", g: "45%", b: "0%" }), "rgb 90% 45% 0%"));
+            assert.isTrue(Color.equals(new Color({ r: "90%", g: "45%", b: "0%" }), "rgb 90% 45% 0%"));
         });
 
         it("HSL parsing", () => {
@@ -586,50 +586,50 @@ describe("terminal", "gradient", "Color", () => {
 
     describe("Utilities", () => {
         it("Color equality", () => {
-            assert.true(Color.equals("#ff0000", "#ff0000"), "Same hex");
-            assert.true(Color.equals("#ff0000", "rgb(255, 0, 0)"), "Same alphas");
-            assert.true(!Color.equals("#ff0000", "rgba(255, 0, 0, .1)"), "Different alphas");
-            assert.true(Color.equals("#ff000066", "rgba(255, 0, 0, .4)"), "Same alphas");
-            assert.true(Color.equals("#f009", "rgba(255, 0, 0, .6)"), "Same alphas");
-            assert.true(Color.equals("#336699CC", "369C"), "Same hex");
-            assert.true(Color.equals("ff0000", "#ff0000"), "Same hex");
-            assert.true(Color.equals("#f00", "#ff0000"), "Same hex");
-            assert.true(Color.equals("#f00", "#ff0000"), "Same hex");
-            assert.true(Color.equals("f00", "#ff0000"), "Same hex");
+            assert.isTrue(Color.equals("#ff0000", "#ff0000"), "Same hex");
+            assert.isTrue(Color.equals("#ff0000", "rgb(255, 0, 0)"), "Same alphas");
+            assert.isTrue(!Color.equals("#ff0000", "rgba(255, 0, 0, .1)"), "Different alphas");
+            assert.isTrue(Color.equals("#ff000066", "rgba(255, 0, 0, .4)"), "Same alphas");
+            assert.isTrue(Color.equals("#f009", "rgba(255, 0, 0, .6)"), "Same alphas");
+            assert.isTrue(Color.equals("#336699CC", "369C"), "Same hex");
+            assert.isTrue(Color.equals("ff0000", "#ff0000"), "Same hex");
+            assert.isTrue(Color.equals("#f00", "#ff0000"), "Same hex");
+            assert.isTrue(Color.equals("#f00", "#ff0000"), "Same hex");
+            assert.isTrue(Color.equals("f00", "#ff0000"), "Same hex");
             assert.equal(new Color("010101").toHexString(), "#010101");
-            assert.true(!Color.equals("#ff0000", "#00ff00"), "Different hex");
-            assert.true(Color.equals("#ff8000", "rgb(100%, 50%, 0%)"), "Percentage bounds checking");
+            assert.isTrue(!Color.equals("#ff0000", "#00ff00"), "Different hex");
+            assert.isTrue(Color.equals("#ff8000", "rgb(100%, 50%, 0%)"), "Percentage bounds checking");
         });
 
         it("isReadable", () => {
             // "#ff0088", "#8822aa" (values used in old WCAG1 tests)
-            assert.true(Color.isReadable("#000000", "#ffffff", { level: "AA", size: "small" }), "white/black is readable");
-            assert.true(!Color.isReadable("#ff0088", "#5c1a72", {}), "not readable - empty wcag2 object");
-            assert.true(!Color.isReadable("#ff0088", "#8822aa", { level: "AA", size: "small" }), "not readable - AA small");
-            assert.true(!Color.isReadable("#ff0088", "#8822aa", { level: "AA", size: "large" }), "not  readable - AA large");
-            assert.true(!Color.isReadable("#ff0088", "#8822aa", { level: "AAA", size: "small" }), "not readable - AAA small");
-            assert.true(!Color.isReadable("#ff0088", "#8822aa", { level: "AAA", size: "large" }), "not readable - AAA large");
+            assert.isTrue(Color.isReadable("#000000", "#ffffff", { level: "AA", size: "small" }), "white/black is readable");
+            assert.isTrue(!Color.isReadable("#ff0088", "#5c1a72", {}), "not readable - empty wcag2 object");
+            assert.isTrue(!Color.isReadable("#ff0088", "#8822aa", { level: "AA", size: "small" }), "not readable - AA small");
+            assert.isTrue(!Color.isReadable("#ff0088", "#8822aa", { level: "AA", size: "large" }), "not  readable - AA large");
+            assert.isTrue(!Color.isReadable("#ff0088", "#8822aa", { level: "AAA", size: "small" }), "not readable - AAA small");
+            assert.isTrue(!Color.isReadable("#ff0088", "#8822aa", { level: "AAA", size: "large" }), "not readable - AAA large");
 
             // values derived from and validated using the calculators at http://www.dasplankton.de/ContrastA/
             // and http://webaim.org/resources/contrastchecker/
 
             // "#ff0088", "#5c1a72": contrast ratio 3.04
-            assert.true(!Color.isReadable("#ff0088", "#5c1a72", { level: "AA", size: "small" }), "not readable - AA small");
-            assert.true(Color.isReadable("#ff0088", "#5c1a72", { level: "AA", size: "large" }), "readable - AA large");
-            assert.true(!Color.isReadable("#ff0088", "#5c1a72", { level: "AAA", size: "small" }), "not readable - AAA small");
-            assert.true(!Color.isReadable("#ff0088", "#5c1a72", { level: "AAA", size: "large" }), "not readable - AAA large");
+            assert.isTrue(!Color.isReadable("#ff0088", "#5c1a72", { level: "AA", size: "small" }), "not readable - AA small");
+            assert.isTrue(Color.isReadable("#ff0088", "#5c1a72", { level: "AA", size: "large" }), "readable - AA large");
+            assert.isTrue(!Color.isReadable("#ff0088", "#5c1a72", { level: "AAA", size: "small" }), "not readable - AAA small");
+            assert.isTrue(!Color.isReadable("#ff0088", "#5c1a72", { level: "AAA", size: "large" }), "not readable - AAA large");
 
             // "#ff0088", "#2e0c3a": contrast ratio 4.56
-            assert.true(Color.isReadable("#ff0088", "#2e0c3a", { level: "AA", size: "small" }), "readable - AA small");
-            assert.true(Color.isReadable("#ff0088", "#2e0c3a", { level: "AA", size: "large" }), "readable - AA large");
-            assert.true(!Color.isReadable("#ff0088", "#2e0c3a", { level: "AAA", size: "small" }), "not readable - AAA small");
-            assert.true(Color.isReadable("#ff0088", "#2e0c3a", { level: "AAA", size: "large" }), "readable - AAA large");
+            assert.isTrue(Color.isReadable("#ff0088", "#2e0c3a", { level: "AA", size: "small" }), "readable - AA small");
+            assert.isTrue(Color.isReadable("#ff0088", "#2e0c3a", { level: "AA", size: "large" }), "readable - AA large");
+            assert.isTrue(!Color.isReadable("#ff0088", "#2e0c3a", { level: "AAA", size: "small" }), "not readable - AAA small");
+            assert.isTrue(Color.isReadable("#ff0088", "#2e0c3a", { level: "AAA", size: "large" }), "readable - AAA large");
 
             // "#db91b8", "#2e0c3a":  contrast ratio 7.12
-            assert.true(Color.isReadable("#db91b8", "#2e0c3a", { level: "AA", size: "small" }), "readable - AA small");
-            assert.true(Color.isReadable("#db91b8", "#2e0c3a", { level: "AA", size: "large" }), "readable - AA large");
-            assert.true(Color.isReadable("#db91b8", "#2e0c3a", { level: "AAA", size: "small" }), "readable - AAA small");
-            assert.true(Color.isReadable("#db91b8", "#2e0c3a", { level: "AAA", size: "large" }), "readable - AAA large");
+            assert.isTrue(Color.isReadable("#db91b8", "#2e0c3a", { level: "AA", size: "small" }), "readable - AA small");
+            assert.isTrue(Color.isReadable("#db91b8", "#2e0c3a", { level: "AA", size: "large" }), "readable - AA large");
+            assert.isTrue(Color.isReadable("#db91b8", "#2e0c3a", { level: "AAA", size: "small" }), "readable - AAA small");
+            assert.isTrue(Color.isReadable("#db91b8", "#2e0c3a", { level: "AAA", size: "large" }), "readable - AAA large");
         });
 
         it("readability", () => {

@@ -1218,10 +1218,10 @@ const buildMat4Tests = () => {
             });
 
             it("should return true for identical matrices", () => {
-                assert.true(r0);
+                assert.isTrue(r0);
             });
             it("should return false for different matrices", () => {
-                assert.false(r1);
+                assert.isFalse(r1);
             });
             it("should not modify matA", () => {
                 assertEquality(matA, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
@@ -1247,13 +1247,13 @@ const buildMat4Tests = () => {
                 r2 = mat4.equals(matA, matD);
             });
             it("should return true for identical matrices", () => {
-                assert.true(r0);
+                assert.isTrue(r0);
             });
             it("should return false for different matrices", () => {
-                assert.false(r1);
+                assert.isFalse(r1);
             });
             it("should return true for close but not identical matrices", () => {
-                assert.true(r2);
+                assert.isTrue(r2);
             });
             it("should not modify matA", () => {
                 assertEquality(matA, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);

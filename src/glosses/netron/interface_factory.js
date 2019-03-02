@@ -1,24 +1,10 @@
 const {
     is,
     util,
-    netron: { Reference, Definitions },
-    tag
+    netron: { Reference, Definitions, Interface }
 } = adone;
 
 const __ = adone.private(adone.netron);
-
-/**
- * Class represented netron interface.
- * 
- * For checking object is netron interface use is.netronInterface() predicate.
- */
-class Interface {
-    constructor(def, peerId) {
-        this[__.I_DEFINITION_SYMBOL] = def;
-        this[__.I_PEERID_SYMBOL] = peerId;
-    }
-}
-tag.add(Interface, "NETRON_INTERFACE");
 
 export default class InterfaceFactory {
     constructor(netron) {

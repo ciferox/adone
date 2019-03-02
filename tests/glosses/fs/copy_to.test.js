@@ -26,7 +26,7 @@ describe("fs", "copyTo", () => {
         const dstPath = spath.join(DST_PATH, "a");
         await fs.copyTo(srcPath, DST_PATH);
 
-        assert.true(await sameContent(srcPath, dstPath));
+        assert.isTrue(await sameContent(srcPath, dstPath));
     });
 
     it("should copy a whole directory", async () => {
@@ -39,7 +39,7 @@ describe("fs", "copyTo", () => {
             if (name === "d") {
                 continue;
             }
-            assert.true(await sameContent(spath.join(FIXTURES_PATH, name), spath.join(DST_PATH, name))); // eslint-disable-line
+            assert.isTrue(await sameContent(spath.join(FIXTURES_PATH, name), spath.join(DST_PATH, name))); // eslint-disable-line
         }
     });
 
@@ -48,7 +48,7 @@ describe("fs", "copyTo", () => {
         const dstPath = spath.join("fixtures", "copy_to", "dst");
         await fs.copyTo(srcPath, dstPath, { cwd: __dirname });
 
-        assert.true(await sameContent(spath.join(FIXTURES_PATH, "a"), spath.join(DST_PATH, "a")));
+        assert.isTrue(await sameContent(spath.join(FIXTURES_PATH, "a"), spath.join(DST_PATH, "a")));
     });
 
     it("should ignore of dest exists", async () => {
@@ -56,6 +56,6 @@ describe("fs", "copyTo", () => {
         const dstPath = spath.join(FIXTURES_PATH, "d");
         await fs.copyTo(srcPath, dstPath, { ignoreExisting: true });
 
-        assert.true(await sameContent(spath.join(FIXTURES_PATH, "b"), spath.join(dstPath, "a")));
+        assert.isTrue(await sameContent(spath.join(FIXTURES_PATH, "b"), spath.join(dstPath, "a")));
     });
 });

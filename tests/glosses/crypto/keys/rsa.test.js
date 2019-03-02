@@ -83,7 +83,7 @@ describe("crypto", "keys", "RSA", function () {
     describe("export and import", () => {
         it("password protected PKCS #8", () => {
             const pem = key.export("pkcs-8", "my secret");
-            assert.true(pem.startsWith("-----BEGIN ENCRYPTED PRIVATE KEY-----"));
+            assert.isTrue(pem.startsWith("-----BEGIN ENCRYPTED PRIVATE KEY-----"));
             const clone = crypto.keys.import(pem, "my secret");
             assert.exists(clone);
             expect(key.equals(clone)).to.eql(true);
@@ -91,7 +91,7 @@ describe("crypto", "keys", "RSA", function () {
 
         it("defaults to PKCS #8", () => {
             const pem = key.export("another secret");
-            assert.true(pem.startsWith("-----BEGIN ENCRYPTED PRIVATE KEY-----"));
+            assert.isTrue(pem.startsWith("-----BEGIN ENCRYPTED PRIVATE KEY-----"));
             const clone = crypto.keys.import(pem, "another secret");
             assert.exists(clone);
             expect(key.equals(clone)).to.eql(true);

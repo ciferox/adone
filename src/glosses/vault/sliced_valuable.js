@@ -212,4 +212,3 @@ export default class SlicedValuable {
         return this[_PARENT_VALUABLE].tags();
     }
 }
-adone.tag.add(SlicedValuable, "VAULT_VALUABLE");

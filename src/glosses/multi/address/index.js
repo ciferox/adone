@@ -385,7 +385,6 @@ export class Multiaddr {
         throw NotImplemented;
     }
 }
-adone.tag.add(Multiaddr, "MULTI_ADDRESS");
 
 /**
  * Creates a Multiaddr from a node-friendly address object

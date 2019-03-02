@@ -120,7 +120,7 @@ describe.skip("realm", "Keychain", () => {
             it("is encrypted PEM encoded PKCS #8", (done) => {
                 ks._getPrivateKey(rsaKeyName, (err, pem) => {
                     assert.notExists(err);
-                    assert.true(pem.startsWith("-----BEGIN ENCRYPTED PRIVATE KEY-----"));
+                    assert.isTrue(pem.startsWith("-----BEGIN ENCRYPTED PRIVATE KEY-----"));
                     done();
                 });
             });
@@ -264,7 +264,7 @@ describe.skip("realm", "Keychain", () => {
             it("is a PKCS #8 encrypted pem", (done) => {
                 ks.exportKey(rsaKeyName, "password", (err, pem) => {
                     assert.notExists(err);
-                    assert.true(pem.startsWith("-----BEGIN ENCRYPTED PRIVATE KEY-----"));
+                    assert.isTrue(pem.startsWith("-----BEGIN ENCRYPTED PRIVATE KEY-----"));
                     pemKey = pem;
                     done();
                 });

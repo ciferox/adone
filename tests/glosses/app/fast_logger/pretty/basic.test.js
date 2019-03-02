@@ -276,7 +276,7 @@ describe("app", "fastLogger", "basic prettifier tests", () => {
         const log = fastLogger({}, new Writable({
             write(chunk, enc, cb) {
                 const formatted = pretty(chunk.toString());
-                assert.notNull(formatted.match('    a: "b"'));
+                assert.isNotNull(formatted.match('    a: "b"'));
                 cb();
             }
         }));

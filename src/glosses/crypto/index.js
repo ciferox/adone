@@ -1,7 +1,3 @@
-adone.definePredicates({
-    identity: "CRYPTO_IDENTITY"
-});
-
 adone.lazify({
     stringCompare: "./string_compare",
     Keygrip: "./keygrip",

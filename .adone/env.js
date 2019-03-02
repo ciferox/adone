@@ -23,7 +23,6 @@ export default {
     KEYS_PATH: join(ROOT_PATH, "keys"),
     PACKAGES_PATH: join(ROOT_PATH, "packages"),
     LOCKFILE_PATH: join(ROOT_PATH, "realm.lock"),
-    devmntPath: join(ETC_PATH, "adone", "devmnt.json"),
 
     omnitron: {
         LOGS_PATH: omnitronLogsPath,

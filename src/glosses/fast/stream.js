@@ -1,6 +1,5 @@
 export default class FastStream extends adone.stream.core.Stream  {
 }
-adone.tag.add(FastStream, "FAST_STREAM");
 
 adone.lazify({
     compress: "./plugins/compress",

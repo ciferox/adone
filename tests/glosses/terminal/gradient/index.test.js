@@ -5,7 +5,7 @@ const {
 describe("terminal", "gradient", () => {
     // Asset that actual is equal to at least one element of expected
     const assertEqualOne = (actual, expected) => {
-        assert.true(expected.indexOf(actual) > -1);
+        assert.isTrue(expected.indexOf(actual) > -1);
     };
 
     it("throw error if wrong gradient arguments", () => {

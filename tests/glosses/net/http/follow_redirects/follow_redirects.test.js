@@ -450,11 +450,11 @@ describe("net", "http", "follow-redirects ", () => {
                 req.setHeader("my-header", "my value");
                 assert.equal(req.getHeader("my-header"), "my value");
                 req.removeHeader("my-header");
-                assert.undefined(req.getHeader("my-header"));
+                assert.isUndefined(req.getHeader("my-header"));
             }
         });
 
-        assert.undefined(res.data["my-header"]);
+        assert.isUndefined(res.data["my-header"]);
     });
 
     it("should provide setHeader", async () => {

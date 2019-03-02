@@ -67,13 +67,13 @@ describe("Stub", () => {
 
         it("call sync method", () => {
             const result = stub.get("methodB", [], netron.peer);
-            assert.false(is.promise(result));
+            assert.isFalse(is.promise(result));
             assert.equal(result, "bbb");
         });
 
         it("call async method", async () => {
             const result = stub.get("asyncB", [], netron.peer);
-            assert.true(is.promise(result));
+            assert.isTrue(is.promise(result));
             assert.equal(await result, "ok");
         });
 
@@ -113,7 +113,7 @@ describe("Stub", () => {
 
         it("set value of writable property", () => {
             assert.equal(stub.get("propB", undefined, netron.peer), 2);
-            assert.undefined(stub.set("propB", 10, netron.peer));
+            assert.isUndefined(stub.set("propB", 10, netron.peer));
             assert.equal(stub.get("propB", undefined, netron.peer), 10);
         });
 
@@ -123,17 +123,17 @@ describe("Stub", () => {
 
         it("set value of parent class property", () => {
             assert.equal(stub.get("propA", undefined, netron.peer), "aaa");
-            assert.undefined(stub.set("propA", 88, netron.peer));
+            assert.isUndefined(stub.set("propA", 88, netron.peer));
             assert.equal(stub.get("propA", undefined, netron.peer), 88);
         });
 
         it("call sync method", () => {
-            assert.undefined(stub.set("methodB", [], netron.peer));
+            assert.isUndefined(stub.set("methodB", [], netron.peer));
         });
 
         it("call async mrthod", async () => {
             const result = stub.set("asyncB", [], netron.peer);
-            assert.true(is.promise(result));
+            assert.isTrue(is.promise(result));
             await result;
         });
 

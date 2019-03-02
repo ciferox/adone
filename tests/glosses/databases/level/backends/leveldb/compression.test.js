@@ -18,9 +18,9 @@ const verify = function (location, compression, done) {
     du(location, (err, size) => {
         assert.notExists(err);
         if (compression) {
-            assert.true(size < dataSize, `on-disk size (${size}) is less than data size (${dataSize})`);
+            assert.isTrue(size < dataSize, `on-disk size (${size}) is less than data size (${dataSize})`);
         } else {
-            assert.true(size >= dataSize, `on-disk size (${size}) is greater than data size (${dataSize})`);
+            assert.isTrue(size >= dataSize, `on-disk size (${size}) is greater than data size (${dataSize})`);
         }
         done();
     });

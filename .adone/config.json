@@ -1,7 +1,8 @@
 {
+    "globalTasks": [],
     "struct": {
         "assets": {
-            "description": "Assets",
+            "description": "All assets",
             "src": [
                 "src/**/*",
                 "!src/**/*.js",
@@ -17,70 +18,29 @@
                 "!lib/**/*.node"
             ]
         },
-        "bin": {
-            "description": "Adone CLI",
-            "src": "src/cli/adone.js",
+        "app": {
+            "description": "ADONE cli utility",
+            "src": "src/app/adone.js",
             "dst": "bin",
             "task": "adoneTranspileExe"
         },
-        "lib": {
-            "description": "Glosses and components",
-            "src": [
-                "src/**/*.js",
-                "!src/cli/adone.js",
-                "!src/native/**/*",
-                "!src/browser/**/*"
-            ],
+        "index": {
+            "description": "ADONE main index file",
+            "src": "src/index.js",
             "dst": "lib",
-            "dstClean": [
-                "lib/**/*.js",
-                "lib/**/*.map"
+            "task": "transpile"
+        },
+        "gloss": {
+            "description": "Glosses - common foundation libraries",
+            "src": [
+                "src/glosses/**/*.js"
             ],
-            "namespace": "adone",
+            "dst": "lib/glosses",
+            "dstClean": [
+                "lib/glosses/**/*.js",
+                "lib/glosses/**/*.map"
+            ],
             "struct": {
-                "global": {
-                    "namespace": "global",
-                    "virtual": true
-                },
-                "std": {
-                    "namespace": "std",
-                    "virtual": true
-                },
-                "dev": {
-                    "namespace": "dev",
-                    "virtual": true
-                },
-                "async": {
-                    "description": "Higher-order functions and common patterns for asynchronous code",
-                    "namespace": "async",
-                    "virtual": true
-                },
-                "benchmark": {
-                    "description": "A benchmarking library",
-                    "namespace": "benchmark",
-                    "virtual": true
-                },
-                "lodash": {
-                    "description": "Lodash - A modern JavaScript utility library delivering modularity, performance & extras",
-                    "namespace": "lodash",
-                    "virtual": true
-                },
-                "cli": {
-                    "description": "Adone CLI stuff",
-                    "src": [
-                        "src/cli/**/*",
-                        "!src/cli/adone.js"
-                    ],
-                    "dst": "lib/cli",
-                    "task": "adoneTranspile",
-                    "namespace": "cli"
-                },
-                "index": {
-                    "description": "Main index file",
-                    "src": "src/index.js",
-                    "dst": "lib",
-                    "task": "transpile"
-                },
                 "app": {
                     "description": "Application framework",
                     "src": "src/glosses/app/**/*.js",
@@ -135,12 +95,17 @@
                         "https://github.com/domenic/chai-as-promised"
                     ]
                 },
-                "cmake": {
-                    "description": "Node.js native addon build tool",
-                    "src": "src/cmake/**/*.js",
-                    "dst": "lib/cmake",
-                    "task": "transpile",
-                    "namespace": "cmake"
+                "async": {
+                    "description": "Async utilities for node and the browser",
+                    "task": "copy",
+                    "src": [
+                        "src/glosses/async/**/*.js",
+                        "!src/glosses/async/**/LICENSE",
+                        "!src/glosses/async/**/README.md"
+                    ],
+                    "dst": "lib/glosses/async",
+                    "namespace": "async",
+                    "original": "https://github.com/caolan/async"
                 },
                 "collection": {
                     "description": "Implementations of common collections",
@@ -420,6 +385,13 @@
                     "dst": "lib/glosses/fake",
                     "namespace": "fake"
                 },
+                "fast": {
+                    "description": "File automation streaming templates/transforms",
+                    "task": "transpile",
+                    "src": "src/glosses/fast/**/*.js",
+                    "dst": "lib/glosses/fast",
+                    "namespace": "fast"
+                },
                 "error": {
                     "description": "Exceptions and error helpers",
                     "task": "transpile",
@@ -468,25 +440,6 @@
                     "src": "src/glosses/globals/index.js",
                     "dst": "lib/glosses/globals",
                     "namespace": "globals"
-                },
-                "gyp": {
-                    "description": "Node.js native addon build tool",
-                    "namespace": "gyp",
-                    "index": "js:index.js",
-                    "struct": {
-                        "js": {
-                            "task": "transpile",
-                            "src": [
-                                "src/gyp/**/*.js",
-                                "!src/gyp/gyp/**/*"
-                            ],
-                            "dst": "lib/gyp"
-                        },
-                        "native-gyp": {
-                            "src": "src/gyp/gyp/**/*",
-                            "dst": "lib/gyp/gyp"
-                        }
-                    }
                 },
                 "hardware": {
                     "description": "Hardware stuff",
@@ -583,6 +536,18 @@
                             "namespace": "bundle"
                         }
                     }
+                },
+                "lodash": {
+                    "description": "A modern JavaScript utility library delivering modularity, performance & extras",
+                    "task": "copy",
+                    "src": [
+                        "src/glosses/lodash/**/*.js",
+                        "!src/glosses/lodash/**/LICENSE",
+                        "!src/glosses/lodash/**/README.md"
+                    ],
+                    "dst": "lib/glosses/lodash",
+                    "namespace": "lodash",
+                    "original": "https://github.com/lodash/lodash"
                 },
                 "math": {
                     "description": "Implementation of common math classes and primitives",
@@ -783,6 +748,27 @@
                     "dst": "lib/glosses/punycode",
                     "namespace": "punycode"
                 },
+                "realm": {
+                    "description": "Realm management",
+                    "task": "transpile",
+                    "src": "src/glosses/realm/**/*.js",
+                    "dst": "lib/glosses/realm",
+                    "namespace": "realm"
+                },
+                "require": {
+                    "description": "Advanced require with ES2018 support",
+                    "task": "transpile",
+                    "src": "src/glosses/require/index.js",
+                    "dst": "lib/glosses/require",
+                    "namespace": "require"
+                },
+                "runtime": {
+                    "description": "Application wide runtime information",
+                    "task": "transpile",
+                    "src": "src/glosses/runtime/**/*.js",
+                    "dst": "lib/glosses/runtime",
+                    "namespace": "runtime"
+                },
                 "regex": {
                     "description": "Regular expression utiliter and common regular expressions",
                     "task": "transpile",
@@ -955,96 +941,136 @@
                     "src": "src/glosses/web/**/*.js",
                     "dst": "lib/glosses/web",
                     "namespace": "web"
-                },
-                "bundle": {
-                    "task": "transpile",
-                    "src": "src/bundle/**/*.js",
-                    "dst": "lib/bundle",
-                    "namespace": "bundle"
-                },
-                "fast": {
-                    "description": "File automation streaming templates/transforms",
-                    "task": "transpile",
-                    "src": "src/fast/**/*.js",
-                    "dst": "lib/fast",
-                    "namespace": "fast"
-                },
-                "isolatedVm": {
-                    "description": "Access to multiple isolates in nodejs",
-                    "task": "transpile",
-                    "src": "src/isolated_vm/**/*.js",
-                    "dst": "lib/isolated_vm",
-                    "namespace": "isolatedVm",
-                    "native": {
-                        "src": "src/isolated_vm/native",
-                        "dst": "lib/isolated_vm/native",
-                        "type": "gyp"
-                    }
-                },
-                "ipfs": {
-                    "description": "IPFS",
-                    "task": "transpile",
-                    "src": "src/ipfs/**/*.js",
-                    "dst": "lib/ipfs",
-                    "namespace": "ipfs"
-                },
-                "napa": {
-                    "description": "Napa.js: a multi-threaded JavaScript runtime",
-                    "task": "transpile",
-                    "src": "src/napa/**/*.js",
-                    "dst": "lib/napa",
-                    "namespace": "napa",
-                    "native": {
-                        "src": "src/napa/native",
-                        "dst": "lib/napa/native"
-                    }
-                },
-                "realm": {
-                    "description": "Realms stuff",
-                    "task": "transpile",
-                    "src": "src/realm/**/*.js",
-                    "dst": "lib/realm",
-                    "namespace": "realm"
-                },
-                "omnitron": {
-                    "task": "adoneTranspile",
-                    "src": "src/omnitron/**/*.js",
-                    "dst": "lib/omnitron",
-                    "namespace": "omnitron"
-                },
-                "omnitronAssets": {
-                    "src": [
-                        "src/omnitron/**/*",
-                        "!src/omnitron/**/*.js"
-                    ],
-                    "dst": "lib/omnitron",
-                    "task": "copy"
-                },
-                "shani": {
-                    "description": "Testing framework",
-                    "task": "transpile",
-                    "src": "src/shani/**/*.js",
-                    "dst": "lib/shani",
-                    "namespace": "shani"
-                },
-                "specter": {
-                    "description": "",
-                    "task": "transpile",
-                    "src": "src/specter/**/*.js",
-                    "dst": "lib/specter",
-                    "namespace": "specter"
-                },
-                "vendor": {
-                    "description": "Third party libraries mapped to adone namespace",
-                    "task": "copy",
-                    "src": [
-                        "src/vendor/**/*.js",
-                        "!src/vendor/**/LICENSE",
-                        "!src/vendor/**/README.md"
-                    ],
-                    "dst": "lib/vendor"
                 }
             }
+        },
+        "virtual": {
+            "description": "Virtual namespaces",
+            "struct": {
+                "global": {
+                    "description": "Node.js Global Object",
+                    "namespace": "global",
+                    "virtual": true
+                },
+                "std": {
+                    "description": "Node.js Built-in Modules",
+                    "namespace": "std",
+                    "virtual": true
+                }
+            },
+            "virtual": true
+        },
+        "benchmark": {
+            "description": "A benchmarking library",
+            "task": "copy",
+            "src": [
+                "src/benchmark/**/*.js",
+                "!src/benchmark/**/LICENSE",
+                "!src/benchmark/**/README.md"
+            ],
+            "dst": "lib/benchmark",
+            "namespace": "benchmark",
+            "original": "https://github.com/bestiejs/benchmark.js/"
+        },
+        "cli": {
+            "description": "Adone CLI stuff",
+            "src": [
+                "src/cli/**/*",
+                "!src/cli/adone.js"
+            ],
+            "dst": "lib/cli",
+            "task": "adoneTranspile",
+            "namespace": "cli"
+        },
+        "cmake": {
+            "description": "Node.js native addon build tool",
+            "src": "src/cmake/**/*.js",
+            "dst": "lib/cmake",
+            "task": "transpile",
+            "namespace": "cmake"
+        },
+        "gyp": {
+            "description": "Node.js native addon build tool",
+            "namespace": "gyp",
+            "index": "js:index.js",
+            "struct": {
+                "js": {
+                    "task": "transpile",
+                    "src": [
+                        "src/gyp/**/*.js",
+                        "!src/gyp/gyp/**/*"
+                    ],
+                    "dst": "lib/gyp"
+                },
+                "native-gyp": {
+                    "src": "src/gyp/gyp/**/*",
+                    "dst": "lib/gyp/gyp"
+                }
+            }
+        },
+        "bundle": {
+            "task": "transpile",
+            "src": "src/bundle/**/*.js",
+            "dst": "lib/bundle",
+            "namespace": "bundle"
+        },
+        "isolatedVm": {
+            "description": "Access to multiple isolates in nodejs",
+            "task": "transpile",
+            "src": "src/isolated_vm/**/*.js",
+            "dst": "lib/isolated_vm",
+            "namespace": "isolatedVm",
+            "native": {
+                "src": "src/isolated_vm/native",
+                "dst": "lib/isolated_vm/native",
+                "type": "gyp"
+            }
+        },
+        "ipfs": {
+            "description": "IPFS",
+            "task": "transpile",
+            "src": "src/ipfs/**/*.js",
+            "dst": "lib/ipfs",
+            "namespace": "ipfs"
+        },
+        "napa": {
+            "description": "Napa.js: a multi-threaded JavaScript runtime",
+            "task": "transpile",
+            "src": "src/napa/**/*.js",
+            "dst": "lib/napa",
+            "namespace": "napa",
+            "native": {
+                "src": "src/napa/native",
+                "dst": "lib/napa/native"
+            }
+        },
+        "omnitron": {
+            "task": "adoneTranspile",
+            "src": "src/omnitron/**/*.js",
+            "dst": "lib/omnitron",
+            "namespace": "omnitron"
+        },
+        "omnitronAssets": {
+            "src": [
+                "src/omnitron/**/*",
+                "!src/omnitron/**/*.js"
+            ],
+            "dst": "lib/omnitron",
+            "task": "copy"
+        },
+        "shani": {
+            "description": "Testing framework",
+            "task": "transpile",
+            "src": "src/shani/**/*.js",
+            "dst": "lib/shani",
+            "namespace": "shani"
+        },
+        "specter": {
+            "description": "",
+            "task": "transpile",
+            "src": "src/specter/**/*.js",
+            "dst": "lib/specter",
+            "namespace": "specter"
         }
     }
 }

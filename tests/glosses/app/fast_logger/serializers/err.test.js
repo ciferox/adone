@@ -7,7 +7,7 @@ describe("app", "fastLogger", "serializers", "err", () => {
         const serialized = err(Error("foo"));
         assert.equal(serialized.type, "Error");
         assert.equal(serialized.message, "foo");
-        assert.notNull(serialized.stack.match(/err\.test\.js:/));
+        assert.isNotNull(serialized.stack.match(/err\.test\.js:/));
     });
 
     it("serializes Error objects with extra properties", () => {
@@ -18,7 +18,7 @@ describe("app", "fastLogger", "serializers", "err", () => {
         assert.equal(serialized.message, "foo");
         assert.ok(serialized.statusCode);
         assert.equal(serialized.statusCode, 500);
-        assert.notNull(serialized.stack.match(/err\.test\.js:/));
+        assert.isNotNull(serialized.stack.match(/err\.test\.js:/));
     });
 
     it("serializes nested errors", () => {
@@ -27,11 +27,11 @@ describe("app", "fastLogger", "serializers", "err", () => {
         const serialized = err(e);
         assert.equal(serialized.type, "Error");
         assert.equal(serialized.message, "foo");
-        assert.notNull(serialized.stack.match(/err\.test\.js:/));
+        assert.isNotNull(serialized.stack.match(/err\.test\.js:/));
         assert.equal(serialized.inner.type, "Error");
         assert.equal(serialized.inner.message, "bar");
-        assert.notNull(serialized.inner.stack.match(/Error: bar/));
-        assert.notNull(serialized.inner.stack.match(/err\.test\.js:/));
+        assert.isNotNull(serialized.inner.stack.match(/Error: bar/));
+        assert.isNotNull(serialized.inner.stack.match(/err\.test\.js:/));
     });
 
     it("prevents infinite recursion", () => {
@@ -40,7 +40,7 @@ describe("app", "fastLogger", "serializers", "err", () => {
         const serialized = err(e);
         assert.equal(serialized.type, "Error");
         assert.equal(serialized.message, "foo");
-        assert.notNull(serialized.stack.match(/err\.test\.js:/));
+        assert.isNotNull(serialized.stack.match(/err\.test\.js:/));
         assert.notOk(serialized.inner);
     });
 
@@ -55,11 +55,11 @@ describe("app", "fastLogger", "serializers", "err", () => {
 
         assert.equal(serialized.type, "Error");
         assert.equal(serialized.message, "foo");
-        assert.notNull(serialized.stack.match(/err\.test\.js:/));
+        assert.isNotNull(serialized.stack.match(/err\.test\.js:/));
         assert.ok(serialized.inner);
         assert.equal(serialized.inner.type, "Error");
         assert.equal(serialized.inner.message, "bar");
-        assert.notNull(serialized.inner.stack.match(/Error: bar/));
+        assert.isNotNull(serialized.inner.stack.match(/Error: bar/));
         assert.notOk(serialized.inner.inner);
     });
 

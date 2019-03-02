@@ -38,7 +38,7 @@ const sink = function (func) {
 };
 
 const check = (chunk, level, msg) => {
-    assert.true(new Date(chunk.time) <= new Date(), "time is greater than Date.now()");
+    assert.isTrue(new Date(chunk.time) <= new Date(), "time is greater than Date.now()");
     delete chunk.time;
     assert.equal(chunk.pid, pid);
     assert.equal(chunk.hostname, hostname);

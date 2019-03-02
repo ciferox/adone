@@ -16,5 +16,3 @@ export default class XLazyFunction extends adone.js.adone.Base {
         return "LazyFunction";
     }
 }
-adone.tag.define("CODEMOD_LAZYFUNCTION");
-adone.tag.add(XLazyFunction, "CODEMOD_LAZYFUNCTION");

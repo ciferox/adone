@@ -44,7 +44,7 @@ describe("data", "basex/base58", () => {
     });
 
     it("decode should return Buffer", () => {
-        assert.true(is.buffer(bases.base2.decode("")));
-        assert.true(is.buffer(bases.base2.decode("01")));
+        assert.isTrue(is.buffer(bases.base2.decode("")));
+        assert.isTrue(is.buffer(bases.base2.decode("01")));
     });
 });

@@ -18,29 +18,24 @@ describe("meta", () => {
         }
 
         it("not instance", () => {
-            const err = assert.throws(() => Reflection.from("a"));
-            assert.instanceOf(err, adone.error.NotValidException);
+            assert.throws(() => Reflection.from("a"), adone.error.NotValidException);
         });
 
         it("class instead instance", () => {
-            const err = assert.throws(() => Reflection.from(A));
-            assert.instanceOf(err, adone.error.NotValidException);
+            assert.throws(() => Reflection.from(A), adone.error.NotValidException);
         });
 
         it("class without constructor", () => {
             class SomeClass { }
-            const err = assert.throws(() => Reflection.from(new SomeClass()));
-            assert.instanceOf(err, adone.error.NotValidException);
+            assert.throws(() => Reflection.from(new SomeClass()), adone.error.NotValidException);
         });
 
         it("Object instead instance", () => {
-            const err = assert.throws(() => Reflection.from(Object));
-            assert.instanceOf(err, adone.error.NotValidException);
+            assert.throws(() => Reflection.from(Object), adone.error.NotValidException);
         });
 
         it("empty function instead instance", () => {
-            const err = assert.throws(() => Reflection.from(adone.noop));
-            assert.instanceOf(err, adone.error.NotValidException);
+            assert.throws(() => Reflection.from(adone.noop), adone.error.NotValidException);
         });
 
         it("instance of unnamed class", () => {
@@ -51,8 +46,7 @@ describe("meta", () => {
                 }()
             );
 
-            const err = assert.throws(() => Reflection.from(a));
-            assert.instanceOf(err, adone.error.NotValidException);
+            assert.throws(() => Reflection.from(a), adone.error.NotValidException);
         });
 
         it("instance with no public methods", () => {
@@ -62,15 +56,14 @@ describe("meta", () => {
                 }
             }
 
-            const err = assert.throws(() => Reflection.from(new A()));
-            assert.instanceOf(err, adone.error.NotValidException);
+            assert.throws(() => Reflection.from(new A()), adone.error.NotValidException);
         });
 
         it("valid instance", () => {
             Reflection.from(new A());
         });
 
-        describe.only("define publics from context decorator", () => {
+        describe("define publics from context decorator", () => {
             it("by default all public methods", () => {
                 class TheBase {
                     @Public({
@@ -179,7 +172,7 @@ describe("meta", () => {
                 assert.strictEqual(r.getMethodMeta("method2").description, "method2 info");
 
                 const baseMethodMeta = r.getMethodMeta("baseMethod");
-                assert.true(is.undefined(baseMethodMeta.description));
+                assert.isTrue(is.undefined(baseMethodMeta.description));
                 assert.strictEqual(baseMethodMeta.type, String);
             });
 
@@ -389,10 +382,10 @@ describe("meta", () => {
             class NonContextableClass {
             }
 
-            assert.true(is.netronContext(ContextableClass));
-            assert.false(is.netronContext(NonContextableClass));
-            assert.true(is.netronContext(new ContextableClass()));
-            assert.false(is.netronContext(new NonContextableClass()));
+            assert.isTrue(is.netronContext(ContextableClass));
+            assert.isFalse(is.netronContext(NonContextableClass));
+            assert.isTrue(is.netronContext(new ContextableClass()));
+            assert.isFalse(is.netronContext(new NonContextableClass()));
         });
 
         it("Reflectio#getName()", () => {
@@ -420,7 +413,7 @@ describe("meta", () => {
         });
     });
 
-    describe.only("contextify()", () => {
+    describe("contextify()", () => {
         class SubSimple {
             subMethod() {
 

@@ -78,4 +78,3 @@ export default class OwnPeer extends AbstractPeer {
         return this.netron.interfaceFactory.create(stub.definition, this);
     }
 }
-adone.tag.add(OwnPeer, "NETRON_OWNPEER");

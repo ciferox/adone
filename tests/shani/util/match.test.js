@@ -24,8 +24,8 @@ describe("shani", "util", "match", () => {
         it("returns false if value is undefined or null", () => {
             const has = matcher("foo");
 
-            assert.false(has.test(undefined));
-            assert.false(has.test(null));
+            assert.isFalse(has.test(undefined));
+            assert.isFalse(has.test(null));
         });
 
         it("returns true if object has property", () => {
@@ -37,7 +37,7 @@ describe("shani", "util", "match", () => {
         it("returns false if object value is not equal to given value", () => {
             const has = matcher("foo", 1);
 
-            assert.false(has.test({ foo: null }));
+            assert.isFalse(has.test({ foo: null }));
         });
 
         it("returns true if object value is equal to given value", () => {
@@ -56,7 +56,7 @@ describe("shani", "util", "match", () => {
         it("allows to expect undefined", () => {
             const has = matcher("foo", undefined);
 
-            assert.false(has.test({ foo: 1 }));
+            assert.isFalse(has.test({ foo: 1 }));
         });
 
         it("compares value deeply", () => {
@@ -105,13 +105,13 @@ describe("shani", "util", "match", () => {
     it("returns false if a property is not equal", () => {
         const m = match({ str: "hello", nr: 1 });
 
-        assert.false(m.test({ str: "hello", nr: 2 }));
+        assert.isFalse(m.test({ str: "hello", nr: 2 }));
     });
 
     it("returns false if a property is missing", () => {
         const m = match({ str: "hello", nr: 1 });
 
-        assert.false(m.test({ nr: 1 }));
+        assert.isFalse(m.test({ nr: 1 }));
     });
 
     it("returns true if array is equal", () => {
@@ -123,13 +123,13 @@ describe("shani", "util", "match", () => {
     it("returns false if array is not equal", () => {
         const m = match({ arr: ["b", "a"] });
 
-        assert.false(m.test({ arr: ["a", "b"] }));
+        assert.isFalse(m.test({ arr: ["a", "b"] }));
     });
 
     it("returns false if array is not equal (even if the contents would match (deep equal))", () => {
         const m = match([{ str: "hello" }]);
 
-        assert.false(m.test([{ str: "hello", ignored: "value" }]));
+        assert.isFalse(m.test([{ str: "hello", ignored: "value" }]));
     });
 
     it("returns true if number objects are equal", () => {
@@ -151,7 +151,7 @@ describe("shani", "util", "match", () => {
     it("returns false if test does not match", () => {
         const m = match({ prop: match.typeOf("boolean") });
 
-        assert.false(m.test({ prop: "no" }));
+        assert.isFalse(m.test({ prop: "no" }));
     });
 
     it("returns true if deep test matches", () => {
@@ -163,14 +163,14 @@ describe("shani", "util", "match", () => {
     it("returns false if deep test does not match", () => {
         const m = match({ deep: { prop: match.typeOf("boolean") } });
 
-        assert.false(m.test({ deep: { prop: "no" } }));
+        assert.isFalse(m.test({ deep: { prop: "no" } }));
     });
 
     it("returns false if tested value is null or undefined", () => {
         const m = match({});
 
-        assert.false(m.test(null));
-        assert.false(m.test(undefined));
+        assert.isFalse(m.test(null));
+        assert.isFalse(m.test(undefined));
     });
 
     it("returns true if error message matches", () => {
@@ -206,10 +206,10 @@ describe("shani", "util", "match", () => {
     it("returns false for string mismatch", () => {
         const m = match("hello.WORLD");
 
-        assert.false(m.test(null));
-        assert.false(m.test({}));
-        assert.false(m.test("hello"));
-        assert.false(m.test("hello.world"));
+        assert.isFalse(m.test(null));
+        assert.isFalse(m.test({}));
+        assert.isFalse(m.test("hello"));
+        assert.isFalse(m.test("hello.world"));
     });
 
     it("returns true for regexp match", () => {
@@ -221,16 +221,16 @@ describe("shani", "util", "match", () => {
     it("returns false for regexp string mismatch", () => {
         const m = match(/^[hel]+$/);
 
-        assert.false(m.test("hello"));
+        assert.isFalse(m.test("hello"));
     });
 
     it("returns false for regexp type mismatch", () => {
         const m = match(/.*/);
 
-        assert.false(m.test());
-        assert.false(m.test(null));
-        assert.false(m.test(123));
-        assert.false(m.test({}));
+        assert.isFalse(m.test());
+        assert.isFalse(m.test(null));
+        assert.isFalse(m.test(123));
+        assert.isFalse(m.test({}));
     });
 
     it("returns true for number match", () => {
@@ -244,11 +244,11 @@ describe("shani", "util", "match", () => {
     it("returns false for number mismatch", () => {
         const m = match(1);
 
-        assert.false(m.test());
-        assert.false(m.test(null));
-        assert.false(m.test(2));
-        assert.false(m.test(false));
-        assert.false(m.test({}));
+        assert.isFalse(m.test());
+        assert.isFalse(m.test(null));
+        assert.isFalse(m.test(2));
+        assert.isFalse(m.test(false));
+        assert.isFalse(m.test({}));
     });
 
     it("returns true for Symbol match", () => {
@@ -262,10 +262,10 @@ describe("shani", "util", "match", () => {
     it("returns false for Symbol mismatch", () => {
         const m = match(Symbol());
 
-        assert.false(m.test());
-        assert.false(m.test(Symbol(null)));
-        assert.false(m.test(Symbol()));
-        assert.false(m.test(Symbol({})));
+        assert.isFalse(m.test());
+        assert.isFalse(m.test(Symbol(null)));
+        assert.isFalse(m.test(Symbol()));
+        assert.isFalse(m.test(Symbol({})));
     });
 
     it("returns true for Symbol inside object", () => {
@@ -293,13 +293,13 @@ describe("shani", "util", "match", () => {
             }
         });
 
-        assert.false(m.test());
+        assert.isFalse(m.test());
     });
 
     it("returns false if test function in object returns nothing", () => {
         const m = match({ test() { } });
 
-        assert.false(m.test());
+        assert.isFalse(m.test());
     });
 
     it("passes actual value to test function in object", () => {
@@ -350,11 +350,11 @@ describe("shani", "util", "match", () => {
         });
 
         it("returns false if test is called with null", () => {
-            assert.false(match.defined.test(null));
+            assert.isFalse(match.defined.test(null));
         });
 
         it("returns false if test is called with undefined", () => {
-            assert.false(match.defined.test(undefined));
+            assert.isFalse(match.defined.test(undefined));
         });
 
         it("returns true if test is called with any value", () => {
@@ -383,10 +383,10 @@ describe("shani", "util", "match", () => {
         });
 
         it("returns false if test is called falsy value", () => {
-            assert.false(match.truthy.test(false));
-            assert.false(match.truthy.test(null));
-            assert.false(match.truthy.test(undefined));
-            assert.false(match.truthy.test(""));
+            assert.isFalse(match.truthy.test(false));
+            assert.isFalse(match.truthy.test(null));
+            assert.isFalse(match.truthy.test(undefined));
+            assert.isFalse(match.truthy.test(""));
         });
     });
 
@@ -403,9 +403,9 @@ describe("shani", "util", "match", () => {
         });
 
         it("returns false if test is called with trueish value", () => {
-            assert.false(match.falsy.test(true));
-            assert.false(match.falsy.test(1));
-            assert.false(match.falsy.test("yes"));
+            assert.isFalse(match.falsy.test(true));
+            assert.isFalse(match.falsy.test(1));
+            assert.isFalse(match.falsy.test("yes"));
         });
     });
 
@@ -433,7 +433,7 @@ describe("shani", "util", "match", () => {
         it("returns false if test is not called with same argument", () => {
             const same = match.same({});
 
-            assert.false(same.test({}));
+            assert.isFalse(same.test({}));
         });
     });
 
@@ -462,7 +462,7 @@ describe("shani", "util", "match", () => {
         it("returns false if test is not called with string", () => {
             const typeOf = match.typeOf("string");
 
-            assert.false(typeOf.test(123));
+            assert.isFalse(typeOf.test(123));
         });
 
         it("returns true if test is called with symbol", () => {
@@ -480,7 +480,7 @@ describe("shani", "util", "match", () => {
         it("returns false if test is not called with regexp", () => {
             const typeOf = match.typeOf("regexp");
 
-            assert.false(typeOf.test(true));
+            assert.isFalse(typeOf.test(true));
         });
     });
 
@@ -509,7 +509,7 @@ describe("shani", "util", "match", () => {
         it("returns false if test is not called with instance of argument", () => {
             const instanceOf = match.instanceOf(Array);
 
-            assert.false(instanceOf.test({}));
+            assert.isFalse(instanceOf.test({}));
         });
 
         it("does not throw if given argument defines Symbol.hasInstance", () => {
@@ -590,7 +590,7 @@ describe("shani", "util", "match", () => {
         it("returns false if object has inherited property", () => {
             const hasOwn = match.hasOwn("toString");
 
-            assert.false(hasOwn.test({}));
+            assert.isFalse(hasOwn.test({}));
         });
 
         it("only includes property in message", () => {
@@ -634,22 +634,22 @@ describe("shani", "util", "match", () => {
         it("fails to match anything that is not an object or an iterable", () => {
             const every = match.every(match.any);
 
-            assert.false(every.test(1));
-            assert.false(every.test("a"));
-            assert.false(every.test(null));
-            assert.false(every.test(() => {}));
+            assert.isFalse(every.test(1));
+            assert.isFalse(every.test("a"));
+            assert.isFalse(every.test(null));
+            assert.isFalse(every.test(() => {}));
         });
 
         it("matches an object if the predicate is true for every property", () => {
             const every = match.every(match.number);
 
-            assert.true(every.test({ a: 1, b: 2 }));
+            assert.isTrue(every.test({ a: 1, b: 2 }));
         });
 
         it("fails if the predicate is false for some of the object properties", () => {
             const every = match.every(match.number);
 
-            assert.false(every.test({ a: 1, b: "b" }));
+            assert.isFalse(every.test({ a: 1, b: "b" }));
         });
 
         it("matches an array if the predicate is true for every element", () => {
@@ -661,7 +661,7 @@ describe("shani", "util", "match", () => {
         it("fails if the predicate is false for some of the array elements", () => {
             const every = match.every(match.number);
 
-            assert.false(every.test([1, "b"]));
+            assert.isFalse(every.test([1, "b"]));
         });
 
         if (is.function(Set)) {
@@ -680,7 +680,7 @@ describe("shani", "util", "match", () => {
                 set.add(1);
                 set.add("b");
 
-                assert.false(every.test(set));
+                assert.isFalse(every.test(set));
             });
         }
     });
@@ -713,22 +713,22 @@ describe("shani", "util", "match", () => {
         it("fails to match anything that is not an object or an iterable", () => {
             const some = match.some(match.any);
 
-            assert.false(some.test(1));
-            assert.false(some.test("a"));
-            assert.false(some.test(null));
-            assert.false(some.test(() => {}));
+            assert.isFalse(some.test(1));
+            assert.isFalse(some.test("a"));
+            assert.isFalse(some.test(null));
+            assert.isFalse(some.test(() => {}));
         });
 
         it("matches an object if the predicate is true for some of the properties", () => {
             const some = match.some(match.number);
 
-            assert.true(some.test({ a: 1, b: "b" }));
+            assert.isTrue(some.test({ a: 1, b: "b" }));
         });
 
         it("fails if the predicate is false for all of the object properties", () => {
             const some = match.some(match.number);
 
-            assert.false(some.test({ a: "a", b: "b" }));
+            assert.isFalse(some.test({ a: "a", b: "b" }));
         });
 
         it("matches an array if the predicate is true for some element", () => {
@@ -740,7 +740,7 @@ describe("shani", "util", "match", () => {
         it("fails if the predicate is false for all of the array elements", () => {
             const some = match.some(match.number);
 
-            assert.false(some.test(["a", "b"]));
+            assert.isFalse(some.test(["a", "b"]));
         });
 
         if (is.function(Set)) {
@@ -760,7 +760,7 @@ describe("shani", "util", "match", () => {
                 set.add("b");
 
 
-                assert.false(some.test(set));
+                assert.isFalse(some.test(set));
             });
         }
     });
@@ -829,13 +829,13 @@ describe("shani", "util", "match", () => {
             it("matches arrays with the exact same elements", () => {
                 const deepEquals = match.array.deepEquals([1, 2, 3]);
                 assert(deepEquals.test([1, 2, 3]));
-                assert.false(deepEquals.test([1, 2]));
-                assert.false(deepEquals.test([3]));
+                assert.isFalse(deepEquals.test([1, 2]));
+                assert.isFalse(deepEquals.test([3]));
             });
 
             it("fails when passed a non-array object", () => {
                 const deepEquals = match.array.deepEquals(["one", "two", "three"]);
-                assert.false(deepEquals.test({ 0: "one", 1: "two", 2: "three", length: 3 }));
+                assert.isFalse(deepEquals.test({ 0: "one", 1: "two", 2: "three", length: 3 }));
             });
         });
 
@@ -850,13 +850,13 @@ describe("shani", "util", "match", () => {
             it("matches arrays starting with the same elements", () => {
                 assert(match.array.startsWith([1]).test([1, 2]));
                 assert(match.array.startsWith([1, 2]).test([1, 2]));
-                assert.false(match.array.startsWith([1, 2, 3]).test([1, 2]));
-                assert.false(match.array.startsWith([2]).test([1, 2]));
+                assert.isFalse(match.array.startsWith([1, 2, 3]).test([1, 2]));
+                assert.isFalse(match.array.startsWith([2]).test([1, 2]));
             });
 
             it("fails when passed a non-array object", () => {
                 const startsWith = match.array.startsWith(["one", "two"]);
-                assert.false(startsWith.test({ 0: "one", 1: "two", 2: "three", length: 3 }));
+                assert.isFalse(startsWith.test({ 0: "one", 1: "two", 2: "three", length: 3 }));
             });
         });
 
@@ -871,14 +871,14 @@ describe("shani", "util", "match", () => {
             it("matches arrays ending with the same elements", () => {
                 assert(match.array.endsWith([2]).test([1, 2]));
                 assert(match.array.endsWith([1, 2]).test([1, 2]));
-                assert.false(match.array.endsWith([1, 2, 3]).test([1, 2]));
-                assert.false(match.array.endsWith([3]).test([1, 2]));
+                assert.isFalse(match.array.endsWith([1, 2, 3]).test([1, 2]));
+                assert.isFalse(match.array.endsWith([3]).test([1, 2]));
             });
 
             it("fails when passed a non-array object", () => {
                 const endsWith = match.array.endsWith(["two", "three"]);
 
-                assert.false(endsWith.test({ 0: "one", 1: "two", 2: "three", length: 3 }));
+                assert.isFalse(endsWith.test({ 0: "one", 1: "two", 2: "three", length: 3 }));
             });
         });
 
@@ -893,14 +893,14 @@ describe("shani", "util", "match", () => {
             it("matches arrays containing all the expected elements", () => {
                 assert(match.array.contains([2]).test([1, 2, 3]));
                 assert(match.array.contains([1, 2]).test([1, 2]));
-                assert.false(match.array.contains([1, 2, 3]).test([1, 2]));
-                assert.false(match.array.contains([3]).test([1, 2]));
+                assert.isFalse(match.array.contains([1, 2, 3]).test([1, 2]));
+                assert.isFalse(match.array.contains([3]).test([1, 2]));
             });
 
             it("fails when passed a non-array object", () => {
                 const contains = match.array.contains(["one", "three"]);
 
-                assert.false(contains.test({ 0: "one", 1: "two", 2: "three", length: 3 }));
+                assert.isFalse(contains.test({ 0: "one", 1: "two", 2: "three", length: 3 }));
             });
         });
     });
@@ -942,8 +942,8 @@ describe("shani", "util", "match", () => {
 
                 const deepEquals = match.map.deepEquals(mapOne);
                 assert(deepEquals.test(mapTwo));
-                assert.false(deepEquals.test(mapThree));
-                assert.false(deepEquals.test(new Map()));
+                assert.isFalse(deepEquals.test(mapThree));
+                assert.isFalse(deepEquals.test(new Map()));
             });
 
             it("fails when maps have the same keys but different values", () => {
@@ -963,14 +963,14 @@ describe("shani", "util", "match", () => {
                 mapTwo.set("three", 4);
 
                 const deepEquals = match.map.deepEquals(mapOne);
-                assert.false(deepEquals.test(mapTwo));
-                assert.false(deepEquals.test(mapThree));
+                assert.isFalse(deepEquals.test(mapTwo));
+                assert.isFalse(deepEquals.test(mapThree));
             });
 
             it("fails when passed a non-map object", () => {
                 const deepEquals = match.array.deepEquals(new Map());
-                assert.false(deepEquals.test({}));
-                assert.false(deepEquals.test([]));
+                assert.isFalse(deepEquals.test({}));
+                assert.isFalse(deepEquals.test([]));
             });
         });
 
@@ -1007,7 +1007,7 @@ describe("shani", "util", "match", () => {
 
                 assert(match.map.contains(mapTwo).test(mapOne));
                 assert(match.map.contains(mapThree).test(mapOne));
-                assert.false(match.map.contains(mapFour).test(mapOne));
+                assert.isFalse(match.map.contains(mapFour).test(mapOne));
             });
 
             it("fails when maps contain the same keys but different values", () => {
@@ -1026,14 +1026,14 @@ describe("shani", "util", "match", () => {
                 mapThree.set("two", 2);
                 mapThree.set("three", 4);
 
-                assert.false(match.map.contains(mapTwo).test(mapOne));
-                assert.false(match.map.contains(mapThree).test(mapOne));
+                assert.isFalse(match.map.contains(mapTwo).test(mapOne));
+                assert.isFalse(match.map.contains(mapThree).test(mapOne));
             });
 
             it("fails when passed a non-map object", () => {
                 const contains = match.map.contains(new Map());
-                assert.false(contains.test({}));
-                assert.false(contains.test([]));
+                assert.isFalse(contains.test({}));
+                assert.isFalse(contains.test([]));
             });
         });
     });
@@ -1075,14 +1075,14 @@ describe("shani", "util", "match", () => {
 
                 const deepEquals = match.set.deepEquals(setOne);
                 assert(deepEquals.test(setTwo));
-                assert.false(deepEquals.test(setThree));
-                assert.false(deepEquals.test(new Set()));
+                assert.isFalse(deepEquals.test(setThree));
+                assert.isFalse(deepEquals.test(new Set()));
             });
 
             it("fails when passed a non-set object", () => {
                 const deepEquals = match.array.deepEquals(new Set());
-                assert.false(deepEquals.test({}));
-                assert.false(deepEquals.test([]));
+                assert.isFalse(deepEquals.test({}));
+                assert.isFalse(deepEquals.test([]));
             });
         });
 
@@ -1119,13 +1119,13 @@ describe("shani", "util", "match", () => {
 
                 assert(match.set.contains(setTwo).test(setOne));
                 assert(match.set.contains(setThree).test(setOne));
-                assert.false(match.set.contains(setFour).test(setOne));
+                assert.isFalse(match.set.contains(setFour).test(setOne));
             });
 
             it("fails when passed a non-set object", () => {
                 const contains = match.set.contains(new Set());
-                assert.false(contains.test({}));
-                assert.false(contains.test([]));
+                assert.isFalse(contains.test({}));
+                assert.isFalse(contains.test([]));
             });
         });
     });
@@ -1190,9 +1190,9 @@ describe("shani", "util", "match", () => {
         it("returns false if neither matcher matches", () => {
             const numberOrAbc = match.number.or("abc");
 
-            assert.false(numberOrAbc.test(/.+/));
-            assert.false(numberOrAbc.test(new Date()));
-            assert.false(numberOrAbc.test({}));
+            assert.isFalse(numberOrAbc.test(/.+/));
+            assert.isFalse(numberOrAbc.test(new Date()));
+            assert.isFalse(numberOrAbc.test({}));
         });
 
         it("can be used with undefined", () => {
@@ -1234,14 +1234,14 @@ describe("shani", "util", "match", () => {
         it("returns false if either matcher does not match", () => {
             const fooAndBar = match.has("foo").and(match.has("bar"));
 
-            assert.false(fooAndBar.test({ foo: "foo" }));
-            assert.false(fooAndBar.test({ bar: "bar" }));
+            assert.isFalse(fooAndBar.test({ foo: "foo" }));
+            assert.isFalse(fooAndBar.test({ bar: "bar" }));
         });
 
         it("can be used with undefined", () => {
             const falsyAndUndefined = match.falsy.and(undefined);
 
-            assert.false(falsyAndUndefined.test(false));
+            assert.isFalse(falsyAndUndefined.test(false));
             assert(falsyAndUndefined.test(undefined));
         });
     });
@@ -1250,13 +1250,13 @@ describe("shani", "util", "match", () => {
         it("returns true for an object with nested matcher", () => {
             const m = match({ outer: match({ inner: "hello" }) });
 
-            assert.true(m.test({ outer: { inner: "hello", foo: "bar" } }));
+            assert.isTrue(m.test({ outer: { inner: "hello", foo: "bar" } }));
         });
 
         it("returns true for an array of nested matchers", () => {
             const m = match([match({ str: "hello" })]);
 
-            assert.true(m.test([{ str: "hello", foo: "bar" }]));
+            assert.isTrue(m.test([{ str: "hello", foo: "bar" }]));
         });
     });
 });

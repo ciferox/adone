@@ -33,8 +33,8 @@ describe("fast logger", "exit", () => {
 
         await once(child, "close");
 
-        assert.null(actual.match(/hello/));
-        assert.null(actual.match(/world/));
+        assert.isNull(actual.match(/hello/));
+        assert.isNull(actual.match(/world/));
     });
 
     it("pino.extreme logs everything when calling flushSync", async () => {

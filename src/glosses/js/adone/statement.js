@@ -3,5 +3,3 @@ export default class XStatement extends adone.js.adone.Base {
         return "Statement";
     }
 }
-adone.tag.define("CODEMOD_STATEMENT");
-adone.tag.add(XStatement, "CODEMOD_STATEMENT");

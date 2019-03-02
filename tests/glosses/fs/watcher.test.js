@@ -249,7 +249,7 @@ describe("fs", "watcher", function watcherTests() {
                         mode: 0x1ed
                     });
                     // eslint-disable-next-line no-await-in-loop
-                    assert.true(await dir.exists());
+                    assert.isTrue(await dir.exists());
                 }
 
                 for (const [name] of fileNames) {

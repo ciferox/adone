@@ -11,12 +11,12 @@ const test = function (fun) {
         db.open();
 
         common.closeableDatabases.push(db);
-        assert.object(db);
+        assert.isObject(db);
 
         fun(db, done);
         // we should still be in a state of limbo down here, not opened or closed, but 'new'
-        assert.false(db.isOpen());
-        assert.false(db.isClosed());
+        assert.isFalse(db.isOpen());
+        assert.isFalse(db.isClosed());
     };
 };
 

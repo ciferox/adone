@@ -42,7 +42,7 @@ describe("fast logger", "custom levels", () => {
             useOnlyCustomLevels: true
         }, stream);
     
-        assert.true(logger.hasOwnProperty("info"));
+        assert.isTrue(logger.hasOwnProperty("info"));
     
         logger.info("test");
         const { level } = await once(stream, "data");
@@ -59,7 +59,7 @@ describe("fast logger", "custom levels", () => {
             level: "foo"
         }, stream);
     
-        assert.false(logger.hasOwnProperty("info"));
+        assert.isFalse(logger.hasOwnProperty("info"));
     });
     
     it("custom levels overrides default level value if use useOnlyCustomLevels", async () => {
@@ -72,7 +72,7 @@ describe("fast logger", "custom levels", () => {
             level: 35
         }, stream);
     
-        assert.false(logger.hasOwnProperty("info"));
+        assert.isFalse(logger.hasOwnProperty("info"));
     });
     
     it("custom levels are inherited by children", async () => {
@@ -117,7 +117,7 @@ describe("fast logger", "custom levels", () => {
     
         logger.foo("test");
         const { customLevels } = await once(stream, "data");
-        assert.undefined(customLevels);
+        assert.isUndefined(customLevels);
     });
     
     it("throws when specifying pre-existing parent labels via child bindings", async () => {

@@ -53,9 +53,9 @@ describe("app", "fastLogger", "pretty", "error like objects tests", () => {
         const log = fastLogger({}, new Writable({
             write(chunk, enc, cb) {
                 const formatted = p(chunk.toString());
-                assert.notNull(formatted.match(/\s{4}error stack/));
-                assert.notNull(formatted.match(/statusCode: 500/));
-                assert.notNull(formatted.match(/originalStack: original stack/));
+                assert.isNotNull(formatted.match(/\s{4}error stack/));
+                assert.isNotNull(formatted.match(/statusCode: 500/));
+                assert.isNotNull(formatted.match(/originalStack: original stack/));
                 cb();
             }
         }));
@@ -89,13 +89,13 @@ describe("app", "fastLogger", "pretty", "error like objects tests", () => {
                 const lines = formatted.split("\n");
                 assert.equal(lines.length, expected.length + 6);
                 assert.equal(lines[0], `[${epoch}] INFO  (${pid} on ${hostname}): `);
-                assert.notNull(lines[1].match(/\s{4}err: {/));
-                assert.notNull(lines[2].match(/\s{6}"type": "Error",/));
-                assert.notNull(lines[3].match(/\s{6}"message": "hello world",/));
-                assert.notNull(lines[4].match(/\s{6}"stack":/));
-                assert.notNull(lines[5].match(/\s{6}Error: hello world/));
+                assert.isNotNull(lines[1].match(/\s{4}err: {/));
+                assert.isNotNull(lines[2].match(/\s{6}"type": "Error",/));
+                assert.isNotNull(lines[3].match(/\s{6}"message": "hello world",/));
+                assert.isNotNull(lines[4].match(/\s{6}"stack":/));
+                assert.isNotNull(lines[5].match(/\s{6}Error: hello world/));
                 // Node 6 starts stack with "at Error (native)"
-                assert.notNull(lines[6].match(/\s{10}(at Object.it|at Error \(native\))/));
+                assert.isNotNull(lines[6].match(/\s{10}(at Object.it|at Error \(native\))/));
                 cb();
             }
         }));
@@ -119,12 +119,12 @@ describe("app", "fastLogger", "pretty", "error like objects tests", () => {
                 const lines = formatted.split("\n");
                 assert.equal(lines.length, expected.length + 6);
                 assert.equal(lines[0], `[${epoch}] INFO  (${pid} on ${hostname}): `);
-                assert.notNull(lines[1].match(/\s{4}err: {$/));
-                assert.notNull(lines[2].match(/\s{6}"type": "Error",$/));
-                assert.notNull(lines[3].match(/\s{6}"message": "hello world",$/));
-                assert.notNull(lines[4].match(/\s{6}"stack":$/));
-                assert.notNull(lines[5].match(/\s{10}Error: hello world$/));
-                assert.notNull(lines[6].match(/\s{10}at anonymous \(C:\\project\\node_modules\\example\\index.js\)$/));
+                assert.isNotNull(lines[1].match(/\s{4}err: {$/));
+                assert.isNotNull(lines[2].match(/\s{6}"type": "Error",$/));
+                assert.isNotNull(lines[3].match(/\s{6}"message": "hello world",$/));
+                assert.isNotNull(lines[4].match(/\s{6}"stack":$/));
+                assert.isNotNull(lines[5].match(/\s{10}Error: hello world$/));
+                assert.isNotNull(lines[6].match(/\s{10}at anonymous \(C:\\project\\node_modules\\example\\index.js\)$/));
                 cb();
             }
         }));
@@ -148,14 +148,14 @@ describe("app", "fastLogger", "pretty", "error like objects tests", () => {
                 const lines = formatted.split("\n");
                 assert.equal(lines.length, expected.length + 7);
                 assert.equal(lines[0], `[${epoch}] INFO  (${pid} on ${hostname}): `);
-                assert.notNull(lines[1].match(/\s{4}err: {/));
-                assert.notNull(lines[2].match(/\s{6}"type": "Error",/));
-                assert.notNull(lines[3].match(/\s{6}"message": "hello world",/));
-                assert.notNull(lines[4].match(/\s{6}"stack":/));
-                assert.notNull(lines[5].match(/\s{6}Error: hello world/));
+                assert.isNotNull(lines[1].match(/\s{4}err: {/));
+                assert.isNotNull(lines[2].match(/\s{6}"type": "Error",/));
+                assert.isNotNull(lines[3].match(/\s{6}"message": "hello world",/));
+                assert.isNotNull(lines[4].match(/\s{6}"stack":/));
+                assert.isNotNull(lines[5].match(/\s{6}Error: hello world/));
                 // Node 6 starts stack with "at Error (native)"
-                assert.notNull(lines[6].match(/\s{10}(at Object.it|at Error \(native\))/));
-                assert.notNull(lines[lines.length - 3].match(/\s{6}"anotherField": "dummy value"/));
+                assert.isNotNull(lines[6].match(/\s{10}(at Object.it|at Error \(native\))/));
+                assert.isNotNull(lines[lines.length - 3].match(/\s{6}"anotherField": "dummy value"/));
                 cb();
             }
         }));
@@ -207,8 +207,8 @@ describe("app", "fastLogger", "pretty", "error like objects tests", () => {
         const log = fastLogger({}, new Writable({
             write(chunk, enc, cb) {
                 const formatted = p(chunk.toString());
-                assert.notNull(formatted.match(/\s{4}message: "foo"/));
-                assert.notNull(formatted.match(/\s{4}stack: null/));
+                assert.isNotNull(formatted.match(/\s{4}message: "foo"/));
+                assert.isNotNull(formatted.match(/\s{4}stack: null/));
                 cb();
             }
         }));

@@ -41,7 +41,7 @@ describe("fast logger", "final", () => {
     });
       
     it("returns an exit listener function", async () => {
-        assert.function(fastLogger.final(fastLogger(fastLogger.extreme()), () => {}));
+        assert.isFunction(fastLogger.final(fastLogger(fastLogger.extreme()), () => {}));
     });
       
     it("listener function immediately sync flushes when fired", async () => {
@@ -100,13 +100,13 @@ describe("fast logger", "final", () => {
         const dest = fastLogger.extreme("/dev/null");
         const logger = fastLogger(dest);
         fastLogger.final(logger, (err, finalLogger) => {
-            assert.null(err);
-            assert.function(finalLogger.trace);
-            assert.function(finalLogger.debug);
-            assert.function(finalLogger.info);
-            assert.function(finalLogger.warn);
-            assert.function(finalLogger.error);
-            assert.function(finalLogger.fatal);
+            assert.isNull(err);
+            assert.isFunction(finalLogger.trace);
+            assert.isFunction(finalLogger.debug);
+            assert.isFunction(finalLogger.info);
+            assert.isFunction(finalLogger.warn);
+            assert.isFunction(finalLogger.error);
+            assert.isFunction(finalLogger.fatal);
       
             assert.notEqual(finalLogger.trace, logger.trace);
             assert.notEqual(finalLogger.debug, logger.debug);
@@ -124,12 +124,12 @@ describe("fast logger", "final", () => {
         const dest = fastLogger.extreme("/dev/null");
         const logger = fastLogger(dest);
         const finalLogger = fastLogger.final(logger);
-        assert.function(finalLogger.trace);
-        assert.function(finalLogger.debug);
-        assert.function(finalLogger.info);
-        assert.function(finalLogger.warn);
-        assert.function(finalLogger.error);
-        assert.function(finalLogger.fatal);
+        assert.isFunction(finalLogger.trace);
+        assert.isFunction(finalLogger.debug);
+        assert.isFunction(finalLogger.info);
+        assert.isFunction(finalLogger.warn);
+        assert.isFunction(finalLogger.error);
+        assert.isFunction(finalLogger.fatal);
       
         assert.notEqual(finalLogger.trace, logger.trace);
         assert.notEqual(finalLogger.debug, logger.debug);
@@ -154,7 +154,7 @@ describe("fast logger", "final", () => {
             }
         };
         fastLogger.final(logger, (err, finalLogger) => {
-            assert.null(err);
+            assert.isNull(err);
             finalLogger.info("hello");
         })();
         await sleep(10);
@@ -179,7 +179,7 @@ describe("fast logger", "final", () => {
             }
         };
         fastLogger.final(logger, (err, finalLogger) => {
-            assert.null(err);
+            assert.isNull(err);
             finalLogger.foo("hello");
         })();
         await sleep(10);

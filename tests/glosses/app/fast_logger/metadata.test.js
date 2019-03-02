@@ -68,7 +68,7 @@ describe("fastLogger", "metadata", () => {
                 assert.equal(instance, this.lastLogger);
                 assert.equal(30, this.lastLevel);
                 assert.equal("a msg", this.lastMsg);
-                assert.null(this.lastObj);
+                assert.isNull(this.lastObj);
                 const result = JSON.parse(chunk);
                 assert.ok(new Date(result.time) <= new Date(), "time is greater than Date.now()");
                 delete result.time;
@@ -91,7 +91,7 @@ describe("fastLogger", "metadata", () => {
             write(chunk) {
                 assert.equal(instance, this.lastLogger);
                 assert.equal(30, this.lastLevel);
-                assert.undefined(this.lastMsg);
+                assert.isUndefined(this.lastMsg);
                 assert.deepEqual({ hello: "world" }, this.lastObj);
                 const result = JSON.parse(chunk);
                 assert.ok(new Date(result.time) <= new Date(), "time is greater than Date.now()");

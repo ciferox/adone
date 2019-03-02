@@ -15,7 +15,7 @@ describe("omnitron", "DB", () => {
     });
 
     it("open database", async () => {
-        assert.null(omnitron.DB.instance);
+        assert.isNull(omnitron.DB.instance);
         db = await omnitron.DB.open();
         assert.instanceOf(omnitron.DB.instance, omnitron.DB);
     });

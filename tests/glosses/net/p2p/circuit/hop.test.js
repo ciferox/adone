@@ -101,7 +101,7 @@ describe("circuit", "relay", () => {
 
             relay.active = false;
             pull.lengthPrefixed.decodeFromReader(shake, (err, msg) => {
-                assert.null(err);
+                assert.isNull(err);
 
                 const response = protocol.CircuitRelay.decode(msg);
                 expect(response.code).to.equal(protocol.CircuitRelay.Status.HOP_NO_CONN_TO_DST);
@@ -152,7 +152,7 @@ describe("circuit", "relay", () => {
             };
 
             pull.lengthPrefixed.decodeFromReader(shake, (err, msg) => {
-                assert.null(err);
+                assert.isNull(err);
 
                 const response = protocol.CircuitRelay.decode(msg);
                 expect(response.code).to.equal(protocol.CircuitRelay.Status.HOP_CANT_RELAY_TO_SELF);
@@ -177,7 +177,7 @@ describe("circuit", "relay", () => {
             };
 
             pull.lengthPrefixed.decodeFromReader(shake, (err, msg) => {
-                assert.null(err);
+                assert.isNull(err);
 
                 const response = protocol.CircuitRelay.decode(msg);
                 expect(response.code).to.equal(protocol.CircuitRelay.Status.HOP_SRC_MULTIADDR_INVALID);
@@ -202,7 +202,7 @@ describe("circuit", "relay", () => {
             };
 
             pull.lengthPrefixed.decodeFromReader(shake, (err, msg) => {
-                assert.null(err);
+                assert.isNull(err);
 
                 const response = protocol.CircuitRelay.decode(msg);
                 expect(response.code).to.equal(protocol.CircuitRelay.Status.HOP_DST_MULTIADDR_INVALID);

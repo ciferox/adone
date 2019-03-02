@@ -44,7 +44,7 @@ describe("util", "toMs", () => {
     });
   
     it("should return NaN if invalid", () => {
-        assert.true(isNaN(toMs("☃")));
+        assert.isTrue(isNaN(toMs("☃")));
     });
   
     it("should be case-insensitive", () => {

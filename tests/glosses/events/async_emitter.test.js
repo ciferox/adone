@@ -5,8 +5,8 @@ const {
 describe("AsyncEmitter", () => {
     it("is.emitter() should return true", () => {
         const emitter = new AsyncEmitter();
-        assert.true(adone.is.emitter(emitter));
-        assert.true(adone.is.asyncEmitter(emitter));
+        assert.isTrue(adone.is.emitter(emitter));
+        assert.isTrue(adone.is.asyncEmitter(emitter));
     });
     
     describe("emitParallel()", () => {

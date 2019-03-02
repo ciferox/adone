@@ -2,12 +2,6 @@ const {
     lazify
 } = adone;
 
-adone.definePredicates({
-    fastStream: "FAST_STREAM",
-    fastLocalStream: "FAST_LOCAL_STREAM",
-    fastLocalMapStream: "FAST_LOCAL_MAP_STREAM"
-});
-
 const fast = lazify({
     File: "./file",
     Stream: "./stream",

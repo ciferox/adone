@@ -154,8 +154,8 @@ describe("ReadStream", () => {
                         assert(call);
                         if (call) {
                             assert.equal(call.args.length, 1, `ReadStream "data" event #${i} fired with 1 argument`);
-                            assert.notNull(call.args[0].key, `ReadStream "data" event #${i} argument has "key" property`);
-                            assert.notNull(call.args[0].value, `ReadStream "data" event #${i} argument has "value" property`);
+                            assert.isNotNull(call.args[0].key, `ReadStream "data" event #${i} argument has "key" property`);
+                            assert.isNotNull(call.args[0].value, `ReadStream "data" event #${i} argument has "value" property`);
                             assert.equal(call.args[0].key, d.key, `ReadStream "data" event #${i} argument has correct "key"`);
                             assert.equal(Number(call.args[0].value), Number(d.value), `ReadStream "data" event #${i} argument has correct "value"`);
                         }
@@ -503,8 +503,8 @@ describe("ReadStream", () => {
         
         const execute = function () {
             // is in limbo
-            assert.false(db.isOpen());
-            assert.false(db.isClosed());
+            assert.isFalse(db.isOpen());
+            assert.isFalse(db.isClosed());
 
             const rs = db.createReadStream();
             rs.on("data", common.dataSpy);
@@ -610,7 +610,7 @@ describe("ReadStream", () => {
 
         common.openTestDatabase((db) => {
             db.batch(data, (err) => {
-                assert.false(Boolean(err));
+                assert.isFalse(Boolean(err));
                 const rs = db.createReadStream().on("close", done);
                 rs.once("data", () => {
                     rs.destroy();

@@ -15,7 +15,7 @@ describe("Init & open()", () => {
     });
 
     it("new DB()", () => {
-        assert.true(is.class(DB));
+        assert.isTrue(is.class(DB));
         assert.lengthOf(DB, 3); // db, options & callback arguments
         assert.throws(() => new DB(), adone.error.DatabaseInitializationException); // no db
     });
@@ -23,17 +23,17 @@ describe("Init & open()", () => {
     it("open and close statuses", (done) => {
         new DB(new Memory(), (err, db) => {
             assert.notExists(err, "no error");
-            assert.true(db.isOpen());
+            assert.isTrue(db.isOpen());
             common.closeableDatabases.push(db);
             db.close((err) => {
                 assert.notExists(err);
 
-                assert.false(db.isOpen());
-                assert.true(db.isClosed());
+                assert.isFalse(db.isOpen());
+                assert.isTrue(db.isClosed());
 
                 new DB(new Memory(), (err, db) => {
                     assert.notExists(err);
-                    assert.object(db);
+                    assert.isObject(db);
                     done();
                 });
             });
@@ -43,9 +43,9 @@ describe("Init & open()", () => {
     it("without callback", (done) => {
         const db = new DB(new Memory());
         common.closeableDatabases.push(db);
-        assert.object(db);
+        assert.isObject(db);
         db.on("ready", () => {
-            assert.true(db.isOpen());
+            assert.isTrue(db.isOpen());
             done();
         });
         db.open();

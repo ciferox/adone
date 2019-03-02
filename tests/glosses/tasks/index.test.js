@@ -101,35 +101,35 @@ describe("task", () => {
     it("task prototype", () => {
         const t = new adone.task.Task();
 
-        assert.true(is.task(t));
-        assert.null(t.manager);
-        assert.null(t.observer);
+        assert.isTrue(is.task(t));
+        assert.isNull(t.manager);
+        assert.isNull(t.observer);
         assert.throws(() => t.manager = undefined, adone.error.NotAllowedException);
         assert.throws(() => t.observer = undefined, adone.error.NotAllowedException);
 
-        assert.function(t.run);
+        assert.isFunction(t.run);
         assert.throws(() => t.run(), adone.error.NotImplementedException);
 
-        assert.function(t.isSuspendable);
-        assert.function(t.isCancelable);
+        assert.isFunction(t.isSuspendable);
+        assert.isFunction(t.isCancelable);
 
-        assert.function(t.suspend);
-        assert.function(t.resume);
-        assert.function(t.cancel);
+        assert.isFunction(t.suspend);
+        assert.isFunction(t.resume);
+        assert.isFunction(t.cancel);
     });
 
     it("by default, task should not be suspendable", () => {
         const t = new adone.task.Task();
-        assert.false(t.isSuspendable());
+        assert.isFalse(t.isSuspendable());
     });
 
     it("by default, task should not be cancelable", () => {
         const t = new adone.task.Task();
-        assert.false(t.isCancelable());
+        assert.isFalse(t.isCancelable());
     });
 
     it("construct manager", () => {
-        assert.true(is.taskManager(manager));
+        assert.isTrue(is.taskManager(manager));
         assert.lengthOf(manager.getTaskNames(), 0);
     });
 
@@ -137,7 +137,7 @@ describe("task", () => {
         class MyTask extends task.Task {
         }
 
-        assert.true(adone.is.task(new MyTask()));
+        assert.isTrue(adone.is.task(new MyTask()));
     });
 
     it("should add only valid task", async () => {
@@ -201,10 +201,10 @@ describe("task", () => {
     it("run task", async () => {
         await manager.addTask("a", SimpleTask);
         const observer = await manager.run("a", adone.package.version);
-        assert.true(adone.is.taskObserver(observer));
-        assert.true(observer.isCompleted());
+        assert.isTrue(adone.is.taskObserver(observer));
+        assert.isTrue(observer.isCompleted());
         assert.equal(await observer.result, adone.package.version);
-        assert.true(observer.isCompleted());
+        assert.isTrue(observer.isCompleted());
     });
 
     it("regular task is stateless", async () => {
@@ -226,7 +226,7 @@ describe("task", () => {
         await manager.addTask("a", TaskA);
         const observer = await manager.run("a", adone.package.version);
         const err = await assert.throws(async () => observer.result);
-        assert.true(observer.isFailed());
+        assert.isTrue(observer.isFailed());
         assert.instanceOf(observer.error, adone.error.RuntimeException);
         assert.instanceOf(err, adone.error.RuntimeException);
     });
@@ -242,7 +242,7 @@ describe("task", () => {
         await manager.addTask("a", TaskA);
         const observer = await manager.run("a", adone.package.version);
         const err = await assert.throws(async () => observer.result);
-        assert.true(observer.isFailed());
+        assert.isTrue(observer.isFailed());
         assert.instanceOf(observer.error, adone.error.RuntimeException);
         assert.instanceOf(err, adone.error.RuntimeException);
     });
@@ -257,9 +257,9 @@ describe("task", () => {
 
         await manager.addTask("a", TaskA);
         const observer = await manager.run("a", adone.package.version);
-        assert.true(observer.isRunning());
+        assert.isTrue(observer.isRunning());
         assert.equal(await observer.result, `adone ${adone.package.version}`);
-        assert.true(observer.isCompleted());
+        assert.isTrue(observer.isCompleted());
     });
 
     it("delete nonexisting task", async () => {
@@ -283,9 +283,9 @@ describe("task", () => {
     it("run task once", async () => {
         const observer = await manager.runOnce(SimpleTask, adone.package.version);
         assert.lengthOf(manager.getTaskNames(), 0);
-        assert.true(observer.isCompleted());
+        assert.isTrue(observer.isCompleted());
         assert.equal(await observer.result, adone.package.version);
-        assert.true(observer.isCompleted());
+        assert.isTrue(observer.isCompleted());
     });
 
     it("run async task once", async () => {
@@ -298,9 +298,9 @@ describe("task", () => {
 
         const observer = await manager.runOnce(TaskA, adone.package.version);
         assert.lengthOf(manager.getTaskNames(), 0);
-        assert.true(observer.isRunning());
+        assert.isTrue(observer.isRunning());
         assert.equal(await observer.result, `adone ${adone.package.version}`);
-        assert.true(observer.isCompleted());
+        assert.isTrue(observer.isCompleted());
     });
 
     it("run deleted but still running task should have thrown", async () => {
@@ -317,9 +317,9 @@ describe("task", () => {
         await assert.throws(async () => manager.run("a", adone.package.version), adone.error.NotExistsException);
 
         assert.lengthOf(manager.getTaskNames(), 0);
-        assert.true(observer.isRunning());
+        assert.isTrue(observer.isRunning());
         assert.equal(await observer.result, `adone ${adone.package.version}`);
-        assert.true(observer.isCompleted());
+        assert.isTrue(observer.isCompleted());
     });
 
     describe("singleton tasks", () => {
@@ -330,7 +330,7 @@ describe("task", () => {
 
             const observer = await manager.run("a");
             await observer.result;
-            assert.notNull(observer.task.manager);
+            assert.isNotNull(observer.task.manager);
         });
 
         it("singleton task is stateful", async () => {
@@ -464,7 +464,7 @@ describe("task", () => {
             const observer = await manager.run("a", false);
             await promise.delay(200);
             await observer.suspend();
-            assert.false(observer.isSuspended());
+            assert.isFalse(observer.isSuspended());
             assert.equal(await observer.result, 100);
         });
 
@@ -475,8 +475,8 @@ describe("task", () => {
             const err = await assert.throws(async () => observer.cancel());
             assert.instanceOf(err, adone.error.NotAllowedException);
             assert.equal(await observer.result, 100);
-            assert.true(observer.isCompleted());
-            assert.false(observer.isCancelled());
+            assert.isTrue(observer.isCompleted());
+            assert.isFalse(observer.isCancelled());
         });
 
         it("suspend/resume suspendable task", async () => {
@@ -484,12 +484,12 @@ describe("task", () => {
             const observer = await manager.run("a", true);
             await promise.delay(200);
             await observer.suspend();
-            assert.true(observer.task.reallySuspended);
-            assert.true(observer.isSuspended());
+            assert.isTrue(observer.task.reallySuspended);
+            assert.isTrue(observer.isSuspended());
             await promise.delay(100);
             await observer.resume();
-            assert.true(observer.task.reallyResumed);
-            assert.true(observer.isRunning());
+            assert.isTrue(observer.task.reallyResumed);
+            assert.isTrue(observer.isRunning());
             assert.equal(await observer.result, 100);
         });
 
@@ -498,9 +498,9 @@ describe("task", () => {
             const observer = await manager.run("a", false, true);
             await promise.delay(200);
             await observer.cancel();
-            assert.true(observer.isCancelled());
+            assert.isTrue(observer.isCancelled());
             assert.notEqual(await observer.result, 100);
-            assert.false(observer.isCompleted());
+            assert.isFalse(observer.isCompleted());
         });
     });
 
@@ -612,13 +612,13 @@ describe("task", () => {
 
                 const observer = await manager.run("series", ["a", "b"], null, false, true);
                 await adone.promise.delay(100);
-                assert.true(observer.isCancelable());
+                assert.isTrue(observer.isCancelable());
 
                 await observer.cancel();
 
                 const result = await observer.result;
                 assert.lengthOf(result, 1);
-                assert.number(result[0]);
+                assert.isNumber(result[0]);
 
                 await observer.result;
             });
@@ -640,21 +640,21 @@ describe("task", () => {
 
                 const observer = await manager.run("series", ["a", "b"], null, false, true);
                 await adone.promise.delay(300);
-                assert.false(observer.isCancelable());
+                assert.isFalse(observer.isCancelable());
 
                 const err = await assert.throws(async () => observer.cancel());
                 assert.instanceOf(err, adone.error.NotAllowedException);
 
                 await adone.promise.delay(800);
 
-                assert.true(observer.isCancelable());
+                assert.isTrue(observer.isCancelable());
 
                 await observer.cancel();
 
                 const result = await observer.result;
                 assert.lengthOf(result, 2);
                 assert.equal(result[0], 888);
-                assert.number(result[1]);
+                assert.isNumber(result[1]);
 
                 await observer.result;
             });
@@ -751,13 +751,13 @@ describe("task", () => {
 
                 const observer = await manager.run("parallel", ["a", "b"], null, false, true);
                 await adone.promise.delay(100);
-                assert.true(observer.isCancelable());
+                assert.isTrue(observer.isCancelable());
 
                 await observer.cancel();
 
                 const result = await observer.result;
-                assert.number(result.a);
-                assert.number(result.b);
+                assert.isNumber(result.a);
+                assert.isNumber(result.b);
 
                 await observer.result;
             });
@@ -779,14 +779,14 @@ describe("task", () => {
 
                 const observer = await manager.run("parallel", ["a", "b"], null, false, true);
                 await adone.promise.delay(300);
-                assert.false(observer.isCancelable());
+                assert.isFalse(observer.isCancelable());
 
                 let err = await assert.throws(async () => observer.cancel());
                 assert.instanceOf(err, adone.error.NotAllowedException);
 
                 await adone.promise.delay(1000);
 
-                assert.false(observer.isCancelable());
+                assert.isFalse(observer.isCancelable());
                 err = await assert.throws(async () => observer.cancel());
                 assert.instanceOf(err, adone.error.NotAllowedException);
 
@@ -864,7 +864,7 @@ describe("task", () => {
 
                 const observer = await manager.run("waterfall", ["d", "e", TaskF], null, 3);
                 const result = await observer.result;
-                assert.true(is.string(result));
+                assert.isTrue(is.string(result));
                 assert.equal(result, "sum = 21");
             });
         });
@@ -1094,7 +1094,7 @@ describe("task", () => {
             const values = [0.1, 0.5, 1.0];
 
             manager.onNotification("progress", (task, name, data) => {
-                assert.true(is.task(task));
+                assert.isTrue(is.task(task));
                 assert.strictEqual(name, "progress");
                 assert.strictEqual(values[i - 1], data.value);
                 assert.strictEqual(`step${i++}`, data.message);
@@ -1117,7 +1117,7 @@ describe("task", () => {
                 name: "progress",
                 tasks: "1"
             }, (task, name, data) => {
-                assert.true(is.task(task));
+                assert.isTrue(is.task(task));
                 assert.strictEqual(name, "progress");
                 assert.strictEqual(values[i - 1], data.value);
                 assert.strictEqual(`step${i++}`, data.message);
@@ -1140,9 +1140,9 @@ describe("task", () => {
             const messages = ["step1", "step2", "step3", "bam1", "bam2", "bam3"];
 
             manager.onNotification(null, (task, name, data) => {
-                assert.true(is.task(task));
-                assert.true(values.includes(data.value));
-                assert.true(messages.includes(data.message));
+                assert.isTrue(is.task(task));
+                assert.isTrue(values.includes(data.value));
+                assert.isTrue(messages.includes(data.message));
                 i++;
             });
 
@@ -1163,10 +1163,10 @@ describe("task", () => {
             const messages = ["bam1", "bam2", "bam3"];
 
             manager.onNotification((task) => task.name === "2", (task, name, data) => {
-                assert.true(is.task(task));
-                assert.true(task.name === "2");
-                assert.true(values.includes(data.value));
-                assert.true(messages.includes(data.message));
+                assert.isTrue(is.task(task));
+                assert.isTrue(task.name === "2");
+                assert.isTrue(values.includes(data.value));
+                assert.isTrue(messages.includes(data.message));
                 i++;
             });
 
@@ -1219,14 +1219,14 @@ describe("task", () => {
     //         const manager = new Manager();
 
 
-    //         assert.function(manager.getIsolate);
-    //         assert.function(manager.getContextBook);
+    //         assert.isFunction(manager.getIsolate);
+    //         assert.isFunction(manager.getContextBook);
     //     });
 
     //     it("create std context with defaults", async () => {
     //         const manager = new Manager();
     //         const stdContext = await manager.getContextBook().createContext("main");
-    //         assert.object(stdContext);
+    //         assert.isObject(stdContext);
 
     //         class MyTask extends task.Task {
     //             run(a, b) {

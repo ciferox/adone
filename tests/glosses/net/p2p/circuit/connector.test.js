@@ -158,8 +158,8 @@ describe("circuit", "Connector", () => {
             });
 
             dialer._dialPeer(dstMa, (err, conn) => {
-                assert.undefined(conn);
-                assert.notNull(err);
+                assert.isUndefined(conn);
+                assert.isNotNull(err);
                 expect(err).to.equal("no relay peers were found or all relays failed to connect");
                 done();
             });
@@ -210,7 +210,7 @@ describe("circuit", "Connector", () => {
 
         it("should handle failed relay negotiation", (done) => {
             callback.callsFake((err, msg) => {
-                assert.notNull(err);
+                assert.isNotNull(err);
                 expect(err).to.be.an.instanceOf(Error);
                 expect(err.message).to.be.equal("Got 400 error code trying to connect over relay");
                 assert.ok(callback.calledOnce);

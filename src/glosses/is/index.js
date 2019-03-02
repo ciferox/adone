@@ -83,7 +83,6 @@ export const safeInteger = Number.isSafeInteger; // eslint-disable-line
 
 
 export const array = Array.isArray; // eslint-disable-line
-export const byteArray = (obj) => adone.tag.has(obj, "BYTE_ARRAY");
 
 // Checks whether given value is a string.
 export const string = (value) => (typeof value === "string"); // eslint-disable-line
@@ -122,12 +121,6 @@ export const numeral = (value) => {
 
     return finite(value);
 };
-
-export const emitter = (obj) => adone.tag.has(obj, "EMITTER");
-export const asyncEmitter = (obj) => adone.tag.has(obj, "ASYNC_EMITTER");
-
-export const long = (obj) => adone.tag.has(obj, "LONG");
-export const bigNumber = (obj) => adone.tag.has(obj, "BIGNUMBER");
 
 // Checks whether given value is an infinite number, i.e: +∞ or -∞.
 export const infinite = (val) => val === +1 / 0 || val === -1 / 0;
@@ -225,7 +218,8 @@ export const plainObject = (value) => {
     return function_(Ctor) && Ctor instanceof Ctor && funcToString.call(Ctor) === objectCtorString; // eslint-disable-line
 };
 
-export const namespace = (value) => object(value) && value[Symbol.for("adone:namespace")] === true;
+const NAMESPACE_SYMBOL = Symbol.for("adone:namespace");
+export const namespace = (value) => object(value) && value[NAMESPACE_SYMBOL] === true;
 
 // Checks whether given value is an empty object, i.e, an object without any own, enumerable, string keyed properties.
 export const emptyObject = (obj) => object(obj) && Object.keys(obj).length === 0;
@@ -672,7 +666,6 @@ export const writableStream = (value) => stream(value) && typeof value._writable
 export const readableStream = (value) => stream(value) && typeof value._readableState === "object"; // eslint-disable-line
 export const duplexStream = (value) => writableStream(value) && readableStream(value);
 export const transformStream = (value) => stream(value) && typeof value._transformState === "object"; // eslint-disable-line
-export const coreStream = (value) => adone.tag.has(value, "CORE_STREAM");
 
 export const utf8 = (bytes) => {
     let i = 0;
@@ -814,13 +807,6 @@ export const generator = (value) => {
 };
 
 export const uint8Array = (value) => value instanceof Uint8Array;
-
-export const subsystem = (obj) => adone.tag.has(obj, "SUBSYSTEM");
-export const application = (obj) => adone.tag.has(obj, "APPLICATION");
-export const configuration = (obj) => adone.tag.has(obj, "CONFIGURATION");
-export const datetime = (obj) => adone.tag.has(obj, "DATETIME");
-
-export const multiAddress = (obj) => adone.tag.has(obj, "MULTI_ADDRESS");
 
 export const windows = platform === "win32";
 
@@ -1033,5 +1019,67 @@ adone.lazify({
     fqdn: "./fqdn",
     url: "./url",
     email: "./email",
-    safeRegexp: "./safe_regexp"
+    safeRegexp: "./safe_regexp",
+
+    // All of these predicates should be replced in-place during transpiling
+    subsystem: () => (obj) => obj instanceof adone.app.Subsystem,
+    application: () => (obj) => obj instanceof adone.app.Application,
+    byteArray: () => (obj) => obj instanceof adone.collection.ByteArray,
+    long: () => (obj) => obj instanceof adone.math.Long,
+    bigNumber: () => (obj) => obj instanceof adone.math.BigNumber,
+    emitter: () => (obj) => obj instanceof adone.event.Emitter,
+    asyncEmitter: () => (obj) => obj instanceof adone.event.AsyncEmitter,
+    coreStream: () => (obj) => obj instanceof adone.stream.core.Stream,
+    configuration: () => (obj) => obj instanceof adone.configuration.Base,
+    datetime: () => (obj) => obj instanceof adone.datetime.Datetime,
+    multiAddress: () => (obj) => obj instanceof adone.multi.address.Multiaddr,
+    task: () => (obj) => obj instanceof adone.task.Task,
+    flowTask: () => (obj) => obj instanceof adone.task.Flow,
+    taskObserver: () => (obj) => obj instanceof adone.task.TaskObserver,
+    taskManager: () => (obj) => obj instanceof adone.task.Manager,
+
+    // crypto
+    identity: () => (obj) => obj instanceof adone.crypto.Identity,
+
+    // fast
+    fastStream: () => (obj) => obj instanceof adone.fast.Stream,
+    fastLocalStream: () => (obj) => obj instanceof adone.fast.LocalStream,
+    fastLocalMapStream: () => (obj) => obj instanceof adone.fast.LocalMapStream,
+
+    // net/p2p
+    p2pPeerInfo: () => (obj) => obj instanceof adone.net.p2p.PeerInfo,
+    p2pCore: () => (obj) => obj instanceof adone.net.p2p.Core,
+
+    vaultValuable: () => (obj) => obj instanceof adone.vault.Valuable,
+
+    // netron
+    netron: () => (obj) => obj instanceof adone.netron.Netron,
+    netronDefinition: () => (obj) => obj instanceof adone.netron.Definition,
+    netronDefinitions: () => (obj) => obj instanceof adone.netron.Definitions,
+    netronReference: () => (obj) => obj instanceof adone.netron.Reference,
+    netronInterface: () => (obj) => obj instanceof adone.netron.Interface,
+    netronStub: () => (obj) => obj instanceof adone.netron.Stub,
+    netronRemoteStub: () => (obj) => obj instanceof adone.netron.RemoteStub,
+    netronPeer: () => (obj) => obj instanceof adone.netron.AbstractPeer,
+    netronOwnPeer: () => (obj) => obj instanceof adone.netron.OwnPeer,
+    netronRemotePeer: () => (obj) => obj instanceof adone.netron.RemotePeer,
+    netronIMethod: () => (ni, name) => function_(ni[name]) && (ni.$def.$[name].method === true),
+    netronIProperty: () => (ni, name) => object(ni[name]) && function_(ni[name].get) && (undefined_(ni.$def.$[name].method)),
+    netronContext: () => (obj) => {
+        let isContex = false;
+        let target = undefined;
+
+        if (class_(obj)) {
+            target = obj;
+        } else if (propertyDefined(obj, "__proto__") && propertyOwned(obj.__proto__, "constructor")) {
+            if (adone.netron.meta.isDynamicContext(obj)) {
+                return true;
+            }
+            target = obj.__proto__.constructor;
+        }
+        if (!undefined_(target)) {
+            isContex = object(adone.meta.reflect.getMetadata(adone.netron.meta.CONTEXT_ANNOTATION, target));
+        }
+        return isContex;
+    }   
 }, exports, require);

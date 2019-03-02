@@ -155,7 +155,7 @@ describe("fs", "rm", () => {
                 file = adone.util.arrify(file);
                 const relative = std.path.join(...file);
                 const p = std.path.join(tmp.path(), relative);
-                assert.true(await fs.exists(p), `expected ${relative} to exist`); // eslint-disable-line
+                assert.isTrue(await fs.exists(p), `expected ${relative} to exist`); // eslint-disable-line
             }
         };
 
@@ -164,7 +164,7 @@ describe("fs", "rm", () => {
                 file = adone.util.arrify(file);
                 const relative = std.path.join(...file);
                 const p = std.path.join(tmp.path(), relative);
-                assert.false(await fs.exists(p), `expected ${relative} not to exist`); // eslint-disable-line
+                assert.isFalse(await fs.exists(p), `expected ${relative} not to exist`); // eslint-disable-line
             }
         };
 

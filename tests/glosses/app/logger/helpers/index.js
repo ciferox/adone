@@ -161,20 +161,20 @@ helpers.tryRead = function tryRead(filename) {
  * @param  {Object} obj Ordinary object to assert against.
  */
 helpers.assertProcessInfo = function (obj) {
-    assert.number(obj.pid);
+    assert.isNumber(obj.pid);
     // `process.gid` and `process.uid` do no exist on Windows.
     if (process.platform === "win32") {
-        assert.null(obj.uid);
-        assert.null(obj.gid);
+        assert.isNull(obj.uid);
+        assert.isNull(obj.gid);
     } else {
-        assert.number(obj.uid);
-        assert.number(obj.gid);
+        assert.isNumber(obj.uid);
+        assert.isNumber(obj.gid);
     }
-    assert.string(obj.cwd);
-    assert.string(obj.execPath);
-    assert.string(obj.version);
+    assert.isString(obj.cwd);
+    assert.isString(obj.execPath);
+    assert.isString(obj.version);
     assert.array(obj.argv);
-    assert.object(obj.memoryUsage);
+    assert.isObject(obj.memoryUsage);
 };
 
 /**
@@ -184,7 +184,7 @@ helpers.assertProcessInfo = function (obj) {
  */
 helpers.assertOsInfo = function (obj) {
     assert.array(obj.loadavg);
-    assert.number(obj.uptime);
+    assert.isNumber(obj.uptime);
 };
 
 /**
@@ -194,12 +194,12 @@ helpers.assertOsInfo = function (obj) {
  */
 helpers.assertTrace = function (trace) {
     trace.forEach((site) => {
-        assert.true(!site.column || is.number(site.column));
-        assert.true(!site.line || is.number(site.line));
-        assert.true(!site.file || is.string(site.file));
-        assert.true(!site.method || is.string(site.method));
-        assert.true(!site.function || is.string(site.function));
-        assert.true(is.boolean(site.native));
+        assert.isTrue(!site.column || is.number(site.column));
+        assert.isTrue(!site.line || is.number(site.line));
+        assert.isTrue(!site.file || is.string(site.file));
+        assert.isTrue(!site.method || is.string(site.method));
+        assert.isTrue(!site.function || is.string(site.function));
+        assert.isTrue(is.boolean(site.native));
     });
 };
 
@@ -210,12 +210,12 @@ helpers.assertTrace = function (trace) {
  */
 helpers.assertLogger = function (l, level) {
     assert.instanceOf(l, logger.Logger);
-    assert.function(l.log);
-    assert.function(l.add);
-    assert.function(l.remove);
+    assert.isFunction(l.log);
+    assert.isFunction(l.add);
+    assert.isFunction(l.remove);
     assert.strictEqual(l.level, level || "info");
     Object.keys(l.levels).forEach((method) => {
-        assert.function(l[method]);
+        assert.isFunction(l[method]);
     });
 };
 
@@ -234,15 +234,15 @@ helpers.assertHandleExceptions = function ({ script, logfile, message }) {
 
         fs.readFile(logfile, (err, data) => {
             helpers.tryUnlink(logfile);
-            assert.null(err);
+            assert.isNull(err);
             data = JSON.parse(data);
 
-            assert.object(data);
+            assert.isObject(data);
             helpers.assertProcessInfo(data.process);
             helpers.assertOsInfo(data.os);
             helpers.assertTrace(data.trace);
             if (message) {
-                assert.true(data.message.includes(`uncaughtException: ${message}`));
+                assert.isTrue(data.message.includes(`uncaughtException: ${message}`));
             }
 
             done();
@@ -269,15 +269,15 @@ helpers.assertHandleRejections = function (options) {
         helpers.tryUnlink(options.logfile);
         child.on("exit", () => {
             fs.readFile(options.logfile, (err, data) => {
-                assert.null(err);
+                assert.isNull(err);
                 data = JSON.parse(data);
   
-                assert.object(data);
+                assert.isObject(data);
                 helpers.assertProcessInfo(data.process);
                 helpers.assertOsInfo(data.os);
                 helpers.assertTrace(data.trace);
                 if (options.message) {
-                    assert.true(data.message.includes(`unhandledRejection: ${options.message}`));
+                    assert.isTrue(data.message.includes(`unhandledRejection: ${options.message}`));
                 }
   
                 done();

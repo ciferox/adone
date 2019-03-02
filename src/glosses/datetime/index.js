@@ -47,8 +47,9 @@ adone.lazify({
     Duration: () => __.duration.Duration,
     isDuration: () => __.duration.isDuration,
     relativeTimeRounding: () => __.duration.getSetRelativeTimeRounding,
-    relativeTimeThreshold: () => __.duration.getSetRelativeTimeThreshold
-}, datetime, undefined, { configurable: true, writable: true });
+    relativeTimeThreshold: () => __.duration.getSetRelativeTimeThreshold,
+    Datetime: ["./__/datetime", (mod) => mod.Datetime]
+}, datetime, require, { configurable: true, writable: true });
 
 
 // datetime.fn = Datetime.prototype;

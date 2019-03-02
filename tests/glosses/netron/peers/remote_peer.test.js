@@ -5,7 +5,7 @@ const {
     netron: { Netron }
 } = adone;
 
-describe("netron", "RemotePeer", () => {
+describe("RemotePeer", () => {
     describe("specific", () => {
         let peerInfo;
         let netron;

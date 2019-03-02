@@ -574,7 +574,7 @@ describe("util", "tokenizeRegexp", () => {
                 });
 
                 specify("Get correct position of closing brace", () => {
-                    assert.number(t[1]);
+                    assert.isNumber(t[1]);
                     assert.equal(t[1], 21);
                 });
             });

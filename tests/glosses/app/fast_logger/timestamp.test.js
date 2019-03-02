@@ -20,7 +20,7 @@ describe("fastLogger", "timestamp", () => {
         const instance = fastLogger(opts, stream);
         instance.info("foobar");
         const result = await once(stream, "data");
-        assert.true(result.hasOwnProperty("time"));
+        assert.isTrue(result.hasOwnProperty("time"));
         assert.equal(result.time, "none");
     });
     
@@ -29,7 +29,7 @@ describe("fastLogger", "timestamp", () => {
         const instance = fastLogger(stream);
         instance.info("foobar");
         const result = await once(stream, "data");
-        assert.true(result.hasOwnProperty("time"));
+        assert.isTrue(result.hasOwnProperty("time"));
         assert.ok(new Date(result.time) <= new Date(), "time is greater than timestamp");
         assert.equal(result.msg, "foobar");
     });
@@ -39,7 +39,7 @@ describe("fastLogger", "timestamp", () => {
         const instance = fastLogger({ timestamp: false }, stream);
         instance.info("foobar");
         const result = await once(stream, "data");
-        assert.false(result.hasOwnProperty("time"));
+        assert.isFalse(result.hasOwnProperty("time"));
         assert.equal(result.msg, "foobar");
     });
     
@@ -48,7 +48,7 @@ describe("fastLogger", "timestamp", () => {
         const instance = fastLogger({ timestamp: true }, stream);
         instance.info("foobar");
         const result = await once(stream, "data");
-        assert.true(result.hasOwnProperty("time"));
+        assert.isTrue(result.hasOwnProperty("time"));
         assert.ok(new Date(result.time) <= new Date(), "time is greater than timestamp");
         assert.equal(result.msg, "foobar");
     });
@@ -59,7 +59,7 @@ describe("fastLogger", "timestamp", () => {
         const instance = logger.child({ component: "child" });
         instance.info("foobar");
         const result = await once(stream, "data");
-        assert.true(result.hasOwnProperty("time"));
+        assert.isTrue(result.hasOwnProperty("time"));
         assert.ok(new Date(result.time) <= new Date(), "time is greater than timestamp");
         assert.equal(result.msg, "foobar");
     });
@@ -70,7 +70,7 @@ describe("fastLogger", "timestamp", () => {
         const instance = logger.child({ component: "child" });
         instance.info("foobar");
         const result = await once(stream, "data");
-        assert.false(result.hasOwnProperty("time"));
+        assert.isFalse(result.hasOwnProperty("time"));
         assert.equal(result.msg, "foobar");
     });
     
@@ -84,7 +84,7 @@ describe("fastLogger", "timestamp", () => {
         Date.now = () => 1531069919686;
         instance.info("foobar");
         const result = await once(stream, "data");
-        assert.true(result.hasOwnProperty("time"));
+        assert.isTrue(result.hasOwnProperty("time"));
         assert.equal(result.time, 1531069920);
         Date.now = now;
     });    

@@ -57,7 +57,7 @@ export const del = function (testCommon) {
                 assert.notExists(err);
                 db.get("foo", (err, value) => {
                     assert.exists(err, "entry properly deleted");
-                    assert.undefined(value, "value is undefined");
+                    assert.isUndefined(value, "value is undefined");
                     assert.ok(verifyNotFoundError(err), "NotFound error");
                     done();
                 });

@@ -112,8 +112,9 @@ export default class CliConfiguration extends adone.configuration.Generic {
     }
 
     static async load({ cwd } = {}) {
+        const rootRealm = adone.realm.getRootRealm();
         if (!is.string(cwd)) {
-            cwd = adone.runtime.realm.env.ETC_ADONE_PATH;
+            cwd = rootRealm.env.ETC_ADONE_PATH;
         }
 
         const config = new CliConfiguration({

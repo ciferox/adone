@@ -15,5 +15,3 @@ export default class XVariable extends adone.js.adone.Base {
         return "Variable";
     }
 }
-adone.tag.define("CODEMOD_VAR");
-adone.tag.add(XVariable, "CODEMOD_VAR");

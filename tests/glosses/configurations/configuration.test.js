@@ -12,19 +12,19 @@ describe("configuration", "Base", () => {
     });
 
     it("should have map-like interface", () => {
-        assert.true(is.propertyOwned(proto, "set"));
-        assert.true(is.propertyOwned(proto, "get"));
-        assert.true(is.propertyOwned(proto, "has"));
-        assert.true(is.propertyOwned(proto, "delete"));
-        assert.true(is.propertyOwned(proto, "keys"));
-        assert.true(is.propertyOwned(proto, "values"));
-        assert.true(is.propertyOwned(proto, "entries"));
-        assert.true(is.propertyOwned(proto, "load"));
-        assert.true(is.propertyOwned(proto, "save"));
+        assert.isTrue(is.propertyOwned(proto, "set"));
+        assert.isTrue(is.propertyOwned(proto, "get"));
+        assert.isTrue(is.propertyOwned(proto, "has"));
+        assert.isTrue(is.propertyOwned(proto, "delete"));
+        assert.isTrue(is.propertyOwned(proto, "keys"));
+        assert.isTrue(is.propertyOwned(proto, "values"));
+        assert.isTrue(is.propertyOwned(proto, "entries"));
+        assert.isTrue(is.propertyOwned(proto, "load"));
+        assert.isTrue(is.propertyOwned(proto, "save"));
     });
 
     it("should get undefined of nonexisting key", () => {
-        assert.undefined(conf.get("nonexists"));
+        assert.isUndefined(conf.get("nonexists"));
     });
 
     it("should correctly check key", () => {
@@ -68,10 +68,10 @@ describe("configuration", "Base", () => {
 
     it("should has() correcly check existence of key", () => {
         conf.set("a.b.c", 10);
-        assert.true(conf.has("a"));
-        assert.true(conf.has("a.b"));
-        assert.true(conf.has("a.b.c"));
-        assert.false(conf.has("a.b.c.d"));
+        assert.isTrue(conf.has("a"));
+        assert.isTrue(conf.has("a.b"));
+        assert.isTrue(conf.has("a.b.c"));
+        assert.isFalse(conf.has("a.b.c.d"));
 
         class A {
             constructor() {
@@ -80,17 +80,17 @@ describe("configuration", "Base", () => {
         }
 
         conf.set("a.b.a", new A());
-        assert.true(conf.has("a.b.a"));
-        assert.true(conf.has("a.b.a.val"));
-        assert.false(conf.has("a.b.a.other"));
+        assert.isTrue(conf.has("a.b.a"));
+        assert.isTrue(conf.has("a.b.a.val"));
+        assert.isFalse(conf.has("a.b.a.other"));
     });
 
     it("should get() value of existence key", () => {
         conf.set("a.b.c", 10);
-        assert.true(is.plainObject(conf.get("a")));
-        assert.true(is.plainObject(conf.get("a.b")));
+        assert.isTrue(is.plainObject(conf.get("a")));
+        assert.isTrue(is.plainObject(conf.get("a.b")));
         assert.equal(conf.get("a.b.c"), 10);
-        assert.undefined(conf.get("a.b.c.d"));
+        assert.isUndefined(conf.get("a.b.c.d"));
 
         class A {
             constructor() {
@@ -102,17 +102,17 @@ describe("configuration", "Base", () => {
         conf.set("a.b.a", a);
         assert.deepEqual(conf.get("a.b.a"), a);
         assert.equal(conf.get("a.b.a.val"), 1);
-        assert.undefined(conf.get("a.b.a.other"));
+        assert.isUndefined(conf.get("a.b.a.other"));
     });
 
     it("should delete keys", () => {
         conf.set("a.b.c", 10);
         conf.delete("a.b.c");
-        assert.true(conf.has("a.b"));
-        assert.false(conf.has("a.b.c"));
+        assert.isTrue(conf.has("a.b"));
+        assert.isFalse(conf.has("a.b.c"));
         conf.delete("a");
-        assert.false(conf.has("a"));
-        assert.false(conf.has("a.b"));
+        assert.isFalse(conf.has("a"));
+        assert.isFalse(conf.has("a.b"));
     });
 
     it("initially keys() should return empty array", () => {
@@ -185,9 +185,9 @@ describe("configuration", "Base", () => {
         conf.set("c", 3);
         const keys = conf.keys();
         assert.equal(keys.length, 3);
-        assert.true(keys.includes("a"));
-        assert.true(keys.includes("b"));
-        assert.true(keys.includes("c"));
+        assert.isTrue(keys.includes("a"));
+        assert.isTrue(keys.includes("b"));
+        assert.isTrue(keys.includes("c"));
     });
 
     it("values()", () => {
@@ -196,9 +196,9 @@ describe("configuration", "Base", () => {
         conf.set("c", 3);
         const vals = conf.values();
         assert.equal(vals.length, 3);
-        assert.true(vals.includes(1));
-        assert.true(vals.includes(2));
-        assert.true(vals.includes(3));
+        assert.isTrue(vals.includes(1));
+        assert.isTrue(vals.includes(2));
+        assert.isTrue(vals.includes(3));
     });
 
     it("entries()", () => {

@@ -60,8 +60,8 @@ export const readStreamSetUp = function (done) {
                 const call = this.dataSpy.getCall(i);
                 if (call) {
                     assert.equal(call.args.length, 1, `ReadStream "data" event #${i} fired with 1 argument`);
-                    assert.notNull(call.args[0].key, `ReadStream "data" event #${i} argument has "key" property`);
-                    assert.notNull(call.args[0].value, `ReadStream "data" event #${i} argument has "value" property`);
+                    assert.isNotNull(call.args[0].key, `ReadStream "data" event #${i} argument has "key" property`);
+                    assert.isNotNull(call.args[0].value, `ReadStream "data" event #${i} argument has "value" property`);
                     assert.equal(call.args[0].key, d.key, `ReadStream "data" event #${i} argument has correct "key"`);
                     assert.deepEqual(Number(call.args[0].value), Number(d.value), `ReadStream "data" event #${i} argument has correct "value"`);
                 }

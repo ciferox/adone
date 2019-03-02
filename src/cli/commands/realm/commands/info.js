@@ -1,6 +1,7 @@
 const {
     app: { Subsystem, MainCommandMeta },
     is,
+    pretty,
     runtime: { term }
 } = adone;
 
@@ -102,7 +103,7 @@ export default class extends Subsystem {
 
             return 0;
         } catch (err) {
-            term.print(`{red-fg}${err.stack}{/}`);
+            console.error(pretty.error(err));
             return 1;
         }
     }
@@ -127,13 +128,6 @@ export default class extends Subsystem {
             info.push({
                 key: "Description:",
                 value: manager.package.description
-            });
-        }
-
-        if (is.object(manager.package.realmType) && is.string(manager.package.realmType)) {
-            info.push({
-                key: "Type:",
-                value: manager.package.realmType
             });
         }
 

@@ -2,7 +2,6 @@ const {
     is,
     std,
     runtime: { term },
-    tag,
     app,
     util
 } = adone;
@@ -79,7 +78,7 @@ export default class Application extends app.Subsystem {
             this.removeProcessHandlers();
             await this.emitParallel("exit", code);
         } catch (err) {
-            console.error(err.stack || err.message || err);
+            console.error(adone.pretty.error(err));
             code = EXIT_ERROR;
         }
 
@@ -121,12 +120,12 @@ export default class Application extends app.Subsystem {
         }
     }
 
-    async _fireException(err) {
+    async fireException(err) {
         let errCode;
         if (is.function(this.error)) {
             errCode = await this.error(err);
         } else {
-            console.error(err.stack || err.message || err);
+            console.error(adone.pretty.error(err));
             errCode = adone.app.EXIT_ERROR;
         }
         if (!is.integer(errCode)) {
@@ -136,15 +135,15 @@ export default class Application extends app.Subsystem {
     }
 
     _uncaughtException(...args) {
-        return this._fireException(...args);
+        return this.fireException(...args);
     }
 
     _unhandledRejection(...args) {
-        return this._fireException(...args);
+        return this.fireException(...args);
     }
 
     _rejectionHandled(...args) {
-        return this._fireException(...args);
+        return this.fireException(...args);
     }
 
     _signalExit(sigName) {
@@ -169,4 +168,3 @@ export default class Application extends app.Subsystem {
         return this[ERROR_SCOPE];
     }
 }
-tag.add(Application, "APPLICATION");

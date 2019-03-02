@@ -376,7 +376,7 @@ describe("promise", () => {
             });
 
             assert.equal(val, fixture);
-            assert.true(called);
+            assert.isTrue(called);
         });
 
         it("callback is called when promise is rejected", async () => {
@@ -388,7 +388,7 @@ describe("promise", () => {
                 assert.equal(err, fixtureErr);
             });
 
-            assert.true(called);
+            assert.isTrue(called);
         });
 
         it("returning a rejected promise in the callback rejects the promise", async () => {

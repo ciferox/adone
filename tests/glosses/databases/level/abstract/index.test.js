@@ -835,7 +835,7 @@ describe("abstract", () => {
                 return Buffer.from("");
             });
             keys.forEach((key) => {
-                assert.true(is.buffer(options[key]), "should be buffer");
+                assert.isTrue(is.buffer(options[key]), "should be buffer");
                 assert.equal(options[key].length, 0, "should be empty");
             });
             verifyOptions(done, db._setupIteratorOptions(options));
@@ -846,7 +846,7 @@ describe("abstract", () => {
                 return "";
             });
             keys.forEach((key) => {
-                assert.string(options[key], "should be string");
+                assert.isString(options[key], "should be string");
                 assert.lengthOf(options[key], 0, "should be empty");
             });
             verifyOptions(done, db._setupIteratorOptions(options));
@@ -857,7 +857,7 @@ describe("abstract", () => {
                 return null;
             });
             keys.forEach((key) => {
-                assert.null(options[key], "should be null");
+                assert.isNull(options[key], "should be null");
             });
             verifyOptions(done, db._setupIteratorOptions(options));
         });
@@ -867,7 +867,7 @@ describe("abstract", () => {
                 return undefined;
             });
             keys.forEach((key) => {
-                assert.undefined(options[key], "should be undefined");
+                assert.isUndefined(options[key], "should be undefined");
             });
             verifyOptions(done, db._setupIteratorOptions(options));
         });

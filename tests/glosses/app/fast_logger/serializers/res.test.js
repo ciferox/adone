@@ -13,7 +13,7 @@ describe("app", "fastLogger", "serializers", "res", () => {
     it("res.raw is not enumerable", () => {
         const handler = (req, res) => {
             const serialized = resSerializer(res);
-            assert.false(serialized.propertyIsEnumerable("raw"));
+            assert.isFalse(serialized.propertyIsEnumerable("raw"));
             res.end();
         };
 

@@ -221,4 +221,3 @@ export default class AbstractPeer extends AsyncEmitter {
     // //     }
     // // }
 }
-adone.tag.add(AbstractPeer, "NETRON_ABSTRACTPEER");

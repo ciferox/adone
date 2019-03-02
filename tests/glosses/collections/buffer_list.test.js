@@ -361,7 +361,7 @@ describe("collection", "BufferList", () => {
         const md5sum = crypto.createHash("md5");
         const bl = new BufferList(((err, buf) => {
             assert(is.buffer(buf));
-            assert.null(err);
+            assert.isNull(err);
             assert.deepEqual(rndhash, md5(bl.slice()));
             assert.deepEqual(rndhash, md5(buf));
 

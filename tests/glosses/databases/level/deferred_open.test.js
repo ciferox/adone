@@ -21,7 +21,7 @@ describe("Deferred open()", () => {
         db.open();
 
         common.closeableDatabases.push(db);
-        assert.object(db);
+        assert.isObject(db);
 
         async.parallel([
             // 2) insert 3 values with put(), these should be deferred until the database is actually open
@@ -47,8 +47,8 @@ describe("Deferred open()", () => {
         });
 
         // we should still be in a state of limbo down here, not opened or closed, but 'new'
-        assert.false(db.isOpen());
-        assert.false(db.isClosed());
+        assert.isFalse(db.isOpen());
+        assert.isFalse(db.isClosed());
     });
 
     it("batch() on pre-opened database", (done) => {
@@ -57,7 +57,7 @@ describe("Deferred open()", () => {
         db.open();
 
         common.closeableDatabases.push(db);
-        assert.object(db);
+        assert.isObject(db);
 
         // 2) insert 3 values with batch(), these should be deferred until the database is actually open
         db.batch([
@@ -83,8 +83,8 @@ describe("Deferred open()", () => {
         });
 
         // we should still be in a state of limbo down here, not opened or closed, but 'new'
-        assert.false(db.isOpen());
-        assert.false(db.isClosed());
+        assert.isFalse(db.isOpen());
+        assert.isFalse(db.isClosed());
     });
 
     it("chained batch() on pre-opened database", (done) => {
@@ -93,7 +93,7 @@ describe("Deferred open()", () => {
         db.open();
 
         common.closeableDatabases.push(db);
-        assert.object(db);
+        assert.isObject(db);
 
         // 2) insert 3 values with batch(), these should be deferred until the database is actually open
         db.batch()
@@ -119,8 +119,8 @@ describe("Deferred open()", () => {
             });
 
         // we should still be in a state of limbo down here, not opened or closed, but 'new'
-        assert.false(db.isOpen());
-        assert.false(db.isClosed());
+        assert.isFalse(db.isOpen());
+        assert.isFalse(db.isClosed());
     });
 
     describe("test deferred ReadStream", () => {

@@ -49,7 +49,7 @@ describe("shani", "util", "nock", "back", () => {
         const scopesLength = scopesLoaded ? 1 : 0;
 
         nockBack("goodRequest.json", function (done) {
-            assert.true(this.scopes.length === scopesLength);
+            assert.isTrue(this.scopes.length === scopesLength);
             http.get("http://www.google.com").end();
             this.assertScopesFinished();
             done();
@@ -91,8 +91,8 @@ describe("shani", "util", "nock", "back", () => {
         promise.then((params) => {
             const nockDone = params.nockDone;
             const context = params.context;
-            assert.function(nockDone);
-            assert.object(context);
+            assert.isFunction(nockDone);
+            assert.isObject(context);
             done();
         });
 
@@ -107,8 +107,8 @@ describe("shani", "util", "nock", "back", () => {
         promise.then((params) => {
             const nockDone = params.nockDone;
             const context = params.context;
-            assert.function(nockDone);
-            assert.object(context);
+            assert.isFunction(nockDone);
+            assert.isObject(context);
             done();
         });
 
@@ -193,7 +193,7 @@ describe("shani", "util", "nock", "back", () => {
                     assert.oneOf(res.statusCode, [200, 301, 302]);
                     res.on("end", () => {
                         assert.ok(dataCalled);
-                        assert.false(this.fixture.existsSync());
+                        assert.isFalse(this.fixture.existsSync());
                         done();
                     });
 
@@ -248,7 +248,7 @@ describe("shani", "util", "nock", "back", () => {
                 http.request(options).end();
                 done();
 
-                assert.true(this.fixture.existsSync());
+                assert.isTrue(this.fixture.existsSync());
                 doneTest();
             });
         });
@@ -274,7 +274,7 @@ describe("shani", "util", "nock", "back", () => {
                 http.request(options).end();
                 done();
 
-                assert.true(this.fixture.existsSync());
+                assert.isTrue(this.fixture.existsSync());
                 doneTest();
             });
 
@@ -298,7 +298,7 @@ describe("shani", "util", "nock", "back", () => {
 
         it("it loads your recorded tests", (doneTest) => {
             nockBack("goodRequest.json", function (done) {
-                assert.true(this.scopes.length > 0);
+                assert.isTrue(this.scopes.length > 0);
                 http.get("http://www.google.com").end();
                 this.assertScopesFinished();
                 done();
@@ -331,10 +331,10 @@ describe("shani", "util", "nock", "back", () => {
                 http.request(options).end();
                 done();
 
-                assert.true(this.fixture.existsSync());
+                assert.isTrue(this.fixture.existsSync());
 
                 nockBack(this.fixture.filename(), function (done) {
-                    assert.true(this.scopes.length === 0);
+                    assert.isTrue(this.scopes.length === 0);
                     done();
                     doneTest();
                 });

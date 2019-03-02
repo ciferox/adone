@@ -47,7 +47,7 @@ describe("util", "fakeClock", () => {
 
             clock.tick(1);
             assert(stub2.called);
-            assert.false(stub1.called);
+            assert.isFalse(stub1.called);
 
             clock.tick(99);
             assert(stub1.called);
@@ -113,9 +113,9 @@ describe("util", "fakeClock", () => {
                 const result = this.clock.setTimeout("");
 
                 if (is.object(result)) {
-                    assert.number(result.id);
+                    assert.isNumber(result.id);
                 } else {
-                    assert.number(result);
+                    assert.isNumber(result);
                 }
             });
 
@@ -135,7 +135,7 @@ describe("util", "fakeClock", () => {
                 clock2.setTimeout(stubs[1], 100);
                 clock2.tick(200);
 
-                assert.false(stubs[0].called);
+                assert.isFalse(stubs[0].called);
                 assert(stubs[1].called);
             });
 
@@ -172,7 +172,7 @@ describe("util", "fakeClock", () => {
 
                 clock.tick(3);
 
-                assert.true(stb.calledWithExactly("the first", "the second"));
+                assert.isTrue(stb.calledWithExactly("the first", "the second"));
             });
 
             it("calls correct timeout on recursive tick", () => {
@@ -284,9 +284,9 @@ describe("util", "fakeClock", () => {
                 const result = this.clock.setImmediate(noop);
 
                 if (is.object(result)) {
-                    assert.number(result.id);
+                    assert.isNumber(result.id);
                 } else {
-                    assert.number(result);
+                    assert.isNumber(result);
                 }
             });
 
@@ -316,7 +316,7 @@ describe("util", "fakeClock", () => {
                 clock2.setImmediate(stubs[1]);
                 clock2.tick(0);
 
-                assert.false(stubs[0].called);
+                assert.isFalse(stubs[0].called);
                 assert(stubs[1].called);
             });
 
@@ -365,7 +365,7 @@ describe("util", "fakeClock", () => {
                 this.clock.clearImmediate(id);
                 this.clock.tick(1);
 
-                assert.false(callback.called);
+                assert.isFalse(callback.called);
             });
 
             it("does not remove timeout", function () {
@@ -377,7 +377,7 @@ describe("util", "fakeClock", () => {
                 }, "Cannot clear timer: timer created with setTimeout() but cleared with clearImmediate()");
                 this.clock.tick(55);
 
-                assert.true(callback.called);
+                assert.isTrue(callback.called);
             });
 
             it("does not remove interval", function () {
@@ -389,7 +389,7 @@ describe("util", "fakeClock", () => {
                 }, "Cannot clear timer: timer created with setInterval() but cleared with clearImmediate()");
                 this.clock.tick(55);
 
-                assert.true(callback.called);
+                assert.isTrue(callback.called);
             });
         });
 
@@ -416,7 +416,7 @@ describe("util", "fakeClock", () => {
                 this.clock.setTimeout(stb, 100);
                 this.clock.tick(10);
 
-                assert.false(stb.called);
+                assert.isFalse(stb.called);
             });
 
             it("triggers after sufficient delay", function () {
@@ -480,7 +480,7 @@ describe("util", "fakeClock", () => {
                 this.clock.setTimeout(stb, 150);
                 this.clock.tick(50);
 
-                assert.false(stb.called);
+                assert.isFalse(stb.called);
                 this.clock.tick(100);
                 assert(stb.called);
             });
@@ -491,15 +491,15 @@ describe("util", "fakeClock", () => {
                 this.clock.setTimeout(stubs[1], 120);
                 this.clock.tick(10);
                 this.clock.tick(89);
-                assert.false(stubs[0].called);
-                assert.false(stubs[1].called);
+                assert.isFalse(stubs[0].called);
+                assert.isFalse(stubs[1].called);
                 this.clock.setTimeout(stubs[2], 20);
                 this.clock.tick(1);
                 assert(stubs[0].called);
-                assert.false(stubs[1].called);
-                assert.false(stubs[2].called);
+                assert.isFalse(stubs[1].called);
+                assert.isFalse(stubs[2].called);
                 this.clock.tick(19);
-                assert.false(stubs[1].called);
+                assert.isFalse(stubs[1].called);
                 assert(stubs[2].called);
                 this.clock.tick(1);
                 assert(stubs[1].called);
@@ -817,7 +817,7 @@ describe("util", "fakeClock", () => {
                 this.clock.next();
 
                 assert(spies[0].called);
-                assert.false(spies[1].called);
+                assert.isFalse(spies[1].called);
             });
 
             it("subsequent calls trigger simultaneous timers", function () {
@@ -829,18 +829,18 @@ describe("util", "fakeClock", () => {
 
                 this.clock.next();
                 assert(spies[2].called);
-                assert.false(spies[0].called);
-                assert.false(spies[1].called);
-                assert.false(spies[3].called);
+                assert.isFalse(spies[0].called);
+                assert.isFalse(spies[1].called);
+                assert.isFalse(spies[3].called);
 
                 this.clock.next();
                 assert(spies[0].called);
-                assert.false(spies[1].called);
-                assert.false(spies[3].called);
+                assert.isFalse(spies[1].called);
+                assert.isFalse(spies[3].called);
 
                 this.clock.next();
                 assert(spies[1].called);
-                assert.false(spies[3].called);
+                assert.isFalse(spies[3].called);
 
                 this.clock.next();
                 assert(spies[3].called);
@@ -862,7 +862,7 @@ describe("util", "fakeClock", () => {
 
                 this.clock.next();
                 assert(spies[0].called);
-                assert.false(spies[1].called);
+                assert.isFalse(spies[1].called);
 
                 this.clock.next();
                 assert(spies[1].called);
@@ -1126,8 +1126,8 @@ describe("util", "fakeClock", () => {
 
                 this.clock.runToLast();
 
-                assert.true(spies[0].called);
-                assert.false(spies[1].called);
+                assert.isTrue(spies[0].called);
+                assert.isFalse(spies[1].called);
             });
 
             it("new timers added with a call time earlier than the last existing timer are run", function () {
@@ -1147,9 +1147,9 @@ describe("util", "fakeClock", () => {
 
                 this.clock.runToLast();
 
-                assert.true(spies[0].called);
-                assert.true(spies[1].called);
-                assert.true(spies[2].called);
+                assert.isTrue(spies[0].called);
+                assert.isTrue(spies[1].called);
+                assert.isTrue(spies[2].called);
             });
 
             it("new timers cannot cause an infinite loop", function () {
@@ -1165,7 +1165,7 @@ describe("util", "fakeClock", () => {
 
                 this.clock.runToLast();
 
-                assert.true(s.called);
+                assert.isTrue(s.called);
             });
         });
 
@@ -1180,7 +1180,7 @@ describe("util", "fakeClock", () => {
                 this.clock.clearTimeout(id);
                 this.clock.tick(50);
 
-                assert.false(stb.called);
+                assert.isFalse(stb.called);
             });
 
             it("does not remove interval", function () {
@@ -1191,7 +1191,7 @@ describe("util", "fakeClock", () => {
                 }, "Cannot clear timer: timer created with setInterval() but cleared with clearTimeout()");
                 this.clock.tick(50);
 
-                assert.true(stb.called);
+                assert.isTrue(stb.called);
             });
 
             it("does not remove interval with undefined interval", function () {
@@ -1202,7 +1202,7 @@ describe("util", "fakeClock", () => {
                 }, "Cannot clear timer: timer created with setInterval() but cleared with clearTimeout()");
                 this.clock.tick(50);
 
-                assert.true(s.called);
+                assert.isTrue(s.called);
             });
 
             it("does not remove immediate", function () {
@@ -1213,7 +1213,7 @@ describe("util", "fakeClock", () => {
                 }, "Cannot clear timer: timer created with setImmediate() but cleared with clearTimeout()");
                 this.clock.tick(50);
 
-                assert.true(stb.called);
+                assert.isTrue(stb.called);
             });
 
             it("ignores null argument", function () {
@@ -1234,7 +1234,7 @@ describe("util", "fakeClock", () => {
                 this.clock.reset();
                 this.clock.tick(0);
 
-                assert.false(stb.called);
+                assert.isFalse(stb.called);
             });
         });
 
@@ -1255,9 +1255,9 @@ describe("util", "fakeClock", () => {
                 const result = this.clock.setInterval("");
 
                 if (is.object(result)) {
-                    assert.number(result.id);
+                    assert.isNumber(result.id);
                 } else {
-                    assert.number(result);
+                    assert.isNumber(result);
                 }
             });
 
@@ -1322,7 +1322,7 @@ describe("util", "fakeClock", () => {
 
                 clock.tick(3);
 
-                assert.true(stb.calledWithExactly("the first", "the second"));
+                assert.isTrue(stb.calledWithExactly("the first", "the second"));
             });
         });
 
@@ -1337,7 +1337,7 @@ describe("util", "fakeClock", () => {
                 this.clock.clearInterval(id);
                 this.clock.tick(50);
 
-                assert.false(stb.called);
+                assert.isFalse(stb.called);
             });
 
             it("removes interval with undefined interval", function () {
@@ -1346,7 +1346,7 @@ describe("util", "fakeClock", () => {
                 this.clock.clearInterval(id);
                 this.clock.tick(50);
 
-                assert.false(s.called);
+                assert.isFalse(s.called);
             });
 
             it("does not remove timeout", function () {
@@ -1356,7 +1356,7 @@ describe("util", "fakeClock", () => {
                     this.clock.clearInterval(id);
                 }, "Cannot clear timer: timer created with setTimeout() but cleared with clearInterval()");
                 this.clock.tick(50);
-                assert.true(stb.called);
+                assert.isTrue(stb.called);
             });
 
             it("does not remove immediate", function () {
@@ -1367,7 +1367,7 @@ describe("util", "fakeClock", () => {
                 }, "Cannot clear timer: timer created with setImmediate() but cleared with clearInterval()");
                 this.clock.tick(50);
 
-                assert.true(stb.called);
+                assert.isTrue(stb.called);
             });
 
             it("ignores null argument", function () {
@@ -1388,7 +1388,7 @@ describe("util", "fakeClock", () => {
             });
 
             it("provides date constructor", function () {
-                assert.function(this.clock.Date);
+                assert.isFunction(this.clock.Date);
             });
 
             it("creates real Date objects", function () {
@@ -1574,7 +1574,7 @@ describe("util", "fakeClock", () => {
             } else {
                 describe("unsupported now", () => {
                     it("is undefined", function () {
-                        assert.undefined(this.clock.Date.now);
+                        assert.isUndefined(this.clock.Date.now);
                     });
                 });
             }
@@ -1603,7 +1603,7 @@ describe("util", "fakeClock", () => {
                 describe("unsupported toSource", () => {
 
                     it("is undefined", function () {
-                        assert.undefined(this.clock.Date.toSource);
+                        assert.isUndefined(this.clock.Date.toSource);
                     });
 
                 });
@@ -1635,8 +1635,8 @@ describe("util", "fakeClock", () => {
             it("returns clock object", function () {
                 this.clock = fakeClock.install();
 
-                assert.object(this.clock);
-                assert.function(this.clock.tick);
+                assert.isObject(this.clock);
+                assert.isFunction(this.clock.tick);
             });
 
             it("has clock property", function () {
@@ -1682,11 +1682,11 @@ describe("util", "fakeClock", () => {
                 const to = setTimeout(stb, 1000);
 
                 if (is.object(setTimeout(noop, 0))) {
-                    assert.number(to.id);
-                    assert.function(to.ref);
-                    assert.function(to.unref);
+                    assert.isNumber(to.id);
+                    assert.isFunction(to.ref);
+                    assert.isFunction(to.unref);
                 } else {
-                    assert.number(to);
+                    assert.isNumber(to);
                 }
             });
 
@@ -1697,7 +1697,7 @@ describe("util", "fakeClock", () => {
                 clearTimeout(setTimeout(stb, 1000));
                 this.clock.tick(1000);
 
-                assert.false(stb.called);
+                assert.isFalse(stb.called);
             });
 
             it("uninstalls global setTimeout", function () {
@@ -1708,7 +1708,7 @@ describe("util", "fakeClock", () => {
                 this.timer = setTimeout(stb, 1000);
                 this.clock.tick(1000);
 
-                assert.false(stb.called);
+                assert.isFalse(stb.called);
                 assert.deepEqual(setTimeout, fakeClock.timers.setTimeout);
             });
 
@@ -1737,7 +1737,7 @@ describe("util", "fakeClock", () => {
                 clearInterval(setInterval(stb, 500));
                 this.clock.tick(1000);
 
-                assert.false(stb.called);
+                assert.isFalse(stb.called);
             });
 
             it("uninstalls global setInterval", function () {
@@ -1748,7 +1748,7 @@ describe("util", "fakeClock", () => {
                 this.timer = setInterval(stb, 1000);
                 this.clock.tick(1000);
 
-                assert.false(stb.called);
+                assert.isFalse(stb.called);
                 assert.deepEqual(setInterval, fakeClock.timers.setInterval);
             });
 
@@ -1790,10 +1790,10 @@ describe("util", "fakeClock", () => {
                         Object.getPrototypeOf(global).tick = function () { };
 
                         this.clock = fakeClock.install({ now: 0, toFake: ["tick"] });
-                        assert.true(global.hasOwnProperty("tick"));
+                        assert.isTrue(global.hasOwnProperty("tick"));
                         this.clock.uninstall();
 
-                        assert.false(global.hasOwnProperty("tick"));
+                        assert.isFalse(global.hasOwnProperty("tick"));
                         delete Object.getPrototypeOf(global).tick;
                     });
                 }
@@ -1806,10 +1806,10 @@ describe("util", "fakeClock", () => {
                 global.tick = noop;
 
                 this.clock = fakeClock.install({ now: 0, toFake: ["tick"] });
-                assert.true(global.hasOwnProperty("tick"));
+                assert.isTrue(global.hasOwnProperty("tick"));
                 this.clock.uninstall();
 
-                assert.true(global.hasOwnProperty("tick"));
+                assert.isTrue(global.hasOwnProperty("tick"));
                 delete global.tick;
             });
 
@@ -1839,7 +1839,7 @@ describe("util", "fakeClock", () => {
                 global.Date.now = undefined;
                 this.clock = fakeClock.install({ now: 0 });
 
-                assert.undefined(Date.now);
+                assert.isUndefined(Date.now);
             });
 
             it("mirrors custom Date properties", function () {

@@ -3,5 +3,3 @@ export default class XImport extends adone.js.adone.Base {
         return "ImportDeclaration";
     }
 }
-adone.tag.define("CODEMOD_IMPORT");
-adone.tag.add(XImport, "CODEMOD_IMPORT");

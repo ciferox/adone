@@ -2280,7 +2280,7 @@ module.exports = function (moscaSettings, createConnection) {
             // two times!
             step1, step2, step3
         ], (err) => {
-            assert.undefined(err);
+            assert.isUndefined(err);
 
             buildClient(done, (client) => {
                 client.connect(opts);

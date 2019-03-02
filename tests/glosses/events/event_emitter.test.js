@@ -4,7 +4,7 @@ const {
 
 describe("event", "Emitter", () => {
     it("is.emitter() should return true", () => {
-        assert.true(adone.is.emitter(new Emitter()));
+        assert.isTrue(adone.is.emitter(new Emitter()));
     });
 
     describe("addListeners", () => {

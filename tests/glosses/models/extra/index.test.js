@@ -405,7 +405,7 @@ describe("interface", () => {
                 });
             });
 
-            assert.true(/TypeError/.test(err.toString())
+            assert.isTrue(/TypeError/.test(err.toString())
                 && /name/.test(err.toString())
                 && /age/.test(err.toString())
                 && /birth/.test(err.toString())

@@ -10,7 +10,7 @@ describe("Subsystem", () => {
     const create = (name) => new Subsystem({ name });
     it("default initialization", () => {
         const ss = create();
-        assert.undefined(ss.name);
+        assert.isUndefined(ss.name);
     });
 
     it("initialization with name", () => {
@@ -48,7 +48,7 @@ describe("Subsystem", () => {
 
     it("check presence and get all of subsystems", () => {
         const ss = create("root");
-        assert.false(ss.hasSubsystems());
+        assert.isFalse(ss.hasSubsystems());
 
         ss.addSubsystem({
             name: "ss1",
@@ -60,14 +60,14 @@ describe("Subsystem", () => {
             subsystem: create("ss2")
         });
 
-        assert.true(ss.hasSubsystems());
+        assert.isTrue(ss.hasSubsystems());
         assert.lengthOf(ss.getSubsystems(), 2);
     });
 
     describe("groups", () => {
         it("check presence and get all of subsystems", () => {
             const ss = create("root");
-            assert.false(ss.hasSubsystems());
+            assert.isFalse(ss.hasSubsystems());
     
             ss.addSubsystem({
                 name: "ss1",
@@ -92,10 +92,10 @@ describe("Subsystem", () => {
                 group: "3"
             });
     
-            assert.false(ss.hasSubsystems("1"));
-            assert.true(ss.hasSubsystems());
-            assert.true(ss.hasSubsystems("2"));
-            assert.true(ss.hasSubsystems("3"));
+            assert.isFalse(ss.hasSubsystems("1"));
+            assert.isTrue(ss.hasSubsystems());
+            assert.isTrue(ss.hasSubsystems("2"));
+            assert.isTrue(ss.hasSubsystems("3"));
             
             assert.lengthOf(ss.getSubsystems("1"), 0);
             assert.lengthOf(ss.getSubsystems("2"), 2);

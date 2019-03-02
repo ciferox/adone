@@ -19,22 +19,22 @@ describe("stripAnsi()", () => {
 
 describe("hasAnsi()", () => {
     it("with ansi", () => {
-        assert.true(text.hasAnsi("foo\u001B[4mcake\u001B[0m"));
+        assert.isTrue(text.hasAnsi("foo\u001B[4mcake\u001B[0m"));
     });
 
     it("without ansi", () => {
-        assert.false(text.hasAnsi("cake"));
+        assert.isFalse(text.hasAnsi("cake"));
     });
 });
 
 describe("Unicode", () => {
     describe("Full width", () => {
         it("check", () => {
-            assert.true(isFullWidthCodePoint("あ".codePointAt(0)));
-            assert.true(isFullWidthCodePoint("谢".codePointAt(0)));
-            assert.true(isFullWidthCodePoint("고".codePointAt(0)));
-            assert.false(isFullWidthCodePoint("a".codePointAt(0)));
-            assert.true(isFullWidthCodePoint(0x1f251));
+            assert.isTrue(isFullWidthCodePoint("あ".codePointAt(0)));
+            assert.isTrue(isFullWidthCodePoint("谢".codePointAt(0)));
+            assert.isTrue(isFullWidthCodePoint("고".codePointAt(0)));
+            assert.isFalse(isFullWidthCodePoint("a".codePointAt(0)));
+            assert.isTrue(isFullWidthCodePoint(0x1f251));
         });
     });
 });

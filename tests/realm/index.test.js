@@ -6,55 +6,55 @@ const {
     // cli,
     realm,
     std,
-    text
+    // text
 } = adone;
 
-const PACKAGES_PATH = std.path.join(__dirname, "packages");
-const FIXTURES_PATH = std.path.join(__dirname, "fixtures");
-const fixturePath = (...args) => std.path.join(FIXTURES_PATH, ...args);
+// const PACKAGES_PATH = std.path.join(__dirname, "packages");
+// const FIXTURES_PATH = std.path.join(__dirname, "fixtures");
+// const fixturePath = (...args) => std.path.join(FIXTURES_PATH, ...args);
 const realmPathFor = (...args) => std.path.join(__dirname, "realms", ...args);
 
-// NOTE: tests order matters
+// // NOTE: tests order matters
 
 describe("realm", () => {
-    let runtimeRealmManager;
+    let rootRealm;
     let realmManager;
     let realmPath;
-    let adoneCliPath;
-    let cliConfig;
+    // let adoneCliPath;
+    // let cliConfig;
     let realmCounter = 1;
     const getRealmName = () => `project${realmCounter++}`;
 
-    const newRealmsPath = fixturePath("new_realms");
+    // const newRealmsPath = fixturePath("new_realms");
 
-    const CORE_TASKS = [
-        "createRealm",
-        "forkRealm",
-        "install",
-        "uninstall",
-        "mount",
-        "unmount",
-        "list",
-        "listByType",
-        "validateRealm",
+    // const CORE_TASKS = [
+    //     "createRealm",
+    //     "forkRealm",
+    //     "install",
+    //     "uninstall",
+    //     "mount",
+    //     "unmount",
+    //     "list",
+    //     "listByType",
+    //     "validateRealm",
 
-        "clean",
-        "build",
-        "copy",
-        "transpile",
-        "transpileExe",
-        "adoneTranspile",
-        "adoneTranspileExe",
-        "adoneDotCompiler",
-        "watch",
-        "increaseVersion",
-        "nbuild",
-        "nclean"
-    ];
+    //     "clean",
+    //     "build",
+    //     "copy",
+    //     "transpile",
+    //     "transpileExe",
+    //     "adoneTranspile",
+    //     "adoneTranspileExe",
+    //     "adoneDotCompiler",
+    //     "watch",
+    //     "increaseVersion",
+    //     "nbuild",
+    //     "nclean"
+    // ];
 
     // const randomName = (prefix = "test") => `${prefix}${text.random(4)}_${text.random(5)}_${text.random(6)}`;
 
-    const createManagerFor = async (name, shouldInit = true) => {
+    const createRealmFor = async (name, shouldInit = true) => {
         const manager = new realm.Manager({
             cwd: realmPathFor(name)
         });
@@ -74,12 +74,28 @@ describe("realm", () => {
         //     await adone.omnitron.dispatcher.stopOmnitron();
     });
 
-    it("default realm runtime information", () => {
-        assert.notDeepEqual(adone.runtime.realm, {});
+    describe.only("adone realm", () => {
+        it("realm namespace", () => {
+            assert.isTrue(is.namespace(adone.realm));
+            assert.isTrue(is.class(adone.realm.Manager));
+            assert.isTrue(is.class(adone.realm.BaseTask));
+            assert.isTrue(is.class(adone.realm.TransformTask));
+            assert.isTrue(is.class(adone.realm.Configuration));
+            assert.isFunction(adone.realm.getRootRealm);
+        });
+
+        it("root realm", () => {
+            rootRealm = realm.getRootRealm();
+            assert.instanceOf(rootRealm, adone.realm.Manager);
+            assert.equal(rootRealm.env.ROOT_PATH, adone.ROOT_PATH);
+            assert.deepEqual(rootRealm.package, adone.package);
+            assert.isObject(rootRealm.config);
+        });
     });
 
+
     it("realm without tasks", async () => {
-        const mgr = await createManagerFor("no_tasks");
+        const mgr = await createRealmFor("no_tasks");
 
         assert.strictEqual(mgr.package.name, "test");
         assert.strictEqual(mgr.package.description, "Tesk project");
@@ -87,13 +103,13 @@ describe("realm", () => {
         assert.strictEqual(mgr.package.main, "lib");
         assert.equal(mgr.fullName, "app.test");
 
-        assert.object(mgr.config.raw.struct);
+        assert.isObject(mgr.config.raw.struct);
 
         assert.lengthOf(mgr.getTaskNames(), 0);
     });
 
     it("realm with tasks", async () => {
-        const mgr = await createManagerFor("with_tasks");
+        const mgr = await createRealmFor("with_tasks");
 
         assert.strictEqual(mgr.package.name, "test2");
         assert.strictEqual(mgr.package.description, "Tesk project 2");
@@ -101,36 +117,36 @@ describe("realm", () => {
         assert.strictEqual(mgr.package.main, "lib");
         assert.equal(mgr.fullName, "app.test2");
 
-        assert.object(mgr.config.raw.struct);
+        assert.isObject(mgr.config.raw.struct);
 
         assert.sameMembers(mgr.getTaskNames(), ["task1", "task2"]);
     });
 
     it("get manager for core realm", async () => {
-        runtimeRealmManager = realm.getCoreManager();
+        rootRealm = realm.getCoreManager();
         const anotherInstance = realm.getCoreManager();
-        assert.false(is.nil(runtimeRealmManager));
-        assert.strictEqual(runtimeRealmManager, anotherInstance);
+        assert.isFalse(is.nil(rootRealm));
+        assert.strictEqual(rootRealm, anotherInstance);
 
-        assert.strictEqual(runtimeRealmManager, adone.runtime.realm.manager);
-        assert.strictEqual(runtimeRealmManager.cwd, runtimeRealmManager.env.ROOT_PATH);
-        assert.deepEqual(runtimeRealmManager.identity, adone.runtime.realm.identity);
-        assert.deepEqual(runtimeRealmManager.config, adone.runtime.realm.config);
+        assert.strictEqual(rootRealm, adone.realm.getRootRealm().manager);
+        assert.strictEqual(rootRealm.cwd, rootRealm.env.ROOT_PATH);
+        assert.deepEqual(rootRealm.identity, adone.realm.getRootRealm().identity);
+        assert.deepEqual(rootRealm.config, adone.realm.getRootRealm().config);
     });
 
     it("initialize realm manager", async () => {
-        assert.null(runtimeRealmManager.typeHandler);
+        assert.isNull(rootRealm.typeHandler);
 
-        assert.lengthOf(runtimeRealmManager.getTaskNames(), 0);
+        assert.lengthOf(rootRealm.getTaskNames(), 0);
 
-        await runtimeRealmManager.initialize();
+        await rootRealm.initialize();
 
-        assert.sameMembers(runtimeRealmManager.getTaskNames(), CORE_TASKS);
+        assert.sameMembers(rootRealm.getTaskNames(), CORE_TASKS);
     });
 
     it("initialize realm manager second time should be thrown", async () => {
         const err = await assert.throws(async () => {
-            await runtimeRealmManager.initialize();
+            await rootRealm.initialize();
         });
         assert.instanceOf(err, error.IllegalStateException);
         assert.equal(err.message, "Realm manager already initialized");
@@ -153,13 +169,13 @@ describe("realm", () => {
 
         it("create realm without 'name' should be thrown", async () => {
             await assert.throws(async () => {
-                await runtimeRealmManager.runAndWait("createRealm");
+                await rootRealm.runAndWait("createRealm");
             }, error.InvalidArgumentException);
         });
 
         it("create realm with default 'basePath' should be thrown", async () => {
             await assert.throws(async () => {
-                await runtimeRealmManager.runAndWait("createRealm", {
+                await rootRealm.runAndWait("createRealm", {
                     name: "realm1"
                 });
             }, error.InvalidArgumentException);
@@ -167,7 +183,7 @@ describe("realm", () => {
 
         it("create realm at existing location should have thrown", async () => {
             await assert.throws(async () => {
-                await runtimeRealmManager.runAndWait("createRealm", {
+                await rootRealm.runAndWait("createRealm", {
                     name: "no_tasks",
                     basePath: realmPathFor()
                 });
@@ -183,16 +199,16 @@ describe("realm", () => {
                 basePath: newRealmsPath
             };
 
-            await runtimeRealmManager.runAndWait("createRealm", info);
+            await rootRealm.runAndWait("createRealm", info);
 
             assert.equal(info.cwd, std.path.join(newRealmsPath, info.name));
-            assert.true(await fs.exists(info.cwd));
-            assert.true(await fs.isFile(std.path.join(info.cwd, realm.Configuration.configName)));
-            assert.true(await fs.isFile(std.path.join(info.cwd, configuration.Npm.configName)));
-            assert.true(await fs.isFile(std.path.join(info.cwd, ".gitignore")));
-            assert.true(await fs.isDirectory(std.path.join(info.cwd, ".git")));
-            assert.true(await fs.isFile(std.path.join(info.cwd, ".eslintrc.js")));
-            assert.true(await fs.isFile(std.path.join(info.cwd, "jsconfig.json")));
+            assert.isTrue(await fs.exists(info.cwd));
+            assert.isTrue(await fs.isFile(std.path.join(info.cwd, realm.Configuration.configName)));
+            assert.isTrue(await fs.isFile(std.path.join(info.cwd, configuration.Npm.configName)));
+            assert.isTrue(await fs.isFile(std.path.join(info.cwd, ".gitignore")));
+            assert.isTrue(await fs.isDirectory(std.path.join(info.cwd, ".git")));
+            assert.isTrue(await fs.isFile(std.path.join(info.cwd, ".eslintrc.js")));
+            assert.isTrue(await fs.isFile(std.path.join(info.cwd, "jsconfig.json")));
 
             const packageConfig = await configuration.Npm.load({
                 cwd: info.cwd
@@ -213,7 +229,7 @@ describe("realm", () => {
                 basePath: newRealmsPath
             };
 
-            await runtimeRealmManager.runAndWait("createRealm", info);
+            await rootRealm.runAndWait("createRealm", info);
 
             assert.equal(info.cwd, std.path.join(newRealmsPath, info.dirName));
 
@@ -234,12 +250,12 @@ describe("realm", () => {
                 basePath: newRealmsPath
             };
 
-            await runtimeRealmManager.runAndWait("createRealm", info);
+            await rootRealm.runAndWait("createRealm", info);
 
-            assert.true(await fs.exists(std.path.join(info.cwd, ".eslintrc.js")));
-            assert.true(await fs.isFile(std.path.join(info.cwd, "jsconfig.json")));
-            assert.false(await fs.exists(std.path.join(info.cwd, ".gitignore")));
-            assert.false(await fs.exists(std.path.join(info.cwd, ".git")));
+            assert.isTrue(await fs.exists(std.path.join(info.cwd, ".eslintrc.js")));
+            assert.isTrue(await fs.isFile(std.path.join(info.cwd, "jsconfig.json")));
+            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".gitignore")));
+            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".git")));
         });
 
         it("create realm without 'eslintrc.js' config", async () => {
@@ -251,12 +267,12 @@ describe("realm", () => {
                 basePath: newRealmsPath
             };
 
-            await runtimeRealmManager.runAndWait("createRealm", info);
+            await rootRealm.runAndWait("createRealm", info);
 
-            assert.false(await fs.exists(std.path.join(info.cwd, ".eslintrc.js")));
-            assert.true(await fs.isFile(std.path.join(info.cwd, "jsconfig.json")));
-            assert.true(await fs.exists(std.path.join(info.cwd, ".gitignore")));
-            assert.true(await fs.exists(std.path.join(info.cwd, ".git")));
+            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".eslintrc.js")));
+            assert.isTrue(await fs.isFile(std.path.join(info.cwd, "jsconfig.json")));
+            assert.isTrue(await fs.exists(std.path.join(info.cwd, ".gitignore")));
+            assert.isTrue(await fs.exists(std.path.join(info.cwd, ".git")));
         });
 
         it("create realm without 'jsconfig.json' config", async () => {
@@ -268,18 +284,18 @@ describe("realm", () => {
                 basePath: newRealmsPath
             };
 
-            await runtimeRealmManager.runAndWait("createRealm", info);
+            await rootRealm.runAndWait("createRealm", info);
 
-            assert.false(await fs.exists(std.path.join(info.cwd, "jsconfig.json")));
-            assert.true(await fs.isFile(std.path.join(info.cwd, ".eslintrc.js")));
-            assert.true(await fs.isFile(std.path.join(info.cwd, ".gitignore")));
-            assert.true(await fs.exists(std.path.join(info.cwd, ".git")));
+            assert.isFalse(await fs.exists(std.path.join(info.cwd, "jsconfig.json")));
+            assert.isTrue(await fs.isFile(std.path.join(info.cwd, ".eslintrc.js")));
+            assert.isTrue(await fs.isFile(std.path.join(info.cwd, ".gitignore")));
+            assert.isTrue(await fs.exists(std.path.join(info.cwd, ".git")));
         });
     });
 
     describe.skip("fork realm", () => {
         it("fork without 'basePath' should be thrown", async () => {
-            const observer = await runtimeRealmManager.runSafe("forkRealm", {
+            const observer = await rootRealm.runSafe("forkRealm", {
                 name: "test"
             });
             const err = await assert.throws(async () => observer.result);
@@ -291,7 +307,7 @@ describe("realm", () => {
                 prefix: "realm-"
             });
     
-            const observer = await runtimeRealmManager.runSafe("forkRealm", {
+            const observer = await rootRealm.runSafe("forkRealm", {
                 basePath: realmPath
             });
             const err = await assert.throws(async () => observer.result);
@@ -303,23 +319,23 @@ describe("realm", () => {
                 prefix: "realm-"
             });
     
-            assert.false(await fs.exists(realmPath));
+            assert.isFalse(await fs.exists(realmPath));
     
-            // runtimeRealmManager.onNotification("progress", (task, name, info) => {
+            // rootRealm.onNotification("progress", (task, name, info) => {
             //     console.log(info.message);
             // });
     
             const name = std.path.basename(realmPath);
             const basePath = std.path.dirname(realmPath);
     
-            const observer = await runtimeRealmManager.runSafe("forkRealm", {
+            const observer = await rootRealm.runSafe("forkRealm", {
                 basePath,
                 name
             });
             const destPath = await observer.result;
     
-            assert.true(await fs.exists(realmPath));
-            assert.true(await fs.isDirectory(realmPath));
+            assert.isTrue(await fs.exists(realmPath));
+            assert.isTrue(await fs.isDirectory(realmPath));
             assert.strictEqual(destPath, realmPath);
     
             realmManager = new realm.Manager({
@@ -355,11 +371,11 @@ describe("realm", () => {
             };
     
             await realmManager.lock();
-            assert.true(await fs.exists(options.lockfilePath));
-            assert.true(await adone.app.lockfile.check(realmManager.env.ROOT_PATH, options));
+            assert.isTrue(await fs.exists(options.lockfilePath));
+            assert.isTrue(await adone.app.lockfile.check(realmManager.env.ROOT_PATH, options));
             await realmManager.unlock();
-            assert.false(await fs.exists(options.lockfilePath));
-            assert.false(await adone.app.lockfile.check(realmManager.env.ROOT_PATH, options));
+            assert.isFalse(await fs.exists(options.lockfilePath));
+            assert.isFalse(await adone.app.lockfile.check(realmManager.env.ROOT_PATH, options));
         });
     
         it("default tasks", async () => {
@@ -408,9 +424,9 @@ describe("realm", () => {
         //                     const packagePath = std.path.join(realmManager.config.PACKAGES_PATH, packageName);
 
         //                     const dir = new fs.Directory(packagePath);
-        //                     assert.true(await dir.exists());
+        //                     assert.isTrue(await dir.exists());
         //                     if (symlink) {
-        //                         assert.true(await dir.isSymbolicLink());
+        //                         assert.isTrue(await dir.isSymbolicLink());
         //                     }
 
         //                     if (name === "complex") {
@@ -429,7 +445,7 @@ describe("realm", () => {
         //                     });
         //                     await observer.result;
 
-        //                     assert.false(await dir.exists());
+        //                     assert.isFalse(await dir.exists());
 
         //                     if (name === "es6") {
         //                         await fs.rm(std.path.join(cliCommandPath, "lib"));
@@ -437,10 +453,10 @@ describe("realm", () => {
 
         //                     await cliConfig.load();
         //                     if (name === "complex") {
-        //                         assert.false(cliConfig.hasCommand("sub1"));
-        //                         assert.false(cliConfig.hasCommand("sub2"));
+        //                         assert.isFalse(cliConfig.hasCommand("sub1"));
+        //                         assert.isFalse(cliConfig.hasCommand("sub2"));
         //                     } else {
-        //                         assert.false(cliConfig.hasCommand(config.raw.name));
+        //                         assert.isFalse(cliConfig.hasCommand(config.raw.name));
         //                     }
         //                 });
         //             }
@@ -458,17 +474,17 @@ describe("realm", () => {
 
         //                     await cliConfig.load();
         //                     if (name === "invalid_complex") {
-        //                         assert.false(cliConfig.hasCommand("sub1"));
-        //                         assert.false(cliConfig.hasCommand("sub2"));
+        //                         assert.isFalse(cliConfig.hasCommand("sub1"));
+        //                         assert.isFalse(cliConfig.hasCommand("sub2"));
         //                     } else {
-        //                         assert.false(cliConfig.hasCommand(config.raw.name));
+        //                         assert.isFalse(cliConfig.hasCommand(config.raw.name));
         //                     }
 
         //                     const packageName = name === "invalid_complex" ? config.raw.name : `${config.raw.type}.${config.raw.name}`;
         //                     const packagePath = std.path.join(realmManager.config.PACKAGES_PATH, packageName);
 
         //                     const dir = new fs.Directory(packagePath);
-        //                     assert.false(await dir.exists());
+        //                     assert.isFalse(await dir.exists());
 
         //                     const installOptions = {
         //                         name: cliCommandPath,
@@ -481,14 +497,14 @@ describe("realm", () => {
         //                     });
         //                     assert.instanceOf(err, Error);
 
-        //                     assert.false(await dir.exists());
+        //                     assert.isFalse(await dir.exists());
 
         //                     await cliConfig.load();
         //                     if (name === "invalid_complex") {
-        //                         assert.false(cliConfig.hasCommand("sub1"));
-        //                         assert.false(cliConfig.hasCommand("sub2"));
+        //                         assert.isFalse(cliConfig.hasCommand("sub1"));
+        //                         assert.isFalse(cliConfig.hasCommand("sub2"));
         //                     } else {
-        //                         assert.false(cliConfig.hasCommand(config.raw.name));
+        //                         assert.isFalse(cliConfig.hasCommand(config.raw.name));
         //                     }
         //                 });
         //             }
@@ -507,7 +523,7 @@ describe("realm", () => {
         //             const packagePath = std.path.join(realmManager.config.PACKAGES_PATH, packageName);
 
         //             const dir = new fs.Directory(packagePath);
-        //             assert.false(await dir.exists());
+        //             assert.isFalse(await dir.exists());
 
         //             const installOptions = {
         //                 name: omnitronServicePath
@@ -516,20 +532,20 @@ describe("realm", () => {
         //             let observer = await realmManager.install(installOptions);
         //             await observer.result;
 
-        //             assert.true(await dir.exists());
+        //             assert.isTrue(await dir.exists());
 
         //             observer = await realmManager.uninstall({
         //                 name: packageName
         //             });
         //             await observer.result;
 
-        //             assert.false(await dir.exists());
+        //             assert.isFalse(await dir.exists());
         //         });
 
         //         it("install/uninstall with active omnitron", async () => {
         //             await adone.omnitron.dispatcher.startOmnitron();
         //             await adone.omnitron.dispatcher.connectLocal();
-        //             assert.true(await adone.omnitron.dispatcher.ping());
+        //             assert.isTrue(await adone.omnitron.dispatcher.ping());
 
         //             const omnitronServicePath = std.path.join(__dirname, "packages", "omnitron_service_good");
 
@@ -541,7 +557,7 @@ describe("realm", () => {
         //             const packagePath = std.path.join(realmManager.config.PACKAGES_PATH, packageName);
 
         //             const dir = new fs.Directory(packagePath);
-        //             assert.false(await dir.exists());
+        //             assert.isFalse(await dir.exists());
 
         //             const installOptions = {
         //                 name: omnitronServicePath
@@ -550,14 +566,14 @@ describe("realm", () => {
         //             let observer = await realmManager.install(installOptions);
         //             await observer.result;
 
-        //             assert.true(await dir.exists());
+        //             assert.isTrue(await dir.exists());
 
         //             observer = await realmManager.uninstall({
         //                 name: packageName
         //             });
         //             await observer.result;
 
-        //             assert.false(await dir.exists());
+        //             assert.isFalse(await dir.exists());
 
         //             await adone.omnitron.dispatcher.stopOmnitron();
         //         });
@@ -576,7 +592,7 @@ describe("realm", () => {
         //             const packagePath = std.path.join(realmManager.config.PACKAGES_PATH, packageName);
 
         //             const dir = new fs.Directory(packagePath);
-        //             assert.false(await dir.exists());
+        //             assert.isFalse(await dir.exists());
 
         //             const installOptions = {
         //                 name: omnitronServicePath
@@ -588,7 +604,7 @@ describe("realm", () => {
         //             });
         //             assert.instanceOf(err, Error);
 
-        //             assert.false(await dir.exists());
+        //             assert.isFalse(await dir.exists());
 
         //             await systemDb.close();
         //         });
@@ -630,12 +646,12 @@ describe("realm", () => {
 
         //             const packagePath = std.path.join(realmManager.config.PACKAGES_PATH, "cli.command.simple");
 
-        //             assert.true(await fs.exists(packagePath));
+        //             assert.isTrue(await fs.exists(packagePath));
 
         //             await fs.rm(cwd);
 
         //             const lstat = await fs.lstat(packagePath);
-        //             assert.true(lstat.isSymbolicLink());
+        //             assert.isTrue(lstat.isSymbolicLink());
 
         //             observer = await realmManager.uninstall({
         //                 name: list[0].name

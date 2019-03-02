@@ -7,7 +7,7 @@ describe("net", "util", "getPort()", () => {
     it("call with no agguments", async () => {
         const port = await util.getPort();
         assert.typeOf(port, "number");
-        assert.true(port > 0);
+        assert.isTrue(port > 0);
 
         const server = adone.std.net.createServer();
 
@@ -22,7 +22,7 @@ describe("net", "util", "getPort()", () => {
             const rbound = adone.math.random(25000, 65536);
             const port = await util.getPort({ lbound, rbound }); // eslint-disable-line
             assert.typeOf(port, "number");
-            assert.true(port >= lbound && port <= rbound);
+            assert.isTrue(port >= lbound && port <= rbound);
         }
     });
 
@@ -54,7 +54,7 @@ describe("net", "util", "getPort()", () => {
             port: somePort
         });
 
-        assert.true(is.number(randomPort));
+        assert.isTrue(is.number(randomPort));
 
         await new Promise((resolve) => server.close(resolve));
     });
@@ -64,7 +64,7 @@ describe("net", "util", "getPort()", () => {
         const server = adone.std.net.createServer();
         await new Promise((resolve) => server.listen(port, resolve));
 
-        assert.false(await util.isFreePort(port));
+        assert.isFalse(await util.isFreePort(port));
         await new Promise((resolve) => server.close(resolve));
     });
 });

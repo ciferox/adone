@@ -10,7 +10,7 @@ describe("system", "process", "kill", () => {
     const noopProcessKilled = async (pid) => {
         // Ensure the noop process has time to exit
         await promise.delay(100);
-        assert.false(await exists(pid));
+        assert.isFalse(await exists(pid));
     };
 
     const cleanupPids = new Set();
@@ -78,7 +78,7 @@ describe("system", "process", "kill", () => {
 
             await kill(title, { force: true });
 
-            assert.false(await exists(pid));
+            assert.isFalse(await exists(pid));
         });
 
         it("win default ignore case", async () => {
@@ -86,7 +86,7 @@ describe("system", "process", "kill", () => {
             const pid = childProcess.spawn(title).pid;
 
             await kill("NOTEPAD.EXE", { force: true });
-            assert.false(await exists(pid));
+            assert.isFalse(await exists(pid));
         });
     } else {
         it("title", async () => {
@@ -124,7 +124,7 @@ describe("system", "process", "kill", () => {
         await kill(process.pid);
 
         await promise.delay(100);
-        assert.true(await exists(pid));
+        assert.isTrue(await exists(pid));
         Object.defineProperty(process, "pid", { value: originalFkillPid });
     });
 

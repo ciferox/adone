@@ -4,11 +4,11 @@ describe("shani", "util", "__", "collection", () => {
     it("creates fake collection", () => {
         const collection = new Collection();
 
-        assert.function(collection.verify);
-        assert.function(collection.restore);
-        assert.function(collection.verifyAndRestore);
-        assert.function(collection.stub);
-        assert.function(collection.mock);
+        assert.isFunction(collection.verify);
+        assert.isFunction(collection.restore);
+        assert.isFunction(collection.verifyAndRestore);
+        assert.isFunction(collection.stub);
+        assert.isFunction(collection.mock);
     });
 
     describe(".createStubInstance", () => {
@@ -433,8 +433,8 @@ describe("shani", "util", "__", "collection", () => {
 
             this.collection.resetHistory();
 
-            assert.false(fake0.called);
-            assert.false(fake1.called);
+            assert.isFalse(fake0.called);
+            assert.isFalse(fake1.called);
         });
 
         it("calls reset on fake that do not have a resetHistory", function () {
@@ -448,7 +448,7 @@ describe("shani", "util", "__", "collection", () => {
 
             this.collection.resetHistory();
 
-            assert.true(noop.reset.called);
+            assert.isTrue(noop.reset.called);
         });
     });
 
@@ -461,9 +461,9 @@ describe("shani", "util", "__", "collection", () => {
             const obj = {};
             this.collection.inject(obj);
 
-            assert.function(obj.spy);
-            assert.function(obj.stub);
-            assert.function(obj.mock);
+            assert.isFunction(obj.spy);
+            assert.isFunction(obj.stub);
+            assert.isFunction(obj.mock);
         });
 
         it("returns argument", function () {

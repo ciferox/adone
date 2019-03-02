@@ -60,7 +60,7 @@ describe("net", "ws", "stream", () => {
             const client = adone.net.ws.stream.createClient(echo.url);
             client.on("error", () => {
                 echo.stop(() => {
-                    assert.true(true, "should emit error");
+                    assert.isTrue(true, "should emit error");
                     done();
                 });
             });

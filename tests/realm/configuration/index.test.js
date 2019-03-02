@@ -92,7 +92,7 @@ describe("realm", "Configuration", () => {
         it("get sub configuration by name", async () => {
             const subConfig = config.getSubConfig("sub2").config;
 
-            assert.object(subConfig.raw.struct);
+            assert.isObject(subConfig.raw.struct);
         });
 
         it("project entries of main configuration", async () => {
@@ -181,7 +181,7 @@ describe("realm", "Configuration", () => {
         });
 
         it("load config", async () => {
-            assert.true(is.plainObject(rawConfig.struct));
+            assert.isTrue(is.plainObject(rawConfig.struct));
         });
 
         it("project entries", async () => {

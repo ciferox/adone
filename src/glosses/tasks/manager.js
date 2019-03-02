@@ -469,4 +469,3 @@ export default class TaskManager extends adone.event.AsyncEmitter {
         return taskInfo;
     }
 }
-adone.tag.add(TaskManager, "TASK_MANAGER");

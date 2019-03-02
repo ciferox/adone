@@ -15,7 +15,7 @@ describe("fastLogger", "stdout protection", () => {
             cb();
         }));
         await once(child, "close");
-        assert.notNull(actual.match(/^hack/));
+        assert.isNotNull(actual.match(/^hack/));
     });
     
 });

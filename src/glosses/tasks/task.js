@@ -69,7 +69,6 @@ export class Task {
         return false;
     }
 }
-adone.tag.add(Task, "TASK");
 
 const TASK_NAME_SYMBOL = Symbol.for("adone.task.TaskObserver#taskName");
 
@@ -216,4 +215,3 @@ export class TaskObserver {
         return this.state === STATE.SUSPENDED;
     }
 }
-adone.tag.add(TaskObserver, "TASK_OBSERVER");

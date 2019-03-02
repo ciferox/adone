@@ -439,4 +439,3 @@ export default class RemotePeer extends AbstractPeer {
         ]);
     }
 }
-adone.tag.add(RemotePeer, "NETRON_REMOTEPEER");

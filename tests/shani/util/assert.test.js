@@ -23,7 +23,7 @@ describe("shani", "util", "assert", () => {
     });
 
     it("is object", () => {
-        assert.object(sassert);
+        assert.isObject(sassert);
     });
 
     it("supports proxy property", () => {
@@ -138,7 +138,7 @@ describe("shani", "util", "assert", () => {
                 sassert.called(stub);
             });
 
-            assert.false(sassert.fail.called);
+            assert.isFalse(sassert.fail.called);
         });
 
         it("calls pass callback", function () {
@@ -204,7 +204,7 @@ describe("shani", "util", "assert", () => {
                 sassert.notCalled(stub);
             });
 
-            assert.false(sassert.fail.called);
+            assert.isFalse(sassert.fail.called);
         });
 
         it("should call pass callback", function () {
@@ -267,7 +267,7 @@ describe("shani", "util", "assert", () => {
                 sassert.calledOnce(stub);
             });
 
-            assert.false(sassert.fail.called);
+            assert.isFalse(sassert.fail.called);
         });
 
         it("fails when method was called more than once", function () {
@@ -517,7 +517,7 @@ describe("shani", "util", "assert", () => {
                 sassert.calledOn(null, object);
             });
 
-            assert.false(this.stub.calledOn.calledWith(object));
+            assert.isFalse(this.stub.calledOn.calledWith(object));
             assert(sassert.fail.called);
         });
 
@@ -529,7 +529,7 @@ describe("shani", "util", "assert", () => {
                 sassert.calledOn(() => { }, object);
             });
 
-            assert.false(this.stub.calledOn.calledWith(object));
+            assert.isFalse(this.stub.calledOn.calledWith(object));
             assert(sassert.fail.called);
         });
 
@@ -552,7 +552,7 @@ describe("shani", "util", "assert", () => {
 
             sassert.calledOn(stub, object);
 
-            assert.false(sassert.fail.called);
+            assert.isFalse(sassert.fail.called);
         });
 
         it("calls pass callback", function () {
@@ -580,7 +580,7 @@ describe("shani", "util", "assert", () => {
                 sassert.calledWithNew(null);
             });
 
-            assert.false(this.stub.calledWithNew.called);
+            assert.isFalse(this.stub.calledWithNew.called);
             assert(sassert.fail.called);
         });
 
@@ -591,7 +591,7 @@ describe("shani", "util", "assert", () => {
                 sassert.calledWithNew(() => { });
             });
 
-            assert.false(this.stub.calledWithNew.called);
+            assert.isFalse(this.stub.calledWithNew.called);
             assert(sassert.fail.called);
         });
 
@@ -612,7 +612,7 @@ describe("shani", "util", "assert", () => {
 
             sassert.calledWithNew(stub);
 
-            assert.false(sassert.fail.called);
+            assert.isFalse(sassert.fail.called);
         });
 
         it("calls pass callback", function () {
@@ -639,7 +639,7 @@ describe("shani", "util", "assert", () => {
                 sassert.alwaysCalledWithNew(null);
             });
 
-            assert.false(this.stub.alwaysCalledWithNew.called);
+            assert.isFalse(this.stub.alwaysCalledWithNew.called);
             assert(sassert.fail.called);
         });
 
@@ -650,7 +650,7 @@ describe("shani", "util", "assert", () => {
                 sassert.alwaysCalledWithNew(() => { });
             });
 
-            assert.false(this.stub.alwaysCalledWithNew.called);
+            assert.isFalse(this.stub.alwaysCalledWithNew.called);
             assert(sassert.fail.called);
         });
 
@@ -671,7 +671,7 @@ describe("shani", "util", "assert", () => {
 
             sassert.alwaysCalledWithNew(stub);
 
-            assert.false(sassert.fail.called);
+            assert.isFalse(sassert.fail.called);
         });
 
         it("calls pass callback", function () {
@@ -714,7 +714,7 @@ describe("shani", "util", "assert", () => {
             });
 
             assert(this.stub.calledWith.calledWith(object, 1));
-            assert.false(sassert.fail.called);
+            assert.isFalse(sassert.fail.called);
         });
 
         it("calls pass callback", function () {
@@ -781,7 +781,7 @@ describe("shani", "util", "assert", () => {
             });
 
             assert(this.stub.calledWithExactly.calledWithExactly(object, 1));
-            assert.false(sassert.fail.called);
+            assert.isFalse(sassert.fail.called);
         });
 
         it("calls pass callback", function () {
@@ -824,7 +824,7 @@ describe("shani", "util", "assert", () => {
             });
 
             assert(this.stub.neverCalledWith.calledWith(object, 1));
-            assert.false(sassert.fail.called);
+            assert.isFalse(sassert.fail.called);
         });
 
         it("calls pass callback", function () {
@@ -865,7 +865,7 @@ describe("shani", "util", "assert", () => {
             });
 
             assert(this.stub.threw.calledWithExactly(1, 2));
-            assert.false(sassert.fail.called);
+            assert.isFalse(sassert.fail.called);
         });
 
         it("calls pass callback", function () {
@@ -906,7 +906,7 @@ describe("shani", "util", "assert", () => {
                 sassert.callCount(stub, 3);
             });
 
-            assert.false(sassert.fail.called);
+            assert.isFalse(sassert.fail.called);
         });
 
         it("calls pass callback", function () {
@@ -955,7 +955,7 @@ describe("shani", "util", "assert", () => {
 
             sassert.alwaysCalledOn(stub, {});
 
-            assert.false(sassert.fail.called);
+            assert.isFalse(sassert.fail.called);
         });
 
         it("calls pass callback", function () {
@@ -1007,7 +1007,7 @@ describe("shani", "util", "assert", () => {
 
             sassert.alwaysCalledWith(stub, {}, []);
 
-            assert.false(sassert.fail.called);
+            assert.isFalse(sassert.fail.called);
         });
 
         it("calls pass callback", () => {
@@ -1046,7 +1046,7 @@ describe("shani", "util", "assert", () => {
 
             sassert.alwaysCalledWithExactly(stub, {}, []);
 
-            assert.false(sassert.fail.called);
+            assert.isFalse(sassert.fail.called);
         });
 
         it("calls pass callback", () => {
@@ -1064,14 +1064,14 @@ describe("shani", "util", "assert", () => {
             const test = {};
             sassert.expose(test);
 
-            assert.function(test.fail);
-            assert.string(test.failException);
-            assert.function(test.assertCalled);
-            assert.function(test.assertCalledOn);
-            assert.function(test.assertCalledWith);
-            assert.function(test.assertCalledWithExactly);
-            assert.function(test.assertThrew);
-            assert.function(test.assertCallCount);
+            assert.isFunction(test.fail);
+            assert.isString(test.failException);
+            assert.isFunction(test.assertCalled);
+            assert.isFunction(test.assertCalledOn);
+            assert.isFunction(test.assertCalledWith);
+            assert.isFunction(test.assertCalledWithExactly);
+            assert.isFunction(test.assertThrew);
+            assert.isFunction(test.assertCallCount);
         });
 
         it("exposes asserts into global", function () {
@@ -1083,12 +1083,12 @@ describe("shani", "util", "assert", () => {
             /**
              * eslint-disable no-undef
              */
-            assert.function(assertCalled);
-            assert.function(assertCalledOn);
-            assert.function(assertCalledWith);
-            assert.function(assertCalledWithExactly);
-            assert.function(assertThrew);
-            assert.function(assertCallCount);
+            assert.isFunction(assertCalled);
+            assert.isFunction(assertCalledOn);
+            assert.isFunction(assertCalledWith);
+            assert.isFunction(assertCalledWithExactly);
+            assert.isFunction(assertThrew);
+            assert.isFunction(assertCallCount);
             /*eslint-enable no-undef*/
         });
 
@@ -1110,14 +1110,14 @@ describe("shani", "util", "assert", () => {
 
             sassert.expose(test, { prefix: "" });
 
-            assert.function(test.fail);
-            assert.string(test.failException);
-            assert.function(test.called);
-            assert.function(test.calledOn);
-            assert.function(test.calledWith);
-            assert.function(test.calledWithExactly);
-            assert.function(test.threw);
-            assert.function(test.callCount);
+            assert.isFunction(test.fail);
+            assert.isString(test.failException);
+            assert.isFunction(test.called);
+            assert.isFunction(test.calledOn);
+            assert.isFunction(test.calledWith);
+            assert.isFunction(test.calledWithExactly);
+            assert.isFunction(test.threw);
+            assert.isFunction(test.callCount);
         });
 
         it("does not expose 'expose'", () => {

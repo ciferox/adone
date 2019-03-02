@@ -51,8 +51,8 @@ describe("util", "movingAverage", () => {
         ma.push(now + 4000, 10);
 
         const m = ma.movingAverage();
-        assert.true(m < 1.28);
-        assert.true(m > 1.27);
+        assert.isTrue(m < 1.28);
+        assert.isTrue(m > 1.27);
     });
 
     it("variance is 0 on one sample", () => {
@@ -84,8 +84,8 @@ describe("util", "movingAverage", () => {
         ma.push(now + 4000, 4);
 
         const v = ma.variance();
-        assert.true(v > 2.53);
-        assert.true(v < 2.54);
+        assert.isTrue(v > 2.53);
+        assert.isTrue(v < 2.54);
     });
 
     it("variance works (2)", () => {
@@ -98,7 +98,7 @@ describe("util", "movingAverage", () => {
         ma.push(now + 4000, 1);
 
         const v = ma.variance();
-        assert.true(v > 0.24);
-        assert.true(v < 0.25);
+        assert.isTrue(v > 0.24);
+        assert.isTrue(v < 0.25);
     });
 });

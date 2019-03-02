@@ -34,5 +34,3 @@ export default class XObject extends adone.js.adone.Base {
         return "Object";
     }
 }
-adone.tag.define("CODEMOD_OBJECT");
-adone.tag.add(XObject, "CODEMOD_OBJECT");

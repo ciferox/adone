@@ -16,29 +16,29 @@ describe("wrapAnsi", () => {
         const res20 = wrapAnsi(fixture, 20);
 
         assert.strictEqual(res20, "The quick brown \u001B[31mfox\u001B[39m\n\u001B[31mjumped over \u001B[39mthe lazy\n\u001B[32mdog and then ran\u001B[39m\n\u001B[32maway with the\u001B[39m\n\u001B[32municorn.\u001B[39m");
-        assert.true(stripAnsi(res20).split("\n").every((x) => x.length <= 20));
+        assert.isTrue(stripAnsi(res20).split("\n").every((x) => x.length <= 20));
     });
 
     it("wraps string at 30 characters", () => {
         const res30 = wrapAnsi(fixture, 30);
 
         assert.strictEqual(res30, "The quick brown \u001B[31mfox jumped\u001B[39m\n\u001B[31mover \u001B[39mthe lazy \u001B[32mdog and then ran\u001B[39m\n\u001B[32maway with the unicorn.\u001B[39m");
-        assert.true(stripAnsi(res30).split("\n").every((x) => x.length <= 30));
+        assert.isTrue(stripAnsi(res30).split("\n").every((x) => x.length <= 30));
     });
 
     it('does not break strings longer than "cols" characters', () => {
         const res5 = wrapAnsi(fixture, 5, { hard: false });
 
         assert.strictEqual(res5, "The\nquick\nbrown\n\u001B[31mfox\u001B[39m\n\u001B[31mjumped\u001B[39m\n\u001B[31mover\u001B[39m\n\u001B[31m\u001B[39mthe\nlazy\n\u001B[32mdog\u001B[39m\n\u001B[32mand\u001B[39m\n\u001B[32mthen\u001B[39m\n\u001B[32mran\u001B[39m\n\u001B[32maway\u001B[39m\n\u001B[32mwith\u001B[39m\n\u001B[32mthe\u001B[39m\n\u001B[32municorn.\u001B[39m");
-        assert.true(stripAnsi(res5).split("\n").filter((x) => x.length > 5).length > 0);
+        assert.isTrue(stripAnsi(res5).split("\n").filter((x) => x.length > 5).length > 0);
     });
 
     it("handles colored string that wraps on to multiple lines", () => {
         const res = wrapAnsi(`${chalk.green("hello world")} hey!`, 5, { hard: false });
         const lines = res.split("\n");
-        assert.true(hasAnsi(lines[0]));
-        assert.true(hasAnsi(lines[1]));
-        assert.false(hasAnsi(lines[2]));
+        assert.isTrue(hasAnsi(lines[0]));
+        assert.isTrue(hasAnsi(lines[1]));
+        assert.isFalse(hasAnsi(lines[2]));
     });
 
     it('does not prepend newline if first string is greater than "cols"', () => {
@@ -52,12 +52,12 @@ describe("wrapAnsi", () => {
         const res5 = wrapAnsi(fixture, 5, { hard: true });
 
         assert.strictEqual(res5, "The\nquick\nbrown\n\u001B[31mfox\u001B[39m\n\u001B[31mjumpe\u001B[39m\n\u001B[31md\u001B[39m\n\u001B[31mover\u001B[39m\n\u001B[31m\u001B[39mthe\nlazy\n\u001B[32mdog\u001B[39m\n\u001B[32mand\u001B[39m\n\u001B[32mthen\u001B[39m\n\u001B[32mran\u001B[39m\n\u001B[32maway\u001B[39m\n\u001B[32mwith\u001B[39m\n\u001B[32mthe\u001B[39m\n\u001B[32munico\u001B[39m\n\u001B[32mrn.\u001B[39m");
-        assert.true(stripAnsi(res5).split("\n").every((x) => x.length <= 5));
+        assert.isTrue(stripAnsi(res5).split("\n").every((x) => x.length <= 5));
     });
 
     it("removes last row if it contained only ansi escape codes", () => {
         const res = wrapAnsi(chalk.green("helloworld"), 2, { hard: true });
-        assert.true(stripAnsi(res).split("\n").every((x) => x.length === 2));
+        assert.isTrue(stripAnsi(res).split("\n").every((x) => x.length === 2));
     });
 
     it("does not prepend newline if first word is split", () => {

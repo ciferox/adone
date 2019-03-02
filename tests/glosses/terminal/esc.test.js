@@ -21,14 +21,14 @@ describe("terminal", "esc", () => {
         });
 
         it("should make groups not be enumerable", () => {
-            assert.true(!is.undefined(Object.getOwnPropertyDescriptor(esc, "modifier")));
-            assert.true(!Object.keys(esc).includes("modifier"));
+            assert.isTrue(!is.undefined(Object.getOwnPropertyDescriptor(esc, "modifier")));
+            assert.isTrue(!Object.keys(esc).includes("modifier"));
         });
 
 
         it("groups should not be enumerable", () => {
-            assert.true(!is.undefined(Object.getOwnPropertyDescriptor(esc, "modifier")));
-            assert.true(!Object.keys(esc).includes("modifier"));
+            assert.isTrue(!is.undefined(Object.getOwnPropertyDescriptor(esc, "modifier")));
+            assert.isTrue(!Object.keys(esc).includes("modifier"));
         });
 
         it("all color types are always available", () => {

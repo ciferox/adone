@@ -28,10 +28,10 @@ const {
 describe("logger", () => {
     describe("transports", () => {
         it("common", () => {
-            assert.true(is.object(logger.transport));
-            assert.true(is.function(logger.TransportStream));
-            assert.true(is.function(logger.transport.Console));
-            assert.true(is.function(logger.transport.File));
+            assert.isTrue(is.object(logger.transport));
+            assert.isTrue(is.function(logger.TransportStream));
+            assert.isTrue(is.function(logger.transport.Console));
+            assert.isTrue(is.function(logger.transport.File));
         });
 
         describe("Console", () => {
@@ -229,7 +229,7 @@ describe("logger", () => {
                 setImmediate(() => {
                     helpers.tryRead(filename)
                         .on("error", (err) => {
-                            assert.false(err);
+                            assert.isFalse(err);
                             cleanup();
                             done();
                         })
@@ -380,7 +380,7 @@ describe("logger", () => {
                         try {
                             stats = fs.statSync(file);
                         } catch (ex) {
-                            assert.object(stats, `${file} failed to open: ${ex.message}`);
+                            assert.isObject(stats, `${file} failed to open: ${ex.message}`);
                         }
 
                         const text = fs.readFileSync(file, "utf8");
@@ -553,7 +553,7 @@ describe("logger", () => {
 
                     helpers.tryRead(logPath)
                         .on("error", (err) => {
-                            assert.false(err);
+                            assert.isFalse(err);
                             l.close();
                             done();
                         })
@@ -596,7 +596,7 @@ describe("logger", () => {
 
                     helpers.tryRead(logPath)
                         .on("error", (err) => {
-                            assert.false(err);
+                            assert.isFalse(err);
                             l.close();
                             done();
                         })
@@ -636,7 +636,7 @@ describe("logger", () => {
                 setTimeout(() => {
                     helpers.tryRead(logPath)
                         .on("error", (err) => {
-                            assert.false(err);
+                            assert.isFalse(err);
                             l.close();
                             done();
                         })
@@ -738,20 +738,20 @@ describe("logger", () => {
     });
 
     it("has expected methods", () => {
-        assert.true(is.object(logger.config));
+        assert.isTrue(is.object(logger.config));
         ["add", "remove", "clear"]
             .concat(Object.keys(logger.config.adone))
             .forEach((key) => {
-                assert.function(adone.runtime.logger[key], `logger.${key}`);
+                assert.isFunction(adone.runtime.logger[key], `logger.${key}`);
             });
     });
 
     describe("config", () => {
         it("should have expected methods", () => {
-            assert.true(is.object(logger.config));
-            assert.true(is.object(logger.config.cli));
-            assert.true(is.object(logger.config.npm));
-            assert.true(is.object(logger.config.syslog));
+            assert.isTrue(is.object(logger.config));
+            assert.isTrue(is.object(logger.config.cli));
+            assert.isTrue(is.object(logger.config.npm));
+            assert.isTrue(is.object(logger.config.syslog));
         });
     });
 
@@ -762,7 +762,7 @@ describe("logger", () => {
 
             it(".add(default-test)", () => {
                 defaultTest = container.add("default-test");
-                assert.function(defaultTest.log);
+                assert.isFunction(defaultTest.log);
             });
 
             it(".get(default-test)", () => {
@@ -770,26 +770,26 @@ describe("logger", () => {
             });
 
             it(".has(default-test)", () => {
-                assert.true(container.has("default-test"));
+                assert.isTrue(container.has("default-test"));
             });
 
             it(".has(not-has)", () => {
-                assert.false(container.has("not-has"));
+                assert.isFalse(container.has("not-has"));
             });
 
             it(".close(default-test)", () => {
                 container.close("default-test");
-                assert.false(container.loggers.has("default-test"));
+                assert.isFalse(container.loggers.has("default-test"));
             });
 
             it(".close(non-existent)", () => {
                 container.close("non-existent");
-                assert.false(container.loggers.has("non-existent"));
+                assert.isFalse(container.loggers.has("non-existent"));
             });
 
             it(".close()", () => {
                 container.close();
-                assert.false(container.loggers.has());
+                assert.isFalse(container.loggers.has());
             });
         });
 
@@ -830,12 +830,12 @@ describe("logger", () => {
 
         it("has expected methods", () => {
             const handler = helpers.exceptionHandler();
-            assert.function(handler.handle);
-            assert.function(handler.unhandle);
-            assert.function(handler.getAllInfo);
-            assert.function(handler.getProcessInfo);
-            assert.function(handler.getOsInfo);
-            assert.function(handler.getTrace);
+            assert.isFunction(handler.handle);
+            assert.isFunction(handler.unhandle);
+            assert.isFunction(handler.getAllInfo);
+            assert.isFunction(handler.getProcessInfo);
+            assert.isFunction(handler.getOsInfo);
+            assert.isFunction(handler.getTrace);
         });
 
         it("new ExceptionHandler()", () => {
@@ -875,13 +875,13 @@ describe("logger", () => {
             const writeable = new stream.Writable({
                 objectMode: true,
                 write(info) {
-                    assert.object(info);
+                    assert.isObject(info);
                     assert.instanceOf(info.error, Error);
                     assert.strictEqual(info.error.message, "wtf this error");
-                    assert.true(info.message.includes("uncaughtException: wtf this error"));
-                    assert.string(info.stack);
-                    assert.object(info.process);
-                    assert.object(info.os);
+                    assert.isTrue(info.message.includes("uncaughtException: wtf this error"));
+                    assert.isString(info.stack);
+                    assert.isObject(info.process);
+                    assert.isObject(info.os);
                     assert.array(info.trace);
 
                     existing.restore();
@@ -895,12 +895,12 @@ describe("logger", () => {
                 transports: [transport]
             });
 
-            assert.undefined(handler.catcher);
+            assert.isUndefined(handler.catcher);
 
             transport.handleExceptions = true;
             handler.handle();
 
-            assert.function(handler.catcher);
+            assert.isFunction(handler.catcher);
             assert.deepEqual(process.listeners("uncaughtException"), [
                 handler.catcher
             ]);
@@ -923,9 +923,9 @@ describe("logger", () => {
             const transport = new logger.transport.File({ filename });
             const instance = new ExceptionStream(transport);
 
-            assert.true(instance.handleExceptions);
+            assert.isTrue(instance.handleExceptions);
             assert.equal(instance.transport, transport);
-            assert.function(instance._write);
+            assert.isFunction(instance._write);
             assert.instanceOf(instance, ExceptionStream);
         });
 
@@ -950,7 +950,7 @@ describe("logger", () => {
                     const result = await forkProcess(path.join(__dirname, "helpers", "scripts", "unhandle-exceptions.js"))
                 } catch (err) { }
                 fs.exists(logFile, (exists) => {
-                    assert.false(exists);
+                    assert.isFalse(exists);
                     done();
                 });
             });
@@ -978,7 +978,7 @@ describe("logger", () => {
 
         it("Custom exitOnError function does not exit", async () => {
             const result = await forkProcess(path.join(__dirname, "helpers", "scripts", "exit-on-error.js"));
-            assert.false(result.killed);
+            assert.isFalse(result.killed);
             assert.strictEqual(result.stdout, "Ignore this error");
         });
 
@@ -1025,10 +1025,10 @@ describe("logger", () => {
         it(".done({ info })", (done) => {
             const profiler = new Profiler({
                 write(info) {
-                    assert.object(info);
+                    assert.isObject(info);
                     assert.strictEqual(info.something, "ok");
                     assert.strictEqual(info.level, "info");
-                    assert.number(info.durationMs);
+                    assert.isNumber(info.durationMs);
                     assert.strictEqual(info.message, "testing1");
                     done();
                 }
@@ -1087,7 +1087,7 @@ describe("logger", () => {
 
         this.timeout(10 * 1000);
         it("is a function", () => {
-            assert.function(tailFile);
+            assert.isFunction(tailFile);
             assert.strictEqual(tailFile.length, 2);
         });
 
@@ -1099,11 +1099,11 @@ describe("logger", () => {
             //
             const startTailFile = function () {
                 const stream = tailFile({ file: tailable });
-                assert.true(stream instanceof Stream);
+                assert.isTrue(stream instanceof Stream);
 
                 stream.on("line", (buff) => {
                     expected += 1;
-                    assert.object(JSON.parse(String(buff)));
+                    assert.isObject(JSON.parse(String(buff)));
                 });
             };
 
@@ -1121,10 +1121,10 @@ describe("logger", () => {
     describe("Logger", () => {
         it("new Logger()", () => {
             const l = logger.create();
-            assert.object(l);
-            // assert.true(is.stream(l.format));
+            assert.isObject(l);
+            // assert.isTrue(is.stream(l.format));
             assert.strictEqual(l.level, "info");
-            assert.true(l.exitOnError);
+            assert.isTrue(l.exitOnError);
         });
 
         it("new Logger({ parameters })", () => {
@@ -1141,7 +1141,7 @@ describe("logger", () => {
 
             assert.strictEqual(l.format, myFormat);
             assert.strictEqual(l.level, "error");
-            assert.false(l.exitOnError);
+            assert.isFalse(l.exitOnError);
             assert.strictEqual(l._readableState.pipesCount, 0);
         });
 
@@ -1159,7 +1159,7 @@ describe("logger", () => {
             });
 
             Object.keys(logger.config.syslog).forEach((level) => {
-                assert.function(l[level]);
+                assert.isFunction(l[level]);
             });
         });
 
@@ -1214,7 +1214,7 @@ describe("logger", () => {
             const l = logger.create();
             const outStream = l.stream();
 
-            assert.true(is.stream(outStream));
+            assert.isTrue(is.stream(outStream));
         });
 
         it(".configure()", () => {
@@ -1308,7 +1308,7 @@ describe("logger", () => {
         it("{ silent: true }", (done) => {
             const neverLogTo = new TransportStream({
                 log(info) {
-                    assert.true(false, "TransportStream was improperly written to");
+                    assert.isTrue(false, "TransportStream was improperly written to");
                 }
             });
 
@@ -1385,7 +1385,7 @@ describe("logger", () => {
                     level,
                     log(obj) {
                         if (level === "info") {
-                            assert.undefined(obj, undefined, "Transport on level info should never be called");
+                            assert.isUndefined(obj, undefined, "Transport on level info should never be called");
                         }
 
                         assert.strictEqual(obj.message, "foo");
@@ -1396,8 +1396,8 @@ describe("logger", () => {
                 });
             };
 
-            assert.function(l.info);
-            assert.function(l.debug);
+            assert.isFunction(l.info);
+            assert.isFunction(l.debug);
 
             l
                 .add(logLevelTransport("info"))
@@ -1426,7 +1426,7 @@ describe("logger", () => {
                     level,
                     log(obj) {
                         if (level === "bad") {
-                            assert.undefined(obj, 'transport on level "bad" should never be called');
+                            assert.isUndefined(obj, 'transport on level "bad" should never be called');
                         }
 
                         assert.strictEqual(obj.message, "foo");
@@ -1437,9 +1437,9 @@ describe("logger", () => {
                 });
             };
 
-            assert.function(l.bad);
-            assert.function(l.test);
-            assert.function(l.ok);
+            assert.isFunction(l.bad);
+            assert.isFunction(l.test);
+            assert.isFunction(l.ok);
 
             l
                 .add(filterLevelTransport("bad"))
@@ -1468,8 +1468,8 @@ describe("logger", () => {
                 const expectedError = { message: "foo", level: "error" };
                 const expectedInfo = { message: "bar", level: "info" };
 
-                assert.function(l.error);
-                assert.function(l.info);
+                assert.isFunction(l.error);
+                assert.isFunction(l.info);
 
                 // Set the level
                 l.level = "error";
@@ -1494,28 +1494,28 @@ describe("logger", () => {
                 transports: [new logger.transport.Console()]
             });
 
-            assert.function(l.isLevelEnabled);
+            assert.isFunction(l.isLevelEnabled);
 
-            assert.function(l.isErrorEnabled);
-            assert.function(l.isWarnEnabled);
-            assert.function(l.isInfoEnabled);
-            assert.function(l.isVerboseEnabled);
-            assert.function(l.isDebugEnabled);
-            assert.function(l.isSillyEnabled);
+            assert.isFunction(l.isErrorEnabled);
+            assert.isFunction(l.isWarnEnabled);
+            assert.isFunction(l.isInfoEnabled);
+            assert.isFunction(l.isVerboseEnabled);
+            assert.isFunction(l.isDebugEnabled);
+            assert.isFunction(l.isSillyEnabled);
 
-            assert.true(l.isLevelEnabled("error"));
-            assert.true(l.isLevelEnabled("warn"));
-            assert.true(l.isLevelEnabled("info"));
-            assert.true(l.isLevelEnabled("verbose"));
-            assert.false(l.isLevelEnabled("debug"));
-            assert.false(l.isLevelEnabled("silly"));
+            assert.isTrue(l.isLevelEnabled("error"));
+            assert.isTrue(l.isLevelEnabled("warn"));
+            assert.isTrue(l.isLevelEnabled("info"));
+            assert.isTrue(l.isLevelEnabled("verbose"));
+            assert.isFalse(l.isLevelEnabled("debug"));
+            assert.isFalse(l.isLevelEnabled("silly"));
 
-            assert.true(l.isErrorEnabled());
-            assert.true(l.isWarnEnabled());
-            assert.true(l.isInfoEnabled());
-            assert.true(l.isVerboseEnabled());
-            assert.false(l.isDebugEnabled());
-            assert.false(l.isSillyEnabled());
+            assert.isTrue(l.isErrorEnabled());
+            assert.isTrue(l.isWarnEnabled());
+            assert.isTrue(l.isInfoEnabled());
+            assert.isTrue(l.isVerboseEnabled());
+            assert.isFalse(l.isDebugEnabled());
+            assert.isFalse(l.isSillyEnabled());
         });
 
         it("default config, transport override", () => {
@@ -1528,28 +1528,28 @@ describe("logger", () => {
                 transports: [transport]
             });
 
-            assert.function(l.isLevelEnabled);
+            assert.isFunction(l.isLevelEnabled);
 
-            assert.function(l.isErrorEnabled);
-            assert.function(l.isWarnEnabled);
-            assert.function(l.isInfoEnabled);
-            assert.function(l.isVerboseEnabled);
-            assert.function(l.isDebugEnabled);
-            assert.function(l.isSillyEnabled);
+            assert.isFunction(l.isErrorEnabled);
+            assert.isFunction(l.isWarnEnabled);
+            assert.isFunction(l.isInfoEnabled);
+            assert.isFunction(l.isVerboseEnabled);
+            assert.isFunction(l.isDebugEnabled);
+            assert.isFunction(l.isSillyEnabled);
 
-            assert.true(l.isLevelEnabled("error"));
-            assert.true(l.isLevelEnabled("warn"));
-            assert.true(l.isLevelEnabled("info"));
-            assert.true(l.isLevelEnabled("verbose"));
-            assert.true(l.isLevelEnabled("debug"));
-            assert.false(l.isLevelEnabled("silly"));
+            assert.isTrue(l.isLevelEnabled("error"));
+            assert.isTrue(l.isLevelEnabled("warn"));
+            assert.isTrue(l.isLevelEnabled("info"));
+            assert.isTrue(l.isLevelEnabled("verbose"));
+            assert.isTrue(l.isLevelEnabled("debug"));
+            assert.isFalse(l.isLevelEnabled("silly"));
 
-            assert.true(l.isErrorEnabled());
-            assert.true(l.isWarnEnabled());
-            assert.true(l.isInfoEnabled());
-            assert.true(l.isVerboseEnabled());
-            assert.true(l.isDebugEnabled());
-            assert.false(l.isSillyEnabled());
+            assert.isTrue(l.isErrorEnabled());
+            assert.isTrue(l.isWarnEnabled());
+            assert.isTrue(l.isInfoEnabled());
+            assert.isTrue(l.isVerboseEnabled());
+            assert.isTrue(l.isDebugEnabled());
+            assert.isFalse(l.isSillyEnabled());
         });
 
         it("default config, no transports", () => {
@@ -1559,28 +1559,28 @@ describe("logger", () => {
                 transports: []
             });
 
-            assert.function(l.isLevelEnabled);
+            assert.isFunction(l.isLevelEnabled);
 
-            assert.function(l.isErrorEnabled);
-            assert.function(l.isWarnEnabled);
-            assert.function(l.isInfoEnabled);
-            assert.function(l.isVerboseEnabled);
-            assert.function(l.isDebugEnabled);
-            assert.function(l.isSillyEnabled);
+            assert.isFunction(l.isErrorEnabled);
+            assert.isFunction(l.isWarnEnabled);
+            assert.isFunction(l.isInfoEnabled);
+            assert.isFunction(l.isVerboseEnabled);
+            assert.isFunction(l.isDebugEnabled);
+            assert.isFunction(l.isSillyEnabled);
 
-            assert.true(l.isLevelEnabled("error"));
-            assert.true(l.isLevelEnabled("warn"));
-            assert.true(l.isLevelEnabled("info"));
-            assert.true(l.isLevelEnabled("verbose"));
-            assert.false(l.isLevelEnabled("debug"));
-            assert.false(l.isLevelEnabled("silly"));
+            assert.isTrue(l.isLevelEnabled("error"));
+            assert.isTrue(l.isLevelEnabled("warn"));
+            assert.isTrue(l.isLevelEnabled("info"));
+            assert.isTrue(l.isLevelEnabled("verbose"));
+            assert.isFalse(l.isLevelEnabled("debug"));
+            assert.isFalse(l.isLevelEnabled("silly"));
 
-            assert.true(l.isErrorEnabled());
-            assert.true(l.isWarnEnabled());
-            assert.true(l.isInfoEnabled());
-            assert.true(l.isVerboseEnabled());
-            assert.false(l.isDebugEnabled());
-            assert.false(l.isSillyEnabled());
+            assert.isTrue(l.isErrorEnabled());
+            assert.isTrue(l.isWarnEnabled());
+            assert.isTrue(l.isInfoEnabled());
+            assert.isTrue(l.isVerboseEnabled());
+            assert.isFalse(l.isDebugEnabled());
+            assert.isFalse(l.isSillyEnabled());
         });
 
         it("custom config", () => {
@@ -1600,19 +1600,19 @@ describe("logger", () => {
                 transports: [new logger.transport.Console()]
             });
 
-            assert.function(l.isLevelEnabled);
+            assert.isFunction(l.isLevelEnabled);
 
-            assert.function(l.isBadEnabled);
-            assert.function(l.isTestEnabled);
-            assert.function(l.isOkEnabled);
+            assert.isFunction(l.isBadEnabled);
+            assert.isFunction(l.isTestEnabled);
+            assert.isFunction(l.isOkEnabled);
 
-            assert.true(l.isLevelEnabled("bad"));
-            assert.true(l.isLevelEnabled("test"));
-            assert.false(l.isLevelEnabled("ok"));
+            assert.isTrue(l.isLevelEnabled("bad"));
+            assert.isTrue(l.isLevelEnabled("test"));
+            assert.isFalse(l.isLevelEnabled("ok"));
 
-            assert.true(l.isBadEnabled());
-            assert.true(l.isTestEnabled());
-            assert.false(l.isOkEnabled());
+            assert.isTrue(l.isBadEnabled());
+            assert.isTrue(l.isTestEnabled());
+            assert.isFalse(l.isOkEnabled());
         });
 
         it("custom config, no transports", () => {
@@ -1632,19 +1632,19 @@ describe("logger", () => {
                 transports: []
             });
 
-            assert.function(l.isLevelEnabled);
+            assert.isFunction(l.isLevelEnabled);
 
-            assert.function(l.isBadEnabled);
-            assert.function(l.isTestEnabled);
-            assert.function(l.isOkEnabled);
+            assert.isFunction(l.isBadEnabled);
+            assert.isFunction(l.isTestEnabled);
+            assert.isFunction(l.isOkEnabled);
 
-            assert.true(l.isLevelEnabled("bad"));
-            assert.true(l.isLevelEnabled("test"));
-            assert.false(l.isLevelEnabled("ok"));
+            assert.isTrue(l.isLevelEnabled("bad"));
+            assert.isTrue(l.isLevelEnabled("test"));
+            assert.isFalse(l.isLevelEnabled("ok"));
 
-            assert.true(l.isBadEnabled());
-            assert.true(l.isTestEnabled());
-            assert.false(l.isOkEnabled());
+            assert.isTrue(l.isBadEnabled());
+            assert.isTrue(l.isTestEnabled());
+            assert.isFalse(l.isOkEnabled());
         });
 
         it("custom config, transport override", () => {
@@ -1667,19 +1667,19 @@ describe("logger", () => {
                 transports: [transport]
             });
 
-            assert.function(l.isLevelEnabled);
+            assert.isFunction(l.isLevelEnabled);
 
-            assert.function(l.isBadEnabled);
-            assert.function(l.isTestEnabled);
-            assert.function(l.isOkEnabled);
+            assert.isFunction(l.isBadEnabled);
+            assert.isFunction(l.isTestEnabled);
+            assert.isFunction(l.isOkEnabled);
 
-            assert.true(l.isLevelEnabled("bad"));
-            assert.true(l.isLevelEnabled("test"));
-            assert.true(l.isLevelEnabled("ok"));
+            assert.isTrue(l.isLevelEnabled("bad"));
+            assert.isTrue(l.isLevelEnabled("test"));
+            assert.isTrue(l.isLevelEnabled("ok"));
 
-            assert.true(l.isBadEnabled());
-            assert.true(l.isTestEnabled());
-            assert.true(l.isOkEnabled());
+            assert.isTrue(l.isBadEnabled());
+            assert.isTrue(l.isTestEnabled());
+            assert.isTrue(l.isOkEnabled());
         });
     });
 
@@ -1706,9 +1706,9 @@ describe("logger", () => {
             // Assert that all transport 'finish' events have been
             // emitted when the logger emits 'finish'.
             l.on("finish", () => {
-                assert.true(finished[0]);
-                assert.true(finished[1]);
-                assert.true(finished[2]);
+                assert.isTrue(finished[0]);
+                assert.isTrue(finished[1]);
+                assert.isTrue(finished[2]);
                 done();
             });
 
@@ -1754,10 +1754,10 @@ describe("logger", () => {
     describe("Logger", () => {
         it(".log(level, message)", (done) => {
             const l = helpers.createLogger((info) => {
-                assert.object(info);
+                assert.isObject(info);
                 assert.strictEqual(info.level, "info");
                 assert.strictEqual(info.message, "Some super awesome log message");
-                assert.string(info[MESSAGE]);
+                assert.isString(info[MESSAGE]);
                 done();
             });
 
@@ -1766,7 +1766,7 @@ describe("logger", () => {
 
         it(".log(level, undefined) creates info with { message: undefined }", (done) => {
             const l = helpers.createLogger((info) => {
-                assert.undefined(info.message);
+                assert.isUndefined(info.message);
                 done();
             });
 
@@ -1775,7 +1775,7 @@ describe("logger", () => {
 
         it(".log(level, null) creates info with { message: null }", (done) => {
             const l = helpers.createLogger((info) => {
-                assert.null(info.message);
+                assert.isNull(info.message);
                 done();
             });
 
@@ -1796,11 +1796,11 @@ describe("logger", () => {
         it(".log(level, message, meta)", (done) => {
             const meta = { one: 2 };
             const l = helpers.createLogger((info) => {
-                assert.object(info);
+                assert.isObject(info);
                 assert.strictEqual(info.level, "info");
                 assert.strictEqual(info.message, "Some super awesome log message");
                 assert.strictEqual(info.one, 2);
-                assert.string(info[MESSAGE]);
+                assert.isString(info[MESSAGE]);
                 done();
             });
 
@@ -1814,7 +1814,7 @@ describe("logger", () => {
             );
 
             const l = helpers.createLogger((info) => {
-                assert.object(info);
+                assert.isObject(info);
                 assert.strictEqual(info.level, "info");
                 assert.strictEqual(info.message, '100% such wow {"much":"javascript"}');
                 assert.sameDeepMembers(info[SPLAT], [100, "wow", { much: "javascript" }]);
@@ -1832,11 +1832,11 @@ describe("logger", () => {
             );
 
             const l = helpers.createLogger((info) => {
-                assert.object(info);
+                assert.isObject(info);
                 assert.strictEqual(info.level, "info");
                 assert.strictEqual(info.message, '100% such wow {"much":"javascript"}');
                 assert.sameDeepMembers(info[SPLAT], [100, "wow", { much: "javascript" }]);
-                assert.true(info.thisIsMeta);
+                assert.isTrue(info.thisIsMeta);
                 assert.strictEqual(info[MESSAGE], 'info: 100% such wow {"much":"javascript"} {"thisIsMeta":true}');
                 done();
             }, format);
@@ -1879,7 +1879,7 @@ describe("logger", () => {
                 const logged = [];
                 const logger = helpers.createLogger((info, enc, next) => {
                     logged.push(info);
-                    assert.undefined(info.label);
+                    assert.isUndefined(info.label);
                     next();
 
                     if (logged.length === 1) {
@@ -1911,7 +1911,7 @@ describe("logger", () => {
         describe(".info", () => {
             it(".info(undefined) creates info with { message: undefined }", (done) => {
                 const l = helpers.createLogger((info) => {
-                    assert.undefined(info.message);
+                    assert.isUndefined(info.message);
                     done();
                 });
 
@@ -1920,7 +1920,7 @@ describe("logger", () => {
 
             it(".info(null) creates info with { message: null }", (done) => {
                 const l = helpers.createLogger((info) => {
-                    assert.null(info.message);
+                    assert.isNull(info.message);
                     done();
                 });
 
@@ -1953,12 +1953,12 @@ describe("logger", () => {
     describe("Logger (profile, startTimer)", () => {
         it("profile(id, info)", (done) => {
             const l = helpers.createLogger((info) => {
-                assert.object(info);
+                assert.isObject(info);
                 assert.strictEqual(info.something, "ok");
                 assert.strictEqual(info.level, "info");
-                assert.number(info.durationMs);
+                assert.isNumber(info.durationMs);
                 assert.strictEqual(info.message, "testing1");
-                assert.string(info[MESSAGE]);
+                assert.isString(info[MESSAGE]);
                 done();
             });
 
@@ -1973,12 +1973,12 @@ describe("logger", () => {
 
         it("profile(id, callback) ignores callback", (done) => {
             const l = helpers.createLogger((info) => {
-                assert.object(info);
+                assert.isObject(info);
                 assert.strictEqual(info.something, "ok");
                 assert.strictEqual(info.level, "info");
-                assert.number(info.durationMs);
+                assert.isNumber(info.durationMs);
                 assert.strictEqual(info.message, "testing2");
-                assert.string(info[MESSAGE]);
+                assert.isString(info[MESSAGE]);
                 done();
             });
 
@@ -1996,12 +1996,12 @@ describe("logger", () => {
 
         it("startTimer()", (done) => {
             const l = helpers.createLogger((info) => {
-                assert.object(info);
+                assert.isObject(info);
                 assert.strictEqual(info.something, "ok");
                 assert.strictEqual(info.level, "info");
-                assert.number(info.durationMs);
+                assert.isNumber(info.durationMs);
                 assert.strictEqual(info.message, "testing1");
-                assert.string(info[MESSAGE]);
+                assert.isString(info[MESSAGE]);
                 done();
             });
 
@@ -2025,7 +2025,7 @@ describe("logger", () => {
 
             l.on("error", (err, transport) => {
                 assert.instanceOf(err, Error);
-                assert.object(transport);
+                assert.isObject(transport);
                 done();
             });
             consoleTransport.emit("error", new Error());
@@ -2039,7 +2039,7 @@ describe("logger", () => {
 
             l.on("warn", (err, transport) => {
                 assert.instanceOf(err, Error);
-                assert.object(transport);
+                assert.isObject(transport);
                 done();
             });
             consoleTransport.emit("warn", new Error());
@@ -2130,7 +2130,7 @@ describe("logger", () => {
                 assert.strictEqual(msg.message, "dummy error");
 
 
-                assert.true(msg.stack.includes("/index.test.js"));
+                assert.isTrue(msg.stack.includes("/index.test.js"));
                 assert.strictEqual(msg.service, "user-service");
                 done();
             });
@@ -2159,8 +2159,8 @@ describe("logger", () => {
                 data += str;
             });
             await child;
-            assert.false(data.includes("\u001b[32mSimply a test\u001b[39m"));
-            assert.true(data.includes("Simply a test"));
+            assert.isFalse(data.includes("\u001b[32mSimply a test\u001b[39m"));
+            assert.isTrue(data.includes("Simply a test"));
         });
     });
 
@@ -2169,12 +2169,12 @@ describe("logger", () => {
 
         it("has expected methods", () => {
             const handler = helpers.rejectionHandler();
-            assert.function(handler.handle);
-            assert.function(handler.unhandle);
-            assert.function(handler.getAllInfo);
-            assert.function(handler.getProcessInfo);
-            assert.function(handler.getOsInfo);
-            assert.function(handler.getTrace);
+            assert.isFunction(handler.handle);
+            assert.isFunction(handler.unhandle);
+            assert.isFunction(handler.getAllInfo);
+            assert.isFunction(handler.getProcessInfo);
+            assert.isFunction(handler.getOsInfo);
+            assert.isFunction(handler.getTrace);
         });
 
         it("new RejectionHandler()", () => {
@@ -2214,13 +2214,13 @@ describe("logger", () => {
             const writeable = new stream.Writable({
                 objectMode: true,
                 write(info) {
-                    assert.object(info);
+                    assert.isObject(info);
                     assert.instanceOf(info.error, Error);
                     assert.strictEqual(info.error.message, "wtf this rejection");
-                    assert.true(info.message.includes("unhandledRejection: wtf this rejection"));
-                    assert.string(info.stack);
-                    assert.object(info.process);
-                    assert.object(info.os);
+                    assert.isTrue(info.message.includes("unhandledRejection: wtf this rejection"));
+                    assert.isString(info.stack);
+                    assert.isObject(info.process);
+                    assert.isObject(info.os);
                     assert.array(info.trace);
 
                     existing.restore();
@@ -2234,12 +2234,12 @@ describe("logger", () => {
                 transports: [transport]
             });
 
-            assert.undefined(handler.catcher);
+            assert.isUndefined(handler.catcher);
 
             transport.handleRejections = true;
             handler.handle();
 
-            assert.function(handler.catcher);
+            assert.isFunction(handler.catcher);
             assert.sameDeepMembers(process.listeners("unhandledRejection"), [
                 handler.catcher
             ]);
@@ -2260,7 +2260,7 @@ describe("logger", () => {
             });
 
             it("is a Symbol", () => {
-                assert.true(is.symbol(logger.LEVEL));
+                assert.isTrue(is.symbol(logger.LEVEL));
             });
 
             it("is not mutable", () => {
@@ -2283,7 +2283,7 @@ describe("logger", () => {
             });
 
             it("is a Symbol", () => {
-                assert.true(is.symbol(MESSAGE));
+                assert.isTrue(is.symbol(MESSAGE));
             });
 
             it("is not mutable", () => {
@@ -2306,7 +2306,7 @@ describe("logger", () => {
             });
 
             it("is a Symbol", () => {
-                assert.true(is.symbol(logger.SPLAT));
+                assert.isTrue(is.symbol(logger.SPLAT));
             });
 
             it("is not mutable", () => {
@@ -2329,7 +2329,7 @@ describe("logger", () => {
             });
 
             it("is a Symbol", () => {
-                assert.object(logger.config);
+                assert.isObject(logger.config);
             });
 
             it("is not mutable", () => {

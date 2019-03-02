@@ -93,7 +93,7 @@ describe("net", "mqtt", "packet", () => {
 
             const result = packet.writeToStream(fixture, stream);
 
-            assert.false(result, "result should be false");
+            assert.isFalse(result, "result should be false");
         });
     };
 

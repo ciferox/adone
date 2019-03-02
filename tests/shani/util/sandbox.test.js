@@ -16,7 +16,7 @@ describe("shani", "util", "sandbox", () => {
     it("creates sandboxes", () => {
         const s = sandbox.create();
 
-        assert.object(s);
+        assert.isObject(s);
         assert(s instanceof sandbox.Sandbox);
     });
 
@@ -43,7 +43,7 @@ describe("shani", "util", "sandbox", () => {
 
         it("must be a function", function () {
 
-            assert.function(this.sandbox.usingPromise);
+            assert.isFunction(this.sandbox.usingPromise);
         });
 
         it("must return the sandbox", function () {
@@ -110,16 +110,16 @@ describe("shani", "util", "sandbox", () => {
         it("injects spy, stub, mock", function () {
             this.sandbox.inject(this.obj);
 
-            assert.function(this.obj.spy);
-            assert.function(this.obj.stub);
-            assert.function(this.obj.mock);
+            assert.isFunction(this.obj.spy);
+            assert.isFunction(this.obj.stub);
+            assert.isFunction(this.obj.mock);
         });
 
         it("should return object", function () {
             const injected = this.sandbox.inject({});
 
-            assert.object(injected);
-            assert.function(injected.spy);
+            assert.isObject(injected);
+            assert.isFunction(injected.spy);
         });
     });
 

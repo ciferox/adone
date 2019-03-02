@@ -64,4 +64,3 @@ export default class FlowTask extends adone.task.Task {
         throw new adone.error.NotAllowedException("Invalid task");
     }
 }
-adone.tag.add(FlowTask, "FLOW_TASK");

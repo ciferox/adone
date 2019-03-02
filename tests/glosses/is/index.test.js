@@ -526,37 +526,37 @@ describe("is", () => {
         }
 
         it("class => false", () => {
-            assert.false(adone.is.plainObject(new Foo()));
+            assert.isFalse(adone.is.plainObject(new Foo()));
         });
 
         it("function => false", () => {
-            assert.false(adone.is.plainObject(new Bar()));
+            assert.isFalse(adone.is.plainObject(new Bar()));
         });
 
         it("[1, 2, 3] => false", () => {
-            assert.false(is.plainObject([1, 2, 3]));
+            assert.isFalse(is.plainObject([1, 2, 3]));
         });
 
         it("{ 'x': 0, 'y': 0 } => true", () => {
-            assert.true(is.plainObject({ x: 0, y: 0 }));
+            assert.isTrue(is.plainObject({ x: 0, y: 0 }));
         });
 
         it("Object.create(null) => true", () => {
-            assert.true(is.plainObject(Object.create(null)));
+            assert.isTrue(is.plainObject(Object.create(null)));
         });
     });
 
     describe("property", () => {
         it("common", () => {
-            assert.true(is.property("foo"));
-            assert.true(!is.property(".foo"));
-            assert.true(!is.property("a.b.c"));
-            assert.true(is.property("_joke"));
-            assert.true(is.property("j_a_b_c"));
-            assert.true(is.property("f00"));
-            assert.true(!is.property("0bad"));
-            assert.true(is.property("break"));
-            assert.true(!is.property("@context"));
+            assert.isTrue(is.property("foo"));
+            assert.isTrue(!is.property(".foo"));
+            assert.isTrue(!is.property("a.b.c"));
+            assert.isTrue(is.property("_joke"));
+            assert.isTrue(is.property("j_a_b_c"));
+            assert.isTrue(is.property("f00"));
+            assert.isTrue(!is.property("0bad"));
+            assert.isTrue(is.property("break"));
+            assert.isTrue(!is.property("@context"));
         });
     });
 });

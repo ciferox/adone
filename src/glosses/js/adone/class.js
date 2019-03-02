@@ -45,5 +45,3 @@ export default class XClass extends adone.js.adone.Base {
         return this._references;
     }
 }
-adone.tag.define("CODEMOD_CLASS");
-adone.tag.add(XClass, "CODEMOD_CLASS");

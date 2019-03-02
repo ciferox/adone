@@ -2,7 +2,7 @@ const { regex, command } = adone.util.shebang;
 
 describe("util", "shebang", () => {
     it("regex", () => {
-        assert.true(regex.test('#!/usr/bin/env node\nconsole.log("unicorns");'));
+        assert.isTrue(regex.test('#!/usr/bin/env node\nconsole.log("unicorns");'));
         assert.equal(regex.exec("#!/usr/bin/env node")[1], "/usr/bin/env node");
     });
 

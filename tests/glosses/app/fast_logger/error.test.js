@@ -18,7 +18,7 @@ describe("fast loggers", "error", () => {
         instance.level = name;
         instance[name](err);
         const result = await once(stream, "data");
-        assert.true(new Date(result.time) <= new Date(), "time is greater than Date.now()");
+        assert.isTrue(new Date(result.time) <= new Date(), "time is greater than Date.now()");
         delete result.time;
         assert.deepEqual(result, {
             pid,
@@ -39,7 +39,7 @@ describe("fast loggers", "error", () => {
         instance.level = name;
         instance[name](err);
         const result = await once(stream, "data");
-        assert.true(new Date(result.time) <= new Date(), "time is greater than Date.now()");
+        assert.isTrue(new Date(result.time) <= new Date(), "time is greater than Date.now()");
         delete result.time;
         assert.deepEqual(result, {
             pid,
@@ -60,7 +60,7 @@ describe("fast loggers", "error", () => {
         instance[name](err);
     
         const result = await once(stream, "data");
-        assert.true(new Date(result.time) <= new Date(), "time is greater than Date.now()");
+        assert.isTrue(new Date(result.time) <= new Date(), "time is greater than Date.now()");
         delete result.time;
         assert.deepEqual(result, {
             pid,
@@ -86,7 +86,7 @@ describe("fast loggers", "error", () => {
         instance.level = name;
         instance[name]({ err });
         const result = await once(stream, "data");
-        assert.true(new Date(result.time) <= new Date(), "time is greater than Date.now()");
+        assert.isTrue(new Date(result.time) <= new Date(), "time is greater than Date.now()");
         delete result.time;
         assert.deepEqual(result, {
             pid,
@@ -111,7 +111,7 @@ describe("fast loggers", "error", () => {
         instance[name](err);
         const result = await once(stream, "data");
     
-        assert.true(new Date(result.time) <= new Date(), "time is greater than Date.now()");
+        assert.isTrue(new Date(result.time) <= new Date(), "time is greater than Date.now()");
         delete result.time;
         assert.deepEqual(result, {
             pid,
@@ -129,7 +129,7 @@ describe("fast loggers", "error", () => {
         const err = new Error("myerror");
         delete err.stack;
         const instance = fastLogger(sink((chunk, enc, cb) => {
-            assert.true(new Date(chunk.time) <= new Date(), "time is greater than Date.now()");
+            assert.isTrue(new Date(chunk.time) <= new Date(), "time is greater than Date.now()");
             delete chunk.time;
             assert.equal(chunk.hasOwnProperty("stack"), false);
             cb();
@@ -143,7 +143,7 @@ describe("fast loggers", "error", () => {
         const err = new Error("myerror");
         err.stack = null;
         const instance = fastLogger(sink((chunk, enc, cb) => {
-            assert.true(new Date(chunk.time) <= new Date(), "time is greater than Date.now()");
+            assert.isTrue(new Date(chunk.time) <= new Date(), "time is greater than Date.now()");
             delete chunk.time;
             assert.equal(chunk.hasOwnProperty("stack"), true);
             assert.equal(chunk.stack, null);

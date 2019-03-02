@@ -59,8 +59,8 @@ exports.assumeFormatted = (fmt, info, assertion, opts = {}) => {
  */
 exports.assumeHasPrototype = (fmt) => {
     return () => {
-        assert.true(is.class(fmt.Format));
-        assert.function(fmt.Format.prototype.transform);
+        assert.isTrue(is.class(fmt.Format));
+        assert.isFunction(fmt.Format.prototype.transform);
     };
 };
 

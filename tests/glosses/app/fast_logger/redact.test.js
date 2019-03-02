@@ -218,7 +218,7 @@ describe("fastLogger", "redact", () => {
             }
         });
         const { req } = await once(stream, "data");
-        assert.false("cookie" in req.headers);
+        assert.isFalse("cookie" in req.headers);
     });
   
     it("redact.remove – top level key", async () => {
@@ -228,7 +228,7 @@ describe("fastLogger", "redact", () => {
             key: { redact: "me" }
         });
         const o = await once(stream, "data");
-        assert.false("key" in o);
+        assert.isFalse("key" in o);
     });
   
     it("redact.remove – top level key in child logger", async () => {
@@ -237,7 +237,7 @@ describe("fastLogger", "redact", () => {
         const instance = fastLogger(opts, stream).child({ key: { redact: "me" } });
         instance.info("test");
         const o = await once(stream, "data");
-        assert.false("key" in o);
+        assert.isFalse("key" in o);
     });
   
     it("redact.paths preserves original object values after the log write", async () => {
@@ -328,8 +328,8 @@ describe("fastLogger", "redact", () => {
         };
         instance.info(obj);
         const o = await once(stream, "data");
-        assert.false("cookie" in o.req.headers);
-        assert.true("cookie" in obj.req.headers);
+        assert.isFalse("cookie" in o.req.headers);
+        assert.isTrue("cookie" in obj.req.headers);
     });
   
     it("redact – supports last position wildcard paths", async () => {

@@ -12,8 +12,7 @@ const PACKAGE_PROPS = [
     "author",
     "bin",
     "main",
-    "license",
-    "realmType"
+    "license"
 ];
 
 export const create = async (info) => {

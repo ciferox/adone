@@ -58,7 +58,7 @@ export const download = function (ver, platform, arch) {
         // go-ipfs contents are in 'go-ipfs/', so append that to the path
         const done = () => resolve({
             fileName,
-            installPath: path.join(adone.runtime.realm.env.OPT_PATH, "/go-ipfs/")
+            installPath: path.join(adone.realm.getRootRealm().env.OPT_PATH, "/go-ipfs/")
         });
 
         // Unpack the response stream
@@ -67,7 +67,7 @@ export const download = function (ver, platform, arch) {
             if (isWindows) {
                 return stream.pipe(
                     unzip
-                        .Extract({ path: adone.runtime.realm.env.OPT_PATH })
+                        .Extract({ path: adone.realm.getRootRealm().env.OPT_PATH })
                         .on("close", done)
                 );
             }
@@ -76,7 +76,7 @@ export const download = function (ver, platform, arch) {
                 .pipe(gunzip())
                 .pipe(
                     tarFS
-                        .extract(adone.runtime.realm.env.OPT_PATH)
+                        .extract(adone.realm.getRootRealm().env.OPT_PATH)
                         .on("finish", done)
                 );
         };

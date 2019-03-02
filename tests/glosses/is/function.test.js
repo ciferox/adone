@@ -50,28 +50,28 @@ describe("is", () => {
 
         describe("not callables", () => {
             it("non-number/string primitives", () => {
-                assert.false(is.function(), "undefined is not function");
-                assert.false(is.function(null), "null is not function");
-                assert.false(is.function(false), "false is not function");
-                assert.false(is.function(true), "true is not function");
+                assert.isFalse(is.function(), "undefined is not function");
+                assert.isFalse(is.function(null), "null is not function");
+                assert.isFalse(is.function(false), "false is not function");
+                assert.isFalse(is.function(true), "true is not function");
             });
 
-            assert.false(is.function([]), "array is not function");
-            assert.false(is.function({}), "object is not function");
-            assert.false(is.function(/a/g), "regex literal is not function");
-            assert.false(is.function(new RegExp("a", "g")), "regex object is not function");
-            assert.false(is.function(new Date()), "new Date() is not function");
+            assert.isFalse(is.function([]), "array is not function");
+            assert.isFalse(is.function({}), "object is not function");
+            assert.isFalse(is.function(/a/g), "regex literal is not function");
+            assert.isFalse(is.function(new RegExp("a", "g")), "regex object is not function");
+            assert.isFalse(is.function(new Date()), "new Date() is not function");
 
             it("numbers", () => {
-                assert.false(is.function(42), "number is not function");
-                assert.false(is.function(Object(42)), "number object is not function");
-                assert.false(is.function(NaN), "NaN is not function");
-                assert.false(is.function(Infinity), "Infinity is not function");
+                assert.isFalse(is.function(42), "number is not function");
+                assert.isFalse(is.function(Object(42)), "number object is not function");
+                assert.isFalse(is.function(NaN), "NaN is not function");
+                assert.isFalse(is.function(Infinity), "Infinity is not function");
             });
 
             it("strings", () => {
-                assert.false(is.function("foo"), "string primitive is not function");
-                assert.false(is.function(Object("foo")), "string object is not function");
+                assert.isFalse(is.function("foo"), "string primitive is not function");
+                assert.isFalse(is.function(Object("foo")), "string object is not function");
             });
 
             it("non-function with function in its [[Prototype]] chain", () => {
@@ -92,7 +92,7 @@ describe("is", () => {
             fakeFunction[Symbol.toStringTag] = "Function";
             assert.equal(String(fakeFunction), String(return3));
             assert.equal(Number(fakeFunction), return3());
-            assert.false(is.function(fakeFunction), 'fake Function with @@toStringTag "Function" is not function');
+            assert.isFalse(is.function(fakeFunction), 'fake Function with @@toStringTag "Function" is not function');
         });
 
         const typedArrayNames = [
@@ -108,37 +108,37 @@ describe("is", () => {
         ];
 
         it("regular function", () => {
-            assert.true(is.function(noop), "function is function");
-            assert.true(is.function(classFake), 'function with name containing "class" is function');
-            assert.true(is.function(returnClass), 'function with string " class " is function');
-            assert.true(is.function(is.function), "is.function is function");
+            assert.isTrue(is.function(noop), "function is function");
+            assert.isTrue(is.function(classFake), 'function with name containing "class" is function');
+            assert.isTrue(is.function(returnClass), 'function with string " class " is function');
+            assert.isTrue(is.function(is.function), "is.function is function");
         });
 
         it("typed arrays", () => {
             for (const typedArray of typedArrayNames) {
-                assert.true(is.function(global[typedArray]), `${typedArray} is function`);
+                assert.isTrue(is.function(global[typedArray]), `${typedArray} is function`);
             }
         });
 
         it("Generators", { skip: !generatorFunction }, () => {
-            assert.true(is.function(generatorFunction), "generator function is function");
+            assert.isTrue(is.function(generatorFunction), "generator function is function");
         });
 
         it("arrow functions", () => {
             arrowFuncs.forEach((arrowFunc) => {
-                assert.true(is.function(arrowFunc), `arrow function ${arrowFunc} is arrow function`);
+                assert.isTrue(is.function(arrowFunc), `arrow function ${arrowFunc} is arrow function`);
             });
         });
 
         it("async functions", () => {
             asyncFuncs.forEach((asyncFunc) => {
-                assert.true(is.function(asyncFunc), `arrow function ${asyncFunc} is arrow function`);
+                assert.isTrue(is.function(asyncFunc), `arrow function ${asyncFunc} is arrow function`);
             });
         });
 
         it("classes", () => {
-            assert.true(is.function(Foo), "class constructor are function");
-            assert.true(is.function(CommentedClass), "class constructor with comments in the signature are function");
+            assert.isTrue(is.function(Foo), "class constructor are function");
+            assert.isTrue(is.function(CommentedClass), "class constructor with comments in the signature are function");
         });
     });
 
@@ -157,16 +157,16 @@ describe("is", () => {
                 new Date()
             ];
             for (const nonFunc of nonFuncs) {
-                assert.false(is.arrowFunction(nonFunc), `${nonFunc} is not a function`);
+                assert.isFalse(is.arrowFunction(nonFunc), `${nonFunc} is not a function`);
             }
         });
 
         it("non-arrow functions", () => {
             const func = function () { };
-            assert.false(is.arrowFunction(func), "anonymous function is not an arrow function");
+            assert.isFalse(is.arrowFunction(func), "anonymous function is not an arrow function");
 
             const namedFunc = function foo() { };
-            assert.false(is.arrowFunction(namedFunc), "named function is not an arrow function");
+            assert.isFalse(is.arrowFunction(namedFunc), "named function is not an arrow function");
         });
 
         it("non-arrow function with faked toString", () => {
@@ -176,21 +176,21 @@ describe("is", () => {
             };
 
             assert.notEqual(String(func), Function.prototype.toString.call(func), "test function has faked toString that is different from default toString");
-            assert.false(is.arrowFunction(func), "anonymous function with faked toString is not an arrow function");
+            assert.isFalse(is.arrowFunction(func), "anonymous function with faked toString is not an arrow function");
         });
 
         it("arrow functions", () => {
             arrowFuncs.forEach((arrowFunc) => {
-                assert.true(is.arrowFunction(arrowFunc), `arrow function ${arrowFunc} is arrow function`);
+                assert.isTrue(is.arrowFunction(arrowFunc), `arrow function ${arrowFunc} is arrow function`);
             });
         });
 
         it("async arrow functions", () => {
             asyncFuncs.slice(0, 2).forEach((asyncFunc) => {
-                assert.true(is.arrowFunction(asyncFunc), `async arrow function ${asyncFunc} is arrow function`);
+                assert.isTrue(is.arrowFunction(asyncFunc), `async arrow function ${asyncFunc} is arrow function`);
             });
             asyncFuncs.slice(2).forEach((asyncFunc) => {
-                assert.false(is.arrowFunction(asyncFunc), `async non-arrow function ${asyncFunc} is not an arrow function`);
+                assert.isFalse(is.arrowFunction(asyncFunc), `async non-arrow function ${asyncFunc} is not an arrow function`);
             });
         });
     });
@@ -198,21 +198,21 @@ describe("is", () => {
     describe("asyncFunction()", () => {
         it("arrow functions", () => {
             arrowFuncs.forEach((arrowFunc) => {
-                assert.false(is.asyncFunction(arrowFunc));
+                assert.isFalse(is.asyncFunction(arrowFunc));
             });
         });
 
         it("generator function", () => {
-            assert.false(is.asyncFunction(generatorFunction));
+            assert.isFalse(is.asyncFunction(generatorFunction));
         });
 
         it("class", () => {
-            assert.false(is.asyncFunction(Foo));
+            assert.isFalse(is.asyncFunction(Foo));
         });
 
         it("valid", () => {
             asyncFuncs.forEach((asyncFunc) => {
-                assert.true(is.asyncFunction(asyncFunc));
+                assert.isTrue(is.asyncFunction(asyncFunc));
             });
         });
     });
@@ -220,22 +220,22 @@ describe("is", () => {
     describe("generatorFunction()", () => {
         it("arrow functions", () => {
             arrowFuncs.forEach((arrowFunc) => {
-                assert.false(is.generatorFunction(arrowFunc), `${arrowFunc} is not a generator`);
+                assert.isFalse(is.generatorFunction(arrowFunc), `${arrowFunc} is not a generator`);
             });
         });
 
         it("async functions", () => {
             asyncFuncs.forEach((asyncFunc) => {
-                assert.false(is.generatorFunction(asyncFunc));
+                assert.isFalse(is.generatorFunction(asyncFunc));
             });
         });
 
         it("class", () => {
-            assert.false(is.asyncFunction(Foo));
+            assert.isFalse(is.asyncFunction(Foo));
         });
 
         it("valid", () => {
-            assert.true(is.generatorFunction(generatorFunction));
+            assert.isTrue(is.generatorFunction(generatorFunction));
         });
     });
 });

@@ -15,40 +15,24 @@ export const ACTION = {
     // MAX: 0x3F
 };
 
-adone.definePredicates({
-    netron: "NETRON",
-    netronDefinition: "NETRON_DEFINITION",
-    netronDefinitions: "NETRON_DEFINITIONS",
-    netronReference: "NETRON_REFERENCE",
-    netronInterface: "NETRON_INTERFACE",
-    netronStub: "NETRON_STUB",
-    netronRemoteStub: "NETRON_REMOTESTUB",
-    netronPeer: "NETRON_ABSTRACTPEER",
-    netronOwnPeer: "NETRON_OWNPEER",
-    netronRemotePeer: "NETRON_REMOTEPEER"
-});
+const __ = adone.lazifyPrivate({
+    I_DEFINITION_SYMBOL: () => Symbol(),
+    I_PEERID_SYMBOL: () => Symbol(),
+    InterfaceFactory: "./interface_factory"
+}, exports, require);
 
-adone.defineCustomPredicate("netronContext", (obj) => {
-    let isContex = false;
-    let target = undefined;
 
-    if (is.class(obj)) {
-        target = obj;
-    } else if (is.propertyDefined(obj, "__proto__") && is.propertyOwned(obj.__proto__, "constructor")) {
-        if (adone.netron.meta.isDynamicContext(obj)) {
-            return true;
-        }
-        target = obj.__proto__.constructor;
+/**
+ * Class represented netron interface.
+ * 
+ * For checking object is netron interface use is.netronInterface() predicate.
+ */
+export class Interface {
+    constructor(def, peerId) {
+        this[__.I_DEFINITION_SYMBOL] = def;
+        this[__.I_PEERID_SYMBOL] = peerId;
     }
-    if (!is.undefined(target)) {
-        isContex = is.object(reflect.getMetadata(adone.netron.meta.CONTEXT_ANNOTATION, target));
-    }
-    return isContex;
-});
-
-adone.defineCustomPredicate("netronIMethod", (ni, name) => (is.function(ni[name]) && (ni.$def.$[name].method === true)));
-adone.defineCustomPredicate("netronIProperty", (ni, name) => (is.object(ni[name]) && is.function(ni[name].get) && (is.undefined(ni.$def.$[name].method))));
-
+}
 
 export class Definition {
     constructor() {
@@ -59,14 +43,12 @@ export class Definition {
         // this.twin = undefined;
     }
 }
-tag.add(Definition, "NETRON_DEFINITION");
 
 export class Reference {
     constructor(defId) {
         this.defId = defId;
     }
 }
-tag.add(Reference, "NETRON_REFERENCE");
 
 export class Definitions {
     constructor(...args) {
@@ -133,7 +115,6 @@ export class Definitions {
         return this._defs.splice(begin, end, ...items);
     }
 }
-adone.tag.add(Definitions, "NETRON_DEFINITIONS");
 
 const MAX_INTEGER = Number.MAX_SAFE_INTEGER >>> 0;
 
@@ -156,8 +137,8 @@ export class FastUniqueId {
     }
 }
 
-const __ = adone.lazify({
-    contextify: () => __.meta.contextify,
+adone.lazify({
+    contextify: () => adone.netron.meta.contextify,
     UniqueId: () => {
         const { math: { Long } } = adone;
         const ONE_LONG = new Long(1, 0, true);
@@ -195,9 +176,3 @@ const __ = adone.lazify({
     packet: "./packet",
     task: "./tasks"
 }, adone.asNamespace(exports), require);
-
-adone.lazifyPrivate({
-    I_DEFINITION_SYMBOL: () => Symbol(),
-    I_PEERID_SYMBOL: () => Symbol(),
-    InterfaceFactory: "./interface_factory"
-}, exports, require);

@@ -2917,7 +2917,7 @@ describe("model", () => {
             });
 
             expect(model.myType).to.not.exist();
-            assert.true(is.function(customJoi.myType));
+            assert.isTrue(is.function(customJoi.myType));
 
             const schema = customJoi.myType();
             expect(schema._type).to.equal("myType");
@@ -2932,7 +2932,7 @@ describe("model", () => {
             });
 
             expect(model.myType).to.not.exist();
-            assert.true(is.function(customJoi.myType));
+            assert.isTrue(is.function(customJoi.myType));
 
             const schema = customJoi.myType();
             Helper.validate(schema, [
@@ -2970,7 +2970,7 @@ describe("model", () => {
                 name: "myType"
             });
             expect(model.myType).to.not.exist();
-            assert.true(is.function(customModel.myType));
+            assert.isTrue(is.function(customModel.myType));
             const schema = customModel.myType({ a: customModel.number() });
             Helper.validate(schema, [
                 [undefined, true],

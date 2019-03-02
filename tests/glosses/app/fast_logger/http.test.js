@@ -38,7 +38,7 @@ describe("fast report", "http", () => {
         server.unref();
         server.listen();
         const err = await once(server, "listening");
-        assert.undefined(err);
+        assert.isUndefined(err);
         const res = await once(http.get(`http://localhost:${ server.address().port}`), "response");
         res.resume();
         server.close();
@@ -77,7 +77,7 @@ describe("fast report", "http", () => {
         server.unref();
         server.listen();
         const err = await once(server, "listening");
-        assert.undefined(err);
+        assert.isUndefined(err);
     
         const res = await once(http.get(`http://localhost:${server.address().port}`), "response");
         res.resume();
@@ -116,7 +116,7 @@ describe("fast report", "http", () => {
         server.unref();
         server.listen();
         const err = await once(server, "listening");
-        assert.undefined(err);
+        assert.isUndefined(err);
     
         const res = await once(http.get(`http://localhost:${server.address().port}`), "response");
         res.resume();
@@ -150,7 +150,7 @@ describe("fast report", "http", () => {
         server.listen();
         const err = await once(server, "listening");
     
-        assert.undefined(err);
+        assert.isUndefined(err);
     
         const res = await once(http.get(`http://localhost:${server.address().port}`), "response");
         res.resume();
@@ -191,7 +191,7 @@ describe("fast report", "http", () => {
         server.unref();
         server.listen();
         const err = await once(server, "listening");
-        assert.undefined(err);
+        assert.isUndefined(err);
     
         const res = await once(http.get(`http://localhost:${server.address().port}`), "response");
         res.resume();
@@ -233,7 +233,7 @@ describe("fast report", "http", () => {
         server.unref();
         server.listen();
         const err = await once(server, "listening");
-        assert.undefined(err);
+        assert.isUndefined(err);
     
         const res = await once(http.get(`http://localhost:${server.address().port}`), "response");
         res.resume();
