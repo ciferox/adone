@@ -4,7 +4,6 @@ const {
     runtime: { term: { stats } }
 } = adone;
 
-"use strict";
 const TEMPLATE_REGEX = /(?:\\(u[a-f\d]{4}|x[a-f\d]{2}|.))|(?:\{(~)?(\w+(?:\([^)]*\))?(?:\.\w+(?:\([^)]*\))?)*)(?:[ \t]|(?=\r?\n)))|(\})|((?:.|[\r\n\f])+?)/gi;
 const STYLE_REGEX = /(?:^|\.)(\w+)(?:\(([^)]*)\))?/g;
 const STRING_REGEX = /^(['"])((?:\\.|(?!\1)[^\\])*)\1$/;
@@ -37,10 +36,11 @@ const parseArguments = function (name, args) {
     let matches;
 
     for (const chunk of chunks) {
-        if (!isNaN(chunk)) {
-            results.push(Number(chunk));
+        const number = Number(chunk);
+        if (!is.nan(number)) {
+            results.push(number);
         } else if ((matches = chunk.match(STRING_REGEX))) {
-            results.push(matches[2].replace(ESCAPE_REGEX, (m, escape, chr) => escape ? unescape(escape) : chr));
+            results.push(matches[2].replace(ESCAPE_REGEX, (m, escape, character) => escape ? unescape(escape) : character));
         } else {
             throw new Error(`Invalid Chalk template style argument: ${chunk} (in style '${name}')`);
         }
@@ -60,7 +60,7 @@ const parseStyle = function (style) {
 
         if (matches[2]) {
             const args = parseArguments(name, matches[2]);
-            results.push([name].concat(args));
+            results.push([name, ...args]);
         } else {
             results.push([name]);
         }
@@ -80,16 +80,17 @@ const buildStyle = function (chalk, styles) {
 
     let current = chalk;
     for (const styleName of Object.keys(enabled)) {
-        if (is.array(enabled[styleName])) {
-            if (!(styleName in current)) {
-                throw new Error(`Unknown Chalk style: ${styleName}`);
-            }
+        if (!is.array(enabled[styleName])) {
+            continue;
+        }
+        if (!(styleName in current)) {
+            throw new Error(`Unknown Chalk style: ${styleName}`);
+        }
 
-            if (enabled[styleName].length > 0) {
-                current = current[styleName].apply(current, enabled[styleName]);
-            } else {
-                current = current[styleName];
-            }
+        if (enabled[styleName].length > 0) {
+            current = current[styleName](...enabled[styleName]);
+        } else {
+            current = current[styleName];
         }
     }
 
@@ -102,13 +103,13 @@ const template = (chalk, tmp) => {
     let chunk = [];
 
     // eslint-disable-next-line max-params
-    tmp.replace(TEMPLATE_REGEX, (m, escapeChar, inverse, style, close, chr) => {
-        if (escapeChar) {
-            chunk.push(unescape(escapeChar));
+    tmp.replace(TEMPLATE_REGEX, (m, escapeCharacter, inverse, style, close, character) => {
+        if (escapeCharacter) {
+            chunk.push(unescape(escapeCharacter));
         } else if (style) {
-            const str = chunk.join("");
+            const string = chunk.join("");
             chunk = [];
-            chunks.push(styles.length === 0 ? str : buildStyle(chalk, styles)(str));
+            chunks.push(styles.length === 0 ? string : buildStyle(chalk, styles)(string));
             styles.push({ inverse, styles: parseStyle(style) });
         } else if (close) {
             if (styles.length === 0) {
@@ -119,7 +120,7 @@ const template = (chalk, tmp) => {
             chunk = [];
             styles.pop();
         } else {
-            chunk.push(chr);
+            chunk.push(character);
         }
     });
 
@@ -165,7 +166,7 @@ for (const key of Object.keys(esc)) {
     styles[key] = {
         get() {
             const codes = esc[key];
-            return build.call(this, this._styles ? this._styles.concat(codes) : [codes], this._empty, key);
+            return build.call(this, [...(this._styles || []), codes], this._empty, key);
         }
     };
 }
@@ -192,7 +193,7 @@ for (const model of Object.keys(esc.color.ansi)) {
                     close: esc.color.close,
                     closeRe: esc.color.closeRe
                 };
-                return build.call(this, this._styles ? this._styles.concat(codes) : [codes], this._empty, model);
+                return build.call(this, [...(this._styles || []), codes], this._empty, model);
             };
         }
     };
@@ -215,30 +216,17 @@ for (const model of Object.keys(esc.bgColor.ansi)) {
                     close: esc.bgColor.close,
                     closeRe: esc.bgColor.closeRe
                 };
-                return build.call(this, this._styles ? this._styles.concat(codes) : [codes], this._empty, model);
+                return build.call(this, [...(this._styles || []), codes], this._empty, model);
             };
         }
     };
 }
 
 const applyStyle = function (...args) {
-    // Support varags, but simply cast to string in case there's only one arg
-    const argsLen = args.length;
-    let str = String(args[0]);
+    let string = args.join(" ");
 
-    if (argsLen === 0) {
-        return "";
-    }
-
-    if (argsLen > 1) {
-        // Don't slice `arguments`, it prevents V8 optimizations
-        for (let a = 1; a < argsLen; a++) {
-            str += ` ${args[a]}`;
-        }
-    }
-
-    if (!this.enabled || this.level <= 0 || !str) {
-        return this._empty ? "" : str;
+    if (!this.enabled || this.level <= 0 || !string) {
+        return this._empty ? "" : string;
     }
 
     // Turns out that on Windows dimmed gray text becomes invisible in cmd.exe,
@@ -253,18 +241,18 @@ const applyStyle = function (...args) {
         // Replace any instances already present with a re-opening code
         // otherwise only the part of the string until said closing code
         // will be colored, and the rest will simply be 'plain'.
-        str = code.open + str.replace(code.closeRe, code.open) + code.close;
+        string = code.open + string.replace(code.closeRe, code.open) + code.close;
 
         // Close the styling before a linebreak and reopen
         // after next line to fix a bleed issue on macOS
         // https://github.com/chalk/chalk/pull/92
-        str = str.replace(/\r?\n/g, `${code.close}$&${code.open}`);
+        string = string.replace(/\r?\n/g, `${code.close}$&${code.open}`);
     }
 
     // Reset the original `dim` if we changed it to work around the Windows dimmed gray issue
     esc.dim.open = originalDim;
 
-    return str;
+    return string;
 };
 
 const proto = Object.defineProperties(() => { }, styles);
@@ -310,6 +298,9 @@ const build = function (_styles, _empty, key) {
 };
 
 const applyOptions = (instance, { enabled, level } = {}) => {
+    if (level > 3 || level < 0) {
+        throw new adone.error.InvalidArgumentException("The 'level' option should be an integer from 0 to 3");
+    }
     const scLevel = stats.stdout ? stats.stdout.level : 0;
     instance.level = is.undefined(level) ? scLevel : level;
     instance.enabled = is.undefined(enabled) ? instance.level > 0 : enabled;
@@ -326,8 +317,10 @@ const chalkTag = function (chalk, strings) {
     const parts = [strings.raw[0]];
 
     for (let i = 1; i < strings.length; i++) {
-        parts.push(String(args[i - 1]).replace(/[{}\\]/g, "\\$&"));
-        parts.push(String(strings.raw[i]));
+        parts.push(
+            String(args[i - 1]).replace(/[{}\\]/g, "\\$&"),
+            String(strings.raw[i])
+        );
     }
 
     return template(chalk, parts.join(""));

@@ -1,9 +1,0 @@
-{
-    "name": "another_name",
-    "description": "another_descr",
-    "version": "2.0.0",
-    "author": "noname",
-    "adone": {
-        "type": "omnitron.service"
-    }
-}

@@ -2,6 +2,7 @@ const {
     app: { lockfile },
     error,
     is,
+    fs,
     realm: { Configuration },
     task,
     std
@@ -21,6 +22,23 @@ const checkEntry = (entry) => {
     return true;
 };
 
+const loadTasks = (path, index) => {
+    let indexFile;
+    if (is.string(index)) {
+        indexFile = index;
+    } else {
+        indexFile = "index.js";
+    }
+    const fullPath = std.path.join(path, indexFile);
+    if (fs.existsSync(fullPath)) {
+        const mod = require(fullPath);
+        return mod.default
+            ? mod.default
+            : mod;
+    }
+    return {};
+};
+
 export default class RealmManager extends task.Manager {
     constructor({ cwd = process.cwd() } = {}) {
         super();
@@ -29,16 +47,26 @@ export default class RealmManager extends task.Manager {
             throw new error.NotValidException(`Invalid type of cwd: ${adone.meta.typeOf(cwd)}`);
         }
         this.cwd = cwd;
+        this.tasks = {};
 
         adone.lazify({
             config: () => Configuration.loadSync({
                 cwd
             }),
             package: std.path.join(cwd, "package.json"),
-            tasks: std.path.join(cwd, ".adone", "tasks"),
             env: std.path.join(cwd, ".adone", "env"),
-            identity: std.path.join(cwd, ".adone", "identity.json")
+            identity: std.path.join(cwd, ".adone", "identity.json") // remove (adone specific)
         }, this, adone.require);
+
+        if (is.object(this.config.raw.tasks) && is.string(this.config.raw.tasks.basePath)) {
+            const basePath = std.path.join(this.cwd, this.config.raw.tasks.basePath);
+            if (fs.existsSync(basePath)) {
+                this.tasks = {
+                    ...loadTasks(basePath, this.config.raw.tasks.index),
+                    ...loadTasks(basePath, this.config.raw.tasks.indexDev)
+                };
+            }
+        }
 
         this.typeHandler = null;
         // this.peerInfo = null;

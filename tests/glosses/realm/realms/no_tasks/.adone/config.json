@@ -1,0 +1,9 @@
+{
+    "scheme": {
+        "src": {
+            "task": "transpile",
+            "src": "src/**/*",
+            "dst": "lib"
+        }
+    }
+}

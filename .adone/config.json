@@ -1,6 +1,14 @@
 {
-    "globalTasks": [],
-    "struct": {
+    "tasks": {
+        "basePath": "./lib/tasks"
+    },
+    "scheme": {
+        "tasks": {
+            "description": "Realm tasks",
+            "src": "src/tasks/**/*.js",
+            "dst": "lib/tasks",
+            "task": "transpile"
+        },
         "assets": {
             "description": "All assets",
             "src": [
@@ -22,10 +30,10 @@
             "description": "ADONE cli utility",
             "src": "src/app/adone.js",
             "dst": "bin",
-            "task": "adoneTranspileExe"
+            "task": "transpileExe"
         },
         "index": {
-            "description": "ADONE main index file",
+            "description": "ADONE index file",
             "src": "src/index.js",
             "dst": "lib",
             "task": "transpile"
@@ -40,31 +48,27 @@
                 "lib/glosses/**/*.js",
                 "lib/glosses/**/*.map"
             ],
-            "struct": {
+            "scheme": {
                 "app": {
                     "description": "Application framework",
                     "src": "src/glosses/app/**/*.js",
                     "dst": "lib/glosses/app",
                     "task": "transpile",
-                    "namespace": "app",
-                    "struct": {
+                    "scheme": {
                         "logger": {
                             "description": "Application logger",
                             "src": "src/glosses/app/logger/**/*.js",
                             "dst": "lib/glosses/app/logger",
-                            "task": "transpile",
-                            "namespace": "logger"
+                            "task": "transpile"
                         },
                         "lockfile": {
                             "description": "Inter-process file locking implementation",
                             "src": "src/glosses/app/lockfile.js",
                             "dst": "lib/glosses/app",
-                            "task": "transpile",
-                            "namespace": "lockfile"
+                            "task": "transpile"
                         },
                         "report": {
                             "description": "Delivers a human-readable diagnostic summary, written to file",
-                            "namespace": "report",
                             "src": "src/glosses/app/report/**/*.js",
                             "dst": "lib/glosses/app/report",
                             "task": "transpile",
@@ -79,15 +83,13 @@
                     "description": "Archivers",
                     "src": "src/glosses/archives/**/*.js",
                     "dst": "lib/glosses/archives",
-                    "task": "transpile",
-                    "namespace": "archives"
+                    "task": "transpile"
                 },
                 "assertion": {
                     "description": "Assertion utilites",
                     "src": "src/glosses/assertion/**/*.js",
                     "dst": "lib/glosses/assertion",
                     "task": "transpile",
-                    "namespace": "assertion",
                     "predecessor": [
                         "https://github.com/chaijs",
                         "https://github.com/domenic/sinon-chai",
@@ -104,26 +106,22 @@
                         "!src/glosses/async/**/README.md"
                     ],
                     "dst": "lib/glosses/async",
-                    "namespace": "async",
                     "original": "https://github.com/caolan/async"
                 },
                 "collection": {
                     "description": "Implementations of common collections",
                     "src": "src/glosses/collections/**/*.js",
                     "dst": "lib/glosses/collections",
-                    "task": "transpile",
-                    "namespace": "collection"
+                    "task": "transpile"
                 },
                 "compressor": {
                     "description": "Compressors",
-                    "namespace": "compressor",
                     "task": "transpile",
                     "src": "src/glosses/compressors/index.js",
                     "dst": "lib/glosses/compressors",
-                    "struct": {
+                    "scheme": {
                         "brotli": {
                             "description": "Brotli compression format",
-                            "namespace": "brotli",
                             "src": "src/glosses/compressors/brotli/**/*.js",
                             "dst": "lib/glosses/compressors/brotli",
                             "task": "transpile",
@@ -134,28 +132,24 @@
                         },
                         "deflate": {
                             "description": "Deflate compressor/decompressor",
-                            "namespace": "deflate",
                             "task": "transpile",
                             "src": "src/glosses/compressors/deflate.js",
                             "dst": "lib/glosses/compressors"
                         },
                         "gz": {
                             "description": "Gzip compressor/decompressor",
-                            "namespace": "gz",
                             "task": "transpile",
                             "src": "src/glosses/compressors/gzip.js",
                             "dst": "lib/glosses/compressors"
                         },
                         "lzma": {
                             "description": "LZMA compressor/decompressor",
-                            "namespace": "lzma",
                             "task": "transpile",
                             "src": "src/glosses/compressors/lzma.js",
                             "dst": "lib/glosses/compressors"
                         },
                         "snappy": {
                             "description": "Snappy, a fast compressor/decompressor",
-                            "namespace": "snappy",
                             "task": "transpile",
                             "src": "src/glosses/compressors/snappy/**/*.js",
                             "dst": "lib/glosses/compressors/snappy",
@@ -166,7 +160,6 @@
                         },
                         "xz": {
                             "description": "XZ compressor/decompressor",
-                            "namespace": "xz",
                             "task": "transpile",
                             "src": "src/glosses/compressors/xz/**/*.js",
                             "dst": "lib/glosses/compressors/xz",
@@ -182,19 +175,16 @@
                     "description": "Configurations",
                     "src": "src/glosses/configurations/**/*.js",
                     "dst": "lib/glosses/configurations",
-                    "task": "transpile",
-                    "namespace": "configuration"
+                    "task": "transpile"
                 },
                 "crypto": {
                     "description": "Common cryptographic utilites",
                     "src": "src/glosses/crypto/**/*.js",
                     "dst": "lib/glosses/crypto",
                     "task": "transpile",
-                    "namespace": "crypto",
-                    "struct": {
+                    "scheme": {
                         "ed25519": {
                             "description": "Implementation of ed25519 signatures",
-                            "namespace": "ed25519",
                             "src": "src/glosses/crypto/ed25519/**/*.js",
                             "dst": "lib/glosses/crypto/ed25519",
                             "task": "transpile",
@@ -206,7 +196,6 @@
                         },
                         "secp256k1": {
                             "description": "Optimized implementation for EC operations on curve secp256k1",
-                            "namespace": "secp256k1",
                             "src": "src/glosses/crypto/secp256k1/**/*.js",
                             "dst": "lib/glosses/crypto/secp256k1",
                             "task": "transpile",
@@ -222,7 +211,6 @@
                     "src": "src/glosses/crypto2/**/*.js",
                     "dst": "lib/glosses/crypto2",
                     "task": "transpile",
-                    "namespace": "crypto2",
                     "predecessor": "https://github.com/digitalbazaar/forge"
                 },
                 "data": {
@@ -231,67 +219,56 @@
                     "dst": "lib/glosses/data",
                     "dstClean": "lib/glosses/data/**/*",
                     "task": "transpile",
-                    "namespace": "data",
-                    "struct": {
+                    "scheme": {
                         "base64": {
                             "description": "Implementation of BASE64 serializer",
                             "index": "glosses/data/base64",
-                            "src": "src/glosses/data/base64.js",
-                            "namespace": "base64"
+                            "src": "src/glosses/data/base64.js"
                         },
                         "bson": {
                             "description": "Implementation of BSON serializer",
                             "src": "src/glosses/data/bson/**/*.js",
-                            "dst": "lib/glosses/data/bson",
-                            "namespace": "bson"
+                            "dst": "lib/glosses/data/bson"
                         },
                         "json": {
                             "description": "Implementation of JSON serializers",
                             "src": "src/glosses/data/json/**/*.js",
-                            "dst": "lib/glosses/data/json",
-                            "namespace": "json"
+                            "dst": "lib/glosses/data/json"
                         },
                         "json5": {
                             "description": "Implementation of JSON5 serializer",
                             "index": "glosses/data/json5",
-                            "src": "src/glosses/data/json5.js",
-                            "namespace": "json5"
+                            "src": "src/glosses/data/json5.js"
                         },
                         "mpak": {
                             "description": "Implementation of MessagePack serializer",
                             "index": "glosses/data/mpak",
-                            "src": "src/glosses/data/mpak.js",
-                            "namespace": "mpak"
+                            "src": "src/glosses/data/mpak.js"
                         },
                         "yaml": {
                             "description": "Implementation of YAML serializer",
                             "src": "src/glosses/data/yaml/**/*.js",
-                            "dst": "lib/glosses/data/yaml",
-                            "namespace": "yaml"
+                            "dst": "lib/glosses/data/yaml"
                         },
                         "base58": {
                             "description": "Implementation of Base58 serializer",
                             "index": "glosses/data/base58",
-                            "src": "src/glosses/data/base58.js",
-                            "namespace": "base58"
+                            "src": "src/glosses/data/base58.js"
                         },
                         "varint": {
                             "description": "Implementation of Protobuf varint",
                             "index": "glosses/data/varint",
-                            "src": "src/glosses/data/varint.js",
-                            "namespace": "varint"
+                            "src": "src/glosses/data/varint.js"
                         },
                         "varintSigned": {
                             "description": "Implementation of Protobuf signed varint",
                             "index": "glosses/data/varint_signed",
-                            "src": "src/glosses/data/varint_signed.js",
-                            "namespace": "varintSigned"
+                            "src": "src/glosses/data/varint_signed.js"
                         },
                         "protobuf": {
                             "description": "Implementation of Protocol Buffers",
                             "src": "src/glosses/data/protobuf/**/*.js",
-                            "dst": "lib/glosses/data/protobuf",
-                            "namespace": "protobuf"
+                            "dst": "lib/glosses/data/protobuf"
                         }
                     }
                 },
@@ -300,18 +277,15 @@
                     "src": "src/glosses/databases/**/*.js",
                     "dst": "lib/glosses/databases",
                     "task": "transpile",
-                    "namespace": "database",
-                    "struct": {
+                    "scheme": {
                         "level": {
                             "description": "Level is a key/value database",
-                            "namespace": "level",
                             "task": "transpile",
                             "src": "src/glosses/databases/level/**/*.js",
                             "dst": "lib/glosses/databases/level",
-                            "struct": {
+                            "scheme": {
                                 "backend": {
                                     "description": "Level's backends",
-                                    "namespace": "backend",
                                     "task": "transpile",
                                     "src": "src/glosses/databases/level/backends/**/*.js",
                                     "dst": "lib/glosses/databases/level/backends",
@@ -324,7 +298,6 @@
                         },
                         "redis": {
                             "description": "Redis is a key/value database",
-                            "namespace": "redis",
                             "task": "transpile",
                             "src": "src/glosses/databases/redis/**/*.js",
                             "dst": "lib/glosses/databases/redis",
@@ -338,15 +311,13 @@
                             "description": "Object document mapper",
                             "task": "transpile",
                             "src": "src/glosses/databases/odm/**/*.js",
-                            "dst": "lib/glosses/databases/odm",
-                            "namespace": "odm"
+                            "dst": "lib/glosses/databases/odm"
                         },
                         "orm": {
                             "description": "ORM implementation",
                             "task": "transpile",
                             "src": "src/glosses/databases/orm/**/*.js",
-                            "dst": "lib/glosses/databases/orm",
-                            "namespace": "orm"
+                            "dst": "lib/glosses/databases/orm"
                         }
                     }
                 },
@@ -354,61 +325,52 @@
                     "description": "Datastores",
                     "task": "transpile",
                     "src": "src/glosses/datastores/**/*.js",
-                    "dst": "lib/glosses/datastores",
-                    "namespace": "datastore"
+                    "dst": "lib/glosses/datastores"
                 },
                 "datetime": {
                     "description": "Datetime utilites",
                     "task": "transpile",
                     "src": "src/glosses/datetime/**/*.js",
-                    "dst": "lib/glosses/datetime",
-                    "namespace": "datetime"
+                    "dst": "lib/glosses/datetime"
                 },
                 "diff": {
                     "description": "Text differencing",
                     "task": "transpile",
                     "src": "src/glosses/diff/**/*.js",
-                    "dst": "lib/glosses/diff",
-                    "namespace": "diff"
+                    "dst": "lib/glosses/diff"
                 },
                 "event": {
                     "description": "Event emitters and other event utilites",
                     "task": "transpile",
                     "src": "src/glosses/events/**/*.js",
-                    "dst": "lib/glosses/events",
-                    "namespace": "event"
+                    "dst": "lib/glosses/events"
                 },
                 "fake": {
                     "description": "Fake data generators and appropriate stuff",
                     "task": "transpile",
                     "src": "src/glosses/fake/**/*.js",
-                    "dst": "lib/glosses/fake",
-                    "namespace": "fake"
+                    "dst": "lib/glosses/fake"
                 },
                 "fast": {
                     "description": "File automation streaming templates/transforms",
                     "task": "transpile",
                     "src": "src/glosses/fast/**/*.js",
-                    "dst": "lib/glosses/fast",
-                    "namespace": "fast"
+                    "dst": "lib/glosses/fast"
                 },
                 "error": {
                     "description": "Exceptions and error helpers",
                     "task": "transpile",
                     "src": "src/glosses/errors/**/*.js",
-                    "dst": "lib/glosses/errors",
-                    "namespace": "error"
+                    "dst": "lib/glosses/errors"
                 },
                 "fs": {
                     "description": "Filesystem utilites",
                     "task": "transpile",
                     "src": "src/glosses/fs/**/*.js",
                     "dst": "lib/glosses/fs",
-                    "namespace": "fs",
-                    "struct": {
+                    "scheme": {
                         "fuse": {
                             "description": "FUSE binding",
-                            "namespace": "fuse",
                             "task": "transpile",
                             "src": "src/glosses/fs/fuse/**/*.js",
                             "dst": "lib/glosses/fs/fuse",
@@ -424,40 +386,34 @@
                     "description": "Geolocation utilites",
                     "task": "transpile",
                     "src": "src/glosses/geoip/**/*.js",
-                    "dst": "lib/glosses/geoip",
-                    "namespace": "geoip"
+                    "dst": "lib/glosses/geoip"
                 },
                 "git": {
                     "description": "Git implementation",
                     "task": "transpile",
                     "src": "src/glosses/git/**/*.js",
-                    "dst": "lib/glosses/git",
-                    "namespace": "git"
+                    "dst": "lib/glosses/git"
                 },
                 "globals": {
                     "description": "Global identifiers from different JavaScript environments",
                     "task": "transpile",
                     "src": "src/glosses/globals/index.js",
-                    "dst": "lib/glosses/globals",
-                    "namespace": "globals"
+                    "dst": "lib/glosses/globals"
                 },
                 "hardware": {
                     "description": "Hardware stuff",
                     "task": "transpile",
                     "src": "src/glosses/hardware/**/*.js",
                     "dst": "lib/glosses/hardware",
-                    "namespace": "hardware",
-                    "struct": {
+                    "scheme": {
                         "board": {
                             "description": "Development boards",
-                            "namespace": "board",
                             "task": "transpile",
                             "src": "src/glosses/hardware/boards/**/*.js",
                             "dst": "lib/glosses/hardware/boards",
-                            "struct": {
+                            "scheme": {
                                 "rpi": {
                                     "description": "SaspberryPI board",
-                                    "namespace": "rpi",
                                     "task": "transpile",
                                     "src": "src/glosses/hardware/boards/rpi/**/*.js",
                                     "dst": "lib/glosses/hardware/boards/rpi",
@@ -471,7 +427,6 @@
                         },
                         "hid": {
                             "description": "HID bus",
-                            "namespace": "hid",
                             "task": "transpile",
                             "src": "src/glosses/hardware/hid/**/*.js",
                             "dst": "lib/glosses/hardware/hid",
@@ -483,7 +438,6 @@
                         },
                         "i2c": {
                             "description": "I2C bus",
-                            "namespace": "i2c",
                             "task": "transpile",
                             "src": "src/glosses/hardware/i2c/**/*.js",
                             "dst": "lib/glosses/hardware/i2c",
@@ -495,7 +449,6 @@
                         },
                         "serial": {
                             "description": "Serial bus",
-                            "namespace": "serial",
                             "task": "transpile",
                             "src": "src/glosses/hardware/serial/**/*.js",
                             "dst": "lib/glosses/hardware/serial",
@@ -511,29 +464,25 @@
                     "description": "Implementation of common predicates",
                     "task": "transpile",
                     "src": "src/glosses/is/**/*.js",
-                    "dst": "lib/glosses/is",
-                    "namespace": "is"
+                    "dst": "lib/glosses/is"
                 },
                 "js": {
                     "description": "JavaScript language stuff",
                     "task": "transpile",
                     "src": "src/glosses/js/**/*.js",
                     "dst": "lib/glosses/js",
-                    "namespace": "js",
-                    "struct": {
+                    "scheme": {
                         "compiler": {
                             "description": "Javascript compiler implementation",
                             "task": "transpile",
                             "src": "src/glosses/js/compiler/**/*.js",
-                            "dst": "lib/glosses/js/compiler",
-                            "namespace": "compiler"
+                            "dst": "lib/glosses/js/compiler"
                         },
                         "bundle": {
                             "description": "Bundler implementation",
                             "task": "transpile",
                             "src": "src/glosses/js/bundle/**/*.js",
-                            "dst": "lib/glosses/js/bundle",
-                            "namespace": "bundle"
+                            "dst": "lib/glosses/js/bundle"
                         }
                     }
                 },
@@ -546,7 +495,6 @@
                         "!src/glosses/lodash/**/README.md"
                     ],
                     "dst": "lib/glosses/lodash",
-                    "namespace": "lodash",
                     "original": "https://github.com/lodash/lodash"
                 },
                 "math": {
@@ -554,7 +502,6 @@
                     "task": "transpile",
                     "src": "src/glosses/math/**/*.js",
                     "dst": "lib/glosses/math",
-                    "namespace": "math",
                     "native": {
                         "src": "src/glosses/math/bignumber/native",
                         "dst": "lib/glosses/math/bignumber/native",
@@ -566,14 +513,12 @@
                     "task": "transpile",
                     "src": "src/glosses/meta/**/*.js",
                     "dst": "lib/glosses/meta",
-                    "namespace": "meta",
-                    "struct": {
+                    "scheme": {
                         "reflect": {
                             "description": "Prototype for a Metadata Reflection API for ECMAScript",
                             "task": "transpile",
                             "src": "src/glosses/meta/reflect.js",
-                            "dst": "lib/glosses/meta",
-                            "namespace": "reflect"
+                            "dst": "lib/glosses/meta"
                         }
                     }
                 },
@@ -582,7 +527,6 @@
                     "task": "transpile",
                     "src": "src/glosses/metrics/**/*.js",
                     "dst": "lib/glosses/metrics",
-                    "namespace": "metrics",
                     "native": {
                         "src": "src/glosses/metrics/native",
                         "dst": "lib/glosses/metrics/native",
@@ -593,8 +537,7 @@
                     "description": "Model definition and validation",
                     "task": "transpile",
                     "src": "src/glosses/models/**/*.js",
-                    "dst": "lib/glosses/models",
-                    "namespace": "model"
+                    "dst": "lib/glosses/models"
                 },
                 "multi": {
                     "description": "Multiformats",
@@ -602,37 +545,31 @@
                     "src": "src/glosses/multi/**/*.js",
                     "dst": "lib/glosses/multi",
                     "dstClean": "lib/glosses/multi/**/*",
-                    "namespace": "multi",
-                    "struct": {
+                    "scheme": {
                         "address": {
                             "description": "Multiaddr implementation",
                             "src": "src/glosses/multi/address/**/*.js",
-                            "dst": "lib/glosses/multi/address",
-                            "namespace": "address"
+                            "dst": "lib/glosses/multi/address"
                         },
                         "address2": {
                             "description": "Multi address format implementation",
                             "src": "src/glosses/multi/address2/**/*.js",
-                            "dst": "lib/glosses/multi/address2",
-                            "namespace": "address2"
+                            "dst": "lib/glosses/multi/address2"
                         },
                         "base": {
                             "description": "Multibase implementation",
                             "src": "src/glosses/multi/base/**/*.js",
-                            "dst": "lib/glosses/multi/base",
-                            "namespace": "base"
+                            "dst": "lib/glosses/multi/base"
                         },
                         "codec": {
                             "description": "Multicodec implementation",
                             "src": "src/glosses/multi/codec/**/*.js",
-                            "dst": "lib/glosses/multi/codec",
-                            "namespace": "codec"
+                            "dst": "lib/glosses/multi/codec"
                         },
                         "hash": {
                             "description": "Multihash implementation",
                             "src": "src/glosses/multi/hash/**/*.js",
-                            "dst": "lib/glosses/multi/hash",
-                            "namespace": "hash"
+                            "dst": "lib/glosses/multi/hash"
                         }
                     }
                 },
@@ -641,21 +578,18 @@
                     "task": "transpile",
                     "src": "src/glosses/net/**/*.js",
                     "dst": "lib/glosses/net",
-                    "namespace": "net",
-                    "struct": {
+                    "scheme": {
                         "dns": {
                             "description": "DNS utilites",
                             "task": "transpile",
                             "src": "src/glosses/net/dns/**/*.js",
                             "dst": "lib/glosses/net/dns",
-                            "namespace": "dns",
-                            "struct": {
+                            "scheme": {
                                 "packet": {
                                     "description": "DNS packet implementation",
                                     "task": "transpile",
                                     "src": "src/glosses/net/dns/packet.js",
-                                    "dst": "lib/glosses/net/dns",
-                                    "namespace": "packet"
+                                    "dst": "lib/glosses/net/dns"
                                 }
                             }
                         },
@@ -663,29 +597,25 @@
                             "description": "IP4/IP6 utilites",
                             "task": "transpile",
                             "src": "src/glosses/net/ip/**/*.js",
-                            "dst": "lib/glosses/net/ip",
-                            "namespace": "ip"
+                            "dst": "lib/glosses/net/ip"
                         },
                         "mimes": {
                             "description": "Media Type Database",
                             "task": "transpile",
                             "src": "src/glosses/net/mimes/index.js",
-                            "dst": "lib/glosses/net/mimes",
-                            "namespace": "mimes"
+                            "dst": "lib/glosses/net/mimes"
                         },
                         "p2p": {
                             "description": "Multipurpose P2P implementation",
                             "task": "transpile",
                             "src": "src/glosses/net/p2p/**/*.js",
-                            "dst": "lib/glosses/net/p2p",
-                            "namespace": "p2p"
+                            "dst": "lib/glosses/net/p2p"
                         },
                         "utp": {
                             "description": "UTP protocol/transport",
                             "task": "transpile",
                             "src": "src/glosses/net/utp/**/*.js",
                             "dst": "lib/glosses/net/utp",
-                            "namespace": "utp",
                             "native": {
                                 "src": "src/glosses/net/utp/native",
                                 "dst": "lib/glosses/net/utp/native",
@@ -697,7 +627,6 @@
                             "task": "transpile",
                             "src": "src/glosses/net/ws/**/*.js",
                             "dst": "lib/glosses/net/ws",
-                            "namespace": "ws",
                             "native": {
                                 "src": "src/glosses/net/ws/native",
                                 "dst": "lib/glosses/net/ws/native"
@@ -709,80 +638,69 @@
                     "description": "Implementation of Netron",
                     "task": "transpile",
                     "src": "src/glosses/netron/**/*.js",
-                    "dst": "lib/glosses/netron",
-                    "namespace": "netron"
+                    "dst": "lib/glosses/netron"
                 },
                 "notifier": {
                     "description": "Implementation of system notifier",
                     "task": "transpile",
                     "src": "src/glosses/notifier/**/*.js",
-                    "dst": "lib/glosses/notifier",
-                    "namespace": "notifier"
+                    "dst": "lib/glosses/notifier"
                 },
                 "p2p": {
                     "description": "Multipurpose P2P implementation (forked from libp2p)",
                     "task": "transpile",
                     "src": "src/glosses/p2p/**/*.js",
                     "dst": "lib/glosses/p2p",
-                    "namespace": "p2p",
                     "predecessor": "https://github.com/libp2p"
                 },
                 "pretty": {
                     "description": "Useful prettiers/pretty-printers",
                     "task": "transpile",
                     "src": "src/glosses/pretty/**/*.js",
-                    "dst": "lib/glosses/pretty",
-                    "namespace": "pretty"
+                    "dst": "lib/glosses/pretty"
                 },
                 "promise": {
                     "description": "Promise utilites",
                     "task": "transpile",
                     "src": "src/glosses/promise/**/*.js",
-                    "dst": "lib/glosses/promise",
-                    "namespace": "promise"
+                    "dst": "lib/glosses/promise"
                 },
                 "punycode": {
                     "description": "Implementation of punycode",
                     "task": "transpile",
                     "src": "src/glosses/punycode/**/*.js",
-                    "dst": "lib/glosses/punycode",
-                    "namespace": "punycode"
+                    "dst": "lib/glosses/punycode"
                 },
                 "realm": {
                     "description": "Realm management",
                     "task": "transpile",
                     "src": "src/glosses/realm/**/*.js",
-                    "dst": "lib/glosses/realm",
-                    "namespace": "realm"
+                    "dst": "lib/glosses/realm"
                 },
                 "require": {
                     "description": "Advanced require with ES2018 support",
                     "task": "transpile",
                     "src": "src/glosses/require/index.js",
-                    "dst": "lib/glosses/require",
-                    "namespace": "require"
+                    "dst": "lib/glosses/require"
                 },
                 "runtime": {
                     "description": "Application wide runtime information",
                     "task": "transpile",
                     "src": "src/glosses/runtime/**/*.js",
-                    "dst": "lib/glosses/runtime",
-                    "namespace": "runtime"
+                    "dst": "lib/glosses/runtime"
                 },
                 "regex": {
                     "description": "Regular expression utiliter and common regular expressions",
                     "task": "transpile",
                     "src": "src/glosses/regex/**/*.js",
-                    "dst": "lib/glosses/regex",
-                    "namespace": "regex"
+                    "dst": "lib/glosses/regex"
                 },
                 "schema": {
                     "description": "Schema validators",
                     "task": "transpile",
                     "src": "src/glosses/schema/**/*.js",
                     "dst": "lib/glosses/schema",
-                    "namespace": "schema",
-                    "struct": {
+                    "scheme": {
                         "dot": {
                             "task": "adoneDotCompiler",
                             "src": "src/glosses/schema/__/dot/*.jst",
@@ -794,53 +712,45 @@
                     "description": "Semantic version parser",
                     "task": "transpile",
                     "src": "src/glosses/semver/**/*.js",
-                    "dst": "lib/glosses/semver",
-                    "namespace": "semver"
+                    "dst": "lib/glosses/semver"
                 },
                 "shell": {
                     "task": "transpile",
                     "src": "src/glosses/shell/**/*.js",
-                    "dst": "lib/glosses/shell",
-                    "namespace": "shell"
+                    "dst": "lib/glosses/shell"
                 },
                 "sourcemap": {
                     "description": "Sourcemaps",
                     "task": "transpile",
                     "src": "src/glosses/sourcemap/**/*.js",
-                    "dst": "lib/glosses/sourcemap",
-                    "namespace": "sourcemap"
+                    "dst": "lib/glosses/sourcemap"
                 },
                 "stream": {
                     "description": "Different streams and stream utilites",
                     "task": "transpile",
                     "src": "src/glosses/streams/**/*.js",
-                    "dst": "lib/glosses/streams",
-                    "namespace": "stream"
+                    "dst": "lib/glosses/streams"
                 },
                 "system": {
                     "description": "System utilites",
                     "task": "transpile",
                     "src": "src/glosses/system/**/*.js",
                     "dst": "lib/glosses/system",
-                    "namespace": "system",
-                    "struct": {
+                    "scheme": {
                         "env": {
                             "description": "Some useful environment variables",
-                            "namespace": "env",
                             "task": "transpile",
                             "src": "src/glosses/system/env.js",
                             "dst": "lib/glosses/system"
                         },
                         "process": {
                             "description": "Process utilites",
-                            "namespace": "process",
                             "task": "transpile",
                             "src": "src/glosses/system/process/**/*.js",
                             "dst": "lib/glosses/system/process"
                         },
                         "user": {
                             "description": "Utilites for lookup uid and gid information",
-                            "namespace": "user",
                             "task": "transpile",
                             "src": "src/glosses/system/user/index.js",
                             "dst": "lib/glosses/system/user",
@@ -855,8 +765,7 @@
                     "description": "Tasks management",
                     "task": "transpile",
                     "src": "src/glosses/tasks/**/*.js",
-                    "dst": "lib/glosses/tasks",
-                    "namespace": "task"
+                    "dst": "lib/glosses/tasks"
                 },
                 "templating": {
                     "description": "Template engines",
@@ -864,19 +773,16 @@
                     "src": "src/glosses/templating/**/*.js",
                     "dst": "lib/glosses/templating",
                     "dstClean": "lib/glosses/templating/**/*",
-                    "namespace": "templating",
-                    "struct": {
+                    "scheme": {
                         "dot": {
                             "description": "Implementation of DoT template engine",
                             "src": "src/glosses/templating/dot/**/*.js",
-                            "dst": "lib/glosses/templating/dot",
-                            "namespace": "dot"
+                            "dst": "lib/glosses/templating/dot"
                         },
                         "nunjucks": {
                             "description": "Implementation of Nunjucks template engine",
                             "src": "src/glosses/templating/nunjucks/**/*.js",
-                            "dst": "lib/glosses/templating/nunjucks",
-                            "namespace": "nunjucks"
+                            "dst": "lib/glosses/templating/nunjucks"
                         }
                     }
                 },
@@ -884,33 +790,28 @@
                     "description": "Terminal stuff",
                     "task": "transpile",
                     "src": "src/glosses/terminal/**/*.js",
-                    "dst": "lib/glosses/terminal",
-                    "namespace": "terminal"
+                    "dst": "lib/glosses/terminal"
                 },
                 "text": {
                     "description": "Text utilites",
                     "task": "transpile",
                     "src": "src/glosses/text/**/*.js",
-                    "dst": "lib/glosses/text",
-                    "namespace": "text"
+                    "dst": "lib/glosses/text"
                 },
                 "uri": {
                     "description": "URI manipulation",
                     "task": "transpile",
                     "src": "src/glosses/uri/**/*.js",
-                    "dst": "lib/glosses/uri",
-                    "namespace": "uri"
+                    "dst": "lib/glosses/uri"
                 },
                 "util": {
                     "description": "Utilites",
                     "task": "transpile",
                     "src": "src/glosses/utils/**/*.js",
                     "dst": "lib/glosses/utils",
-                    "namespace": "util",
-                    "struct": {
+                    "scheme": {
                         "memcpy": {
                             "description": "Memory copy utilites with native performance",
-                            "namespace": "memcpy",
                             "task": "transpile",
                             "src": "src/glosses/utils/memcpy/index.js",
                             "dst": "lib/glosses/utils/memcpy",
@@ -921,7 +822,6 @@
                         },
                         "throttle": {
                             "description": "Throttling asyncronous cuncurrency",
-                            "namespace": "throttle",
                             "task": "transpile",
                             "src": "src/glosses/utils/throttle/**/*.js",
                             "dst": "lib/glosses/utils/throttle"
@@ -932,29 +832,25 @@
                     "description": "Vault implementation on top of leveldb",
                     "task": "transpile",
                     "src": "src/glosses/vault/**/*.js",
-                    "dst": "lib/glosses/vault",
-                    "namespace": "vault"
+                    "dst": "lib/glosses/vault"
                 },
                 "web": {
                     "description": "Web framework",
                     "task": "transpile",
                     "src": "src/glosses/web/**/*.js",
-                    "dst": "lib/glosses/web",
-                    "namespace": "web"
+                    "dst": "lib/glosses/web"
                 }
             }
         },
         "virtual": {
             "description": "Virtual namespaces",
-            "struct": {
+            "scheme": {
                 "global": {
                     "description": "Node.js Global Object",
-                    "namespace": "global",
                     "virtual": true
                 },
                 "std": {
                     "description": "Node.js Built-in Modules",
-                    "namespace": "std",
                     "virtual": true
                 }
             },
@@ -969,7 +865,6 @@
                 "!src/benchmark/**/README.md"
             ],
             "dst": "lib/benchmark",
-            "namespace": "benchmark",
             "original": "https://github.com/bestiejs/benchmark.js/"
         },
         "cli": {
@@ -979,21 +874,18 @@
                 "!src/cli/adone.js"
             ],
             "dst": "lib/cli",
-            "task": "adoneTranspile",
-            "namespace": "cli"
+            "task": "adoneTranspile"
         },
         "cmake": {
             "description": "Node.js native addon build tool",
             "src": "src/cmake/**/*.js",
             "dst": "lib/cmake",
-            "task": "transpile",
-            "namespace": "cmake"
+            "task": "transpile"
         },
         "gyp": {
             "description": "Node.js native addon build tool",
-            "namespace": "gyp",
             "index": "js:index.js",
-            "struct": {
+            "scheme": {
                 "js": {
                     "task": "transpile",
                     "src": [
@@ -1011,15 +903,13 @@
         "bundle": {
             "task": "transpile",
             "src": "src/bundle/**/*.js",
-            "dst": "lib/bundle",
-            "namespace": "bundle"
+            "dst": "lib/bundle"
         },
         "isolatedVm": {
             "description": "Access to multiple isolates in nodejs",
             "task": "transpile",
             "src": "src/isolated_vm/**/*.js",
             "dst": "lib/isolated_vm",
-            "namespace": "isolatedVm",
             "native": {
                 "src": "src/isolated_vm/native",
                 "dst": "lib/isolated_vm/native",
@@ -1030,15 +920,13 @@
             "description": "IPFS",
             "task": "transpile",
             "src": "src/ipfs/**/*.js",
-            "dst": "lib/ipfs",
-            "namespace": "ipfs"
+            "dst": "lib/ipfs"
         },
         "napa": {
             "description": "Napa.js: a multi-threaded JavaScript runtime",
             "task": "transpile",
             "src": "src/napa/**/*.js",
             "dst": "lib/napa",
-            "namespace": "napa",
             "native": {
                 "src": "src/napa/native",
                 "dst": "lib/napa/native"
@@ -1047,8 +935,7 @@
         "omnitron": {
             "task": "adoneTranspile",
             "src": "src/omnitron/**/*.js",
-            "dst": "lib/omnitron",
-            "namespace": "omnitron"
+            "dst": "lib/omnitron"
         },
         "omnitronAssets": {
             "src": [
@@ -1062,15 +949,13 @@
             "description": "Testing framework",
             "task": "transpile",
             "src": "src/shani/**/*.js",
-            "dst": "lib/shani",
-            "namespace": "shani"
+            "dst": "lib/shani"
         },
         "specter": {
             "description": "",
             "task": "transpile",
             "src": "src/specter/**/*.js",
-            "dst": "lib/specter",
-            "namespace": "specter"
+            "dst": "lib/specter"
         }
     }
 }

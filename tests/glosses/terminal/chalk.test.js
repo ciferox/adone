@@ -3,6 +3,34 @@ describe("terminal", "Chalk", () => {
         terminal: { chalk }
     } = adone;
 
+    describe("constructor", () => {
+        it("create an isolated context where colors can be disabled (by level)", () => {
+            const ctx = new chalk.constructor({ level: 0, enabled: true });
+            assert.equal(ctx.red("foo"), "foo");
+            assert.equal(chalk.red("foo"), "\u001B[31mfoo\u001B[39m");
+            ctx.level = 2;
+            assert.equal(ctx.red("foo"), "\u001B[31mfoo\u001B[39m");
+        });
+
+        it("create an isolated context where colors can be disabled (by enabled flag)", () => {
+            const ctx = new chalk.constructor({ enabled: false });
+            assert.equal(ctx.red("foo"), "foo");
+            assert.equal(chalk.red("foo"), "\u001B[31mfoo\u001B[39m");
+            ctx.enabled = true;
+            assert.equal(ctx.red("foo"), "\u001B[31mfoo\u001B[39m");
+        });
+
+        it("the 'level' option should be a number from 0 to 3", () => {
+            assert.throws(() => {
+                new chalk.constructor({ level: 10 });
+            }, /should be an integer from 0 to 3/);
+
+            assert.throws(() => {
+                new chalk.constructor({ level: -1 });
+            }, /should be an integer from 0 to 3/);
+        });
+    });
+
     it("don't add any styling when called as the base function", () => {
         assert.equal(chalk("foo"), "foo");
     });
@@ -92,24 +120,6 @@ describe("terminal", "Chalk", () => {
     it("don't emit RGB codes if level is 0", () => {
         assert.equal(new chalk.constructor({ level: 0 }).hex("#FF0000")("hello"), "hello");
         assert.equal(new chalk.constructor({ level: 0 }).bgHex("#FF0000")("hello"), "hello");
-    });
-
-    describe("constructor", () => {
-        it("create an isolated context where colors can be disabled (by level)", () => {
-            const ctx = new chalk.constructor({ level: 0, enabled: true });
-            assert.equal(ctx.red("foo"), "foo");
-            assert.equal(chalk.red("foo"), "\u001B[31mfoo\u001B[39m");
-            ctx.level = 2;
-            assert.equal(ctx.red("foo"), "\u001B[31mfoo\u001B[39m");
-        });
-
-        it("create an isolated context where colors can be disabled (by enabled flag)", () => {
-            const ctx = new chalk.constructor({ enabled: false });
-            assert.equal(ctx.red("foo"), "foo");
-            assert.equal(chalk.red("foo"), "\u001B[31mfoo\u001B[39m");
-            ctx.enabled = true;
-            assert.equal(ctx.red("foo"), "\u001B[31mfoo\u001B[39m");
-        });
     });
 
     describe("enabled", () => {
@@ -228,6 +238,5 @@ describe("terminal", "Chalk", () => {
             assert.equal(ctx.visible("foo"), "foo");
             assert.equal(ctx.red("foo"), "\u001B[31mfoo\u001B[39m");
         });
-
     });
 });

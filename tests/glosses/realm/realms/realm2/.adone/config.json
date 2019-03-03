@@ -1,0 +1,18 @@
+{
+    "tasks": {
+        "basePath": "lib",
+        "index": "tasks"
+    },
+    "scheme": {
+        "tasks": {
+            "task": "transpile",
+            "src": "src/tasks/**/*",
+            "dst": "lib/tasks"
+        },
+        "app": {
+            "task": "transpile",
+            "src": "src/app/**/*",
+            "dst": "bin"
+        }
+    }
+}

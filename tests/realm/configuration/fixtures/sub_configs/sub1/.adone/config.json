@@ -1,9 +1,0 @@
-{
-    "struct": {
-        "js": {
-            "task": "transpile",
-            "src": "src/*",
-            "dst": "dst"
-        }
-    }
-}

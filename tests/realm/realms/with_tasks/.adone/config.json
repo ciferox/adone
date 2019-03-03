@@ -1,9 +1,0 @@
-{
-    "struct": {
-        "src": {
-            "task": "transpile",
-            "src": "src/**/*",
-            "dst": "lib"
-        }
-    }
-}

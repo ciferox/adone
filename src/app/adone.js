@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import "adone";
+import "..";
 
 const {
     is,

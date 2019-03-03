@@ -27,9 +27,8 @@ export default class extends Subsystem {
         try {
             const manager = await this.parent.getRealm();
 
-            console.log();
-
             if (opts.has("common") || !opts.hasSomething()) {
+                console.log();
                 console.log(adone.pretty.table(this._getCommonInfo(manager), {
                     width: "100%",
                     borderless: true,

@@ -1,7 +1,7 @@
 {
   "name": "adone",
   "description": "The generalized core for building of Cyber Fractal Systems Infrastructures ~ CFSI",
-  "version": "0.6.75",
+  "version": "0.6.76",
   "author": "ADONE core team <info@adone.io>",
   "license": "Apache-2.0",
   "homepage": "https://adone.io/",
@@ -14,7 +14,6 @@
   },
   "bin": "./bin/adone.js",
   "main": "lib",
-  "realmType": "core",
   "devDependencies": {
     "@nodeutils/defaults-deep": "^1.1.0",
     "@types/adone": "^0.6.23",

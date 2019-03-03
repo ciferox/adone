@@ -1,10 +1,7 @@
 const {
     is,
-    fs,
     std
 } = adone;
-
-const SUB_CONFIGS = Symbol();
 
 const normalizeValue = (dirName, parent, item, name) => {
     const val = item[name];
@@ -38,12 +35,6 @@ const addIfNotIncluded = (arr, item) => {
 };
 
 export default class Configuration extends adone.configuration.Generic {
-    constructor(options) {
-        super(options);
-
-        this[SUB_CONFIGS] = new Map();
-    }
-
     /**
      * Returns absolute path of configuration.
      */
@@ -52,32 +43,14 @@ export default class Configuration extends adone.configuration.Generic {
     }
 
     /**
-     * Returns sub configurations.
-     */
-    getSubConfigs() {
-        return [...this[SUB_CONFIGS].values()];
-    }
-
-    /**
-     * Returns subconfiguration by name.
-     * 
-     * @param {*} name entry name
-     */
-    getSubConfig(name) {
-        return this[SUB_CONFIGS].get(name);
-    }
-
-    /**
      * Loads configuration.
      */
     async load() {
         await super.load(Configuration.configName);
-        await this._loadSubConfigs("", this.raw.struct);
     }
 
     async loadSync() {
         super.loadSync(Configuration.configName);
-        // await this._loadSubConfigs("", this.raw.struct);
     }
 
     /**
@@ -85,155 +58,18 @@ export default class Configuration extends adone.configuration.Generic {
      * 
      * @param {*} cwd path where config should be saved
      */
-    async save({ cwd = this.getCwd(), subConfigs = false } = {}) {
-        if (subConfigs) {
-            for (const config of this[SUB_CONFIGS].values()) {
-                await config.save({ cwd }); // eslint-disable-line
-            }
-        }
-
+    async save({ cwd = this.getCwd() } = {}) {
         return super.save(is.string(cwd) ? std.path.join(cwd, Configuration.configName) : Configuration.configName, null, {
             space: "    "
         });
     }
 
-    getMainPath(absolute) {
-        const path = is.string(this.raw.main) ? this.raw.main : "";
-        return std.path.normalize(is.string(absolute)
-            ? std.path.join(absolute, path)
-            : absolute === true
-                ? std.path.join(this.getCwd(), path)
-                : path);
-    }
-
-    getCliMainPath(absolute) {
-        return std.path.normalize(is.string(this.raw.cliMain)
-            ? is.string(absolute)
-                ? std.path.join(absolute, this.raw.cliMain)
-                : absolute === true
-                    ? std.path.join(this.getCwd(), this.raw.cliMain)
-                    : this.raw.cliMain
-            : this.getMainPath(absolute));
-    }
-
     getEntries(path) {
-        let result = this._getEntries();
-
-        for (const [key, sub] of this[SUB_CONFIGS].entries()) {
-            result = result.concat(sub.config._getEntries(key, sub.dirName));
-        }
-
-        let validator;
-        if (is.regexp(path)) {
-            validator = (entry) => path.test(entry.id);
-        } else {
-            validator = (entry) => entry.id.startsWith(path);
-        }
-
-        return !is.nil(path) ? result.filter(validator) : result;
-    }
-
-    getNamespace() {
-        const topo = {};
-
-        if (is.plainObject(this.raw.struct)) {
-            let count = 0;
-            let exposedNode;
-            // Validate
-            for (const [, val] of Object.entries(this.raw.struct)) {
-                if (is.string(val.namespace)) {
-                    count++;
-                    exposedNode = val;
-                }
-            }
-
-            if (count > 1) {
-                throw new adone.error.NotAllowedException("It is not allowed to expose multiple root namespaces");
-            } else if (count === 1) {
-                const constructPath = (glob, index) => {
-                    let result;
-
-                    if (is.string(glob)) {
-                        let prefix;
-                        if (is.glob(glob)) {
-                            prefix = adone.util.globParent(glob);
-                        } else {
-                            prefix = glob;
-                        }
-                        result = std.path.join(prefix, index);
-                    } else if (is.array(glob)) {
-                        const globs = glob.filter((x) => x[0] !== "!");
-                        if (globs.length !== 1) {
-                            throw new adone.error.NotValidException(`Invalid glob: ${glob}`);
-                        }
-
-                        result = constructPath(globs[0], index);
-                    }
-
-                    return result;
-                };
-
-                const processEntry = (entry) => {
-                    const ns = {
-                        ...adone.util.pick(entry, ["author", "description", "virtual"])
-                    };
-
-                    let index = entry.index;
-                    if (is.undefined(index)) {
-                        index = "index.js";
-                    }
-
-                    let indexSrc;
-                    let indexDst;
-                    if (index.includes(":")) {
-                        //
-                    } else {
-                        indexSrc = constructPath(entry.src, index);
-                        indexDst = constructPath(entry.dst, index);
-                    }
-
-                    ns.index = {
-                        src: indexSrc,
-                        dst: indexDst
-                    };
-
-                    return ns;
-                };
-
-                const iterateDeep = (struct, nsTopo) => {
-                    if (is.plainObject(struct)) {
-                        const namespaces = {};
-                        for (const entry of Object.values(struct)) {
-                            if (is.string(entry.namespace)) {
-                                const ns = processEntry(entry);
-                                if (is.plainObject(entry.struct)) {
-                                    iterateDeep(entry.struct, ns);
-                                }
-                                namespaces[entry.namespace] = ns;
-                            }
-                        }
-
-                        if (Object.keys(namespaces).length > 0) {
-                            nsTopo.namespace = namespaces;
-                        }
-                    }
-                };
-
-                topo[exposedNode.namespace] = processEntry(exposedNode);
-
-                iterateDeep(exposedNode.struct, topo[exposedNode.namespace]);
-            }
-        }
-
-        return topo;
-    }
-
-    _getEntries(prefix = "", dirName = "") {
         const units = {};
         const entries = [];
 
-        if (is.plainObject(this.raw.struct)) {
-            this._parseStructure(prefix, dirName, this.raw, this.raw.struct, units);
+        if (is.plainObject(this.raw.scheme)) {
+            this._parseScheme("", "", this.raw, this.raw.scheme, units);
 
             // Convert object to array
             const keys = Object.keys(units);
@@ -245,17 +81,24 @@ export default class Configuration extends adone.configuration.Generic {
             }
         }
 
-        return entries;
+        let validator;
+        if (is.regexp(path)) {
+            validator = (entry) => path.test(entry.id);
+        } else {
+            validator = (entry) => entry.id.startsWith(path);
+        }
+
+        return !is.nil(path) ? entries.filter(validator) : entries;
     }
 
-    _parseStructure(prefix, dirName, parent, struct, units) {
+    _parseScheme(prefix, dirName, parent, scheme, units) {
         const srcs = [];
-        for (const [key, val] of Object.entries(struct)) {
+        for (const [key, val] of Object.entries(scheme)) {
             if (is.plainObject(val)) {
                 const fullKey = prefix.length > 0 ? `${prefix}.${key}` : key;
 
                 const unit = units[fullKey] = {
-                    ...adone.util.omit(val, ["struct", "src", "dst", "task"])
+                    ...adone.util.omit(val, ["scheme", "src", "dst", "task"])
                 };
 
                 const src = normalizeValue(dirName, null, val, "src");
@@ -290,8 +133,8 @@ export default class Configuration extends adone.configuration.Generic {
                     }
                 }
 
-                if (is.plainObject(val.struct)) {
-                    const childSrcs = this._parseStructure(fullKey, dirName, val, val.struct, units);
+                if (is.plainObject(val.scheme)) {
+                    const childSrcs = this._parseScheme(fullKey, dirName, val, val.scheme, units);
                     if (childSrcs.length > 0) {
                         addIfNotIncluded(srcs, childSrcs);
 
@@ -347,43 +190,13 @@ export default class Configuration extends adone.configuration.Generic {
                     }
                 }
 
-                if (is.string(unit.namespace)) {
-                    if (!is.string(unit.index) && (is.exist(unit.src) || is.plainObject(val.struct))) {
-                        unit.index = "index.js";
-                    }
+                if (!is.string(unit.index) && (is.exist(unit.src) || is.plainObject(val.scheme))) {
+                    unit.index = "index.js";
                 }
             }
         }
 
         return srcs;
-    }
-
-    async _loadSubConfigs(prefix, struct) {
-        this[SUB_CONFIGS].clear();
-        if (is.plainObject(struct)) {
-            for (const [key, val] of Object.entries(struct)) {
-                const fullKey = prefix.length > 0 ? `${prefix}.${key}` : key;
-                if (is.string(val)) {
-                    const subCwd = std.path.join(this.getCwd(), val);
-
-                    const subConfigPath = std.path.join(subCwd, Configuration.configName);
-                    // eslint-disable-next-line
-                    if (!(await fs.exists(subConfigPath))) {
-                        throw new adone.error.NotExistsException(`Configuration '${subConfigPath}' is not exist`);
-                    }
-
-                    this[SUB_CONFIGS].set(fullKey, {
-                        dirName: val,
-                        // eslint-disable-next-line
-                        config: await Configuration.load({
-                            cwd: subCwd
-                        })
-                    });
-                } else if (is.plainObject(val.struct)) {
-                    await this._loadSubConfigs(fullKey, val.struct); // eslint-disable-line
-                }
-            }
-        }
     }
 
     static async load({ cwd } = {}) {

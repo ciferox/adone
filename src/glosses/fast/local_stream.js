@@ -176,6 +176,7 @@ export const watchSource = (globs, {
                 return;
             }
         }
+        
         let _base = base;
         if (!_base) {
             const i = util.matchPath(globs, path, { index: true, dot: true });

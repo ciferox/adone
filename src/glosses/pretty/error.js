@@ -389,19 +389,19 @@ const fn = (e, { maxItems = 16, skipNodeFiles = false } = {}) => {
         message: String(e.message).trim()
     };
 
-    let result = `  ${chalk.bgRed.white(header.title.kind)}${chalk.grey(header.colon)} ${chalk.white.bold(header.message)}\n\n`;
+    let result = `${chalk.bgRed.white(header.title.kind)}${chalk.grey(header.colon)} ${chalk.white.bold(header.message)}\n\n`;
 
     const traceItems = [];
     let count = -1;
 
     for (let i = 0; i < e.trace.length; i++) {
-        const item = e.trace[i];
-        if (is.nil(item)) {
+        const trace = e.trace[i];
+        if (is.nil(trace)) {
             continue;
         }
 
-        if (skipNodeFiles && typeof item === "object") {
-            if (nodePaths.includes(item.path)) {
+        if (skipNodeFiles && typeof trace === "object") {
+            if (nodePaths.includes(trace.path)) {
                 return true;
             }
         }
@@ -412,34 +412,26 @@ const fn = (e, { maxItems = 16, skipNodeFiles = false } = {}) => {
             break;
         }
 
-        if (is.string(item)) {
-            traceItems.push({ custom: item });
+        if (is.string(trace)) {
+            traceItems.push({ custom: trace });
         } else {
-            const pointer = is.nil(item.file)
-                ? ""
-                : {
-                    file: item.file,
-                    colon: ":",
-                    line: item.line
-                };
-
-            const footer = { addr: item.shortenedAddr };
-            if (!is.nil(item.extra)) {
-                footer.extra = item.extra;
+            let what = "";
+            if ((is.string(trace.what)) && (trace.what.trim().length > 0)) {
+                what = trace.what;
             }
-
-            const markupItem = {
-                header: {
-                    pointer
-                },
-                footer
-            };
-
-            if ((is.string(item.what)) && (item.what.trim().length > 0)) {
-                markupItem.header.what = item.what;
+            
+            result += `${chalk.grey("-")}`;
+            if (!is.nil(trace.file)) {
+                result += ` ${chalk.yellow.bold(trace.file)}`;
+                if (is.number(trace.line)) {
+                    result += `${chalk.grey(":")}${chalk.yellow.bold(trace.line.toString())}`;
+                }
             }
+            result += ` ${chalk.white(what)}\n  ${chalk.grey.italic(trace.shortenedAddr)}`;
 
-            result += `  ${chalk.grey("-")} ${chalk.yellow.bold(markupItem.header.pointer.file)}${chalk.grey(markupItem.header.pointer.colon)}${chalk.yellow.bold(markupItem.header.pointer.line.toString())} ${chalk.white(markupItem.header.what)}\n    ${chalk.grey.italic(markupItem.footer.addr)}`;
+            if (!is.nil(trace.extra)) {
+                result += `\n  ${trace.extra}`;
+            }
         }
 
         if (e.trace.length - 1 > i) {
