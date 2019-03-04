@@ -1,14 +1,13 @@
-const multistream = require('multistream-select')
-const debug = require('debug')
-const log = debug('libp2p:switch:conn-manager')
-const once = require('once')
-const ConnectionFSM = require('../connection')
-const { msHandle, msSelect, identifyDialer } = require('../utils')
+const debug = require("debug");
+const log = debug("libp2p:switch:conn-manager");
+const once = require("once");
+const ConnectionFSM = require("../connection");
+const { msHandle, msSelect, identifyDialer } = require("../utils");
 
-const plaintext = require('../plaintext')
+const plaintext = require("../plaintext");
 
 const {
-    p2p: { identify, Circuit }
+    p2p: { identify, Circuit, multiformat: { multistream } }
 } = adone;
 
 /**
@@ -17,8 +16,8 @@ const {
  */
 class ConnectionManager {
     constructor(_switch) {
-        this.switch = _switch
-        this.connections = {}
+        this.switch = _switch;
+        this.connections = {};
     }
 
     /**
@@ -28,10 +27,10 @@ class ConnectionManager {
      * @returns {void}
      */
     add(connection) {
-        this.connections[connection.theirB58Id] = this.connections[connection.theirB58Id] || []
+        this.connections[connection.theirB58Id] = this.connections[connection.theirB58Id] || [];
         // Only add it if it's not there
         if (!this.get(connection)) {
-            this.connections[connection.theirB58Id].push(connection)
+            this.connections[connection.theirB58Id].push(connection);
         }
     }
 
@@ -42,14 +41,16 @@ class ConnectionManager {
      * @returns {ConnectionFSM|null} The found connection or null
      */
     get(connection) {
-        if (!this.connections[connection.theirB58Id]) return null
+        if (!this.connections[connection.theirB58Id]) {
+            return null; 
+        }
 
         for (let i = 0; i < this.connections[connection.theirB58Id].length; i++) {
             if (this.connections[connection.theirB58Id][i] === connection) {
-                return this.connections[connection.theirB58Id][i]
+                return this.connections[connection.theirB58Id][i];
             }
         }
-        return null
+        return null;
     }
 
     /**
@@ -61,9 +62,9 @@ class ConnectionManager {
     getOne(peerId) {
         if (this.connections[peerId]) {
             // TODO: Maybe select the best?
-            return this.connections[peerId][0]
+            return this.connections[peerId][0];
         }
-        return null
+        return null;
     }
 
     /**
@@ -73,12 +74,14 @@ class ConnectionManager {
      * @returns {void}
      */
     remove(connection) {
-        if (!this.connections[connection.theirB58Id]) return
+        if (!this.connections[connection.theirB58Id]) {
+            return; 
+        }
 
         for (let i = 0; i < this.connections[connection.theirB58Id].length; i++) {
             if (this.connections[connection.theirB58Id][i] === connection) {
-                this.connections[connection.theirB58Id].splice(i, 1)
-                return
+                this.connections[connection.theirB58Id].splice(i, 1);
+                return;
             }
         }
     }
@@ -89,11 +92,11 @@ class ConnectionManager {
      * @returns {ConnectionFSM[]}
      */
     getAll() {
-        let connections = []
+        let connections = [];
         for (const conns of Object.values(this.connections)) {
-            connections = [...connections, ...conns]
+            connections = [...connections, ...conns];
         }
-        return connections
+        return connections;
     }
 
     /**
@@ -103,7 +106,7 @@ class ConnectionManager {
      * @returns {ConnectionFSM[]}
      */
     getAllById(peerId) {
-        return this.connections[peerId] || []
+        return this.connections[peerId] || [];
     }
 
     /**
@@ -115,13 +118,13 @@ class ConnectionManager {
      */
     addStreamMuxer(muxer) {
         // for dialing
-        this.switch.muxers[muxer.multicodec] = muxer
+        this.switch.muxers[muxer.multicodec] = muxer;
 
         // for listening
         this.switch.handle(muxer.multicodec, (protocol, conn) => {
-            const muxedConn = muxer.listener(conn)
+            const muxedConn = muxer.listener(conn);
 
-            muxedConn.on('stream', this.switch.protocolMuxer(null))
+            muxedConn.on("stream", this.switch.protocolMuxer(null));
 
             // If identify is enabled
             //   1. overload getPeerInfo
@@ -131,79 +134,79 @@ class ConnectionManager {
                 // Get the peer info from the crypto exchange
                 conn.getPeerInfo((err, cryptoPI) => {
                     if (err || !cryptoPI) {
-                        log('crypto peerInfo wasnt found')
+                        log("crypto peerInfo wasnt found");
                     }
 
                     // overload peerInfo to use Identify instead
                     conn.getPeerInfo = async (callback) => {
-                        const conn = muxedConn.newStream()
-                        const ms = new multistream.Dialer()
-                        callback = once(callback)
+                        const conn = muxedConn.newStream();
+                        const ms = new multistream.Dialer();
+                        callback = once(callback);
 
-                        let results
+                        let results;
                         try {
-                            await msHandle(ms, conn)
-                            const msConn = await msSelect(ms, identify.multicodec)
-                            results = await identifyDialer(msConn, cryptoPI)
+                            await msHandle(ms, conn);
+                            const msConn = await msSelect(ms, identify.multicodec);
+                            results = await identifyDialer(msConn, cryptoPI);
                         } catch (err) {
                             return muxedConn.end(() => {
-                                callback(err, null)
-                            })
+                                callback(err, null);
+                            });
                         }
 
-                        const { peerInfo, observedAddrs } = results
+                        const { peerInfo, observedAddrs } = results;
 
-                        for (var i = 0; i < observedAddrs.length; i++) {
-                            var addr = observedAddrs[i]
-                            this.switch._peerInfo.multiaddrs.addSafe(addr)
+                        for (let i = 0; i < observedAddrs.length; i++) {
+                            const addr = observedAddrs[i];
+                            this.switch._peerInfo.multiaddrs.addSafe(addr);
                         }
 
                         if (peerInfo) {
-                            conn.setPeerInfo(peerInfo)
+                            conn.setPeerInfo(peerInfo);
                         }
-                        callback(null, peerInfo)
-                    }
+                        callback(null, peerInfo);
+                    };
 
                     conn.getPeerInfo((err, peerInfo) => {
                         /* eslint no-warning-comments: off */
                         if (err) {
-                            return log('identify not successful')
+                            return log("identify not successful");
                         }
-                        const b58Str = peerInfo.id.toB58String()
+                        const b58Str = peerInfo.id.toB58String();
 
                         const connection = new ConnectionFSM({
                             _switch: this.switch,
                             peerInfo,
                             muxer: muxedConn,
-                            conn: conn,
-                            type: 'inc'
-                        })
-                        this.switch.connection.add(connection)
+                            conn,
+                            type: "inc"
+                        });
+                        this.switch.connection.add(connection);
 
                         if (peerInfo.multiaddrs.size > 0) {
                             // with incomming conn and through identify, going to pick one
                             // of the available multiaddrs from the other peer as the one
                             // I'm connected to as we really can't be sure at the moment
                             // TODO add this consideration to the connection abstraction!
-                            peerInfo.connect(peerInfo.multiaddrs.toArray()[0])
+                            peerInfo.connect(peerInfo.multiaddrs.toArray()[0]);
                         } else {
                             // for the case of websockets in the browser, where peers have
                             // no addr, use just their IPFS id
-                            peerInfo.connect(`/ipfs/${b58Str}`)
+                            peerInfo.connect(`/ipfs/${b58Str}`);
                         }
-                        peerInfo = this.switch._peerBook.put(peerInfo)
+                        peerInfo = this.switch._peerBook.put(peerInfo);
 
-                        muxedConn.once('close', () => {
-                            connection.close()
-                        })
+                        muxedConn.once("close", () => {
+                            connection.close();
+                        });
 
-                        this.switch.emit('peer-mux-established', peerInfo)
-                    })
-                })
+                        this.switch.emit("peer-mux-established", peerInfo);
+                    });
+                });
             }
 
-            return conn
-        })
+            return conn;
+        });
     }
 
     /**
@@ -216,11 +219,11 @@ class ConnectionManager {
      */
     crypto(tag, encrypt) {
         if (!tag && !encrypt) {
-            tag = plaintext.tag
-            encrypt = plaintext.encrypt
+            tag = plaintext.tag;
+            encrypt = plaintext.encrypt;
         }
 
-        this.switch.crypto = { tag, encrypt }
+        this.switch.crypto = { tag, encrypt };
     }
 
     /**
@@ -231,14 +234,14 @@ class ConnectionManager {
      * @returns {void}
      */
     enableCircuitRelay(config) {
-        config = config || {}
+        config = config || {};
 
         if (config.enabled) {
             if (!config.hop) {
-                Object.assign(config, { hop: { enabled: false, active: false } })
+                Object.assign(config, { hop: { enabled: false, active: false } });
             }
 
-            this.switch.transport.add(Circuit.tag, new Circuit(this.switch, config))
+            this.switch.transport.add(Circuit.tag, new Circuit(this.switch, config));
         }
     }
 
@@ -249,11 +252,11 @@ class ConnectionManager {
      * @returns {void}
      */
     reuse() {
-        this.switch.identify = true
+        this.switch.identify = true;
         this.switch.handle(identify.multicodec, (protocol, conn) => {
-            identify.listener(conn, this.switch._peerInfo)
-        })
+            identify.listener(conn, this.switch._peerInfo);
+        });
     }
 }
 
-module.exports = ConnectionManager
+module.exports = ConnectionManager;

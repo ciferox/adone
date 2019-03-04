@@ -1,16 +1,16 @@
-const parallel = require('async/parallel')
+const parallel = require("async/parallel");
 
-const errcode = require('err-code')
+const errcode = require("err-code");
 
-const Message = require('../../message')
-const utils = require('../../utils')
+const Message = require("../../message");
+const utils = require("../../utils");
 
 const {
     p2p: { record: { Record } }
 } = adone;
 
 module.exports = (dht) => {
-    const log = utils.logger(dht.peerInfo.id, 'rpc:get-value')
+    const log = utils.logger(dht.peerInfo.id, "rpc:get-value");
 
     /**
      * Process `GetValue` DHT messages.
@@ -21,31 +21,31 @@ module.exports = (dht) => {
      * @returns {undefined}
      */
     return function getValue(peer, msg, callback) {
-        const key = msg.key
+        const key = msg.key;
 
-        log('key: %b', key)
+        log("key: %b", key);
 
         if (!key || key.length === 0) {
-            return callback(errcode(new Error('Invalid key'), 'ERR_INVALID_KEY'))
+            return callback(errcode(new Error("Invalid key"), "ERR_INVALID_KEY"));
         }
 
-        const response = new Message(Message.TYPES.GET_VALUE, key, msg.clusterLevel)
+        const response = new Message(Message.TYPES.GET_VALUE, key, msg.clusterLevel);
 
         if (utils.isPublicKeyKey(key)) {
-            log('is public key')
-            const id = utils.fromPublicKeyKey(key)
-            let info
+            log("is public key");
+            const id = utils.fromPublicKeyKey(key);
+            let info;
 
             if (dht._isSelf(id)) {
-                info = dht.peerInfo
+                info = dht.peerInfo;
             } else if (dht.peerBook.has(id)) {
-                info = dht.peerBook.get(id)
+                info = dht.peerBook.get(id);
             }
 
             if (info && info.id.pubKey) {
-                log('returning found public key')
-                response.record = new Record(key, info.id.pubKey.bytes)
-                return callback(null, response)
+                log("returning found public key");
+                response.record = new Record(key, info.id.pubKey.bytes);
+                return callback(null, response);
             }
         }
 
@@ -54,23 +54,23 @@ module.exports = (dht) => {
             (cb) => dht._betterPeersToQuery(msg, peer, cb)
         ], (err, res) => {
             if (err) {
-                return callback(err)
+                return callback(err);
             }
 
-            const record = res[0]
-            const closer = res[1]
+            const record = res[0];
+            const closer = res[1];
 
             if (record) {
-                log('got record')
-                response.record = record
+                log("got record");
+                response.record = record;
             }
 
             if (closer.length > 0) {
-                log('got closer %s', closer.length)
-                response.closerPeers = closer
+                log("got closer %s", closer.length);
+                response.closerPeers = closer;
             }
 
-            callback(null, response)
-        })
-    }
-}
+            callback(null, response);
+        });
+    };
+};

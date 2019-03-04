@@ -1,12 +1,10 @@
-/* eslint-env mocha */
-'use strict'
+const {
+    std: { fs }
+} = adone;
 
-const fs = require('fs')
-
-describe('spdy-node-tests', () => {
-  fs.readdirSync(__dirname)
-    .filter((file) => file.match(/\.node\.js$/))
-    .forEach((file) => {
-      require(`./${file}`)
-    })
-})
+describe("spdy-node-tests", () => {
+    fs.readdirSync(__dirname)
+        .forEach((file) => {
+            require(`./${file}`);
+        });
+});

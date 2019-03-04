@@ -1,5 +1,5 @@
-'use strict'
+
 
 module.exports = {
-  pk: require('./public-key')
-}
+    pk: require("./public-key")
+};

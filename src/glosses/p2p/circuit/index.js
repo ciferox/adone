@@ -1,3 +1,1 @@
-'use strict'
-
-module.exports = require('./circuit')
+module.exports = require("./circuit");

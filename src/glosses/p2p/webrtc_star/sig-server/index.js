@@ -1,56 +1,59 @@
-'use strict'
+const Hapi = require("hapi");
+const config = require("./config");
+const log = config.log;
+// const epimetheus = require("epimetheus");
+const path = require("path");
 
-const Hapi = require('hapi')
-const config = require('./config')
-const log = config.log
-const epimetheus = require('epimetheus')
-const path = require('path')
+const {
+    is
+} = adone;
 
-exports = module.exports
+exports = module.exports;
 
 exports.start = (options, callback) => {
-  if (typeof options === 'function') {
-    callback = options
-    options = {}
-  }
-
-  const port = options.port || config.hapi.port
-  const host = options.host || config.hapi.host
-
-  const http = new Hapi.Server(config.hapi.options)
-
-  http.connection({
-    port: port,
-    host: host
-  })
-
-  http.register({ register: require('inert') }, (err) => {
-    if (err) {
-      return callback(err)
+    if (is.function(options)) {
+        callback = options;
+        options = {};
     }
 
-    http.start((err) => {
-      if (err) {
-        return callback(err)
-      }
+    if (options.host) {
+        config.hapi.host = options.host;
+    }
 
-      log('signaling server has started on: ' + http.info.uri)
+    if (is.number(options.port)) {
+        config.hapi.port = options.port;
+    }
 
-      http.peers = require('./routes-ws')(http, options.metrics).peers
+    const http = new Hapi.Server(config.hapi);
 
-      http.route({
-        method: 'GET',
-        path: '/',
-        handler: (request, reply) => reply.file(path.join(__dirname, 'index.html'), {
-          confine: false
-        })
-      })
+    http.register(require("inert")).then((err) => {
+        if (err) {
+            return callback(err);
+        }
 
-      callback(null, http)
-    })
+        http.start().then((err) => {
+            if (err) {
+                return callback(err);
+            }
 
-    if (options.metrics) { epimetheus.instrument(http) }
-  })
+            log(`signaling server has started on: ${http.info.uri}`);
 
-  return http
-}
+            // http.peers = require("./routes-ws")(http, options.metrics).peers;
+            require("./routes-ws").call(http, http, options.metrics);
+
+            http.route({
+                method: "GET",
+                path: "/",
+                handler: (request, h) => ({ file: path.join(__dirname, "index.html") })
+            });
+
+            callback(null, http);
+        });
+
+        // if (options.metrics) {
+        //     epimetheus.instrument(http);
+        // }
+    });
+
+    return http;
+};

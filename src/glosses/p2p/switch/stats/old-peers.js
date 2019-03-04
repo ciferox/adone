@@ -1,6 +1,6 @@
-'use strict'
 
-const LRU = require('hashlru')
+
+const LRU = require("hashlru");
 
 /**
  * Creates and returns a Least Recently Used Cache
@@ -9,7 +9,7 @@ const LRU = require('hashlru')
  * @returns {LRUCache}
  */
 module.exports = (maxSize) => {
-  const patched = LRU(maxSize)
-  patched.delete = patched.remove
-  return patched
-}
+    const patched = LRU(maxSize);
+    patched.delete = patched.remove;
+    return patched;
+};

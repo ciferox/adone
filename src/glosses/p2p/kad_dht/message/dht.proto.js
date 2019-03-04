@@ -1,4 +1,4 @@
-'use strict'
+
 
 module.exports = `// can't use, because protocol-buffers doesn't support imports
 // so we have to duplicate for now :(
@@ -73,4 +73,4 @@ message Message {
   // Used to return Providers
   // GET_VALUE, ADD_PROVIDER, GET_PROVIDERS
   repeated Peer providerPeers = 9;
-}`
+}`;

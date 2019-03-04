@@ -16,7 +16,10 @@ const __ = lazify({
 export const extension = lazify({
     dirty: "./extensions/dirty",
     mock: "./extensions/mock",
-    promise: "./extensions/promise"
+    promise: "./extensions/promise",
+    checkmark: "./extensions/checkmark",
+    spy: "./extensions/spy",
+    string: "./extensions/string"
 }, null, require);
 
 const used = new Set();

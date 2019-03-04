@@ -1,10 +1,11 @@
-const bs58 = require('bs58')
+const bs58 = require("bs58");
 
 const {
+    is,
     p2p: { crypto }
 } = adone;
 
-exports = module.exports
+exports = module.exports;
 
 /**
  * Generatea random sequence number.
@@ -13,8 +14,8 @@ exports = module.exports
  * @private
  */
 exports.randomSeqno = () => {
-    return crypto.randomBytes(20)
-}
+    return crypto.randomBytes(20);
+};
 
 /**
  * Generate a message id, based on the `from` and `seqno`.
@@ -25,8 +26,8 @@ exports.randomSeqno = () => {
  * @private
  */
 exports.msgId = (from, seqno) => {
-    return from + seqno.toString('hex')
-}
+    return from + seqno.toString("hex");
+};
 
 /**
  * Check if any member of the first set is also a member
@@ -38,21 +39,21 @@ exports.msgId = (from, seqno) => {
  * @private
  */
 exports.anyMatch = (a, b) => {
-    let bHas
-    if (Array.isArray(b)) {
-        bHas = (val) => b.indexOf(val) > -1
+    let bHas;
+    if (is.array(b)) {
+        bHas = (val) => b.indexOf(val) > -1;
     } else {
-        bHas = (val) => b.has(val)
+        bHas = (val) => b.has(val);
     }
 
-    for (let val of a) {
+    for (const val of a) {
         if (bHas(val)) {
-            return true
+            return true;
         }
     }
 
-    return false
-}
+    return false;
+};
 
 /**
  * Make everything an array.
@@ -62,35 +63,35 @@ exports.anyMatch = (a, b) => {
  * @private
  */
 exports.ensureArray = (maybeArray) => {
-    if (!Array.isArray(maybeArray)) {
-        return [maybeArray]
+    if (!is.array(maybeArray)) {
+        return [maybeArray];
     }
 
-    return maybeArray
-}
+    return maybeArray;
+};
 
 exports.normalizeInRpcMessages = (messages) => {
     if (!messages) {
-        return messages
+        return messages;
     }
     return messages.map((msg) => {
-        const m = Object.assign({}, msg)
-        if (Buffer.isBuffer(msg.from)) {
-            m.from = bs58.encode(msg.from)
+        const m = Object.assign({}, msg);
+        if (is.buffer(msg.from)) {
+            m.from = bs58.encode(msg.from);
         }
-        return m
-    })
-}
+        return m;
+    });
+};
 
 exports.normalizeOutRpcMessages = (messages) => {
     if (!messages) {
-        return messages
+        return messages;
     }
     return messages.map((msg) => {
-        const m = Object.assign({}, msg)
-        if (typeof msg.from === 'string' || msg.from instanceof String) {
-            m.from = bs58.decode(msg.from)
+        const m = Object.assign({}, msg);
+        if (is.string(msg.from) || msg.from instanceof String) {
+            m.from = bs58.decode(msg.from);
         }
-        return m
-    })
-}
+        return m;
+    });
+};

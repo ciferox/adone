@@ -1,3 +1,4 @@
+const sinon = require("sinon");
 const series = require("async/series");
 const createNode = require("./utils/create_node");
 

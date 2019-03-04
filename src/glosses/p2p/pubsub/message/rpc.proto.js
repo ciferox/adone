@@ -1,4 +1,4 @@
-'use strict'
+
 module.exports = `
 message RPC {
   repeated SubOpts subscriptions = 1;
@@ -15,4 +15,4 @@ message RPC {
     optional bytes seqno = 3;
     repeated string topicIDs = 4; 
   }
-}`
+}`;

@@ -3,7 +3,7 @@ const {
 } = adone;
 const { expect, extension } = assertion;
 
-describe("assertion", "interface", "dirty", () => {
+describe("assertion", "extension", "dirty", () => {
     assertion
         .use(extension.promise)
         .use(extension.dirty);

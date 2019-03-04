@@ -1,4 +1,4 @@
-const multiaddr = require('multiaddr')
+const multiaddr = require("multiaddr");
 
 const {
     p2p: { PeerId, PeerInfo }
@@ -13,36 +13,36 @@ const {
  * @returns {PeerInfo}
  */
 function getPeerInfo(peer, peerBook) {
-    let peerInfo
+    let peerInfo;
 
     // Already a PeerInfo instance
     if (PeerInfo.isPeerInfo(peer)) {
-        return peer
+        return peer;
     }
 
     // Attempt to convert from Multiaddr instance (not string)
     if (multiaddr.isMultiaddr(peer)) {
-        const peerIdB58Str = peer.getPeerId()
+        const peerIdB58Str = peer.getPeerId();
         try {
-            peerInfo = peerBook.get(peerIdB58Str)
+            peerInfo = peerBook.get(peerIdB58Str);
         } catch (err) {
-            peerInfo = new PeerInfo(PeerId.createFromB58String(peerIdB58Str))
+            peerInfo = new PeerInfo(PeerId.createFromB58String(peerIdB58Str));
         }
-        peerInfo.multiaddrs.add(peer)
-        return peerInfo
+        peerInfo.multiaddrs.add(peer);
+        return peerInfo;
     }
 
     // Attempt to convert from PeerId
     if (PeerId.isPeerId(peer)) {
-        const peerIdB58Str = peer.toB58String()
+        const peerIdB58Str = peer.toB58String();
         try {
-            return peerBook.get(peerIdB58Str)
+            return peerBook.get(peerIdB58Str);
         } catch (err) {
-            throw new Error('Couldnt get PeerInfo')
+            throw new Error("Couldnt get PeerInfo");
         }
     }
 
-    throw new Error('peer type not recognized')
+    throw new Error("peer type not recognized");
 }
 
-module.exports = getPeerInfo
+module.exports = getPeerInfo;

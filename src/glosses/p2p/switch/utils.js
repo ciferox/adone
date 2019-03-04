@@ -12,11 +12,13 @@ const {
 module.exports.msHandle = (multistream, connection) => {
     return new Promise((resolve, reject) => {
         multistream.handle(connection, (err) => {
-            if (err) return reject(err)
-            resolve()
-        })
-    })
-}
+            if (err) {
+                return reject(err); 
+            }
+            resolve();
+        });
+    });
+};
 
 /**
  * For a given multistream, selects the given protocol
@@ -27,11 +29,13 @@ module.exports.msHandle = (multistream, connection) => {
 module.exports.msSelect = (multistream, protocol) => {
     return new Promise((resolve, reject) => {
         multistream.select(protocol, (err, connection) => {
-            if (err) return reject(err)
-            resolve(connection)
-        })
-    })
-}
+            if (err) {
+                return reject(err); 
+            }
+            resolve(connection);
+        });
+    });
+};
 
 /**
  * Runs identify for the given connection and verifies it against the
@@ -43,8 +47,10 @@ module.exports.msSelect = (multistream, protocol) => {
 module.exports.identifyDialer = (connection, cryptoPeerInfo) => {
     return new Promise((resolve, reject) => {
         identify.dialer(connection, cryptoPeerInfo, (err, peerInfo, observedAddrs) => {
-            if (err) return reject(err)
-            resolve({ peerInfo, observedAddrs })
-        })
-    })
-}
+            if (err) {
+                return reject(err); 
+            }
+            resolve({ peerInfo, observedAddrs });
+        });
+    });
+};

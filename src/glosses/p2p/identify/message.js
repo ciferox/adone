@@ -1,6 +1,6 @@
-'use strict'
 
-const protons = require('protons')
+
+const protons = require("protons");
 const schema = `
 message Identify {
   // protocolVersion determines compatibility between peers
@@ -25,6 +25,6 @@ message Identify {
 
   repeated string protocols = 3;
 }
-`
+`;
 
-module.exports = protons(schema).Identify
+module.exports = protons(schema).Identify;

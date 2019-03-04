@@ -1,7 +1,8 @@
-'use strict'
+const pull = require("pull-stream/pull");
 
-const Connection = require('interface-connection').Connection
-const pull = require('pull-stream/pull')
+const {
+    p2p: { Connection }
+} = adone;
 
 /**
  * Creates a pull stream to run the given Connection stream through
@@ -16,29 +17,29 @@ const pull = require('pull-stream/pull')
  * @returns {Connection}
  */
 module.exports = (transport, protocol, connection, observer) => {
-  const peerInfo = new Promise((resolve, reject) => {
-    connection.getPeerInfo((err, peerInfo) => {
-      if (!err && peerInfo) {
-        resolve(peerInfo)
-        return
-      }
+    const peerInfo = new Promise((resolve, reject) => {
+        connection.getPeerInfo((err, peerInfo) => {
+            if (!err && peerInfo) {
+                resolve(peerInfo);
+                return;
+            }
 
-      const setPeerInfo = connection.setPeerInfo
-      connection.setPeerInfo = (pi) => {
-        setPeerInfo.call(connection, pi)
-        resolve(pi)
-      }
-    })
-  })
+            const setPeerInfo = connection.setPeerInfo;
+            connection.setPeerInfo = (pi) => {
+                setPeerInfo.call(connection, pi);
+                resolve(pi);
+            };
+        });
+    });
 
-  const stream = {
-    source: pull(
-      connection,
-      observer.incoming(transport, protocol, peerInfo)),
-    sink: pull(
-      observer.outgoing(transport, protocol, peerInfo),
-      connection)
-  }
+    const stream = {
+        source: pull(
+            connection,
+            observer.incoming(transport, protocol, peerInfo)),
+        sink: pull(
+            observer.outgoing(transport, protocol, peerInfo),
+            connection)
+    };
 
-  return new Connection(stream, connection)
-}
+    return new Connection(stream, connection);
+};

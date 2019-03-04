@@ -1,5 +1,4 @@
-'use strict'
-const protobuf = require('protons')
+const protobuf = require("protons");
 module.exports = protobuf(`
 message CircuitRelay {
 
@@ -41,4 +40,4 @@ message CircuitRelay {
 
   optional Status code = 4;   // Status code, used when Type is STATUS
 }
-`)
+`);

@@ -1,22 +1,22 @@
-const pull = require('pull-stream/pull')
-const debug = require('debug')
-const EE = require('events').EventEmitter
-const once = require('once')
-const utilsFactory = require('./utils')
-const StreamHandler = require('./stream-handler')
-const proto = require('../protocol').CircuitRelay
-const multiaddr = require('multiaddr')
-const series = require('async/series')
-const waterfall = require('async/waterfall')
+const pull = require("pull-stream/pull");
+const debug = require("debug");
+const EE = require("events").EventEmitter;
+const once = require("once");
+const utilsFactory = require("./utils");
+const StreamHandler = require("./stream-handler");
+const proto = require("../protocol").CircuitRelay;
+const multiaddr = require("multiaddr");
+const series = require("async/series");
+const waterfall = require("async/waterfall");
 
-const multicodec = require('./../multicodec')
+const multicodec = require("./../multicodec");
 
 const {
     p2p: { PeerId, PeerInfo }
 } = adone;
 
-const log = debug('libp2p:circuit:relay')
-log.err = debug('libp2p:circuit:error:relay')
+const log = debug("libp2p:circuit:relay");
+log.err = debug("libp2p:circuit:error:relay");
 
 class Hop extends EE {
     /**
@@ -30,12 +30,12 @@ class Hop extends EE {
      * @param {Object} options
      */
     constructor(swarm, options) {
-        super()
-        this.swarm = swarm
-        this.peerInfo = this.swarm._peerInfo
-        this.utils = utilsFactory(swarm)
-        this.config = options || { active: false, enabled: false }
-        this.active = this.config.active
+        super();
+        this.swarm = swarm;
+        this.peerInfo = this.swarm._peerInfo;
+        this.utils = utilsFactory(swarm);
+        this.config = options || { active: false, enabled: false };
+        this.active = this.config.active;
     }
 
     /**
@@ -49,81 +49,81 @@ class Hop extends EE {
         if (!this.config.enabled) {
             this.utils.writeResponse(
                 sh,
-                proto.Status.HOP_CANT_SPEAK_RELAY)
-            return sh.close()
+                proto.Status.HOP_CANT_SPEAK_RELAY);
+            return sh.close();
         }
 
         // check if message is `CAN_HOP`
         if (message.type === proto.Type.CAN_HOP) {
             this.utils.writeResponse(
                 sh,
-                proto.Status.SUCCESS)
-            return sh.close()
+                proto.Status.SUCCESS);
+            return sh.close();
         }
 
         // This is a relay request - validate and create a circuit
-        let srcPeerId = null
-        let dstPeerId = null
+        let srcPeerId = null;
+        let dstPeerId = null;
         try {
-            srcPeerId = PeerId.createFromBytes(message.srcPeer.id).toB58String()
-            dstPeerId = PeerId.createFromBytes(message.dstPeer.id).toB58String()
+            srcPeerId = PeerId.createFromBytes(message.srcPeer.id).toB58String();
+            dstPeerId = PeerId.createFromBytes(message.dstPeer.id).toB58String();
         } catch (err) {
-            log.err(err)
+            log.err(err);
 
             if (!srcPeerId) {
                 this.utils.writeResponse(
                     sh,
-                    proto.Status.HOP_SRC_MULTIADDR_INVALID)
-                return sh.close()
+                    proto.Status.HOP_SRC_MULTIADDR_INVALID);
+                return sh.close();
             }
 
             if (!dstPeerId) {
                 this.utils.writeResponse(
                     sh,
-                    proto.Status.HOP_DST_MULTIADDR_INVALID)
-                return sh.close()
+                    proto.Status.HOP_DST_MULTIADDR_INVALID);
+                return sh.close();
             }
         }
 
         if (srcPeerId === dstPeerId) {
             this.utils.writeResponse(
                 sh,
-                proto.Status.HOP_CANT_RELAY_TO_SELF)
-            return sh.close()
+                proto.Status.HOP_CANT_RELAY_TO_SELF);
+            return sh.close();
         }
 
         if (!message.dstPeer.addrs.length) {
             // TODO: use encapsulate here
-            const addr = multiaddr(`/p2p-circuit/ipfs/${dstPeerId}`).buffer
-            message.dstPeer.addrs.push(addr)
+            const addr = multiaddr(`/p2p-circuit/ipfs/${dstPeerId}`).buffer;
+            message.dstPeer.addrs.push(addr);
         }
 
-        log(`trying to establish a circuit: ${srcPeerId} <-> ${dstPeerId}`)
+        log(`trying to establish a circuit: ${srcPeerId} <-> ${dstPeerId}`);
         const noPeer = () => {
             // log.err(err)
             this.utils.writeResponse(
                 sh,
-                proto.Status.HOP_NO_CONN_TO_DST)
-            return sh.close()
-        }
+                proto.Status.HOP_NO_CONN_TO_DST);
+            return sh.close();
+        };
 
         const isConnected = (cb) => {
-            let dstPeer
+            let dstPeer;
             try {
-                dstPeer = this.swarm._peerBook.get(dstPeerId)
+                dstPeer = this.swarm._peerBook.get(dstPeerId);
                 if (!dstPeer.isConnected() && !this.active) {
-                    const err = new Error(`No Connection to peer ${dstPeerId}`)
-                    noPeer(err)
-                    return cb(err)
+                    const err = new Error(`No Connection to peer ${dstPeerId}`);
+                    noPeer(err);
+                    return cb(err);
                 }
             } catch (err) {
                 if (!this.active) {
-                    noPeer(err)
-                    return cb(err)
+                    noPeer(err);
+                    return cb(err);
                 }
             }
-            cb()
-        }
+            cb();
+        };
 
         series([
             (cb) => this.utils.validateAddrs(message, sh, proto.Type.HOP, cb),
@@ -131,12 +131,12 @@ class Hop extends EE {
             (cb) => this._circuit(sh, message, cb)
         ], (err) => {
             if (err) {
-                log.err(err)
-                sh.close()
-                return setImmediate(() => this.emit('circuit:error', err))
+                log.err(err);
+                sh.close();
+                return setImmediate(() => this.emit("circuit:error", err));
             }
-            setImmediate(() => this.emit('circuit:success'))
-        })
+            setImmediate(() => this.emit("circuit:success"));
+        });
     }
 
     /**
@@ -152,9 +152,9 @@ class Hop extends EE {
             if (err) {
                 this.utils.writeResponse(
                     srcSh,
-                    proto.Status.HOP_CANT_DIAL_DST)
-                log.err(err)
-                return callback(err)
+                    proto.Status.HOP_CANT_DIAL_DST);
+                log.err(err);
+                return callback(err);
             }
 
             return this.utils.writeResponse(
@@ -162,12 +162,12 @@ class Hop extends EE {
                 proto.Status.SUCCESS,
                 (err) => {
                     if (err) {
-                        log.err(err)
-                        return callback(err)
+                        log.err(err);
+                        return callback(err);
                     }
-                    return callback(null, dstConn)
-                })
-        })
+                    return callback(null, dstConn);
+                });
+        });
     }
 
     /**
@@ -182,32 +182,32 @@ class Hop extends EE {
     _negotiateStop(dstSh, srcSh, message, callback) {
         const stopMsg = Object.assign({}, message, {
             type: proto.Type.STOP // change the message type
-        })
+        });
         dstSh.write(proto.encode(stopMsg),
             (err) => {
                 if (err) {
                     this.utils.writeResponse(
                         srcSh,
-                        proto.Status.HOP_CANT_OPEN_DST_STREAM)
-                    log.err(err)
-                    return callback(err)
+                        proto.Status.HOP_CANT_OPEN_DST_STREAM);
+                    log.err(err);
+                    return callback(err);
                 }
 
                 // read response from STOP
                 dstSh.read((err, msg) => {
                     if (err) {
-                        log.err(err)
-                        return callback(err)
+                        log.err(err);
+                        return callback(err);
                     }
 
-                    const message = proto.decode(msg)
+                    const message = proto.decode(msg);
                     if (message.code !== proto.Status.SUCCESS) {
-                        return callback(new Error(`Unable to create circuit!`))
+                        return callback(new Error("Unable to create circuit!"));
                     }
 
-                    return callback(null, msg)
-                })
-            })
+                    return callback(null, msg);
+                });
+            });
     }
 
     /**
@@ -220,41 +220,41 @@ class Hop extends EE {
      * @private
      */
     _circuit(srcSh, message, callback) {
-        let dstSh = null
+        let dstSh = null;
         waterfall([
             (cb) => this._connectToStop(message.dstPeer, srcSh, cb),
             (_dstConn, cb) => {
-                dstSh = new StreamHandler(_dstConn)
-                this._negotiateStop(dstSh, srcSh, message, cb)
+                dstSh = new StreamHandler(_dstConn);
+                this._negotiateStop(dstSh, srcSh, message, cb);
             }
         ], (err) => {
             if (err) {
                 // close/end the source stream if there was an error
                 if (srcSh) {
-                    srcSh.close()
+                    srcSh.close();
                 }
 
                 if (dstSh) {
-                    dstSh.close()
+                    dstSh.close();
                 }
-                return callback(err)
+                return callback(err);
             }
 
-            const src = srcSh.rest()
-            const dst = dstSh.rest()
+            const src = srcSh.rest();
+            const dst = dstSh.rest();
 
-            const srcIdStr = PeerId.createFromBytes(message.srcPeer.id).toB58String()
-            const dstIdStr = PeerId.createFromBytes(message.dstPeer.id).toB58String()
+            const srcIdStr = PeerId.createFromBytes(message.srcPeer.id).toB58String();
+            const dstIdStr = PeerId.createFromBytes(message.dstPeer.id).toB58String();
 
             // circuit the src and dst streams
             pull(
                 src,
                 dst,
                 src
-            )
-            log(`circuit ${srcIdStr} <-> ${dstIdStr} established`)
-            callback()
-        })
+            );
+            log(`circuit ${srcIdStr} <-> ${dstIdStr} established`);
+            callback();
+        });
     }
 
     /**
@@ -266,17 +266,17 @@ class Hop extends EE {
      * @private
      */
     _dialPeer(dstPeer, callback) {
-        const peerInfo = new PeerInfo(PeerId.createFromBytes(dstPeer.id))
-        dstPeer.addrs.forEach((a) => peerInfo.multiaddrs.add(a))
+        const peerInfo = new PeerInfo(PeerId.createFromBytes(dstPeer.id));
+        dstPeer.addrs.forEach((a) => peerInfo.multiaddrs.add(a));
         this.swarm.dial(peerInfo, multicodec.relay, once((err, conn) => {
             if (err) {
-                log.err(err)
-                return callback(err)
+                log.err(err);
+                return callback(err);
             }
 
-            callback(null, conn)
-        }))
+            callback(null, conn);
+        }));
     }
 }
 
-module.exports = Hop
+module.exports = Hop;

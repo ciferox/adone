@@ -1,25 +1,24 @@
-const setImmediate = require('async/setImmediate')
+const setImmediate = require("async/setImmediate");
 
-const EE = require('events').EventEmitter
-const Connection = require('interface-connection').Connection
-const utilsFactory = require('./utils')
-const proto = require('../protocol').CircuitRelay
-const series = require('async/series')
+const EE = require("events").EventEmitter;
+const utilsFactory = require("./utils");
+const proto = require("../protocol").CircuitRelay;
+const series = require("async/series");
 
 const {
-    p2p: { PeerInfo }
+    p2p: { Connection, PeerInfo }
 } = adone;
 
-const debug = require('debug')
+const debug = require("debug");
 
-const log = debug('libp2p:circuit:stop')
-log.err = debug('libp2p:circuit:error:stop')
+const log = debug("libp2p:circuit:stop");
+log.err = debug("libp2p:circuit:error:stop");
 
 class Stop extends EE {
     constructor(swarm) {
-        super()
-        this.swarm = swarm
-        this.utils = utilsFactory(swarm)
+        super();
+        this.swarm = swarm;
+        this.utils = utilsFactory(swarm);
     }
 
     /**
@@ -31,7 +30,7 @@ class Stop extends EE {
      * @returns {undefined}
      */
     handle(msg, sh, callback) {
-        callback = callback || (() => { })
+        callback = callback || (() => { });
 
         series([
             (cb) => this.utils.validateAddrs(msg, sh, proto.Type.STOP, cb),
@@ -40,18 +39,18 @@ class Stop extends EE {
             if (err) {
                 // we don't return the error here,
                 // since multistream select don't expect one
-                callback()
-                return log(err)
+                callback();
+                return log(err);
             }
 
-            const peerInfo = new PeerInfo(this.utils.peerIdFromId(msg.srcPeer.id))
-            msg.srcPeer.addrs.forEach((addr) => peerInfo.multiaddrs.add(addr))
-            const newConn = new Connection(sh.rest())
-            newConn.setPeerInfo(peerInfo)
-            setImmediate(() => this.emit('connection', newConn))
-            callback(newConn)
-        })
+            const peerInfo = new PeerInfo(this.utils.peerIdFromId(msg.srcPeer.id));
+            msg.srcPeer.addrs.forEach((addr) => peerInfo.multiaddrs.add(addr));
+            const newConn = new Connection(sh.rest());
+            newConn.setPeerInfo(peerInfo);
+            setImmediate(() => this.emit("connection", newConn));
+            callback(newConn);
+        });
     }
 }
 
-module.exports = Stop
+module.exports = Stop;

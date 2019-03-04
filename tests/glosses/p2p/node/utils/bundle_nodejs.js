@@ -1,13 +1,9 @@
-const SPDY = require("libp2p-spdy");
-const MPLEX = require("libp2p-mplex");
 const PULLMPLEX = require("pull-mplex");
-const SECIO = require("libp2p-secio");
 const defaultsDeep = require("@nodeutils/defaults-deep");
-const libp2p = require("../..");
 
 const {
     is,
-    p2p: { KadDHT, TCP, WS, MulticastDNS, Bootstrap, secio: SECIO, SPDY }
+    p2p: { Node, KadDHT, TCP, WS, MulticastDNS, Bootstrap, secio: SECIO, spdy, multiplex }
 } = adone;
 
 const mapMuxers = function (list) {
@@ -16,8 +12,8 @@ const mapMuxers = function (list) {
             return pref;
         }
         switch (pref.trim().toLowerCase()) {
-            case "spdy": return SPDY;
-            case "mplex": return MPLEX;
+            case "spdy": return spdy;
+            case "mplex": return multiplex;
             case "pullmplex": return PULLMPLEX;
             default:
                 throw new Error(`${pref} muxer not available`);
@@ -32,11 +28,11 @@ const getMuxers = function (muxers) {
     } else if (muxers) {
         return mapMuxers(muxers);
     }
-    return [PULLMPLEX, MPLEX, SPDY];
+    return [PULLMPLEX, multiplex, spdy];
 
 };
 
-class Node extends libp2p {
+class TestNode extends Node {
     constructor(_options) {
         const defaults = {
             modules: {
@@ -90,4 +86,4 @@ class Node extends libp2p {
     }
 }
 
-module.exports = Node;
+module.exports = TestNode;

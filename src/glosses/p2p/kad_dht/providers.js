@@ -1,12 +1,12 @@
-const cache = require('hashlru')
-const varint = require('varint')
-const each = require('async/each')
-const pull = require('pull-stream')
-const CID = require('cids')
-const Key = require('interface-datastore').Key
+const cache = require("hashlru");
+const varint = require("varint");
+const each = require("async/each");
+const pull = require("pull-stream");
+const CID = require("cids");
+const Key = require("interface-datastore").Key;
 
-const c = require('./constants')
-const utils = require('./utils')
+const c = require("./constants");
+const utils = require("./utils");
 
 const {
     p2p: { PeerId }
@@ -31,32 +31,32 @@ class Providers {
      * @param {number} [cacheSize=256]
      */
     constructor(datastore, self, cacheSize) {
-        this.datastore = datastore
+        this.datastore = datastore;
 
-        this._log = utils.logger(self, 'providers')
+        this._log = utils.logger(self, "providers");
 
         /**
          * How often invalid records are cleaned. (in seconds)
          *
          * @type {number}
          */
-        this.cleanupInterval = c.PROVIDERS_CLEANUP_INTERVAL
+        this.cleanupInterval = c.PROVIDERS_CLEANUP_INTERVAL;
 
         /**
          * How long is a provider valid for. (in seconds)
          *
          * @type {number}
          */
-        this.provideValidity = c.PROVIDERS_VALIDITY
+        this.provideValidity = c.PROVIDERS_VALIDITY;
 
         /**
          * LRU cache size
          *
          * @type {number}
          */
-        this.lruCacheSize = cacheSize || c.PROVIDERS_LRU_CACHE_SIZE
+        this.lruCacheSize = cacheSize || c.PROVIDERS_LRU_CACHE_SIZE;
 
-        this.providers = cache(this.lruCacheSize)
+        this.providers = cache(this.lruCacheSize);
     }
 
     /**
@@ -66,8 +66,8 @@ class Providers {
      */
     stop() {
         if (this._cleaner) {
-            clearInterval(this._cleaner)
-            this._cleaner = null
+            clearInterval(this._cleaner);
+            this._cleaner = null;
         }
     }
 
@@ -82,36 +82,36 @@ class Providers {
     _cleanup() {
         this._getProviderCids((err, cids) => {
             if (err) {
-                return this._log.error('Failed to get cids', err)
+                return this._log.error("Failed to get cids", err);
             }
 
             each(cids, (cid, cb) => {
                 this._getProvidersMap(cid, (err, provs) => {
                     if (err) {
-                        return cb(err)
+                        return cb(err);
                     }
 
                     provs.forEach((time, provider) => {
-                        this._log('comparing: %s - %s > %s', Date.now(), time, this.provideValidity)
+                        this._log("comparing: %s - %s > %s", Date.now(), time, this.provideValidity);
                         if (Date.now() - time > this.provideValidity) {
-                            provs.delete(provider)
+                            provs.delete(provider);
                         }
-                    })
+                    });
 
                     if (provs.size === 0) {
-                        return this._deleteProvidersMap(cid, cb)
+                        return this._deleteProvidersMap(cid, cb);
                     }
 
-                    cb()
-                })
+                    cb();
+                });
             }, (err) => {
                 if (err) {
-                    return this._log.error('Failed to cleanup', err)
+                    return this._log.error("Failed to cleanup", err);
                 }
 
-                this._log('Cleanup successfull')
-            })
-        })
+                this._log("Cleanup successfull");
+            });
+        });
     }
 
     /**
@@ -126,32 +126,32 @@ class Providers {
         pull(
             this.datastore.query({ prefix: c.PROVIDERS_KEY_PREFIX }),
             pull.map((entry) => {
-                const parts = entry.key.toString().split('/')
+                const parts = entry.key.toString().split("/");
                 if (parts.length !== 4) {
-                    this._log.error('incorrectly formatted provider entry in datastore: %s', entry.key)
-                    return
+                    this._log.error("incorrectly formatted provider entry in datastore: %s", entry.key);
+                    return;
                 }
 
-                let decoded
+                let decoded;
                 try {
-                    decoded = utils.decodeBase32(parts[2])
+                    decoded = utils.decodeBase32(parts[2]);
                 } catch (err) {
-                    this._log.error('error decoding base32 provider key: %s', parts[2])
-                    return
+                    this._log.error("error decoding base32 provider key: %s", parts[2]);
+                    return;
                 }
 
-                let cid
+                let cid;
                 try {
-                    cid = new CID(decoded)
+                    cid = new CID(decoded);
                 } catch (err) {
-                    this._log.error('error converting key to cid from datastore: %s', err.message)
+                    this._log.error("error converting key to cid from datastore: %s", err.message);
                 }
 
-                return cid
+                return cid;
             }),
             pull.filter(Boolean),
             pull.collect(callback)
-        )
+        );
     }
 
     /**
@@ -164,13 +164,13 @@ class Providers {
      * @private
      */
     _getProvidersMap(cid, callback) {
-        const provs = this.providers.get(makeProviderKey(cid))
+        const provs = this.providers.get(makeProviderKey(cid));
 
         if (!provs) {
-            return loadProviders(this.datastore, cid, callback)
+            return loadProviders(this.datastore, cid, callback);
         }
 
-        callback(null, provs)
+        callback(null, provs);
     }
 
     /**
@@ -183,9 +183,9 @@ class Providers {
      * @private
      */
     _deleteProvidersMap(cid, callback) {
-        const dsKey = makeProviderKey(cid)
-        this.providers.set(dsKey, null)
-        const batch = this.datastore.batch()
+        const dsKey = makeProviderKey(cid);
+        this.providers.set(dsKey, null);
+        const batch = this.datastore.batch();
 
         pull(
             this.datastore.query({
@@ -195,28 +195,28 @@ class Providers {
             pull.through((entry) => batch.delete(entry.key)),
             pull.onEnd((err) => {
                 if (err) {
-                    return callback(err)
+                    return callback(err);
                 }
-                batch.commit(callback)
+                batch.commit(callback);
             })
-        )
+        );
     }
 
     get cleanupInterval() {
-        return this._cleanupInterval
+        return this._cleanupInterval;
     }
 
     set cleanupInterval(val) {
-        this._cleanupInterval = val
+        this._cleanupInterval = val;
 
         if (this._cleaner) {
-            clearInterval(this._cleaner)
+            clearInterval(this._cleaner);
         }
 
         this._cleaner = setInterval(
             () => this._cleanup(),
             this.cleanupInterval
-        )
+        );
     }
 
     /**
@@ -228,27 +228,27 @@ class Providers {
      * @returns {undefined}
      */
     addProvider(cid, provider, callback) {
-        this._log('addProvider %s', cid.toBaseEncodedString())
-        const dsKey = makeProviderKey(cid)
-        const provs = this.providers.get(dsKey)
+        this._log("addProvider %s", cid.toBaseEncodedString());
+        const dsKey = makeProviderKey(cid);
+        const provs = this.providers.get(dsKey);
 
         const next = (err, provs) => {
             if (err) {
-                return callback(err)
+                return callback(err);
             }
 
-            this._log('loaded %s provs', provs.size)
-            const now = Date.now()
-            provs.set(provider, now)
+            this._log("loaded %s provs", provs.size);
+            const now = Date.now();
+            provs.set(provider, now);
 
-            this.providers.set(dsKey, provs)
-            writeProviderEntry(this.datastore, cid, provider, now, callback)
-        }
+            this.providers.set(dsKey, provs);
+            writeProviderEntry(this.datastore, cid, provider, now, callback);
+        };
 
         if (!provs) {
-            loadProviders(this.datastore, cid, next)
+            loadProviders(this.datastore, cid, next);
         } else {
-            next(null, provs)
+            next(null, provs);
         }
     }
 
@@ -260,14 +260,14 @@ class Providers {
      * @returns {undefined}
      */
     getProviders(cid, callback) {
-        this._log('getProviders %s', cid.toBaseEncodedString())
+        this._log("getProviders %s", cid.toBaseEncodedString());
         this._getProvidersMap(cid, (err, provs) => {
             if (err) {
-                return callback(err)
+                return callback(err);
             }
 
-            callback(null, Array.from(provs.keys()))
-        })
+            callback(null, Array.from(provs.keys()));
+        });
     }
 }
 
@@ -280,7 +280,7 @@ class Providers {
  * @private
  */
 function makeProviderKey(cid) {
-    return c.PROVIDERS_KEY_PREFIX + utils.encodeBase32(cid.buffer)
+    return c.PROVIDERS_KEY_PREFIX + utils.encodeBase32(cid.buffer);
 }
 
 /**
@@ -298,11 +298,11 @@ function makeProviderKey(cid) {
 function writeProviderEntry(store, cid, peer, time, callback) {
     const dsKey = [
         makeProviderKey(cid),
-        '/',
+        "/",
         utils.encodeBase32(peer.id)
-    ].join('')
+    ].join("");
 
-    store.put(new Key(dsKey), Buffer.from(varint.encode(time)), callback)
+    store.put(new Key(dsKey), Buffer.from(varint.encode(time)), callback);
 }
 
 /**
@@ -319,23 +319,23 @@ function loadProviders(store, cid, callback) {
     pull(
         store.query({ prefix: makeProviderKey(cid) }),
         pull.map((entry) => {
-            const parts = entry.key.toString().split('/')
-            const lastPart = parts[parts.length - 1]
-            const rawPeerId = utils.decodeBase32(lastPart)
-            return [new PeerId(rawPeerId), readTime(entry.value)]
+            const parts = entry.key.toString().split("/");
+            const lastPart = parts[parts.length - 1];
+            const rawPeerId = utils.decodeBase32(lastPart);
+            return [new PeerId(rawPeerId), readTime(entry.value)];
         }),
         pull.collect((err, res) => {
             if (err) {
-                return callback(err)
+                return callback(err);
             }
 
-            return callback(null, new Map(res))
+            return callback(null, new Map(res));
         })
-    )
+    );
 }
 
 function readTime(buf) {
-    return varint.decode(buf)
+    return varint.decode(buf);
 }
 
-module.exports = Providers
+module.exports = Providers;

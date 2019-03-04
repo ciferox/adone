@@ -1,72 +1,72 @@
-'use strict'
+const multiaddr = require("multiaddr");
 
-const Connection = require('interface-connection').Connection
-const multiaddr = require('multiaddr')
-const os = require('os')
+const {
+    noop,
+    p2p: { Connection },
+    std: { os }
+} = adone;
 
-function noop () {}
-
-const createServer = require('pull-ws/server') || noop
+const createServer = require("pull-ws/server") || noop;
 
 module.exports = (options, handler) => {
-  const listener = createServer(options, (socket) => {
-    socket.getObservedAddrs = (callback) => {
-      // TODO research if we can reuse the address in anyway
-      return callback(null, [])
-    }
+    const listener = createServer(options, (socket) => {
+        socket.getObservedAddrs = (callback) => {
+            // TODO research if we can reuse the address in anyway
+            return callback(null, []);
+        };
 
-    handler(new Connection(socket))
-  })
+        handler(new Connection(socket));
+    });
 
-  let listeningMultiaddr
+    let listeningMultiaddr;
 
-  listener._listen = listener.listen
-  listener.listen = (ma, callback) => {
-    callback = callback || noop
-    listeningMultiaddr = ma
+    listener._listen = listener.listen;
+    listener.listen = (ma, callback) => {
+        callback = callback || noop;
+        listeningMultiaddr = ma;
 
-    if (ma.protoNames().includes('ipfs')) {
-      ma = ma.decapsulate('ipfs')
-    }
+        if (ma.protoNames().includes("ipfs")) {
+            ma = ma.decapsulate("ipfs");
+        }
 
-    listener._listen(ma.toOptions(), callback)
-  }
+        listener._listen(ma.toOptions(), callback);
+    };
 
-  listener.getAddrs = (callback) => {
-    const multiaddrs = []
-    const address = listener.address()
+    listener.getAddrs = (callback) => {
+        const multiaddrs = [];
+        const address = listener.address();
 
-    if (!address) {
-      return callback(new Error('Listener is not ready yet'))
-    }
+        if (!address) {
+            return callback(new Error("Listener is not ready yet"));
+        }
 
-    let ipfsId = listeningMultiaddr.getPeerId()
+        const ipfsId = listeningMultiaddr.getPeerId();
 
-    // Because TCP will only return the IPv6 version
-    // we need to capture from the passed multiaddr
-    if (listeningMultiaddr.toString().indexOf('ip4') !== -1) {
-      let m = listeningMultiaddr.decapsulate('tcp')
-      m = m.encapsulate('/tcp/' + address.port + '/ws')
-      if (listeningMultiaddr.getPeerId()) {
-        m = m.encapsulate('/ipfs/' + ipfsId)
-      }
-
-      if (m.toString().indexOf('0.0.0.0') !== -1) {
-        const netInterfaces = os.networkInterfaces()
-        Object.keys(netInterfaces).forEach((niKey) => {
-          netInterfaces[niKey].forEach((ni) => {
-            if (ni.family === 'IPv4') {
-              multiaddrs.push(multiaddr(m.toString().replace('0.0.0.0', ni.address)))
+        // Because TCP will only return the IPv6 version
+        // we need to capture from the passed multiaddr
+        if (listeningMultiaddr.toString().indexOf("ip4") !== -1) {
+            let m = listeningMultiaddr.decapsulate("tcp");
+            m = m.encapsulate(`/tcp/${address.port}/ws`);
+            if (listeningMultiaddr.getPeerId()) {
+                m = m.encapsulate(`/ipfs/${ipfsId}`);
             }
-          })
-        })
-      } else {
-        multiaddrs.push(m)
-      }
-    }
 
-    callback(null, multiaddrs)
-  }
+            if (m.toString().indexOf("0.0.0.0") !== -1) {
+                const netInterfaces = os.networkInterfaces();
+                Object.keys(netInterfaces).forEach((niKey) => {
+                    netInterfaces[niKey].forEach((ni) => {
+                        if (ni.family === "IPv4") {
+                            multiaddrs.push(multiaddr(m.toString().replace("0.0.0.0", ni.address)));
+                        }
+                    });
+                });
+            } else {
+                multiaddrs.push(m);
+            }
+        }
 
-  return listener
-}
+        callback(null, multiaddrs);
+    };
+
+    return listener;
+};

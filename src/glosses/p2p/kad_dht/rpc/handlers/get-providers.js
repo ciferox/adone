@@ -1,17 +1,17 @@
-const CID = require('cids')
-const parallel = require('async/parallel')
+const CID = require("cids");
+const parallel = require("async/parallel");
 
-const errcode = require('err-code')
+const errcode = require("err-code");
 
-const Message = require('../../message')
-const utils = require('../../utils')
+const Message = require("../../message");
+const utils = require("../../utils");
 
 const {
     p2p: { PeerInfo }
 } = adone;
 
 module.exports = (dht) => {
-    const log = utils.logger(dht.peerInfo.id, 'rpc:get-providers')
+    const log = utils.logger(dht.peerInfo.id, "rpc:get-providers");
 
     /**
      * Process `GetProviders` DHT messages.
@@ -22,59 +22,59 @@ module.exports = (dht) => {
      * @returns {undefined}
      */
     return function getProviders(peer, msg, callback) {
-        let cid
+        let cid;
         try {
-            cid = new CID(msg.key)
+            cid = new CID(msg.key);
         } catch (err) {
-            return callback(errcode(new Error(`Invalid CID: ${err.message}`), 'ERR_INVALID_CID'))
+            return callback(errcode(new Error(`Invalid CID: ${err.message}`), "ERR_INVALID_CID"));
         }
 
-        log('%s', cid.toBaseEncodedString())
+        log("%s", cid.toBaseEncodedString());
 
-        const dsKey = utils.bufferToKey(cid.buffer)
+        const dsKey = utils.bufferToKey(cid.buffer);
 
         parallel([
             (cb) => dht.datastore.has(dsKey, (err, exists) => {
                 if (err) {
-                    log.error('Failed to check datastore existence', err)
-                    return cb(null, false)
+                    log.error("Failed to check datastore existence", err);
+                    return cb(null, false);
                 }
 
-                cb(null, exists)
+                cb(null, exists);
             }),
             (cb) => dht.providers.getProviders(cid, cb),
             (cb) => dht._betterPeersToQuery(msg, peer, cb)
         ], (err, res) => {
             if (err) {
-                return callback(err)
+                return callback(err);
             }
-            const has = res[0]
-            const closer = res[2]
+            const has = res[0];
+            const closer = res[2];
             const providers = res[1].map((p) => {
                 if (dht.peerBook.has(p)) {
-                    return dht.peerBook.get(p)
+                    return dht.peerBook.get(p);
                 }
 
-                return dht.peerBook.put(new PeerInfo(p))
-            })
+                return dht.peerBook.put(new PeerInfo(p));
+            });
 
             if (has) {
-                providers.push(dht.peerInfo)
+                providers.push(dht.peerInfo);
             }
 
-            const response = new Message(msg.type, msg.key, msg.clusterLevel)
+            const response = new Message(msg.type, msg.key, msg.clusterLevel);
 
             if (providers.length > 0) {
-                response.providerPeers = providers
+                response.providerPeers = providers;
             }
 
             if (closer.length > 0) {
-                response.closerPeers = closer
+                response.closerPeers = closer;
             }
 
-            log('got %s providers %s closerPeers', providers.length, closer.length)
+            log("got %s providers %s closerPeers", providers.length, closer.length);
 
-            callback(null, response)
-        })
-    }
-}
+            callback(null, response);
+        });
+    };
+};

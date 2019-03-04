@@ -1,5 +1,5 @@
-'use strict'
-const once = require('once')
+
+const once = require("once");
 
 /**
  * Registers `handler` to each event in `events`. The `handler`
@@ -18,16 +18,16 @@ const once = require('once')
  * @param {function(*)} handler The handler to call when an event is triggered
  * @returns {void}
  */
-function emitFirst (emitter, events, handler) {
-  handler = once(handler)
-  events.forEach((e) => {
-    emitter.once(e, (...args) => {
-      events.forEach((ev) => {
-        emitter.removeListener(ev, handler)
-      })
-      handler.apply(emitter, args)
-    })
-  })
+function emitFirst(emitter, events, handler) {
+    handler = once(handler);
+    events.forEach((e) => {
+        emitter.once(e, (...args) => {
+            events.forEach((ev) => {
+                emitter.removeListener(ev, handler);
+            });
+            handler.apply(emitter, args);
+        });
+    });
 }
 
-module.exports.emitFirst = emitFirst
+module.exports.emitFirst = emitFirst;

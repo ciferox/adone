@@ -1,59 +1,63 @@
-const pull = require('pull-stream/pull')
-const Connection = require('interface-connection').Connection
-const assert = require('assert')
-const debug = require('debug')
-const once = require('once')
-const log = debug('libp2p:secio')
-log.error = debug('libp2p:secio:error')
+const pull = require("pull-stream/pull");
+const assert = require("assert");
+const debug = require("debug");
+const once = require("once");
+const log = debug("libp2p:secio");
+log.error = debug("libp2p:secio:error");
 
-const handshake = require('./handshake')
-const State = require('./state')
+const handshake = require("./handshake");
+const State = require("./state");
 
 const {
-    p2p: { PeerInfo }
+    is,
+    p2p: { Connection, PeerInfo }
 } = adone;
 
 module.exports = {
-    tag: '/secio/1.0.0',
+    tag: "/secio/1.0.0",
     encrypt(localId, conn, remoteId, callback) {
-        assert(localId, 'no local private key provided')
-        assert(conn, 'no connection for the handshake  provided')
+        assert(localId, "no local private key provided");
+        assert(conn, "no connection for the handshake  provided");
 
-        if (typeof remoteId === 'function') {
-            callback = remoteId
-            remoteId = undefined
+        if (is.function(remoteId)) {
+            callback = remoteId;
+            remoteId = undefined;
         }
 
-        callback = once(callback || function (err) {
-            if (err) { log.error(err) }
-        })
+        callback = once(callback || ((err) => {
+            if (err) {
+                log.error(err);
+            }
+        }));
 
-        const timeout = 60 * 1000 * 5
+        const timeout = 60 * 1000 * 5;
 
-        const state = new State(localId, remoteId, timeout, callback)
+        const state = new State(localId, remoteId, timeout, callback);
 
-        function finish(err) {
-            if (err) { return callback(err) }
+        const encryptedConnection = new Connection(undefined, conn);
+
+        const finish = function (err) {
+            if (err) {
+                return callback(err);
+            }
 
             conn.getPeerInfo((err, peerInfo) => {
-                encryptedConnection.setInnerConn(new Connection(state.secure, conn))
+                encryptedConnection.setInnerConn(new Connection(state.secure, conn));
 
                 if (err) { // no peerInfo yet, means I'm the receiver
-                    encryptedConnection.setPeerInfo(new PeerInfo(state.id.remote))
+                    encryptedConnection.setPeerInfo(new PeerInfo(state.id.remote));
                 }
 
-                callback()
-            })
-        }
-
-        const encryptedConnection = new Connection(undefined, conn)
+                callback();
+            });
+        };
 
         pull(
             conn,
             handshake(state, finish),
             conn
-        )
+        );
 
-        return encryptedConnection
+        return encryptedConnection;
     }
-}
+};

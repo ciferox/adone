@@ -1,22 +1,22 @@
-'use strict'
 
-const crypto = require('crypto')
-const lengths = require('./lengths')
-const nextTick = require('async/nextTick')
+
+const crypto = require("crypto");
+const lengths = require("./lengths");
+const nextTick = require("async/nextTick");
 
 exports.create = function (hash, secret, callback) {
-  const res = {
-    digest (data, cb) {
-      const hmac = crypto.createHmac(hash.toLowerCase(), secret)
+    const res = {
+        digest(data, cb) {
+            const hmac = crypto.createHmac(hash.toLowerCase(), secret);
 
-      hmac.update(data)
+            hmac.update(data);
 
-      nextTick(() => {
-        cb(null, hmac.digest())
-      })
-    },
-    length: lengths[hash]
-  }
+            nextTick(() => {
+                cb(null, hmac.digest());
+            });
+        },
+        length: lengths[hash]
+    };
 
-  callback(null, res)
-}
+    callback(null, res);
+};

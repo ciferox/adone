@@ -83,7 +83,7 @@ class PeerId {
             maxRunes = pid.length;
         }
 
-        return "<peer.ID " + pid.substr(0, maxRunes) + ">";
+        return `<peer.ID ${pid.substr(0, maxRunes)}>`;
     }
 
     // return the jsonified version of the key, matching the formatting
@@ -110,12 +110,12 @@ class PeerId {
     }
 
     isEqual(id) {
-        if (Buffer.isBuffer(id)) {
-            return this.id.equals(id)
+        if (is.buffer(id)) {
+            return this.id.equals(id);
         } else if (id.id) {
-            return this.id.equals(id.id)
+            return this.id.equals(id.id);
         }
-        throw new Error('not valid Id')
+        throw new Error("not valid Id");
 
     }
 
@@ -189,7 +189,9 @@ exports.createFromPubKey = function (key, callback) {
             buf = Buffer.from(key, "base64");
         }
 
-        if (!is.buffer(buf)) { throw new Error('Supplied key is neither a base64 string nor a buffer') };
+        if (!is.buffer(buf)) {
+            throw new Error("Supplied key is neither a base64 string nor a buffer"); 
+        }
 
         pubKey = cryptoKeys.unmarshalPublicKey(buf);
     } catch (err) {
@@ -218,7 +220,9 @@ exports.createFromPrivKey = function (key, callback) {
             buf = Buffer.from(key, "base64");
         }
 
-        if (!is.buffer(buf)) { throw new Error('Supplied key is neither a base64 string nor a buffer') };
+        if (!is.buffer(buf)) {
+            throw new Error("Supplied key is neither a base64 string nor a buffer"); 
+        }
     } catch (err) {
         return callback(err);
     }

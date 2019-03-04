@@ -1,10 +1,10 @@
-'use strict'
 
-const protons = require('protons')
 
-const rpcProto = protons(require('./rpc.proto.js'))
-const topicDescriptorProto = protons(require('./topic-descriptor.proto.js'))
+const protons = require("protons");
 
-exports = module.exports
-exports.rpc = rpcProto
-exports.td = topicDescriptorProto
+const rpcProto = protons(require("./rpc.proto.js"));
+const topicDescriptorProto = protons(require("./topic-descriptor.proto.js"));
+
+exports = module.exports;
+exports.rpc = rpcProto;
+exports.td = topicDescriptorProto;

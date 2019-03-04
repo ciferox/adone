@@ -6,8 +6,7 @@ const closeAndWait = function (stream) {
         pull.empty(),
         stream,
         pull.onEnd((err) => {
-            console.log("a");
-            // expect(err).to.not.exist.mark();
+            expect(err).to.not.exist.mark();
         })
     );
 };
@@ -26,22 +25,20 @@ module.exports = (common) => {
             });
         });
 
-        it.only("Open a stream from the dialer", (done) => {
+        it("Open a stream from the dialer", (done) => {
             const p = pair();
             const dialer = muxer.dialer(p[0]);
             const listener = muxer.listener(p[1]);
 
-            // expect(4).checks(done);
+            expect(4).checks(done);
 
             listener.on("stream", (stream) => {
-                console.log("b");
-                // expect(stream).to.exist.mark();
+                expect(stream).to.exist.mark();
                 closeAndWait(stream);
             });
 
             const conn = dialer.newStream((err) => {
-                console.log("c");
-                // expect(err).to.not.exist.mark();
+                expect(err).to.not.exist.mark();
             });
 
             closeAndWait(conn);

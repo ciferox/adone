@@ -1,29 +1,32 @@
-'use strict'
+const ConnectionFSM = require("./connection");
+const getPeerInfo = require("./get-peer-info");
+const once = require("once");
+const setImmediate = require("async/setImmediate");
 
-const Connection = require('interface-connection').Connection
-const ConnectionFSM = require('./connection')
-const getPeerInfo = require('./get-peer-info')
-const once = require('once')
-const setImmediate = require('async/setImmediate')
+const {
+    is,
+    p2p: { Connection }
+} = adone;
 
-const debug = require('debug')
-const log = debug('libp2p:switch:dial')
 
-function maybePerformHandshake ({ protocol, proxyConnection, connection, callback }) {
-  if (protocol) {
-    return connection.shake(protocol, (err, conn) => {
-      if (!conn) {
-        return callback(err)
-      }
+const debug = require("debug");
+const log = debug("libp2p:switch:dial");
 
-      proxyConnection.setPeerInfo(connection.theirPeerInfo)
-      proxyConnection.setInnerConn(conn)
-      callback(null, proxyConnection)
-    })
-  }
+const maybePerformHandshake = function ({ protocol, proxyConnection, connection, callback }) {
+    if (protocol) {
+        return connection.shake(protocol, (err, conn) => {
+            if (!conn) {
+                return callback(err);
+            }
 
-  callback()
-}
+            proxyConnection.setPeerInfo(connection.theirPeerInfo);
+            proxyConnection.setInnerConn(conn);
+            callback(null, proxyConnection);
+        });
+    }
+
+    callback();
+};
 
 /**
  * Returns a Dialer generator that when called, will immediately begin dialing
@@ -33,78 +36,78 @@ function maybePerformHandshake ({ protocol, proxyConnection, connection, callbac
  * @param {Boolean} returnFSM Whether or not to return an fsm instead of a Connection
  * @returns {function(PeerInfo, string, function(Error, Connection))}
  */
-function dial (_switch, returnFSM) {
-  /**
-   * Creates a new dialer and immediately begins dialing to the given `peer`
-   *
-   * @param {PeerInfo} peer
-   * @param {string} protocol
-   * @param {function(Error, Connection)} callback
-   * @returns {Connection}
-   */
-  return (peer, protocol, callback) => {
-    if (typeof protocol === 'function') {
-      callback = protocol
-      protocol = null
-    }
+const dial = function (_switch, returnFSM) {
+    /**
+     * Creates a new dialer and immediately begins dialing to the given `peer`
+     *
+     * @param {PeerInfo} peer
+     * @param {string} protocol
+     * @param {function(Error, Connection)} callback
+     * @returns {Connection}
+     */
+    return (peer, protocol, callback) => {
+        if (is.function(protocol)) {
+            callback = protocol;
+            protocol = null;
+        }
 
-    callback = once(callback || function noop () {})
+        callback = once(callback || function noop() { });
 
-    const peerInfo = getPeerInfo(peer, _switch._peerBook)
-    const b58Id = peerInfo.id.toB58String()
+        const peerInfo = getPeerInfo(peer, _switch._peerBook);
+        const b58Id = peerInfo.id.toB58String();
 
-    log(`dialing to ${b58Id.slice(0, 8)} with protocol ${protocol || 'unknown'}`)
+        log(`dialing to ${b58Id.slice(0, 8)} with protocol ${protocol || "unknown"}`);
 
-    let connection = _switch.connection.getOne(b58Id)
+        let connection = _switch.connection.getOne(b58Id);
 
-    if (!ConnectionFSM.isConnectionFSM(connection)) {
-      connection = new ConnectionFSM({
-        _switch,
-        peerInfo,
-        muxer: null,
-        conn: null
-      })
-      connection.once('error', (err) => callback(err))
-      connection.once('connected', () => connection.protect())
-      connection.once('private', () => connection.encrypt())
-      connection.once('encrypted', () => connection.upgrade())
-      connection.once('muxed', () => {
-        maybePerformHandshake({
-          protocol,
-          proxyConnection,
-          connection,
-          callback
-        })
-      })
-      connection.once('unmuxed', () => {
-        maybePerformHandshake({
-          protocol,
-          proxyConnection,
-          connection,
-          callback
-        })
-      })
-    }
+        const proxyConnection = new Connection();
+        proxyConnection.setPeerInfo(peerInfo);
 
-    const proxyConnection = new Connection()
-    proxyConnection.setPeerInfo(peerInfo)
+        if (!ConnectionFSM.isConnectionFSM(connection)) {
+            connection = new ConnectionFSM({
+                _switch,
+                peerInfo,
+                muxer: null,
+                conn: null
+            });
+            connection.once("error", (err) => callback(err));
+            connection.once("connected", () => connection.protect());
+            connection.once("private", () => connection.encrypt());
+            connection.once("encrypted", () => connection.upgrade());
+            connection.once("muxed", () => {
+                maybePerformHandshake({
+                    protocol,
+                    proxyConnection,
+                    connection,
+                    callback
+                });
+            });
+            connection.once("unmuxed", () => {
+                maybePerformHandshake({
+                    protocol,
+                    proxyConnection,
+                    connection,
+                    callback
+                });
+            });
+        }
 
-    setImmediate(() => {
-      // If we have a muxed connection, attempt the protocol handshake
-      if (connection.getState() === 'MUXED') {
-        maybePerformHandshake({
-          protocol,
-          proxyConnection,
-          connection,
-          callback
-        })
-      } else {
-        connection.dial()
-      }
-    })
+        setImmediate(() => {
+            // If we have a muxed connection, attempt the protocol handshake
+            if (connection.getState() === "MUXED") {
+                maybePerformHandshake({
+                    protocol,
+                    proxyConnection,
+                    connection,
+                    callback
+                });
+            } else {
+                connection.dial();
+            }
+        });
 
-    return returnFSM ? connection : proxyConnection
-  }
-}
+        return returnFSM ? connection : proxyConnection;
+    };
+};
 
-module.exports = dial
+module.exports = dial;

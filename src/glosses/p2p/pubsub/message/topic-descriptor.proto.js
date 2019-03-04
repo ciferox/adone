@@ -1,4 +1,4 @@
-'use strict'
+
 module.exports = `
 // topicCID = cid(merkledag_protobuf(topicDescriptor)); (not the topic.name)
 message TopicDescriptor {
@@ -27,4 +27,4 @@ message TopicDescriptor {
       WOT = 2; // web of trust, certificates can allow publisher set to grow
     }
   }
-}`
+}`;

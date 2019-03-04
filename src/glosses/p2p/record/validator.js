@@ -1,7 +1,7 @@
-'use strict'
 
-const bsplit = require('buffer-split')
-const errcode = require('err-code')
+
+const bsplit = require("buffer-split");
+const errcode = require("err-code");
 
 /**
  * Checks a record and ensures it is still valid.
@@ -13,26 +13,26 @@ const errcode = require('err-code')
  * @returns {undefined}
  */
 const verifyRecord = (validators, record, callback) => {
-  const key = record.key
-  const parts = bsplit(key, Buffer.from('/'))
+    const key = record.key;
+    const parts = bsplit(key, Buffer.from("/"));
 
-  if (parts.length < 3) {
+    if (parts.length < 3) {
     // No validator available
-    return callback()
-  }
+        return callback();
+    }
 
-  const validator = validators[parts[1].toString()]
+    const validator = validators[parts[1].toString()];
 
-  if (!validator) {
-    const errMsg = `Invalid record keytype`
+    if (!validator) {
+        const errMsg = "Invalid record keytype";
 
-    return callback(errcode(new Error(errMsg), 'ERR_INVALID_RECORD_KEY_TYPE'))
-  }
+        return callback(errcode(new Error(errMsg), "ERR_INVALID_RECORD_KEY_TYPE"));
+    }
 
-  validator.func(key, record.value, callback)
-}
+    validator.func(key, record.value, callback);
+};
 
 module.exports = {
-  verifyRecord: verifyRecord,
-  validators: require('./validators')
-}
+    verifyRecord,
+    validators: require("./validators")
+};

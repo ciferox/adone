@@ -1,20 +1,21 @@
-const waterfall = require('async/waterfall')
-const each = require('async/each')
-const timeout = require('async/timeout')
+const waterfall = require("async/waterfall");
+const each = require("async/each");
+const timeout = require("async/timeout");
 
-const errcode = require('err-code')
+const errcode = require("err-code");
 
-const utils = require('./utils')
-const Message = require('./message')
-const c = require('./constants')
-const Query = require('./query')
-const LimitedPeerList = require('./limited-peer-list')
+const utils = require("./utils");
+const Message = require("./message");
+const c = require("./constants");
+const Query = require("./query");
+const LimitedPeerList = require("./limited-peer-list");
 
 const {
+    is,
     p2p: { record: libp2pRecord, PeerId, PeerInfo }
 } = adone;
 
-const Record = libp2pRecord.Record
+const Record = libp2pRecord.Record;
 
 module.exports = (dht) => ({
     /**
@@ -29,23 +30,23 @@ module.exports = (dht) => ({
     _nearestPeersToQuery(msg, callback) {
         utils.convertBuffer(msg.key, (err, key) => {
             if (err) {
-                return callback(err)
+                return callback(err);
             }
-            let ids
+            let ids;
             try {
-                ids = dht.routingTable.closestPeers(key, dht.ncp)
+                ids = dht.routingTable.closestPeers(key, dht.ncp);
             } catch (err) {
-                return callback(err)
+                return callback(err);
             }
 
             callback(null, ids.map((p) => {
                 if (dht.peerBook.has(p)) {
-                    return dht.peerBook.get(p)
-                } else {
-                    return dht.peerBook.put(new PeerInfo(p))
-                }
-            }))
-        })
+                    return dht.peerBook.get(p);
+                } 
+                return dht.peerBook.put(new PeerInfo(p));
+                
+            }));
+        });
     },
     /**
      * Get the nearest peers to the given query, but iff closer
@@ -58,24 +59,24 @@ module.exports = (dht) => ({
      * @private
      */
     _betterPeersToQuery(msg, peer, callback) {
-        dht._log('betterPeersToQuery')
+        dht._log("betterPeersToQuery");
         dht._nearestPeersToQuery(msg, (err, closer) => {
             if (err) {
-                return callback(err)
+                return callback(err);
             }
 
             const filtered = closer.filter((closer) => {
                 if (dht._isSelf(closer.id)) {
                     // Should bail, not sure
-                    dht._log.error('trying to return self as closer')
-                    return false
+                    dht._log.error("trying to return self as closer");
+                    return false;
                 }
 
-                return !closer.id.isEqual(peer.id)
-            })
+                return !closer.id.isEqual(peer.id);
+            });
 
-            callback(null, filtered)
-        })
+            callback(null, filtered);
+        });
     },
     /**
      * Try to fetch a given record by from the local datastore.
@@ -90,50 +91,50 @@ module.exports = (dht) => ({
      *@private
      */
     _checkLocalDatastore(key, callback) {
-        dht._log('checkLocalDatastore: %b', key)
-        const dsKey = utils.bufferToKey(key)
+        dht._log("checkLocalDatastore: %b", key);
+        const dsKey = utils.bufferToKey(key);
 
         // 2. fetch value from ds
         dht.datastore.has(dsKey, (err, exists) => {
             if (err) {
-                return callback(err)
+                return callback(err);
             }
             if (!exists) {
-                return callback()
+                return callback();
             }
 
             dht.datastore.get(dsKey, (err, res) => {
                 if (err) {
-                    return callback(err)
+                    return callback(err);
                 }
 
-                const rawRecord = res
+                const rawRecord = res;
 
                 // 4. create record from the returned bytes
-                let record
+                let record;
                 try {
-                    record = Record.deserialize(rawRecord)
+                    record = Record.deserialize(rawRecord);
                 } catch (err) {
-                    return callback(err)
+                    return callback(err);
                 }
 
                 if (!record) {
-                    return callback(errcode(new Error('Invalid record'), 'ERR_INVALID_RECORD'))
+                    return callback(errcode(new Error("Invalid record"), "ERR_INVALID_RECORD"));
                 }
 
                 // 5. check validity
 
                 // compare recvtime with maxrecordage
-                if (record.timeReceived == null ||
+                if (is.nil(record.timeReceived) ||
                     utils.now() - record.timeReceived > c.MAX_RECORD_AGE) {
                     // 6. if: record is bad delete it and return
-                    return dht.datastore.delete(dsKey, callback)
+                    return dht.datastore.delete(dsKey, callback);
                 }
 
                 //    else: return good record
-                callback(null, record)
-            })
-        })
+                callback(null, record);
+            });
+        });
     },
     /**
      * Add the peer to the routing table and update it in the peerbook.
@@ -145,8 +146,8 @@ module.exports = (dht) => ({
      * @private
      */
     _add(peer, callback) {
-        peer = dht.peerBook.put(peer)
-        dht.routingTable.add(peer.id, callback)
+        peer = dht.peerBook.put(peer);
+        dht.routingTable.add(peer.id, callback);
     },
     /**
      * Verify a record without searching the DHT.
@@ -158,12 +159,12 @@ module.exports = (dht) => ({
      * @private
      */
     _verifyRecordLocally(record, callback) {
-        dht._log('verifyRecordLocally')
+        dht._log("verifyRecordLocally");
         libp2pRecord.validator.verifyRecord(
             dht.validators,
             record,
             callback
-        )
+        );
     },
     /**
      * Find close peers for a given peer
@@ -176,18 +177,18 @@ module.exports = (dht) => ({
      * @private
      */
     _closerPeersSingle(key, peer, callback) {
-        dht._log('_closerPeersSingle %b from %s', key, peer.toB58String())
+        dht._log("_closerPeersSingle %b from %s", key, peer.toB58String());
         dht._findPeerSingle(peer, new PeerId(key), (err, msg) => {
             if (err) {
-                return callback(err)
+                return callback(err);
             }
 
             const out = msg.closerPeers
                 .filter((pInfo) => !dht._isSelf(pInfo.id))
-                .map((pInfo) => dht.peerBook.put(pInfo))
+                .map((pInfo) => dht.peerBook.put(pInfo));
 
-            callback(null, out)
-        })
+            callback(null, out);
+        });
     },
     /**
      * Is the given peer id the peer id?
@@ -198,7 +199,7 @@ module.exports = (dht) => ({
      * @private
      */
     _isSelf(other) {
-        return other && dht.peerInfo.id.id.equals(other.id)
+        return other && dht.peerInfo.id.id.equals(other.id);
     },
     /**
      * Ask peer `peer` if they know where the peer with id `target` is.
@@ -211,9 +212,9 @@ module.exports = (dht) => ({
      * @private
      */
     _findPeerSingle(peer, target, callback) {
-        dht._log('_findPeerSingle %s', peer.toB58String())
-        const msg = new Message(Message.TYPES.FIND_NODE, target.id, 0)
-        dht.network.sendRequest(peer, msg, callback)
+        dht._log("_findPeerSingle %s", peer.toB58String());
+        const msg = new Message(Message.TYPES.FIND_NODE, target.id, 0);
+        dht.network.sendRequest(peer, msg, callback);
     },
     /**
      * Store the given key/value pair at the peer `target`.
@@ -227,20 +228,20 @@ module.exports = (dht) => ({
      * @private
      */
     _putValueToPeer(key, rec, target, callback) {
-        const msg = new Message(Message.TYPES.PUT_VALUE, key, 0)
-        msg.record = rec
+        const msg = new Message(Message.TYPES.PUT_VALUE, key, 0);
+        msg.record = rec;
 
         dht.network.sendRequest(target, msg, (err, resp) => {
             if (err) {
-                return callback(err)
+                return callback(err);
             }
 
             if (!resp.record.value.equals(Record.deserialize(rec).value)) {
-                return callback(errcode(new Error('value not put correctly'), 'ERR_PUT_VALUE_INVALID'))
+                return callback(errcode(new Error("value not put correctly"), "ERR_PUT_VALUE_INVALID"));
             }
 
-            callback()
-        })
+            callback();
+        });
     },
     /**
      * Store the given key/value pair locally, in the datastore.
@@ -252,7 +253,7 @@ module.exports = (dht) => ({
      * @private
      */
     _putLocal(key, rec, callback) {
-        dht.datastore.put(utils.bufferToKey(key), rec, callback)
+        dht.datastore.put(utils.bufferToKey(key), rec, callback);
     },
     /**
      * Get the value to the given key.
@@ -266,27 +267,27 @@ module.exports = (dht) => ({
      * @private
      */
     _get(key, options, callback) {
-        dht._log('_get %b', key)
+        dht._log("_get %b", key);
         waterfall([
             (cb) => dht.getMany(key, 16, options, cb),
             (vals, cb) => {
-                const recs = vals.map((v) => v.val)
-                let i = 0
+                const recs = vals.map((v) => v.val);
+                let i = 0;
 
                 try {
-                    i = libp2pRecord.selection.bestRecord(dht.selectors, key, recs)
+                    i = libp2pRecord.selection.bestRecord(dht.selectors, key, recs);
                 } catch (err) {
                     // Assume the first record if no selector available
-                    if (err.code !== 'ERR_NO_SELECTOR_FUNCTION_FOR_RECORD_KEY') {
-                        return cb(err)
+                    if (err.code !== "ERR_NO_SELECTOR_FUNCTION_FOR_RECORD_KEY") {
+                        return cb(err);
                     }
                 }
 
-                const best = recs[i]
-                dht._log('GetValue %b %s', key, best)
+                const best = recs[i];
+                dht._log("GetValue %b %s", key, best);
 
                 if (!best) {
-                    return cb(errcode(new Error('best value was not found'), 'ERR_NOT_FOUND'))
+                    return cb(errcode(new Error("best value was not found"), "ERR_NOT_FOUND"));
                 }
 
                 // Send out correction record
@@ -295,30 +296,30 @@ module.exports = (dht) => ({
                     (fixupRec, cb) => each(vals, (v, cb) => {
                         // no need to do anything
                         if (v.val.equals(best)) {
-                            return cb()
+                            return cb();
                         }
 
                         // correct ourself
                         if (dht._isSelf(v.from)) {
                             return dht._putLocal(key, fixupRec, (err) => {
                                 if (err) {
-                                    dht._log.error('Failed error correcting self', err)
+                                    dht._log.error("Failed error correcting self", err);
                                 }
-                                cb()
-                            })
+                                cb();
+                            });
                         }
 
                         // send correction
                         dht._putValueToPeer(key, fixupRec, v.from, (err) => {
                             if (err) {
-                                dht._log.error('Failed error correcting entry', err)
+                                dht._log.error("Failed error correcting entry", err);
                             }
-                            cb()
-                        })
+                            cb();
+                        });
                     }, cb)
-                ], (err) => cb(err, err ? null : best))
+                ], (err) => cb(err, err ? null : best));
             }
-        ], callback)
+        ], callback);
     },
     /**
      * Attempt to retrieve the value for the given key from
@@ -331,28 +332,28 @@ module.exports = (dht) => ({
      * @private
      */
     _getLocal(key, callback) {
-        dht._log('getLocal %b', key)
+        dht._log("getLocal %b", key);
 
         waterfall([
             (cb) => dht.datastore.get(utils.bufferToKey(key), cb),
             (raw, cb) => {
-                dht._log('found %b in local datastore', key)
-                let rec
+                dht._log("found %b in local datastore", key);
+                let rec;
                 try {
-                    rec = Record.deserialize(raw)
+                    rec = Record.deserialize(raw);
                 } catch (err) {
-                    return cb(err)
+                    return cb(err);
                 }
 
                 dht._verifyRecordLocally(rec, (err) => {
                     if (err) {
-                        return cb(err)
+                        return cb(err);
                     }
 
-                    cb(null, rec)
-                })
+                    cb(null, rec);
+                });
             }
-        ], callback)
+        ], callback);
     },
     /**
      * Query a particular peer for the value for the given key.
@@ -371,30 +372,30 @@ module.exports = (dht) => ({
         waterfall([
             (cb) => dht._getValueSingle(peer, key, cb),
             (msg, cb) => {
-                const peers = msg.closerPeers
-                const record = msg.record
+                const peers = msg.closerPeers;
+                const record = msg.record;
 
                 if (record) {
                     // We have a record
                     return dht._verifyRecordOnline(record, (err) => {
                         if (err) {
-                            const errMsg = 'invalid record received, discarded'
+                            const errMsg = "invalid record received, discarded";
 
-                            dht._log(errMsg)
-                            return cb(errcode(new Error(errMsg), 'ERR_INVALID_RECORD'))
+                            dht._log(errMsg);
+                            return cb(errcode(new Error(errMsg), "ERR_INVALID_RECORD"));
                         }
 
-                        return cb(null, record, peers)
-                    })
+                        return cb(null, record, peers);
+                    });
                 }
 
                 if (peers.length > 0) {
-                    return cb(null, null, peers)
+                    return cb(null, null, peers);
                 }
 
-                cb(errcode(new Error('Not found'), 'ERR_NOT_FOUND'))
+                cb(errcode(new Error("Not found"), "ERR_NOT_FOUND"));
             }
-        ], callback)
+        ], callback);
     },
     /**
      * Get a value via rpc call for the given parameters.
@@ -407,8 +408,8 @@ module.exports = (dht) => ({
      * @private
      */
     _getValueSingle(peer, key, callback) {
-        const msg = new Message(Message.TYPES.GET_VALUE, key, 0)
-        dht.network.sendRequest(peer, msg, callback)
+        const msg = new Message(Message.TYPES.GET_VALUE, key, 0);
+        dht.network.sendRequest(peer, msg, callback);
     },
     /**
      * Verify a record, fetching missing public keys from the network.
@@ -421,7 +422,7 @@ module.exports = (dht) => ({
      * @private
      */
     _verifyRecordOnline(record, callback) {
-        libp2pRecord.validator.verifyRecord(dht.validators, record, callback)
+        libp2pRecord.validator.verifyRecord(dht.validators, record, callback);
     },
     /**
      * Get the public key directly from a node.
@@ -433,25 +434,25 @@ module.exports = (dht) => ({
      * @private
      */
     _getPublicKeyFromNode(peer, callback) {
-        const pkKey = utils.keyForPublicKey(peer)
+        const pkKey = utils.keyForPublicKey(peer);
         waterfall([
             (cb) => dht._getValueSingle(peer, pkKey, cb),
             (msg, cb) => {
                 if (!msg.record || !msg.record.value) {
-                    return cb(errcode(new Error(`Node not responding with its public key: ${peer.toB58String()}`), 'ERR_INVALID_RECORD'))
+                    return cb(errcode(new Error(`Node not responding with its public key: ${peer.toB58String()}`), "ERR_INVALID_RECORD"));
                 }
 
-                PeerId.createFromPubKey(msg.record.value, cb)
+                PeerId.createFromPubKey(msg.record.value, cb);
             },
             (recPeer, cb) => {
                 // compare hashes of the pub key
                 if (!recPeer.isEqual(peer)) {
-                    return cb(errcode(new Error('public key does not match id'), 'ERR_PUBLIC_KEY_DOES_NOT_MATCH_ID'))
+                    return cb(errcode(new Error("public key does not match id"), "ERR_PUBLIC_KEY_DOES_NOT_MATCH_ID"));
                 }
 
-                cb(null, recPeer.pubKey)
+                cb(null, recPeer.pubKey);
             }
-        ], callback)
+        ], callback);
     },
     /**
      * Search the dht for up to `n` providers of the given CID.
@@ -465,82 +466,82 @@ module.exports = (dht) => ({
      * @private
      */
     _findNProviders(key, providerTimeout, n, callback) {
-        let out = new LimitedPeerList(n)
+        const out = new LimitedPeerList(n);
 
         dht.providers.getProviders(key, (err, provs) => {
             if (err) {
-                return callback(err)
+                return callback(err);
             }
 
             provs.forEach((id) => {
-                let info
+                let info;
                 if (dht.peerBook.has(id)) {
-                    info = dht.peerBook.get(id)
+                    info = dht.peerBook.get(id);
                 } else {
-                    info = dht.peerBook.put(new PeerInfo(id))
+                    info = dht.peerBook.put(new PeerInfo(id));
                 }
-                out.push(info)
-            })
+                out.push(info);
+            });
 
             // All done
             if (out.length >= n) {
-                return callback(null, out.toArray())
+                return callback(null, out.toArray());
             }
 
             // need more, query the network
-            const paths = []
+            const paths = [];
             const query = new Query(dht, key.buffer, (pathIndex, numPaths) => {
                 // This function body runs once per disjoint path
-                const pathSize = utils.pathSize(out.length - n, numPaths)
-                const pathProviders = new LimitedPeerList(pathSize)
-                paths.push(pathProviders)
+                const pathSize = utils.pathSize(out.length - n, numPaths);
+                const pathProviders = new LimitedPeerList(pathSize);
+                paths.push(pathProviders);
 
                 // Here we return the query function to use on this particular disjoint path
                 return (peer, cb) => {
                     waterfall([
                         (cb) => dht._findProvidersSingle(peer, key, cb),
                         (msg, cb) => {
-                            const provs = msg.providerPeers
-                            dht._log('(%s) found %s provider entries', dht.peerInfo.id.toB58String(), provs.length)
+                            const provs = msg.providerPeers;
+                            dht._log("(%s) found %s provider entries", dht.peerInfo.id.toB58String(), provs.length);
 
                             provs.forEach((prov) => {
-                                pathProviders.push(dht.peerBook.put(prov))
-                            })
+                                pathProviders.push(dht.peerBook.put(prov));
+                            });
 
                             // hooray we have all that we want
                             if (pathProviders.length >= pathSize) {
-                                return cb(null, { success: true })
+                                return cb(null, { success: true });
                             }
 
                             // it looks like we want some more
                             cb(null, {
                                 closerPeers: msg.closerPeers
-                            })
+                            });
                         }
-                    ], cb)
-                }
-            })
+                    ], cb);
+                };
+            });
 
-            const peers = dht.routingTable.closestPeers(key.buffer, c.ALPHA)
+            const peers = dht.routingTable.closestPeers(key.buffer, c.ALPHA);
 
             timeout((cb) => query.run(peers, cb), providerTimeout)((err) => {
                 // combine peers from each path
                 paths.forEach((path) => {
                     path.toArray().forEach((peer) => {
-                        out.push(peer)
-                    })
-                })
+                        out.push(peer);
+                    });
+                });
 
                 if (err) {
-                    if (err.code === 'ETIMEDOUT' && out.length > 0) {
-                        return callback(null, out.toArray())
+                    if (err.code === "ETIMEDOUT" && out.length > 0) {
+                        return callback(null, out.toArray());
                     }
-                    return callback(err)
+                    return callback(err);
                 }
 
-                callback(null, out.toArray())
-            })
-        })
+                callback(null, out.toArray());
+            });
+        });
     },
     /**
      * Check for providers from a single node.
@@ -553,7 +554,7 @@ module.exports = (dht) => ({
      * @private
      */
     _findProvidersSingle(peer, key, callback) {
-        const msg = new Message(Message.TYPES.GET_PROVIDERS, key.buffer, 0)
-        dht.network.sendRequest(peer, msg, callback)
+        const msg = new Message(Message.TYPES.GET_PROVIDERS, key.buffer, 0);
+        dht.network.sendRequest(peer, msg, callback);
     }
-})
+});

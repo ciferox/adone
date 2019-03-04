@@ -1,4 +1,4 @@
-'use strict'
+
 
 /**
  * Best record selector, for public key records.
@@ -10,7 +10,7 @@
  * @returns {number}
  */
 const publicKeySelector = (k, records) => {
-  return 0
-}
+    return 0;
+};
 
-module.exports = publicKeySelector
+module.exports = publicKeySelector;

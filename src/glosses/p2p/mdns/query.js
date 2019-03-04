@@ -1,35 +1,37 @@
-const os = require('os')
-const debug = require('debug')
-const log = debug('libp2p:mdns')
-const Multiaddr = require('multiaddr')
+const os = require("os");
+const debug = require("debug");
+const log = debug("libp2p:mdns");
+const Multiaddr = require("multiaddr");
 
 const {
     p2p: { PeerId, PeerInfo, TCP }
 } = adone;
 
-const tcp = new TCP()
+const tcp = new TCP();
 
 
 module.exports = {
 
-    queryLAN: function (mdns, serviceTag, interval) {
+    queryLAN(mdns, serviceTag, interval) {
         const query = () => {
-            log('query', serviceTag)
+            log("query", serviceTag);
             mdns.query({
                 questions: [{
                     name: serviceTag,
-                    type: 'PTR'
+                    type: "PTR"
                 }]
-            })
-        }
+            });
+        };
 
         // Immediately start a query, then do it every interval.
-        query()
-        return setInterval(query, interval)
+        query();
+        return setInterval(query, interval);
     },
 
-    gotResponse: function (rsp, peerInfo, serviceTag, callback) {
-        if (!rsp.answers) { return }
+    gotResponse(rsp, peerInfo, serviceTag, callback) {
+        if (!rsp.answers) {
+            return; 
+        }
 
         const answers = {
             ptr: {},
@@ -37,119 +39,123 @@ module.exports = {
             txt: {},
             a: [],
             aaaa: []
-        }
+        };
 
         rsp.answers.forEach((answer) => {
             switch (answer.type) {
-                case 'PTR': answers.ptr = answer; break
-                case 'SRV': answers.srv = answer; break
-                case 'TXT': answers.txt = answer; break
-                case 'A': answers.a.push(answer); break
-                case 'AAAA': answers.aaaa.push(answer); break
-                default: break
+                case "PTR": answers.ptr = answer; break;
+                case "SRV": answers.srv = answer; break;
+                case "TXT": answers.txt = answer; break;
+                case "A": answers.a.push(answer); break;
+                case "AAAA": answers.aaaa.push(answer); break;
+                default: break;
             }
-        })
+        });
 
         if (answers.ptr.name !== serviceTag) {
-            return
+            return;
         }
 
-        const b58Id = answers.txt.data[0].toString()
-        const port = answers.srv.data.port
-        const multiaddrs = []
+        const b58Id = answers.txt.data[0].toString();
+        const port = answers.srv.data.port;
+        const multiaddrs = [];
 
         answers.a.forEach((a) => {
-            multiaddrs.push(new Multiaddr('/ip4/' + a.data + '/tcp/' + port))
-        })
+            multiaddrs.push(new Multiaddr(`/ip4/${a.data}/tcp/${port}`));
+        });
         answers.aaaa.forEach((a) => {
-            multiaddrs.push(new Multiaddr('/ip6/' + a.data + '/tcp/' + port))
-        })
+            multiaddrs.push(new Multiaddr(`/ip6/${a.data}/tcp/${port}`));
+        });
 
         if (peerInfo.id.toB58String() === b58Id) {
-            return // replied to myself, ignore
+            return; // replied to myself, ignore
         }
 
-        log('peer found -', b58Id)
+        log("peer found -", b58Id);
 
-        const peerId = PeerId.createFromB58String(b58Id)
+        const peerId = PeerId.createFromB58String(b58Id);
 
         PeerInfo.create(peerId, (err, peerFound) => {
             if (err) {
-                return log('Error creating PeerInfo from new found peer', err)
+                return log("Error creating PeerInfo from new found peer", err);
             }
 
-            multiaddrs.forEach((addr) => peerFound.multiaddrs.add(addr))
+            multiaddrs.forEach((addr) => peerFound.multiaddrs.add(addr));
 
-            callback(null, peerFound)
-        })
+            callback(null, peerFound);
+        });
     },
 
-    gotQuery: function (qry, mdns, peerInfo, serviceTag, broadcast) {
-        if (!broadcast) { return }
+    gotQuery(qry, mdns, peerInfo, serviceTag, broadcast) {
+        if (!broadcast) {
+            return; 
+        }
 
-        const multiaddrs = tcp.filter(peerInfo.multiaddrs.toArray())
+        const multiaddrs = tcp.filter(peerInfo.multiaddrs.toArray());
         // Only announce TCP for now
-        if (multiaddrs.length === 0) { return }
+        if (multiaddrs.length === 0) {
+            return; 
+        }
 
         if (qry.questions[0] && qry.questions[0].name === serviceTag) {
-            const answers = []
+            const answers = [];
 
             answers.push({
                 name: serviceTag,
-                type: 'PTR',
-                class: 'IN',
+                type: "PTR",
+                class: "IN",
                 ttl: 120,
-                data: peerInfo.id.toB58String() + '.' + serviceTag
-            })
+                data: `${peerInfo.id.toB58String()}.${serviceTag}`
+            });
 
             // Only announce TCP multiaddrs for now
-            const port = multiaddrs[0].toString().split('/')[4]
+            const port = multiaddrs[0].toString().split("/")[4];
 
             answers.push({
-                name: peerInfo.id.toB58String() + '.' + serviceTag,
-                type: 'SRV',
-                class: 'IN',
+                name: `${peerInfo.id.toB58String()}.${serviceTag}`,
+                type: "SRV",
+                class: "IN",
                 ttl: 120,
                 data: {
                     priority: 10,
                     weight: 1,
-                    port: port,
+                    port,
                     target: os.hostname()
                 }
-            })
+            });
 
             answers.push({
-                name: peerInfo.id.toB58String() + '.' + serviceTag,
-                type: 'TXT',
-                class: 'IN',
+                name: `${peerInfo.id.toB58String()}.${serviceTag}`,
+                type: "TXT",
+                class: "IN",
                 ttl: 120,
                 data: peerInfo.id.toB58String()
-            })
+            });
 
             multiaddrs.forEach((ma) => {
-                if (ma.protoNames()[0] === 'ip4') {
+                if (ma.protoNames()[0] === "ip4") {
                     answers.push({
                         name: os.hostname(),
-                        type: 'A',
-                        class: 'IN',
+                        type: "A",
+                        class: "IN",
                         ttl: 120,
-                        data: ma.toString().split('/')[2]
-                    })
-                    return
+                        data: ma.toString().split("/")[2]
+                    });
+                    return;
                 }
-                if (ma.protoNames()[0] === 'ip6') {
+                if (ma.protoNames()[0] === "ip6") {
                     answers.push({
                         name: os.hostname(),
-                        type: 'AAAA',
-                        class: 'IN',
+                        type: "AAAA",
+                        class: "IN",
                         ttl: 120,
-                        data: ma.toString().split('/')[2]
-                    })
+                        data: ma.toString().split("/")[2]
+                    });
                 }
-            })
+            });
 
-            log('responding to query')
-            mdns.respond(answers)
+            log("responding to query");
+            mdns.respond(answers);
         }
     }
-}
+};

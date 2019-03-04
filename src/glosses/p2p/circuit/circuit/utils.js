@@ -1,7 +1,8 @@
-const multiaddr = require('multiaddr')
-const proto = require('../protocol')
+const multiaddr = require("multiaddr");
+const proto = require("../protocol");
 
 const {
+    is,
     p2p: { PeerId, PeerInfo }
 } = adone;
 
@@ -12,17 +13,17 @@ module.exports = function (swarm) {
      * @param {Multiaddr|PeerInfo} peer
      * @return {*}
      */
-    function getB58String(peer) {
-        let b58Id = null
+    const getB58String = function (peer) {
+        let b58Id = null;
         if (multiaddr.isMultiaddr(peer)) {
-            const relayMa = multiaddr(peer)
-            b58Id = relayMa.getPeerId()
+            const relayMa = multiaddr(peer);
+            b58Id = relayMa.getPeerId();
         } else if (PeerInfo.isPeerInfo(peer)) {
-            b58Id = peer.id.toB58String()
+            b58Id = peer.id.toB58String();
         }
 
-        return b58Id
-    }
+        return b58Id;
+    };
 
     /**
      * Helper to make a peer info from a multiaddrs
@@ -33,28 +34,28 @@ module.exports = function (swarm) {
      * @private
      */
     // TODO: this is ripped off of libp2p, should probably be a generally available util function
-    function peerInfoFromMa(peer) {
-        let p
+    const peerInfoFromMa = function (peer) {
+        let p;
         // PeerInfo
         if (PeerInfo.isPeerInfo(peer)) {
-            p = peer
+            p = peer;
             // Multiaddr instance (not string)
         } else if (multiaddr.isMultiaddr(peer)) {
-            const peerIdB58Str = peer.getPeerId()
+            const peerIdB58Str = peer.getPeerId();
             try {
-                p = swarm._peerBook.get(peerIdB58Str)
+                p = swarm._peerBook.get(peerIdB58Str);
             } catch (err) {
-                p = new PeerInfo(PeerId.createFromB58String(peerIdB58Str))
+                p = new PeerInfo(PeerId.createFromB58String(peerIdB58Str));
             }
-            p.multiaddrs.add(peer)
+            p.multiaddrs.add(peer);
             // PeerId
         } else if (PeerId.isPeerId(peer)) {
-            const peerIdB58Str = peer.toB58String()
-            p = swarm._peerBook.has(peerIdB58Str) ? swarm._peerBook.get(peerIdB58Str) : peer
+            const peerIdB58Str = peer.toB58String();
+            p = swarm._peerBook.has(peerIdB58Str) ? swarm._peerBook.get(peerIdB58Str) : peer;
         }
 
-        return p
-    }
+        return p;
+    };
 
     /**
      * Checks if peer has an existing connection
@@ -63,9 +64,7 @@ module.exports = function (swarm) {
      * @param {Swarm} swarm
      * @return {Boolean}
      */
-    function isPeerConnected(peerId) {
-        return swarm.muxedConns[peerId] || swarm.conns[peerId]
-    }
+    const isPeerConnected = (peerId) => swarm.muxedConns[peerId] || swarm.conns[peerId];
 
     /**
      * Write a response
@@ -75,14 +74,14 @@ module.exports = function (swarm) {
      * @param {Function} cb
      * @returns {*}
      */
-    function writeResponse(streamHandler, status, cb) {
-        cb = cb || (() => { })
+    const writeResponse = function (streamHandler, status, cb) {
+        cb = cb || (() => { });
         streamHandler.write(proto.CircuitRelay.encode({
             type: proto.CircuitRelay.Type.STATUS,
             code: status
-        }))
-        return cb()
-    }
+        }));
+        return cb();
+    };
 
     /**
      * Validate incomming HOP/STOP message
@@ -93,39 +92,39 @@ module.exports = function (swarm) {
      * @returns {*}
      * @param {Function} cb
      */
-    function validateAddrs(msg, streamHandler, type, cb) {
+    const validateAddrs = function (msg, streamHandler, type, cb) {
         try {
             msg.dstPeer.addrs.forEach((addr) => {
-                return multiaddr(addr)
-            })
+                return multiaddr(addr);
+            });
         } catch (err) {
             writeResponse(streamHandler, type === proto.CircuitRelay.Type.HOP
                 ? proto.CircuitRelay.Status.HOP_DST_MULTIADDR_INVALID
-                : proto.CircuitRelay.Status.STOP_DST_MULTIADDR_INVALID)
-            return cb(err)
+                : proto.CircuitRelay.Status.STOP_DST_MULTIADDR_INVALID);
+            return cb(err);
         }
 
         try {
             msg.srcPeer.addrs.forEach((addr) => {
-                return multiaddr(addr)
-            })
+                return multiaddr(addr);
+            });
         } catch (err) {
             writeResponse(streamHandler, type === proto.CircuitRelay.Type.HOP
                 ? proto.CircuitRelay.Status.HOP_SRC_MULTIADDR_INVALID
-                : proto.CircuitRelay.Status.STOP_SRC_MULTIADDR_INVALID)
-            return cb(err)
+                : proto.CircuitRelay.Status.STOP_SRC_MULTIADDR_INVALID);
+            return cb(err);
         }
 
-        return cb(null)
-    }
+        return cb(null);
+    };
 
-    function peerIdFromId(id) {
-        if (typeof id === 'string') {
-            return PeerId.createFromB58String(id)
+    const peerIdFromId = function (id) {
+        if (is.string(id)) {
+            return PeerId.createFromB58String(id);
         }
 
-        return PeerId.createFromBytes(id)
-    }
+        return PeerId.createFromBytes(id);
+    };
 
     return {
         getB58String,
@@ -134,5 +133,5 @@ module.exports = function (swarm) {
         validateAddrs,
         writeResponse,
         peerIdFromId
-    }
-}
+    };
+};

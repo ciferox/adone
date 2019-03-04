@@ -1,5 +1,7 @@
-/* global self */
+/**
+ * global self
+ */
 
-'use strict'
 
-module.exports = self.crypto || self.msCrypto
+
+module.exports = self.crypto || self.msCrypto;

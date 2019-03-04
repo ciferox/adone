@@ -1,34 +1,27 @@
-/* eslint-env mocha */
-'use strict'
+const getPeerInfo = require(adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "node", "get-peer-info"));
 
-const chai = require('chai')
-chai.use(require('dirty-chai'))
-const expect = chai.expect
+describe("getPeerInfo", () => {
+    it("should callback with error for invalid string multiaddr", (done) => {
+        getPeerInfo(null)("INVALID MULTIADDR", (err) => {
+            expect(err).to.exist();
+            expect(err.code).to.eql("ERR_INVALID_MULTIADDR");
+            done();
+        });
+    });
 
-const getPeerInfo = require('../src/get-peer-info')
+    it("should callback with error for invalid non-peer multiaddr", (done) => {
+        getPeerInfo(null)("/ip4/8.8.8.8/tcp/1080", (err) => {
+            expect(err).to.exist();
+            expect(err.code).to.equal("ERR_INVALID_MULTIADDR");
+            done();
+        });
+    });
 
-describe('getPeerInfo', () => {
-  it('should callback with error for invalid string multiaddr', (done) => {
-    getPeerInfo(null)('INVALID MULTIADDR', (err) => {
-      expect(err).to.exist()
-      expect(err.code).to.eql('ERR_INVALID_MULTIADDR')
-      done()
-    })
-  })
-
-  it('should callback with error for invalid non-peer multiaddr', (done) => {
-    getPeerInfo(null)('/ip4/8.8.8.8/tcp/1080', (err) => {
-      expect(err).to.exist()
-      expect(err.code).to.equal('ERR_INVALID_MULTIADDR')
-      done()
-    })
-  })
-
-  it('should callback with error for invalid non-peer multiaddr', (done) => {
-    getPeerInfo(null)(undefined, (err) => {
-      expect(err).to.exist()
-      expect(err.code).to.eql('ERR_INVALID_PEER_TYPE')
-      done()
-    })
-  })
-})
+    it("should callback with error for invalid non-peer multiaddr", (done) => {
+        getPeerInfo(null)(undefined, (err) => {
+            expect(err).to.exist();
+            expect(err.code).to.eql("ERR_INVALID_PEER_TYPE");
+            done();
+        });
+    });
+});

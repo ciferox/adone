@@ -1,61 +1,64 @@
-const EventEmitter = require('events').EventEmitter
-const Connection = require('interface-connection').Connection
-const toPull = require('stream-to-pull-stream')
-const pullCatch = require('pull-catch')
-const pull = require('pull-stream')
-const noop = () => { }
-const debug = require('debug')
-const log = debug('spdy')
-log.error = debug('spdy:error')
+const EventEmitter = require("events").EventEmitter;
+const toPull = require("stream-to-pull-stream");
+const pullCatch = require("pull-catch");
+const pull = require("pull-stream");
+const noop = () => { };
+const debug = require("debug");
+const log = debug("spdy");
+log.error = debug("spdy:error");
 
-function catchError(stream) {
+const {
+    p2p: { Connection }
+} = adone;
+
+const catchError = function (stream) {
     return {
         source: pull(
             stream.source,
             pullCatch()
         ),
         sink: stream.sink
-    }
-}
+    };
+};
 
-const SPDY_CODEC = require('./spdy-codec')
+const SPDY_CODEC = require("./spdy-codec");
 
 module.exports = class Muxer extends EventEmitter {
     constructor(conn, spdy) {
-        super()
+        super();
 
-        this.spdy = spdy
-        this.conn = conn
-        this.multicodec = SPDY_CODEC
+        this.spdy = spdy;
+        this.conn = conn;
+        this.multicodec = SPDY_CODEC;
 
-        spdy.start(3.1)
+        spdy.start(3.1);
 
         // The rest of the API comes by default with SPDY
-        spdy.on('close', (didError) => {
+        spdy.on("close", (didError) => {
             // If we get a fatal ok error, just close
             if (didError && /ok/i.test(didError.message)) {
-                didError = false
+                didError = false;
             }
-            spdy.destroyStreams(new Error('underlying socket has been closed'))
-            this.emit('close', didError)
-        })
+            spdy.destroyStreams(new Error("underlying socket has been closed"));
+            this.emit("close", didError);
+        });
 
-        spdy.on('error', (err) => {
+        spdy.on("error", (err) => {
             if (!err) {
-                return noop()
+                return noop();
             }
-            this.emit('error', err)
-        })
+            this.emit("error", err);
+        });
 
         // needed by other spdy impl that need the response headers
         // in order to confirm the stream can be open
-        spdy.on('stream', (stream) => {
+        spdy.on("stream", (stream) => {
             const muxedConn = new Connection(
                 catchError(toPull.duplex(stream)),
                 this.conn
-            )
-            this.emit('stream', muxedConn)
-        })
+            );
+            this.emit("stream", muxedConn);
+        });
     }
 
     /**
@@ -67,45 +70,45 @@ module.exports = class Muxer extends EventEmitter {
      * @returns {void}
      */
     emit(eventName, ...args) {
-        if (eventName === 'error' && !this._events.error) {
-            log.error('error', ...args)
+        if (eventName === "error" && !this._events.error) {
+            log.error("error", ...args);
         } else {
-            super.emit(eventName, ...args)
+            super.emit(eventName, ...args);
         }
     }
 
     // method added to enable pure stream muxer feeling
     newStream(callback) {
         if (!callback) {
-            callback = noop
+            callback = noop;
         }
 
         const stream = this.spdy.request({
-            method: 'POST',
-            path: '/',
+            method: "POST",
+            path: "/",
             headers: {}
         }, (err) => {
             if (err) {
-                return callback(err)
+                return callback(err);
             }
-            callback(null, conn)
-        })
+            callback(null, conn);
+        });
 
         const conn = new Connection(
             catchError(toPull.duplex(stream)),
             this.conn
-        )
+        );
 
-        return conn
+        return conn;
     }
 
     end(cb) {
-        cb = cb || noop
+        cb = cb || noop;
         this.spdy.end((err) => {
             if (err && /ok/i.test(err.message)) {
-                return cb()
+                return cb();
             }
-            cb(err)
-        })
+            cb(err);
+        });
     }
-}
+};

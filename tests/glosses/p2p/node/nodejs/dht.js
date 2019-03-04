@@ -1,168 +1,160 @@
-/* eslint-env mocha */
+const MemoryStore = require("interface-datastore").MemoryDatastore;
 
-'use strict'
+const createNode = require("../utils/create_node");
 
-const chai = require('chai')
-chai.use(require('dirty-chai'))
-const expect = chai.expect
+describe(".dht", () => {
+    describe("enabled", () => {
+        let nodeA;
+        const datastore = new MemoryStore();
 
-const MemoryStore = require('interface-datastore').MemoryDatastore
+        before((done) => {
+            createNode("/ip4/0.0.0.0/tcp/0", {
+                datastore
+            }, (err, node) => {
+                expect(err).to.not.exist();
+                nodeA = node;
 
-const createNode = require('./utils/create-node')
+                // Rewrite validators
+                nodeA._dht.validators.v = {
+                    func(key, publicKey, callback) {
+                        setImmediate(callback);
+                    },
+                    sign: false
+                };
 
-describe('.dht', () => {
-  describe('enabled', () => {
-    let nodeA
-    const datastore = new MemoryStore()
+                // Rewrite selectors
+                nodeA._dht.selectors.v = () => 0;
 
-    before(function (done) {
-      createNode('/ip4/0.0.0.0/tcp/0', {
-        datastore
-      }, (err, node) => {
-        expect(err).to.not.exist()
-        nodeA = node
+                // Start
+                nodeA.start(done);
+            });
+        });
 
-        // Rewrite validators
-        nodeA._dht.validators.v = {
-          func (key, publicKey, callback) {
-            setImmediate(callback)
-          },
-          sign: false
-        }
+        after((done) => {
+            nodeA.stop(done);
+        });
 
-        // Rewrite selectors
-        nodeA._dht.selectors.v = () => 0
+        it("should be able to dht.put a value to the DHT", (done) => {
+            const key = Buffer.from("key");
+            const value = Buffer.from("value");
 
-        // Start
-        nodeA.start(done)
-      })
-    })
+            nodeA.dht.put(key, value, (err) => {
+                expect(err).to.not.exist();
+                done();
+            });
+        });
 
-    after((done) => {
-      nodeA.stop(done)
-    })
+        it("should be able to dht.get a value from the DHT with options", (done) => {
+            const key = Buffer.from("/v/hello");
+            const value = Buffer.from("world");
 
-    it('should be able to dht.put a value to the DHT', (done) => {
-      const key = Buffer.from('key')
-      const value = Buffer.from('value')
+            nodeA.dht.put(key, value, (err) => {
+                expect(err).to.not.exist();
 
-      nodeA.dht.put(key, value, (err) => {
-        expect(err).to.not.exist()
-        done()
-      })
-    })
+                nodeA.dht.get(key, { maxTimeout: 3000 }, (err, res) => {
+                    expect(err).to.not.exist();
+                    expect(res).to.eql(value);
+                    done();
+                });
+            });
+        });
 
-    it('should be able to dht.get a value from the DHT with options', (done) => {
-      const key = Buffer.from('/v/hello')
-      const value = Buffer.from('world')
+        it("should be able to dht.get a value from the DHT with no options defined", (done) => {
+            const key = Buffer.from("/v/hello");
+            const value = Buffer.from("world");
 
-      nodeA.dht.put(key, value, (err) => {
-        expect(err).to.not.exist()
+            nodeA.dht.put(key, value, (err) => {
+                expect(err).to.not.exist();
 
-        nodeA.dht.get(key, { maxTimeout: 3000 }, (err, res) => {
-          expect(err).to.not.exist()
-          expect(res).to.eql(value)
-          done()
-        })
-      })
-    })
+                nodeA.dht.get(key, (err, res) => {
+                    expect(err).to.not.exist();
+                    expect(res).to.eql(value);
+                    done();
+                });
+            });
+        });
 
-    it('should be able to dht.get a value from the DHT with no options defined', (done) => {
-      const key = Buffer.from('/v/hello')
-      const value = Buffer.from('world')
+        it("should be able to dht.getMany a value from the DHT with options", (done) => {
+            const key = Buffer.from("/v/hello");
+            const value = Buffer.from("world");
 
-      nodeA.dht.put(key, value, (err) => {
-        expect(err).to.not.exist()
+            nodeA.dht.put(key, value, (err) => {
+                expect(err).to.not.exist();
 
-        nodeA.dht.get(key, (err, res) => {
-          expect(err).to.not.exist()
-          expect(res).to.eql(value)
-          done()
-        })
-      })
-    })
+                nodeA.dht.getMany(key, 1, { maxTimeout: 3000 }, (err, res) => {
+                    expect(err).to.not.exist();
+                    expect(res).to.exist();
+                    done();
+                });
+            });
+        });
 
-    it('should be able to dht.getMany a value from the DHT with options', (done) => {
-      const key = Buffer.from('/v/hello')
-      const value = Buffer.from('world')
+        it("should be able to dht.getMany a value from the DHT with no options defined", (done) => {
+            const key = Buffer.from("/v/hello");
+            const value = Buffer.from("world");
 
-      nodeA.dht.put(key, value, (err) => {
-        expect(err).to.not.exist()
+            nodeA.dht.put(key, value, (err) => {
+                expect(err).to.not.exist();
 
-        nodeA.dht.getMany(key, 1, { maxTimeout: 3000 }, (err, res) => {
-          expect(err).to.not.exist()
-          expect(res).to.exist()
-          done()
-        })
-      })
-    })
+                nodeA.dht.getMany(key, 1, (err, res) => {
+                    expect(err).to.not.exist();
+                    expect(res).to.exist();
+                    done();
+                });
+            });
+        });
+    });
 
-    it('should be able to dht.getMany a value from the DHT with no options defined', (done) => {
-      const key = Buffer.from('/v/hello')
-      const value = Buffer.from('world')
+    describe("disabled", () => {
+        let nodeA;
 
-      nodeA.dht.put(key, value, (err) => {
-        expect(err).to.not.exist()
+        before((done) => {
+            createNode("/ip4/0.0.0.0/tcp/0", {
+                config: {
+                    dht: {
+                        enabled: false
+                    }
+                }
+            }, (err, node) => {
+                expect(err).to.not.exist();
+                nodeA = node;
+                nodeA.start(done);
+            });
+        });
 
-        nodeA.dht.getMany(key, 1, (err, res) => {
-          expect(err).to.not.exist()
-          expect(res).to.exist()
-          done()
-        })
-      })
-    })
-  })
+        after((done) => {
+            nodeA.stop(done);
+        });
 
-  describe('disabled', () => {
-    let nodeA
+        it("should receive an error on dht.put if the dht is disabled", (done) => {
+            const key = Buffer.from("key");
+            const value = Buffer.from("value");
 
-    before(function (done) {
-      createNode('/ip4/0.0.0.0/tcp/0', {
-        config: {
-          dht: {
-            enabled: false
-          }
-        }
-      }, (err, node) => {
-        expect(err).to.not.exist()
-        nodeA = node
-        nodeA.start(done)
-      })
-    })
+            nodeA.dht.put(key, value, (err) => {
+                expect(err).to.exist();
+                expect(err.code).to.equal("ERR_DHT_DISABLED");
+                done();
+            });
+        });
 
-    after((done) => {
-      nodeA.stop(done)
-    })
+        it("should receive an error on dht.get if the dht is disabled", (done) => {
+            const key = Buffer.from("key");
 
-    it('should receive an error on dht.put if the dht is disabled', (done) => {
-      const key = Buffer.from('key')
-      const value = Buffer.from('value')
+            nodeA.dht.get(key, (err) => {
+                expect(err).to.exist();
+                expect(err.code).to.equal("ERR_DHT_DISABLED");
+                done();
+            });
+        });
 
-      nodeA.dht.put(key, value, (err) => {
-        expect(err).to.exist()
-        expect(err.code).to.equal('ERR_DHT_DISABLED')
-        done()
-      })
-    })
+        it("should receive an error on dht.getMany if the dht is disabled", (done) => {
+            const key = Buffer.from("key");
 
-    it('should receive an error on dht.get if the dht is disabled', (done) => {
-      const key = Buffer.from('key')
-
-      nodeA.dht.get(key, (err) => {
-        expect(err).to.exist()
-        expect(err.code).to.equal('ERR_DHT_DISABLED')
-        done()
-      })
-    })
-
-    it('should receive an error on dht.getMany if the dht is disabled', (done) => {
-      const key = Buffer.from('key')
-
-      nodeA.dht.getMany(key, 10, (err) => {
-        expect(err).to.exist()
-        expect(err.code).to.equal('ERR_DHT_DISABLED')
-        done()
-      })
-    })
-  })
-})
+            nodeA.dht.getMany(key, 10, (err) => {
+                expect(err).to.exist();
+                expect(err.code).to.equal("ERR_DHT_DISABLED");
+                done();
+            });
+        });
+    });
+});

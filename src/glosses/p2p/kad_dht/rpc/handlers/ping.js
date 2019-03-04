@@ -1,11 +1,11 @@
-'use strict'
 
-const utils = require('../../utils')
+
+const utils = require("../../utils");
 
 module.exports = (dht) => {
-  const log = utils.logger(dht.peerInfo.id, 'rpc:ping')
+    const log = utils.logger(dht.peerInfo.id, "rpc:ping");
 
-  /**
+    /**
    * Process `Ping` DHT messages.
    *
    * @param {PeerInfo} peer
@@ -13,8 +13,8 @@ module.exports = (dht) => {
    * @param {function(Error, Message)} callback
    * @returns {undefined}
    */
-  return function ping (peer, msg, callback) {
-    log('from %s', peer.id.toB58String())
-    callback(null, msg)
-  }
-}
+    return function ping(peer, msg, callback) {
+        log("from %s", peer.id.toB58String());
+        callback(null, msg);
+    };
+};

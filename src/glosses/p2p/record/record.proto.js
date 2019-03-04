@@ -1,4 +1,4 @@
-'use strict'
+
 module.exports = `// Record represents a dht record that contains a value
 // for a key value pair
 message Record {
@@ -16,4 +16,4 @@ message Record {
 
   // Time the record was received, set by receiver
   optional string timeReceived = 5;
-}`
+}`;
