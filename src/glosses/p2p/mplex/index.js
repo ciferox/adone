@@ -5,7 +5,7 @@ const Muxer = require("./muxer");
 const pump = require("pump");
 
 const {
-    p2p: { stream: { pullStreamToStream: toStream } }
+    stream: { pull2: { pullStreamToStream: toStream } }
 } = adone;
 
 function create(rawConn, isListener) {

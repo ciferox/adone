@@ -1,9 +1,7 @@
 const {
-    p2p: { stream: { pull, generate } }
+    stream: { pull2: pull }
 } = adone;
-
-const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "streams", ...args);
-const pair = require(srcPath("pair", "duplex"));
+const { pair, generate } = pull;
 
 const each = require("async/each");
 const eachLimit = require("async/eachLimit");
@@ -29,7 +27,7 @@ const marker = function (n, done) {
 };
 
 module.exports = (muxer, nStreams, nMsg, done, limit) => {
-    const p = pair();
+    const p = pair.duplex();
     const dialerSocket = p[0];
     const listenerSocket = p[1];
 

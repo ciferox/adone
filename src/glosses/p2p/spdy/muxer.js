@@ -5,8 +5,10 @@ log.error = debug("spdy:error");
 
 const {
     noop,
-    p2p: { Connection, stream: { pull, catch: pullCatch, streamToPullStream: toPull } }
+    p2p: { Connection },
+    stream: { pull2: pull }
 } = adone;
+const { catch: pullCatch, streamToPullStream: toPull } = pull;
 
 const catchError = function (stream) {
     return {

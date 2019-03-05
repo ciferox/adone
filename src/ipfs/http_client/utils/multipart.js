@@ -2,7 +2,7 @@ const Transform = require('stream').Transform
 const isNode = require('detect-node')
 
 const {
-    p2p: { stream: { pullStreamToStream, is: { source: isSource } } }
+    stream: { pull2: { pullStreamToStream, is: { source: isSource } } }
 } = adone;
 
 const PADDING = '--'

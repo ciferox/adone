@@ -5,15 +5,13 @@ const waterfall = require("async/waterfall");
 const sinon = require("sinon");
 
 const {
-    p2p: { Connection, PeerId, PeerInfo, stream: { pull: { pull }, protocolBuffers: pb } },
+    p2p: { Connection, PeerId, PeerInfo },
+    stream: { pull2: pull },
     std: { path }
 } = adone;
+const { values, asyncMap, pair, protocolBuffers: pb } = pull;
 
 const srcPath = (...args) => path.join(adone.ROOT_PATH, "lib", "glosses", ...args);
-
-const values = require(srcPath("p2p", "streams", "pull/sources/values"));
-const asyncMap = require(srcPath("p2p", "streams", "pull/throughs/async-map"));
-const pair = require(srcPath("p2p", "streams", "pair/duplex"));
 
 const Dialer = require(srcPath("p2p", "circuit", "circuit/dialer"));
 const proto = require(srcPath("p2p", "circuit", "protocol"));
@@ -77,7 +75,7 @@ describe("dialer tests", () => {
 
         let p = null;
         beforeEach(() => {
-            p = pair();
+            p = pair.duplex();
             fromConn = new Connection(p[0]);
 
             dialer.relayPeers = new Map();
@@ -206,7 +204,7 @@ describe("dialer tests", () => {
                     dialer._negotiateRelay.callThrough();
                     dialer._dialRelayHelper.callThrough();
                     peer = new PeerInfo(PeerId.createFromB58String("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE"));
-                    p = pair();
+                    p = pair.duplex();
                     conn = new Connection(p[1]);
                     cb();
                 }

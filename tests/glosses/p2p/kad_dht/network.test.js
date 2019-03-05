@@ -1,8 +1,11 @@
 const series = require("async/series");
 
 const {
-    p2p: { KadDHT, TCP, Switch, PeerBook, Connection, multiplex, stream: { pull, lengthPrefixed: lp } }
+    p2p: { KadDHT, TCP, Switch, PeerBook, Connection, multiplex },
+    stream: { pull2: pull }
 } = adone;
+const { lengthPrefixed: lp } = pull;
+
 const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "kad_dht", ...args);
 
 const Message = require(srcPath("message"));

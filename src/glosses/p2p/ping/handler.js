@@ -1,6 +1,7 @@
 const {
-    p2p: { stream: { pull: { pull }, handshake } }
+    stream: { pull2: pull }
 } = adone;
+const { handshake } = pull;
 
 const constants = require("./constants");
 const PROTOCOL = constants.PROTOCOL;

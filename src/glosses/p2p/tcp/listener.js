@@ -9,7 +9,8 @@ const {
     is,
     lodash: { includes },
     noop,
-    p2p: { Connection, stream: { streamToPullStream: toPull } },
+    p2p: { Connection },
+    stream: { pull2: { streamToPullStream } },
     std: { net, os }
 } = adone;
 
@@ -50,7 +51,7 @@ module.exports = (handler) => {
 
         log("new connection", addr.toString());
 
-        const s = toPull.duplex(socket);
+        const s = streamToPullStream.duplex(socket);
 
         s.getObservedAddrs = (cb) => {
             cb(null, [addr]);

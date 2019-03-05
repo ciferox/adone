@@ -5,16 +5,15 @@ const createInfos = utils.createInfos;
 
 const {
     is,
-    p2p: { Switch, PeerBook }
+    p2p: { Switch, PeerBook },
+    stream: { pull2: pull }
 } = adone;
-
-const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", ...args);
-const pair = require(srcPath("p2p", "streams", "pair/duplex"));
+const { pair } = pull;
 
 class MockTransport extends EventEmitter {
     constructor() {
         super();
-        this.conn = pair();
+        this.conn = pair.duplex();
     }
 
     dial(addr, cb) {

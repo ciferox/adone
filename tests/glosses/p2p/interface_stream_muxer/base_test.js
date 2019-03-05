@@ -1,9 +1,7 @@
-const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "streams", ...args);
-const pair = require(srcPath("pair", "duplex"));
-
 const {
-    p2p: { stream: { pull } }
+    stream: { pull2: pull }
 } = adone;
+const { pair } = pull;
 
 const closeAndWait = function (stream) {
     pull(
@@ -30,7 +28,7 @@ module.exports = (common) => {
         });
 
         it("Open a stream from the dialer", (done) => {
-            const p = pair();
+            const p = pair.duplex();
             const dialer = muxer.dialer(p[0]);
             const listener = muxer.listener(p[1]);
 
@@ -49,7 +47,7 @@ module.exports = (common) => {
         });
 
         it("Open a stream from the listener", (done) => {
-            const p = pair();
+            const p = pair.duplex();
             const dialer = muxer.dialer(p[0]);
             const listener = muxer.listener(p[1]);
 
@@ -68,7 +66,7 @@ module.exports = (common) => {
         });
 
         it("Open a stream on both sides", (done) => {
-            const p = pair();
+            const p = pair.duplex();
             const dialer = muxer.dialer(p[0]);
             const listener = muxer.listener(p[1]);
 
@@ -97,7 +95,7 @@ module.exports = (common) => {
         });
 
         it("Open a stream on one side, write, open a stream in the other side", (done) => {
-            const p = pair();
+            const p = pair.duplex();
             const dialer = muxer.dialer(p[0]);
             const listener = muxer.listener(p[1]);
 

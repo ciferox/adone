@@ -1,11 +1,8 @@
-const values = require("../../streams/pull/sources/values");
-const collect = require("../../streams/pull/sinks/collect");
-const empty = require("../../streams/pull/sources/empty");
-
 const {
     is,
-    p2p: { stream: { pull: { pull }, lengthPrefixed: lp, handshake } }
+    stream: { pull2: pull }
 } = adone;
+const { collect, values, empty, lengthPrefixed: lp, handshake } = pull;
 
 const debug = require("debug");
 const log = debug("libp2p:circuit:stream-handler");

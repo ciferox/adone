@@ -1,11 +1,11 @@
 const EventEmitter = require("events").EventEmitter;
-const empty = require("../streams/pull/sources/empty");
 const constants = require("./constants");
 const util = require("./util");
 
 const {
-    p2p: { stream: { pull: { pull }, handshake } }
+    stream: { pull2: pull }
 } = adone;
+const { empty, handshake } = pull;
 
 const rnd = util.rnd;
 const debug = require("debug");

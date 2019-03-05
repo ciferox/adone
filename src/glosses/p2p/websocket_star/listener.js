@@ -9,13 +9,14 @@ const once = require("once");
 const setImmediate = require("async/setImmediate");
 const utils = require("./utils");
 const cleanUrlSIO = utils.cleanUrlSIO;
-const through = require("../streams/pull/throughs/through");
 const ERRORS = require("./errors");
 
 const {
     is,
-    p2p: { crypto, Connection, stream: { pull: { pull }, socketioPullStream: sp } }
+    p2p: { crypto, Connection },
+    stream: { pull2: pull }
 } = adone;
+const { through, socketioPullStream: sp } = pull;
 
 const noop = once(() => { });
 

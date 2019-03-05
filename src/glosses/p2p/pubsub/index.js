@@ -1,5 +1,4 @@
 const EventEmitter = require("events");
-const empty = require("../streams/pull/sources/empty");
 const asyncEach = require("async/each");
 const TimeCache = require("time-cache");
 const debug = require("debug");
@@ -11,8 +10,9 @@ const message = require("./message");
 const nextTick = require("async/nextTick");
 
 const {
-    p2p: { stream: { pull: { pull } } }
+    stream: { pull2: pull }
 } = adone;
+const { empty } = pull;
 
 /**
  * PubsubBaseProtocol handles the peers and connections logic for pubsub routers

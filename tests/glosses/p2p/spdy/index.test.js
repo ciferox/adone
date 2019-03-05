@@ -1,9 +1,10 @@
 const {
-    p2p: { spdy, stream: { pull } }
+    p2p: { spdy },
+    stream: { pull2: pull }
 } = adone;
+const { pair } = pull;
 
 const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", ...args);
-const pair = require(srcPath("p2p", "streams", "pair/duplex"));
 
 describe("spdy-generic", () => {
     let listenerSocket;
@@ -13,7 +14,7 @@ describe("spdy-generic", () => {
     let dialer;
 
     before(() => {
-        const p = pair();
+        const p = pair.duplex();
         dialerSocket = p[0];
         listenerSocket = p[1];
     });

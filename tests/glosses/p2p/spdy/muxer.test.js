@@ -3,11 +3,11 @@ const sinon = require("sinon");
 const spdy = require("spdy-transport");
 
 const {
-    p2p: { stream: { pull, pullStreamToStream } }
+    stream: { pull2: pull }
 } = adone;
+const { pair, pullStreamToStream } = pull;
 
 const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", ...args);
-const pair = require(srcPath("p2p", "streams", "pair/duplex"));
 
 const Muxer = require(srcPath("p2p", "spdy", "muxer"));
 
@@ -20,7 +20,7 @@ describe("multiplex-muxer", () => {
     });
 
     it("can be created", () => {
-        const p = pair();
+        const p = pair.duplex();
         spdyMuxer = spdy.connection.create(pullStreamToStream(p), {
             protocol: "spdy",
             isServer: false

@@ -1,7 +1,4 @@
 const varint = require("varint");
-const map = require("../../../streams/pull/throughs/map");
-const collect = require("../../../streams/pull/sinks/collect");
-const take = require("../../../streams/pull/throughs/take");
 const util = require("../util");
 const select = require("../select");
 const once = require("once");
@@ -9,8 +6,10 @@ const once = require("once");
 const PROTOCOL_ID = require("./../constants").PROTOCOL_ID;
 
 const {
-    p2p: { Connection, stream: { pull: { pull }, lengthPrefixed: pullLP } }
+    p2p: { Connection },
+    stream: { pull2: pull }
 } = adone;
+const { collect, map, take, lengthPrefixed } = pull;
 
 /**
  *
@@ -113,7 +112,7 @@ class Dialer {
 
             pull(
                 conn,
-                pullLP.decode(),
+                lengthPrefixed.decode(),
                 collectLs(conn),
                 map(stringify),
                 collect((err, list) => {

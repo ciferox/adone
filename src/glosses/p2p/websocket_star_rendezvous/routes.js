@@ -7,7 +7,7 @@ const uuid = require("uuid");
 const client = require("prom-client");
 
 const {
-    p2p: { stream: { socketioPullStream: sp } }
+    stream: { pull2: { socketioPullStream: sp } }
 } = adone;
 
 const fake = {

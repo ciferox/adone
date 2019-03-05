@@ -1,9 +1,7 @@
-const map = require("../streams/pull/throughs/map");
-const asyncMap = require("../streams/pull/throughs/async-map");
-
 const {
-    p2p: { stream: { pull: { pull }, lengthPrefixed: lp } }
+    stream: { pull2: pull }
 } = adone;
+const { map, asyncMap, lengthPrefixed: lp } = pull;
 
 const lpOpts = {
     fixed: true,

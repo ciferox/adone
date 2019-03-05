@@ -9,8 +9,9 @@ const Message = require("./message");
 const utils = require("./utils");
 
 const {
-    p2p: { stream: { pull, lengthPrefixed: lp } }
+    stream: { pull2: pull }
 } = adone;
+const { lengthPrefixed: lp } = pull;
 
 /**
  * Handle network operations for the dht

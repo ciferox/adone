@@ -1,10 +1,9 @@
-const values = require("../streams/pull/sources/values");
-
 const msg = require("./message");
 
 const {
-    p2p: { stream: { pull: { pull }, lengthPrefixed: lp } }
+    stream: { pull2: pull }
 } = adone;
+const { values, lengthPrefixed: lp } = pull;
 
 module.exports = (conn, pInfoSelf) => {
     // send what I see from the other + my Info

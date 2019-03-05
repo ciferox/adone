@@ -1,11 +1,10 @@
-const values = require("../../streams/pull/sources/values");
-const collect = require("../../streams/pull/sinks/collect");
 const debug = require("debug");
 
 const {
     is,
-    p2p: { stream: { pull: { pull }, lengthPrefixed: pullLP } }
+    stream: { pull2: pull }
 } = adone;
+const { collect, values, lengthPrefixed } = pull;
 
 exports = module.exports;
 
@@ -16,7 +15,7 @@ const randomId = () => ((~~(Math.random() * 1e9)).toString(36));
 const encode = function (msg, callback) {
     pull(
         values(is.buffer(msg) ? [msg] : [Buffer.from(msg)]),
-        pullLP.encode(),
+        lengthPrefixed.encode(),
         collect((err, encoded) => {
             if (err) {
                 return callback(err);

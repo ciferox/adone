@@ -1,7 +1,7 @@
 const lsReadableStream = require("./ls-readable-stream");
 
 const {
-    p2p: { stream: { streamToPullStream } }
+    stream: { pull2: { streamToPullStream } }
 } = adone;
 
 

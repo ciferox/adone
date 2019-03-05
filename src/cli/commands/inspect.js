@@ -61,7 +61,7 @@ export default class Inspection extends Subsystem {
         ],
         options: [
             {
-                name: "--all",
+                name: ["--all", "-A"],
                 help: "Show all properties"
             },
             {
@@ -128,6 +128,14 @@ export default class Inspection extends Subsystem {
                 objectPath = result.objectPath;
             }
 
+            const showValue = opts.has("value");
+            const asObject = opts.has("object");
+            if ((showValue || asObject) && objectPath.length === 0) {
+                const tmp = namespace.split(".");
+                objectPath = tmp.pop();
+                namespace = tmp.join(".");
+            }
+
             let ns;
             switch (namespace) {
                 case "global":
@@ -140,8 +148,17 @@ export default class Inspection extends Subsystem {
                     ns = get(global, namespace);
             }
 
-            if (objectPath === "") {
+            if (objectPath.length === 0) {
                 const { util } = adone;
+
+                const omitProps = [];
+                const type = adone.meta.typeOf(ns);
+                switch (type) {
+                    case "class":
+                    case "function":
+                        omitProps.push("length", "name", "prototype");
+                        break;
+                }
 
                 const styleType = (type) => `{magenta-fg}${type}{/magenta-fg}`;
                 const styleName = (name) => `{green-fg}{bold}${name}{/bold}{/green-fg}`;
@@ -157,7 +174,7 @@ export default class Inspection extends Subsystem {
                 };
 
                 const list = [];
-                for (let [key, value] of util.entries(ns, { onlyEnumerable: false, all: opts.has("all") })) {
+                for (let [key, value] of util.entries(util.omit(ns, omitProps), { onlyEnumerable: false, all: opts.has("all") })) {
                     const origType = meta.typeOf(value);
                     let type = origType;
 
@@ -260,7 +277,6 @@ export default class Inspection extends Subsystem {
                 const type = meta.typeOf(obj);
 
                 let result;
-                const showValue = opts.has("value");
                 switch (type) {
                     case "function":
                     case "class":
@@ -268,7 +284,7 @@ export default class Inspection extends Subsystem {
                             ? adone.js.highlight(obj.toString())
                             : meta.inspect(get(ns, objectPath), {
                                 ...inspectOptions,
-                                asObject: opts.has("object")
+                                asObject
                             });
                         break;
                     default:

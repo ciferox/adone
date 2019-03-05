@@ -1,6 +1,7 @@
 const {
-    p2p: { stream: { pull: { pull }, stringify, split, is } }
+    stream: { pull2: pull }
 } = adone;
+const { stringify, split, is } = pull;
 
 const map = require("../pull/throughs/map");
 const filter = require("../pull/throughs/filter");

@@ -2,12 +2,13 @@ const parallel = require("async/parallel");
 const series = require("async/series");
 
 const {
-    p2p: { secio, Connection, PeerId, multiformat: { multistream }, stream: { pull } }
+    p2p: { secio, Connection, PeerId, multiformat: { multistream } },
+    stream: { pull2: pull }
 } = adone;
+const { pair } = pull;
 const { Listener, Dialer } = multistream;
 
 const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", ...args);
-const pair = require(srcPath("p2p", "streams", "pair/duplex"));
 
 const State = require(srcPath("p2p", "secio", "state"));
 const handshake = require(srcPath("p2p", "secio", "handshake"));
@@ -36,7 +37,7 @@ describe("secio", () => {
     });
 
     it("upgrades a connection", (done) => {
-        const p = pair();
+        const p = pair.duplex();
 
         const aToB = secio.encrypt(peerA, new Connection(p[0]), peerB, (err) => expect(err).to.not.exist());
         const bToA = secio.encrypt(peerB, new Connection(p[1]), peerA, (err) => expect(err).to.not.exist());
@@ -57,7 +58,7 @@ describe("secio", () => {
     });
 
     it("works over multistream-select", (done) => {
-        const p = pair();
+        const p = pair.duplex();
 
         const listener = new Listener();
         const dialer = new Dialer();
@@ -98,7 +99,7 @@ describe("secio", () => {
     });
 
     it("establishes the connection even if the receiver does not know who is dialing", (done) => {
-        const p = pair();
+        const p = pair.duplex();
 
         const aToB = secio.encrypt(peerA, new Connection(p[0]), peerB, (err) => expect(err).to.not.exist());
         const bToA = secio.encrypt(peerB, new Connection(p[1]), undefined, (err) => expect(err).to.not.exist());
@@ -125,7 +126,7 @@ describe("secio", () => {
     });
 
     it("fails if we dialed to the wrong peer", (done) => {
-        const p = pair();
+        const p = pair.duplex();
         let count = 0;
 
         function check(err) {
@@ -141,7 +142,7 @@ describe("secio", () => {
     });
 
     it("bubbles errors from handshake failures properly", (done) => {
-        const p = pair();
+        const p = pair.duplex();
         const timeout = 60 * 1000 * 5;
         const stateA = new State(peerA, peerC, timeout, () => { });
         const stateB = new State(peerB, peerA, timeout, () => { });

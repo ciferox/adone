@@ -5,8 +5,10 @@ const utils = require("./utils");
 const config = require("./config");
 
 const {
-    p2p: { PubsubBaseProtocol, stream: { pull, lengthPrefixed: lp } }
+    p2p: { PubsubBaseProtocol },
+    stream: { pull2: pull }
 } = adone;
+const { lengthPrefixed: lp } = pull;
 
 const { message } = PubsubBaseProtocol;
 
@@ -51,7 +53,7 @@ class FloodSub extends PubsubBaseProtocol {
     _onDial(peerInfo, conn, callback) {
         super._onDial(peerInfo, conn, (err) => {
             if (err) {
-                return callback(err); 
+                return callback(err);
             }
             const idB58Str = peerInfo.id.toB58String();
             const peer = this.peers.get(idB58Str);
@@ -159,7 +161,7 @@ class FloodSub extends PubsubBaseProtocol {
     stop(callback) {
         super.stop((err) => {
             if (err) {
-                return callback(err); 
+                return callback(err);
             }
             this.subscriptions = new Set();
             callback();

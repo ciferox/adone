@@ -2,7 +2,7 @@ const util = require("./util");
 const writeEncoded = util.writeEncoded;
 
 const {
-    p2p: { stream: { handshake, lengthPrefixed: pullLP } }
+    stream: { pull2: { handshake, lengthPrefixed } }
 } = adone;
 
 const select = function (multicodec, callback, log) {
@@ -15,7 +15,7 @@ const select = function (multicodec, callback, log) {
     log(`writing multicodec: ${multicodec}`);
     writeEncoded(shake, Buffer.from(`${multicodec}\n`), callback);
 
-    pullLP.decodeFromReader(shake, (err, data) => {
+    lengthPrefixed.decodeFromReader(shake, (err, data) => {
         if (err) {
             return callback(err);
         }

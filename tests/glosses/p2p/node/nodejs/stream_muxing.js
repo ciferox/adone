@@ -5,7 +5,8 @@ const tryEcho = require("../utils/try_echo");
 const echo = require("../utils/echo");
 
 const {
-    p2p: { spdy, multiplex, stream: { mplex: pMplex } }
+    p2p: { spdy, multiplex },
+    stream: { pull2: { mplex: pMplex } }
 } = adone;
 
 const test = function (nodeA, nodeB, callback) {

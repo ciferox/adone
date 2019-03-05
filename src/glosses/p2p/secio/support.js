@@ -1,11 +1,11 @@
 const mh = require("multihashing-async");
-const values = require("../streams/pull/sources/values");
-const collect = require("../streams/pull/sinks/collect");
 const parallel = require("async/parallel");
 
 const {
-    p2p: { crypto, stream: { pull, lengthPrefixed: lp } }
+    p2p: { crypto },
+    stream: { pull2: pull }
 } = adone;
+const { values, collect, lengthPrefixed: lp } = pull;
 
 exports.exchanges = [
     "P-256",

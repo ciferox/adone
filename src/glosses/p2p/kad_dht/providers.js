@@ -8,7 +8,8 @@ const c = require("./constants");
 const utils = require("./utils");
 
 const {
-    p2p: { PeerId, stream: { pull } }
+    p2p: { PeerId },
+    stream: { pull2: pull }
 } = adone;
 
 /**

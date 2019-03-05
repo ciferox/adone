@@ -9,8 +9,10 @@ const MULTIPLEX_CODEC = require("./codec");
 const {
     is,
     noop,
-    p2p: { Connection, stream: { pull, catch: pullCatch, streamToPullStream: toPull } }
+    p2p: { Connection },
+    stream: { pull2: pull }
 } = adone;
+const { catch: pullCatch, streamToPullStream: toPull } = pull;
 
 
 // Catch error makes sure that even though we get the "Channel destroyed" error

@@ -729,7 +729,15 @@
                     "description": "Different streams and stream utilites",
                     "task": "transpile",
                     "src": "src/glosses/streams/**/*.js",
-                    "dst": "lib/glosses/streams"
+                    "dst": "lib/glosses/streams",
+                    "scheme": {
+                        "pull2": {
+                            "description": "Minimal Pipeable Pull-stream",
+                            "task": "transpile",
+                            "src": "src/glosses/streams/pull2/**/*.js",
+                            "dst": "lib/glosses/streams/pull2"
+                        }
+                    }
                 },
                 "system": {
                     "description": "System utilites",

@@ -11,7 +11,8 @@ const waterfall = require("async/waterfall");
 const multicodec = require("./../multicodec");
 
 const {
-    p2p: { PeerId, PeerInfo, stream: { pull: { pull } } }
+    p2p: { PeerId, PeerInfo },
+    stream: { pull2: pull }
 } = adone;
 
 const log = debug("libp2p:circuit:relay");

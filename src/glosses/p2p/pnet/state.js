@@ -2,8 +2,9 @@ const crypto = require("crypto");
 const debug = require("debug");
 
 const {
-    p2p: { stream: { pull, cat, defer: deferred, reader: Reader, pair } }
+    stream: { pull2: pull }
 } = adone;
+const { cat, defer: deferred, reader: Reader, pair } = pull;
 
 const cryptoStreams = require("./crypto");
 const NONCE_LENGTH = require("./key-generator").NONCE_LENGTH;

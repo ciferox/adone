@@ -1,6 +1,6 @@
 const {
     is,
-    p2p: { stream: { through } }
+    stream: { pull2: { through2 } }
 } = adone;
 
 const lazyConcat = function (buffers) {
@@ -41,7 +41,7 @@ module.exports = function block(size, opts) {
     let bufferSkip = 0;
     let emittedChunk = false;
 
-    return through(function transform(data) {
+    return through2(function transform(data) {
         if (is.number(data)) {
             data = Buffer.from([data]);
         }

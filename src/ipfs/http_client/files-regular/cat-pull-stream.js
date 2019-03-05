@@ -1,7 +1,7 @@
 const cleanCID = require('../utils/clean-cid')
 
 const {
-    p2p: { stream: { defer, streamToPullStream } },
+    stream: { pull2: { defer, streamToPullStream } },
     ipfs: { isIPFS }
 } = adone;
 

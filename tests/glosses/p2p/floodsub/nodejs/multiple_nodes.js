@@ -9,7 +9,7 @@ const first = utils.first;
 const createNode = utils.createNode;
 const expectSet = utils.expectSet;
 
-describe("multiple nodes (more than 2)", () => {
+describe.todo("multiple nodes (more than 2)", () => {
     describe("every peer subscribes to the topic", () => {
         describe("line", () => {
             // line

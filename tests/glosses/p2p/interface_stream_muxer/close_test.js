@@ -2,12 +2,11 @@ const parallel = require("async/parallel");
 const series = require("async/series");
 const multiaddr = require("multiaddr");
 
-const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "streams", ...args);
-const pair = require(srcPath("pair", "duplex"));
-
 const {
-    p2p: { TCP, stream: { pull } }
+    p2p: { TCP },
+    stream: { pull2: pull }
 } = adone;
+const { pair } = pull;
 
 const mh = multiaddr("/ip4/127.0.0.1/tcp/10000");
 
@@ -78,7 +77,7 @@ module.exports = (common) => {
         });
 
         it("closing one of the muxed streams doesn't close others", (done) => {
-            const p = pair();
+            const p = pair.duplex();
             const dialer = muxer.dialer(p[0]);
             const listener = muxer.listener(p[1]);
 
@@ -112,7 +111,7 @@ module.exports = (common) => {
         });
 
         it.skip("closing on spdy doesn't close until all the streams that are being muxed are closed", (done) => {
-            const p = pair();
+            const p = pair.duplex();
             const dialer = muxer.dial(p[0]);
             const listener = muxer.listen(p[1]);
 

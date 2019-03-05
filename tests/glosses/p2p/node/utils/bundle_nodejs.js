@@ -2,7 +2,8 @@ const defaultsDeep = require("@nodeutils/defaults-deep");
 
 const {
     is,
-    p2p: { Node, KadDHT, TCP, WS, MulticastDNS, Bootstrap, secio: SECIO, spdy, multiplex, stream: { mplex: PULLMPLEX } }
+    p2p: { Node, KadDHT, TCP, WS, MulticastDNS, Bootstrap, secio: SECIO, spdy, multiplex },
+    stream: { pull2: { mplex: PULLMPLEX } }
 } = adone;
 
 const mapMuxers = function (list) {

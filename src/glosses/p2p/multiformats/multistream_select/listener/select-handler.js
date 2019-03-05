@@ -2,7 +2,8 @@ const writeEncoded = require("../util.js").writeEncoded;
 const some = require("async/some");
 
 const {
-    p2p: { Connection, stream: { lengthPrefixed: lp, handshake } }
+    p2p: { Connection },
+    stream: { pull2: { lengthPrefixed, handshake } }
 } = adone;
 
 const selectHandler = function (rawConn, handlersMap, log) {
@@ -15,7 +16,7 @@ const selectHandler = function (rawConn, handlersMap, log) {
     const shake = stream.handshake;
 
     const next = function () {
-        lp.decodeFromReader(shake, (err, data) => {
+        lengthPrefixed.decodeFromReader(shake, (err, data) => {
             if (err) {
                 return cb(err);
             }

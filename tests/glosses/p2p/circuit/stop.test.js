@@ -2,7 +2,8 @@ const nodes = require("./fixtures/nodes");
 const waterfall = require("async/waterfall");
 
 const {
-    p2p: { Connection, PeerId, PeerInfo, stream: { handshake } },
+    p2p: { Connection, PeerId, PeerInfo },
+    stream: { pull2: { handshake } },
     std: { path }
 } = adone;
 

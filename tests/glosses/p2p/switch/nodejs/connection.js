@@ -2,8 +2,10 @@ const sinon = require("sinon");
 const parallel = require("async/parallel");
 
 const {
-    p2p: { Protector, Switch, Connection, secio, PeerBook, WS, spdy, stream: { pull, mplex: multiplex } }
+    p2p: { Protector, Switch, Connection, secio, PeerBook, WS, spdy },
+    stream: { pull2: pull }
 } = adone;
+const { mplex: multiplex } = pull;
 
 const generatePSK = Protector.generate;
 

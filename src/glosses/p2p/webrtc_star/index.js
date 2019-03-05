@@ -15,7 +15,8 @@ const cleanMultiaddr = utils.cleanMultiaddr;
 
 const {
     is,
-    p2p: { Connection, PeerId, PeerInfo, stream: { streamToPullStream: toPull } }
+    p2p: { Connection, PeerId, PeerInfo },
+    stream: { pull2: { streamToPullStream: toPull } }
 } = adone;
 
 const noop = once(() => { });

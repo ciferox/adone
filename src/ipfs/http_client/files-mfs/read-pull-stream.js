@@ -1,5 +1,5 @@
 const {
-    p2p: { stream: { defer, streamToPullStream } }
+    stream: { pull2: { defer, streamToPullStream } }
 } = adone;
 
 module.exports = (send) => {

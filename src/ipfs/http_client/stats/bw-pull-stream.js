@@ -1,8 +1,9 @@
 const transformChunk = require('./bw-util')
 
 const {
-    p2p: { stream: { pull, defer, streamToPullStream } }
+    stream: { pull2: pull }
 } = adone;
+const { defer, streamToPullStream } = pull;
 
 module.exports = (send) => {
     return (opts) => {

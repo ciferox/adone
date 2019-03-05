@@ -1,13 +1,12 @@
 const multiaddr = require("multiaddr");
 
 const {
-    p2p: { PeerInfo, identify, stream: { pull: { pull }, lengthPrefixed: lp } }
+    p2p: { PeerInfo, identify },
+    stream: { pull2: pull }
 } = adone;
+const { pair, collect, lengthPrefixed: lp } = pull;
 
 const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", ...args);
-
-const collect = require(srcPath("p2p", "streams", "pull/sinks/collect"));
-const pair = require(srcPath("p2p", "streams", "pair/duplex"));
 
 const msg = require(srcPath("p2p", "identify", "message"));
 
@@ -28,7 +27,7 @@ describe("identify.listener", () => {
     });
 
     it("works", (done) => {
-        const p = pair();
+        const p = pair.duplex();
 
         info.multiaddrs.add(multiaddr("/ip4/127.0.0.1/tcp/5002"));
 

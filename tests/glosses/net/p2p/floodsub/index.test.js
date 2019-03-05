@@ -6,7 +6,7 @@ const {
     lodash: { times: _times }
 } = adone;
 
-describe("floodsub", () => {
+describe.todo("floodsub", () => {
     describe("basics between 2 nodes", () => {
         const shouldNotHappen = function (msg) {
             assert.fail();

@@ -2,7 +2,8 @@ const multiaddr = require("multiaddr");
 
 const {
     noop,
-    p2p: { Connection, stream: { ws: { createServer } } },
+    p2p: { Connection },
+    stream: { pull2: { ws: { createServer } } },
     std: { os }
 } = adone;
 

@@ -1,5 +1,3 @@
-'use strict'
-
 const promisify = require('promisify-es6')
 const ConcatStream = require('concat-stream')
 const once = require('once')
@@ -9,7 +7,7 @@ const FileResultStreamConverter = require('../utils/file-result-stream-converter
 const SendFilesStream = require('../utils/send-files-stream')
 
 const {
-    p2p: { stream: { is: { source: isSource } } }
+    stream: { pull2: { is: { source: isSource } } }
 } = adone;
 
 module.exports = (send) => {

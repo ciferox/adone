@@ -1,7 +1,8 @@
 const assert = require("assert");
 
 const {
-    p2p: { Connection, stream: { pull } }
+    p2p: { Connection },
+    stream: { pull2: pull }
 } = adone;
 
 const Errors = require("./errors");

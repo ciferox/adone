@@ -1,13 +1,12 @@
 const multiaddr = require("multiaddr");
 
 const {
-    p2p: { identify, PeerInfo, stream: { pull: { pull }, lengthPrefixed: lp } }
+    p2p: { identify, PeerInfo },
+    stream: { pull2: pull }
 } = adone;
+const { pair, values, lengthPrefixed: lp } = pull;
 
 const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", ...args);
-
-const values = require(srcPath("p2p", "streams", "pull/sources/values"));
-const pair = require(srcPath("p2p", "streams", "pair/duplex"));
 
 const msg = require(srcPath("p2p", "identify", "message"));
 
@@ -27,7 +26,7 @@ describe("identify.dialer", () => {
     });
 
     it("works", (done) => {
-        const p = pair();
+        const p = pair.duplex();
         original.multiaddrs.add(multiaddr("/ip4/127.0.0.1/tcp/5002"));
         const input = msg.encode({
             protocolVersion: "ipfs/0.1.0",
@@ -59,7 +58,7 @@ describe("identify.dialer", () => {
     });
 
     it("does not crash with invalid listen addresses", (done) => {
-        const p = pair();
+        const p = pair.duplex();
         original.multiaddrs.add(multiaddr("/ip4/127.0.0.1/tcp/5002"));
         const input = msg.encode({
             protocolVersion: "ipfs/0.1.0",
@@ -83,7 +82,7 @@ describe("identify.dialer", () => {
     });
 
     it("does not crash with invalid observed address", (done) => {
-        const p = pair();
+        const p = pair.duplex();
         original.multiaddrs.add(multiaddr("/ip4/127.0.0.1/tcp/5002"));
         const input = msg.encode({
             protocolVersion: "ipfs/0.1.0",
@@ -107,7 +106,7 @@ describe("identify.dialer", () => {
     });
 
     it("should return an error with mismatched peerInfo data", (done) => {
-        const p = pair();
+        const p = pair.duplex();
         original.multiaddrs.add(multiaddr("/ip4/127.0.0.1/tcp/5002"));
         const input = msg.encode({
             protocolVersion: "ipfs/0.1.0",

@@ -11,7 +11,8 @@ const {
     is,
     lodash: { includes, isFunction },
     noop,
-    p2p: { Connection, stream: { streamToPullStream: toPull } }
+    p2p: { Connection },
+    stream: { pull2: { streamToPullStream } }
 } = adone;
 
 class TCP {
@@ -40,7 +41,7 @@ class TCP {
             callback();
         });
 
-        const socket = toPull.duplex(rawSocket);
+        const socket = streamToPullStream.duplex(rawSocket);
 
         const conn = new Connection(socket);
 

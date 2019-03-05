@@ -39,6 +39,5 @@ adone.lazify({
     spdy: "./spdy",
     multiplex: "./mplex",
 
-    multiformat: "./multiformats",
-    stream: "./streams"
+    multiformat: "./multiformats"
 }, adone.asNamespace(exports), require);

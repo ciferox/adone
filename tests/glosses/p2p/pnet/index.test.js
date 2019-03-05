@@ -1,14 +1,12 @@
 const parallel = require("async/parallel");
 
 const {
-    p2p: { Protector, PeerId, Connection, stream: { pull } }
+    p2p: { Protector, PeerId, Connection },
+    stream: { pull2: pull }
 } = adone;
+const { pair } = pull;
 
 const { errors, generate } = Protector;
-
-const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", ...args);
-const pair = require(srcPath("p2p", "streams", "pair/duplex"));
-
 
 const swarmKeyBuffer = Buffer.alloc(95);
 const wrongSwarmKeyBuffer = Buffer.alloc(95);
@@ -36,7 +34,7 @@ describe("private network", () => {
     });
 
     it("should protect a simple connection", (done) => {
-        const p = pair();
+        const p = pair.duplex();
         const protector = new Protector(swarmKeyBuffer);
 
         const aToB = protector.protect(new Connection(p[0]), (err) => {
@@ -62,7 +60,7 @@ describe("private network", () => {
     });
 
     it("should not connect to a peer with a different key", (done) => {
-        const p = pair();
+        const p = pair.duplex();
         const protector = new Protector(swarmKeyBuffer);
         const protectorB = new Protector(wrongSwarmKeyBuffer);
 

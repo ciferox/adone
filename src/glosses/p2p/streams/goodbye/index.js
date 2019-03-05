@@ -1,5 +1,5 @@
 const {
-    p2p: { stream: { pull } }
+    stream: { pull2: pull }
 } = adone;
 
 const endable = require("./endable");
@@ -16,7 +16,7 @@ module.exports = function (stream, goodbye) {
         sink: pull(
             //when the goodbye is received, allow the source to end.
             pull.filter((data) => {
-                if (data !== goodbye) {return true};
+                if (data !== goodbye) { return true };
                 e.end();
             }),
             stream.sink

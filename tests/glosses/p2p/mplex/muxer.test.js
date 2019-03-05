@@ -1,6 +1,8 @@
-const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", ...args);
-const pair = require(srcPath("p2p", "streams", "pair/duplex"));
+const {
+    stream: { pull2: { pair } }
+} = adone;
 
+const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", ...args);
 const Muxer = require(srcPath("p2p", "mplex", "muxer"));
 const Multiplex = require(srcPath("p2p", "mplex", "internals"));
 
@@ -9,7 +11,7 @@ describe("multiplex-muxer", () => {
     let multiplex;
 
     it("can be created", () => {
-        const p = pair();
+        const p = pair.duplex();
         multiplex = new Multiplex();
         muxer = new Muxer(p, multiplex);
     });
@@ -26,7 +28,7 @@ describe("multiplex-muxer", () => {
     });
 
     it("can be destroyed with an error", (done) => {
-        const p = pair();
+        const p = pair.duplex();
         const multiplex = new Multiplex();
         const muxer = new Muxer(p, multiplex);
         const error = new Error("bad things");
@@ -38,7 +40,7 @@ describe("multiplex-muxer", () => {
     });
 
     it("destroying with error does not throw with no listener", () => {
-        const p = pair();
+        const p = pair.duplex();
         const multiplex = new Multiplex();
         const muxer = new Muxer(p, multiplex);
         const error = new Error("bad things");

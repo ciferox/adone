@@ -31,7 +31,7 @@ class PubsubImplementation extends PubsubBaseProtocol {
     }
 }
 
-describe("pubsub base protocol", () => {
+describe.todo("pubsub base protocol", () => {
     describe("fresh nodes", () => {
         let nodeA;
         let nodeB;

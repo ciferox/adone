@@ -2,9 +2,11 @@ const sinon = require("sinon");
 const multiaddr = require("multiaddr");
 
 const {
-    p2p: { spdy, WS, stream: { pull, file } },
+    p2p: { spdy, WS },
+    stream: { pull2: pull },
     std: { fs, path }
 } = adone;
+const { file } = pull;
 
 const fixturePath = (...args) => path.join(__dirname, "..", "test_data", ...args);
 

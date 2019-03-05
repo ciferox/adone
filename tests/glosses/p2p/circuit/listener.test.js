@@ -4,14 +4,13 @@ const waterfall = require("async/waterfall");
 const multiaddr = require("multiaddr");
 
 const {
-    p2p: { Connection, PeerId, PeerInfo, stream: { pull: { pull }, handshake, lengthPrefixed: lp } },
+    p2p: { Connection, PeerId, PeerInfo },
+    stream: { pull2: pull },
     std: { path }
 } = adone;
+const { collect, values, handshake, lengthPrefixed: lp } = pull;
 
 const srcPath = (...args) => path.join(adone.ROOT_PATH, "lib", "glosses", ...args);
-
-const values = require(srcPath("p2p", "streams", "pull/sources/values"));
-const collect = require(srcPath("p2p", "streams", "pull/sinks/collect"));
 
 const Listener = require(srcPath("p2p", "circuit", "listener"));
 const proto = require(srcPath("p2p", "circuit", "protocol"));

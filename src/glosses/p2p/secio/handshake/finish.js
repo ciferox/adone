@@ -1,4 +1,3 @@
-const pullError = require("../../streams/pull/sources/error");
 const debug = require("debug");
 
 const log = debug("libp2p:secio");
@@ -8,8 +7,9 @@ const etm = require("../etm");
 const crypto = require("./crypto");
 
 const {
-    p2p: { stream: { pull: { pull }, handshake } }
+    stream: { pull2: pull }
 } = adone;
+const { handshake, error: pullError } = pull;
 
 // step 3. Finish
 // -- send expected message to verify encryption works (send local nonce)

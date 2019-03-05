@@ -9,7 +9,8 @@ const createListener = require("./listener");
 
 const {
     is,
-    p2p: { Connection, stream: { ws: { connect } } }
+    p2p: { Connection },
+    stream: { pull2: { ws: { connect } } }
 } = adone;
 
 class WebSockets {

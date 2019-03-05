@@ -4,7 +4,7 @@ const Muxer = require("./muxer");
 const SPDY_CODEC = require("./spdy-codec");
 
 const {
-    p2p: { stream: { pullStreamToStream: toStream } }
+    stream: { pull2: { pullStreamToStream: toStream } }
 } = adone;
 
 function create(rawConn, isListener) {

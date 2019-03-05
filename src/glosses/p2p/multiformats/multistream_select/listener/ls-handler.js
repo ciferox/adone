@@ -1,11 +1,11 @@
-const values = require("../../../streams/pull/sources/values");
 const varint = require("varint");
 
 const {
-    p2p: { stream: { pull: { pull }, lengthPrefixed: pullLP } }
+    stream: { pull2: pull }
 } = adone;
+const { values, lengthPrefixed } = pull;
 
-function lsHandler(self, conn) {
+const lsHandler = function (self, conn) {
     const protos = Object.keys(self.handlers).filter((key) => key !== "ls");
 
     const nProtos = protos.length;
@@ -28,7 +28,7 @@ function lsHandler(self, conn) {
 
     pull(
         values([buf].concat(encodedProtos)),
-        pullLP.encode(),
+        lengthPrefixed.encode(),
         conn
     );
 }

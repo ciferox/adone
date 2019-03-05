@@ -4,8 +4,9 @@ const utils = require("../utils");
 const c = require("../constants");
 
 const {
-    p2p: { stream: { pull, lengthPrefixed: lp } }
+    stream: { pull2: pull }
 } = adone;
+const { lengthPrefixed: lp } = pull;
 
 module.exports = (dht) => {
     const log = utils.logger(dht.peerInfo.id, "rpc");

@@ -4,8 +4,9 @@ const EventEmitter = require("events");
 const rpc = require("./message").rpc.RPC;
 
 const {
-    p2p: { stream: { pull, pushable: Pushable, lengthPrefixed: lp } }
+    stream: { pull2: pull }
 } = adone;
+const { pushable: Pushable, lengthPrefixed: lp } = pull;
 
 /**
  * The known state of a connected peer.
