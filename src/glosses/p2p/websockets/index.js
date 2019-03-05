@@ -1,4 +1,3 @@
-const connect = require("pull-ws/client");
 const mafmt = require("mafmt");
 const withIs = require("class-is");
 
@@ -10,7 +9,7 @@ const createListener = require("./listener");
 
 const {
     is,
-    p2p: { Connection }
+    p2p: { Connection, stream: { ws: { connect } } }
 } = adone;
 
 class WebSockets {

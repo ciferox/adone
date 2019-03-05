@@ -1,4 +1,3 @@
-const pull = require("pull-stream/pull");
 const assert = require("assert");
 const select = require("../select");
 const selectHandler = require("./select-handler");
@@ -11,7 +10,7 @@ const PROTOCOL_ID = require("./../constants").PROTOCOL_ID;
 
 const {
     is,
-    p2p: { Connection }
+    p2p: { Connection, stream: { pull: { pull } } }
 } = adone;
 
 

@@ -6,7 +6,6 @@ const withIs = require("class-is");
 const io = require("socket.io-client");
 const EE = require("events").EventEmitter;
 const SimplePeer = require("simple-peer");
-const toPull = require("stream-to-pull-stream");
 const once = require("once");
 const setImmediate = require("async/setImmediate");
 const webrtcSupport = require("webrtcsupport");
@@ -16,7 +15,7 @@ const cleanMultiaddr = utils.cleanMultiaddr;
 
 const {
     is,
-    p2p: { Connection, PeerId, PeerInfo }
+    p2p: { Connection, PeerId, PeerInfo, stream: { streamToPullStream: toPull } }
 } = adone;
 
 const noop = once(() => { });

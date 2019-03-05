@@ -1,17 +1,16 @@
-
-
 const varint = require("varint");
-const pull = require("pull-stream/pull");
-const map = require("pull-stream/throughs/map");
-const collect = require("pull-stream/sinks/collect");
-const take = require("pull-stream/throughs/take");
-const pullLP = require("pull-length-prefixed");
-const Connection = require("interface-connection").Connection;
+const map = require("../../../streams/pull/throughs/map");
+const collect = require("../../../streams/pull/sinks/collect");
+const take = require("../../../streams/pull/throughs/take");
 const util = require("../util");
 const select = require("../select");
 const once = require("once");
 
 const PROTOCOL_ID = require("./../constants").PROTOCOL_ID;
+
+const {
+    p2p: { Connection, stream: { pull: { pull }, lengthPrefixed: pullLP } }
+} = adone;
 
 /**
  *

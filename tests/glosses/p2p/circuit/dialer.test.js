@@ -1,24 +1,23 @@
 const nodes = require("./fixtures/nodes");
 const multiaddr = require("multiaddr");
 const waterfall = require("async/waterfall");
-const pull = require("pull-stream/pull");
-const values = require("pull-stream/sources/values");
-const asyncMap = require("pull-stream/throughs/async-map");
-const pair = require("pull-pair/duplex");
-const pb = require("pull-protocol-buffers");
 
 const sinon = require("sinon");
 
 const {
-    p2p: { Connection, PeerId, PeerInfo },
+    p2p: { Connection, PeerId, PeerInfo, stream: { pull: { pull }, protocolBuffers: pb } },
     std: { path }
 } = adone;
 
-const srcPath = (...args) => path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "circuit", ...args);
+const srcPath = (...args) => path.join(adone.ROOT_PATH, "lib", "glosses", ...args);
 
-const Dialer = require(srcPath("circuit/dialer"));
-const proto = require(srcPath("protocol"));
-const utilsFactory = require(srcPath("circuit/utils"));
+const values = require(srcPath("p2p", "streams", "pull/sources/values"));
+const asyncMap = require(srcPath("p2p", "streams", "pull/throughs/async-map"));
+const pair = require(srcPath("p2p", "streams", "pair/duplex"));
+
+const Dialer = require(srcPath("p2p", "circuit", "circuit/dialer"));
+const proto = require(srcPath("p2p", "circuit", "protocol"));
+const utilsFactory = require(srcPath("p2p", "circuit", "circuit/utils"));
 
 describe("dialer tests", () => {
     describe(".dial", () => {

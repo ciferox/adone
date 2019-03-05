@@ -1,11 +1,12 @@
-const pair = require("pull-pair/duplex");
-const pull = require("pull-stream");
 const parallel = require("async/parallel");
 const series = require("async/series");
 const multiaddr = require("multiaddr");
 
+const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "streams", ...args);
+const pair = require(srcPath("pair", "duplex"));
+
 const {
-    p2p: { TCP }
+    p2p: { TCP, stream: { pull } }
 } = adone;
 
 const mh = multiaddr("/ip4/127.0.0.1/tcp/10000");
@@ -25,7 +26,7 @@ module.exports = (common) => {
         beforeEach((done) => {
             common.setup((err, _muxer) => {
                 if (err) {
-                    return done(err); 
+                    return done(err);
                 }
                 muxer = _muxer;
                 done();
@@ -134,7 +135,7 @@ module.exports = (common) => {
                 ], cb);
             }), (err) => {
                 if (err) {
-                    return done(err); 
+                    return done(err);
                 }
 
                 conns.forEach((conn, i) => {

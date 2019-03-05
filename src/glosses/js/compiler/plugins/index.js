@@ -19,6 +19,7 @@ const plugins = {
         dynamicImport: "./syntax/dynamic_import"
     }, null, require),
     transform: lazify({
+        asyncGeneratorFunctions: "./transform/async_generator_functions",
         asyncToGenerator: "./transform/async_to_generator",
         classProperties: "./transform/class_properties",
         decorators: "./transform/decorators",

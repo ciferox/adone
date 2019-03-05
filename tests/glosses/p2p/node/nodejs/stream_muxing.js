@@ -1,12 +1,11 @@
 const parallel = require("async/parallel");
 const series = require("async/series");
-const pMplex = require("pull-mplex");
 const createNode = require("../utils/create_node");
 const tryEcho = require("../utils/try_echo");
 const echo = require("../utils/echo");
 
 const {
-    p2p: { spdy, multiplex }
+    p2p: { spdy, multiplex, stream: { mplex: pMplex } }
 } = adone;
 
 const test = function (nodeA, nodeB, callback) {

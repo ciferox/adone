@@ -1,6 +1,6 @@
 
 
-const map = require("pull-stream/throughs/map");
+const map = require("../streams/pull/throughs/map");
 const EventEmitter = require("events");
 
 /**

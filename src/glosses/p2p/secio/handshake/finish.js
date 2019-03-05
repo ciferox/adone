@@ -1,8 +1,4 @@
-
-
-const pull = require("pull-stream/pull");
-const pullError = require("pull-stream/sources/error");
-const handshake = require("pull-handshake");
+const pullError = require("../../streams/pull/sources/error");
 const debug = require("debug");
 
 const log = debug("libp2p:secio");
@@ -10,6 +6,10 @@ log.error = debug("libp2p:secio:error");
 
 const etm = require("../etm");
 const crypto = require("./crypto");
+
+const {
+    p2p: { stream: { pull: { pull }, handshake } }
+} = adone;
 
 // step 3. Finish
 // -- send expected message to verify encryption works (send local nonce)
@@ -45,7 +45,7 @@ module.exports = function finish(state, callback) {
         };
 
         if (err) {
-            return fail(err); 
+            return fail(err);
         }
 
         try {

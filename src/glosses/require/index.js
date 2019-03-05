@@ -5,6 +5,7 @@ const plugins = [
         legacy: true
     }],
     ["transform.classProperties", { loose: true }],
+    "transform.asyncGeneratorFunctions",
     "transform.modulesCommonjs",
     "transform.functionBind",
     "transform.objectRestSpread",

@@ -3,7 +3,6 @@ const log = debug("libp2p:webrtc-star");
 const mafmt = require("mafmt");
 const io = require("socket.io-client");
 const SimplePeer = require("simple-peer");
-const toPull = require("stream-to-pull-stream");
 const once = require("once");
 const webrtcSupport = require("webrtcsupport");
 const utils = require("./utils");
@@ -17,7 +16,7 @@ const {
     event,
     is,
     multi,
-    net: { p2p: { PeerInfo, Connection } }
+    net: { p2p: { PeerInfo, Connection, stream: { streamToPullStream: toPull } } }
 } = adone;
 
 const sioOptions = {

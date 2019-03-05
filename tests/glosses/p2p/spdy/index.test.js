@@ -1,9 +1,9 @@
-const pair = require("pull-pair/duplex");
-const pull = require("pull-stream");
-
 const {
-    p2p: { spdy }
+    p2p: { spdy, stream: { pull } }
 } = adone;
+
+const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", ...args);
+const pair = require(srcPath("p2p", "streams", "pair/duplex"));
 
 describe("spdy-generic", () => {
     let listenerSocket;

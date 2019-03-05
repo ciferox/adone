@@ -1,5 +1,9 @@
-const pair = require("pull-pair/duplex");
-const pull = require("pull-stream");
+const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "streams", ...args);
+const pair = require(srcPath("pair", "duplex"));
+
+const {
+    p2p: { stream: { pull } }
+} = adone;
 
 const closeAndWait = function (stream) {
     pull(

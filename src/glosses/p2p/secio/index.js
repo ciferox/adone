@@ -1,4 +1,3 @@
-const pull = require("pull-stream/pull");
 const assert = require("assert");
 const debug = require("debug");
 const once = require("once");
@@ -10,7 +9,7 @@ const State = require("./state");
 
 const {
     is,
-    p2p: { Connection, PeerInfo }
+    p2p: { Connection, PeerInfo, stream: { pull: { pull } } }
 } = adone;
 
 module.exports = {

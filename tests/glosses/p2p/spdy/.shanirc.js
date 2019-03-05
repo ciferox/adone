@@ -1,8 +1,7 @@
 const multiaddr = require("multiaddr");
-const pull = require("pull-stream");
 
 const {
-    p2p: { spdy, WS }
+    p2p: { spdy, WS, stream: { pull } }
 } = adone;
 
 export default (ctx) => {

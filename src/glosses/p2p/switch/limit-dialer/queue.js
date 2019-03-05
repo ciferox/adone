@@ -1,5 +1,4 @@
-const pull = require("pull-stream/pull");
-const empty = require("pull-stream/sources/empty");
+const empty = require("../../streams/pull/sources/empty");
 const timeout = require("async/timeout");
 const queue = require("async/queue");
 const debug = require("debug");
@@ -7,7 +6,7 @@ const once = require("once");
 
 const {
     is,
-    p2p: { Connection }
+    p2p: { Connection, stream: { pull: { pull } } }
 } = adone;
 
 const log = debug("libp2p:switch:dialer:queue");

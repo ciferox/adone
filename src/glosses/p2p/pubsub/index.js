@@ -1,8 +1,5 @@
-
-
 const EventEmitter = require("events");
-const pull = require("pull-stream/pull");
-const empty = require("pull-stream/sources/empty");
+const empty = require("../streams/pull/sources/empty");
 const asyncEach = require("async/each");
 const TimeCache = require("time-cache");
 const debug = require("debug");
@@ -12,6 +9,10 @@ const Peer = require("./peer");
 const message = require("./message");
 
 const nextTick = require("async/nextTick");
+
+const {
+    p2p: { stream: { pull: { pull } } }
+} = adone;
 
 /**
  * PubsubBaseProtocol handles the peers and connections logic for pubsub routers
@@ -215,7 +216,7 @@ class PubsubBaseProtocol extends EventEmitter {
      * @param {Error} err error for connection end
      */
     _onConnectionEnd(idB58Str, peer, err) {
-    // socket hang up, means the one side canceled
+        // socket hang up, means the one side canceled
         if (err && err.message !== "socket hang up") {
             this.log.err(err);
         }

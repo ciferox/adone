@@ -1,13 +1,11 @@
 const TimeCache = require("time-cache");
-const pull = require("pull-stream");
-const lp = require("pull-length-prefixed");
 const assert = require("assert");
 
 const utils = require("./utils");
 const config = require("./config");
 
 const {
-    p2p: { PubsubBaseProtocol }
+    p2p: { PubsubBaseProtocol, stream: { pull, lengthPrefixed: lp } }
 } = adone;
 
 const { message } = PubsubBaseProtocol;

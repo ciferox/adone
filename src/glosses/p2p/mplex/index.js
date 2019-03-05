@@ -1,11 +1,12 @@
-
-
-const toStream = require("pull-stream-to-stream");
 const MplexCore = require("./internals");
 const MULTIPLEX_CODEC = require("./codec");
 const Muxer = require("./muxer");
 
 const pump = require("pump");
+
+const {
+    p2p: { stream: { pullStreamToStream: toStream } }
+} = adone;
 
 function create(rawConn, isListener) {
     const stream = toStream(rawConn);

@@ -1,24 +1,20 @@
-
-
-const handshake = require("pull-handshake");
-const lp = require("pull-length-prefixed");
-const Connection = require("interface-connection").Connection;
 const writeEncoded = require("../util.js").writeEncoded;
 const some = require("async/some");
 
-function selectHandler(rawConn, handlersMap, log) {
+const {
+    p2p: { Connection, stream: { lengthPrefixed: lp, handshake } }
+} = adone;
+
+const selectHandler = function (rawConn, handlersMap, log) {
     const cb = (err) => {
-    // incoming errors are irrelevant for the app
+        // incoming errors are irrelevant for the app
         log.error(err);
     };
 
     const stream = handshake({ timeout: 60 * 1000 }, cb);
     const shake = stream.handshake;
 
-    next();
-    return stream;
-
-    function next() {
+    const next = function () {
         lp.decodeFromReader(shake, (err, data) => {
             if (err) {
                 return cb(err);
@@ -45,8 +41,11 @@ function selectHandler(rawConn, handlersMap, log) {
                 }
             });
         });
-    }
-}
+    };
+
+    next();
+    return stream;
+};
 
 function matcher(protocol, handlers, callback) {
     const supportedProtocols = Object.keys(handlers);

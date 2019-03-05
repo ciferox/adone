@@ -1,11 +1,10 @@
-const pull = require("pull-stream/pull");
-const values = require("pull-stream/sources/values");
-const collect = require("pull-stream/sinks/collect");
-const pullLP = require("pull-length-prefixed");
+const values = require("../../streams/pull/sources/values");
+const collect = require("../../streams/pull/sinks/collect");
 const debug = require("debug");
 
 const {
-    is
+    is,
+    p2p: { stream: { pull: { pull }, lengthPrefixed: pullLP } }
 } = adone;
 
 exports = module.exports;

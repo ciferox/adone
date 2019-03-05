@@ -1,16 +1,16 @@
-
-
-const pull = require("pull-stream/pull");
-const values = require("pull-stream/sources/values");
-const lp = require("pull-length-prefixed");
+const values = require("../streams/pull/sources/values");
 
 const msg = require("./message");
+
+const {
+    p2p: { stream: { pull: { pull }, lengthPrefixed: lp } }
+} = adone;
 
 module.exports = (conn, pInfoSelf) => {
     // send what I see from the other + my Info
     conn.getObservedAddrs((err, observedAddrs) => {
         if (err) {
-            return; 
+            return;
         }
         observedAddrs = observedAddrs[0];
 

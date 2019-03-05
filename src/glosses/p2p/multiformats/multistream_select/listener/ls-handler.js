@@ -1,9 +1,9 @@
-
-
-const pull = require("pull-stream/pull");
-const values = require("pull-stream/sources/values");
-const pullLP = require("pull-length-prefixed");
+const values = require("../../../streams/pull/sources/values");
 const varint = require("varint");
+
+const {
+    p2p: { stream: { pull: { pull }, lengthPrefixed: pullLP } }
+} = adone;
 
 function lsHandler(self, conn) {
     const protos = Object.keys(self.handlers).filter((key) => key !== "ls");

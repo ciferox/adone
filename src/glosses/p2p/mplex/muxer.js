@@ -1,7 +1,4 @@
 const EventEmitter = require("events").EventEmitter;
-const toPull = require("stream-to-pull-stream");
-const pull = require("pull-stream");
-const pullCatch = require("pull-catch");
 const setImmediate = require("async/setImmediate");
 const debug = require("debug");
 const log = debug("mplex");
@@ -12,7 +9,7 @@ const MULTIPLEX_CODEC = require("./codec");
 const {
     is,
     noop,
-    p2p: { Connection }
+    p2p: { Connection, stream: { pull, catch: pullCatch, streamToPullStream: toPull } }
 } = adone;
 
 

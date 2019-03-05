@@ -1,4 +1,3 @@
-const pull = require("pull-stream/pull");
 const debug = require("debug");
 const EE = require("events").EventEmitter;
 const once = require("once");
@@ -12,7 +11,7 @@ const waterfall = require("async/waterfall");
 const multicodec = require("./../multicodec");
 
 const {
-    p2p: { PeerId, PeerInfo }
+    p2p: { PeerId, PeerInfo, stream: { pull: { pull } } }
 } = adone;
 
 const log = debug("libp2p:circuit:relay");

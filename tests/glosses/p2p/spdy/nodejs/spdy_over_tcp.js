@@ -1,10 +1,8 @@
 const sinon = require("sinon");
 const multiaddr = require("multiaddr");
-const pull = require("pull-stream");
-const file = require("pull-file");
 
 const {
-    p2p: { spdy, TCP },
+    p2p: { spdy, TCP, stream: { pull, file } },
     std: { fs, path }
 } = adone;
 

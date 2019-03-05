@@ -1,5 +1,4 @@
 const multiaddr = require("multiaddr");
-const toPull = require("stream-to-pull-stream");
 const EventEmitter = require("events").EventEmitter;
 const debug = require("debug");
 const log = debug("libp2p:tcp:listen");
@@ -10,7 +9,7 @@ const {
     is,
     lodash: { includes },
     noop,
-    p2p: { Connection },
+    p2p: { Connection, stream: { streamToPullStream: toPull } },
     std: { net, os }
 } = adone;
 

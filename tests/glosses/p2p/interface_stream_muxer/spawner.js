@@ -1,6 +1,10 @@
-const pair = require("pull-pair/duplex");
-const pull = require("pull-stream");
-const generate = require("pull-generate");
+const {
+    p2p: { stream: { pull, generate } }
+} = adone;
+
+const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "streams", ...args);
+const pair = require(srcPath("pair", "duplex"));
+
 const each = require("async/each");
 const eachLimit = require("async/eachLimit");
 const setImmediate = require("async/setImmediate");

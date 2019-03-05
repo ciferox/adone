@@ -1,8 +1,7 @@
 const cleanCID = require('../utils/clean-cid')
-const toPull = require('stream-to-pull-stream')
-const deferred = require('pull-defer')
 
 const {
+    p2p: { stream: { defer, streamToPullStream } },
     ipfs: { isIPFS }
 } = adone;
 
@@ -10,7 +9,7 @@ module.exports = (send) => {
     return (hash, opts) => {
         opts = opts || {}
 
-        const p = deferred.source()
+        const p = defer.source()
 
         try {
             hash = cleanCID(hash)
@@ -28,7 +27,7 @@ module.exports = (send) => {
         send({ path: 'cat', args: hash, buffer: opts.buffer, qs: query }, (err, stream) => {
             if (err) { return p.end(err) }
 
-            p.resolve(toPull(stream))
+            p.resolve(streamToPullStream(stream))
         })
 
         return p

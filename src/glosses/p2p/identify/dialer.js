@@ -1,14 +1,12 @@
 const multiaddr = require("multiaddr");
-const pull = require("pull-stream/pull");
-const take = require("pull-stream/throughs/take");
-const collect = require("pull-stream/sinks/collect");
-const lp = require("pull-length-prefixed");
+const take = require("../streams/pull/throughs/take");
+const collect = require("../streams/pull/sinks/collect");
 
 const msg = require("./message");
 
 const {
     is,
-    p2p: { PeerId, PeerInfo }
+    p2p: { PeerId, PeerInfo, stream: { pull: { pull }, lengthPrefixed: lp } }
 } = adone;
 
 const hasObservedAddr = (input) => input.observedAddr && input.observedAddr.length > 0;

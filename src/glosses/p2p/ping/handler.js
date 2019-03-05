@@ -1,7 +1,7 @@
+const {
+    p2p: { stream: { pull: { pull }, handshake } }
+} = adone;
 
-
-const pull = require("pull-stream/pull");
-const handshake = require("pull-handshake");
 const constants = require("./constants");
 const PROTOCOL = constants.PROTOCOL;
 const PING_LENGTH = constants.PING_LENGTH;

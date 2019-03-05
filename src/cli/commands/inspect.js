@@ -69,7 +69,11 @@ export default class Inspection extends Subsystem {
                 help: "Show value instead of description"
             },
             {
-                name: "--depth",
+                name: ["--object", "-O"],
+                help: "Interpret as plain object"
+            },
+            {
+                name: ["--depth", "-D"],
                 type: Number,
                 default: 1,
                 help: "The depth of object inspection"
@@ -262,7 +266,10 @@ export default class Inspection extends Subsystem {
                     case "class":
                         result = showValue
                             ? adone.js.highlight(obj.toString())
-                            : meta.inspect(get(ns, objectPath), inspectOptions);
+                            : meta.inspect(get(ns, objectPath), {
+                                ...inspectOptions,
+                                asObject: opts.has("object")
+                            });
                         break;
                     default:
                         result = showValue

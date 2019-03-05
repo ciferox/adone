@@ -1,12 +1,11 @@
-
-
-const lp = require("pull-length-prefixed");
-const Pushable = require("pull-pushable");
-const pull = require("pull-stream");
 const setImmediate = require("async/setImmediate");
 const EventEmitter = require("events");
 
-const { message } = require("libp2p-pubsub");
+const {
+    p2p: { PubsubBaseProtocol, stream: { pull, pushable: Pushable, lengthPrefixed: lp } }
+} = adone;
+
+const { message } = PubsubBaseProtocol;
 const rpc = message.rpc.RPC;
 
 /**
@@ -168,7 +167,7 @@ class Peer extends EventEmitter {
      * @returns {undefined}
      */
     close(callback) {
-    // Force removal of peer
+        // Force removal of peer
         this._references = 1;
 
         // End the pushable

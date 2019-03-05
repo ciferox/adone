@@ -2,22 +2,20 @@
 const nodes = require("./fixtures/nodes");
 const waterfall = require("async/waterfall");
 const multiaddr = require("multiaddr");
-const handshake = require("pull-handshake");
-const lp = require("pull-length-prefixed");
-const pull = require("pull-stream/pull");
-const values = require("pull-stream/sources/values");
-const collect = require("pull-stream/sinks/collect");
 
 const {
-    p2p: { Connection, PeerId, PeerInfo },
+    p2p: { Connection, PeerId, PeerInfo, stream: { pull: { pull }, handshake, lengthPrefixed: lp } },
     std: { path }
 } = adone;
 
-const srcPath = (...args) => path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "circuit", ...args);
+const srcPath = (...args) => path.join(adone.ROOT_PATH, "lib", "glosses", ...args);
 
-const Listener = require(srcPath("listener"));
-const proto = require(srcPath("protocol"));
-const multicodec = require(srcPath("multicodec"));
+const values = require(srcPath("p2p", "streams", "pull/sources/values"));
+const collect = require(srcPath("p2p", "streams", "pull/sinks/collect"));
+
+const Listener = require(srcPath("p2p", "circuit", "listener"));
+const proto = require(srcPath("p2p", "circuit", "protocol"));
+const multicodec = require(srcPath("p2p", "circuit", "multicodec"));
 
 const sinon = require("sinon");
 

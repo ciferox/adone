@@ -1,4 +1,4 @@
-const defer = require("pull-defer/duplex");
+const defer = require("../streams/defer/duplex");
 
 export default class Connection {
     constructor(conn, info) {

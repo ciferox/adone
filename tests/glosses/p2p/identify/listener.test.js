@@ -1,15 +1,15 @@
-const pull = require("pull-stream/pull");
-const collect = require("pull-stream/sinks/collect");
-const pair = require("pull-pair/duplex");
-const lp = require("pull-length-prefixed");
 const multiaddr = require("multiaddr");
 
 const {
-    p2p: { PeerInfo, identify }
+    p2p: { PeerInfo, identify, stream: { pull: { pull }, lengthPrefixed: lp } }
 } = adone;
 
-const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "identify", ...args);
-const msg = require(srcPath("message"));
+const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", ...args);
+
+const collect = require(srcPath("p2p", "streams", "pull/sinks/collect"));
+const pair = require(srcPath("p2p", "streams", "pair/duplex"));
+
+const msg = require(srcPath("p2p", "identify", "message"));
 
 describe("identify.listener", () => {
     let info;

@@ -2,11 +2,9 @@ const multiaddr = require("multiaddr");
 
 const {
     noop,
-    p2p: { Connection },
+    p2p: { Connection, stream: { ws: { createServer } } },
     std: { os }
 } = adone;
-
-const createServer = require("pull-ws/server") || noop;
 
 module.exports = (options, handler) => {
     const listener = createServer(options, (socket) => {

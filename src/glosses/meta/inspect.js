@@ -4,21 +4,22 @@ const {
     terminal: { esc }
 } = adone;
 
-/*
-    * style:
-        * 'none': (default) normal output suitable for console.log() or writing in a file
-        * 'color': colorful output suitable for term
-    * depth: depth limit, default: 3
-    * noFunc: do not display functions
-    * noNotices: do not display '[depth limit]'/'[circular]'
-    * noDescriptor: do not display descriptor information
-    * noType: do not display type and constructor
-    * enumOnly: only display enumerable properties
-    * funcDetails: display function's details
-    * proto: display object's prototype
-    * sort: sort the keys
-    * minimal: imply noFunc: true, noDescriptor: true, noType: true, enumOnly: true, proto: false and funcDetails: false.
-*/
+/**
+ * style:
+ * 'none': (default) normal output suitable for console.log() or writing in a file
+ * 'color': colorful output suitable for term
+ * depth: depth limit, default: 3
+ * noFunc: do not display functions
+ * noNotices: do not display '[depth limit]'/'[circular]'
+ * noDescriptor: do not display descriptor information
+ * noType: do not display type and constructor
+ * enumOnly: only display enumerable properties
+ * funcDetails: display function's details
+ * proto: display object's prototype
+ * sort: sort the keys
+ * minimal: imply noFunc: true, noDescriptor: true, noType: true, enumOnly: true, proto: false and funcDetails: false.
+ * asObject: interpret as plain object
+ */
 
 // Styles
 const defaultInspectStyle = {
@@ -127,7 +128,13 @@ const inspect_ = (runtime, options, variable) => {
     let descriptor;
     let nextAncestors;
 
-    const type = adone.meta.typeOf(variable);
+    let type;
+    if (options.asObject && !is.primitive(variable)) {
+        type = "Object";
+    } else {
+        type = adone.meta.typeOf(variable);
+    }    
+    
     const indent = options.style.tab.repeat(runtime.depth);
 
     if (type === "function" && options.noFunc) {

@@ -1,11 +1,11 @@
-
-
-const handshake = require("pull-handshake");
-const pullLP = require("pull-length-prefixed");
 const util = require("./util");
 const writeEncoded = util.writeEncoded;
 
-function select(multicodec, callback, log) {
+const {
+    p2p: { stream: { handshake, lengthPrefixed: pullLP } }
+} = adone;
+
+const select = function (multicodec, callback, log) {
     const stream = handshake({
         timeout: 60 * 1000
     }, callback);
@@ -30,6 +30,6 @@ function select(multicodec, callback, log) {
     });
 
     return stream;
-}
+};
 
 module.exports = select;

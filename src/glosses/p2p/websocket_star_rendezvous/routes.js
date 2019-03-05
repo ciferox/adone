@@ -2,10 +2,14 @@
  * eslint-disable func-style
  */
 const SocketIO = require("socket.io");
-const sp = require("socket.io-pull-stream");
 const util = require("./utils");
 const uuid = require("uuid");
 const client = require("prom-client");
+
+const {
+    p2p: { stream: { socketioPullStream: sp } }
+} = adone;
+
 const fake = {
     gauge: {
         set: () => { }
@@ -133,7 +137,7 @@ module.exports = (config, http) => {
         const log = getConfig().log.bind(getConfig().log, `[${socket.id}]`);
         _peers[multiaddr] = socket;
         if (!socket.stopSendingPeersIntv) {
-            socket.stopSendingPeersIntv = {}; 
+            socket.stopSendingPeersIntv = {};
         }
         joinsSuccessTotal.inc();
         refreshMetrics();

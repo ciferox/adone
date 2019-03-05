@@ -1,5 +1,4 @@
 const net = require("net");
-const toPull = require("stream-to-pull-stream");
 const mafmt = require("mafmt");
 const withIs = require("class-is");
 const once = require("once");
@@ -12,7 +11,7 @@ const {
     is,
     lodash: { includes, isFunction },
     noop,
-    p2p: { Connection }
+    p2p: { Connection, stream: { streamToPullStream: toPull } }
 } = adone;
 
 class TCP {

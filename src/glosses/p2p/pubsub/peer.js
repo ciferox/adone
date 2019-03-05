@@ -1,12 +1,11 @@
-
-
-const lp = require("pull-length-prefixed");
-const Pushable = require("pull-pushable");
-const pull = require("pull-stream");
 const setImmediate = require("async/setImmediate");
 const EventEmitter = require("events");
 
 const rpc = require("./message").rpc.RPC;
+
+const {
+    p2p: { stream: { pull, pushable: Pushable, lengthPrefixed: lp } }
+} = adone;
 
 /**
  * The known state of a connected peer.
@@ -167,7 +166,7 @@ class Peer extends EventEmitter {
      * @returns {undefined}
      */
     close(callback) {
-    // Force removal of peer
+        // Force removal of peer
         this._references = 1;
 
         // End the pushable

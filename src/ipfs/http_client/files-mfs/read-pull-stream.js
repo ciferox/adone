@@ -1,26 +1,25 @@
-'use strict'
-
-const toPull = require('stream-to-pull-stream')
-const deferred = require('pull-defer')
+const {
+    p2p: { stream: { defer, streamToPullStream } }
+} = adone;
 
 module.exports = (send) => {
-  return (args, opts) => {
-    opts = opts || {}
+    return (args, opts) => {
+        opts = opts || {};
 
-    const p = deferred.source()
+        const p = defer.source();
 
-    send({
-      path: 'files/read',
-      args: args,
-      qs: opts
-    }, (err, stream) => {
-      if (err) {
-        return p.abort(err)
-      }
+        send({
+            path: "files/read",
+            args,
+            qs: opts
+        }, (err, stream) => {
+            if (err) {
+                return p.abort(err);
+            }
 
-      p.resolve(toPull(stream))
-    })
+            p.resolve(streamToPullStream(stream));
+        });
 
-    return p
-  }
-}
+        return p;
+    };
+};

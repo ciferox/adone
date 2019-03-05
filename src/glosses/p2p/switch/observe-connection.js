@@ -1,7 +1,5 @@
-const pull = require("pull-stream/pull");
-
 const {
-    p2p: { Connection }
+    p2p: { Connection, stream: { pull: { pull } } }
 } = adone;
 
 /**

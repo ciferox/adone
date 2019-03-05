@@ -1,22 +1,20 @@
 const nodes = require("./fixtures/nodes");
-const handshake = require("pull-handshake");
 const waterfall = require("async/waterfall");
 const multiaddr = require("multiaddr");
-const pull = require("pull-stream/pull");
-const values = require("pull-stream/sources/values");
-const collect = require("pull-stream/sinks/collect");
-const lp = require("pull-length-prefixed");
 
 const {
-    p2p: { Connection, PeerId, PeerInfo },
+    p2p: { Connection, PeerId, PeerInfo, stream: { pull: { pull }, handshake, lengthPrefixed: lp } },
     std: { path }
 } = adone;
 
-const srcPath = (...args) => path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "circuit", ...args);
+const srcPath = (...args) => path.join(adone.ROOT_PATH, "lib", "glosses", ...args);
 
-const Hop = require(srcPath("circuit/hop"));
-const proto = require(srcPath("protocol"));
-const StreamHandler = require(srcPath("circuit/stream-handler"));
+const values = require(srcPath("p2p", "streams", "pull/sources/values"));
+const collect = require(srcPath("p2p", "streams", "pull/sinks/collect"));
+
+const Hop = require(srcPath("p2p", "circuit", "circuit/hop"));
+const proto = require(srcPath("p2p", "circuit", "protocol"));
+const StreamHandler = require(srcPath("p2p", "circuit", "circuit/stream-handler"));
 
 const sinon = require("sinon");
 
@@ -45,8 +43,8 @@ describe("relay", () => {
             };
 
             Object.keys(peers).forEach((key) => {
- peers[key]._connectedMultiaddr = true; 
-}); // make it truthy
+                peers[key]._connectedMultiaddr = true;
+            }); // make it truthy
 
             waterfall([
                 (cb) => PeerId.createFromJSON(nodes.node4, cb),
@@ -272,8 +270,8 @@ describe("relay", () => {
             };
 
             Object.keys(peers).forEach((key) => {
- peers[key]._connectedMultiaddr = true; 
-}); // make it truthy
+                peers[key]._connectedMultiaddr = true;
+            }); // make it truthy
 
             waterfall([
                 (cb) => PeerId.createFromJSON(nodes.node4, cb),

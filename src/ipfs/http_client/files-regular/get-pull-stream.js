@@ -1,10 +1,8 @@
 const cleanCID = require('../utils/clean-cid')
 const TarStreamToObjects = require('../utils/tar-stream-to-objects')
-const pull = require('pull-stream')
-const toPull = require('stream-to-pull-stream')
-const deferred = require('pull-defer')
 
 const {
+    p2p: { stream: { pull, defer, streamToPullStream } },
     ipfs: { isIPFS }
 } = adone;
 
@@ -12,7 +10,7 @@ module.exports = (send) => {
     return (path, opts) => {
         opts = opts || {}
 
-        const p = deferred.source()
+        const p = defer.source()
 
         try {
             path = cleanCID(path)
@@ -30,10 +28,10 @@ module.exports = (send) => {
 
             p.resolve(
                 pull(
-                    toPull.source(stream),
+                    streamToPullStream.source(stream),
                     pull.map(file => {
                         const { path, content } = file
-                        return content ? { path, content: toPull.source(content) } : file
+                        return content ? { path, content: streamToPullStream.source(content) } : file
                     })
                 )
             )

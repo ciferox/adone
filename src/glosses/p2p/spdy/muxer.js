@@ -1,14 +1,11 @@
 const EventEmitter = require("events").EventEmitter;
-const toPull = require("stream-to-pull-stream");
-const pullCatch = require("pull-catch");
-const pull = require("pull-stream");
-const noop = () => { };
 const debug = require("debug");
 const log = debug("spdy");
 log.error = debug("spdy:error");
 
 const {
-    p2p: { Connection }
+    noop,
+    p2p: { Connection, stream: { pull, catch: pullCatch, streamToPullStream: toPull } }
 } = adone;
 
 const catchError = function (stream) {

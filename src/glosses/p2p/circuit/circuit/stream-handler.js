@@ -1,12 +1,10 @@
-const values = require("pull-stream/sources/values");
-const collect = require("pull-stream/sinks/collect");
-const empty = require("pull-stream/sources/empty");
-const pull = require("pull-stream/pull");
-const lp = require("pull-length-prefixed");
-const handshake = require("pull-handshake");
+const values = require("../../streams/pull/sources/values");
+const collect = require("../../streams/pull/sinks/collect");
+const empty = require("../../streams/pull/sources/empty");
 
 const {
-    is
+    is,
+    p2p: { stream: { pull: { pull }, lengthPrefixed: lp, handshake } }
 } = adone;
 
 const debug = require("debug");

@@ -1,8 +1,5 @@
-const pull = require("pull-stream");
-const lp = require("pull-length-prefixed");
-
 const {
-    p2p: { KadDHT, Connection, PeerBook, Switch, TCP, multiplex }
+    p2p: { KadDHT, Connection, PeerBook, Switch, TCP, multiplex, stream: { pull, lengthPrefixed: lp } }
 } = adone;
 
 const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "kad_dht", ...args);

@@ -1,8 +1,11 @@
 const spdy = require("spdy-transport");
-const toStream = require("pull-stream-to-stream");
 
 const Muxer = require("./muxer");
 const SPDY_CODEC = require("./spdy-codec");
+
+const {
+    p2p: { stream: { pullStreamToStream: toStream } }
+} = adone;
 
 function create(rawConn, isListener) {
     const conn = toStream(rawConn);

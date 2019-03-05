@@ -1,13 +1,12 @@
 const sanitize = require("sanitize-filename");
 const mergeOptions = require("merge-options");
 const DS = require("interface-datastore");
-const collect = require("pull-stream/sinks/collect");
-const pull = require("pull-stream/pull");
+const collect = require("../streams/pull/sinks/collect");
 const CMS = require("./cms");
 
 const {
     is,
-    p2p: { crypto }
+    p2p: { crypto, stream: { pull: { pull } } }
 } = adone;
 
 const keyPrefix = "/pkcs8/";

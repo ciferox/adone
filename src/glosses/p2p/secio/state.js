@@ -1,7 +1,6 @@
-
-
-const handshake = require("pull-handshake");
-const deferred = require("pull-defer");
+const {
+    p2p: { stream: { handshake, defer: deferred } }
+} = adone;
 
 class State {
     constructor(localId, remoteId, timeout, callback) {
@@ -17,7 +16,7 @@ class State {
         this.id.remote = remoteId;
         this.key.local = localId.privKey;
         this.timeout = timeout || 60 * 1000;
-        callback = callback || (() => {});
+        callback = callback || (() => { });
 
         this.secure = deferred.duplex();
         this.stream = handshake({ timeout: this.timeout }, callback);

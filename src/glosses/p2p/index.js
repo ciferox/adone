@@ -8,7 +8,6 @@ adone.lazify({
     crypto: "./crypto",
     cryptoSecp256k1: "./crypto_secp256k1",
     ConnectionManager: "./connection_manager",
-    Switch: "./switch",
     Ping: "./ping",
     PubsubBaseProtocol: "./pubsub",
     FloodSub: "./floodsub",
@@ -16,6 +15,9 @@ adone.lazify({
     secio: "./secio",
     identify: "./identify",
     Circuit: "./circuit",
+
+    Switch: "./switch",
+    Protector: "./pnet",
 
     DelegatedPeerRouter: "./delegated_peer_routing",
     DelegatedContentRouter: "./delegated_content_routing",
@@ -37,5 +39,6 @@ adone.lazify({
     spdy: "./spdy",
     multiplex: "./mplex",
 
-    multiformat: "./multiformats"
+    multiformat: "./multiformats",
+    stream: "./streams"
 }, adone.asNamespace(exports), require);

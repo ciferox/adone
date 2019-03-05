@@ -1,7 +1,8 @@
-const pair = require("pull-pair/duplex");
+const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", ...args);
+const pair = require(srcPath("p2p", "streams", "pair/duplex"));
 
-const Muxer = require(adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "mplex", "muxer"));
-const Multiplex = require(adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "mplex", "internals"));
+const Muxer = require(srcPath("p2p", "mplex", "muxer"));
+const Multiplex = require(srcPath("p2p", "mplex", "internals"));
 
 describe("multiplex-muxer", () => {
     let muxer;

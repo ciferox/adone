@@ -2,7 +2,6 @@ const debug = require("debug");
 const log = debug("libp2p:websocket-star:listener");
 const multiaddr = require("multiaddr");
 const io = require("socket.io-client");
-const sp = require("socket.io-pull-stream");
 const uuid = require("uuid");
 const series = require("async/series");
 const EE = require("events").EventEmitter;
@@ -10,13 +9,12 @@ const once = require("once");
 const setImmediate = require("async/setImmediate");
 const utils = require("./utils");
 const cleanUrlSIO = utils.cleanUrlSIO;
-const pull = require("pull-stream/pull");
-const through = require("pull-stream/throughs/through");
+const through = require("../streams/pull/throughs/through");
 const ERRORS = require("./errors");
 
 const {
     is,
-    p2p: { crypto, Connection }
+    p2p: { crypto, Connection, stream: { pull: { pull }, socketioPullStream: sp } }
 } = adone;
 
 const noop = once(() => { });
@@ -107,7 +105,7 @@ class Listener extends EE {
 
         this.io.emit("ss-join", maStr, pubKeyStr, (err, sig, peers) => {
             if (err) {
-                return callback(err); 
+                return callback(err);
             }
 
             if (sig) {
@@ -233,7 +231,7 @@ class Listener extends EE {
 
                 this.log("error", err);
                 if (!(err instanceof Error)) {
-                    err = new Error(err); 
+                    err = new Error(err);
                 }
                 this._down();
                 this.emit("error", err);
@@ -359,7 +357,7 @@ class Listener extends EE {
         // "multiaddr", "multiaddr", "string", "function" - dialFrom, dialTo, dialId, cb
         io.emit("ss-dial", this.ma.toString(), ma.toString(), dialId, (err) => {
             if (err) {
-                return callback(err instanceof Error ? err : new Error(err)); 
+                return callback(err instanceof Error ? err : new Error(err));
             }
             dlog(err ? `error: ${err.toString()}` : "success");
             const source = io.createSource(`${dialId}.listener`);

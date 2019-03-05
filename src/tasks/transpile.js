@@ -13,11 +13,13 @@ export default class extends adone.realm.TransformTask {
 
     plugins() {
         return [
+            "syntax.asyncGenerators",
             "transform.flowStripTypes",
             ["transform.decorators", {
                 legacy: true
             }],
             ["transform.classProperties", { loose: true }],
+            // "transform.asyncGeneratorFunctions",
             "transform.modulesCommonjs",
             "transform.functionBind",
             "transform.objectRestSpread",

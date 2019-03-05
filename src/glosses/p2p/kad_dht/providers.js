@@ -1,7 +1,6 @@
 const cache = require("hashlru");
 const varint = require("varint");
 const each = require("async/each");
-const pull = require("pull-stream");
 const CID = require("cids");
 const Key = require("interface-datastore").Key;
 
@@ -9,7 +8,7 @@ const c = require("./constants");
 const utils = require("./utils");
 
 const {
-    p2p: { PeerId }
+    p2p: { PeerId, stream: { pull } }
 } = adone;
 
 /**
