@@ -1,4 +1,7 @@
-const { Key } = require('interface-datastore')
+const {
+    datastore2: { interface: { Key } }
+} = adone;
+
 const series = require('async/series')
 const errcode = require('err-code')
 

@@ -2,10 +2,10 @@ const series = require("async/series");
 const parallel = require("async/parallel");
 
 const {
-    p2p: { PeerBook, PeerInfo, Switch, TCP, Ping }
+    p2p: { PeerBook, PeerInfo, Switch, transport: { TCP }, Ping }
 } = adone;
 
-describe("libp2p ping", () => {
+describe("p2p", "ping", () => {
     let swarmA;
     let swarmB;
     let peerA;

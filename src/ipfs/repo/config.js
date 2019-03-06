@@ -1,9 +1,9 @@
-const Key = require('interface-datastore').Key
 const queue = require('async/queue')
 const waterfall = require('async/waterfall')
 
 const {
-    lodash: { get: _get, set: _set, has: _has }
+    lodash: { get: _get, set: _set, has: _has },
+    datastore2: { interface: { Key } }
 } = adone;
 
 const configKey = new Key('config')

@@ -1,5 +1,4 @@
 const { EventEmitter } = require("events");
-const MemoryStore = require("interface-datastore").MemoryDatastore;
 const waterfall = require("async/waterfall");
 const each = require("async/each");
 const filter = require("async/filter");
@@ -20,6 +19,7 @@ const defaultsDeep = require("@nodeutils/defaults-deep");
 
 const {
     is,
+    datastore2: { backend: { MemoryDatastore } },
     p2p: { crypto, record: libp2pRecord, PeerId, PeerInfo }
 } = adone;
 
@@ -91,7 +91,7 @@ class KadDHT extends EventEmitter {
          *
          * @type {Datastore}
          */
-        this.datastore = options.datastore || new MemoryStore();
+        this.datastore = options.datastore || new MemoryDatastore();
 
         /**
          * Provider management
@@ -117,8 +117,8 @@ class KadDHT extends EventEmitter {
         // Inject private apis so we don't clutter up this file
         const pa = privateApi(this);
         Object.keys(pa).forEach((name) => {
- this[name] = pa[name]; 
-});
+            this[name] = pa[name];
+        });
 
         /**
          * Provider management
@@ -231,7 +231,7 @@ class KadDHT extends EventEmitter {
                             cb(null, true);
                         });
                     }, (err, results) => {
-                        if (err) {return cb(err)};
+                        if (err) { return cb(err) };
 
                         // Did we put to enough peers?
                         if (options.minPeers > results.length) {

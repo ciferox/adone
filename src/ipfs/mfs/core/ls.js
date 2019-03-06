@@ -1,28 +1,30 @@
-'use strict'
+const {
+    FILE_SEPARATOR
+} = require("./utils");
+const lsPullStream = require("./ls-pull-stream");
 
 const {
-  FILE_SEPARATOR
-} = require('./utils')
-const pull = require('pull-stream/pull')
-const collect = require('pull-stream/sinks/collect')
-const lsPullStream = require('./ls-pull-stream')
+    is,
+    stream: { pull2: pull }
+} = adone;
+const { collect } = pull;
 
 module.exports = (context) => {
-  return function mfsLs (path, options, callback) {
-    if (typeof path === 'function') {
-      callback = path
-      path = FILE_SEPARATOR
-      options = {}
-    }
+    return function mfsLs(path, options, callback) {
+        if (is.function(path)) {
+            callback = path;
+            path = FILE_SEPARATOR;
+            options = {};
+        }
 
-    if (typeof options === 'function') {
-      callback = options
-      options = {}
-    }
+        if (is.function(options)) {
+            callback = options;
+            options = {};
+        }
 
-    pull(
-      lsPullStream(context)(path, options),
-      collect(callback)
-    )
-  }
-}
+        pull(
+            lsPullStream(context)(path, options),
+            collect(callback)
+        );
+    };
+};

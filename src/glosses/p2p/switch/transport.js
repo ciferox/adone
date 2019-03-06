@@ -1,9 +1,3 @@
-
-
-/**
- * eslint no-warning-comments: off
- */
-
 const parallel = require("async/parallel");
 const once = require("once");
 const debug = require("debug");
@@ -109,9 +103,9 @@ class TransportManager {
         log("dialing %s", key, multiaddrs.map((m) => m.toString()));
 
         // dial each of the multiaddrs with the given transport
-        this.dialer.dialMany(peerInfo.id, transport, multiaddrs, (err, success) => {
-            if (err) {
-                return callback(err);
+        this.dialer.dialMany(peerInfo.id, transport, multiaddrs, (errors, success) => {
+            if (errors) {
+                return callback(errors);
             }
 
             peerInfo.connect(success.multiaddr);

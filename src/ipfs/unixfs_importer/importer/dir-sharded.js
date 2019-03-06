@@ -4,15 +4,13 @@ const waterfall = require('async/waterfall')
 const multihashing = require('multihashing-async')
 const Dir = require('./dir')
 const persist = require('../utils/persist')
-const toPull = require('async-iterator-to-pull-stream')
-const pull = require('pull-stream/pull')
-const onEnd = require('pull-stream/sinks/on-end')
-const asyncMap = require('pull-stream/throughs/async-map')
 const Bucket = require('hamt-sharding')
 
 const {
-    ipfs: { UnixFs, ipld: { dagPb } }
+    ipfs: { UnixFs, ipld: { dagPb } },
+    stream: { pull2: pull }
 } = adone;
+const { asyncMap, asyncIteratorToPullStream, onEnd } = pull;
 
 const {
     DAGLink,
@@ -90,7 +88,7 @@ class DirSharded extends Dir {
 
     eachChildSeries(iterator, callback) {
         pull(
-            toPull(this._bucket.eachLeafSeries()),
+            asyncIteratorToPullStream(this._bucket.eachLeafSeries()),
             asyncMap((child, cb) => {
                 iterator(child.key, child.value, cb)
             }),

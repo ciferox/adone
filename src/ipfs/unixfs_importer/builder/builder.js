@@ -1,18 +1,17 @@
 const extend = require('deep-extend')
-const pull = require('pull-stream/pull')
-const values = require('pull-stream/sources/values')
-const collect = require('pull-stream/sinks/collect')
-const through = require('pull-stream/throughs/through')
-const pullThrough = require('pull-through')
 const parallel = require('async/parallel')
 const waterfall = require('async/waterfall')
-const paraMap = require('pull-paramap')
 const persist = require('../utils/persist')
 const reduce = require('./reduce')
 
 const {
     ipfs: { UnixFs, ipld: { dagPb } }
 } = adone;
+
+const {
+    stream: { pull2: pull }
+} = adone;
+const { collect, through, values, paramap: paraMap, through2: pullThrough } = pull;
 
 const {
     DAGNode

@@ -81,7 +81,6 @@ adone.lazify({
     nonUnique: "./throughs/non_unique",
     flatten: "./throughs/flatten",
 
-    mplex: "./mplex",
     abortable: "./abortable",
     batch: "./batch",
     cat: "./cat",
@@ -116,7 +115,9 @@ adone.lazify({
     hang: "./hang",
     block: "./block",
     jsonDoubleline: "./json_doubleline",
-    goodbye: "./goodbye"
+    goodbye: "./goodbye",
+    serializer: "./serializer",
+    many: "./many"
 }, core, require);
 
 export default adone.asNamespace(core);

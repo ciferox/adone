@@ -11,13 +11,13 @@ const {
 const log = debug("libp2p:bootstrap");
 log.error = debug("libp2p:bootstrap:error");
 
-function isIPFS(addr) {
+const isIPFS = function (addr) {
     try {
         return mafmt.IPFS.matches(addr);
     } catch (e) {
         return false;
     }
-}
+};
 
 class Bootstrap extends EventEmitter {
     constructor(options) {
@@ -43,7 +43,7 @@ class Bootstrap extends EventEmitter {
     _discoverBootstrapPeers() {
         this._list.forEach((candidate) => {
             if (!isIPFS(candidate)) {
-                return log.error("Invalid multiaddr"); 
+                return log.error("Invalid multiaddr");
             }
 
             const ma = multiaddr(candidate);
@@ -52,7 +52,7 @@ class Bootstrap extends EventEmitter {
 
             PeerInfo.create(peerId, (err, peerInfo) => {
                 if (err) {
-                    return log.error("Invalid bootstrap peer id", err); 
+                    return log.error("Invalid bootstrap peer id", err);
                 }
                 peerInfo.multiaddrs.add(ma);
                 this.emit("peer", peerInfo);

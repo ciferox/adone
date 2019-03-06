@@ -15,7 +15,7 @@ const wrongSwarmKeyBuffer = Buffer.alloc(95);
 generate(swarmKeyBuffer);
 generate(wrongSwarmKeyBuffer);
 
-describe("private network", () => {
+describe("p2p", "private network", () => {
     before((done) => {
         parallel([
             (cb) => PeerId.createFromJSON(require("./fixtures/peer-a"), cb),

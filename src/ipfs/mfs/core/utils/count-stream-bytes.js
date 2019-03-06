@@ -1,17 +1,18 @@
-'use strict'
-
-const through = require('pull-stream/throughs/through')
+const {
+    stream: { pull2: pull }
+} = adone;
+const { through } = pull;
 
 const countStreamBytes = (callback) => {
-  let bytesRead = 0
+    let bytesRead = 0;
 
-  return through((buffer) => {
-    bytesRead += buffer.length
+    return through((buffer) => {
+        bytesRead += buffer.length;
 
-    return buffer
-  }, () => {
-    callback(bytesRead)
-  })
-}
+        return buffer;
+    }, () => {
+        callback(bytesRead);
+    });
+};
 
-module.exports = countStreamBytes
+module.exports = countStreamBytes;

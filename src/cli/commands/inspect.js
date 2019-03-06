@@ -158,6 +158,8 @@ export default class Inspection extends Subsystem {
                     case "function":
                         omitProps.push("length", "name", "prototype");
                         break;
+                    default:
+                        omitProps.push("__esModule");
                 }
 
                 const styleType = (type) => `{magenta-fg}${type}{/magenta-fg}`;

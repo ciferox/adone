@@ -1,90 +1,92 @@
-/* eslint-env mocha */
-'use strict'
+/**
+ * eslint-env mocha
+ */
 
-const chai = require('chai')
-const dirtyChai = require('dirty-chai')
-const expect = chai.expect
-chai.use(dirtyChai)
 
-const parallel = require('async/parallel')
-const TCP = require('libp2p-tcp')
-const pull = require('pull-stream')
-const PeerBook = require('peer-book')
+const chai = require("chai");
+const dirtyChai = require("dirty-chai");
+const expect = chai.expect;
+chai.use(dirtyChai);
 
-const utils = require('./utils')
-const createInfos = utils.createInfos
-const tryEcho = utils.tryEcho
-const Switch = require('../src')
+const parallel = require("async/parallel");
+const TCP = require("libp2p-tcp");
+const pull = require("pull-stream");
+const PeerBook = require("peer-book");
 
-describe('Switch (no Stream Multiplexing)', () => {
-  let switchA
-  let switchB
+const utils = require("./utils");
+const createInfos = utils.createInfos;
+const tryEcho = utils.tryEcho;
+const Switch = require("../src");
 
-  before((done) => createInfos(2, (err, infos) => {
-    expect(err).to.not.exist()
+describe("Switch (no Stream Multiplexing)", () => {
+    let switchA;
+    let switchB;
 
-    const peerA = infos[0]
-    const peerB = infos[1]
+    before((done) => createInfos(2, (err, infos) => {
+        expect(err).to.not.exist();
 
-    peerA.multiaddrs.add('/ip4/127.0.0.1/tcp/9001')
-    peerB.multiaddrs.add('/ip4/127.0.0.1/tcp/9002/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC')
+        const peerA = infos[0];
+        const peerB = infos[1];
 
-    switchA = new Switch(peerA, new PeerBook())
-    switchB = new Switch(peerB, new PeerBook())
+        peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/9001");
+        peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9002/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC");
 
-    switchA.transport.add('tcp', new TCP())
-    switchB.transport.add('tcp', new TCP())
+        switchA = new Switch(peerA, new PeerBook());
+        switchB = new Switch(peerB, new PeerBook());
 
-    parallel([
-      (cb) => switchA.transport.listen('tcp', {}, null, cb),
-      (cb) => switchB.transport.listen('tcp', {}, null, cb)
-    ], done)
-  }))
+        switchA.transport.add("tcp", new TCP());
+        switchB.transport.add("tcp", new TCP());
 
-  after((done) => parallel([
-    (cb) => switchA.stop(cb),
-    (cb) => switchB.stop(cb)
-  ], done))
+        parallel([
+            (cb) => switchA.transport.listen("tcp", {}, null, cb),
+            (cb) => switchB.transport.listen("tcp", {}, null, cb)
+        ], done);
+    }));
 
-  it('handle a protocol', (done) => {
-    switchB.handle('/bananas/1.0.0', (protocol, conn) => pull(conn, conn))
-    expect(switchB.protocols).to.have.all.keys('/bananas/1.0.0')
-    done()
-  })
+    after((done) => parallel([
+        (cb) => switchA.stop(cb),
+        (cb) => switchB.stop(cb)
+    ], done));
 
-  it('dial on protocol', (done) => {
-    switchB.handle('/pineapple/1.0.0', (protocol, conn) => pull(conn, conn))
+    it("handle a protocol", (done) => {
+        switchB.handle("/bananas/1.0.0", (protocol, conn) => pull(conn, conn));
+        expect(switchB.protocols).to.have.all.keys("/bananas/1.0.0");
+        done();
+    });
 
-    switchA.dial(switchB._peerInfo, '/pineapple/1.0.0', (err, conn) => {
-      expect(err).to.not.exist()
-      tryEcho(conn, done)
-    })
-  })
+    it("dial on protocol", (done) => {
+        switchB.handle("/pineapple/1.0.0", (protocol, conn) => pull(conn, conn));
 
-  it('dial on protocol (returned conn)', (done) => {
-    switchB.handle('/apples/1.0.0', (protocol, conn) => pull(conn, conn))
+        switchA.dial(switchB._peerInfo, "/pineapple/1.0.0", (err, conn) => {
+            expect(err).to.not.exist();
+            tryEcho(conn, done);
+        });
+    });
 
-    const conn = switchA.dial(switchB._peerInfo, '/apples/1.0.0', (err) => {
-      expect(err).to.not.exist()
-    })
+    it("dial on protocol (returned conn)", (done) => {
+        switchB.handle("/apples/1.0.0", (protocol, conn) => pull(conn, conn));
 
-    tryEcho(conn, done)
-  })
+        const conn = switchA.dial(switchB._peerInfo, "/apples/1.0.0", (err) => {
+            expect(err).to.not.exist();
+        });
 
-  it('dial to warm a conn', (done) => {
-    switchA.dial(switchB._peerInfo, done)
-  })
+        tryEcho(conn, done);
+    });
 
-  it('dial on protocol, reuse warmed conn', (done) => {
-    switchA.dial(switchB._peerInfo, '/bananas/1.0.0', (err, conn) => {
-      expect(err).to.not.exist()
-      tryEcho(conn, done)
-    })
-  })
+    it("dial to warm a conn", (done) => {
+        switchA.dial(switchB._peerInfo, done);
+    });
 
-  it('unhandle', () => {
-    const proto = '/bananas/1.0.0'
-    switchA.unhandle(proto)
-    expect(switchA.protocols[proto]).to.not.exist()
-  })
-})
+    it("dial on protocol, reuse warmed conn", (done) => {
+        switchA.dial(switchB._peerInfo, "/bananas/1.0.0", (err, conn) => {
+            expect(err).to.not.exist();
+            tryEcho(conn, done);
+        });
+    });
+
+    it("unhandle", () => {
+        const proto = "/bananas/1.0.0";
+        switchA.unhandle(proto);
+        expect(switchA.protocols[proto]).to.not.exist();
+    });
+});

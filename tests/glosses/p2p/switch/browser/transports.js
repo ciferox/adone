@@ -1,52 +1,54 @@
-/* eslint-env mocha */
-'use strict'
+/**
+ * eslint-env mocha
+ */
 
-const chai = require('chai')
-const dirtyChai = require('dirty-chai')
-const expect = chai.expect
-chai.use(dirtyChai)
 
-const PeerId = require('peer-id')
-const PeerInfo = require('peer-info')
-const PeerBook = require('peer-book')
-const WebSockets = require('libp2p-websockets')
+const chai = require("chai");
+const dirtyChai = require("dirty-chai");
+const expect = chai.expect;
+chai.use(dirtyChai);
 
-const tryEcho = require('./utils').tryEcho
-const Switch = require('../src')
+const PeerId = require("peer-id");
+const PeerInfo = require("peer-info");
+const PeerBook = require("peer-book");
+const WebSockets = require("libp2p-websockets");
 
-describe('Transports', () => {
-  describe('WebSockets', () => {
-    let sw
-    let peer
+const tryEcho = require("./utils").tryEcho;
+const Switch = require("../src");
 
-    before((done) => {
-      const b58IdSrc = 'QmYzgdesgjdvD3okTPGZT9NPmh1BuH5FfTVNKjsvaAprhb'
-      // use a pre generated Id to save time
-      const idSrc = PeerId.createFromB58String(b58IdSrc)
-      const peerSrc = new PeerInfo(idSrc)
-      sw = new Switch(peerSrc, new PeerBook())
+describe("Transports", () => {
+    describe("WebSockets", () => {
+        let sw;
+        let peer;
 
-      PeerInfo.create((err, p) => {
-        expect(err).to.not.exist()
-        peer = p
-        done()
-      })
-    })
+        before((done) => {
+            const b58IdSrc = "QmYzgdesgjdvD3okTPGZT9NPmh1BuH5FfTVNKjsvaAprhb";
+            // use a pre generated Id to save time
+            const idSrc = PeerId.createFromB58String(b58IdSrc);
+            const peerSrc = new PeerInfo(idSrc);
+            sw = new Switch(peerSrc, new PeerBook());
 
-    it('.transport.add', () => {
-      sw.transport.add('ws', new WebSockets())
-      expect(Object.keys(sw.transports).length).to.equal(1)
-    })
+            PeerInfo.create((err, p) => {
+                expect(err).to.not.exist();
+                peer = p;
+                done();
+            });
+        });
 
-    it('.transport.dial', (done) => {
-      peer.multiaddrs.clear()
-      peer.multiaddrs.add('/ip4/127.0.0.1/tcp/15337/ws')
+        it(".transport.add", () => {
+            sw.transport.add("ws", new WebSockets());
+            expect(Object.keys(sw.transports).length).to.equal(1);
+        });
 
-      const conn = sw.transport.dial('ws', peer, (err, conn) => {
-        expect(err).to.not.exist()
-      })
+        it(".transport.dial", (done) => {
+            peer.multiaddrs.clear();
+            peer.multiaddrs.add("/ip4/127.0.0.1/tcp/15337/ws");
 
-      tryEcho(conn, done)
-    })
-  })
-})
+            const conn = sw.transport.dial("ws", peer, (err, conn) => {
+                expect(err).to.not.exist();
+            });
+
+            tryEcho(conn, done);
+        });
+    });
+});

@@ -4,7 +4,7 @@ const log = debug("libp2p:mdns");
 const Multiaddr = require("multiaddr");
 
 const {
-    p2p: { PeerId, PeerInfo, TCP }
+    p2p: { PeerId, PeerInfo, transport: { TCP } }
 } = adone;
 
 const tcp = new TCP();
@@ -30,7 +30,7 @@ module.exports = {
 
     gotResponse(rsp, peerInfo, serviceTag, callback) {
         if (!rsp.answers) {
-            return; 
+            return;
         }
 
         const answers = {
@@ -88,13 +88,13 @@ module.exports = {
 
     gotQuery(qry, mdns, peerInfo, serviceTag, broadcast) {
         if (!broadcast) {
-            return; 
+            return;
         }
 
         const multiaddrs = tcp.filter(peerInfo.multiaddrs.toArray());
         // Only announce TCP for now
         if (multiaddrs.length === 0) {
-            return; 
+            return;
         }
 
         if (qry.questions[0] && qry.questions[0].name === serviceTag) {

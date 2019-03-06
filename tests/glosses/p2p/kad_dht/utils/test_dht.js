@@ -7,7 +7,7 @@ const createPeerInfo = require("./create_peer_info");
 
 const {
     is,
-    p2p: { KadDHT, multiplex, TCP, Switch, PeerBook }
+    p2p: { KadDHT, muxer: { mplex }, transport: { TCP }, Switch, PeerBook }
 } = adone;
 
 class TestDHT {
@@ -45,7 +45,7 @@ class TestDHT {
 
             const sw = new Switch(p, new PeerBook());
             sw.transport.add("tcp", new TCP());
-            sw.connection.addStreamMuxer(multiplex);
+            sw.connection.addStreamMuxer(mplex);
             sw.connection.reuse();
 
             const dht = new KadDHT(sw, options);

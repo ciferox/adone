@@ -1,4 +1,3 @@
-const Store = require("interface-datastore").MemoryDatastore;
 const parallel = require("async/parallel");
 const waterfall = require("async/waterfall");
 const CID = require("cids");
@@ -7,9 +6,9 @@ const map = require("async/map");
 const timesSeries = require("async/timesSeries");
 const each = require("async/each");
 const eachSeries = require("async/eachSeries");
-const LevelStore = require("datastore-level");
 
 const {
+    datastore2: { backend: { MemoryDatastore, LevelDatastore } },
     lodash: { range },
     std: { os, path }
 } = adone;
@@ -36,7 +35,7 @@ describe("Providers", () => {
     });
 
     it("simple add and get of providers", (done) => {
-        const providers = new Providers(new Store(), infos[2].id);
+        const providers = new Providers(new MemoryDatastore(), infos[2].id);
 
         const cid = new CID("QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n");
 
@@ -56,7 +55,7 @@ describe("Providers", () => {
     });
 
     it("more providers than space in the lru cache", (done) => {
-        const providers = new Providers(new Store(), infos[2].id, 10);
+        const providers = new Providers(new MemoryDatastore(), infos[2].id, 10);
 
         waterfall([
             (cb) => map(
@@ -88,7 +87,7 @@ describe("Providers", () => {
     });
 
     it("expires", (done) => {
-        const providers = new Providers(new Store(), infos[2].id);
+        const providers = new Providers(new MemoryDatastore(), infos[2].id);
         providers.cleanupInterval = 100;
         providers.provideValidity = 200;
 
@@ -123,7 +122,7 @@ describe("Providers", () => {
         const p = path.join(
             os.tmpdir(), (Math.random() * 100).toString()
         );
-        const store = new LevelStore(p);
+        const store = new LevelDatastore(p);
         const providers = new Providers(store, infos[2].id, 10);
 
         console.log("starting");

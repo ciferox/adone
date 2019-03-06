@@ -2,23 +2,18 @@ const debug = require('debug')
 const tar = require('tar-stream')
 const log = debug('jsipfs:http-api:files')
 log.error = debug('jsipfs:http-api:files:error')
-const pull = require('pull-stream')
-const toPull = require('stream-to-pull-stream')
-const pushable = require('pull-pushable')
-const toStream = require('pull-stream-to-stream')
-const abortable = require('pull-abortable')
 const Joi = require('joi')
 const Boom = require('boom')
-const ndjson = require('pull-ndjson')
 const { PassThrough } = require('readable-stream')
 const multibase = require('multibase')
 const promisify = require('promisify-es6')
 const { cidToString } = require('../../../utils/cid')
 
 const {
-    ipfs: { isIPFS, multipart }
+    ipfs: { isIPFS, multipart },
+    stream: { pull2: pull }
 } = adone;
-
+const { abortable, ndjson, streamToPullStream: toPull, pullStreamToStream: toStream, pushable } = pull;
 
 function numberFromQuery(query, key) {
     if (query && query[key] !== undefined) {

@@ -1,10 +1,3 @@
-const pull = require('pull-stream/pull')
-const once = require('pull-stream/sources/once')
-const asyncMap = require('pull-stream/throughs/async-map')
-const flatten = require('pull-stream/throughs/flatten')
-const filter = require('pull-stream/throughs/filter')
-const defer = require('pull-defer')
-const collect = require('pull-stream/sinks/collect')
 const {
     toMfsPath
 } = require('./utils')
@@ -13,6 +6,11 @@ const log = require('debug')('ipfs:mfs:read-pull-stream')
 const {
     ipfs: { unixfsExporter: exporter }
 } = adone;
+
+const {
+    stream: { pull2: pull }
+} = adone;
+const { defer, asyncMap, collect, once, flatten, filter } = pull;
 
 const defaultOptions = {
     offset: 0,

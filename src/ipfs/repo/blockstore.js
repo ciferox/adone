@@ -1,6 +1,3 @@
-const core = require('datastore-core')
-const ShardingStore = core.ShardingDatastore
-const Key = require('interface-datastore').Key
 const base32 = require('base32.js')
 const setImmediate = require('async/setImmediate')
 const reject = require('async/reject')
@@ -8,8 +5,10 @@ const CID = require('cids')
 const pull = require('pull-stream')
 
 const {
-    ipfs: { Block }
+    ipfs: { Block },
+    datastore2: { shard: sh, ShardingDatastore, interface: { Key } }
 } = adone;
+
 
 /**
  * Transform a raw buffer to a base32 encoded key.
@@ -42,8 +41,8 @@ module.exports = (filestore, options, callback) => {
 
 function maybeWithSharding(filestore, options, callback) {
     if (options.sharding) {
-        const shard = new core.shard.NextToLast(2)
-        ShardingStore.createOrOpen(filestore, shard, callback)
+        const shard = new sh.NextToLast(2)
+        ShardingDatastore.createOrOpen(filestore, shard, callback)
     } else {
         setImmediate(() => callback(null, filestore))
     }

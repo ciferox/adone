@@ -40,7 +40,7 @@ const spawnNode = function (boostrap, callback) {
     });
 };
 
-describe("DelegatedContentRouting", function () {
+describe("p2p", "DelegatedContentRouter", function () {
     this.timeout(20 * 1000); // we're spawning daemons, give ci some time
 
     let selfNode;

@@ -1,4 +1,6 @@
-const { Key } = require('interface-datastore')
+const {
+    datastore2: { interface: { Key } }
+} = adone;
 const { encodeBase32 } = require('./utils')
 
 const {

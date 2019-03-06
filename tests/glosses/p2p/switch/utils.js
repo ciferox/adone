@@ -1,8 +1,8 @@
 const parallel = require("async/parallel");
-const pull = require("pull-stream");
 
 const {
-    p2p: { PeerId, PeerInfo }
+    p2p: { PeerId, PeerInfo },
+    stream: { pull2: pull }
 } = adone;
 
 const fixtures = require("./test-data/ids.json").infos;
@@ -63,9 +63,13 @@ exports.doneAfter = (n, willFinish, done) => {
     const errors = [];
     return (err) => {
         count++;
-        if (err) { errors.push(err) };
+        if (err) {
+            errors.push(err);
+        }
         if (count >= n) {
-            if (willFinish) { willFinish() };
+            if (willFinish) {
+                willFinish();
+            }
             done(errors.length > 0 ? errors : null);
         }
     };

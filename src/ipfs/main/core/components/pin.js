@@ -8,7 +8,6 @@ const eachLimit = require('async/eachLimit')
 const waterfall = require('async/waterfall')
 const detectLimit = require('async/detectLimit')
 const setImmediate = require('async/setImmediate')
-const { Key } = require('interface-datastore')
 const errCode = require('err-code')
 const multibase = require('multibase')
 
@@ -16,8 +15,10 @@ const createPinSet = require('./pin-set')
 const { resolvePath } = require('../utils')
 
 const {
-    ipfs: { ipld: { dagPb } }
+    ipfs: { ipld: { dagPb } },
+    datastore2: { interface: { Key } }
 } = adone;
+
 
 const { DAGNode, DAGLink, util } = dagPb;
 

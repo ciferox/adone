@@ -1,9 +1,6 @@
 const debug = require('debug')
 const log = debug('jsipfs:http-gateway')
 log.error = debug('jsipfs:http-gateway:error')
-const pull = require('pull-stream')
-const pushable = require('pull-pushable')
-const toStream = require('pull-stream-to-stream')
 const fileType = require('file-type')
 const mime = require('mime-types')
 const { PassThrough } = require('readable-stream')
@@ -12,6 +9,12 @@ const Boom = require('boom')
 const { resolver } = adone.ipfs.httpResponse;
 const PathUtils = require('../utils/path')
 const { cidToString } = require('../../../utils/cid')
+
+const {
+    stream: { pull2: pull }
+} = adone;
+const { pushable, pullStreamToStream: toStream } = pull;
+
 
 function detectContentType(ref, chunk) {
     let fileSignature

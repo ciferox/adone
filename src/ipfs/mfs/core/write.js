@@ -16,14 +16,7 @@ const {
     toTrail,
     zeros
 } = require('./utils')
-const pull = require('pull-stream/pull')
-const cat = require('pull-cat')
-const collect = require('pull-stream/sinks/collect')
-const empty = require('pull-stream/sources/empty')
-const err = require('pull-stream/sources/error')
 const log = require('debug')('ipfs:mfs:write')
-const values = require('pull-stream/sources/values')
-const deferred = require('pull-defer')
 const CID = require('cids')
 const stat = require('./stat')
 const mkdir = require('./mkdir')
@@ -31,6 +24,11 @@ const mkdir = require('./mkdir')
 const {
     ipfs: { UnixFs: { unmarshal }, unixfsExporter: exporter, unixfsImporter: importer }
 } = adone;
+
+const {
+    stream: { pull2: pull }
+} = adone;
+const { defer: deferred, cat, values, empty, collect, error: err } = pull;
 
 const defaultOptions = {
     offset: 0, // the offset in the file to begin writing

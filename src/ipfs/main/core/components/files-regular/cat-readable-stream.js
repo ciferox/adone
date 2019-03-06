@@ -1,7 +1,8 @@
-'use strict'
-
-const toStream = require('pull-stream-to-stream')
+const {
+    stream: { pull2: pull }
+} = adone;
+const { pullStreamToStream: toStream } = pull;
 
 module.exports = function (self) {
-  return (ipfsPath, options) => toStream.source(self.catPullStream(ipfsPath, options))
-}
+    return (ipfsPath, options) => toStream.source(self.catPullStream(ipfsPath, options));
+};

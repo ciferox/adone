@@ -1,18 +1,20 @@
-'use strict'
+const promisify = require("promisify-es6");
 
-const promisify = require('promisify-es6')
-const pull = require('pull-stream/pull')
+const {
+    is,
+    stream: { pull2: pull }
+} = adone;
 
-module.exports = function ping (self) {
-  return promisify((peerId, opts, callback) => {
-    if (typeof opts === 'function') {
-      callback = opts
-      opts = {}
-    }
+module.exports = function ping(self) {
+    return promisify((peerId, opts, callback) => {
+        if (is.function(opts)) {
+            callback = opts;
+            opts = {};
+        }
 
-    pull(
-      self.pingPullStream(peerId, opts),
-      pull.collect(callback)
-    )
-  })
-}
+        pull(
+            self.pingPullStream(peerId, opts),
+            pull.collect(callback)
+        );
+    });
+};

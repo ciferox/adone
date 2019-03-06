@@ -1,18 +1,10 @@
-const traverse = require('pull-traverse')
-const pull = require('pull-stream/pull')
-const values = require('pull-stream/sources/values')
-const error = require('pull-stream/sources/error')
-const once = require('pull-stream/sources/once')
-const empty = require('pull-stream/sources/empty')
-const filter = require('pull-stream/throughs/filter')
-const flatten = require('pull-stream/throughs/flatten')
-const map = require('pull-stream/throughs/map')
-const paramap = require('pull-paramap')
 const extractDataFromBlock = require('./extract-data-from-block')
 
 const {
-    ipfs: { UnixFs }
+    ipfs: { UnixFs },
+    stream: { pull2: pull }
 } = adone;
+const { empty, traverse, once, values, paramap, flatten, error, filter, map } = pull;
 
 // Logic to export a single (possibly chunked) unixfs file.
 module.exports = (cid, node, name, path, pathRest, resolve, size, dag, parent, depth, options) => {

@@ -2,10 +2,9 @@ const sinon = require("sinon");
 const parallel = require("async/parallel");
 
 const {
-    p2p: { Protector, Switch, Connection, secio, PeerBook, WS, spdy },
+    p2p: { Protector, Switch, Connection, secio, PeerBook, transport: { WS }, muxer: { spdy, pullMplex } },
     stream: { pull2: pull }
 } = adone;
-const { mplex: multiplex } = pull;
 
 const generatePSK = Protector.generate;
 
@@ -32,13 +31,13 @@ describe("ConnectionFSM", () => {
             dialerSwitch = new Switch(infos.shift(), new PeerBook());
             dialerSwitch._peerInfo.multiaddrs.add("/ip4/0.0.0.0/tcp/15451/ws");
             dialerSwitch.connection.crypto(secio.tag, secio.encrypt);
-            dialerSwitch.connection.addStreamMuxer(multiplex);
+            dialerSwitch.connection.addStreamMuxer(pullMplex);
             dialerSwitch.transport.add("ws", new WS());
 
             listenerSwitch = new Switch(infos.shift(), new PeerBook());
             listenerSwitch._peerInfo.multiaddrs.add("/ip4/0.0.0.0/tcp/15452/ws");
             listenerSwitch.connection.crypto(secio.tag, secio.encrypt);
-            listenerSwitch.connection.addStreamMuxer(multiplex);
+            listenerSwitch.connection.addStreamMuxer(pullMplex);
             listenerSwitch.transport.add("ws", new WS());
 
             spdySwitch = new Switch(infos.shift(), new PeerBook());
@@ -126,11 +125,9 @@ describe("ConnectionFSM", () => {
             peerInfo: listenerSwitch._peerInfo
         });
 
-        const stub = sinon.stub(dialerSwitch.transport, "dial").callsArgWith(2, {
-            errors: [
-                new Error("address in use")
-            ]
-        });
+        const stub = sinon.stub(dialerSwitch.transport, "dial").callsArgWith(2, [
+            new Error("address in use")
+        ]);
 
         connection.once("error:connection_attempt_failed", (errors) => {
             expect(errors).to.have.length(1).mark();
@@ -217,7 +214,7 @@ describe("ConnectionFSM", () => {
             connection.upgrade();
         });
         connection.once("muxed", (conn) => {
-            expect(conn.multicodec).to.equal(multiplex.multicodec);
+            expect(conn.multicodec).to.equal(pullMplex.multicodec);
             done();
         });
 
@@ -265,7 +262,7 @@ describe("ConnectionFSM", () => {
             connection.upgrade();
         });
         connection.once("muxed", (conn) => {
-            expect(conn.multicodec).to.equal(multiplex.multicodec);
+            expect(conn.multicodec).to.equal(pullMplex.multicodec);
 
             connection.shake("/muxed-conn-test/1.0.0", (err, protocolConn) => {
                 expect(err).to.not.exist();
@@ -296,7 +293,7 @@ describe("ConnectionFSM", () => {
             connection.upgrade();
         });
         connection.once("muxed", (conn) => {
-            expect(conn.multicodec).to.equal(multiplex.multicodec);
+            expect(conn.multicodec).to.equal(pullMplex.multicodec);
 
             connection.shake(null, (err, protocolConn) => {
                 expect(err).to.not.exist();

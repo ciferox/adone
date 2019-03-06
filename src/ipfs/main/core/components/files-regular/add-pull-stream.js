@@ -1,14 +1,13 @@
-const pull = require('pull-stream')
-const toPull = require('stream-to-pull-stream')
 const waterfall = require('async/waterfall')
 const isStream = require('is-stream')
-const isSource = require('is-pull-stream').isSource
 const CID = require('cids')
 const { parseChunkerString } = require('./utils')
 
 const {
-    ipfs: { unixfsImporter: importer }
+    ipfs: { unixfsImporter: importer },
+    stream: { pull2: pull }
 } = adone;
+const { streamToPullStream: toPull, is: { source: isSource } } = pull;
 
 const WRAPPER = 'wrapper/'
 

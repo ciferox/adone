@@ -1,10 +1,5 @@
 const waterfall = require('async/waterfall')
-const asyncMap = require('async/map')
 const log = require('debug')('ipfs:mfs:mkdir')
-const pull = require('pull-stream/pull')
-const filter = require('pull-stream/throughs/filter')
-const map = require('pull-stream/throughs/map')
-const collect = require('pull-stream/sinks/collect')
 const CID = require('cids')
 const {
     createNode,
@@ -18,6 +13,11 @@ const {
 const {
     ipfs: { unixfsExporter: exporter }
 } = adone;
+
+const {
+    stream: { pull2: pull }
+} = adone;
+const { asyncMap, collect, filter, map } = pull;
 
 const defaultOptions = {
     parents: false,

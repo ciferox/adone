@@ -1,11 +1,11 @@
 const debug = require('debug')
 const OFFLINE_ERROR = require('../utils').OFFLINE_ERROR
-const pull = require('pull-stream')
-const Pushable = require('pull-pushable')
 
 const {
-    p2p: { PeerId }
+    p2p: { PeerId },
+    stream: { pull2: pull }
 } = adone;
+const { pushable: Pushable } = pull;
 
 const log = debug('jsipfs:pingPullStream')
 log.error = debug('jsipfs:pingPullStream:error')

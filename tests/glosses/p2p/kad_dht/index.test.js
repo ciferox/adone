@@ -15,7 +15,7 @@ const TestDHT = require("./utils/test_dht");
 
 const {
     lodash: { random },
-    p2p: { KadDHT, PeerId, PeerBook, PeerInfo, Switch, TCP, multiplex, record: { Record } }
+    p2p: { KadDHT, PeerId, PeerBook, PeerInfo, Switch, transport: { TCP }, muxer: { mplex }, record: { Record } }
 } = adone;
 
 const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "kad_dht", ...args);
@@ -122,7 +122,7 @@ describe("KadDHT", () => {
     it("create", () => {
         const sw = new Switch(peerInfos[0], new PeerBook());
         sw.transport.add("tcp", new TCP());
-        sw.connection.addStreamMuxer(multiplex);
+        sw.connection.addStreamMuxer(mplex);
         sw.connection.reuse();
         const dht = new KadDHT(sw, { kBucketSize: 5 });
 
@@ -135,7 +135,7 @@ describe("KadDHT", () => {
     it("create with validators and selectors", () => {
         const sw = new Switch(peerInfos[0], new PeerBook());
         sw.transport.add("tcp", new TCP());
-        sw.connection.addStreamMuxer(multiplex);
+        sw.connection.addStreamMuxer(mplex);
         sw.connection.reuse();
         const dht = new KadDHT(sw, {
             validators: {
@@ -158,7 +158,7 @@ describe("KadDHT", () => {
     it("should be able to start and stop", (done) => {
         const sw = new Switch(peerInfos[0], new PeerBook());
         sw.transport.add("tcp", new TCP());
-        sw.connection.addStreamMuxer(multiplex);
+        sw.connection.addStreamMuxer(mplex);
         sw.connection.reuse();
         const dht = new KadDHT(sw);
 
@@ -189,7 +189,7 @@ describe("KadDHT", () => {
     it("should be able to start with random-walk disabled", (done) => {
         const sw = new Switch(peerInfos[0], new PeerBook());
         sw.transport.add("tcp", new TCP());
-        sw.connection.addStreamMuxer(multiplex);
+        sw.connection.addStreamMuxer(mplex);
         sw.connection.reuse();
         const dht = new KadDHT(sw, { randomWalk: { enabled: false } });
 
@@ -220,7 +220,7 @@ describe("KadDHT", () => {
     it("should fail to start when already started", (done) => {
         const sw = new Switch(peerInfos[0], new PeerBook());
         sw.transport.add("tcp", new TCP());
-        sw.connection.addStreamMuxer(multiplex);
+        sw.connection.addStreamMuxer(mplex);
         sw.connection.reuse();
         const dht = new KadDHT(sw, { enabledDiscovery: false });
 
@@ -236,7 +236,7 @@ describe("KadDHT", () => {
     it("should fail to stop when was not started", (done) => {
         const sw = new Switch(peerInfos[0], new PeerBook());
         sw.transport.add("tcp", new TCP());
-        sw.connection.addStreamMuxer(multiplex);
+        sw.connection.addStreamMuxer(mplex);
         sw.connection.reuse();
         const dht = new KadDHT(sw, { enabledDiscovery: false });
 
@@ -842,7 +842,7 @@ describe("KadDHT", () => {
     it("_nearestPeersToQuery", (done) => {
         const sw = new Switch(peerInfos[0], new PeerBook());
         sw.transport.add("tcp", new TCP());
-        sw.connection.addStreamMuxer(multiplex);
+        sw.connection.addStreamMuxer(mplex);
         sw.connection.reuse();
         const dht = new KadDHT(sw);
 
@@ -860,7 +860,7 @@ describe("KadDHT", () => {
     it("_betterPeersToQuery", (done) => {
         const sw = new Switch(peerInfos[0], new PeerBook());
         sw.transport.add("tcp", new TCP());
-        sw.connection.addStreamMuxer(multiplex);
+        sw.connection.addStreamMuxer(mplex);
         sw.connection.reuse();
         const dht = new KadDHT(sw);
 
@@ -882,7 +882,7 @@ describe("KadDHT", () => {
         it("allow a peer record from store if recent", (done) => {
             const sw = new Switch(peerInfos[0], new PeerBook());
             sw.transport.add("tcp", new TCP());
-            sw.connection.addStreamMuxer(multiplex);
+            sw.connection.addStreamMuxer(mplex);
             sw.connection.reuse();
             const dht = new KadDHT(sw);
 
@@ -905,7 +905,7 @@ describe("KadDHT", () => {
         it("delete entries received from peers that have expired", (done) => {
             const sw = new Switch(peerInfos[0], new PeerBook());
             sw.transport.add("tcp", new TCP());
-            sw.connection.addStreamMuxer(multiplex);
+            sw.connection.addStreamMuxer(mplex);
             sw.connection.reuse();
             const dht = new KadDHT(sw);
 
@@ -943,7 +943,7 @@ describe("KadDHT", () => {
         it("valid record", (done) => {
             const sw = new Switch(peerInfos[0], new PeerBook());
             sw.transport.add("tcp", new TCP());
-            sw.connection.addStreamMuxer(multiplex);
+            sw.connection.addStreamMuxer(mplex);
             sw.connection.reuse();
             const dht = new KadDHT(sw);
 

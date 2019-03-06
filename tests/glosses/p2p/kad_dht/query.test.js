@@ -1,5 +1,5 @@
 const {
-    p2p: { KadDHT, PeerBook, Switch, TCP, multiplex }
+    p2p: { KadDHT, PeerBook, Switch, transport: { TCP }, multiplex }
 } = adone;
 const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "kad_dht", ...args);
 

@@ -1,13 +1,13 @@
 const debug = require("debug");
 const multihashing = require("multihashing-async");
 const mh = require("multihashes");
-const Key = require("interface-datastore").Key;
 const base32 = require("base32.js");
 const distance = require("xor-distance");
 const map = require("async/map");
 const setImmediate = require("async/setImmediate");
 
 const {
+    datastore2: { interface: { Key } },
     p2p: { PeerId, record: { Record } }
 } = adone;
 

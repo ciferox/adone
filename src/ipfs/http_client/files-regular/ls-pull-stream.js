@@ -1,11 +1,12 @@
 const moduleConfig = require('../utils/module-config')
-const pull = require('pull-stream')
-const deferred = require('pull-defer')
 const cleanCID = require('../utils/clean-cid')
 
 const {
-    ipfs: { isIPFS }
+    ipfs: { isIPFS },
+    stream: { pull2: pull }
 } = adone;
+const { defer: deferred } = pull;
+
 
 module.exports = (arg) => {
     const send = moduleConfig(arg)

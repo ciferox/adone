@@ -4,11 +4,13 @@ const {
     loadNode
 } = require('./utils')
 const waterfall = require('async/waterfall')
-const pull = require('pull-stream/pull')
-const collect = require('pull-stream/sinks/collect')
-const asyncMap = require('pull-stream/throughs/async-map')
 const CID = require('cids')
 const log = require('debug')('ipfs:mfs:stat')
+
+const {
+    stream: { pull2: pull }
+} = adone;
+const { collect, asyncMap } = pull;
 
 const {
     ipfs: { UnixFs: { unmarshal }, unixfsExporter: exporter }

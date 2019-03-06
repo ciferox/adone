@@ -1,6 +1,5 @@
 const base32Encode = require('base32-encode')
 const NanoDate = require('timestamp-nano')
-const { Key } = require('interface-datastore')
 const multihash = require('multihashes')
 
 const debug = require('debug')
@@ -12,8 +11,10 @@ const { parseRFC3339 } = require('./utils')
 const ERRORS = require('./errors')
 
 const {
-    p2p: { crypto, PeerId }
+    p2p: { crypto, PeerId },
+    datastore2: { interface: { Key } }
 } = adone;
+
 
 const ID_MULTIHASH_CODE = multihash.names.id
 

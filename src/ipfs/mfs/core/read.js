@@ -1,25 +1,27 @@
-'use strict'
+const readPullStream = require("./read-pull-stream");
 
-const pull = require('pull-stream/pull')
-const collect = require('pull-stream/sinks/collect')
-const readPullStream = require('./read-pull-stream')
+const {
+    is,
+    stream: { pull2: pull }
+} = adone;
+const { collect } = pull;
 
 module.exports = (context) => {
-  return function mfsRead (path, options, callback) {
-    if (typeof options === 'function') {
-      callback = options
-      options = {}
-    }
-
-    pull(
-      readPullStream(context)(path, options),
-      collect((error, buffers) => {
-        if (error) {
-          return callback(error)
+    return function mfsRead(path, options, callback) {
+        if (is.function(options)) {
+            callback = options;
+            options = {};
         }
 
-        return callback(null, Buffer.concat(buffers))
-      })
-    )
-  }
-}
+        pull(
+            readPullStream(context)(path, options),
+            collect((error, buffers) => {
+                if (error) {
+                    return callback(error);
+                }
+
+                return callback(null, Buffer.concat(buffers));
+            })
+        );
+    };
+};

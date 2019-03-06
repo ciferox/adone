@@ -1,17 +1,16 @@
-const pull = require('pull-stream')
 const CID = require('cids')
 const doUntil = require('async/doUntil')
 const joinPath = require('path').join
 const osPathSep = require('path').sep
-const pullDeferSource = require('pull-defer').source
-const pullTraverse = require('pull-traverse')
 const map = require('async/map')
 const waterfall = require('async/waterfall')
 const mergeOptions = require('merge-options')
 
 const {
-    ipfs: { Block, ipld: { dagCbor: ipldDagCbor, dagPb: ipldDagPb, raw: ipldRaw } }
+    ipfs: { Block, ipld: { dagCbor: ipldDagCbor, dagPb: ipldDagPb, raw: ipldRaw } },
+    stream: { pull2: pull }
 } = adone;
+const { defer: { source: pullDeferSource }, traverse: pullTraverse } = pull;
 
 function noop() { }
 

@@ -1,10 +1,10 @@
-const pull = require('pull-stream')
-const deferred = require('pull-defer')
 const { normalizePath } = require('./utils')
 
 const {
-    ipfs: { unixfsExporter: exporter }
+    ipfs: { unixfsExporter: exporter },
+    stream: { pull2: pull }
 } = adone;
+const { defer: deferred } = pull;
 
 module.exports = function (self) {
     return function catPullStream(ipfsPath, options) {

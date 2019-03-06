@@ -1,15 +1,11 @@
-const pull = require('pull-stream/pull')
-const error = require('pull-stream/sources/error')
-const filter = require('pull-stream/throughs/filter')
-const flatten = require('pull-stream/throughs/flatten')
-const map = require('pull-stream/throughs/map')
-const paramap = require('pull-paramap')
 const CID = require('cids')
 const waterfall = require('async/waterfall')
 
 const {
-    ipfs: { UnixFs }
+    ipfs: { UnixFs },
+    stream: { pull2: pull }
 } = adone;
+const { paramap, flatten, error, filter, map } = pull;
 
 const resolvers = {
     directory: require('./dir-flat'),

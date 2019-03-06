@@ -1,14 +1,16 @@
-const os = require("os");
-const path = require("path");
 const rimraf = require("rimraf");
 const series = require("async/series");
-const FsStore = require("datastore-fs");
+
+const {
+    datastore2: { backend: { FsDatastore } },
+    std: { os, path }
+} = adone;
 
 describe("node", () => {
     const store1 = path.join(os.tmpdir(), "test-keystore-1");
     const store2 = path.join(os.tmpdir(), "test-keystore-2");
-    const datastore1 = new FsStore(store1);
-    const datastore2 = new FsStore(store2);
+    const datastore1 = new FsDatastore(store1);
+    const datastore2 = new FsDatastore(store2);
 
     before((done) => {
         series([

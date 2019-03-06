@@ -2,7 +2,6 @@ const series = require('async/series')
 const get = require('lodash/get')
 const setImmediate = require('async/setImmediate')
 const promisify = require('promisify-es6')
-const { TieredDatastore } = require('datastore-core')
 
 const IPNS = require('../ipns')
 const PubsubDatastore = require('../ipns/routing/pubsub-datastore')
@@ -10,7 +9,8 @@ const OfflineDatastore = require('../ipns/routing/offline-datastore')
 const createLibp2pBundle = require('./libp2p')
 
 const {
-    ipfs: { Bitswap }
+    ipfs: { Bitswap },
+    datastore2: { TieredDatastore }
 } = adone;
 
 module.exports = (self) => {

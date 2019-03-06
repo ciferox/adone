@@ -36,4 +36,4 @@ adone.lazify({
     Codec: "./codec",
     backend: "./backends",
     streamFromIterator: "./stream_from_iterator"
-}, exports, require);
+}, adone.asNamespace(exports), require);

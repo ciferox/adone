@@ -1,14 +1,15 @@
 const toPathComponents = require('./to-path-components')
-const pull = require('pull-stream/pull')
-const filter = require('pull-stream/throughs/filter')
-const map = require('pull-stream/throughs/map')
-const collect = require('pull-stream/sinks/collect')
 const log = require('debug')('ipfs:mfs:utils:to-trail')
 const CID = require('cids')
 
 const {
     ipfs: { unixfsExporter: exporter }
 } = adone;
+
+const {
+    stream: { pull2: pull }
+} = adone;
+const { collect, filter, map } = pull;
 
 const toTrail = (context, path, options, callback) => {
     const toExport = toPathComponents(path)

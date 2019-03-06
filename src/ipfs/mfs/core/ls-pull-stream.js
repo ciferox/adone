@@ -6,17 +6,15 @@ const {
     FILE_SEPARATOR,
     FILE_TYPES
 } = require('./utils')
-const pull = require('pull-stream/pull')
-const collect = require('pull-stream/sinks/collect')
-const asyncMap = require('pull-stream/throughs/async-map')
-const filter = require('pull-stream/throughs/filter')
-const once = require('pull-stream/sources/once')
-const error = require('pull-stream/sources/error')
-const defer = require('pull-defer')
 
 const {
     ipfs: { UnixFs, unixfsExporter: exporter }
 } = adone;
+
+const {
+    stream: { pull2: pull }
+} = adone;
+const { defer, collect, asyncMap, once, error, filter } = pull;
 
 const defaultOptions = {
     long: false,

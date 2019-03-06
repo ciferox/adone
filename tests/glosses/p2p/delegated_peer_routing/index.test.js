@@ -39,7 +39,7 @@ const spawnNode = function (boostrap, callback) {
     });
 };
 
-describe("DelegatedPeerRouting", function () {
+describe("p2p", "DelegatedPeerRouter", function () {
     this.timeout(20 * 1000); // we're spawning daemons, give ci some time
 
     let nodeToFind;

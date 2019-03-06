@@ -1,13 +1,11 @@
-const defer = require('pull-defer')
-const pull = require('pull-stream/pull')
-const error = require('pull-stream/sources/error')
-const values = require('pull-stream/sources/values')
-const filter = require('pull-stream/throughs/filter')
-const map = require('pull-stream/throughs/map')
-const cat = require('pull-cat')
 const Bucket = require('hamt-sharding/src/bucket')
 const DirSharded = require('../unixfs_importer/importer/dir-sharded')
 const waterfall = require('async/waterfall')
+
+const {
+    stream: { pull2: pull }
+} = adone;
+const { defer, cat, values, error, filter, map } = pull;
 
 // Logic to export a unixfs directory.
 module.exports = shardedDirExporter

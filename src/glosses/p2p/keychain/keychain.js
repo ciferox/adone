@@ -1,10 +1,10 @@
 const sanitize = require("sanitize-filename");
 const mergeOptions = require("merge-options");
-const DS = require("interface-datastore");
 const CMS = require("./cms");
 
 const {
     is,
+    datastore2: { interface: { Key } },
     p2p: { crypto },
     stream: { pull2: pull }
 } = adone;
@@ -65,22 +65,22 @@ const _error = function (callback, err) {
  * Converts a key name into a datastore name.
  *
  * @param {string} name
- * @returns {DS.Key}
+ * @returns {Key}
  * @private
  */
 function DsName(name) {
-    return new DS.Key(keyPrefix + name);
+    return new Key(keyPrefix + name);
 }
 
 /**
  * Converts a key name into a datastore info name.
  *
  * @param {string} name
- * @returns {DS.Key}
+ * @returns {Key}
  * @private
  */
 function DsInfoName(name) {
-    return new DS.Key(infoPrefix + name);
+    return new Key(infoPrefix + name);
 }
 
 /**

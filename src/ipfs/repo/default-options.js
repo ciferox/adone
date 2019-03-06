@@ -1,23 +1,26 @@
-'use strict'
-
 // Default configuration for a repo in node.js
+
+const {
+    datastore2: { backend: { FsDatastore, LevelDatastore } }
+} = adone;
+
 module.exports = {
-  lock: 'fs',
-  storageBackends: {
-    root: require('datastore-fs'),
-    blocks: require('datastore-fs'),
-    keys: require('datastore-fs'),
-    datastore: require('datastore-level')
-  },
-  storageBackendOptions: {
-    root: {
-      extension: ''
+    lock: "fs",
+    storageBackends: {
+        root: FsDatastore,
+        blocks: FsDatastore,
+        keys: FsDatastore,
+        datastore: LevelDatastore
     },
-    blocks: {
-      sharding: true,
-      extension: '.data'
-    },
-    keys: {
+    storageBackendOptions: {
+        root: {
+            extension: ""
+        },
+        blocks: {
+            sharding: true,
+            extension: ".data"
+        },
+        keys: {
+        }
     }
-  }
-}
+};

@@ -26,18 +26,11 @@ adone.lazify({
     KadDHT: "./kad_dht",
     MulticastDNS: "./mdns",
 
-    WebRTCStar: "./webrtc_star",
-    WebsocketStar: "./websocket_star",
     WebsocketStarMulti: "./websocket_star_multi",
     rendezvous: "./websocket_star_rendezvous",
     
-    // transports
-    TCP: "./tcp",
-    WS: "./websockets",
-
-    // multiplexors
-    spdy: "./spdy",
-    multiplex: "./mplex",
+    transport: "./transports",
+    muxer: "./muxers",
 
     multiformat: "./multiformats"
 }, adone.asNamespace(exports), require);

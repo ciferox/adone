@@ -6,7 +6,7 @@ const {
     p2p: { Bootstrap }
 } = adone;
 
-describe("bootstrap", () => {
+describe("p2p", "bootstrap", () => {
     it("find the other peer", function (done) {
         this.timeout(5 * 1000);
         const r = new Bootstrap({
