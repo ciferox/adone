@@ -466,6 +466,12 @@
                         }
                     }
                 },
+                "ipfs": {
+                    "description": "IPFS",
+                    "task": "transpile",
+                    "src": "src/glosses/ipfs/**/*.js",
+                    "dst": "lib/glosses/ipfs"
+                },
                 "is": {
                     "description": "Implementation of common predicates",
                     "task": "transpile",
@@ -929,12 +935,6 @@
                 "dst": "lib/isolated_vm/native",
                 "type": "gyp"
             }
-        },
-        "ipfs": {
-            "description": "IPFS",
-            "task": "transpile",
-            "src": "src/ipfs/**/*.js",
-            "dst": "lib/ipfs"
         },
         "napa": {
             "description": "Napa.js: a multi-threaded JavaScript runtime",
