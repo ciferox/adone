@@ -6,7 +6,7 @@ const {
 } = adone;
 const { pair, pullStreamToStream } = pull;
 
-const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", ...args);
+const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", ...args);
 
 describe("generic", () => {
     let listenerSocket;
@@ -75,7 +75,7 @@ describe("generic", () => {
 describe("muxer", () => {
     const spdyTransport = require("spdy-transport");
 
-    const Muxer = require(srcPath("p2p", "spdy", "muxer"));
+    const Muxer = require(srcPath("muxers", "spdy", "muxer"));
     let muxer;
     let spdyMuxer;
 

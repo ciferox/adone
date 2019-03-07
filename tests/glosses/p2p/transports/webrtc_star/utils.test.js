@@ -1,18 +1,12 @@
-/**
- * eslint-env mocha
- */
+const {
+    multiformat: { multiaddr }
+} = adone;
 
+const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "transports", "webrtc_star", ...args);
 
+const { cleanUrlSIO, cleanMultiaddr } = require(srcPath("utils"));
 
-const chai = require("chai");
-const dirtyChai = require("dirty-chai");
-const expect = chai.expect;
-chai.use(dirtyChai);
-const multiaddr = require("multiaddr");
-const cleanMultiaddr = require("../src/utils").cleanMultiaddr;
-const cleanUrlSIO = require("../src/utils").cleanUrlSIO;
-
-describe("utils", () => {
+describe("p2p", "transport", "WebRTCStar", "utils", () => {
     const legacyMultiaddrStringDNS = "/libp2p-webrtc-star/dns4/star-signal.cloud.ipfs.team/tcp/443/wss/ipfs/QmWxLfixekyv6GAzvDEtXfXjj7gb1z3G8i5aQNHLhw1zA1";
     const legacyMultiaddrStringIP = "/libp2p-webrtc-star/ip4/127.0.0.1/tcp/1212/wss/ipfs/QmWxLfixekyv6GAzvDEtXfXjj7gb1z3G8i5aQNHLhw1zA1";
 

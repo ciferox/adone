@@ -1,22 +1,13 @@
-/**
- * eslint-env mocha
- */
-
-
-const chai = require("chai");
-const dirtyChai = require("dirty-chai");
-const expect = chai.expect;
-chai.use(dirtyChai);
-
 const parallel = require("async/parallel");
-const TCP = require("libp2p-tcp");
-const pull = require("pull-stream");
-const PeerBook = require("peer-book");
 
-const utils = require("./utils");
-const createInfos = utils.createInfos;
-const tryEcho = utils.tryEcho;
-const Switch = require("../src");
+const utils = require("../utils");
+const { createInfos, tryEcho } = utils;
+
+const {
+    p2p: { Switch, PeerBook, transport: { TCP } },
+    stream: { pull2: pull }
+} = adone;
+
 
 describe("Switch (no Stream Multiplexing)", () => {
     let switchA;

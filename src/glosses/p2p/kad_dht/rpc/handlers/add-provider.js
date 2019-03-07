@@ -1,6 +1,7 @@
+const {
+    multiformat: { CID }
+} = adone;
 
-
-const CID = require("cids");
 const utils = require("../../utils");
 const errcode = require("err-code");
 

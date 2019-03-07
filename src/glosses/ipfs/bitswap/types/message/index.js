@@ -2,17 +2,16 @@ const protons = require('protons')
 const assert = require('assert')
 const each = require('async/each')
 const nextTick = require('async/nextTick')
-const CID = require('cids')
-const codecName = require('multicodec/src/name-table')
+const codecName = require('../../../../multiformats/multicodec/name-table')
 const vd = require('varint-decoder')
-const multihashing = require('multihashing-async')
 
 const pbm = protons(require('./message.proto'))
 const Entry = require('./entry')
 
 const {
     ipfs: { Block },
-    lodash: { isEqualWith }
+    lodash: { isEqualWith },
+    multiformat: { CID, multihashingAsync: multihashing }
 } = adone;
 
 class BitswapMessage {

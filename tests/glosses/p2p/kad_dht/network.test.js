@@ -1,7 +1,7 @@
 const series = require("async/series");
 
 const {
-    p2p: { KadDHT, TCP, Switch, PeerBook, Connection, multiplex },
+    p2p: { KadDHT, transport: { TCP }, Switch, PeerBook, Connection, muxer: { mplex } },
     stream: { pull2: pull }
 } = adone;
 const { lengthPrefixed: lp } = pull;
@@ -26,7 +26,7 @@ describe("Network", () => {
             peerInfos = result;
             const sw = new Switch(peerInfos[0], new PeerBook());
             sw.transport.add("tcp", new TCP());
-            sw.connection.addStreamMuxer(multiplex);
+            sw.connection.addStreamMuxer(mplex);
             sw.connection.reuse();
             dht = new KadDHT(sw);
 

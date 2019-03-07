@@ -2,7 +2,7 @@ const waterfall = require("async/waterfall");
 const defaultsDeep = require("@nodeutils/defaults-deep");
 
 const {
-    p2p: { Node, PeerId, PeerInfo, WS, KadDHT }
+    p2p: { Node, PeerId, PeerInfo, transport: { WS }, KadDHT }
 } = adone;
 
 describe("private network", () => {

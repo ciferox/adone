@@ -1,10 +1,10 @@
 const promisify = require('promisify-es6')
-const CID = require('cids')
 const waterfall = require('async/waterfall')
 const block = require('../block')
 
 const {
-    ipfs: { ipld: { dagPb, dagCbor } }
+    ipfs: { ipld: { dagPb, dagCbor } },
+    multiformat: { CID }
 } = adone;
 
 const resolvers = {

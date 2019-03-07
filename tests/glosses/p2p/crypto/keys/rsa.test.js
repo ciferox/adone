@@ -188,7 +188,9 @@ describe("RSA", function () {
             const key = crypto.keys.unmarshalPublicKey(fixtures.verify.publicKey);
 
             key.verify(fixtures.verify.data, fixtures.verify.signature, (err, ok) => {
-                if (err) {throw err};
+                if (err) {
+                    throw err; 
+                }
                 expect(err).to.not.exist();
                 expect(ok).to.equal(true);
                 done();

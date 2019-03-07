@@ -1,26 +1,28 @@
 const waterfall = require("async/waterfall");
 
 const {
-    p2p: { Node, secio: SECIO, TCP, PeerId, PeerInfo, multiplex }
+    p2p: { Node, KadDHT, secio: SECIO, transport: { TCP }, PeerId, PeerInfo, muxer: { mplex } }
 } = adone;
 
 class TestNode extends Node {
-    constructor(peerInfo, options) {
+    constructor(options) {
         options = options || {};
 
         const modules = {
-            transport: [new TCP()],
-            connection: {
-                muxer: multiplex,
-                crypto: SECIO
-            }
+            transport: [TCP],
+            streamMuxer: [mplex],
+            connEncryption: [SECIO],
+            dht: KadDHT
         };
 
-        super(modules, peerInfo, null, options.DHT || {});
+        super({
+            ...options,
+            modules
+        });
     }
 }
 
-const createLibp2pNode = function (options, callback) {
+const createNode = function (options, callback) {
     let node;
 
     waterfall([
@@ -28,11 +30,14 @@ const createLibp2pNode = function (options, callback) {
         (id, cb) => PeerInfo.create(id, cb),
         (peerInfo, cb) => {
             peerInfo.multiaddrs.add("/ip4/127.0.0.1/tcp/0");
-            node = new TestNode(peerInfo, options);
+            node = new TestNode({
+                ...options,
+                peerInfo
+            });
             node.start(cb);
         }
     ], (err) => callback(err, node));
 };
 
-exports = module.exports = createLibp2pNode;
+exports = module.exports = createNode;
 exports.bundle = TestNode;

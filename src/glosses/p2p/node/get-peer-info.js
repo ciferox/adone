@@ -1,9 +1,9 @@
-const multiaddr = require("multiaddr");
 const errCode = require("err-code");
 
 const {
     is,
-    p2p: { PeerId, PeerInfo }
+    p2p: { PeerId, PeerInfo },
+    multiformat: { multiaddr }
 } = adone;
 
 module.exports = (node) => {

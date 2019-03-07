@@ -1,31 +1,15 @@
-/**
- * eslint-env mocha
- */
-/**
- * eslint max-nested-callbacks: ["error", 5]
- */
-
-
-const chai = require("chai");
-const dirtyChai = require("dirty-chai");
-const expect = chai.expect;
-chai.use(dirtyChai);
-
 const parallel = require("async/parallel");
-const TCP = require("libp2p-tcp");
-const WebSockets = require("libp2p-websockets");
-const mplex = require("pull-mplex");
-const spdy = require("libp2p-spdy");
-const pull = require("pull-stream");
-const PeerBook = require("peer-book");
 
-const utils = require("./utils");
-const createInfos = utils.createInfos;
-const tryEcho = utils.tryEcho;
-const Switch = require("../src");
+const utils = require("../utils");
+const { createInfos, tryEcho } = utils;
+
+const {
+    p2p: { Switch, PeerBook, transport: { TCP, WS }, muxer: { pullMplex, spdy } },
+    stream: { pull2: pull }
+} = adone;
 
 describe("Switch (everything all together)", () => {
-    [mplex, spdy].forEach((muxer) => {
+    [pullMplex, spdy].forEach((muxer) => {
         describe(muxer.multicodec, () => {
             let switchA; // tcp
             let switchB; // tcp+ws
@@ -83,10 +67,10 @@ describe("Switch (everything all together)", () => {
                 switchD._peerInfo.multiaddrs.add("/ip4/127.0.0.1/tcp/9032/ws");
                 switchE._peerInfo.multiaddrs.add("/ip4/127.0.0.1/tcp/9042/ws");
 
-                switchB.transport.add("ws", new WebSockets());
-                switchC.transport.add("ws", new WebSockets());
-                switchD.transport.add("ws", new WebSockets());
-                switchE.transport.add("ws", new WebSockets());
+                switchB.transport.add("ws", new WS());
+                switchC.transport.add("ws", new WS());
+                switchD.transport.add("ws", new WS());
+                switchE.transport.add("ws", new WS());
 
                 parallel([
                     (cb) => switchB.transport.listen("ws", {}, null, cb),
@@ -189,7 +173,7 @@ describe("Switch (everything all together)", () => {
                 function check(err) {
                     expect(err).to.not.exist();
                     if (++i === 3) {
-                        done(); 
+                        done();
                     }
                 }
 

@@ -1,9 +1,9 @@
 const promisify = require('promisify-es6')
 const map = require('async/map')
-const CID = require('cids')
 
 const {
-    ipfs: { isIPFS }
+    ipfs: { isIPFS },
+    multiformat: { CID }
 } = adone;
 
 const ERR_BAD_PATH = 'ERR_BAD_PATH'

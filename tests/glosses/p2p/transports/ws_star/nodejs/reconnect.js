@@ -1,5 +1,5 @@
-const multiaddr = require("multiaddr");
 const {
+    multiformat: { multiaddr },
     p2p: { rendezvous, transport: { WSStar } }
 } = adone;
 

@@ -231,7 +231,9 @@ class KadDHT extends EventEmitter {
                             cb(null, true);
                         });
                     }, (err, results) => {
-                        if (err) { return cb(err) };
+                        if (err) {
+                            return cb(err); 
+                        }
 
                         // Did we put to enough peers?
                         if (options.minPeers > results.length) {

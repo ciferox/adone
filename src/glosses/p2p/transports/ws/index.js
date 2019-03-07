@@ -1,13 +1,12 @@
-const mafmt = require("mafmt");
 const withIs = require("class-is");
 
-const toUri = require("multiaddr-to-uri");
 const debug = require("debug");
 const log = debug("libp2p:websockets:dialer");
 
 const createListener = require("./listener");
 
 const {
+    multiformat: { mafmt, multiaddrToUri: toUri },
     is,
     p2p: { Connection },
     stream: { pull2: { ws: { connect } } }

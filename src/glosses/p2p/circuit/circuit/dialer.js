@@ -1,6 +1,5 @@
 const once = require("once");
 const waterfall = require("async/waterfall");
-const multiaddr = require("multiaddr");
 
 const utilsFactory = require("./utils");
 const StreamHandler = require("./stream-handler");
@@ -14,6 +13,7 @@ const proto = require("../protocol");
 
 const {
     is,
+    multiformat: { multiaddr },
     p2p: { Connection, PeerId }
 } = adone;
 

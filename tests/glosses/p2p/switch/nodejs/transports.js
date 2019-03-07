@@ -1,35 +1,27 @@
-/**
- * eslint-env mocha
- */
-/**
- * eslint no-warning-comments: off
- */
-
-
-const chai = require("chai");
-const dirtyChai = require("dirty-chai");
-const expect = chai.expect;
-chai.use(dirtyChai);
 const parallel = require("async/parallel");
-const TCP = require("libp2p-tcp");
-const WS = require("libp2p-websockets");
-const pull = require("pull-stream");
-const PeerBook = require("peer-book");
 
-const utils = require("./utils");
+const utils = require("../utils");
 const createInfos = utils.createInfos;
 const tryEcho = utils.tryEcho;
-const Switch = require("../src");
+
+const {
+    p2p: { Switch, PeerBook, transport: { WS, TCP } },
+    stream: { pull2: pull }
+} = adone;
 
 describe("transports", () => {
     [
-        { n: "TCP", C: TCP, maGen: (port) => {
-            return `/ip4/127.0.0.1/tcp/${port}`; 
-        } },
-        { n: "WS", C: WS, maGen: (port) => {
-            return `/ip4/127.0.0.1/tcp/${port}/ws`; 
-        } }
-    // { n: 'UTP', C: UTP, maGen: (port) => { return `/ip4/127.0.0.1/udp/${port}/utp` } }
+        {
+            n: "TCP", C: TCP, maGen: (port) => {
+                return `/ip4/127.0.0.1/tcp/${port}`;
+            }
+        },
+        {
+            n: "WS", C: WS, maGen: (port) => {
+                return `/ip4/127.0.0.1/tcp/${port}/ws`;
+            }
+        }
+        // { n: 'UTP', C: UTP, maGen: (port) => { return `/ip4/127.0.0.1/udp/${port}/utp` } }
     ].forEach((t) => describe(t.n, () => {
         let switchA;
         let switchB;
@@ -221,7 +213,7 @@ describe("transports", () => {
         it("handles EADDRINUSE error when trying to listen", (done) => {
             // TODO: fix libp2p-websockets to not throw Uncaught Error in this test
             if (t.n === "WS") {
-                return done(); 
+                return done();
             }
 
             const switch1 = new Switch(switchA._peerInfo, new PeerBook());

@@ -1,5 +1,3 @@
-
-
 const { struct, superstruct } = require("superstruct");
 const { optional, list } = struct;
 
@@ -45,11 +43,11 @@ const optionsSchema = s(
                 kBucketSize: "number",
                 enabled: "boolean?",
                 randomWalk: optional(s({
-                    enabled: "boolean?",
+                    enabled: "boolean?", // disabled waiting for https://github.com/libp2p/js-libp2p-kad-dht/issues/86
                     queriesPerPeriod: "number?",
                     interval: "number?",
                     timeout: "number?"
-                }, { enabled: true, queriesPerPeriod: 1, interval: 30000, timeout: 10000 })),
+                }, { enabled: false, queriesPerPeriod: 1, interval: 30000, timeout: 10000 })),
                 validators: "object?",
                 selectors: "object?"
             }, { enabled: true, kBucketSize: 20, enabledDiscovery: true }),
@@ -66,9 +64,9 @@ module.exports.validate = (opts) => {
 
     // Improve errors throwed, reduce stack by throwing here and add reason to the message
     if (error) {
-        throw new Error(`${error.message}${error.reason ? ` - ${error.reason}` : ""}`);
+        throw new Error(`${error.message}${error.reason ? " - " + error.reason : ""}`);
     } else {
-    // Throw when dht is enabled but no dht module provided
+        // Throw when dht is enabled but no dht module provided
         if (options.config.dht.enabled) {
             s("function|object")(options.modules.dht);
         }

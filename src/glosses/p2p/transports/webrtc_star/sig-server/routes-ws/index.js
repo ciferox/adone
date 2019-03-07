@@ -1,4 +1,6 @@
-/* eslint-disable func-style */
+/**
+ * eslint-disable func-style
+ */
 /**
  * eslint-disable func-style
  */

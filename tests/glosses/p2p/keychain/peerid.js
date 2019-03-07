@@ -1,7 +1,7 @@
 const {
+    multiformat: { multihash },
     p2p: { PeerId, crypto }
 } = adone;
-const multihash = require("multihashes");
 
 const cryptoSrcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "crypto", ...args);
 const rsaUtils = require(cryptoSrcPath("keys/rsa-utils"));
@@ -18,12 +18,12 @@ describe("peer ID", () => {
     let publicKeyDer; // a buffer
 
     before((done) => {
-        const encoded = Buffer.from(sample.privKey, 'base64')
+        const encoded = Buffer.from(sample.privKey, "base64");
         PeerId.createFromPrivKey(encoded, (err, id) => {
-            expect(err).to.not.exist()
-            peer = id
-            done()
-        })
+            expect(err).to.not.exist();
+            peer = id;
+            done();
+        });
     });
 
     it("decoded public key", (done) => {

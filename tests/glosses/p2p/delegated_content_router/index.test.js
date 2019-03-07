@@ -1,11 +1,11 @@
 const {
     is,
     p2p: { PeerId, DelegatedContentRouter },
-    ipfs: { ipfsdCtl }
+    ipfs: { ipfsdCtl },
+    multiformat: { CID }
 } = adone;
 
 const async = require("async");
-const CID = require("cids");
 
 const factory = ipfsdCtl.create({ type: "go" });
 

@@ -26,7 +26,6 @@ adone.lazify({
     KadDHT: "./kad_dht",
     MulticastDNS: "./mdns",
 
-    WebsocketStarMulti: "./websocket_star_multi",
     rendezvous: "./websocket_star_rendezvous",
     
     transport: "./transports",

@@ -1,17 +1,16 @@
 const debug = require("debug");
 const log = debug("libp2p:websocket-star");
-const multiaddr = require("multiaddr");
 const EE = require("events").EventEmitter;
 const setImmediate = require("async/setImmediate");
 const utils = require("./utils");
 const Listener = require("./listener");
 const cleanUrlSIO = utils.cleanUrlSIO;
-const mafmt = require("mafmt");
 const withIs = require("class-is");
 
 const {
     is,
-    p2p: { Connection, PeerId, PeerInfo }
+    p2p: { Connection, PeerId, PeerInfo },
+    multiformat: { multiaddr, mafmt }
 } = adone;
 
 class WebsocketStar {

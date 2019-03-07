@@ -7,7 +7,8 @@ const { msHandle, msSelect, identifyDialer } = require("../utils");
 const plaintext = require("../plaintext");
 
 const {
-    p2p: { identify, Circuit, multiformat: { multistream } }
+    multiformat: { multistream },
+    p2p: { identify, Circuit }
 } = adone;
 
 /**

@@ -4,11 +4,11 @@ const {
     loadNode
 } = require('./utils')
 const waterfall = require('async/waterfall')
-const CID = require('cids')
 const log = require('debug')('ipfs:mfs:stat')
 
 const {
-    stream: { pull2: pull }
+    stream: { pull2: pull },
+    multiformat: { CID }
 } = adone;
 const { collect, asyncMap } = pull;
 

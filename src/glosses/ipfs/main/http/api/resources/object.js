@@ -1,7 +1,5 @@
 const promisify = require('promisify-es6')
-const CID = require('cids')
 const Joi = require('joi')
-const multibase = require('multibase')
 const Boom = require('boom')
 const { cidToString } = require('../../../utils/cid')
 const debug = require('debug')
@@ -9,7 +7,9 @@ const log = debug('jsipfs:http-api:object')
 log.error = debug('jsipfs:http-api:object:error')
 
 const {
-    ipfs: { multipart, ipld: { dagPb } }
+    ipfs: { multipart, ipld: { dagPb } },
+    multiformat: { CID },
+    multiformat: { multibase }
 } = adone;
 
 const { DAGNode, DAGLink } = dagPb;

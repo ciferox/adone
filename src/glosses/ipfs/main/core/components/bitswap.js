@@ -2,11 +2,11 @@ const OFFLINE_ERROR = require('../utils').OFFLINE_ERROR
 const promisify = require('promisify-es6')
 const setImmediate = require('async/setImmediate')
 const Big = require('bignumber.js')
-const CID = require('cids')
 const errCode = require('err-code')
 
 const {
-    p2p: { PeerId }
+    p2p: { PeerId },
+    multiformat: { CID }
 } = adone;
 
 function formatWantlist(list, cidBase) {

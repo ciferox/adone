@@ -1,8 +1,8 @@
 const peerList = require("./default_peers");
 const partialValidPeerList = require("./some_invalid_peers");
-const mafmt = require("mafmt");
 
 const {
+    multiformat: { mafmt },
     p2p: { Bootstrap }
 } = adone;
 

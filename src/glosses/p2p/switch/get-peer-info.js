@@ -1,7 +1,6 @@
-const multiaddr = require("multiaddr");
-
 const {
-    p2p: { PeerId, PeerInfo }
+    p2p: { PeerId, PeerInfo },
+    multiformat: { multiaddr }
 } = adone;
 
 /**

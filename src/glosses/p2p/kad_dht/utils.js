@@ -1,12 +1,11 @@
 const debug = require("debug");
-const multihashing = require("multihashing-async");
-const mh = require("multihashes");
 const base32 = require("base32.js");
 const distance = require("xor-distance");
 const map = require("async/map");
 const setImmediate = require("async/setImmediate");
 
 const {
+    multiformat: { multihashingAsync: multihashing, multihash: mh },
     datastore2: { interface: { Key } },
     p2p: { PeerId, record: { Record } }
 } = adone;

@@ -3,10 +3,10 @@ const setImmediate = require("async/setImmediate");
 const waterfall = require("async/series");
 const each = require("async/each");
 const mkdirp = require("mkdirp");
-const writeFile = require("fast-write-atomic");
 
 const {
     is,
+    fs: { writeFileAtomic },
     datastore2: { interface: { Key, error, util: { asyncFilter, asyncSort } } },
     stream: { pull2: pull },
     std: { fs, path }
@@ -156,7 +156,7 @@ class FsDatastore {
         const file = parts.file.slice(0, -this.opts.extension.length);
         waterfall([
             (cb) => mkdirp(parts.dir, { fs }, cb),
-            (cb) => writeFile(file, val, cb)
+            (cb) => writeFileAtomic(file, val, cb)
         ], (err) => callback(err));
     }
 
@@ -172,7 +172,7 @@ class FsDatastore {
         const parts = this._encode(key);
         waterfall([
             (cb) => mkdirp(parts.dir, { fs }, cb),
-            (cb) => writeFile(parts.file, val, cb)
+            (cb) => writeFileAtomic(parts.file, val, cb)
         ], (err) => {
             if (err) {
                 return callback(error.dbWriteFailedError(err));

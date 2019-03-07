@@ -1,6 +1,10 @@
 const getConfig = require('./default-config')
 const sendRequest = require('./send-request')
-const multiaddr = require('multiaddr')
+
+const {
+    multiformat: { multiaddr }
+} = adone;
+
 
 module.exports = (arg) => {
     const config = getConfig()

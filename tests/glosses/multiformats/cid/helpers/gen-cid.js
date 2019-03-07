@@ -1,10 +1,10 @@
-
+const {
+    multiformat: { multibase, multihashing }
+} = adone;
 
 // CID String: <mbase><version><mcodec><mhash>
 
-const multibase = require("multibase");
 const codecs = require("../../src").codecs;
-const multihashing = require("multihashing");
 
 const mh = multihashing(Buffer.from("oh, hey!"), "sha2-256");
 

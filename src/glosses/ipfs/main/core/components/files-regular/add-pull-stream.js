@@ -1,9 +1,8 @@
 const waterfall = require('async/waterfall')
 const isStream = require('is-stream')
-const CID = require('cids')
 const { parseChunkerString } = require('./utils')
-
 const {
+    multiformat: { CID },
     ipfs: { unixfsImporter: importer },
     stream: { pull2: pull }
 } = adone;

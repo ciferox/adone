@@ -1,4 +1,3 @@
-const CID = require("cids");
 const parallel = require("async/parallel");
 
 const errcode = require("err-code");
@@ -7,7 +6,8 @@ const Message = require("../../message");
 const utils = require("../../utils");
 
 const {
-    p2p: { PeerInfo }
+    p2p: { PeerInfo },
+    multiformat: { CID }
 } = adone;
 
 module.exports = (dht) => {

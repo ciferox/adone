@@ -1,8 +1,8 @@
 const promisify = require('promisify-es6')
-const multiaddr = require('multiaddr')
 
 const {
-    p2p: { PeerId }
+    p2p: { PeerId },
+    multiformat: { multiaddr }
 } = adone;
 
 module.exports = (send) => {

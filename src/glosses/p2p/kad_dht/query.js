@@ -1,9 +1,10 @@
-
+const {
+    multiformat: { multihash: mh }
+} = adone;
 
 const waterfall = require("async/waterfall");
 const each = require("async/each");
 const queue = require("async/queue");
-const mh = require("multihashes");
 
 const c = require("./constants");
 const PeerQueue = require("./peer-queue");
@@ -155,7 +156,7 @@ function workerQueue(query, path, callback) {
     const fill = () => {
         query._log("queue:fill");
         while (q.length() < query.concurrency &&
-           path.peersToQuery.length > 0) {
+            path.peersToQuery.length > 0) {
             q.push(path.peersToQuery.dequeue());
         }
     };

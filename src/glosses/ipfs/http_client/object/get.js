@@ -1,9 +1,9 @@
 const promisify = require('promisify-es6')
-const CID = require('cids')
 const LRU = require('lru-cache')
 
 const {
-    ipfs: { ipld: { dagPb } }
+    ipfs: { ipld: { dagPb } },
+    multiformat: { CID }
 } = adone;
 
 const {

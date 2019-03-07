@@ -9,7 +9,7 @@ const {
 } = adone;
 
 const srcPath = (...args) => path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", ...args);
-const signalling = require(srcPath("webrtc_star/sig-server"));
+const signalling = require(srcPath("transports", "webrtc_star/sig-server"));
 
 describe("peer discovery", () => {
     let nodeA;
@@ -56,7 +56,7 @@ describe("peer discovery", () => {
                 (cb) => ss.stop().then(cb)
             ], done);
         });
-    }
+    };
 
     describe("module registration", () => {
         it("should enable by default a module passed as an object", (done) => {

@@ -1,11 +1,11 @@
 const {
     is,
+    multiformat: { multiaddr },
     p2p: { PeerId },
     std: { os, path }
 } = adone;
 
 const auto = require("async/auto");
-const multiaddr = require("multiaddr");
 const hat = require("hat");
 const { spawnNodesWithId } = require("../utils/spawn");
 const { getDescribe, getIt } = require("../utils/shani");

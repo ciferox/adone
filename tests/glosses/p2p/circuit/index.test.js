@@ -1,9 +1,9 @@
 const nodes = require("./fixtures/nodes");
-const multiaddr = require("multiaddr");
 const waterfall = require("async/waterfall");
 const sinon = require("sinon");
 
 const {
+    multiformat: { multiaddr },
     p2p: { Connection, PeerId, PeerInfo },
     stream: { pull2: pull },
     std: { path }

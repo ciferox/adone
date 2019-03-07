@@ -17,16 +17,13 @@ const {
     zeros
 } = require('./utils')
 const log = require('debug')('ipfs:mfs:write')
-const CID = require('cids')
 const stat = require('./stat')
 const mkdir = require('./mkdir')
 
 const {
-    ipfs: { UnixFs: { unmarshal }, unixfsExporter: exporter, unixfsImporter: importer }
-} = adone;
-
-const {
-    stream: { pull2: pull }
+    ipfs: { UnixFs: { unmarshal }, unixfsExporter: exporter, unixfsImporter: importer },
+    stream: { pull2: pull },
+    multiformat: { CID }
 } = adone;
 const { defer: deferred, cat, values, empty, collect, error: err } = pull;
 

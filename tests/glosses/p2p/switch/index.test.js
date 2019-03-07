@@ -2,11 +2,11 @@ const { EventEmitter } = require("events");
 
 const utils = require("./utils");
 const createInfos = utils.createInfos;
-const MultiAddr = require("multiaddr");
 const TestPeerInfos = require("./test-data/ids.json").infos;
 
 const {
     is,
+    multiformat: { multiaddr },
     p2p: { Switch, PeerId, PeerInfo, PeerBook },
     stream: { pull2: pull }
 } = adone;
@@ -109,7 +109,7 @@ describe("p2p", "switch", () => {
             PeerId.createFromJSON(TestPeerInfos[0].id, (err, id) => {
                 peerIdA = id;
                 peerInfoA = new PeerInfo(peerIdA);
-                multiaddrA = MultiAddr("/ipfs/QmdWYwTywvXBeLKWthrVNjkq9SafEDn1PbAZdz4xZW7Jd9");
+                multiaddrA = multiaddr("/ipfs/QmdWYwTywvXBeLKWthrVNjkq9SafEDn1PbAZdz4xZW7Jd9");
                 peerInfoA.multiaddrs.add(multiaddrA);
                 peerBook.put(peerInfoA);
                 done(err);
@@ -123,7 +123,7 @@ describe("p2p", "switch", () => {
         });
 
         it("should return a new PeerInfo with a multiAddr not in the PeerBook", () => {
-            const wrongMultiAddr = MultiAddr("/ipfs/QmckZzdVd72h9QUFuJJpQqhsZqGLwjhh81qSvZ9BhB2FQi");
+            const wrongMultiAddr = multiaddr("/ipfs/QmckZzdVd72h9QUFuJJpQqhsZqGLwjhh81qSvZ9BhB2FQi");
             const _peerInfo = getPeerInfo(wrongMultiAddr, peerBook);
             expect(PeerInfo.isPeerInfo(_peerInfo)).to.equal(true);
             expect(peerBook.has(_peerInfo)).to.equal(false);

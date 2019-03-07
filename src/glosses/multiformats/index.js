@@ -2,6 +2,7 @@ adone.lazify({
     CID: "./cid",
     mafmt: "./mafmt",
     multiaddr: "./multiaddr",
+    multiaddrToUri: "./multiaddr_to_uri",
     multibase: "./multibase",
     multicodec: "./multicodec",
     multihash: "./multihash",

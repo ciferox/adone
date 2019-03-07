@@ -28,7 +28,7 @@ describe("datastore", "backend", "LevelDatastore", () => {
             const levelStore = new LevelDatastore("init-default", {
                 db: level.backend.Memory,
                 createIfMissing: true,
-                errorIfExis ts: true
+                errorIfExists: true
             });
 
             levelStore.open((err) => {

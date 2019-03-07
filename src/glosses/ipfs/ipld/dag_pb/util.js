@@ -1,13 +1,13 @@
-'use strict'
-
-const CID = require('cids')
 const protons = require('protons')
 const proto = protons(require('./dag.proto.js'))
 const resolver = require('./resolver')
 const DAGLink = require('./dag-link')
 const DAGNode = require('./dag-node')
-const multihashing = require('multihashing-async')
 const waterfall = require('async/waterfall')
+
+const {
+    multiformat: { CID, multihashingAsync: multihashing }
+} = adone;
 
 exports = module.exports
 
@@ -26,89 +26,89 @@ exports = module.exports
  * @param {CidCallback} callback - Callback that handles the return value
  * @returns {void}
  */
-function cid (dagNode, options, callback) {
-  if (typeof options === 'function') {
-    callback = options
-    options = {}
-  }
-  options = options || {}
-  const hashAlg = options.hashAlg || resolver.defaultHashAlg
-  let version = options.version
-  if (typeof version === 'undefined') {
-    version = hashAlg === 'sha2-256' ? 0 : 1
-  }
-  waterfall([
-    (cb) => {
-      if (Buffer.isBuffer(dagNode)) {
-        return cb(null, dagNode)
-      }
+function cid(dagNode, options, callback) {
+    if (typeof options === 'function') {
+        callback = options
+        options = {}
+    }
+    options = options || {}
+    const hashAlg = options.hashAlg || resolver.defaultHashAlg
+    let version = options.version
+    if (typeof version === 'undefined') {
+        version = hashAlg === 'sha2-256' ? 0 : 1
+    }
+    waterfall([
+        (cb) => {
+            if (Buffer.isBuffer(dagNode)) {
+                return cb(null, dagNode)
+            }
 
-      serialize(dagNode, cb)
-    },
-    (serialized, cb) => multihashing(serialized, hashAlg, cb),
-    (mh, cb) => cb(null, new CID(version, resolver.multicodec, mh))
-  ], callback)
+            serialize(dagNode, cb)
+        },
+        (serialized, cb) => multihashing(serialized, hashAlg, cb),
+        (mh, cb) => cb(null, new CID(version, resolver.multicodec, mh))
+    ], callback)
 }
 
-function serialize (node, callback) {
-  let serialized
-  let {
-    data,
-    links = []
-  } = node
+function serialize(node, callback) {
+    let serialized
+    let {
+        data,
+        links = []
+    } = node
 
-  // If the node is not an instance of a DAGNode, the link.hash might be a Base58 encoded string; decode it
-  if (!DAGNode.isDAGNode(node) && links) {
-    links = links.map((link) => {
-      return DAGLink.isDAGLink(link) ? link : DAGLink.util.createDagLinkFromB58EncodedHash(link)
+    // If the node is not an instance of a DAGNode, the link.hash might be a Base58 encoded string; decode it
+    if (!DAGNode.isDAGNode(node) && links) {
+        links = links.map((link) => {
+            return DAGLink.isDAGLink(link) ? link : DAGLink.util.createDagLinkFromB58EncodedHash(link)
+        })
+    }
+
+    try {
+        serialized = proto.PBNode.encode(toProtoBuf({
+            data, links
+        }))
+    } catch (err) {
+        return callback(err)
+    }
+
+    callback(null, serialized)
+}
+
+function deserialize(buffer, callback) {
+    const pbn = proto.PBNode.decode(buffer)
+
+    const links = pbn.Links.map((link) => {
+        return new DAGLink(link.Name, link.Tsize, link.Hash)
     })
-  }
 
-  try {
-    serialized = proto.PBNode.encode(toProtoBuf({
-      data, links
-    }))
-  } catch (err) {
-    return callback(err)
-  }
+    const data = pbn.Data == null ? Buffer.alloc(0) : pbn.Data
 
-  callback(null, serialized)
+    setImmediate(() => callback(null, new DAGNode(data, links, buffer.length)))
 }
 
-function deserialize (buffer, callback) {
-  const pbn = proto.PBNode.decode(buffer)
+function toProtoBuf(node) {
+    const pbn = {}
 
-  const links = pbn.Links.map((link) => {
-    return new DAGLink(link.Name, link.Tsize, link.Hash)
-  })
+    if (node.data && node.data.length > 0) {
+        pbn.Data = node.data
+    } else {
+        // NOTE: this has to be null in order to match go-ipfs serialization `null !== new Buffer(0)`
+        pbn.Data = null
+    }
 
-  const data = pbn.Data == null ? Buffer.alloc(0) : pbn.Data
+    if (node.links && node.links.length > 0) {
+        pbn.Links = node.links
+            .map((link) => ({
+                Hash: link.cid.buffer,
+                Name: link.name,
+                Tsize: link.size
+            }))
+    } else {
+        pbn.Links = null
+    }
 
-  setImmediate(() => callback(null, new DAGNode(data, links, buffer.length)))
-}
-
-function toProtoBuf (node) {
-  const pbn = {}
-
-  if (node.data && node.data.length > 0) {
-    pbn.Data = node.data
-  } else {
-    // NOTE: this has to be null in order to match go-ipfs serialization `null !== new Buffer(0)`
-    pbn.Data = null
-  }
-
-  if (node.links && node.links.length > 0) {
-    pbn.Links = node.links
-      .map((link) => ({
-        Hash: link.cid.buffer,
-        Name: link.name,
-        Tsize: link.size
-      }))
-  } else {
-    pbn.Links = null
-  }
-
-  return pbn
+    return pbn
 }
 
 exports.serialize = serialize

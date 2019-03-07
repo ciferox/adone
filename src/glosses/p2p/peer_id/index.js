@@ -1,15 +1,11 @@
-/**
- * Id is an object representation of a peer Id. a peer Id is a multihash
- */
-
-const mh = require("multihashes");
 // const cryptoKeys = require("libp2p-crypto/src/keys");
-const assert = require("assert");
 const waterfall = require("async/waterfall");
 const withIs = require("class-is");
 
 const {
     is,
+    assertion: { assert },
+    multiformat: { multihash: mh },
     p2p: { crypto: { keys: cryptoKeys } }
 } = adone;
 
@@ -190,7 +186,7 @@ exports.createFromPubKey = function (key, callback) {
         }
 
         if (!is.buffer(buf)) {
-            throw new Error("Supplied key is neither a base64 string nor a buffer"); 
+            throw new Error("Supplied key is neither a base64 string nor a buffer");
         }
 
         pubKey = cryptoKeys.unmarshalPublicKey(buf);
@@ -221,7 +217,7 @@ exports.createFromPrivKey = function (key, callback) {
         }
 
         if (!is.buffer(buf)) {
-            throw new Error("Supplied key is neither a base64 string nor a buffer"); 
+            throw new Error("Supplied key is neither a base64 string nor a buffer");
         }
     } catch (err) {
         return callback(err);

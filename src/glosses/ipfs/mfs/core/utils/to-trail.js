@@ -1,13 +1,10 @@
 const toPathComponents = require('./to-path-components')
 const log = require('debug')('ipfs:mfs:utils:to-trail')
-const CID = require('cids')
 
 const {
-    ipfs: { unixfsExporter: exporter }
-} = adone;
-
-const {
-    stream: { pull2: pull }
+    ipfs: { unixfsExporter: exporter },
+    stream: { pull2: pull },
+    multiformat: { CID }
 } = adone;
 const { collect, filter, map } = pull;
 

@@ -59,7 +59,9 @@ describe("with libp2p-crypto-secp256k1 module present", () => {
     before((done) => {
         crypto.keys.supportedKeys.secp256k1 = mockSecp256k1Module;
         crypto.keys.generateKeyPair("secp256k1", 256, (err, _key) => {
-            if (err) { return done(err) };
+            if (err) {
+                return done(err); 
+            }
             key = _key;
             done();
         });
@@ -78,7 +80,9 @@ describe("with libp2p-crypto-secp256k1 module present", () => {
     it("protobuf encoding", (done) => {
         const keyMarshal = crypto.keys.marshalPrivateKey(key);
         crypto.keys.unmarshalPrivateKey(keyMarshal, (err, key2) => {
-            if (err) { return done(err) };
+            if (err) {
+                return done(err); 
+            }
             const keyMarshal2 = crypto.keys.marshalPrivateKey(key2);
 
             expect(keyMarshal).to.eql(keyMarshal2);

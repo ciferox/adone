@@ -1,11 +1,11 @@
 const {
-    ipfs: { isIPFS }
+    ipfs: { isIPFS },
+    multiformat: { multibase }
 } = adone;
 
 const loadFixture = require("../../aegir/fixtures");
 const hat = require("hat");
 const waterfall = require("async/waterfall");
-const multibase = require("multibase");
 const { spawnNodeWithId } = require("../utils/spawn");
 const { connect } = require("../utils/swarm");
 const { getDescribe, getIt } = require("../utils/shani");

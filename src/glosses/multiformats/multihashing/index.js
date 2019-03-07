@@ -1,9 +1,10 @@
-
-
-const multihash = require("multihashes");
 const blake = require("./blake");
 const sha3 = require("./sha3");
 const crypto = require("webcrypto");
+
+const {
+    multiformat: { multihash }
+} = adone;
 
 const mh = module.exports = Multihashing;
 

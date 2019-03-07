@@ -1,7 +1,6 @@
-
-
-const forgePbkdf2 = require("node-forge/lib/pbkdf2");
-const forgeUtil = require("node-forge/lib/util");
+const {
+    crypto2: { pbkdf2, util }
+} = adone;
 
 /**
  * Maps an IPFS hash name to its node-forge equivalent.
@@ -26,18 +25,16 @@ const hashName = {
  * @param {string} hash - The hash name ('sha1', 'sha2-512, ...)
  * @returns {string} - A new password
  */
-function pbkdf2(password, salt, iterations, keySize, hash) {
+module.exports = function (password, salt, iterations, keySize, hash) {
     const hasher = hashName[hash];
     if (!hasher) {
         throw new Error(`Hash '${hash}' is unknown or not supported`);
     }
-    const dek = forgePbkdf2(
+    const dek = pbkdf2(
         password,
         salt,
         iterations,
         keySize,
         hasher);
-    return forgeUtil.encode64(dek);
-}
-
-module.exports = pbkdf2;
+    return util.encode64(dek);
+};

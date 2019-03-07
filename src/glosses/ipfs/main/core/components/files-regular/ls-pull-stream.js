@@ -1,9 +1,9 @@
-const pull = require('pull-stream')
-const CID = require('cids')
 const { normalizePath } = require('./utils')
 
 const {
-    ipfs: { unixfsExporter: exporter }
+    ipfs: { unixfsExporter: exporter },
+    multiformat: { CID },
+    stream: { pull2: pull }
 } = adone;
 
 module.exports = function (self) {

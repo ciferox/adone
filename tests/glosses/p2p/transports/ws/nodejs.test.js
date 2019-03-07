@@ -1,9 +1,9 @@
 const {
+    multiformat: { multiaddr },
     p2p: { transport: { WS } },
     stream: { pull2: pull }
 } = adone;
 const { goodbye } = pull;
-const multiaddr = require("multiaddr");
 
 describe("p2p", "transport", "WS", () => {
     describe("instantiate the transport", () => {

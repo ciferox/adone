@@ -1,11 +1,11 @@
 const parallel = require("async/parallel");
 const series = require("async/series");
 const waterfall = require("async/waterfall");
-const multiaddr = require("multiaddr");
 const crypto = require("crypto");
 
 const {
     is,
+    multiformat: { multiaddr },
     ipfs: { IPFS, ipfsdCtl }
 } = adone;
 

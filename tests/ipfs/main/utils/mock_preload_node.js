@@ -1,10 +1,10 @@
 const http = require("http");
-const toUri = require("multiaddr-to-uri");
 const URL = require("url").URL || self.URL;
 const errCode = require("err-code");
 
 const {
-    is
+    is,
+    multiformat: { multiaddToUri: toUri }
 } = adone;
 
 const defaultPort = 1138;
@@ -154,7 +154,7 @@ module.exports.waitForCids = (cids, opts, cb) => {
     const checkForCid = () => {
         getPreloadCids(opts.addr, (err, preloadCids) => {
             if (err) {
-                return cb(err); 
+                return cb(err);
             }
 
             // See if our cached preloadCids includes all the cids we're looking for.

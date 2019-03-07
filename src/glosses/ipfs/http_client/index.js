@@ -1,8 +1,8 @@
 const {
-    is
+    is,
+    multiformat: { multiaddr }
 } = adone;
 
-const multiaddr = require("multiaddr");
 const loadCommands = require("./utils/load-commands");
 const getConfig = require("./utils/default-config");
 const sendRequest = require("./utils/send-request");

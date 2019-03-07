@@ -1,6 +1,10 @@
 const base32Encode = require('base32-encode')
 const NanoDate = require('timestamp-nano')
-const multihash = require('multihashes')
+
+const {
+    multiformat: { multihash }
+} = adone;
+
 
 const debug = require('debug')
 const log = debug('jsipns')

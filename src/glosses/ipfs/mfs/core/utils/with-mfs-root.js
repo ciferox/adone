@@ -1,4 +1,3 @@
-const CID = require('cids')
 const log = require('debug')('ipfs:mfs:utils:with-mfs-root')
 const waterfall = require('async/waterfall')
 
@@ -7,7 +6,8 @@ const {
 } = require('./constants')
 
 const {
-    ipfs: { UnixFs, ipld: { dagPb } }
+    ipfs: { UnixFs, ipld: { dagPb } },
+    multiformat: { CID }
 } = adone;
 
 const {

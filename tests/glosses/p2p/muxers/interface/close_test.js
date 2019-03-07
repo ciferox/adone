@@ -1,8 +1,8 @@
 const parallel = require("async/parallel");
 const series = require("async/series");
-const multiaddr = require("multiaddr");
 
 const {
+    multiformat: { multiaddr },
     p2p: { transport: { TCP } },
     stream: { pull2: pull }
 } = adone;

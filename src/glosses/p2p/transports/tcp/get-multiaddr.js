@@ -1,6 +1,7 @@
+const {
+    multiformat: { multiaddr }
+} = adone;
 
-
-const multiaddr = require("multiaddr");
 const Address6 = require("ip-address").Address6;
 const debug = require("debug");
 const log = debug("libp2p:tcp:get-multiaddr");

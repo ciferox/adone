@@ -1,11 +1,13 @@
-const MemoryStore = require("interface-datastore").MemoryDatastore;
+const {
+    datastore2: { backend: { MemoryDatastore } }
+} = adone;
 
 const createNode = require("../utils/create_node");
 
 describe(".dht", () => {
     describe("enabled", () => {
         let nodeA;
-        const datastore = new MemoryStore();
+        const datastore = new MemoryDatastore();
 
         before((done) => {
             createNode("/ip4/0.0.0.0/tcp/0", {

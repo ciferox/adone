@@ -1,7 +1,7 @@
-const multiaddr = require("multiaddr");
 const parallel = require("run-parallel");
 
 const {
+    multiformat: { multiaddr },
     p2p: { Connection, muxer: { spdy }, transport: { TCP } },
     stream: { pull2: pull }
 } = adone;

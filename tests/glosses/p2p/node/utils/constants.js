@@ -1,12 +1,13 @@
-'use strict'
 
-const PeerId = require('peer-id')
-const PeerInfo = require('peer-info')
-const nextTick = require('async/nextTick')
-const peerJSON = require('../fixtures/test-peer')
-const multiaddr = require('multiaddr')
+const nextTick = require("async/nextTick");
+const peerJSON = require("../fixtures/test-peer");
 
-let peerRelay = null
+const {
+    multiformat: { multiaddr },
+    p2p: { PeerId, PeerInfo }
+} = adone;
+
+let peerRelay = null;
 
 /**
  * Creates a `PeerInfo` that can be used across testing. Once the
@@ -21,20 +22,22 @@ let peerRelay = null
  * @returns {void}
  */
 module.exports.getPeerRelay = (callback) => {
-  if (peerRelay) return nextTick(callback, null, peerRelay)
-
-  PeerId.createFromJSON(peerJSON, (err, peerId) => {
-    if (err) {
-      return callback(err)
+    if (peerRelay) {
+        return nextTick(callback, null, peerRelay);
     }
-    peerRelay = new PeerInfo(peerId)
 
-    peerRelay.multiaddrs.add('/ip4/127.0.0.1/tcp/9200/ws')
-    peerRelay.multiaddrs.add('/ip4/127.0.0.1/tcp/9245')
+    PeerId.createFromJSON(peerJSON, (err, peerId) => {
+        if (err) {
+            return callback(err);
+        }
+        peerRelay = new PeerInfo(peerId);
 
-    callback(null, peerRelay)
-  })
-}
+        peerRelay.multiaddrs.add("/ip4/127.0.0.1/tcp/9200/ws");
+        peerRelay.multiaddrs.add("/ip4/127.0.0.1/tcp/9245");
 
-module.exports.WS_RENDEZVOUS_MULTIADDR = multiaddr('/ip4/127.0.0.1/tcp/14444/wss')
-module.exports.WRTC_RENDEZVOUS_MULTIADDR = multiaddr('/ip4/127.0.0.1/tcp/15555/wss')
+        callback(null, peerRelay);
+    });
+};
+
+module.exports.WS_RENDEZVOUS_MULTIADDR = multiaddr("/ip4/127.0.0.1/tcp/14444/wss");
+module.exports.WRTC_RENDEZVOUS_MULTIADDR = multiaddr("/ip4/127.0.0.1/tcp/15555/wss");

@@ -1,35 +1,35 @@
-'use strict'
-
-const multibase = require('multibase')
+const {
+    multiformat: { multibase }
+} = adone;
 const { print } = require('../../utils')
 const { cidToString } = require('../../../utils/cid')
 
 module.exports = {
-  command: 'rm <ipfsPath...>',
+    command: 'rm <ipfsPath...>',
 
-  describe: 'Removes the pinned object from local storage.',
+    describe: 'Removes the pinned object from local storage.',
 
-  builder: {
-    recursive: {
-      type: 'boolean',
-      alias: 'r',
-      default: true,
-      describe: 'Recursively unpin the objects linked to by the specified object(s).'
+    builder: {
+        recursive: {
+            type: 'boolean',
+            alias: 'r',
+            default: true,
+            describe: 'Recursively unpin the objects linked to by the specified object(s).'
+        },
+        'cid-base': {
+            describe: 'Number base to display CIDs in.',
+            type: 'string',
+            choices: multibase.names
+        }
     },
-    'cid-base': {
-      describe: 'Number base to display CIDs in.',
-      type: 'string',
-      choices: multibase.names
-    }
-  },
 
-  handler: ({ getIpfs, ipfsPath, recursive, cidBase, resolve }) => {
-    resolve((async () => {
-      const ipfs = await getIpfs()
-      const results = await ipfs.pin.rm(ipfsPath, { recursive })
-      results.forEach((res) => {
-        print(`unpinned ${cidToString(res.hash, { base: cidBase })}`)
-      })
-    })())
-  }
+    handler: ({ getIpfs, ipfsPath, recursive, cidBase, resolve }) => {
+        resolve((async () => {
+            const ipfs = await getIpfs()
+            const results = await ipfs.pin.rm(ipfsPath, { recursive })
+            results.forEach((res) => {
+                print(`unpinned ${cidToString(res.hash, { base: cidBase })}`)
+            })
+        })())
+    }
 }

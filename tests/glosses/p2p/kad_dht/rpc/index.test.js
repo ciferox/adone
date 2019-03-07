@@ -1,5 +1,5 @@
 const {
-    p2p: { KadDHT, Connection, PeerBook, Switch, TCP, multiplex },
+    p2p: { KadDHT, Connection, PeerBook, Switch, transport: { TCP }, muxer: { mplex } },
     stream: { pull2: pull }
 } = adone;
 const { lengthPrefixed: lp } = pull;
@@ -29,7 +29,7 @@ describe("rpc", () => {
         it("calls back with the response", (done) => {
             const sw = new Switch(peerInfos[0], new PeerBook());
             sw.transport.add("tcp", new TCP());
-            sw.connection.addStreamMuxer(multiplex);
+            sw.connection.addStreamMuxer(mplex);
             sw.connection.reuse();
             const dht = new KadDHT(sw, { kBucketSize: 5 });
 

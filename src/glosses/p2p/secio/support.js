@@ -1,7 +1,7 @@
-const mh = require("multihashing-async");
 const parallel = require("async/parallel");
 
 const {
+    multiformat: { multihashingAsync: mh },
     p2p: { crypto },
     stream: { pull2: pull }
 } = adone;

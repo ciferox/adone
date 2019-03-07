@@ -1,8 +1,8 @@
-const multiaddr = require("multiaddr");
 const parallel = require("async/parallel");
 const series = require("async/series");
 
 const {
+    multiformat: { multiaddr },
     p2p: { PeerInfo, MulticastDNS }
 } = adone;
 

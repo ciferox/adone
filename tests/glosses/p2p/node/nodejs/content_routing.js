@@ -1,12 +1,11 @@
 const parallel = require("async/parallel");
 const waterfall = require("async/waterfall");
-const CID = require("cids");
 const sinon = require("sinon");
 const nock = require("nock");
-const ma = require("multiaddr");
 const Node = require("../utils/bundle_nodejs");
 
 const {
+    multiformat: { CID, multiaddr: ma },
     lodash: { times: _times },
     p2p: { DelegatedContentRouter }
 } = adone;
@@ -140,8 +139,8 @@ describe(".contentRouting", () => {
                         protocol: "http",
                         port: 60197
                     }, [
-                            ma("/ip4/0.0.0.0/tcp/60194")
-                        ]);
+                        ma("/ip4/0.0.0.0/tcp/60194")
+                    ]);
                     nodeA = new Node({
                         peerInfo,
                         modules: {
@@ -298,8 +297,8 @@ describe(".contentRouting", () => {
                         protocol: "http",
                         port: 60197
                     }, [
-                            ma("/ip4/0.0.0.0/tcp/60194")
-                        ]);
+                        ma("/ip4/0.0.0.0/tcp/60194")
+                    ]);
                     nodeA = new Node({
                         peerInfo,
                         modules: {

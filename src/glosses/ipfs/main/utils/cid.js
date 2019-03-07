@@ -1,6 +1,6 @@
-'use strict'
-
-const CID = require('cids')
+const {
+    multiformat: { CID }
+} = adone;
 
 /**
 * Stringify a CID encoded in the requested base, upgrading to v1 if necessary.
@@ -18,18 +18,18 @@ const CID = require('cids')
 * @returns {String}
 */
 exports.cidToString = (cid, options) => {
-  options = options || {}
-  options.base = options.base || null
-  options.upgrade = options.upgrade !== false
+    options = options || {}
+    options.base = options.base || null
+    options.upgrade = options.upgrade !== false
 
-  if (!CID.isCID(cid)) {
-    cid = new CID(cid)
-  }
+    if (!CID.isCID(cid)) {
+        cid = new CID(cid)
+    }
 
-  if (cid.version === 0 && options.base && options.base !== 'base58btc') {
-    if (!options.upgrade) return cid.toString()
-    cid = cid.toV1()
-  }
+    if (cid.version === 0 && options.base && options.base !== 'base58btc') {
+        if (!options.upgrade) return cid.toString()
+        cid = cid.toV1()
+    }
 
-  return cid.toBaseEncodedString(options.base)
+    return cid.toBaseEncodedString(options.base)
 }

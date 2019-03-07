@@ -4,7 +4,7 @@ const withIs = require("class-is");
 const BaseConnection = require("./base");
 
 const {
-    p2p: { multiformat: { multistream } }
+    multiformat: { multistream }
 } = adone;
 
 class IncomingConnectionFSM extends BaseConnection {

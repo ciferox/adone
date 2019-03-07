@@ -1,10 +1,10 @@
 const {
+    multiformat: { multiaddr },
     p2p: { Connection, transport: { TCP } },
     stream: { pull2: pull }
 } = adone;
 
-const multiaddr = require("multiaddr");
-const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "tcp", ...args);
+const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "transports", "tcp", ...args);
 
 describe("p2p", "transport", "TCP", () => {
     describe("Constructor", () => {

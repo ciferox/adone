@@ -1,25 +1,14 @@
-/**
- * eslint-env mocha
- */
-
-
-const chai = require("chai");
-chai.use(require("dirty-chai"));
-chai.use(require("chai-checkmark"));
-const expect = chai.expect;
 const parallel = require("async/parallel");
-const TCP = require("libp2p-tcp");
-const multiplex = require("libp2p-mplex");
-const pull = require("pull-stream");
-const secio = require("libp2p-secio");
-const PeerBook = require("peer-book");
-const identify = require("libp2p-identify");
-const lp = require("pull-length-prefixed");
 const sinon = require("sinon");
 
-const utils = require("./utils");
-const createInfos = utils.createInfos;
-const Switch = require("../src");
+const utils = require("../utils");
+const { createInfos } = utils;
+
+const {
+    p2p: { identify, secio, Switch, PeerBook, transport: { TCP }, muxer: { mplex } },
+    stream: { pull2: pull }
+} = adone;
+const { lengthPrefixed: lp } = pull;
 
 describe("Identify", () => {
     let switchA;
@@ -49,9 +38,9 @@ describe("Identify", () => {
         switchB.connection.crypto(secio.tag, secio.encrypt);
         switchC.connection.crypto(secio.tag, secio.encrypt);
 
-        switchA.connection.addStreamMuxer(multiplex);
-        switchB.connection.addStreamMuxer(multiplex);
-        switchC.connection.addStreamMuxer(multiplex);
+        switchA.connection.addStreamMuxer(mplex);
+        switchB.connection.addStreamMuxer(mplex);
+        switchC.connection.addStreamMuxer(mplex);
 
         switchA.connection.reuse();
         switchB.connection.reuse();
@@ -106,7 +95,7 @@ describe("Identify", () => {
         const stub = sinon.stub(identify, "listener").callsFake((conn) => {
             conn.getObservedAddrs((err, observedAddrs) => {
                 if (err) {
-                    return; 
+                    return;
                 }
                 observedAddrs = observedAddrs[0];
 

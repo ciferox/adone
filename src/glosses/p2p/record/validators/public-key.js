@@ -1,8 +1,8 @@
 const setImmediate = require("async/setImmediate");
-const multihashing = require("multihashing-async");
 
 const {
-    is
+    is,
+    multiformat: { multihashingAsync: multihashing }
 } = adone;
 
 /**

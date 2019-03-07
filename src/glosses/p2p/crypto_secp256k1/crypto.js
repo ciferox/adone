@@ -1,8 +1,9 @@
-
-
 const secp256k1 = require("secp256k1");
-const multihashing = require("multihashing-async");
 const setImmediate = require("async/setImmediate");
+
+const {
+    multiformat: { multihashingAsync }
+} = adone;
 
 const HASH_ALGORITHM = "sha2-256";
 
@@ -23,7 +24,7 @@ module.exports = (randomBytes) => {
     function hashAndSign(key, msg, callback) {
         const done = (err, res) => setImmediate(() => callback(err, res));
 
-        multihashing.digest(msg, HASH_ALGORITHM, (err, digest) => {
+        multihashingAsync.digest(msg, HASH_ALGORITHM, (err, digest) => {
             if (err) {
                 return done(err); 
             }
@@ -41,7 +42,7 @@ module.exports = (randomBytes) => {
     function hashAndVerify(key, sig, msg, callback) {
         const done = (err, res) => setImmediate(() => callback(err, res));
 
-        multihashing.digest(msg, HASH_ALGORITHM, (err, digest) => {
+        multihashingAsync.digest(msg, HASH_ALGORITHM, (err, digest) => {
             if (err) {
                 return done(err); 
             }

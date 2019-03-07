@@ -1,6 +1,3 @@
-
-
-const multihashing = require("multihashing-async");
 const protobuf = require("protons");
 const bs58 = require("bs58");
 
@@ -8,7 +5,8 @@ const crypto = require("./ed25519");
 const pbm = protobuf(require("./keys.proto"));
 
 const {
-    is
+    is,
+    multiformat: { multihashingAsync }
 } = adone;
 
 class Ed25519PublicKey {
@@ -38,7 +36,7 @@ class Ed25519PublicKey {
 
     hash(callback) {
         ensure(callback);
-        multihashing(this.bytes, "sha2-256", callback);
+        multihashingAsync(this.bytes, "sha2-256", callback);
     }
 }
 
@@ -80,7 +78,7 @@ class Ed25519PrivateKey {
 
     hash(callback) {
         ensure(callback);
-        multihashing(this.bytes, "sha2-256", callback);
+        multihashingAsync(this.bytes, "sha2-256", callback);
     }
 
     /**

@@ -1,11 +1,10 @@
-const CID = require('cids')
 const Joi = require('joi')
-const multibase = require('multibase')
 const Boom = require('boom')
 const { cidToString } = require('../../../utils/cid')
 
 const {
-    ipfs: { multipart }
+    ipfs: { multipart },
+    multiformat: { CID, multibase }
 } = adone;
 
 const debug = require('debug')

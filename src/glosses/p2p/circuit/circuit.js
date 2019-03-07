@@ -1,11 +1,9 @@
-const mafmt = require("mafmt");
-const multiaddr = require("multiaddr");
-
 const CircuitDialer = require("./circuit/dialer");
 const utilsFactory = require("./circuit/utils");
 
 const {
-    is
+    is,
+    multiformat: { multiaddr, mafmt }
 } = adone;
 
 const debug = require("debug");

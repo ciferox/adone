@@ -1,7 +1,6 @@
-const CID = require('cids')
-
 const {
-    stream: { pull2: pull }
+    stream: { pull2: pull },
+    multiformat: { CID }
 } = adone;
 const { values, error, filter, map } = pull;
 

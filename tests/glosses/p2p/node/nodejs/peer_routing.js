@@ -73,7 +73,9 @@ describe(".peerRouting", () => {
                     (cb) => nodeB.dial(nodeD.peerInfo.id, cb),
                     (cb) => nodeC.dial(nodeE.peerInfo.id, cb)
                 ], (err) => {
-                    if (err) { throw err };
+                    if (err) {
+                        throw err; 
+                    }
                     expect(err).to.not.exist();
                     nodeB.peerRouting.findPeer(nodeE.peerInfo.id, (err, peerInfo) => {
                         expect(err).to.not.exist();

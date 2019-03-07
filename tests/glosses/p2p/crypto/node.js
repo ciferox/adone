@@ -1,3 +1,3 @@
-'use strict'
 
-require('./keys/rsa-crypto-libs')
+
+require("./keys/rsa-crypto-libs");

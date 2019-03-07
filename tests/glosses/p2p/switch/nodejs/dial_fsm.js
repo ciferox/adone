@@ -61,6 +61,8 @@ describe("dialFSM", () => {
         ], done);
     });
 
+    afterEach((done) => setTimeout(done, 100)); // ??? but without it some tests timedout
+
     it("should emit `error:connection_attempt_failed` when a transport fails to dial", (done) => {
         switchC.handle("/warn/1.0.0", () => { });
 

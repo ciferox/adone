@@ -1,8 +1,8 @@
 const defaultsDeep = require('@nodeutils/defaults-deep')
-const multiaddr = require('multiaddr')
 
 const {
-    p2p: { secio: SECIO, Multiplex, KadDHT, Bootstrap, Node: BaseNode, TCP, WS, MulticastDNS, WebsocketStarMulti }
+    p2p: { secio: SECIO, muxer: { mplex }, KadDHT, Bootstrap, Node: BaseNode, transport: { TCP, WS, WSStarMulti }, MulticastDNS },
+    multiformat: { multiaddr }
 } = adone;
 
 
@@ -12,7 +12,7 @@ class Node extends BaseNode {
         // const wsstar = new WebSocketStar({ id: _options.peerInfo.id })
         const wsstarServers = _options.peerInfo.multiaddrs.toArray().map(String).filter(addr => addr.includes('p2p-websocket-star'))
         _options.peerInfo.multiaddrs.replace(wsstarServers.map(multiaddr), '/p2p-websocket-star') // the ws-star-multi module will replace this with the chosen ws-star servers
-        const wsstar = new WebsocketStarMulti({ servers: wsstarServers, id: _options.peerInfo.id, ignore_no_online: !wsstarServers.length || _options.wsStarIgnoreErrors })
+        const wsstar = new WSStarMulti({ servers: wsstarServers, id: _options.peerInfo.id, ignore_no_online: !wsstarServers.length || _options.wsStarIgnoreErrors })
 
         const defaults = {
             modules: {
@@ -22,7 +22,7 @@ class Node extends BaseNode {
                     wsstar
                 ],
                 streamMuxer: [
-                    Multiplex
+                    mplex
                 ],
                 connEncryption: [
                     SECIO

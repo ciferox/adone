@@ -1,4 +1,6 @@
-const multiaddr = require("multiaddr");
+const {
+    multiformat: { multiaddr }
+} = adone;
 const EventEmitter = require("events").EventEmitter;
 const debug = require("debug");
 const log = debug("libp2p:tcp:listen");

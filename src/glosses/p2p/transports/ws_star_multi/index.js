@@ -7,12 +7,11 @@ const {
     map,
     parallel
 } = require("async");
-const multiaddr = require("multiaddr");
-const mafmt = require("mafmt");
 
 const {
     is,
-    p2p: { transport: { WSStar } }
+    p2p: { transport: { WSStar } },
+    multiformat: { multiaddr, mafmt }
 } = adone;
 
 
@@ -63,15 +62,15 @@ class WebsocketStarMulti { // listen on multiple websocket star servers without 
                     setTimeout(next, this.opt.timeout || 5000, new Error("Timeout"));
                     server.listen(multiaddr(server.url).encapsulate(`/ipfs/${id}`), next);
                 }), () => {
-                    if (!listener.online.length && !this.opt.ignore_no_online) {
-                        const e = new Error("Couldn't listen on any of the servers");
-                        listener.emit("error", e);
-                        cb(e);
-                    } else {
-                        listener.emit("listening");
-                        cb();
-                    }
-                });
+                if (!listener.online.length && !this.opt.ignore_no_online) {
+                    const e = new Error("Couldn't listen on any of the servers");
+                    listener.emit("error", e);
+                    cb(e);
+                } else {
+                    listener.emit("listening");
+                    cb();
+                }
+            });
         };
 
         listener.close = (cb) =>

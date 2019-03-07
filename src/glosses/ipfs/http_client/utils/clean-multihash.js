@@ -1,8 +1,8 @@
 const bs58 = require('bs58')
-const CID = require('cids')
 
 const {
-    ipfs: { isIPFS }
+    ipfs: { isIPFS },
+    multiformat: { CID }
 } = adone;
 
 module.exports = function (multihash) {

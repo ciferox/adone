@@ -1,8 +1,8 @@
 const defaultsDeep = require('@nodeutils/defaults-deep')
-const multiaddr = require('multiaddr')
 
 const {
-    p2p: { secio: SECIO, KadDHT, Bootstrap, Multiplex, WS, WebRTCStar, WebsocketStarMulti }
+    p2p: { secio: SECIO, KadDHT, Bootstrap, Multiplex, WS, WebRTCStar, WebsocketStarMulti },
+    multiformat: { multiaddr }
 } = adone;
 
 class Node extends libp2p {

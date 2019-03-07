@@ -1,112 +1,86 @@
-const {
-    is,
-    fs,
-    std: { path }
-} = adone;
+const { open, write, close, rename, fsync, unlink } = require("fs");
+const { join, dirname } = require("path");
 
-const activeFiles = {};
+let counter = 0;
 
-let invocations = 0;
+const id = () => `${process.pid}.${counter++}`;
 
-const cleanupOnExit = (tmpfile) => {
-    return async () => {
-        try {
-            await fs.unlink(is.function(tmpfile) ? tmpfile() : tmpfile);
-        } catch (_) {
-            //
+const cleanup = (dest, err, cb) => unlink(dest, () => cb(err));
+const closeAndCleanup = (fd, dest, err, cb) => close(fd, () => cleanup(dest, err, cb));
+
+const writeLoop = (fd, content, contentLength, offset, cb) => {
+    write(fd, content, offset, (err, bytesWritten) => {
+        if (err) {
+            cb(err);
+            return;
         }
-    };
-};
 
-export default async (filename, data, options = {}) => {
-    let truename;
-    let fd;
-    let tmpfile;
-    const removeOnExit = cleanupOnExit(() => tmpfile);
-    const absoluteName = path.resolve(filename);
-
-    return new Promise((superResolve, superReject) => {
-        new Promise((resolve) => {
-            // make a queue if it doesn't already exist
-            if (!activeFiles[absoluteName]) {
-                activeFiles[absoluteName] = [];
-            }
-
-            activeFiles[absoluteName].push(resolve); // add this job to the queue
-            if (activeFiles[absoluteName].length === 1) {
-                resolve();
-            } // kick off the first one
-        }).then(async () => {
-            try {
-                truename = await fs.realpath(filename);
-            } catch (err) {
-                truename = filename;
-            }
-            tmpfile = `${truename}.${adone.crypto.hash.murmur3.x86.hash128(`${process.pid}${++invocations}`)}`;
-        }).then(async () => {
-            if (!(options.mode && options.chown)) {
-                // Either mode or chown is not explicitly set
-                // Default behavior is to copy it from original file
-                try {
-                    const stats = await fs.stat(truename);
-                    options = Object.assign({}, options);
-
-                    if (!options.mode) {
-                        options.mode = stats.mode;
-                    }
-                    if (!options.chown && process.getuid) {
-                        options.chown = { uid: stats.uid, gid: stats.gid };
-                    }
-                } catch (err) {
-                    //
-                }
-            }
-        }).then(async () => {
-            fd = await fs.open(tmpfile, "w", options.mode);
-        }).then(async () => {
-            if (is.buffer(data)) {
-                await fs.write(fd, data, 0, data.length, 0);
-            } else if (!is.nil(data)) {
-                await fs.write(fd, String(data), 0, String(options.encoding || "utf8"));
-            }
-        }).then(async () => {
-            if (options.fsync !== false) {
-                try {
-                    await fs.fsync(fd);
-                    await fs.close(fd);
-                } catch (err) {
-                    throw err;
-                }
-            }
-        }).then(async () => {
-            if (options.chown) {
-                await fs.chown(tmpfile, options.chown.uid, options.chown.gid);
-            }
-        }).then(async () => {
-            if (options.mode) {
-                await fs.chmod(tmpfile, options.mode);
-            }
-        }).then(async () => {
-            await fs.rename(tmpfile, truename);
-        }).then(async () => {
-            await removeOnExit();
-            superResolve();
-        }).catch(async (err) => {
-            try {
-                await removeOnExit();
-                await fs.unlink(tmpfile);
-            } catch (err) {
-                //
-            } finally {
-                superReject(err);
-            }
-        }).then(() => {
-            activeFiles[absoluteName].shift(); // remove the element added by serializeSameFile
-            if (activeFiles[absoluteName].length > 0) {
-                activeFiles[absoluteName][0](); // start next job if one is pending
-            } else {
-                delete activeFiles[absoluteName];
-            }
-        });
+        if (bytesWritten < contentLength - offset) {
+            writeLoop(fd, content, contentLength, offset + bytesWritten, cb);
+        } else {
+            cb(null);
+        }
     });
 };
+
+const openLoop = (dest, cb) => {
+    open(dest, "w", (err, fd) => {
+        if (err) {
+            if (err.code === "EMFILE") {
+                openLoop(dest, cb);
+                return;
+            }
+
+            cb(err);
+            return;
+        }
+
+        cb(null, fd);
+    });
+};
+
+export default function (path, content, cb) {
+    const tmp = join(dirname(path), `.${id()}`);
+    openLoop(tmp, (err, fd) => {
+        if (err) {
+            cb(err);
+            return;
+        }
+
+        const contentLength = Buffer.byteLength(content);
+        writeLoop(fd, content, contentLength, 0, (err) => {
+            if (err) {
+                closeAndCleanup(fd, tmp, err, cb);
+                return;
+            }
+
+            fsync(fd, (err) => {
+                if (err) {
+                    closeAndCleanup(fd, tmp, err, cb);
+                    return;
+                }
+
+                close(fd, (err) => {
+                    if (err) {
+                        // TODO could we possibly be leaking a file descriptor here?
+                        cleanup(tmp, err, cb);
+                        return;
+                    }
+
+                    rename(tmp, path, (err) => {
+                        if (err) {
+                            cleanup(tmp, err, cb);
+                            return;
+                        }
+
+                        cb(null);
+                    });
+                });
+            });
+        });
+
+        // clean up after oursevles, this is not needed
+        // anymore
+        content = null;
+    });
+}

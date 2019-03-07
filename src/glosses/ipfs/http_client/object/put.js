@@ -1,8 +1,8 @@
 const promisify = require('promisify-es6')
-const CID = require('cids')
 
 const {
-    ipfs: { ipld: { dagPb } }
+    ipfs: { ipld: { dagPb } },
+    multiformat: { CID }
 } = adone;
 
 const { DAGNode } = dagPb;

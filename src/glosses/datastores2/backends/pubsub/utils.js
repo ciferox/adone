@@ -1,4 +1,6 @@
-const multibase = require("multibase");
+const {
+    multiformat: { multibase }
+} = adone;
 const errcode = require("err-code");
 
 const namespace = "/record/";

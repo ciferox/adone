@@ -1,7 +1,5 @@
-const mh = require('multihashes')
 const promisify = require('promisify-es6')
 const reduce = require('async/reduce')
-const CID = require('cids')
 const debug = require('debug')
 const log = debug('jsipfs:http:response:resolver')
 log.error = debug('jsipfs:http:response:resolver:error')
@@ -10,7 +8,8 @@ const dirView = require('./dir-view')
 const pathUtil = require('./utils/path')
 
 const {
-    ipfs: { UnixFs }
+    ipfs: { UnixFs },
+    multiformat: { CID, multihash: mh }
 } = adone;
 
 function getIndexFiles(links) {

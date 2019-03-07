@@ -1,6 +1,5 @@
 const waterfall = require("async/waterfall");
 const series = require("async/series");
-const multiaddr = require("multiaddr");
 const rimraf = require("rimraf");
 const once = require("once");
 const defaults = require("lodash.defaults");
@@ -23,7 +22,8 @@ const run = require("./utils/run");
 const {
     is,
     ipfs: { httpClient: IpfsClient },
-    std: { fs, os, path }
+    std: { fs, os, path },
+    multiformat: { multiaddr }
 } = adone;
 
 // amount of ms to wait before sigkill

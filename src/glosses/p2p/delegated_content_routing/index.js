@@ -1,13 +1,13 @@
 const {
     is,
     p2p: { PeerId, PeerInfo },
-    ipfs: { httpClient: { dht, refs, swarm, defaultConfig } }
+    ipfs: { httpClient: { dht, refs, swarm, defaultConfig } },
+    multiformat: { multiaddr }
 } = adone;
 
 const series = require("async/series");
 const parallel = require("async/parallel");
 const reflect = require("async/reflect");
-const multiaddr = require("multiaddr");
 
 const DEFAULT_MAX_TIMEOUT = 30e3; // 30 second default
 const DEFAULT_IPFS_API = {

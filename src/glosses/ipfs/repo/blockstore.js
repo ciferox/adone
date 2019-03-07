@@ -1,12 +1,12 @@
 const base32 = require('base32.js')
 const setImmediate = require('async/setImmediate')
 const reject = require('async/reject')
-const CID = require('cids')
 const pull = require('pull-stream')
 
 const {
     ipfs: { Block },
-    datastore2: { shard: sh, ShardingDatastore, interface: { Key } }
+    datastore2: { shard: sh, ShardingDatastore, interface: { Key } },
+    multiformat: { CID }
 } = adone;
 
 

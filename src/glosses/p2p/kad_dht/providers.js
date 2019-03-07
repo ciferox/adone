@@ -1,7 +1,6 @@
 const cache = require("hashlru");
 const varint = require("varint");
 const each = require("async/each");
-const CID = require("cids");
 
 const c = require("./constants");
 const utils = require("./utils");
@@ -9,9 +8,9 @@ const utils = require("./utils");
 const {
     datastore2: { interface: { Key } },
     p2p: { PeerId },
-    stream: { pull2: pull }
+    stream: { pull2: pull },
+    multiformat: { CID }
 } = adone;
-
 /**
  * This class manages known providers.
  * A provider is a peer that we know to have the content for a given CID.

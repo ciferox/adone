@@ -1,5 +1,3 @@
-const multihashes = require('multihashes')
-const CID = require('cids')
 const protobuf = require('protons')
 const fnv1a = require('fnv1a')
 const varint = require('varint')
@@ -7,7 +5,8 @@ const someSeries = require('async/someSeries')
 const eachOfSeries = require('async/eachOfSeries')
 
 const {
-    ipfs: { ipld: { dagPb } }
+    ipfs: { ipld: { dagPb } },
+    multiformat: { CID, multihash: multihashes }
 } = adone;
 
 const { DAGNode, DAGLink } = dagPb;

@@ -1,15 +1,15 @@
-'use strict'
-
-const CID = require('cids')
+const {
+    multiformat: { CID }
+} = adone;
 
 module.exports = (cid, base) => {
-  if (Buffer.isBuffer(cid)) {
-    cid = new CID(cid)
-  }
+    if (Buffer.isBuffer(cid)) {
+        cid = new CID(cid)
+    }
 
-  if (base === 'base58btc') {
-    return cid.toBaseEncodedString()
-  }
+    if (base === 'base58btc') {
+        return cid.toBaseEncodedString()
+    }
 
-  return cid.toV1().toBaseEncodedString(base)
+    return cid.toV1().toBaseEncodedString(base)
 }

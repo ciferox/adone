@@ -1,8 +1,7 @@
-const multiaddr = require("multiaddr");
-
 const f = require("./utils/factory");
 const {
     is,
+    multiformat: { multiaddr },
     ipfs: { httpClient }
 } = adone;
 

@@ -2,10 +2,10 @@ const sinon = require("sinon");
 const waterfall = require("async/waterfall");
 const series = require("async/series");
 const parallel = require("async/parallel");
-const multiaddr = require("multiaddr");
 
 const {
     is,
+    multiformat: { multiaddr },
     p2p: { Circuit }
 } = adone;
 
@@ -44,7 +44,7 @@ describe("circuit relay", () => {
                 callback(node);
             });
         });
-    }
+    };
 
     before(function (done) {
         this.timeout(20 * 1000);
@@ -55,91 +55,91 @@ describe("circuit relay", () => {
                 "/ip4/0.0.0.0/tcp/0/ws",
                 "/ip4/0.0.0.0/tcp/0"
             ], {
-                    config: {
-                        relay: {
+                config: {
+                    relay: {
+                        enabled: true,
+                        hop: {
                             enabled: true,
-                            hop: {
-                                enabled: true,
-                                active: false // passive relay
-                            }
+                            active: false // passive relay
                         }
                     }
-                }, (node) => {
-                    relayNode1 = node;
-                    cb();
-                }),
+                }
+            }, (node) => {
+                relayNode1 = node;
+                cb();
+            }),
             // setup active relay
             (cb) => setupNode([
                 "/ip4/0.0.0.0/tcp/0/ws",
                 "/ip4/0.0.0.0/tcp/0"
             ], {
-                    config: {
-                        relay: {
+                config: {
+                    relay: {
+                        enabled: true,
+                        hop: {
                             enabled: true,
-                            hop: {
-                                enabled: true,
-                                active: false // passive relay
-                            }
+                            active: false // passive relay
                         }
                     }
-                }, (node) => {
-                    relayNode2 = node;
-                    cb();
-                }),
+                }
+            }, (node) => {
+                relayNode2 = node;
+                cb();
+            }),
             // setup node with WS
             (cb) => setupNode([
                 "/ip4/0.0.0.0/tcp/0/ws"
             ], {
-                    config: {
-                        relay: {
-                            enabled: true
-                        }
+                config: {
+                    relay: {
+                        enabled: true
                     }
-                }, (node) => {
-                    nodeWS1 = node;
-                    cb();
-                }),
+                }
+            }, (node) => {
+                nodeWS1 = node;
+                cb();
+            }),
             // setup node with WS
             (cb) => setupNode([
                 "/ip4/0.0.0.0/tcp/0/ws"
             ], {
-                    config: {
-                        relay: {
-                            enabled: true
-                        }
+                config: {
+                    relay: {
+                        enabled: true
                     }
-                }, (node) => {
-                    nodeWS2 = node;
-                    cb();
-                }),
+                }
+            }, (node) => {
+                nodeWS2 = node;
+                cb();
+            }),
             // set up node with TCP and listening on relay1
             (cb) => setupNode([
                 "/ip4/0.0.0.0/tcp/0",
                 `/p2p/${relayNode1.peerInfo.id.toB58String()}/p2p-circuit`
             ], {
-                    config: {
-                        relay: {
-                            enabled: true
-                        }
+                config: {
+                    relay: {
+                        enabled: true
                     }
-                }, (node) => {
-                    nodeTCP1 = node;
-                    cb();
-                }),
+                }
+            }, (node) => {
+                nodeTCP1 = node;
+                cb();
+            }),
             // set up node with TCP and listening on relay2 over TCP transport
             (cb) => setupNode([
                 "/ip4/0.0.0.0/tcp/0",
                 `/ip4/0.0.0.0/tcp/0/p2p/${relayNode2.peerInfo.id.toB58String()}/p2p-circuit`
             ], {
-                    config: {
-                        relay: {
-                            enabled: true
-                        }
+                config: {
+                    relay: {
+                        enabled: true
                     }
-                }, (node) => {
-                    nodeTCP2 = node;
-                    cb();
-                })
+                }
+            }, (node) => {
+                nodeTCP2 = node;
+                cb();
+            })
         ], (err) => {
             expect(err).to.not.exist();
 

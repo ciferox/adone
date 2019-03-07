@@ -2,19 +2,18 @@ const _ = require("lodash");
 const series = require("async/series");
 const waterfall = require("async/waterfall");
 const parallel = require("async/parallel");
-const multiaddr = require("multiaddr");
 const isNode = require("detect-node");
-const multihashing = require("multihashing-async");
 const CID = require("cids");
 
 const {
+    multiformat: { multiaddr, multihashingAsync },
     ipfs: { Block, IPFS, ipfsdCtl }
 } = adone;
 
 function makeBlock(callback) {
     const d = Buffer.from(`IPFS is awesome ${Math.random()}`);
 
-    multihashing(d, "sha2-256", (err, multihash) => {
+    multihashingAsync(d, "sha2-256", (err, multihash) => {
         if (err) {
             return callback(err);
         }

@@ -19,7 +19,7 @@ const validateConfig = require("./config").validate;
 
 const {
     is,
-    p2p: { PeerBook, ConnectionManager, Switch, Ping, WS }
+    p2p: { PeerBook, ConnectionManager, Switch, Ping, transport: { WS } }
 } = adone;
 
 const notStarted = (action, state) => {
@@ -240,12 +240,12 @@ class Node extends EventEmitter {
 
         this._getPeerInfo(peer, (err, peerInfo) => {
             if (err) {
-                return callback(err); 
+                return callback(err);
             }
 
             this._switch.dial(peerInfo, protocol, (err, conn) => {
                 if (err) {
-                    return callback(err); 
+                    return callback(err);
                 }
                 this.peerBook.put(peerInfo);
                 callback(null, conn);
@@ -274,7 +274,7 @@ class Node extends EventEmitter {
 
         this._getPeerInfo(peer, (err, peerInfo) => {
             if (err) {
-                return callback(err); 
+                return callback(err);
             }
 
             const connFSM = this._switch.dialFSM(peerInfo, protocol, (err) => {
@@ -290,7 +290,7 @@ class Node extends EventEmitter {
     hangUp(peer, callback) {
         this._getPeerInfo(peer, (err, peerInfo) => {
             if (err) {
-                return callback(err); 
+                return callback(err);
             }
 
             this._switch.hangUp(peerInfo, callback);
@@ -304,7 +304,7 @@ class Node extends EventEmitter {
 
         this._getPeerInfo(peer, (err, peerInfo) => {
             if (err) {
-                return callback(err); 
+                return callback(err);
             }
 
             callback(null, new Ping(this._switch, peerInfo));
@@ -451,7 +451,7 @@ class Node extends EventEmitter {
                     return parallel(
                         this._discovery.map((d) => {
                             return (_cb) => d.stop(() => {
-                                _cb(); 
+                                _cb();
                             });
                         }),
                         cb

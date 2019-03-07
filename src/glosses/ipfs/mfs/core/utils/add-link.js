@@ -1,4 +1,3 @@
-const CID = require("cids");
 const waterfall = require("async/waterfall");
 const DirSharded = require("../../../unixfs_importer/importer/dir-sharded");
 const series = require("async/series");
@@ -9,9 +8,9 @@ const {
 } = require("./hamt-utils");
 
 const {
-    ipfs: { UnixFs, ipld: { dagPb } }
+    ipfs: { UnixFs, ipld: { dagPb } },
+    multiformat: { CID }
 } = adone;
-
 const {
     DAGNode,
     DAGLink

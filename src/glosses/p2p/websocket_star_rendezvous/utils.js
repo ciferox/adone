@@ -1,9 +1,7 @@
-const multiaddr = require("multiaddr");
-const mafmt = require("mafmt");
-
 const {
     is,
-    p2p: { crypto, PeerId }
+    p2p: { crypto, PeerId },
+    multiformat: { multiaddr, mafmt }
 } = adone;
 
 const isIP = function (ma) {

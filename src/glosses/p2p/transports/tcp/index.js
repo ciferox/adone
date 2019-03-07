@@ -1,5 +1,4 @@
 const net = require("net");
-const mafmt = require("mafmt");
 const withIs = require("class-is");
 const once = require("once");
 const debug = require("debug");
@@ -10,6 +9,7 @@ const createListener = require("./listener");
 const {
     is,
     lodash: { includes, isFunction },
+    multiformat: { mafmt },
     noop,
     p2p: { Connection },
     stream: { pull2: { streamToPullStream } }

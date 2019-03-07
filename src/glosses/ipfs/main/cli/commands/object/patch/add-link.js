@@ -1,4 +1,6 @@
-const multibase = require('multibase')
+const {
+    multiformat: { multibase }
+} = adone;
 const promisify = require('promisify-es6')
 const { print } = require('../../../utils')
 const { cidToString } = require('../../../../utils/cid')

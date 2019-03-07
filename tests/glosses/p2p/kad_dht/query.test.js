@@ -1,5 +1,5 @@
 const {
-    p2p: { KadDHT, PeerBook, Switch, transport: { TCP }, multiplex }
+    p2p: { KadDHT, PeerBook, Switch, transport: { TCP }, muxer: { mplex } }
 } = adone;
 const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "kad_dht", ...args);
 
@@ -22,7 +22,7 @@ describe("Query", () => {
             peerInfos = result;
             const sw = new Switch(peerInfos[0], new PeerBook());
             sw.transport.add("tcp", new TCP());
-            sw.connection.addStreamMuxer(multiplex);
+            sw.connection.addStreamMuxer(mplex);
             sw.connection.reuse();
             dht = new KadDHT(sw);
 
@@ -99,23 +99,23 @@ describe("Query", () => {
     });
 
     /**
-   * This test creates two disjoint tracks of peers, one for
-   * each of the query's two paths to follow. The "good"
-   * track that leads to the target initially has high
-   * distances to the target, while the "bad" track that
-   * goes nowhere has small distances to the target.
-   * Only by going down both simultaneously will it find
-   * the target before the end of the bad track. The greedy
-   * behavior without disjoint paths would reach the target
-   * only after visiting every single peer.
-   *
-   *                 xor distance to target
-   * far <-----------------------------------------------> close
-   * <us>
-   *     <good 0> <g 1> <g 2>                            <target>
-   *                           <bad 0> <b 1> ... <b n>
-   *
-   */
+     * This test creates two disjoint tracks of peers, one for
+     * each of the query's two paths to follow. The "good"
+     * track that leads to the target initially has high
+     * distances to the target, while the "bad" track that
+     * goes nowhere has small distances to the target.
+     * Only by going down both simultaneously will it find
+     * the target before the end of the bad track. The greedy
+     * behavior without disjoint paths would reach the target
+     * only after visiting every single peer.
+     *
+     *                 xor distance to target
+     * far <-----------------------------------------------> close
+     * <us>
+     *     <good 0> <g 1> <g 2>                            <target>
+     *                           <bad 0> <b 1> ... <b n>
+     *
+     */
     it("uses disjoint paths", (done) => {
         const goodLength = 3;
         createDisjointTracks(peerInfos, goodLength, (err, targetId, starts, getResponse) => {

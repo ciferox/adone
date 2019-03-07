@@ -1,11 +1,8 @@
 const {
-    p2p: { PeerId, PeerInfo }
+    p2p: { PeerId, PeerInfo },
+    multiformat: { CID, multibase, multiaddr, multihash }
 } = adone;
 
-const multiaddr = require("multiaddr");
-const multibase = require("multibase");
-const multihash = require("multihashes");
-const CID = require("cids");
 const { getDescribe, getIt } = require("./utils/shani");
 
 module.exports = (createCommon, options) => {

@@ -2,12 +2,11 @@ const waterfall = require('async/waterfall')
 const parallel = require('async/parallel')
 const setImmediate = require('async/setImmediate')
 const promisify = require('promisify-es6')
-const CID = require('cids')
-const mh = require('multihashes')
 const errCode = require('err-code')
 
 const {
-    ipfs: { UnixFs, ipld: { dagPb } }
+    ipfs: { UnixFs, ipld: { dagPb } },
+    multiformat: { CID, multihash: mh }
 } = adone;
 
 const {

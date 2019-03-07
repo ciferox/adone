@@ -1,8 +1,8 @@
 const request = require('superagent')
-const multiaddr = require('multiaddr')
 
 const {
-    ipfs: { httpClient: IpfsClient }
+    ipfs: { httpClient: IpfsClient },
+    multiformat: { multiaddr }
 } = adone;
 
 function createApi(apiAddr, gwAddr, IpfsClient) {

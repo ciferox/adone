@@ -1,16 +1,15 @@
 const Hapi = require('hapi')
 const Pino = require('hapi-pino')
 const debug = require('debug')
-const multiaddr = require('multiaddr')
 const promisify = require('promisify-es6')
-const toUri = require('multiaddr-to-uri')
 const toMultiaddr = require('uri-to-multiaddr')
 
 const IPFS = require('../core')
 const errorHandler = require('./error-handler')
 
 const {
-    p2p: { Bootstrap, WebRTCStar, TCP, WS, MulticastDNS }
+    p2p: { Bootstrap, WebRTCStar, TCP, WS, MulticastDNS },
+    multiformat: { multiaddr, multiaddrToUri: toUri }
 } = adone;
 
 const hapiInfoToMultiaddr = function (info) {

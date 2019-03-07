@@ -3,6 +3,7 @@ const series = require("async/series");
 const times = require("lodash/times");
 
 const {
+    is,
     assertion,
     p2p: { FloodSub }
 } = adone;
@@ -12,7 +13,12 @@ const first = utils.first;
 const createNode = utils.createNode;
 const expectSet = utils.expectSet;
 
-describe.todo("basics between 2 nodes", () => {
+const shouldNotHappen = (msg) => {
+    expect.fail();
+};
+
+
+describe("basics between 2 nodes", () => {
     describe("fresh nodes", () => {
         let nodeA;
         let nodeB;
@@ -118,9 +124,7 @@ describe.todo("basics between 2 nodes", () => {
 
             fsB.once("Z", shouldNotHappen);
 
-            fsA.on("Z", receivedMsg);
-
-            function receivedMsg(msg) {
+            const receivedMsg = function (msg) {
                 expect(msg.data.toString()).to.equal("banana");
                 expect(msg.from).to.be.eql(fsB.libp2p.peerInfo.id.toB58String());
                 expect(is.buffer(msg.seqno)).to.be.true();
@@ -131,7 +135,9 @@ describe.todo("basics between 2 nodes", () => {
                     fsB.removeListener("Z", shouldNotHappen);
                     done();
                 }
-            }
+            };
+
+            fsA.on("Z", receivedMsg);
 
             times(10, () => fsB.publish("Z", Buffer.from("banana")));
         });
@@ -141,9 +147,7 @@ describe.todo("basics between 2 nodes", () => {
 
             fsB.once("Z", shouldNotHappen);
 
-            fsA.on("Z", receivedMsg);
-
-            function receivedMsg(msg) {
+            const receivedMsg = function (msg) {
                 expect(msg.data.toString()).to.equal("banana");
                 expect(msg.from).to.be.eql(fsB.libp2p.peerInfo.id.toB58String());
                 expect(is.buffer(msg.seqno)).to.be.true();
@@ -154,7 +158,9 @@ describe.todo("basics between 2 nodes", () => {
                     fsB.removeListener("Z", shouldNotHappen);
                     done();
                 }
-            }
+            };
+
+            fsA.on("Z", receivedMsg);
 
             const msgs = [];
             times(10, () => msgs.push(Buffer.from("banana")));
@@ -216,12 +222,7 @@ describe.todo("basics between 2 nodes", () => {
                 fsA = new FloodSub(nodeA);
                 fsB = new FloodSub(nodeB);
 
-                parallel([
-                    (cb) => fsA.start(cb),
-                    (cb) => fsB.start(cb)
-                ], next);
-
-                function next() {
+                const next = function () {
                     fsA.subscribe("Za");
                     fsB.subscribe("Zb");
 
@@ -230,7 +231,12 @@ describe.todo("basics between 2 nodes", () => {
                     expect(fsB.peers.size).to.equal(0);
                     expectSet(fsB.subscriptions, ["Zb"]);
                     done();
-                }
+                };
+
+                parallel([
+                    (cb) => fsA.start(cb),
+                    (cb) => fsB.start(cb)
+                ], next);
             });
         });
 
@@ -290,12 +296,7 @@ describe.todo("basics between 2 nodes", () => {
                 fsA = new FloodSub(nodeA);
                 fsB = new FloodSub(nodeB);
 
-                parallel([
-                    (cb) => fsA.start(cb),
-                    (cb) => fsB.start(cb)
-                ], next);
-
-                function next() {
+                const next = function () {
                     fsA.subscribe("Za");
                     fsB.subscribe("Zb");
 
@@ -304,7 +305,12 @@ describe.todo("basics between 2 nodes", () => {
                     expect(fsB.peers.size).to.equal(0);
                     expectSet(fsB.subscriptions, ["Zb"]);
                     done();
-                }
+                };
+
+                parallel([
+                    (cb) => fsA.start(cb),
+                    (cb) => fsB.start(cb)
+                ], next);
             });
         });
 
@@ -368,16 +374,15 @@ describe.todo("basics between 2 nodes", () => {
             fsA = new FloodSub(nodeA);
             fsB = new FloodSub(nodeB);
 
+            const next = function () {
+                expect(fsA.peers.size).to.equal(1);
+                expect(fsB.peers.size).to.equal(1);
+                done();
+            };
             parallel([
                 (cb) => fsA.start(cb),
                 (cb) => fsB.start(cb)
             ], next);
-
-            function next() {
-                expect(fsA.peers.size).to.equal(1);
-                expect(fsB.peers.size).to.equal(1);
-                done();
-            }
         });
 
         it("stop both FloodSubs", (done) => {
@@ -403,7 +408,7 @@ describe.todo("basics between 2 nodes", () => {
                 (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb)
             ], (err, nodes) => {
                 if (err) {
-                    return done(err); 
+                    return done(err);
                 }
 
                 nodeA = nodes[0];
@@ -433,6 +438,14 @@ describe.todo("basics between 2 nodes", () => {
         it("does not dial twice to same peer", (done) => {
             sandbox.on(fsA, ["_onDial"]);
 
+            const startComplete = function () {
+                // Check that only one dial was made
+                setTimeout(() => {
+                    expect(fsA._onDial).to.have.been.called.once();
+                    done();
+                }, 1000);
+            };
+
             // When node A starts, it will dial all peers in its peer book, which
             // is just peer B
             fsA.start(startComplete);
@@ -440,14 +453,6 @@ describe.todo("basics between 2 nodes", () => {
             // Simulate a connection coming in from peer B at the same time. This
             // causes floodsub to dial peer B
             nodeA.emit("peer:connect", nodeB.peerInfo);
-
-            function startComplete() {
-                // Check that only one dial was made
-                setTimeout(() => {
-                    expect(fsA._onDial).to.have.been.called.once();
-                    done();
-                }, 1000);
-            }
         });
     });
 
@@ -466,7 +471,7 @@ describe.todo("basics between 2 nodes", () => {
                 (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb)
             ], (err, nodes) => {
                 if (err) {
-                    return done(err); 
+                    return done(err);
                 }
 
                 nodeA = nodes[0];
@@ -507,11 +512,7 @@ describe.todo("basics between 2 nodes", () => {
                 dialProtocol(peerInfo, multicodec, cb);
             });
 
-            // When node A starts, it will dial all peers in its peer book, which
-            // is just peer B
-            fsA.start(startComplete);
-
-            function startComplete() {
+            const startComplete = function () {
                 // Simulate a connection coming in from peer B. This causes floodsub
                 // to dial peer B
                 nodeA.emit("peer:connect", nodeB.peerInfo);
@@ -521,7 +522,11 @@ describe.todo("basics between 2 nodes", () => {
                     expect(fsA.libp2p.dialProtocol).to.have.been.called.twice();
                     done();
                 }, 1000);
-            }
+            };
+
+            // When node A starts, it will dial all peers in its peer book, which
+            // is just peer B
+            fsA.start(startComplete);
         });
     });
 
@@ -540,7 +545,7 @@ describe.todo("basics between 2 nodes", () => {
                 (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb)
             ], (err, nodes) => {
                 if (err) {
-                    return done(err); 
+                    return done(err);
                 }
 
                 nodeA = nodes[0];
@@ -567,7 +572,7 @@ describe.todo("basics between 2 nodes", () => {
             });
         });
 
-        it("does not process dial after stop", (done) => {
+        it.todo("does not process dial after stop", (done) => {
             sandbox.on(fsA, ["_onDial"]);
 
             // Simulate a connection coming in from peer B at the same time. This
@@ -585,7 +590,3 @@ describe.todo("basics between 2 nodes", () => {
         });
     });
 });
-
-function shouldNotHappen(msg) {
-    expect.fail();
-}

@@ -1,14 +1,14 @@
 const times = require("async/times");
 const waterfall = require("async/waterfall");
 const timeout = require("async/timeout");
-const multihashing = require("multihashing-async");
 const assert = require("assert");
 const c = require("./constants");
 
 const errcode = require("err-code");
 
 const {
-    p2p: { crypto, PeerId }
+    p2p: { crypto, PeerId },
+    multiformat: { multihashingAsync: multihashing }
 } = adone;
 
 class RandomWalk {

@@ -73,9 +73,9 @@ module.exports = (datastore1, datastore2) => {
             });
         });
 
-        describe.todo("key", () => {
+        describe("key", () => {
             it("can be an ed25519 key", function (done) {
-                this.timeout(50 * 1000);
+                this.timeout(5000 * 1000);
                 ks.createKey(`${keyName}ed25519`, "ed25519", 2048, (err, info) => {
                     expect(err).to.not.exist();
                     expect(info).exist();
@@ -140,7 +140,7 @@ module.exports = (datastore1, datastore2) => {
             });
 
             it("should validate type is string", (done) => {
-                ks.createKey(`TEST${  Date.now()}`, null, 2048, (err) => {
+                ks.createKey(`TEST${Date.now()}`, null, 2048, (err) => {
                     expect(err).to.exist();
                     expect(err.message).to.contain("Invalid key type");
                     done();
@@ -148,7 +148,7 @@ module.exports = (datastore1, datastore2) => {
             });
 
             it("should validate size is integer", (done) => {
-                ks.createKey(`TEST${  Date.now()}`, "rsa", "string", (err) => {
+                ks.createKey(`TEST${Date.now()}`, "rsa", "string", (err) => {
                     expect(err).to.exist();
                     expect(err.message).to.contain("Invalid key size");
                     done();
@@ -166,7 +166,7 @@ module.exports = (datastore1, datastore2) => {
             });
         });
 
-        describe.todo("query", () => {
+        describe("query", () => {
             it("finds all existing keys", (done) => {
                 ks.listKeys((err, keys) => {
                     expect(err).to.not.exist();
@@ -231,7 +231,7 @@ module.exports = (datastore1, datastore2) => {
                 });
             });
 
-            it.todo("encrypts", (done) => {
+            it("encrypts", (done) => {
                 ks.cms.encrypt(keyName, plainData, (err, msg) => {
                     expect(err).to.not.exist();
                     expect(msg).to.exist();
@@ -255,7 +255,7 @@ module.exports = (datastore1, datastore2) => {
                 });
             });
 
-            it.todo("cannot be read without the key", (done) => {
+            it("cannot be read without the key", (done) => {
                 emptyKeystore.cms.decrypt(cms, (err, plain) => {
                     expect(err).to.exist();
                     expect(err).to.have.property("missingKeys");
@@ -264,7 +264,7 @@ module.exports = (datastore1, datastore2) => {
                 });
             });
 
-            it.todo("can be read with the key", (done) => {
+            it("can be read with the key", (done) => {
                 ks.cms.decrypt(cms, (err, plain) => {
                     expect(err).to.not.exist();
                     expect(plain).to.exist();
@@ -274,7 +274,7 @@ module.exports = (datastore1, datastore2) => {
             });
         });
 
-        describe.todo("exported key", () => {
+        describe("exported key", () => {
             let pemKey;
             let ed25519Key;
             let secp256k1Key;
@@ -421,7 +421,7 @@ module.exports = (datastore1, datastore2) => {
                 });
             });
 
-            it.todo("removes the existing key name", (done) => {
+            it("removes the existing key name", (done) => {
                 ks.renameKey(keyName, renamedKeyName, (err, key) => {
                     expect(err).to.not.exist();
                     expect(key).to.exist();
@@ -434,7 +434,7 @@ module.exports = (datastore1, datastore2) => {
                 });
             });
 
-            it.todo("creates the new key name", (done) => {
+            it("creates the new key name", (done) => {
                 ks.findKeyByName(renamedKeyName, (err, key) => {
                     expect(err).to.not.exist();
                     expect(key).to.exist();
@@ -443,7 +443,7 @@ module.exports = (datastore1, datastore2) => {
                 });
             });
 
-            it.todo("does not change the key ID", (done) => {
+            it("does not change the key ID", (done) => {
                 ks.findKeyByName(renamedKeyName, (err, key) => {
                     expect(err).to.not.exist();
                     expect(key).to.exist();
@@ -469,7 +469,7 @@ module.exports = (datastore1, datastore2) => {
                 });
             });
 
-            it.todo("can remove a known key", (done) => {
+            it("can remove a known key", (done) => {
                 ks.removeKey(renamedKeyName, (err, key) => {
                     expect(err).to.not.exist();
                     expect(key).to.exist();

@@ -1,26 +1,16 @@
-/**
- * eslint-env mocha
- */
-
-
-const chai = require("chai");
-const dirtyChai = require("dirty-chai");
-const expect = chai.expect;
-chai.use(dirtyChai);
-
 const sinon = require("sinon");
 const once = require("once");
 const parallel = require("async/parallel");
 const series = require("async/series");
-const TCP = require("libp2p-tcp");
-const WS = require("libp2p-websockets");
-const multiplex = require("pull-mplex");
-const PeerBook = require("peer-book");
 const getPorts = require("portfinder").getPorts;
 
-const utils = require("./utils");
-const createInfos = utils.createInfos;
-const Swarm = require("../src");
+const utils = require("../utils");
+const { createInfos } = utils;
+
+const {
+    p2p: { Switch, PeerBook, transport: { TCP, WS }, muxer: { pullMplex, spdy } }
+} = adone;
+
 
 describe("circuit", () => {
     let swarmA; // TCP and WS
@@ -38,9 +28,9 @@ describe("circuit", () => {
         peerA.multiaddrs.add("/ip4/0.0.0.0/tcp/9001");
         peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9002/ws");
 
-        swarmA = new Swarm(peerA, new PeerBook());
-        swarmB = new Swarm(peerB, new PeerBook());
-        swarmC = new Swarm(peerC, new PeerBook());
+        swarmA = new Switch(peerA, new PeerBook());
+        swarmB = new Switch(peerB, new PeerBook());
+        swarmC = new Switch(peerC, new PeerBook());
 
         swarmA.transport.add("tcp", new TCP());
         swarmA.transport.add("ws", new WS());
@@ -145,13 +135,13 @@ describe("circuit", () => {
     });
 
     describe("in a basic network", () => {
-    // Create 5 nodes
-    // Make node 1 act as a Bootstrap node and relay (speak tcp and ws)
-    // Make nodes 2 & 3 speak tcp only
-    // Make nodes 4 & 5 speak WS only
-    // Have all nodes dial node 1
-    // Each node should get the peers of node 1
-    // Attempt to dial to each peer
+        // Create 5 nodes
+        // Make node 1 act as a Bootstrap node and relay (speak tcp and ws)
+        // Make nodes 2 & 3 speak tcp only
+        // Make nodes 4 & 5 speak WS only
+        // Have all nodes dial node 1
+        // Each node should get the peers of node 1
+        // Attempt to dial to each peer
         let bootstrapSwitch;
         let tcpSwitch1;
         let tcpSwitch2;
@@ -184,8 +174,8 @@ describe("circuit", () => {
                 wsPeer2.multiaddrs.add(`/ip4/0.0.0.0/tcp/${ports.shift()}/ws`);
 
                 // Setup the bootstrap node with the minimum needed for being a relay
-                bootstrapSwitch = new Swarm(bootstrapPeer, new PeerBook());
-                bootstrapSwitch.connection.addStreamMuxer(multiplex);
+                bootstrapSwitch = new Switch(bootstrapPeer, new PeerBook());
+                bootstrapSwitch.connection.addStreamMuxer(pullMplex);
                 bootstrapSwitch.connection.reuse();
                 bootstrapSwitch.connection.enableCircuitRelay({
                     enabled: true,
@@ -196,29 +186,29 @@ describe("circuit", () => {
                 });
 
                 // Setup the tcp1 node with the minimum needed for dialing via a relay
-                tcpSwitch1 = new Swarm(tcpPeer1, new PeerBook());
-                tcpSwitch1.connection.addStreamMuxer(multiplex);
+                tcpSwitch1 = new Switch(tcpPeer1, new PeerBook());
+                tcpSwitch1.connection.addStreamMuxer(pullMplex);
                 tcpSwitch1.connection.reuse();
                 tcpSwitch1.connection.enableCircuitRelay({
                     enabled: true
                 });
 
                 // Setup tcp2 node to not be able to dial/listen over relay
-                tcpSwitch2 = new Swarm(tcpPeer2, new PeerBook());
+                tcpSwitch2 = new Switch(tcpPeer2, new PeerBook());
                 tcpSwitch2.connection.reuse();
-                tcpSwitch2.connection.addStreamMuxer(multiplex);
+                tcpSwitch2.connection.addStreamMuxer(pullMplex);
 
                 // Setup the ws1 node with the minimum needed for dialing via a relay
-                wsSwitch1 = new Swarm(wsPeer1, new PeerBook());
-                wsSwitch1.connection.addStreamMuxer(multiplex);
+                wsSwitch1 = new Switch(wsPeer1, new PeerBook());
+                wsSwitch1.connection.addStreamMuxer(pullMplex);
                 wsSwitch1.connection.reuse();
                 wsSwitch1.connection.enableCircuitRelay({
                     enabled: true
                 });
 
                 // Setup the ws2 node with the minimum needed for dialing via a relay
-                wsSwitch2 = new Swarm(wsPeer2, new PeerBook());
-                wsSwitch2.connection.addStreamMuxer(multiplex);
+                wsSwitch2 = new Switch(wsPeer2, new PeerBook());
+                wsSwitch2.connection.addStreamMuxer(pullMplex);
                 wsSwitch2.connection.reuse();
                 wsSwitch2.connection.enableCircuitRelay({
                     enabled: true
@@ -253,7 +243,7 @@ describe("circuit", () => {
                     }
                 ], (err) => {
                     if (err) {
-                        return done(err); 
+                        return done(err);
                     }
 
                     done = once(done);

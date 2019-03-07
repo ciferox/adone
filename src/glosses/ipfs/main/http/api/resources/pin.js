@@ -1,12 +1,12 @@
 const mapValues = require('lodash/mapValues')
 const keyBy = require('lodash/keyBy')
-const multibase = require('multibase')
 const Joi = require('joi')
 const Boom = require('boom')
 const { cidToString } = require('../../../utils/cid')
 
 const {
-    ipfs: { isIPFS }
+    ipfs: { isIPFS },
+    multiformat: { multibase }
 } = adone;
 
 function parseArgs(request, h) {

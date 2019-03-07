@@ -1,7 +1,5 @@
 const debug = require("debug");
 const log = debug("libp2p:webrtc-star");
-const multiaddr = require("multiaddr");
-const mafmt = require("mafmt");
 const withIs = require("class-is");
 const io = require("socket.io-client");
 const EE = require("events").EventEmitter;
@@ -16,7 +14,8 @@ const cleanMultiaddr = utils.cleanMultiaddr;
 const {
     is,
     p2p: { Connection, PeerId, PeerInfo },
-    stream: { pull2: { streamToPullStream: toPull } }
+    stream: { pull2: { streamToPullStream: toPull } },
+    multiformat: { multiaddr, mafmt }
 } = adone;
 
 const noop = once(() => { });

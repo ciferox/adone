@@ -1,34 +1,34 @@
-'use strict'
+const {
+    multiformat: { multiaddr, mafmt }
+} = adone;
 
-const mafmt = require('mafmt')
-const multiaddr = require('multiaddr')
 const utils = require('../../utils')
 const print = require('../../utils').print
 
 module.exports = {
-  command: 'peers',
+    command: 'peers',
 
-  describe: 'List peers with open connections',
+    describe: 'List peers with open connections',
 
-  builder: {},
+    builder: {},
 
-  handler (argv) {
-    argv.resolve((async () => {
-      if (!utils.isDaemonOn()) {
-        throw new Error('This command must be run in online mode. Try running \'ipfs daemon\' first.')
-      }
+    handler(argv) {
+        argv.resolve((async () => {
+            if (!utils.isDaemonOn()) {
+                throw new Error('This command must be run in online mode. Try running \'ipfs daemon\' first.')
+            }
 
-      const ipfs = await argv.getIpfs()
-      const result = await ipfs.swarm.peers()
+            const ipfs = await argv.getIpfs()
+            const result = await ipfs.swarm.peers()
 
-      result.forEach((item) => {
-        let ma = multiaddr(item.addr.toString())
-        if (!mafmt.IPFS.matches(ma)) {
-          ma = ma.encapsulate('/ipfs/' + item.peer.toB58String())
-        }
-        const addr = ma.toString()
-        print(addr)
-      })
-    })())
-  }
+            result.forEach((item) => {
+                let ma = multiaddr(item.addr.toString())
+                if (!mafmt.IPFS.matches(ma)) {
+                    ma = ma.encapsulate('/ipfs/' + item.peer.toB58String())
+                }
+                const addr = ma.toString()
+                print(addr)
+            })
+        })())
+    }
 }

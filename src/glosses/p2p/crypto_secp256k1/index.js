@@ -1,10 +1,8 @@
-
-
 const bs58 = require("bs58");
-const multihashing = require("multihashing-async");
 
 const {
-    is
+    is,
+    multiformat: { multihashingAsync }
 } = adone;
 
 module.exports = (keysProtobuf, randomBytes, crypto) => {
@@ -38,7 +36,7 @@ module.exports = (keysProtobuf, randomBytes, crypto) => {
 
         hash(callback) {
             ensure(callback);
-            multihashing(this.bytes, "sha2-256", callback);
+            multihashingAsync(this.bytes, "sha2-256", callback);
         }
     }
 
@@ -76,7 +74,7 @@ module.exports = (keysProtobuf, randomBytes, crypto) => {
 
         hash(callback) {
             ensure(callback);
-            multihashing(this.bytes, "sha2-256", callback);
+            multihashingAsync(this.bytes, "sha2-256", callback);
         }
 
         /**
@@ -116,14 +114,14 @@ module.exports = (keysProtobuf, randomBytes, crypto) => {
 
         crypto.generateKey((err, privateKeyBytes) => {
             if (err) {
-                return callback(err); 
+                return callback(err);
             }
 
             let privkey;
             try {
                 privkey = new Secp256k1PrivateKey(privateKeyBytes);
             } catch (err) {
-                return callback(err); 
+                return callback(err);
             }
 
             callback(null, privkey);

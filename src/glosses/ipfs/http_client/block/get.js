@@ -1,9 +1,9 @@
 const promisify = require('promisify-es6')
-const CID = require('cids')
 const streamToValue = require('../utils/stream-to-value')
 
 const {
-    ipfs: { Block }
+    ipfs: { Block },
+    multiformat: { CID }
 } = adone;
 
 module.exports = (send) => {

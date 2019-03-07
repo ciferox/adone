@@ -1,14 +1,13 @@
 const rimraf = require("rimraf");
 const each = require("async/each");
-const CID = require("cids");
 
 const {
     database: { level },
     datastore2: { MountDatastore, interface: { Key, util }, backend: { LevelDatastore } },
     std: { path },
-    stream: { pull2: pull }
+    stream: { pull2: pull },
+    multiformat: { CID }
 } = adone;
-
 const tesInterface = require("../interface");
 
 describe("datastore", "backend", "LevelDatastore", () => {

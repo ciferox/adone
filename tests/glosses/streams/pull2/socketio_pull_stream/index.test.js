@@ -1,5 +1,6 @@
 const {
-    p2p: { Connection, multiformat: { multistream } },
+    multiformat: { multistream },
+    p2p: { Connection },
     stream: { pull2: pull }
 } = adone;
 

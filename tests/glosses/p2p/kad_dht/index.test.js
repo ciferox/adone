@@ -101,7 +101,7 @@ const countDiffPeers = function (a, b) {
     return b.filter((p) => !s.has(p.toB58String())).length;
 };
 
-describe("KadDHT", () => {
+describe("common", () => {
     let peerInfos;
     let values;
 

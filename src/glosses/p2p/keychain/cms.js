@@ -2,12 +2,10 @@ const setImmediate = require("async/setImmediate");
 const series = require("async/series");
 const detect = require("async/detect");
 const waterfall = require("async/waterfall");
-require("node-forge/lib/pkcs7");
-require("node-forge/lib/pbe");
-const forge = require("node-forge/lib/forge");
 const util = require("./util");
 
 const {
+    crypto2,
     is
 } = adone;
 
@@ -63,20 +61,20 @@ class CMS {
             const key = results[0];
             const pem = results[1];
             try {
-                const privateKey = forge.pki.decryptRsaPrivateKey(pem, self.keychain._());
+                const privateKey = crypto2.pki.decryptRsaPrivateKey(pem, self.keychain._());
                 util.certificateForKey(key, privateKey, (err, certificate) => {
                     if (err) {
                         return callback(err); 
                     }
 
                     // create a p7 enveloped message
-                    const p7 = forge.pkcs7.createEnvelopedData();
+                    const p7 = crypto2.pkcs7.createEnvelopedData();
                     p7.addRecipient(certificate);
-                    p7.content = forge.util.createBuffer(plain);
+                    p7.content = crypto2.util.createBuffer(plain);
                     p7.encrypt();
 
                     // convert message to DER
-                    const der = forge.asn1.toDer(p7.toAsn1()).getBytes();
+                    const der = crypto2.asn1.toDer(p7.toAsn1()).getBytes();
                     done(null, Buffer.from(der, "binary"));
                 });
             } catch (err) {
@@ -105,9 +103,9 @@ class CMS {
         const self = this;
         let cms;
         try {
-            const buf = forge.util.createBuffer(cmsData.toString("binary"));
-            const obj = forge.asn1.fromDer(buf);
-            cms = forge.pkcs7.messageFromAsn1(obj);
+            const buf = crypto2.util.createBuffer(cmsData.toString("binary"));
+            const obj = crypto2.asn1.fromDer(buf);
+            cms = crypto2.pkcs7.messageFromAsn1(obj);
         } catch (err) {
             return done(new Error(`Invalid CMS: ${err.message}`));
         }
@@ -145,7 +143,7 @@ class CMS {
                         return done(err); 
                     }
 
-                    const privateKey = forge.pki.decryptRsaPrivateKey(pem, self.keychain._());
+                    const privateKey = crypto2.pki.decryptRsaPrivateKey(pem, self.keychain._());
                     cms.decrypt(r.recipient, privateKey);
                     done(null, Buffer.from(cms.content.getBytes(), "binary"));
                 });

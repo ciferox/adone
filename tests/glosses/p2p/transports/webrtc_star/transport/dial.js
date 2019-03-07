@@ -1,7 +1,7 @@
-const multiaddr = require("multiaddr");
 const series = require("async/series");
 
 const {
+    multiformat: { multiaddr },
     stream: { pull2: pull }
 } = adone;
 

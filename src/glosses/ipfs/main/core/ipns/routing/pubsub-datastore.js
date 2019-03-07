@@ -1,10 +1,9 @@
-const { fromB58String, toB58String } = require('multihashes')
-
 const withIs = require('class-is')
 
 const {
     ipfs: { ipns },
-    datastore2: { backend: { PubsubDatastore } }
+    datastore2: { backend: { PubsubDatastore } },
+    multiformat: { multihash: { fromB58String, toB58String } }
 } = adone;
 
 const errcode = require('err-code')

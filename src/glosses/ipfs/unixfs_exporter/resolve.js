@@ -1,9 +1,9 @@
-const CID = require('cids')
 const waterfall = require('async/waterfall')
 
 const {
     ipfs: { UnixFs },
-    stream: { pull2: pull }
+    stream: { pull2: pull },
+    multiformat: { CID }
 } = adone;
 const { paramap, flatten, error, filter, map } = pull;
 

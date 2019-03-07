@@ -1,12 +1,12 @@
 const leftPad = require('left-pad')
 const whilst = require('async/whilst')
 const waterfall = require('async/waterfall')
-const multihashing = require('multihashing-async')
 const Dir = require('./dir')
 const persist = require('../utils/persist')
 const Bucket = require('hamt-sharding')
 
 const {
+    multiformat: { multihashingAsync: multihashing },
     ipfs: { UnixFs, ipld: { dagPb } },
     stream: { pull2: pull }
 } = adone;

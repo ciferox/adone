@@ -1,8 +1,8 @@
-const multiaddr = require("multiaddr");
 const proto = require("../protocol");
 
 const {
     is,
+    multiformat: { multiaddr },
     p2p: { PeerId, PeerInfo }
 } = adone;
 

@@ -1,5 +1,4 @@
 const promisify = require('promisify-es6')
-const CID = require('cids')
 const map = require('async/map')
 const mapSeries = require('async/mapSeries')
 const series = require('async/series')
@@ -9,16 +8,16 @@ const waterfall = require('async/waterfall')
 const detectLimit = require('async/detectLimit')
 const setImmediate = require('async/setImmediate')
 const errCode = require('err-code')
-const multibase = require('multibase')
 
 const createPinSet = require('./pin-set')
 const { resolvePath } = require('../utils')
 
 const {
     ipfs: { ipld: { dagPb } },
-    datastore2: { interface: { Key } }
+    datastore2: { interface: { Key } },
+    multiformat: { CID },
+    multiformat: { multibase }
 } = adone;
-
 
 const { DAGNode, DAGLink, util } = dagPb;
 

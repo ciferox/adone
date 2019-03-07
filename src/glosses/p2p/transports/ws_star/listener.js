@@ -1,6 +1,5 @@
 const debug = require("debug");
 const log = debug("libp2p:websocket-star:listener");
-const multiaddr = require("multiaddr");
 const io = require("socket.io-client");
 const uuid = require("uuid");
 const series = require("async/series");
@@ -14,7 +13,8 @@ const ERRORS = require("./errors");
 const {
     is,
     p2p: { crypto, Connection },
-    stream: { pull2: pull }
+    stream: { pull2: pull },
+    multiformat: { multiaddr }
 } = adone;
 const { through, socketioPullStream: sp } = pull;
 

@@ -9,7 +9,9 @@ const first = utils.first;
 const createNode = utils.createNode;
 const expectSet = utils.expectSet;
 
-describe.todo("multiple nodes (more than 2)", () => {
+describe("multiple nodes (more than 2)", function () {
+    this.timeout(60 * 1000);
+
     describe("every peer subscribes to the topic", () => {
         describe("line", () => {
             // line
@@ -270,7 +272,7 @@ describe.todo("multiple nodes (more than 2)", () => {
                 expectSet(e.ps.subscriptions, ["Z"]);
             });
 
-            it("publishes from c", (done) => {
+            it.todo("publishes from c", (done) => {
                 let counter = 0;
 
                 a.ps.on("Z", incMsg);

@@ -1,10 +1,9 @@
 const promisify = require('promisify-es6')
-const CID = require('cids')
-const multihash = require('multihashes')
 const SendOneFile = require('../utils/send-one-file')
 
 const {
-    ipfs: { ipld: { dagPb, dagCbor } }
+    ipfs: { ipld: { dagPb, dagCbor } },
+    multiformat: { CID, multihash }
 } = adone;
 
 module.exports = (send) => {

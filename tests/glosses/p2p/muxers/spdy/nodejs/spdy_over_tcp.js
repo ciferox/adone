@@ -1,7 +1,7 @@
 const sinon = require("sinon");
-const multiaddr = require("multiaddr");
 
 const {
+    multiformat: { multiaddr },
     p2p: { muxer: { spdy }, transport: { TCP } },
     stream: { pull2: pull },
     std: { fs, path }

@@ -7,7 +7,9 @@ module.exports = (common) => {
 
         beforeEach((done) => {
             common.setup((err, _muxer) => {
-                if (err) {return done(err)};
+                if (err) {
+                    return done(err); 
+                }
                 muxer = _muxer;
                 done();
             });

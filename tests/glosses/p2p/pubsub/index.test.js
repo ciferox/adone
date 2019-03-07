@@ -7,7 +7,7 @@ const {
 } = adone;
 
 const utils = require("./utils");
-const createNode = utils.createNode;
+const { createNode } = utils;
 
 class PubsubImplementation extends PubsubBaseProtocol {
     constructor(libp2p) {
@@ -31,7 +31,7 @@ class PubsubImplementation extends PubsubBaseProtocol {
     }
 }
 
-describe.todo("pubsub base protocol", () => {
+describe("pubsub base protocol", () => {
     describe("fresh nodes", () => {
         let nodeA;
         let nodeB;
@@ -151,7 +151,9 @@ describe.todo("pubsub base protocol", () => {
                 (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb),
                 (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb)
             ], (err, nodes) => {
-                if (err) { return done(err) };
+                if (err) {
+                    return done(err);
+                }
 
                 nodeA = nodes[0];
                 nodeB = nodes[1];
@@ -198,7 +200,7 @@ describe.todo("pubsub base protocol", () => {
         });
     });
 
-    describe("allow dials even after error", () => {
+    describe.todo("allow dials even after error", () => {
         let sandbox;
         let nodeA;
         let nodeB;
@@ -212,7 +214,9 @@ describe.todo("pubsub base protocol", () => {
                 (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb),
                 (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb)
             ], (err, nodes) => {
-                if (err) { return done(err) };
+                if (err) {
+                    return done(err);
+                }
 
                 nodeA = nodes[0];
                 nodeB = nodes[1];
@@ -270,7 +274,7 @@ describe.todo("pubsub base protocol", () => {
         });
     });
 
-    describe("prevent processing dial after stop", () => {
+    describe.todo("prevent processing dial after stop", () => {
         let sandbox;
         let nodeA;
         let nodeB;
@@ -284,7 +288,9 @@ describe.todo("pubsub base protocol", () => {
                 (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb),
                 (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb)
             ], (err, nodes) => {
-                if (err) { return done(err) };
+                if (err) {
+                    return done(err);
+                }
 
                 nodeA = nodes[0];
                 nodeB = nodes[1];

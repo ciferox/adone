@@ -1,74 +1,74 @@
-'use strict'
-
-const CID = require('cids')
-const assert = require('assert')
 const withIs = require('class-is')
+const {
+    assertion: { assert },
+    multiformat: { CID }
+} = adone;
 
 // Link represents an IPFS Merkle DAG Link between Nodes.
 class DAGLink {
-  constructor (name, size, cid) {
-    assert(cid, 'A link requires a cid to point to')
-    // assert(size, 'A link requires a size')
-    //  note - links should include size, but this assert is disabled
-    //  for now to maintain consistency with go-ipfs pinset
+    constructor(name, size, cid) {
+        assert(cid, 'A link requires a cid to point to')
+        // assert(size, 'A link requires a size')
+        //  note - links should include size, but this assert is disabled
+        //  for now to maintain consistency with go-ipfs pinset
 
-    this._name = name || ''
-    this._nameBuf = null
-    this._size = size
-    this._cid = new CID(cid)
-  }
-
-  toString () {
-    return `DAGLink <${this._cid.toBaseEncodedString()} - name: "${this.name}", size: ${this.size}>`
-  }
-
-  toJSON () {
-    if (!this._json) {
-      this._json = Object.freeze({
-        name: this.name,
-        size: this.size,
-        cid: this._cid.toBaseEncodedString()
-      })
+        this._name = name || ''
+        this._nameBuf = null
+        this._size = size
+        this._cid = new CID(cid)
     }
 
-    return Object.assign({}, this._json)
-  }
-
-  get name () {
-    return this._name
-  }
-
-  // Memoize the Buffer representation of name
-  // We need this to sort the links, otherwise
-  // we will reallocate new buffers every time
-  get nameAsBuffer () {
-    if (this._nameBuf !== null) {
-      return this._nameBuf
+    toString() {
+        return `DAGLink <${this._cid.toBaseEncodedString()} - name: "${this.name}", size: ${this.size}>`
     }
 
-    this._nameBuf = Buffer.from(this._name)
-    return this._nameBuf
-  }
+    toJSON() {
+        if (!this._json) {
+            this._json = Object.freeze({
+                name: this.name,
+                size: this.size,
+                cid: this._cid.toBaseEncodedString()
+            })
+        }
 
-  set name (name) {
-    throw new Error("Can't set property: 'name' is immutable")
-  }
+        return Object.assign({}, this._json)
+    }
 
-  get size () {
-    return this._size
-  }
+    get name() {
+        return this._name
+    }
 
-  set size (size) {
-    throw new Error("Can't set property: 'size' is immutable")
-  }
+    // Memoize the Buffer representation of name
+    // We need this to sort the links, otherwise
+    // we will reallocate new buffers every time
+    get nameAsBuffer() {
+        if (this._nameBuf !== null) {
+            return this._nameBuf
+        }
 
-  get cid () {
-    return this._cid
-  }
+        this._nameBuf = Buffer.from(this._name)
+        return this._nameBuf
+    }
 
-  set cid (cid) {
-    throw new Error("Can't set property: 'cid' is immutable")
-  }
+    set name(name) {
+        throw new Error("Can't set property: 'name' is immutable")
+    }
+
+    get size() {
+        return this._size
+    }
+
+    set size(size) {
+        throw new Error("Can't set property: 'size' is immutable")
+    }
+
+    get cid() {
+        return this._cid
+    }
+
+    set cid(cid) {
+        throw new Error("Can't set property: 'cid' is immutable")
+    }
 }
 
 exports = module.exports = withIs(DAGLink, { className: 'DAGLink', symbolName: '@ipld/js-ipld-dag-pb/daglink' })

@@ -1,17 +1,13 @@
-/**
- * eslint-env mocha
- */
-
-
-const chai = require("chai");
-chai.use(require("dirty-chai"));
-const expect = chai.expect;
-const multiaddr = require("multiaddr");
-const pull = require("pull-stream");
 const setImmediate = require("async/setImmediate");
+const utils = require("../utils");
 
-const LimitDialer = require("../src/limit-dialer");
-const utils = require("./utils");
+const {
+    multiformat: { multiaddr },
+    stream: { pull2: pull }
+} = adone;
+
+const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "switch", ...args);
+const LimitDialer = require(srcPath("limit-dialer"));
 
 describe("LimitDialer", () => {
     let peers;

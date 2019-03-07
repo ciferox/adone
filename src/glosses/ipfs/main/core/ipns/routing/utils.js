@@ -1,7 +1,6 @@
-const multibase = require('multibase')
-
 const {
-    ipfs: { ipns }
+    ipfs: { ipns },
+    multiformat: { multibase }
 } = adone;
 
 module.exports = {

@@ -1,9 +1,9 @@
-const pull = require('pull-stream')
-const toB58String = require('multihashes').toB58String
 const Boom = require('boom')
 
 const {
-    ipfs: { isIPFS, unixfsExporter: exporter }
+    ipfs: { isIPFS, unixfsExporter: exporter },
+    multiformat: { toB58String },
+    stream: { pull2: pull }
 } = adone;
 
 const fileTypeMap = {

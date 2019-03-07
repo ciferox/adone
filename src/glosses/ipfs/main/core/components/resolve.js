@@ -1,11 +1,11 @@
 const promisify = require('promisify-es6')
 const setImmediate = require('async/setImmediate')
 const doUntil = require('async/doUntil')
-const CID = require('cids')
 const { cidToString } = require('../../utils/cid')
 
 const {
-    ipfs: { isIPFS }
+    ipfs: { isIPFS },
+    multiformat: { CID }
 } = adone;
 
 module.exports = (self) => {

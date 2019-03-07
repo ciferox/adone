@@ -1,10 +1,10 @@
 const os = require("os");
 const debug = require("debug");
 const log = debug("libp2p:mdns");
-const Multiaddr = require("multiaddr");
 
 const {
-    p2p: { PeerId, PeerInfo, transport: { TCP } }
+    p2p: { PeerId, PeerInfo, transport: { TCP } },
+    multiformat: { multiaddr: Multiaddr }
 } = adone;
 
 const tcp = new TCP();

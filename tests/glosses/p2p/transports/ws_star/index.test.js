@@ -1,9 +1,9 @@
-const multiaddr = require("multiaddr");
 const each = require("async/each");
 const series = require("async/series");
 const map = require("async/map");
 
 const {
+    multiformat: { multiaddr },
     p2p: { PeerId, transport: { WSStar } },
     stream: { pull2: pull }
 } = adone;

@@ -1,32 +1,15 @@
-/**
- * eslint-env mocha
- */
-/**
- * eslint max-nested-callbacks: ["error", 8]
- */
-
-
-const chai = require("chai");
-const dirtyChai = require("dirty-chai");
-const expect = chai.expect;
-chai.use(dirtyChai);
-
 const parallel = require("async/parallel");
-const TCP = require("libp2p-tcp");
-const multiplex = require("libp2p-mplex");
-const pullMplex = require("pull-mplex");
-const spdy = require("libp2p-spdy");
-const pull = require("pull-stream");
-const PeerBook = require("peer-book");
-const utils = require("./utils");
-const createInfos = utils.createInfos;
-const tryEcho = utils.tryEcho;
+const utils = require("../utils");
+const { createInfos, tryEcho } = utils;
 
-const Switch = require("../src");
+const {
+    p2p: { Switch, PeerBook, transport: { TCP }, muxer: { mplex, pullMplex, spdy } },
+    stream: { pull2: pull }
+} = adone;
 
 describe("Stream Multiplexing", () => {
     [
-        multiplex,
+        mplex,
         pullMplex,
         spdy
     ].forEach((sm) => describe(sm.multicodec, () => {
@@ -37,7 +20,7 @@ describe("Stream Multiplexing", () => {
         before((done) => createInfos(3, (err, peerInfos) => {
             expect(err).to.not.exist();
             function maGen(port) {
-                return `/ip4/127.0.0.1/tcp/${port}`; 
+                return `/ip4/127.0.0.1/tcp/${port}`;
             }
 
             const peerA = peerInfos[0];

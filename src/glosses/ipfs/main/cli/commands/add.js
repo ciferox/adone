@@ -2,14 +2,13 @@ const sortBy = require('lodash/sortBy')
 const promisify = require('promisify-es6')
 const getFolderSize = promisify(require('get-folder-size'))
 const byteman = require('byteman')
-const mh = require('multihashes')
-const multibase = require('multibase')
 const { print, isDaemonOn, createProgressBar } = require('../utils')
 const { cidToString } = require('../../utils/cid')
 const globSource = require('../../utils/files/glob-source')
 
 const {
-    stream: { pull2: pull }
+    stream: { pull2: pull },
+    multiformat: { multihash: mh, multibase }
 } = adone;
 const { streamToPullStream: toPull } = pull;
 

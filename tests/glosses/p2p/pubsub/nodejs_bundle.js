@@ -1,5 +1,5 @@
 const {
-    p2p: { TCP, spdy, secio, Node }
+    p2p: { KadDHT, transport: { TCP }, muxer: { spdy }, secio, Node }
 } = adone;
 
 class TestNode extends Node {
@@ -7,13 +7,19 @@ class TestNode extends Node {
         const modules = {
             transport: [TCP],
             streamMuxer: [spdy],
-            connEncryption: [secio]
+            connEncryption: [secio],
+            dht: KadDHT
         };
 
         super({
             modules,
             peerInfo,
-            peerBook
+            peerBook,
+            config: {
+                EXPERIMENTAL: {
+                    pubsub: true
+                }
+            }
         });
     }
 }

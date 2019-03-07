@@ -1,9 +1,10 @@
 
 
-require("node-forge/lib/x509");
-const forge = require("node-forge/lib/forge");
-const pki = forge.pki;
 exports = module.exports;
+
+const {
+    crypto2: { pki }
+} = adone;
 
 /**
  * Gets a self-signed X.509 certificate for the key.

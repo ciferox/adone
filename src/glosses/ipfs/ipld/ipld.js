@@ -1,4 +1,3 @@
-const CID = require('cids')
 const doUntil = require('async/doUntil')
 const joinPath = require('path').join
 const osPathSep = require('path').sep
@@ -7,6 +6,7 @@ const waterfall = require('async/waterfall')
 const mergeOptions = require('merge-options')
 
 const {
+    multiformat: { CID },
     ipfs: { Block, ipld: { dagCbor: ipldDagCbor, dagPb: ipldDagPb, raw: ipldRaw } },
     stream: { pull2: pull }
 } = adone;

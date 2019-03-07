@@ -1,7 +1,7 @@
 const observeConn = require("./observe-connection");
 
 const {
-    p2p: { multiformat: { multistream } }
+    multiformat: { multistream }
 } = adone;
 
 const debug = require("debug");

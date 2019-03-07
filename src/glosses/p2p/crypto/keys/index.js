@@ -1,11 +1,8 @@
 const protobuf = require("protons");
 const keysPBM = protobuf(require("./keys.proto"));
-require("node-forge/lib/asn1");
-require("node-forge/lib/rsa");
-require("node-forge/lib/pbe");
-const forge = require("node-forge/lib/forge");
 
 const {
+    crypto2,
     is
 } = adone;
 
@@ -124,11 +121,11 @@ exports.marshalPrivateKey = (key, type) => {
 
 exports.import = (pem, password, callback) => {
     try {
-        const key = forge.pki.decryptRsaPrivateKey(pem, password);
+        const key = crypto2.pki.decryptRsaPrivateKey(pem, password);
         if (is.null(key)) {
             throw new Error("Cannot read the key, most likely the password is wrong or not a RSA key");
         }
-        let der = forge.asn1.toDer(forge.pki.privateKeyToAsn1(key));
+        let der = crypto2.asn1.toDer(crypto2.pki.privateKeyToAsn1(key));
         der = Buffer.from(der.getBytes(), "binary");
         return supportedKeys.rsa.unmarshalRsaPrivateKey(der, callback);
     } catch (err) {

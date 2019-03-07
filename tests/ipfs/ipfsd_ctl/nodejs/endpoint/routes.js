@@ -1,9 +1,9 @@
 const {
+    multiformat: { multiaddr },
     std: { path }
 } = adone;
 
 const proxyquire = require("proxyquire");
-const multiaddr = require("multiaddr");
 
 const Hapi = require("hapi");
 

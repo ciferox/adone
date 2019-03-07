@@ -28,7 +28,9 @@ exports.createNodes = function createNodes(configNodes, callback) {
 
         if (config.id) {
             PeerId.createFromJSON(config.id, (err, peerId) => {
-                if (err) {return callback(err)};
+                if (err) {
+                    return callback(err); 
+                }
                 PeerInfo.create(peerId, setup);
             });
         } else {

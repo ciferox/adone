@@ -1,10 +1,10 @@
-const multiaddr = require("multiaddr");
 const {
     each,
     map
 } = require("async");
 
 const {
+    multiformat: { multiaddr },
     p2p: { PeerId, transport: { WSStarMulti } },
     stream: { pull2: pull }
 } = adone;

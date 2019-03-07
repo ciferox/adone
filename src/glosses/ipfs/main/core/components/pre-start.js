@@ -1,10 +1,10 @@
-const multiaddr = require('multiaddr')
 const waterfall = require('async/waterfall')
 const defaultsDeep = require('@nodeutils/defaults-deep')
 const NoKeychain = require('./no-keychain')
 
 const {
-    p2p: { PeerId, PeerInfo, Keychain }
+    p2p: { PeerId, PeerInfo, Keychain },
+    multiformat: { multiaddr }
 } = adone;
 
 /*

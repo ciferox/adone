@@ -12,7 +12,8 @@ const {
 } = require("../errors");
 
 const {
-    p2p: { Circuit, multiformat: { multistream } }
+    multiformat: { multistream },
+    p2p: { Circuit }
 } = adone;
 
 /**

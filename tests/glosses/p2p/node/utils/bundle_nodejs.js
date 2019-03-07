@@ -2,8 +2,7 @@ const defaultsDeep = require("@nodeutils/defaults-deep");
 
 const {
     is,
-    p2p: { Node, KadDHT, TCP, WS, MulticastDNS, Bootstrap, secio: SECIO, spdy, multiplex },
-    stream: { pull2: { mplex: PULLMPLEX } }
+    p2p: { Node, KadDHT, transport: { TCP, WS }, MulticastDNS, Bootstrap, secio: SECIO, muxer: { spdy, mplex, pullMplex } }
 } = adone;
 
 const mapMuxers = function (list) {
@@ -13,8 +12,8 @@ const mapMuxers = function (list) {
         }
         switch (pref.trim().toLowerCase()) {
             case "spdy": return spdy;
-            case "mplex": return multiplex;
-            case "pullmplex": return PULLMPLEX;
+            case "mplex": return mplex;
+            case "pullmplex": return pullMplex;
             default:
                 throw new Error(`${pref} muxer not available`);
         }
@@ -28,7 +27,7 @@ const getMuxers = function (muxers) {
     } else if (muxers) {
         return mapMuxers(muxers);
     }
-    return [PULLMPLEX, multiplex, spdy];
+    return [pullMplex, mplex, spdy];
 
 };
 

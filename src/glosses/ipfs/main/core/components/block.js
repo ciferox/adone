@@ -1,12 +1,11 @@
-const multihashing = require('multihashing-async')
-const CID = require('cids')
 const waterfall = require('async/waterfall')
 const setImmediate = require('async/setImmediate')
 const promisify = require('promisify-es6')
 const errCode = require('err-code')
 
 const {
-    ipfs: { Block }
+    ipfs: { Block },
+    multiformat: { CID, multihashingAsync: multihashing }
 } = adone;
 
 module.exports = function block(self) {

@@ -1,16 +1,14 @@
-const multihashing = require("multihashing-async");
 const protobuf = require("protons");
 const bs58 = require("bs58");
 const nextTick = require("async/nextTick");
 
 const crypto = require("./rsa");
 const pbm = protobuf(require("./keys.proto"));
-require("node-forge/lib/sha512");
-require("node-forge/lib/pbe");
-const forge = require("node-forge/lib/forge");
 
 const {
-    is
+    crypto2,
+    is,
+    multiformat: { multihashingAsync }
 } = adone;
 
 class RsaPublicKey {
@@ -44,7 +42,7 @@ class RsaPublicKey {
 
     hash(callback) {
         ensure(callback);
-        multihashing(this.bytes, "sha2-256", callback);
+        multihashingAsync(this.bytes, "sha2-256", callback);
     }
 }
 
@@ -94,7 +92,7 @@ class RsaPrivateKey {
 
     hash(callback) {
         ensure(callback);
-        multihashing(this.bytes, "sha2-256", callback);
+        multihashingAsync(this.bytes, "sha2-256", callback);
     }
 
     /**
@@ -137,9 +135,9 @@ class RsaPrivateKey {
             let err = null;
             let pem = null;
             try {
-                const buffer = new forge.util.ByteBuffer(this.marshal());
-                const asn1 = forge.asn1.fromDer(buffer);
-                const privateKey = forge.pki.privateKeyFromAsn1(asn1);
+                const buffer = new crypto2.util.ByteBuffer(this.marshal());
+                const asn1 = crypto2.asn1.fromDer(buffer);
+                const privateKey = crypto2.pki.privateKeyFromAsn1(asn1);
                 if (format === "pkcs-8") {
                     const options = {
                         algorithm: "aes256",
@@ -147,7 +145,7 @@ class RsaPrivateKey {
                         saltSize: 128 / 8,
                         prfAlgorithm: "sha512"
                     };
-                    pem = forge.pki.encryptRsaPrivateKey(privateKey, password, options);
+                    pem = crypto2.pki.encryptRsaPrivateKey(privateKey, password, options);
                 } else {
                     err = new Error(`Unknown export format '${format}'`);
                 }

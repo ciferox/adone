@@ -1,7 +1,3 @@
-const multiaddr = require('multiaddr')
-const multihash = require('multihashes')
-const multibase = require('multibase')
-const CID = require('cids')
 const debug = require('debug')
 const defaultsDeep = require('@nodeutils/defaults-deep')
 const EventEmitter = require('events')
@@ -17,7 +13,8 @@ const mfsPreload = require('./mfs-preload')
 
 const {
     p2p: { crypto, PeerId, PeerInfo, PeerBook },
-    ipfs: { isIPFS, ipld: { Ipld }, BlockService }
+    ipfs: { isIPFS, ipld: { Ipld }, BlockService },
+    multiformat: { CID, multibase, multihash, multiaddr }
 } = adone;
 
 // All known (non-default) IPLD formats

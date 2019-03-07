@@ -1,9 +1,9 @@
 const series = require("async/series");
-const multiaddr = require("multiaddr");
 const path = require("path");
 const isNode = require("detect-node");
 
 const {
+    multiformat: { multiaddr },
     ipfs: { ipfsdCtl }
 } = adone;
 

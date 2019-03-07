@@ -1,7 +1,5 @@
 const parallel = require("async/parallel");
 const waterfall = require("async/waterfall");
-const CID = require("cids");
-const multihashing = require("multihashing-async");
 const map = require("async/map");
 const timesSeries = require("async/timesSeries");
 const each = require("async/each");
@@ -10,7 +8,8 @@ const eachSeries = require("async/eachSeries");
 const {
     datastore2: { backend: { MemoryDatastore, LevelDatastore } },
     lodash: { range },
-    std: { os, path }
+    std: { os, path },
+    multiformat: { CID, multihashingAsync: multihashing }
 } = adone;
 const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "kad_dht", ...args);
 

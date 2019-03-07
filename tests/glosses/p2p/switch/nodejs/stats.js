@@ -1,26 +1,15 @@
-/**
- * eslint-env mocha
- */
-
-
-const chai = require("chai");
-const dirtyChai = require("dirty-chai");
-const expect = chai.expect;
-chai.use(dirtyChai);
 const parallel = require("async/parallel");
 const each = require("async/each");
 const map = require("async/map");
 const series = require("async/series");
-const TCP = require("libp2p-tcp");
-const multiplex = require("libp2p-mplex");
-const pull = require("pull-stream");
-const secio = require("libp2p-secio");
-const PeerBook = require("peer-book");
 
-const utils = require("./utils");
-const createInfos = utils.createInfos;
-const tryEcho = utils.tryEcho;
-const Switch = require("../src");
+const utils = require("../utils");
+const { createInfos, tryEcho } = utils;
+
+const {
+    p2p: { secio, Switch, PeerBook, transport: { TCP }, muxer: { mplex } },
+    stream: { pull2: pull }
+} = adone;
 
 describe("Stats", () => {
     const setup = (cb) => {
@@ -48,8 +37,8 @@ describe("Stats", () => {
             switchA.connection.crypto(secio.tag, secio.encrypt);
             switchB.connection.crypto(secio.tag, secio.encrypt);
 
-            switchA.connection.addStreamMuxer(multiplex);
-            switchB.connection.addStreamMuxer(multiplex);
+            switchA.connection.addStreamMuxer(mplex);
+            switchB.connection.addStreamMuxer(mplex);
 
             parallel([
                 (cb) => switchA.start(cb),

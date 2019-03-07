@@ -65,9 +65,9 @@ describe("p2p", "muxer", "mplex", () => {
     });
 
     describe("muxer", () => {
-        const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", ...args);
-        const Muxer = require(srcPath("p2p", "mplex", "muxer"));
-        const Multiplex = require(srcPath("p2p", "mplex", "internals"));
+        const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "muxers", "mplex", ...args);
+        const Muxer = require(srcPath("muxer"));
+        const Multiplex = require(srcPath("internals"));
 
         let muxer;
         let multiplex;

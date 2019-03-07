@@ -1,10 +1,9 @@
-const multiaddr = require("multiaddr");
-const mafmt = require("mafmt");
 const EventEmitter = require("events").EventEmitter;
 const debug = require("debug");
 const nextTick = require("async/nextTick");
 
 const {
+    multiformat: { multiaddr, mafmt },
     p2p: { PeerId, PeerInfo }
 } = adone;
 

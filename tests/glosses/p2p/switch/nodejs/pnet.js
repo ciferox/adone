@@ -1,60 +1,76 @@
-/**
- * eslint-env mocha
- */
-
-
-const chai = require("chai");
-const dirtyChai = require("dirty-chai");
-const expect = chai.expect;
-chai.use(dirtyChai);
 const parallel = require("async/parallel");
-const TCP = require("libp2p-tcp");
-const multiplex = require("pull-mplex");
-const pull = require("pull-stream");
-const secio = require("libp2p-secio");
-const PeerBook = require("peer-book");
 
-const utils = require("./utils");
+const utils = require("../utils");
 const createInfos = utils.createInfos;
 const tryEcho = utils.tryEcho;
-const Switch = require("../src");
 
-describe("SECIO", () => {
+const {
+    p2p: { Switch, PeerBook, Protector, secio, transport: { TCP }, muxer: { pullMplex } },
+    stream: { pull2: pull }
+} = adone;
+
+const generatePSK = Protector.generate;
+
+const psk = Buffer.alloc(95);
+const psk2 = Buffer.alloc(95);
+generatePSK(psk);
+generatePSK(psk2);
+
+describe("Private Network", function () {
+    this.timeout(20 * 1000);
+
     let switchA;
     let switchB;
     let switchC;
+    let switchD;
 
-    before((done) => createInfos(3, (err, infos) => {
+    before((done) => createInfos(4, (err, infos) => {
         expect(err).to.not.exist();
 
         const peerA = infos[0];
         const peerB = infos[1];
         const peerC = infos[2];
+        const peerD = infos[3];
 
         peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/9001");
         peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9002");
         peerC.multiaddrs.add("/ip4/127.0.0.1/tcp/9003");
+        peerD.multiaddrs.add("/ip4/127.0.0.1/tcp/9004");
 
-        switchA = new Switch(peerA, new PeerBook());
-        switchB = new Switch(peerB, new PeerBook());
+        switchA = new Switch(peerA, new PeerBook(), {
+            protector: new Protector(psk)
+        });
+        switchB = new Switch(peerB, new PeerBook(), {
+            protector: new Protector(psk)
+        });
+        // alternative way to add the protector
         switchC = new Switch(peerC, new PeerBook());
+        switchC.protector = new Protector(psk);
+        // Create a switch on a different private network
+        switchD = new Switch(peerD, new PeerBook(), {
+            protector: new Protector(psk2)
+        });
 
         switchA.transport.add("tcp", new TCP());
         switchB.transport.add("tcp", new TCP());
         switchC.transport.add("tcp", new TCP());
+        switchD.transport.add("tcp", new TCP());
 
         switchA.connection.crypto(secio.tag, secio.encrypt);
         switchB.connection.crypto(secio.tag, secio.encrypt);
         switchC.connection.crypto(secio.tag, secio.encrypt);
+        switchD.connection.crypto(secio.tag, secio.encrypt);
 
-        switchA.connection.addStreamMuxer(multiplex);
-        switchB.connection.addStreamMuxer(multiplex);
-        switchC.connection.addStreamMuxer(multiplex);
+        switchA.connection.addStreamMuxer(pullMplex);
+        switchB.connection.addStreamMuxer(pullMplex);
+        switchC.connection.addStreamMuxer(pullMplex);
+        switchD.connection.addStreamMuxer(pullMplex);
 
         parallel([
             (cb) => switchA.transport.listen("tcp", {}, null, cb),
             (cb) => switchB.transport.listen("tcp", {}, null, cb),
-            (cb) => switchC.transport.listen("tcp", {}, null, cb)
+            (cb) => switchC.transport.listen("tcp", {}, null, cb),
+            (cb) => switchD.transport.listen("tcp", {}, null, cb)
         ], done);
     }));
 
@@ -63,11 +79,12 @@ describe("SECIO", () => {
         parallel([
             (cb) => switchA.stop(cb),
             (cb) => switchB.stop(cb),
-            (cb) => switchC.stop(cb)
+            (cb) => switchC.stop(cb),
+            (cb) => switchD.stop(cb)
         ], done);
     });
 
-    it("handle + dial on protocol", (done) => {
+    it("should handle + dial on protocol", (done) => {
         switchB.handle("/abacaxi/1.0.0", (protocol, conn) => pull(conn, conn));
 
         switchA.dial(switchB._peerInfo, "/abacaxi/1.0.0", (err, conn) => {
@@ -77,7 +94,7 @@ describe("SECIO", () => {
         });
     });
 
-    it("dial to warm conn", (done) => {
+    it("should dial to warm conn", (done) => {
         switchB.dial(switchA._peerInfo, (err) => {
             expect(err).to.not.exist();
             expect(Object.keys(switchB.conns).length).to.equal(0);
@@ -86,7 +103,7 @@ describe("SECIO", () => {
         });
     });
 
-    it("dial on protocol, reuse warmed conn", (done) => {
+    it("should dial on protocol, reuseing warmed conn", (done) => {
         switchA.handle("/papaia/1.0.0", (protocol, conn) => pull(conn, conn));
 
         switchB.dial(switchA._peerInfo, "/papaia/1.0.0", (err, conn) => {
@@ -97,7 +114,7 @@ describe("SECIO", () => {
         });
     });
 
-    it("enable identify to reuse incomming muxed conn", (done) => {
+    it("should enable identify to reuse incomming muxed conn", (done) => {
         switchA.connection.reuse();
         switchC.connection.reuse();
 
@@ -111,8 +128,19 @@ describe("SECIO", () => {
         });
     });
 
-    it("switch back to plaintext if no arguments passed in", () => {
-        switchA.connection.crypto();
-        expect(switchA.crypto.tag).to.eql("/plaintext/1.0.0");
+    /**
+     * This test is being skipped until a related issue with pull-reader overreading can be resolved
+     * Currently this test will time out instead of returning an error properly. This is the same issue
+     * in ipfs/interop, https://github.com/ipfs/interop/pull/24/commits/179978996ecaef39e78384091aa9669dcdb94cc0
+     */
+    it("should fail to talk to a switch on a different private network", (done) => {
+        switchD.dial(switchA._peerInfo, (err) => {
+            expect(err).to.exist();
+        });
+
+        // A successful connection will return in well under 2 seconds
+        setTimeout(() => {
+            done();
+        }, 2000);
     });
 });

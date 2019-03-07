@@ -2,7 +2,8 @@ const parallel = require("async/parallel");
 const series = require("async/series");
 
 const {
-    p2p: { secio, Connection, PeerId, multiformat: { multistream } },
+    multiformat: { multistream },
+    p2p: { secio, Connection, PeerId },
     stream: { pull2: pull }
 } = adone;
 const { pair } = pull;

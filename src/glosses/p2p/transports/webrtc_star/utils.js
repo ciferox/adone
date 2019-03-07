@@ -1,6 +1,6 @@
-
-
-const multiaddr = require("multiaddr");
+const {
+    multiformat: { multiaddr }
+} = adone;
 
 function cleanUrlSIO(ma) {
     const maStrSplit = ma.toString().split("/");

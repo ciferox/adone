@@ -1,12 +1,12 @@
 const io = require("socket.io-client");
-const multiaddr = require("multiaddr");
 const uuid = require("uuid");
 
 const {
+    multiformat: { multiaddr },
     p2p: { rendezvous }
 } = adone;
 
-describe("rendezvous", () => {
+describe("p2p", "rendezvous", () => {
     const sioOptions = {
         transports: ["websocket"],
         "force new connection": true

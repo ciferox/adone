@@ -1,6 +1,5 @@
-const multiaddr = require("multiaddr");
-
 const {
+    multiformat: { multiaddr },
     p2p: { muxer: { spdy }, transport: { WS } },
     stream: { pull2: pull }
 } = adone;

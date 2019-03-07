@@ -1,14 +1,7 @@
-/**
- * eslint-env mocha
- */
+const {
+    multiformat: { multiaddr }
+} = adone;
 
-;
-
-const chai = require("chai");
-const dirtyChai = require("dirty-chai");
-const expect = chai.expect;
-chai.use(dirtyChai);
-const multiaddr = require("multiaddr");
 const cleanMultiaddr = require("../src/utils").cleanMultiaddr;
 const cleanUrlSIO = require("../src/utils").cleanUrlSIO;
 

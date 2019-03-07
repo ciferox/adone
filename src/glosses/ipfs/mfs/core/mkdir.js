@@ -1,6 +1,9 @@
 const waterfall = require('async/waterfall')
 const log = require('debug')('ipfs:mfs:mkdir')
-const CID = require('cids')
+const {
+    multiformat: { CID }
+} = adone;
+
 const {
     createNode,
     toMfsPath,

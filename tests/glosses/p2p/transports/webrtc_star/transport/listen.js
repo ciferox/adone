@@ -1,4 +1,6 @@
-const multiaddr = require("multiaddr");
+const {
+    multiformat: { multiaddr }
+} = adone;
 
 module.exports = (create) => {
     describe("listen", () => {
