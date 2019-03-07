@@ -38,7 +38,7 @@ if (!is.undefined(Error.captureStackTrace)) {
 
 // eslint-disable-next-line func-name-matching
 global.err = function globalErr(fn, val, skipStackTest) {
-    if (assertion.util.type(fn) !== "function") {
+    if (adone.typeOf(fn) !== "function") {
         throw new assertion.AssertionError("Invalid fn");
     }
 
@@ -54,7 +54,7 @@ global.err = function globalErr(fn, val, skipStackTest) {
                 );
         }
 
-        switch (assertion.util.type(val).toLowerCase()) {
+        switch (adone.typeOf(val).toLowerCase()) {
             case "undefined": return;
             case "string": return assertion.expect(err.message).to.equal(val);
             case "regexp": return assertion.expect(err.message).to.match(val);

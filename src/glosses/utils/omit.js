@@ -19,11 +19,11 @@ export default (obj, props) => {
     } else if (!props) {
         isShouldOmit = adone.falsely;
     } else {
-        throw new adone.error.InvalidArgumentException(`Unsupported type of 'props': ${adone.meta.typeOf(props)}`);
+        throw new adone.error.InvalidArgumentException(`Unsupported type of 'props': ${adone.typeOf(props)}`);
     }
 
     const keys = adone.util.keys(obj, {
-        onlyEnumerable: false
+        enumOnly: false
     });
 
     const result = {};

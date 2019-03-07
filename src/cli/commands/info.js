@@ -91,7 +91,7 @@ class SystemInfoRenderer {
                 } else if (is.string(getter)) {
                     value = getter;
                 } else if (getter) {
-                    value = adone.meta.inspect(getter, { style: "color", depth: 3 });
+                    value = adone.inspect(getter, { style: "color", depth: 3 });
                 } else {
                     continue;
                 }

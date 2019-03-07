@@ -1,0 +1,293 @@
+const {
+    multiformat: { mafmt, multiaddr }
+} = adone;
+
+describe("multiformat", "multiaddr validation", () => {
+    const goodDNS = [
+        "/dnsaddr/ipfs.io",
+        "/dns4/ipfs.io",
+        "/dns4/libp2p.io",
+        "/dns6/protocol.ai",
+        "/dns4/protocol.ai/tcp/80",
+        "/dns6/protocol.ai/tcp/80",
+        "/dnsaddr/protocol.ai/tcp/80"
+    ];
+
+    const badDNS = [
+        "/ip4/127.0.0.1"
+    ];
+
+    const goodIP = [
+        "/ip4/0.0.0.0",
+        "/ip6/fc00::"
+    ];
+
+    const badIP = [
+        "/ip4/0.0.0.0/tcp/555",
+        "/udp/789/ip6/fc00::"
+    ];
+
+    const goodTCP = [
+        "/ip4/0.0.7.6/tcp/1234",
+        "/ip6/::/tcp/0",
+        "/dns4/protocol.ai/tcp/80",
+        "/dnsaddr/protocol.ai/tcp/80"
+    ];
+
+    const badTCP = [
+        "/tcp/12345",
+        "/ip6/fc00::/udp/5523/tcp/9543",
+        "/dns4/protocol.ai"
+    ];
+
+    const goodUDP = [
+        "/ip4/0.0.7.6/udp/1234",
+        "/ip6/::/udp/0"
+    ];
+
+    const badUDP = [
+        "/udp/12345",
+        "/ip6/fc00::/tcp/5523/udp/9543"
+    ];
+
+    const goodUTP = [
+        "/ip4/1.2.3.4/udp/3456/utp",
+        "/ip6/::/udp/0/utp"
+    ];
+
+    const badUTP = [
+        "/ip4/0.0.0.0/tcp/12345/utp",
+        "/ip6/::/ip4/0.0.0.0/udp/1234/utp"
+    ];
+
+    const goodHTTP = [
+        "/dnsaddr/ipfs.io",
+        "/dnsaddr/ipfs.io/http",
+        "/dnsaddr/ipfs.io/tcp/3456/http",
+        "/ip4/0.0.0.0/http",
+        "/ip4/0.0.0.0/tcp/12345/http",
+        "/ip6/::/http",
+        "/ip6/::/tcp/12345/http"
+    ];
+
+    const goodHTTPS = [
+        "/dnsaddr/ipfs.io/https",
+        "/dnsaddr/ipfs.io/tcp/3456/https",
+        "/ip4/0.0.0.0/https",
+        "/ip4/0.0.0.0/tcp/12345/https",
+        "/ip6/::/https",
+        "/ip6/::/tcp/12345/https"
+    ];
+
+    const goodWS = [
+        "/dnsaddr/ipfs.io/ws",
+        "/ip4/1.2.3.4/tcp/3456/ws",
+        "/ip6/::/tcp/0/ws"
+    ];
+
+    const goodWSS = [
+        "/dnsaddr/ipfs.io/wss",
+        "/ip4/1.2.3.4/tcp/3456/wss",
+        "/ip6/::/tcp/0/wss"
+    ];
+
+    const goodWebRTCStar = [
+        "/ip4/1.2.3.4/tcp/3456/ws/p2p-webrtc-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4",
+        "/dnsaddr/ipfs.io/ws/p2p-webrtc-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4",
+        "/dnsaddr/ipfs.io/wss/p2p-webrtc-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4",
+        "/ip6/::/tcp/0/ws/p2p-webrtc-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo5",
+        "/dns4/wrtc-star.discovery.libp2p.io/tcp/443/wss/p2p-webrtc-star/ipfs/QmTysQQiTGMdfRsDQp516oZ9bR3FiSCDnicUnqny2q1d79"
+    ];
+
+    const goodWebRTCDirect = [
+        "/ip4/1.2.3.4/tcp/3456/http/p2p-webrtc-direct",
+        "/ip6/::/tcp/0/http/p2p-webrtc-direct"
+    ];
+
+    const goodWebSocketStar = [
+        "/ip4/1.2.3.4/tcp/3456/ws/p2p-websocket-star",
+        "/ip6/::/tcp/0/ws/p2p-websocket-star",
+        "/dnsaddr/localhost/ws/p2p-websocket-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4",
+        "/ip4/1.2.3.4/tcp/3456/ws/p2p-websocket-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4",
+        "/dns4/ws-star.discovery.libp2p.io/tcp/443/wss/p2p-websocket-star/ipfs/Qma3uqwymdqwXtC4uvmqqwwMhTDHD7xp9FzM75tQB5qRM3"
+    ];
+
+    const goodStardust = [
+        "/ip4/1.2.3.4/tcp/3456/ws/p2p-stardust",
+        "/ip6/::/tcp/0/ws/p2p-stardust",
+        "/dnsaddr/localhost/ws/p2p-stardust/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4",
+        "/ip4/1.2.3.4/tcp/3456/ws/p2p-stardust/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4",
+        "/dns4/ws-star.discovery.libp2p.io/tcp/443/wss/p2p-stardust/ipfs/Qma3uqwymdqwXtC4uvmqqwwMhTDHD7xp9FzM75tQB5qRM3"
+    ];
+
+    const badWS = [
+        "/ip4/0.0.0.0/tcp/12345/udp/2222/ws",
+        "/ip6/::/ip4/0.0.0.0/udp/1234/ws",
+        "/ip4/127.0.0.1/tcp/24642/ws/p2p-webrtc-star"
+    ];
+
+    const badWSS = [
+        "/ip4/0.0.0.0/tcp/12345/udp/2222/wss",
+        "/ip6/::/ip4/0.0.0.0/udp/1234/wss"
+    ];
+
+    const goodCircuit = [
+        "/p2p-circuit",
+        "/p2p-circuit/ipfs/QmUjNmr8TgJCn1Ao7DvMy4cjoZU15b9bwSCBLE3vwXiwgj",
+        "/p2p-circuit/ip4/127.0.0.1/tcp/20008/ws/ipfs/QmUjNmr8TgJCn1Ao7DvMy4cjoZU15b9bwSCBLE3vwXiwgj",
+        "/p2p-circuit/ip4/1.2.3.4/tcp/3456/ws/p2p-webrtc-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4",
+        "/p2p-circuit/ip4/1.2.3.4/tcp/3456/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4",
+        "/p2p-circuit/ip4/127.0.0.1/tcp/4002/ipfs/QmddWMcQX6orJGHpETYMyPgXrCXCtYANMFVDCvhKoDwLqA",
+        "/p2p-circuit/ipfs/QmddWMcQX6orJGHpETYMyPgXrCXCtYANMFVDCvhKoDwLqA",
+        "/p2p-circuit/ip4/127.0.0.1/tcp/20008/ws/ipfs/QmUjNmr8TgJCn1Ao7DvMy4cjoZU15b9bwSCBLE3vwXiwgj/" +
+        "p2p-circuit/ipfs/QmUjNmr8TgJCn1Ao7DvMy4cjoZU15b9bwSCBLE3vwXiwgj"
+    ];
+
+    const badCircuit = [
+        "/ip4/0.0.0.0/tcp/12345/udp/2222/wss",
+        "/ip4/0.0.7.6/udp/1234",
+        "/ip6/::/udp/0/utp",
+        "/dnsaddr/ipfs.io/ws",
+        "/ip4/1.2.3.4/tcp/3456/http/p2p-webrtc-star"
+    ];
+
+    const goodIPFS = [
+        "/ip4/127.0.0.1/tcp/20008/ws/ipfs/QmUjNmr8TgJCn1Ao7DvMy4cjoZU15b9bwSCBLE3vwXiwgj",
+        "/ip4/1.2.3.4/tcp/3456/ws/p2p-webrtc-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4",
+        "/ip4/1.2.3.4/tcp/3456/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4",
+        "/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4/p2p-circuit",
+        "/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4/p2p-circuit/ipfs/QmUjNmr8TgJCn1Ao7DvMy4cjoZU15b9bwSCBLE3vwXiwgj"
+    ].concat(goodCircuit);
+
+    const assertMatches = function (p) {
+        const tests = Array.from(arguments).slice(1);
+        tests.forEach((test) => {
+            test.forEach((testcase) => {
+                try {
+                    console.log(testcase);
+                    expect(p.matches(testcase), `assertMatches: ${testcase} (string)`).to.be.equal(true);
+                    const ma = multiaddr(testcase);
+                    expect(p.matches(ma), `assertMatches: ${testcase} (multiaddr object)`).to.be.equal(true);
+                    expect(p.matches(ma.buffer), `assertMatches: ${testcase} (multiaddr.buffer)`).to.be.equal(true);
+                } catch (err) {
+                    err.stack = `[testcase=${JSON.stringify(testcase)}, shouldMatch=true] ${err.stack}`;
+                    throw err;
+                }
+            });
+        });
+    };
+
+    const assertMismatches = function (p) {
+        const tests = Array.from(arguments).slice(1);
+        tests.forEach((test) => {
+            test.forEach((testcase) => {
+                try {
+                    expect(p.matches(testcase), `assertMismatches: ${testcase} (string)`).to.be.eql(false);
+                    let validMultiaddrObj;
+                    try {
+                        // if testcase string happens to be a valid multiaddr,
+                        // we expect 'p' test to also return false for Multiaddr object and Buffer versions
+                        validMultiaddrObj = multiaddr(testcase);
+                    } catch (e) {
+                        // Ignoring testcase as the string is not a multiaddr
+                        // (There is a separate 'Buffer is invalid' test later below)
+                    }
+                    if (validMultiaddrObj) {
+                        expect(p.matches(validMultiaddrObj), `assertMismatches: ${testcase} (multiaddr object)`).to.be.eql(false);
+                        expect(p.matches(validMultiaddrObj.buffer), `assertMismatches: ${testcase} (multiaddr.buffer)`).to.be.eql(false);
+                    }
+                } catch (err) {
+                    err.stack = `[testcase=${JSON.stringify(testcase)}, shouldMatch=false] ${err.stack}`;
+                    throw err;
+                }
+            });
+        });
+    };
+
+    it("do not throw if multiaddr str is invalid", () => {
+        expect(mafmt.HTTP.matches("/http-google-com")).to.be.eql(false);
+    });
+
+    it("do not throw if multiaddr Buffer is invalid", () => {
+        expect(mafmt.HTTP.matches(Buffer.from("no spoon"))).to.be.eql(false);
+    });
+
+    it("DNS validation", () => {
+        assertMatches(mafmt.DNS, goodDNS);
+        assertMismatches(mafmt.DNS, badDNS, badIP);
+    });
+
+    it("IP validation", () => {
+        assertMatches(mafmt.IP, goodIP);
+        assertMismatches(mafmt.IP, badIP, goodTCP);
+    });
+
+    it("TCP validation", () => {
+        assertMatches(mafmt.TCP, goodTCP);
+        assertMismatches(mafmt.TCP, badTCP, goodIP);
+    });
+
+    it("UDP validation", () => {
+        assertMatches(mafmt.UDP, goodUDP);
+        assertMismatches(mafmt.UDP, badUDP, goodIP, goodTCP, goodUTP);
+    });
+
+    it("UTP validation", () => {
+        assertMatches(mafmt.UTP, goodUTP);
+        assertMismatches(mafmt.UTP, badUTP, goodIP, goodTCP, goodUDP);
+    });
+
+    it("HTTP validation", () => {
+        assertMatches(mafmt.HTTP, goodHTTP);
+        assertMismatches(mafmt.HTTP, goodIP, goodUDP);
+    });
+
+    it("HTTPS validation", () => {
+        assertMatches(mafmt.HTTPS, goodHTTPS);
+        assertMismatches(mafmt.HTTPS, goodHTTP, goodIP, goodTCP, goodUDP);
+    });
+
+    it("Reliable validation", () => {
+        assertMatches(mafmt.Reliable, goodUTP, goodTCP);
+        assertMismatches(mafmt.Reliable, goodIP, goodUDP);
+    });
+
+    it("WebSockets validation", () => {
+        assertMatches(mafmt.WebSockets, goodWS);
+        assertMismatches(mafmt.WebSockets, goodIP, goodUDP, badWS);
+    });
+
+    it("WebSocketsSecure validation", () => {
+        assertMatches(mafmt.WebSocketsSecure, goodWSS);
+        assertMismatches(mafmt.WebSocketsSecure, goodIP, badWSS, goodUDP, badWS);
+    });
+
+    it("WebSocketStar validation", () => {
+        assertMatches(mafmt.WebSocketStar, goodWebSocketStar);
+        assertMismatches(mafmt.WebSocketStar, goodIP, goodUDP, badWS);
+    });
+
+    it("Stardust validation", () => {
+        assertMatches(mafmt.Stardust, goodStardust);
+        assertMismatches(mafmt.Stardust, goodIP, goodUDP, badWS);
+    });
+
+    it("WebRTCStar validation", () => {
+        assertMatches(mafmt.WebRTCStar, goodWebRTCStar);
+        assertMismatches(mafmt.WebRTCStar, goodIP, goodUDP, badWS);
+    });
+
+    it("WebRTCDirect validation", () => {
+        assertMatches(mafmt.WebRTCDirect, goodWebRTCDirect);
+        assertMismatches(mafmt.WebRTCDirect, goodIP, goodUDP, badWS);
+    });
+
+    it("Circuit validation", () => {
+        assertMatches(mafmt.Circuit, goodCircuit);
+        assertMismatches(mafmt.Circuit, badCircuit);
+    });
+
+    it("IPFS validation", () => {
+        assertMatches(mafmt.IPFS, goodIPFS);
+    });
+});

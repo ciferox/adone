@@ -72,7 +72,7 @@ const ensureBuffer = (input) => {
         return Buffer.from(input);
     }
 
-    throw new error.InvalidArgumentException(`input must be buffer, number or string, received ${adone.meta.typeOf(input)}`);
+    throw new error.InvalidArgumentException(`input must be buffer, number or string, received ${adone.typeOf(input)}`);
 };
 
 const _crc32 = (buf, previous) => {

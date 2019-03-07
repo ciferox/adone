@@ -317,7 +317,7 @@ export const run = async (App, {
 
     // surrogate application, use only own properties
     const _App = is.class(App) ? App.prototype : App;
-    const allProps = util.entries(_App, { onlyEnumerable: false });
+    const allProps = util.entries(_App, { enumOnly: false });
 
     if (!is.null(adone.runtime.app)) {
         await adone.runtime.app._uninitialize();

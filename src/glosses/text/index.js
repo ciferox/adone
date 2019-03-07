@@ -1,30 +1,7 @@
-const { is } = adone;
-
-// From Mozilla Developper Network
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
-const escapeControlMap = { "\r": "\\r", "\n": "\\n", "\t": "\\t", "\x7f": "\\x7f" };
-const escapeHtmlMap = { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" };
-export const escape = {
-    regExpPattern: (str) => str.replace(/([.*+?^${}()|[\]/\\])/g, "\\$1"),
-    regExpReplacement: (str) => str.replace(/\$/g, "$$$$"), // This replace any single $ by a double $$
-    format: (str) => str.replace(/%/g, "%%"), // This replace any single % by a double %%
-    shellArg: (str) => (`'${str.replace(/'/g, "'\\''")}'`),
-    // Escape \r \n \t so they become readable again, escape all ASCII control character as well, using \x syntaxe
-    control: (str) => {
-        return str.replace(/[\x00-\x1f\x7f]/g, (match) => {
-            if (!is.undefined(escapeControlMap[match])) {
-                return escapeControlMap[match];
-            }
-            let hex = match.charCodeAt(0).toString(16);
-            if (hex.length % 2) {
-                hex = `0${hex}`;
-            }
-            return `\\x${hex}`;
-        });
-    },
-    // Escape all html special characters & < > " '
-    htmlSpecialChars: (str) => str.replace(/[&<>"']/g, (match) => escapeHtmlMap[match])
-};
+const {
+    is,
+    text
+} = adone;
 
 export const regexp = {
     array2alternatives: (array) => {
@@ -35,7 +12,7 @@ export const regexp = {
 
         // Then escape what should be
         for (let i = 0; i < sorted.length; ++i) {
-            sorted[i] = escape.regExpPattern(sorted[i]);
+            sorted[i] = text.escape.regExpPattern(sorted[i]);
         }
 
         return sorted.join("|");
@@ -254,7 +231,7 @@ export const stringDistanceCapped = (strA, strB, cap) => {
                 memo[i - 1][j] + 1,
                 memo[i][j - 1] + 1,
                 memo[i - 1][j - 1] +
-              (ch === strB.charCodeAt(j - 1) ? 0 : 1)
+                (ch === strB.charCodeAt(j - 1) ? 0 : 1)
             );
         }
     }
@@ -384,6 +361,7 @@ export const toUTF8Array = (str) => {
 };
 
 adone.lazify({
+    escape: "./escape",
     unicode: "./unicode",
     spinner: "./spinners",
     table: "./table",

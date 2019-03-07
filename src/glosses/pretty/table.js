@@ -166,8 +166,8 @@ export default function prettyTable(data, {
             if (is.plainObject(map[key])) {
                 const m = map[key];
                 const style = m.style;
-                const styleType = adone.meta.typeOf(style);
-                const formatType = adone.meta.typeOf(m.format);
+                const styleType = adone.typeOf(style);
+                const formatType = adone.typeOf(m.format);
                 let str;
                 if (is.function(m.handle)) {
                     str = m.handle(item);

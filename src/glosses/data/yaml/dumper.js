@@ -661,7 +661,7 @@ const writeNode = (state, level, object, block, compact, iskey) => {
         detectType(state, object, true);
     }
 
-    const type = adone.meta.typeOf(state.dump);
+    const type = adone.typeOf(state.dump);
 
     if (block) {
         block = (state.flowLevel < 0 || state.flowLevel > level);

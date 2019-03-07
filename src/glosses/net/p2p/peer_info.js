@@ -155,6 +155,6 @@ export default class PeerInfo {
         } else if (is.plainObject(val)) {
             return new PeerInfo(Identity.createFromJSON(val));
         }
-        throw new adone.error.NotValidException(`Invalid type of input for PeerInfo: ${adone.meta.typeOf(val)}`);
+        throw new adone.error.NotValidException(`Invalid type of input for PeerInfo: ${adone.typeOf(val)}`);
     }
 }

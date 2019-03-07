@@ -98,14 +98,6 @@ export default (code, options) => {
 
     options = Object.assign({}, options);
 
-    const isFunction = result.value.startsWith("function");
-    const isAsyncFn = result.value.startsWith("async function");
-    const isMethod = /^\*?.+\([\s\S\w\W]*\)\s*\{/i.test(result.value);
-
-    if (!(isFunction || isAsyncFn) && isMethod) {
-        result.value = `{ ${result.value} }`;
-    }
-
     const node = adone.js.compiler.parseExpression(result.value, options);
     return plugins.reduce((res, fn) => fn(node, res) || res, result);
 };

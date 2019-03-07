@@ -25,7 +25,6 @@ const util = adone.lazify({
     isProxyEnabled: "./is_proxy_enabled",
     getActual: "./get_actual",
     getProperties: "./get_properties",
-    type: "./type_detect",
     eql: "./deep_eql",
     eqlArray: () => adone.is.equalArrays,
     getPathInfo: () => util.pathval.getPathInfo,

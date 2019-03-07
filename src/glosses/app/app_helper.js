@@ -431,7 +431,7 @@ class Argument {
     }
 
     _formatValue(x) {
-        const type = adone.meta.typeOf(x);
+        const type = adone.typeOf(x);
 
         switch (type) {
             case "string": {

@@ -1,9 +1,6 @@
 /* eslint-disable adone/no-null-comp */
 /* eslint-disable adone/no-typeof */
 
-const {
-    assertion: { util: { type }}
-} = adone;
 
 function FakeMap() {
     this._key = "chai/deep-eql__" + Math.random() + Date.now();
@@ -182,8 +179,8 @@ function extensiveDeepEqual(leftHandOperand, rightHandOperand, options) {
         }
     }
 
-    var leftHandType = type(leftHandOperand);
-    if (leftHandType !== type(rightHandOperand)) {
+    var leftHandType = adone.typeOf(leftHandOperand);
+    if (leftHandType !== adone.typeOf(rightHandOperand)) {
         memoizeSet(leftHandOperand, rightHandOperand, options.memoize, false);
         return false;
     }

@@ -241,7 +241,7 @@ export default class RemotePeer extends AbstractPeer {
         return new Promise((resolve, reject) => {
             this._sendRequest(ACTION.TASK, task, (result) => {
                 if (!is.plainObject(result)) {
-                    return reject(new adone.error.NotValidException(`Not valid result: ${adone.meta.typeOf(result)}`));
+                    return reject(new adone.error.NotValidException(`Not valid result: ${adone.typeOf(result)}`));
                 }
                 resolve(result);
             });

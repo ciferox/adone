@@ -2,17 +2,13 @@
 //     is
 // } = adone;
 
-const GLOBAL_PREFIX_LEN = "global".length + 1;
-const ADONE_PREFIX_LEN = "adone".length + 1;
-export const skipAdoneNs = (namespace) => namespace.substring(ADONE_PREFIX_LEN);
-export const skipGlobalNs = (namespace) => namespace.substring(GLOBAL_PREFIX_LEN);
+// const GLOBAL_PREFIX_LEN = "global".length + 1;
+// const ADONE_PREFIX_LEN = "adone".length + 1;
+// export const skipAdoneNs = (namespace) => namespace.substring(ADONE_PREFIX_LEN);
+// export const skipGlobalNs = (namespace) => namespace.substring(GLOBAL_PREFIX_LEN);
 
 adone.lazify({
-    typeOf: "./type_of",
-    reflect: "./reflect",
-    inspect: ["./inspect", (mod) => mod.inspect],
-    inspectError: ["./inspect", (mod) => mod.inspectError],
-    inspectStack: ["./inspect", (mod) => mod.inspectStack],
+    reflect: "./reflect"
     // nsNames: () => adone.meta.namespaces.map((ns) => ns.name).sort((a, b) => a.localeCompare(b))
 }, adone.asNamespace(exports), require);
 

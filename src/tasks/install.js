@@ -18,7 +18,7 @@ const DEST_OPTIONS = {
 export default class InstallTask extends task.Task {
     async run({ name, build = false, symlink = false } = {}) {
         if (!is.string(name)) {
-            throw new adone.error.InvalidArgumentException(`Invalid type of name: ${adone.meta.typeOf(name)}`);
+            throw new adone.error.InvalidArgumentException(`Invalid type of name: ${adone.typeOf(name)}`);
         }
 
         this.manager.notify(this, "progress", {

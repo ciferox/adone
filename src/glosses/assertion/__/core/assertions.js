@@ -299,7 +299,7 @@ module.exports = function (assertion, _) {
         const article = ~["a", "e", "i", "o", "u"].indexOf(type.charAt(0)) ? "an " : "a ";
 
         this.assert(
-            type === _.type(obj).toLowerCase()
+            type === adone.typeOf(obj).toLowerCase()
             , `expected #{this} to be ${article}${type}`
             , `expected #{this} not to be ${article}${type}`
         );
@@ -472,7 +472,7 @@ module.exports = function (assertion, _) {
         }
 
         const obj = flag(this, "object");
-        const objType = _.type(obj).toLowerCase();
+        const objType = adone.typeOf(obj).toLowerCase();
         let flagMsg = flag(this, "message");
         const negate = flag(this, "negate");
         const ssfi = flag(this, "ssfi");
@@ -895,7 +895,7 @@ module.exports = function (assertion, _) {
 
         flagMsg = flagMsg ? `${flagMsg}: ` : "";
 
-        switch (_.type(val).toLowerCase()) {
+        switch (adone.typeOf(val).toLowerCase()) {
             case "array":
             case "string":
                 itemsCount = val.length;
@@ -966,7 +966,7 @@ module.exports = function (assertion, _) {
     // eslint-disable-next-line func-style
     function checkArguments() {
         const obj = flag(this, "object");
-        const type = _.type(obj);
+        const type = adone.typeOf(obj);
         this.assert(
             type === "Arguments"
             , `expected #{this} to be arguments but got ${type}`
@@ -1161,8 +1161,8 @@ module.exports = function (assertion, _) {
         const flagMsg = flag(this, "message");
         const msgPrefix = ((flagMsg) ? `${flagMsg}: ` : "");
         const ssfi = flag(this, "ssfi");
-        const objType = _.type(obj).toLowerCase();
-        const nType = _.type(n).toLowerCase();
+        const objType = adone.typeOf(obj).toLowerCase();
+        const nType = adone.typeOf(n).toLowerCase();
         let errorMessage;
         let shouldThrow = true;
 
@@ -1267,8 +1267,8 @@ module.exports = function (assertion, _) {
         const flagMsg = flag(this, "message");
         const msgPrefix = ((flagMsg) ? `${flagMsg}: ` : "");
         const ssfi = flag(this, "ssfi");
-        const objType = _.type(obj).toLowerCase();
-        const nType = _.type(n).toLowerCase();
+        const objType = adone.typeOf(obj).toLowerCase();
+        const nType = adone.typeOf(n).toLowerCase();
         let errorMessage;
         let shouldThrow = true;
 
@@ -1373,8 +1373,8 @@ module.exports = function (assertion, _) {
         const flagMsg = flag(this, "message");
         const msgPrefix = ((flagMsg) ? `${flagMsg}: ` : "");
         const ssfi = flag(this, "ssfi");
-        const objType = _.type(obj).toLowerCase();
-        const nType = _.type(n).toLowerCase();
+        const objType = adone.typeOf(obj).toLowerCase();
+        const nType = adone.typeOf(n).toLowerCase();
         let errorMessage;
         let shouldThrow = true;
 
@@ -1479,8 +1479,8 @@ module.exports = function (assertion, _) {
         const flagMsg = flag(this, "message");
         const msgPrefix = ((flagMsg) ? `${flagMsg}: ` : "");
         const ssfi = flag(this, "ssfi");
-        const objType = _.type(obj).toLowerCase();
-        const nType = _.type(n).toLowerCase();
+        const objType = adone.typeOf(obj).toLowerCase();
+        const nType = adone.typeOf(n).toLowerCase();
         let errorMessage;
         let shouldThrow = true;
 
@@ -1584,9 +1584,9 @@ module.exports = function (assertion, _) {
         const flagMsg = flag(this, "message");
         const msgPrefix = ((flagMsg) ? `${flagMsg}: ` : "");
         const ssfi = flag(this, "ssfi");
-        const objType = _.type(obj).toLowerCase();
-        const startType = _.type(start).toLowerCase();
-        const finishType = _.type(finish).toLowerCase();
+        const objType = adone.typeOf(obj).toLowerCase();
+        const startType = adone.typeOf(start).toLowerCase();
+        const finishType = adone.typeOf(finish).toLowerCase();
         let errorMessage;
         let shouldThrow = true;
         const range = (startType === "date" && finishType === "date")
@@ -1692,7 +1692,7 @@ module.exports = function (assertion, _) {
                 flagMsg = flagMsg ? `${flagMsg}: ` : "";
                 throw new AssertionError(
                     `${flagMsg}The instanceof assertion needs a constructor but ${
-                    _.type(constructor)} was given.`,
+                    adone.typeOf(constructor)} was given.`,
                     undefined,
                     ssfi
                 );
@@ -2162,7 +2162,7 @@ module.exports = function (assertion, _) {
             flag(this, "message", msg);
         }
         const obj = flag(this, "object");
-        const objType = _.type(obj).toLowerCase();
+        const objType = adone.typeOf(obj).toLowerCase();
         const flagMsg = flag(this, "message");
         const ssfi = flag(this, "ssfi");
         let descriptor = "length";
@@ -2382,8 +2382,8 @@ module.exports = function (assertion, _) {
     // eslint-disable-next-line func-style
     function assertKeys(keys) {
         const obj = flag(this, "object");
-        const objType = _.type(obj);
-        const keysType = _.type(keys);
+        const objType = adone.typeOf(obj);
+        const keysType = adone.typeOf(keys);
         const ssfi = flag(this, "ssfi");
         const isDeep = flag(this, "deep");
         let str;

@@ -466,6 +466,12 @@
                         }
                     }
                 },
+                "inspect": {
+                    "description": "Inspection tools",
+                    "task": "transpile",
+                    "src": "src/glosses/inspect/**/*.js",
+                    "dst": "lib/glosses/inspect"
+                },
                 "ipfs": {
                     "description": "IPFS",
                     "task": "transpile",
@@ -550,6 +556,12 @@
                     "task": "transpile",
                     "src": "src/glosses/models/**/*.js",
                     "dst": "lib/glosses/models"
+                },
+                "multiformats": {
+                    "description": "Self-describing values for Future-proofing",
+                    "task": "transpile",
+                    "src": "src/glosses/multiformats/**/*.js",
+                    "dst": "lib/glosses/multiformats"
                 },
                 "multi": {
                     "description": "Multiformats",
@@ -817,6 +829,12 @@
                     "task": "transpile",
                     "src": "src/glosses/text/**/*.js",
                     "dst": "lib/glosses/text"
+                },
+                "typeof": {
+                    "description": "Advanced typeof",
+                    "task": "transpile",
+                    "src": "src/glosses/typeof/**/*.js",
+                    "dst": "lib/glosses/typeof"
                 },
                 "uri": {
                     "description": "URI manipulation",

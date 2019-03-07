@@ -49,8 +49,8 @@ class Differ extends adone.event.Emitter {
             this.emit("element", "old", actual, key);
             return;
         }
-        const aType = adone.meta.typeOf(actual);
-        const bType = adone.meta.typeOf(expected);
+        const aType = adone.typeOf(actual);
+        const bType = adone.typeOf(expected);
 
         if (aType !== bType) {
             this.emit("element", "delete", actual, key);
@@ -78,7 +78,7 @@ class Differ extends adone.event.Emitter {
 
                 const first = curr.value.shift();
 
-                if (adone.meta.typeOf(prev.value) === adone.meta.typeOf(first)) {
+                if (adone.typeOf(prev.value) === adone.typeOf(first)) {
                     if (prev.action === "delete" && action === "add") {
                         res.pop();
                         res.push({
@@ -313,7 +313,7 @@ export const getDiff = (actual, expected) => {
     const MAX_DEPTH = 3; // todo: customize it
 
     const stringify = (obj, level = 0, stack = []) => {
-        const type = adone.meta.typeOf(obj);
+        const type = adone.typeOf(obj);
 
         const indent = (level) => "    ".repeat(level);
 

@@ -88,11 +88,11 @@ describe("util", "omit", () => {
         }
 
         const result = keys(omit(A, ["a"]), {
-            onlyEnumerable: false
+            enumOnly: false
         });
 
         assert.sameMembers(result, keys(A, {
-            onlyEnumerable: false
+            enumOnly: false
         }));
     });
 
@@ -109,7 +109,7 @@ describe("util", "omit", () => {
         const resultDescrs = [];
 
         const keys_ = keys(omit(A, ["a"]), {
-            onlyEnumerable: false
+            enumOnly: false
         });
 
         for (const key of keys_) {
@@ -120,7 +120,7 @@ describe("util", "omit", () => {
         }
 
         const result = omit(A, ["name"]);
-        for (const key of keys(result, { onlyEnumerable: false })) {
+        for (const key of keys(result, { enumOnly: false })) {
             resultDescrs.push(Object.getOwnPropertyDescriptor(result, key));
         }
 

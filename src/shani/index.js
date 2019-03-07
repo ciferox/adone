@@ -251,7 +251,7 @@ class Block {
         }
         if (!this.isExclusive() && is.propertyOwned(options, "skip")) { // no explicit skip + skip option provided
             const { skip } = options;
-            const type = adone.meta.typeOf(skip);
+            const type = adone.typeOf(skip);
             switch (type) {
                 case "boolean": {
                     if (skip) {
@@ -275,7 +275,7 @@ class Block {
         }
         if (is.propertyOwned(options, "timeout")) {
             const { timeout } = options;
-            const type = adone.meta.typeOf(timeout);
+            const type = adone.typeOf(timeout);
             switch (type) {
                 case "number": {
                     if (timeout < 0) {
@@ -488,7 +488,7 @@ class Test {
         }
         if (!this.isExclusive() && is.propertyOwned(options, "skip")) { // no explicit skip + skip option provided
             const { skip } = options;
-            const type = adone.meta.typeOf(skip);
+            const type = adone.typeOf(skip);
             switch (type) {
                 case "boolean": {
                     if (skip) {
@@ -512,7 +512,7 @@ class Test {
         }
         if (is.propertyOwned(options, "timeout")) {
             const { timeout } = options;
-            const type = adone.meta.typeOf(timeout);
+            const type = adone.typeOf(timeout);
             switch (type) {
                 case "number": {
                     if (timeout < 0) {
@@ -542,7 +542,7 @@ class Test {
         if (hasBefore || hasAfter) {
             const handle = async (hookType) => {
                 const { [hookType]: hook } = options;
-                const type = adone.meta.typeOf(hook);
+                const type = adone.typeOf(hook);
                 switch (type) {
                     case "function": {
                         this[hookType](hook);
@@ -803,7 +803,7 @@ class ConfigLoader {
             const m = adone.require(p);
             config = m.default;
             if (!is.function(config) && !is.undefined(config)) {
-                throw new error.IllegalStateException(`Failed to load .shanirc.js file: ${p}. Expected default export to be a function or undefined, but got: ${adone.meta.typeOf(config)}`);
+                throw new error.IllegalStateException(`Failed to load .shanirc.js file: ${p}. Expected default export to be a function or undefined, but got: ${adone.typeOf(config)}`);
             }
         }
         this._rcCache.set(dirname, config);

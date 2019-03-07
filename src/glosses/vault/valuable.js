@@ -58,7 +58,7 @@ export default class Valuable {
         let keyMeta = this._getKeyUnsafe(name);
         let id;
         let shouldUpdateMeta = false;
-        type = (is.undefined(type) ? adone.meta.typeOf(value) : type);
+        type = (is.undefined(type) ? adone.typeOf(value) : type);
         if (is.undefined(keyMeta)) {
             id = this[VALUABLE_META].nextKeyId++;
             keyMeta = {

@@ -44,7 +44,7 @@ export default class RealmManager extends task.Manager {
         super();
 
         if (!is.string(cwd)) {
-            throw new error.NotValidException(`Invalid type of cwd: ${adone.meta.typeOf(cwd)}`);
+            throw new error.NotValidException(`Invalid type of cwd: ${adone.typeOf(cwd)}`);
         }
         this.cwd = cwd;
         this.tasks = {};

@@ -164,7 +164,7 @@ export default class Run extends Subsystem {
             console.log(runnable());
         } else {
             if (is.object(runnable)) {
-                adone.util.keys(runnable, { onlyEnumerable: false, all: true }).length > 0 && console.log(runnable);
+                adone.util.keys(runnable, { enumOnly: false, all: true }).length > 0 && console.log(runnable);
             } else {
                 console.log(runnable);
             }

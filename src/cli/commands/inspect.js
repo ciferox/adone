@@ -62,33 +62,69 @@ export default class Inspection extends Subsystem {
         options: [
             {
                 name: ["--all", "-A"],
-                help: "Show all properties"
+                help: "Show all properties (be default it shows only enumerables)"
             },
             {
                 name: ["--value", "-V"],
                 help: "Show value instead of description"
             },
             {
-                name: ["--object", "-O"],
+                name: "--native",
+                help: "Use native `typeof` for type detection"
+            },
+            {
+                name: ["--as-object", "-O"],
                 help: "Interpret as plain object"
+            },
+            {
+                name: "--func-details",
+                help: "Show function details"
+            },
+            {
+                name: "--style",
+                type: String,
+                default: "color",
+                choices: ["none", "inline", "color", "html"],
+                help: "Style to use"
             },
             {
                 name: ["--depth", "-D"],
                 type: Number,
                 default: 1,
                 help: "The depth of object inspection"
+            },
+            {
+                name: "--descr",
+                help: "The depth of object inspection"
+            },
+            {
+                name: "--no-sort",
+                help: "Sort by keys"
+            },
+            {
+                name: "--no-type",
+                help: "Without type and constructor"
+            },
+            {
+                name: "--no-proto",
+                help: "Without proto"
             }
         ]
     })
     async inspect(args, opts) {
         try {
             const inspectOptions = {
-                style: "color",
+                style: opts.get("style"),
                 depth: opts.get("depth"),
-                noDescriptor: true,
-                noNotices: true,
-                sort: true,
-                proto: true
+                noType: opts.has("noType"),
+                noDescriptor: !opts.has("descr"),
+                sort: !opts.has("noSort"),
+                proto: !opts.has("noProto"),
+                enumOnly: !opts.has("all"),
+                asObject: opts.has("asObject"),
+                native: opts.has("native"),
+                useInspect: true,
+                funcDetails: opts.has("funcDetails")
             };
 
             let name = args.get("name");
@@ -129,8 +165,7 @@ export default class Inspection extends Subsystem {
             }
 
             const showValue = opts.has("value");
-            const asObject = opts.has("object");
-            if ((showValue || asObject) && objectPath.length === 0) {
+            if ((showValue || inspectOptions.asObject) && objectPath.length === 0) {
                 const tmp = namespace.split(".");
                 objectPath = tmp.pop();
                 namespace = tmp.join(".");
@@ -148,123 +183,9 @@ export default class Inspection extends Subsystem {
                     ns = get(global, namespace);
             }
 
+            let result;
             if (objectPath.length === 0) {
-                const { util } = adone;
-
-                const omitProps = [];
-                const type = adone.meta.typeOf(ns);
-                switch (type) {
-                    case "class":
-                    case "function":
-                        omitProps.push("length", "name", "prototype");
-                        break;
-                    default:
-                        omitProps.push("__esModule");
-                }
-
-                const styleType = (type) => `{magenta-fg}${type}{/magenta-fg}`;
-                const styleName = (name) => `{green-fg}{bold}${name}{/bold}{/green-fg}`;
-                const styleArgs = (args) => `{green-fg}(${args.join(", ")}){/green-fg}`;
-                const styleLiteral = (type, name) => `${styleName(name)}: ${styleType(type)}`;
-                const styleLiteralArgs = (type, name, args) => `${styleName(name)}: ${styleType(type)}${styleArgs(args)}`;
-                const styleLiteralValue = (type, name, value) => {
-                    if (is.string(value)) {
-                        value = `"${value}"`;
-                    }
-
-                    return `${styleName(name)}: ${styleType(type)} = {blue-fg}${value}{/blue-fg}`;
-                };
-
-                const list = [];
-                for (let [key, value] of util.entries(util.omit(ns, omitProps), { onlyEnumerable: false, all: opts.has("all") })) {
-                    const origType = meta.typeOf(value);
-                    let type = origType;
-
-                    switch (type) {
-                        case "function": {
-                            try {
-                                const result = adone.js.parseFunction(value);
-                                type = "";
-                                if (result.isAsync) {
-                                    type += "async ";
-                                }
-                                if (!result.isArrow) {
-                                    type += "function ";
-                                }
-
-                                value = result.args;
-                            } catch (err) {
-                                if (value.toString().includes("[native code]")) {
-                                    type = "native function ";
-                                } else {
-                                    type = "function ";
-                                }
-
-                                value = [];
-                            }
-                            break;
-                        }
-                        case "Object": {
-                            if (is.class(value.constructor)) {
-                                type = value.constructor.name;
-                            } else {
-                                type = "object ";
-                            }
-                            break;
-                        }
-                    }
-
-                    list.push({
-                        origType,
-                        type,
-                        key,
-                        value
-                    });
-                }
-
-                list.sort((a, b) => {
-                    if (a.key < b.key) {
-                        return -1;
-                    } else if (a.key > b.key) {
-                        return 1;
-                    }
-                    return 0;
-                });
-
-                term.print(`${styleType("namespace")} ${styleName(namespace)}\n`);
-                for (const { origType, type, key, value } of list) {
-                    term.print("    ");
-                    switch (origType) {
-                        case "string": {
-                            term.print(`${styleLiteralValue(type, key, value)} {italic}{grey-fg}(${value.length}){/grey-fg}{/italic}`);
-                            break;
-                        }
-                        case "number":
-                        case "boolean":
-                            term.print(`${styleLiteralValue(type, key, value)}`);
-                            break;
-                        case "function": {
-                            term.print(styleLiteralArgs(type, key, value));
-                            break;
-                        }
-                        case "class": {
-                            term.print(styleLiteral(type, key));
-                            break;
-                        }
-                        case "namespace": {
-                            term.print(styleLiteral(type, key));
-                            break;
-                        }
-                        case "Object": {
-                            term.print(styleLiteral(type, key));
-                            break;
-                        }
-                        default:
-                            term.print(styleLiteral(type, key));
-                    }
-                    term.print("\n");
-                }
-                // console.log(meta.inspect(ns, inspectOptions));
+                result = adone.inspect(ns, inspectOptions);
             } else {
                 const parts = objectPath.split(".");
 
@@ -276,27 +197,22 @@ export default class Inspection extends Subsystem {
                     }
                     obj = obj[part];
                 }
-                const type = meta.typeOf(obj);
+                const type = adone.typeOf(obj);
 
-                let result;
                 switch (type) {
                     case "function":
                     case "class":
                         result = showValue
                             ? adone.js.highlight(obj.toString())
-                            : meta.inspect(get(ns, objectPath), {
-                                ...inspectOptions,
-                                asObject
-                            });
+                            : adone.inspect(get(ns, objectPath), inspectOptions);
                         break;
                     default:
                         result = showValue
                             ? obj
-                            : meta.inspect(get(ns, objectPath), inspectOptions);
+                            : adone.inspect(get(ns, objectPath), inspectOptions);
                 }
-
-                console.log(result);
             }
+            console.log(result);
 
             return 0;
         } catch (err) {

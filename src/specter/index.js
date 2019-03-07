@@ -54,7 +54,7 @@ class Specter {
         } else if (is.plainObject(hostInfo)) {
             host = new Host(hostInfo);
         } else {
-            throw new adone.error.NotValidException(`Invalid type of host: ${adone.meta.typeOf(host)}`);
+            throw new adone.error.NotValidException(`Invalid type of host: ${adone.typeOf(host)}`);
         }
 
         this._.hosts.push(host);

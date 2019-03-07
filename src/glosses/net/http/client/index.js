@@ -322,7 +322,7 @@ const createInstance = (options) => {
     const context = new Client(options);
     const instance = context.request.bind(context);
 
-    const ents = util.entries(Client.prototype, { onlyEnumerable: false }).filter((x) => x[0] !== "constructor");
+    const ents = util.entries(Client.prototype, { enumOnly: false }).filter((x) => x[0] !== "constructor");
     for (const [name, method] of ents) {
         instance[name] = method.bind(context);
     }

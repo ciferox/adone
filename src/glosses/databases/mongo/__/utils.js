@@ -152,7 +152,7 @@ export const toError = (error) => {
     const e = MongoError.create({ message: msg, driver: true });
 
     // Get all object keys
-    const keys = is.object(error) ? util.keys(error, { onlyEnumerable: false }) : [];
+    const keys = is.object(error) ? util.keys(error, { enumOnly: false }) : [];
 
     for (let i = 0; i < keys.length; i++) {
         try {

@@ -603,8 +603,8 @@ export const deepEqual = (leftHandOperand, rightHandOperand, options) => {
             }
         }
 
-        const leftHandType = adone.meta.typeOf(leftHandOperand);
-        if (leftHandType !== adone.meta.typeOf(rightHandOperand)) {
+        const leftHandType = adone.typeOf(leftHandOperand);
+        if (leftHandType !== adone.typeOf(rightHandOperand)) {
             memoizeSet(leftHandOperand, rightHandOperand, options.memoize, false);
             return false;
         }

@@ -343,9 +343,9 @@ export const zip = function* (...iterables) {
     }
 };
 
-const _keys = (object, onlyEnumerable, followProto) => {
+const _keys = (object, enumOnly, followProto) => {
     if (!followProto) {
-        if (onlyEnumerable) {
+        if (enumOnly) {
             return Object.keys(object);
         }
         return Object.getOwnPropertyNames(object);
@@ -353,7 +353,7 @@ const _keys = (object, onlyEnumerable, followProto) => {
 
     const props = new Set();
 
-    if (onlyEnumerable) {
+    if (enumOnly) {
         for (const prop in object) {
             props.add(prop);
         }
@@ -382,52 +382,52 @@ const _keys = (object, onlyEnumerable, followProto) => {
     return [...props];
 };
 
-export const keys = (object, { onlyEnumerable = true, followProto = false, all = false } = {}) => {
+export const keys = (object, { enumOnly = true, followProto = false, all = false } = {}) => {
     if (is.nil(object)) {
         return [];
     }
 
     if (all) {
-        [onlyEnumerable, followProto] = [false, true];
+        [enumOnly, followProto] = [false, true];
     }
 
-    return _keys(object, onlyEnumerable, followProto);
+    return _keys(object, enumOnly, followProto);
 };
 
-export const values = (object, { onlyEnumerable = true, followProto = false, all = false } = {}) => {
+export const values = (object, { enumOnly = true, followProto = false, all = false } = {}) => {
     if (is.nil(object)) {
         return [];
     }
 
     if (all) {
-        [onlyEnumerable, followProto] = [false, true];
+        [enumOnly, followProto] = [false, true];
     }
 
-    if (!followProto && onlyEnumerable) {
+    if (!followProto && enumOnly) {
         return Object.values(object);
     }
 
-    const k = _keys(object, onlyEnumerable, followProto);
+    const k = _keys(object, enumOnly, followProto);
     for (let i = 0; i < k.length; ++i) {
         k[i] = object[k[i]];
     }
     return k;
 };
 
-export const entries = (object, { onlyEnumerable = true, followProto = false, all = false } = {}) => {
+export const entries = (object, { enumOnly = true, followProto = false, all = false } = {}) => {
     if (is.nil(object)) {
         return [];
     }
 
     if (all) {
-        [onlyEnumerable, followProto] = [false, true];
+        [enumOnly, followProto] = [false, true];
     }
 
-    if (!followProto && onlyEnumerable) {
+    if (!followProto && enumOnly) {
         return Object.entries(object);
     }
 
-    const k = _keys(object, onlyEnumerable, followProto);
+    const k = _keys(object, enumOnly, followProto);
     for (let i = 0; i < k.length; ++i) {
         const key = k[i];
         k[i] = [key, object[key]];
@@ -615,14 +615,14 @@ export class Cloner {
     clone(obj, {
         deep = true,
         nonPlainObjects = false,
-        onlyEnumerable = true
+        enumOnly = true
     } = {}) {
         if (!is.object(obj)) {
             return obj;
         }
         if (is.array(obj)) {
             if (deep) {
-                return obj.map((x) => this.clone(x, { deep, nonPlainObjects, onlyEnumerable }));
+                return obj.map((x) => this.clone(x, { deep, nonPlainObjects, enumOnly }));
             }
             return obj.slice(0);
         }
@@ -642,8 +642,8 @@ export class Cloner {
             return obj;
         }
         const res = {};
-        for (const key of keys(obj, { onlyEnumerable })) {
-            res[key] = deep ? this.clone(obj[key], { deep, nonPlainObjects, onlyEnumerable }) : obj[key];
+        for (const key of keys(obj, { enumOnly })) {
+            res[key] = deep ? this.clone(obj[key], { deep, nonPlainObjects, enumOnly }) : obj[key];
         }
         return res;
     }

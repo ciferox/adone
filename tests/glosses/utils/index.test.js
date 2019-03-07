@@ -468,7 +468,7 @@ describe("util", () => {
             expect(t.a).not.to.be.deep.equal(b);
         });
 
-        it("should not clone non-enumerable properies when onlyEnumerable = false", () => {
+        it("should not clone non-enumerable properies when enumOnly = false", () => {
             const s = {};
             Object.defineProperty(s, "a", {
                 enumerable: false,
@@ -478,13 +478,13 @@ describe("util", () => {
             expect(t).to.be.empty();
         });
 
-        it("should clone non-enumerable properies when onlyEnumerable = true", () => {
+        it("should clone non-enumerable properies when enumOnly = true", () => {
             const s = {};
             Object.defineProperty(s, "a", {
                 enumerable: false,
                 value: 42
             });
-            const t = clone(s, { onlyEnumerable: false });
+            const t = clone(s, { enumOnly: false });
             expect(t).to.be.deep.equal({ a: 42 });
         });
 
@@ -508,7 +508,7 @@ describe("util", () => {
             }
             const thing = new Thing();
             const s = { a: { b: [thing] } };
-            const t = clone(s, { onlyEnumerable: false, nonPlainObjects: true });
+            const t = clone(s, { enumOnly: false, nonPlainObjects: true });
             expect(t.a.b[0]).to.exist();
             expect(t.a.b[0]).not.to.be.equal(thing);
             expect(t.a.b[0]).to.be.deep.equal({ property: 42 });

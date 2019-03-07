@@ -474,7 +474,7 @@ export default class Netron extends adone.task.Manager {
         } else if (is.string(peerId)) { // base58
             base58Id = peerId;
         } else {
-            throw new error.NotValidException(`Invalid type of peer identity: ${adone.meta.typeOf(peerId)}`);
+            throw new error.NotValidException(`Invalid type of peer identity: ${adone.typeOf(peerId)}`);
         }
 
         const peer = this.peers.get(base58Id);

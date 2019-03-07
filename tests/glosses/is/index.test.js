@@ -559,4 +559,41 @@ describe("is", () => {
             assert.isTrue(!is.property("@context"));
         });
     });
+
+    describe("adone specific", () => {
+        describe("namespace", () => {
+            it("plain object", () => {
+                const obj = {};
+                assert.isFalse(is.namespace(obj));
+            });
+
+            it("plain object marked namespace", () => {
+                const obj = adone.asNamespace({});
+                assert.isTrue(is.namespace(obj));
+            });
+
+            class A {}
+            function b() {};
+
+            it("class", () => {
+                const obj = A;
+                assert.isFalse(is.namespace(obj));
+            });
+            
+            it("class marked namespace", () => {
+                const obj = adone.asNamespace(A);
+                assert.isTrue(is.namespace(obj));
+            });
+
+            it("function", () => {
+                const obj = b;
+                assert.isFalse(is.namespace(obj));
+            });
+            
+            it("function marked namespace", () => {
+                const obj = adone.asNamespace(b);
+                assert.isTrue(is.namespace(obj));
+            });
+        });
+    });
 });

@@ -845,7 +845,7 @@ const getList = async () => {
 
 export const getPidByPort = (input) => {
     if (!is.number(input)) {
-        return Promise.reject(new TypeError(`Expected a number, got ${adone.meta.typeOf(input)}`));
+        return Promise.reject(new TypeError(`Expected a number, got ${adone.typeOf(input)}`));
     }
 
     return getList().then((list) => getPort(input, list));
@@ -853,7 +853,7 @@ export const getPidByPort = (input) => {
 
 export const getPidsByPorts = async (input) => {
     if (!is.array(input)) {
-        return Promise.reject(new TypeError(`Expected an array, got ${adone.meta.typeOf(input)}`));
+        return Promise.reject(new TypeError(`Expected an array, got ${adone.typeOf(input)}`));
     }
 
     let list = await getList();

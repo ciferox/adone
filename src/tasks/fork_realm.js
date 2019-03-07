@@ -38,11 +38,11 @@ export default class extends BaseTask {
         });
 
         if (!is.string(basePath)) {
-            throw new error.NotValidException(`Invalid type of 'basePath': ${adone.meta.typeOf(basePath)}`);
+            throw new error.NotValidException(`Invalid type of 'basePath': ${adone.typeOf(basePath)}`);
         }
 
         if (!is.string(name)) {
-            throw new error.NotValidException(`Invalid type of 'name': ${adone.meta.typeOf(name)}`);
+            throw new error.NotValidException(`Invalid type of 'name': ${adone.typeOf(name)}`);
         }
 
         this.destPath = compress ? basePath : std.path.resolve(basePath, name);

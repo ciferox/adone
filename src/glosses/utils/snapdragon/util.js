@@ -345,7 +345,7 @@ export const isType = function (node, type) {
     if (!isNode(node)) {
         return false;
     }
-    switch (adone.meta.typeOf(type)) {
+    switch (adone.typeOf(type)) {
         case "string":
             return node.type === type;
         case "RegExp":
@@ -659,7 +659,7 @@ export const isInside = function (state, node, type) {
         return (parent && parent.type === type) || isInsideType(state, type);
     }
 
-    if (adone.meta.typeOf(type) === "RegExp") {
+    if (adone.typeOf(type) === "RegExp") {
         if (parent && parent.type && type.test(parent.type)) {
             return true;
         }

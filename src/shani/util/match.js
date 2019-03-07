@@ -254,7 +254,7 @@ match.some = function (predicate) {
             });
         }
 
-        return Boolean(actual) && adone.meta.typeOf(actual.forEach) === "function" && !every(actual, (element) => {
+        return Boolean(actual) && adone.typeOf(actual.forEach) === "function" && !every(actual, (element) => {
             return !predicate.test(element);
         });
     }, `some(${predicate.message})`);
