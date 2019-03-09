@@ -58,7 +58,7 @@ export default class Tree extends adone.terminal.ui.widget.Element {
 
             let i = 0;
 
-            if (typeof node.children === "function") {
+            if (is.function(node.children)) {
                 node.childrenContent = node.children(node);
             }
 
@@ -77,11 +77,11 @@ export default class Tree extends adone.terminal.ui.widget.Element {
                 child.parent = node;
                 child.position = i++;
 
-                if (typeof child.extended === "undefined") {
+                if (is.undefined(child.extended)) {
                     child.extended = this.options.extended; 
                 }
 
-                if (typeof child.children === "function") { 
+                if (is.function(child.children)) { 
                     child.childrenContent = child.children(child); 
                 } else {
                     child.childrenContent = child.children; 

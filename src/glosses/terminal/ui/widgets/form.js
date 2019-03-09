@@ -165,9 +165,9 @@ export default class Form extends adone.terminal.ui.widget.Element {
         const out = {};
 
         this.children.forEach(function fn(el) {
-            if (el.value != null) {
+            if (!is.nil(el.value)) {
                 const name = el.name || el.type;
-                if (Array.isArray(out[name])) {
+                if (is.array(out[name])) {
                     out[name].push(el.value);
                 } else if (out[name]) {
                     out[name] = [out[name], el.value];

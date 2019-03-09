@@ -13,7 +13,7 @@ export default class ExTable extends adone.terminal.ui.widget.Element {
             throw "Error: A table must get columnWidth as a property. Please refer to the README.";
         }
 
-        options.columnSpacing = options.columnSpacing == null ? 10 : options.columnSpacing;
+        options.columnSpacing = is.nil(options.columnSpacing) ? 10 : options.columnSpacing;
         options.bold = true;
         options.selectedFg = options.selectedFg || "white";
         options.selectedBg = options.selectedBg || "blue";
@@ -109,8 +109,8 @@ export default class ExTable extends adone.terminal.ui.widget.Element {
             data: {
                 headers: ["col1", "col2"],
                 data: [["a", "b"],
-                     ["5", "u"],
-                     ["x", "16.1"]]
+                    ["5", "u"],
+                    ["x", "16.1"]]
             }
         };
     }

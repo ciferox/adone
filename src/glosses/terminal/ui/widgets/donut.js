@@ -132,8 +132,8 @@ export default class Donut extends adone.terminal.ui.widget.Canvas {
             radius: 1,
             arcWidth: 1,
             data: [{ color: "red", percent: "50", label: "a" },
-                 { color: "blue", percent: "20", label: "b" },
-                 { color: "yellow", percent: "80", label: "c" }
+                { color: "blue", percent: "20", label: "b" },
+                { color: "yellow", percent: "80", label: "c" }
             ]
         };
     }

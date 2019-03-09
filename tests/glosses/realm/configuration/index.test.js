@@ -80,6 +80,30 @@ describe("realm", "Configuration", () => {
             assert.isTrue(is.plainObject(rawConfig.scheme));
         });
 
+        it("project entries for path", async () => {
+            assert.sameDeepMembers(config.getEntries("app"), [
+                {
+                    id: "app",
+                    description: "ADONE CLI application",
+                    src: "src/app/adone.js",
+                    dst: "bin",
+                    task: "transpileExe",
+                    index: "index.js"
+                },
+                {
+                    id: "app.internals",
+                    description: "ADONE CLI internals",
+                    src: [
+                        "!src/app/adone.js",
+                        "src/app/**/*.js"
+                    ],
+                    dst: "lib/app",
+                    task: "transpile",
+                    index: "index.js"
+                }
+            ]);
+        });
+
         it("project entries", async () => {
             assert.includeDeepMembers(config.getEntries(), [
                 {
@@ -103,11 +127,22 @@ describe("realm", "Configuration", () => {
                 },
                 {
                     id: "app",
-                    description: "ADONE cli utility",
+                    description: "ADONE CLI application",
                     src: "src/app/adone.js",
                     dst: "bin",
-                    index: "index.js",
-                    task: "transpileExe"
+                    task: "transpileExe",
+                    index: "index.js"
+                },
+                {
+                    id: "app.internals",
+                    description: "ADONE CLI internals",
+                    src: [
+                        "!src/app/adone.js",
+                        "src/app/**/*.js"
+                    ],
+                    dst: "lib/app",
+                    task: "transpile",
+                    index: "index.js"
                 },
                 {
                     id: "index",
@@ -116,19 +151,6 @@ describe("realm", "Configuration", () => {
                     dst: "lib",
                     index: "index.js",
                     task: "transpile"
-                }
-            ]);
-        });
-
-        it("project entries for path", async () => {
-            assert.sameDeepMembers(config.getEntries("app"), [
-                {
-                    id: "app",
-                    description: "ADONE cli utility",
-                    src: "src/app/adone.js",
-                    index: "index.js",
-                    dst: "bin",
-                    task: "transpileExe"
                 }
             ]);
         });

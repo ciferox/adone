@@ -9,7 +9,7 @@ export default class Bar extends adone.terminal.ui.widget.Canvas {
             this.options.barSpacing = this.options.barWidth + 3;
         }
 
-        this.options.xOffset = this.options.xOffset == null ? 5 : this.options.xOffset;
+        this.options.xOffset = is.nil(this.options.xOffset) ? 5 : this.options.xOffset;
         if (this.options.showText === false) {
             this.options.showText = false;
         } else {

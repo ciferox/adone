@@ -10,7 +10,7 @@ export default class Textbox extends adone.terminal.ui.widget.TextArea {
     setValue(value) {
         let visible;
         let val;
-        if (value == null) {
+        if (is.nil(value)) {
             value = this.value;
         }
         if (this._value !== value) {

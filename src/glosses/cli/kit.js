@@ -1,13 +1,28 @@
 const {
     is,
-    app
+    app,
+    terminal: __
 } = adone;
+
+const DEFAULT_THEME = adone.lazify({
+    primary: () => __.chalkify("#388E3C"),
+    secondary: () => __.chalkify("#2196F3"),
+    accent: () => __.chalkify("#7C4DFF"),
+    focus: () => __.chalkify("#009688"),
+    inactive: () => __.chalkify("#616161"),
+    error: () => __.chalkify("#D32F2F"),
+    warn: () => __.chalkify("#FF5722"),
+    info: () => __.chalkify("#FFEB3B"),
+    notice: () => __.chalkify("#FFEB3B")
+}, null);
+
 
 class CliKit extends app.Subsystem {
     constructor() {
         super();
         this._bar = null;
         this._silent = false;
+        this.theme = DEFAULT_THEME;
     }
 
     uninitialize() {

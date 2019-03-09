@@ -31,7 +31,7 @@ export default class ANSIImage extends adone.terminal.ui.widget.Element {
     }
 
     setImage(file) {
-        this.file = typeof file === "string" ? file : null;
+        this.file = is.string(file) ? file : null;
 
         if (/^https?:/.test(file)) {
             file = ANSIImage.curl(file);
@@ -40,11 +40,11 @@ export default class ANSIImage extends adone.terminal.ui.widget.Element {
         let width = this.position.width;
         let height = this.position.height;
 
-        if (width != null) {
+        if (!is.nil(width)) {
             width = this.width;
         }
 
-        if (height != null) {
+        if (!is.nil(height)) {
             height = this.height;
         }
 
@@ -61,7 +61,7 @@ export default class ANSIImage extends adone.terminal.ui.widget.Element {
                 filename: this.file
             });
 
-            if (width == null || height == null) {
+            if (is.nil(width) || is.nil(height)) {
                 this.width = this.img.cellmap[0].length;
                 this.height = this.img.cellmap.length;
             }

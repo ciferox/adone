@@ -46,13 +46,6 @@ export default class extends Subsystem {
         ],
         options: [
             {
-                name: "--type",
-                type: String,
-                default: "empty",
-                choices: ["empty", "application", "cli.application", "cli.command", "omnitron.service"],
-                help: "Type of project"
-            },
-            {
                 name: "--dir",
                 type: String,
                 required: false,

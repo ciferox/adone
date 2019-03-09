@@ -54,7 +54,7 @@ export default class TransformTask extends BaseTask {
 
     notifyError(stream, params) {
         if (is.fastLocalStream(stream)) {
-            const notify = fast.plugin.notify.onError({
+            const notify = fast.extension.notify.onError({
                 title: `${this.manager.package.name}.${params.id}`,
                 message: (error) => error.message
             });

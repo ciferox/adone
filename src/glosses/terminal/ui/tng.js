@@ -21,7 +21,7 @@ function PNG(file, options) {
     this.optimization = this.options.optimization || "mem";
     this.speed = this.options.speed || 1;
 
-    if (Buffer.isBuffer(file)) {
+    if (is.buffer(file)) {
         this.file = this.options.filename || null;
         buf = file;
     } else {
@@ -129,13 +129,13 @@ PNG.prototype.parseRaw = function (buf) {
 };
 
 PNG.prototype.parseChunks = function (chunks) {
-    let i,
-        chunk,
-        name,
-        data,
-        p,
-        idat,
-        info;
+    let i;
+    let chunk;
+    let name;
+    let data;
+    let p;
+    let idat;
+    let info;
 
     for (i = 0; i < chunks.length; i++) {
         chunk = chunks[i];
@@ -276,19 +276,19 @@ PNG.prototype.parseChunks = function (chunks) {
 };
 
 PNG.prototype.parseLines = function (data) {
-    let pixels = [],
-        x,
-        p,
-        prior,
-        line,
-        filter,
-        samples,
-        pendingSamples,
-        ch,
-        shiftStart,
-        i,
-        toShift,
-        sample;
+    const pixels = [];
+    let x;
+    let p;
+    let prior;
+    let line;
+    let filter;
+    let samples;
+    let pendingSamples;
+    let ch;
+    let shiftStart;
+    let i;
+    let toShift;
+    let sample;
 
     this.sampleDepth =
         this.colorType === 0 ? 1
@@ -346,14 +346,14 @@ PNG.prototype.unfilterLine = function (filter, line, prior) {
 };
 
 PNG.prototype.sampleLine = function (line, width) {
-    let samples = [],
-        x = 0,
-        pendingSamples,
-        ch,
-        i,
-        sample,
-        shiftStart,
-        toShift;
+    let samples = [];
+    let x = 0;
+    let pendingSamples;
+    let ch;
+    let i;
+    let sample;
+    let shiftStart;
+    let toShift;
 
     while (x < line.length) {
         pendingSamples = this.sampleDepth;
@@ -389,7 +389,7 @@ PNG.prototype.sampleLine = function (line, width) {
     }
 
     // Needed for deinterlacing?
-    if (width != null) {
+    if (!is.nil(width)) {
         samples = samples.slice(0, width * this.sampleDepth);
     }
 
@@ -427,10 +427,10 @@ PNG.prototype.filters = {
     },
     _predictor: function PaethPredictor(a, b, c) {
         // a = left, b = above, c = upper left
-        let p = a + b - c,
-            pa = Math.abs(p - a),
-            pb = Math.abs(p - b),
-            pc = Math.abs(p - c);
+        const p = a + b - c;
+        const pa = Math.abs(p - a);
+        const pb = Math.abs(p - b);
+        const pc = Math.abs(p - c);
         if (pa <= pb && pa <= pc) {
             return a;
         }
@@ -546,7 +546,7 @@ PNG.prototype.sampleInterlacedLines = function (raw) {
             if (xstep === 1) {
                 assert.equal(xstart, 0);
                 offset = y * vpr;
-                for (k = offset, f = 0; k < offset + vpr; k++ , f++) {
+                for (k = offset, f = 0; k < offset + vpr; k++, f++) {
                     samples[k] = flat[f];
                 }
             } else {
@@ -566,8 +566,8 @@ PNG.prototype.sampleInterlacedLines = function (raw) {
 };
 
 PNG.prototype.createBitmap = function (pixels) {
-    let bmp = [],
-        i;
+    const bmp = [];
+    let i;
 
     if (this.colorType === 0) {
         pixels = pixels.map((sample) => {
@@ -656,8 +656,8 @@ PNG.prototype.createCellmap = function (bmp, options) {
 };
 
 PNG.prototype.renderANSI = function (bmp) {
-    let self = this,
-        out = "";
+    const self = this;
+    let out = "";
 
     bmp.forEach((line, y) => {
         line.forEach((pixel, x) => {
@@ -671,8 +671,8 @@ PNG.prototype.renderANSI = function (bmp) {
 };
 
 PNG.prototype.renderContent = function (bmp, el) {
-    let self = this,
-        out = "";
+    const self = this;
+    let out = "";
 
     bmp.forEach((line, y) => {
         line.forEach((pixel, x) => {
@@ -688,22 +688,22 @@ PNG.prototype.renderContent = function (bmp, el) {
 };
 
 PNG.prototype.renderScreen = function (bmp, screen, xi, xl, yi, yl) {
-    let self = this,
-        lines = screen.lines,
-        cellLines,
-        y,
-        yy,
-        x,
-        xx,
-        alpha,
-        attr,
-        ch;
+    const self = this;
+    const lines = screen.lines;
+    let cellLines;
+    let y;
+    let yy;
+    let x;
+    let xx;
+    let alpha;
+    let attr;
+    let ch;
 
     cellLines = bmp.reduce((cellLines, line, y) => {
         const cellLine = [];
         line.forEach((pixel, x) => {
-            let outch = self.getOutch(x, y, line, pixel),
-                cell = self.pixelToCell(pixel, outch);
+            const outch = self.getOutch(x, y, line, pixel);
+            const cell = self.pixelToCell(pixel, outch);
             cellLine.push(cell);
         });
         cellLines.push(cellLine);
@@ -740,20 +740,20 @@ PNG.prototype.renderScreen = function (bmp, screen, xi, xl, yi, yl) {
 };
 
 PNG.prototype.renderElement = function (bmp, el) {
-    let xi = el.aleft + el.ileft,
-        xl = el.aleft + el.width - el.iright,
-        yi = el.atop + el.itop,
-        yl = el.atop + el.height - el.ibottom;
+    const xi = el.aleft + el.ileft;
+    const xl = el.aleft + el.width - el.iright;
+    const yi = el.atop + el.itop;
+    const yl = el.atop + el.height - el.ibottom;
 
     return this.renderScreen(bmp, el.screen, xi, xl, yi, yl);
 };
 
 PNG.prototype.pixelToSGR = function (pixel, ch) {
-    let bga = 1.0,
-        fga = 0.5,
-        a = pixel.a / 255,
-        bg,
-        fg;
+    const bga = 1.0;
+    const fga = 0.5;
+    const a = pixel.a / 255;
+    let bg;
+    let fg;
 
     bg = this.colors.match(
         pixel.r * a * bga | 0,
@@ -779,11 +779,11 @@ PNG.prototype.pixelToSGR = function (pixel, ch) {
 };
 
 PNG.prototype.pixelToTags = function (pixel, ch) {
-    let bga = 1.0,
-        fga = 0.5,
-        a = pixel.a / 255,
-        bg,
-        fg;
+    const bga = 1.0;
+    const fga = 0.5;
+    const a = pixel.a / 255;
+    let bg;
+    let fg;
 
     bg = this.colors.RGBtoHex(
         pixel.r * a * bga | 0,
@@ -809,11 +809,11 @@ PNG.prototype.pixelToTags = function (pixel, ch) {
 };
 
 PNG.prototype.pixelToCell = function (pixel, ch) {
-    let bga = 1.0,
-        fga = 0.5,
-        a = pixel.a / 255,
-        bg,
-        fg;
+    const bga = 1.0;
+    const fga = 0.5;
+    const a = pixel.a / 255;
+    let bg;
+    let fg;
 
     bg = this.colors.match(
         pixel.r * bga | 0,
@@ -840,18 +840,18 @@ PNG.prototype.getOutch = (function () {
     const dchars = "????8@8@#8@8##8#MKXWwz$&%x><\\/xo;+=|^-:i'.`,  `.        ";
 
     const luminance = function (pixel) {
-        let a = pixel.a / 255,
-            r = pixel.r * a,
-            g = pixel.g * a,
-            b = pixel.b * a,
-            l = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        const a = pixel.a / 255;
+        const r = pixel.r * a;
+        const g = pixel.g * a;
+        const b = pixel.b * a;
+        const l = 0.2126 * r + 0.7152 * g + 0.0722 * b;
 
         return l / 255;
     };
 
     return function (x, y, line, pixel) {
-        let lumi = luminance(pixel),
-            outch = dchars[lumi * (dchars.length - 1) | 0];
+        const lumi = luminance(pixel);
+        const outch = dchars[lumi * (dchars.length - 1) | 0];
 
         return outch;
     };
@@ -871,9 +871,9 @@ PNG.prototype.compileFrames_lomem = function (frames) {
         this.width = frame.fctl.width;
         this.height = frame.fctl.height;
 
-        let pixels = frame._pixels || this.parseLines(frame.fdat),
-            bmp = frame._bmp || this.createBitmap(pixels),
-            fc = frame.fctl;
+        const pixels = frame._pixels || this.parseLines(frame.fdat);
+        const bmp = frame._bmp || this.createBitmap(pixels);
+        const fc = frame.fctl;
 
         return {
             actl: this.actl,
@@ -896,11 +896,11 @@ PNG.prototype.compileFrames_locpu = function (frames) {
         this.width = frame.fctl.width;
         this.height = frame.fctl.height;
 
-        let pixels = frame._pixels || this.parseLines(frame.fdat),
-            bmp = frame._bmp || this.createBitmap(pixels),
-            renderBmp = this.renderFrame(bmp, frame, i),
-            cellmap = this.createCellmap(renderBmp),
-            fc = frame.fctl;
+        const pixels = frame._pixels || this.parseLines(frame.fdat);
+        const bmp = frame._bmp || this.createBitmap(pixels);
+        const renderBmp = this.renderFrame(bmp, frame, i);
+        const cellmap = this.createCellmap(renderBmp);
+        const fc = frame.fctl;
 
         return {
             actl: this.actl,
@@ -913,17 +913,17 @@ PNG.prototype.compileFrames_locpu = function (frames) {
 };
 
 PNG.prototype.renderFrame = function (bmp, frame, i) {
-    let first = this.frames[0],
-        last = this.frames[i - 1],
-        fc = frame.fctl,
-        xo = fc.xOffset,
-        yo = fc.yOffset,
-        lxo,
-        lyo,
-        x,
-        y,
-        line,
-        p;
+    const first = this.frames[0];
+    const last = this.frames[i - 1];
+    const fc = frame.fctl;
+    const xo = fc.xOffset;
+    const yo = fc.yOffset;
+    let lxo;
+    let lyo;
+    let x;
+    let y;
+    let line;
+    let p;
 
     if (!this._curBmp) {
         this._curBmp = [];
@@ -993,10 +993,10 @@ PNG.prototype._animate = function (callback) {
         return callback(this.bmp, this.cellmap);
     }
 
-    let self = this,
-        numPlays = this.actl.numPlays || Infinity,
-        running = 0,
-        i = -1;
+    const self = this;
+    let numPlays = this.actl.numPlays || Infinity;
+    let running = 0;
+    let i = -1;
 
     this._curBmp = null;
     this._lastBmp = null;
@@ -1018,9 +1018,9 @@ PNG.prototype._animate = function (callback) {
             return setImmediate(next);
         }
 
-        let bmp = frame.bmp,
-            renderBmp = self.renderFrame(bmp, frame, i),
-            cellmap = self.createCellmap(renderBmp);
+        const bmp = frame.bmp;
+        const renderBmp = self.renderFrame(bmp, frame, i);
+        const cellmap = self.createCellmap(renderBmp);
 
         callback(renderBmp, cellmap);
         return setTimeout(next, frame.delay / self.speed | 0);
@@ -1089,15 +1089,15 @@ PNG.prototype.stop = function () {
 };
 
 PNG.prototype.toPNG = function (input) {
-    let options = this.options,
-        file = this.file,
-        format = this.format,
-        buf,
-        img,
-        gif,
-        i,
-        control,
-        disposeOp;
+    const options = this.options;
+    const file = this.file;
+    const format = this.format;
+    let buf;
+    let img;
+    let gif;
+    let i;
+    let control;
+    let disposeOp;
 
     if (format !== "gif") {
         buf = exec("convert", [`${format}:-`, "png:-"],
@@ -1157,23 +1157,23 @@ PNG.prototype.toPNG = function (input) {
 // doesn't support apngs, so we coalesce the gif frames into one image and then
 // slice them into frames.
 PNG.prototype.gifMagick = function (input) {
-    let options = this.options,
-        file = this.file,
-        format = this.format,
-        buf,
-        fmt,
-        img,
-        frames,
-        frame,
-        width,
-        height,
-        iwidth,
-        twidth,
-        i,
-        lines,
-        line,
-        x,
-        y;
+    const options = this.options;
+    const file = this.file;
+    const format = this.format;
+    let buf;
+    let fmt;
+    let img;
+    let frames;
+    let frame;
+    let width;
+    let height;
+    let iwidth;
+    let twidth;
+    let i;
+    let lines;
+    let line;
+    let x;
+    let y;
 
     buf = exec("convert",
         [`${format}:-`, "-coalesce", "+append", "png:-"],
@@ -1281,7 +1281,7 @@ PNG.prototype.decompress = function (buffers) {
  * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
+ */
 
 PNG.prototype.crc32 = (function () {
     const crcTable = [
@@ -1358,17 +1358,17 @@ function GIF(file, options) {
         return new GIF(file, options);
     }
 
-    let info = {},
-        p = 0,
-        buf,
-        i,
-        total,
-        sig,
-        desc,
-        img,
-        ext,
-        label,
-        size;
+    const info = {};
+    let p = 0;
+    let buf;
+    let i;
+    let total;
+    let sig;
+    let desc;
+    let img;
+    let ext;
+    let label;
+    let size;
 
     if (!file) {
         throw new Error("no file");
@@ -1384,7 +1384,7 @@ function GIF(file, options) {
     this.pixelLimit = this.options.pixelLimit || 7622550;
     this.totalPixels = 0;
 
-    if (Buffer.isBuffer(file)) {
+    if (is.buffer(file)) {
         buf = file;
         file = null;
     } else {
@@ -1411,7 +1411,7 @@ function GIF(file, options) {
     if (this.gct) {
         this.colors = [];
         total = 1 << this.gctsize;
-        for (i = 0; i < total; i++ , p += 3) {
+        for (i = 0; i < total; i++, p += 3) {
             this.colors.push([buf[p], buf[p + 1], buf[p + 2], 255]);
         }
     }
@@ -1446,7 +1446,7 @@ function GIF(file, options) {
                 if (img.lct) {
                     img.lcolors = [];
                     total = 1 << img.lctsize;
-                    for (i = 0; i < total; i++ , p += 3) {
+                    for (i = 0; i < total; i++, p += 3) {
                         img.lcolors.push([buf[p], buf[p + 1], buf[p + 2], 255]);
                     }
                 }
@@ -1622,25 +1622,25 @@ function GIF(file, options) {
             [0, 0]
         ];
 
-        let table = img.lcolors || this.colors,
-            row = 0,
-            col = 0,
-            ilp = 0,
-            p = 0,
-            b,
-            idx,
-            i,
-            y,
-            x,
-            line,
-            pixel;
+        const table = img.lcolors || this.colors;
+        let row = 0;
+        let col = 0;
+        let ilp = 0;
+        let p = 0;
+        let b;
+        let idx;
+        let i;
+        let y;
+        let x;
+        let line;
+        let pixel;
 
         img.samples = [];
         // Rewritten version of:
         // https://github.com/lbv/ka-cs-programs/blob/master/lib/gif-reader.js
         for (; ;) {
             b = img.data[p++];
-            if (b == null) {
+            if (is.nil(b)) {
                 break;
             }
             idx = (row * img.width + col) * 4;
@@ -1703,26 +1703,26 @@ function GIF(file, options) {
 // Rewritten version of:
 // https://github.com/lbv/ka-cs-programs/blob/master/lib/gif-reader.js
 GIF.prototype.decompress = function (input, codeSize) {
-    let bitDepth = codeSize + 1,
-        CC = 1 << codeSize,
-        EOI = CC + 1,
-        stack = [],
-        table = [],
-        ntable = 0,
-        oldCode = null,
-        buffer = 0,
-        nbuffer = 0,
-        p = 0,
-        buf = [],
-        bits,
-        read,
-        ans,
-        n,
-        code,
-        i,
-        K,
-        b,
-        maxElem;
+    let bitDepth = codeSize + 1;
+    const CC = 1 << codeSize;
+    const EOI = CC + 1;
+    const stack = [];
+    let table = [];
+    let ntable = 0;
+    let oldCode = null;
+    let buffer = 0;
+    let nbuffer = 0;
+    let p = 0;
+    const buf = [];
+    let bits;
+    let read;
+    let ans;
+    let n;
+    let code;
+    let i;
+    let K;
+    let b;
+    let maxElem;
 
     for (; ;) {
         if (stack.length === 0) {
@@ -1761,7 +1761,7 @@ GIF.prototype.decompress = function (input, codeSize) {
                 continue;
             }
 
-            if (oldCode === null) {
+            if (is.null(oldCode)) {
                 oldCode = code;
                 buf.push(table[code][0]);
                 continue;
@@ -1793,7 +1793,7 @@ GIF.prototype.decompress = function (input, codeSize) {
             }
         }
         b = stack.pop();
-        if (b == null) {
+        if (is.nil(b)) {
             break;
         }
         buf.push(b);

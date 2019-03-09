@@ -14,7 +14,7 @@ export default class EventEmitter {
     addListener(type, listener) {
         if (!this._events[type]) {
             this._events[type] = listener;
-        } else if (typeof this._events[type] === "function") {
+        } else if (is.function(this._events[type])) {
             this._events[type] = [this._events[type], listener];
         } else {
             this._events[type].push(listener);
@@ -28,7 +28,7 @@ export default class EventEmitter {
             return;
         }
 
-        if (typeof handler === "function" || handler.length === 1) {
+        if (is.function(handler) || handler.length === 1) {
             delete this._events[type];
             this._emit("removeListener", [type, listener]);
             return;
@@ -61,7 +61,7 @@ export default class EventEmitter {
     }
 
     listeners(type) {
-        return typeof this._events[type] === "function" ? [this._events[type]] : this._events[type] || [];
+        return is.function(this._events[type]) ? [this._events[type]] : this._events[type] || [];
     }
 
     _emit(type, args) {
@@ -79,7 +79,7 @@ export default class EventEmitter {
             return;
         }
 
-        if (typeof handler === "function") {
+        if (is.function(handler)) {
             return handler.apply(this, args);
         }
 

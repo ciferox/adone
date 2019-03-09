@@ -157,7 +157,7 @@ export default class Element extends adone.terminal.ui.Node {
             delete this.lpos;
         });
 
-        if (options.hoverBg != null) {
+        if (!is.nil(options.hoverBg)) {
             options.hoverEffects = options.hoverEffects || {};
             options.hoverEffects.bg = options.hoverBg;
         }
@@ -251,7 +251,7 @@ export default class Element extends adone.terminal.ui.Node {
                             const perc = (y - this.itop) / (this.height - this.iheight);
                             this.setScrollPerc(perc * 100 | 0);
                             this.screen.render();
-                            let smd, smu;
+                            let smd; let smu;
                             this._scrollingBar = true;
                             this.onScreenEvent("mousedown", smd = (data) => {
                                 const y = data.y - this.atop;
@@ -459,7 +459,7 @@ export default class Element extends adone.terminal.ui.Node {
 
     set aleft(val) {
         let expr;
-        if (typeof val === "string") {
+        if (is.string(val)) {
             if (val === "center") {
                 val = this.screen.width / 2 | 0;
                 val -= this.width / 2 | 0;
@@ -492,7 +492,7 @@ export default class Element extends adone.terminal.ui.Node {
 
     set atop(val) {
         let expr;
-        if (typeof val === "string") {
+        if (is.string(val)) {
             if (val === "center") {
                 val = this.screen.height / 2 | 0;
                 val -= this.height / 2 | 0;
@@ -649,40 +649,40 @@ export default class Element extends adone.terminal.ui.Node {
     }
 
     sattr(style, fg, bg) {
-        let bold = style.bold,
-            underline = style.underline,
-            blink = style.blink,
-            inverse = style.inverse,
-            invisible = style.invisible;
+        let bold = style.bold;
+        let underline = style.underline;
+        let blink = style.blink;
+        let inverse = style.inverse;
+        let invisible = style.invisible;
 
         // if (arguments.length === 1) {
-        if (fg == null && bg == null) {
+        if (is.nil(fg) && is.nil(bg)) {
             fg = style.fg;
             bg = style.bg;
         }
 
         // This used to be a loop, but I decided
         // to unroll it for performance's sake.
-        if (typeof bold === "function") {
+        if (is.function(bold)) {
             bold = bold(this);
         }
-        if (typeof underline === "function") {
+        if (is.function(underline)) {
             underline = underline(this); 
         }
-        if (typeof blink === "function") {
+        if (is.function(blink)) {
             blink = blink(this);
         }
-        if (typeof inverse === "function") {
+        if (is.function(inverse)) {
             inverse = inverse(this); 
         }
-        if (typeof invisible === "function") {
+        if (is.function(invisible)) {
             invisible = invisible(this); 
         }
 
-        if (typeof fg === "function") {
+        if (is.function(fg)) {
             fg = fg(this);
         }
-        if (typeof bg === "function") {
+        if (is.function(bg)) {
             bg = bg(this);
         }
 
@@ -800,7 +800,7 @@ export default class Element extends adone.terminal.ui.Node {
         }
 
         const width = this.width - this.iwidth;
-        if (this._clines == null || this._clines.width !== width || this._clines.content !== this.content) {
+        if (is.nil(this._clines) || this._clines.width !== width || this._clines.content !== this.content) {
             let content = this.content;
 
             content = content
@@ -859,13 +859,13 @@ export default class Element extends adone.terminal.ui.Node {
     }
 
     _parseAttr(lines) {
-        let dattr = this.sattr(this.style),
-            attr = dattr,
-            attrs = [],
-            line,
-            i,
-            j,
-            c;
+        const dattr = this.sattr(this.style);
+        let attr = dattr;
+        const attrs = [];
+        let line;
+        let i;
+        let j;
+        let c;
 
         if (lines[0].attr === attr) {
             return;
@@ -893,9 +893,9 @@ export default class Element extends adone.terminal.ui.Node {
         }
         //if (!align && !~line.indexOf('{|}')) return line;
 
-        let cline = line.replace(/\x1b\[[\d;]*m/g, ""),
-            len = cline.length,
-            s = width - len;
+        const cline = line.replace(/\x1b\[[\d;]*m/g, "");
+        const len = cline.length;
+        let s = width - len;
 
         if (this.shrink) {
             s = 0;
@@ -926,23 +926,23 @@ export default class Element extends adone.terminal.ui.Node {
     }
 
     _wrapContent(content, width) {
-        let tags = this.parseTags,
-            state = this.align,
-            wrap = this.wrap,
-            margin = 0,
-            rtof = [],
-            ftor = [],
-            out = [],
-            no = 0,
-            line,
-            align,
-            cap,
-            total,
-            i,
-            part,
-            j,
-            lines,
-            rest;
+        const tags = this.parseTags;
+        let state = this.align;
+        const wrap = this.wrap;
+        let margin = 0;
+        const rtof = [];
+        const ftor = [];
+        const out = [];
+        let no = 0;
+        let line;
+        let align;
+        let cap;
+        let total;
+        let i;
+        let part;
+        let j;
+        let lines;
+        let rest;
 
         lines = content.split("\n");
 
@@ -1125,7 +1125,7 @@ export default class Element extends adone.terminal.ui.Node {
             return true;
         }
 
-        if (typeof verify !== "function") {
+        if (!is.function(verify)) {
             verify = function () {
                 return true; 
             };
@@ -1165,22 +1165,22 @@ export default class Element extends adone.terminal.ui.Node {
                 return; 
             }
 
-            let ox = self._drag.x,
-                oy = self._drag.y,
-                px = self.parent.aleft,
-                py = self.parent.atop,
-                x = data.x - px - ox,
-                y = data.y - py - oy;
+            const ox = self._drag.x;
+            const oy = self._drag.y;
+            const px = self.parent.aleft;
+            const py = self.parent.atop;
+            const x = data.x - px - ox;
+            const y = data.y - py - oy;
 
-            if (self.position.right != null) {
-                if (self.position.left != null) {
+            if (!is.nil(self.position.right)) {
+                if (!is.nil(self.position.left)) {
                     self.width = `100%-${self.parent.width - self.width}`;
                 }
                 self.position.right = null;
             }
 
-            if (self.position.bottom != null) {
-                if (self.position.top != null) {
+            if (!is.nil(self.position.bottom)) {
+                if (!is.nil(self.position.top)) {
                     self.height = `100%-${self.parent.height - self.height}`;
                 }
                 self.position.bottom = null;
@@ -1343,7 +1343,7 @@ export default class Element extends adone.terminal.ui.Node {
     }
 
     setHover(options) {
-        if (typeof options === "string") {
+        if (is.string(options)) {
             options = { text: options };
         }
 
@@ -1383,7 +1383,7 @@ export default class Element extends adone.terminal.ui.Node {
     _getPos() {
         const pos = this.lpos;
 
-        if (pos.aleft != null) {
+        if (!is.nil(pos.aleft)) {
             return pos;
         }
 
@@ -1402,12 +1402,12 @@ export default class Element extends adone.terminal.ui.Node {
      */
 
     _getWidth(get) {
-        let parent = get ? this.parent._getPos() : this.parent,
-            width = this.position.width,
-            left,
-            expr;
+        const parent = get ? this.parent._getPos() : this.parent;
+        let width = this.position.width;
+        let left;
+        let expr;
 
-        if (typeof width === "string") {
+        if (is.string(width)) {
             if (width === "half") {
                 width = "50%";
             }
@@ -1425,9 +1425,9 @@ export default class Element extends adone.terminal.ui.Node {
         // the content width, and the content width is initially
         // decided by the width the element, so it needs to be
         // calculated here.
-        if (width == null) {
+        if (is.nil(width)) {
             left = this.position.left || 0;
-            if (typeof left === "string") {
+            if (is.string(left)) {
                 if (left === "center") {
                     left = "50%"; 
                 }
@@ -1439,7 +1439,7 @@ export default class Element extends adone.terminal.ui.Node {
             }
             width = parent.width - (this.position.right || 0) - left;
             if (this.screen.autoPadding) {
-                if ((this.position.left != null || this.position.right == null)
+                if ((!is.nil(this.position.left) || is.nil(this.position.right))
                     && this.position.left !== "center") {
                     width -= this.parent.ileft;
                 }
@@ -1451,12 +1451,12 @@ export default class Element extends adone.terminal.ui.Node {
     }
 
     _getHeight(get) {
-        let parent = get ? this.parent._getPos() : this.parent,
-            height = this.position.height,
-            top,
-            expr;
+        const parent = get ? this.parent._getPos() : this.parent;
+        let height = this.position.height;
+        let top;
+        let expr;
 
-        if (typeof height === "string") {
+        if (is.string(height)) {
             if (height === "half") {
                 height = "50%";
             }
@@ -1474,9 +1474,9 @@ export default class Element extends adone.terminal.ui.Node {
         // the content width, and the content width is initially
         // decided by the width the element, so it needs to be
         // calculated here.
-        if (height == null) {
+        if (is.nil(height)) {
             top = this.position.top || 0;
-            if (typeof top === "string") {
+            if (is.string(top)) {
                 if (top === "center") {
                     top = "50%";
                 }
@@ -1488,8 +1488,8 @@ export default class Element extends adone.terminal.ui.Node {
             }
             height = parent.height - (this.position.bottom || 0) - top;
             if (this.screen.autoPadding) {
-                if ((this.position.top != null
-                    || this.position.bottom == null)
+                if ((!is.nil(this.position.top)
+                    || is.nil(this.position.bottom))
                     && this.position.top !== "center") {
                     height -= this.parent.itop;
                 }
@@ -1501,11 +1501,11 @@ export default class Element extends adone.terminal.ui.Node {
     }
 
     _getLeft(get) {
-        let parent = get ? this.parent._getPos() : this.parent,
-            left = this.position.left || 0,
-            expr;
+        const parent = get ? this.parent._getPos() : this.parent;
+        let left = this.position.left || 0;
+        let expr;
 
-        if (typeof left === "string") {
+        if (is.string(left)) {
             if (left === "center") {
                 left = "50%";
             }
@@ -1519,13 +1519,13 @@ export default class Element extends adone.terminal.ui.Node {
             }
         }
 
-        if (this.position.left == null && this.position.right != null) {
+        if (is.nil(this.position.left) && !is.nil(this.position.right)) {
             return this.screen.cols - this._getWidth(get) - this._getRight(get);
         }
 
         if (this.screen.autoPadding) {
-            if ((this.position.left != null
-                || this.position.right == null)
+            if ((!is.nil(this.position.left)
+                || is.nil(this.position.right))
                 && this.position.left !== "center") {
                 left += this.parent.ileft;
             }
@@ -1535,10 +1535,10 @@ export default class Element extends adone.terminal.ui.Node {
     }
 
     _getRight(get) {
-        let parent = get ? this.parent._getPos() : this.parent,
-            right;
+        const parent = get ? this.parent._getPos() : this.parent;
+        let right;
 
-        if (this.position.right == null && this.position.left != null) {
+        if (is.nil(this.position.right) && !is.nil(this.position.left)) {
             right = this.screen.cols - (this._getLeft(get) + this._getWidth(get));
             if (this.screen.autoPadding) {
                 right += this.parent.iright;
@@ -1556,11 +1556,11 @@ export default class Element extends adone.terminal.ui.Node {
     }
 
     _getTop(get) {
-        let parent = get ? this.parent._getPos() : this.parent,
-            top = this.position.top || 0,
-            expr;
+        const parent = get ? this.parent._getPos() : this.parent;
+        let top = this.position.top || 0;
+        let expr;
 
-        if (typeof top === "string") {
+        if (is.string(top)) {
             if (top === "center") {
                 top = "50%";
             }
@@ -1574,13 +1574,13 @@ export default class Element extends adone.terminal.ui.Node {
             }
         }
 
-        if (this.position.top == null && this.position.bottom != null) {
+        if (is.nil(this.position.top) && !is.nil(this.position.bottom)) {
             return this.screen.rows - this._getHeight(get) - this._getBottom(get);
         }
 
         if (this.screen.autoPadding) {
-            if ((this.position.top != null
-                || this.position.bottom == null)
+            if ((!is.nil(this.position.top)
+                || is.nil(this.position.bottom))
                 && this.position.top !== "center") {
                 top += this.parent.itop;
             }
@@ -1590,10 +1590,10 @@ export default class Element extends adone.terminal.ui.Node {
     }
 
     _getBottom(get) {
-        let parent = get ? this.parent._getPos() : this.parent,
-            bottom;
+        const parent = get ? this.parent._getPos() : this.parent;
+        let bottom;
 
-        if (this.position.bottom == null && this.position.top != null) {
+        if (is.nil(this.position.bottom) && !is.nil(this.position.top)) {
             bottom = this.screen.rows - (this._getTop(get) + this._getHeight(get));
             if (this.screen.autoPadding) {
                 bottom += this.parent.ibottom;
@@ -1619,7 +1619,7 @@ export default class Element extends adone.terminal.ui.Node {
             return { xi, xl: xi + 1, yi, yl: yi + 1 };
         }
 
-        let i, el, ret, mxi = xi, mxl = xi + 1, myi = yi, myl = yi + 1;
+        let i; let el; let ret; let mxi = xi; let mxl = xi + 1; let myi = yi; let myl = yi + 1;
 
         // This is a chicken and egg problem. We need to determine how the children
         // will render in order to determine how this element renders, but it in
@@ -1651,7 +1651,7 @@ export default class Element extends adone.terminal.ui.Node {
             // large as possible. So, we can just use the height and/or width the of
             // element.
             // if (get) {
-            if (el.position.left == null && el.position.right != null) {
+            if (is.nil(el.position.left) && !is.nil(el.position.right)) {
                 ret.xl = xi + (ret.xl - ret.xi);
                 ret.xi = xi;
                 if (this.screen.autoPadding) {
@@ -1660,7 +1660,7 @@ export default class Element extends adone.terminal.ui.Node {
                     ret.xi += this.ileft;
                 }
             }
-            if (el.position.top == null && el.position.bottom != null) {
+            if (is.nil(el.position.top) && !is.nil(el.position.bottom)) {
                 ret.yl = yi + (ret.yl - ret.yi);
                 ret.yi = yi;
                 if (this.screen.autoPadding) {
@@ -1689,10 +1689,10 @@ export default class Element extends adone.terminal.ui.Node {
             //this.shrink = true;
         }
 
-        if (this.position.width == null
-            && (this.position.left == null
-                || this.position.right == null)) {
-            if (this.position.left == null && this.position.right != null) {
+        if (is.nil(this.position.width)
+            && (is.nil(this.position.left)
+                || is.nil(this.position.right))) {
+            if (is.nil(this.position.left) && !is.nil(this.position.right)) {
                 xi = xl - (mxl - mxi);
                 if (!this.screen.autoPadding) {
                     xi -= this.padding.left + this.padding.right;
@@ -1719,9 +1719,9 @@ export default class Element extends adone.terminal.ui.Node {
             }
         }
 
-        if (this.position.height == null
-            && (this.position.top == null
-                || this.position.bottom == null)
+        if (is.nil(this.position.height)
+            && (is.nil(this.position.top)
+                || is.nil(this.position.bottom))
             && (!this.scrollable || this._isList)) {
             // NOTE: Lists get special treatment if they are shrunken - assume they
             // want all list items showing. This is one case we can calculate the
@@ -1730,7 +1730,7 @@ export default class Element extends adone.terminal.ui.Node {
                 myi = 0 - this.itop;
                 myl = this.items.length + this.ibottom;
             }
-            if (this.position.top == null && this.position.bottom != null) {
+            if (is.nil(this.position.top) && !is.nil(this.position.bottom)) {
                 yi = yl - (myl - myi);
                 if (!this.screen.autoPadding) {
                     yi -= this.padding.top + this.padding.bottom;
@@ -1751,24 +1751,24 @@ export default class Element extends adone.terminal.ui.Node {
     }
 
     _getShrinkContent(xi, xl, yi, yl) {
-        let h = this._clines.length,
-            w = this._clines.mwidth || 1;
+        const h = this._clines.length;
+        const w = this._clines.mwidth || 1;
 
-        if (this.position.width == null
-            && (this.position.left == null
-                || this.position.right == null)) {
-            if (this.position.left == null && this.position.right != null) {
+        if (is.nil(this.position.width)
+            && (is.nil(this.position.left)
+                || is.nil(this.position.right))) {
+            if (is.nil(this.position.left) && !is.nil(this.position.right)) {
                 xi = xl - w - this.iwidth;
             } else {
                 xl = xi + w + this.iwidth;
             }
         }
 
-        if (this.position.height == null
-            && (this.position.top == null
-                || this.position.bottom == null)
+        if (is.nil(this.position.height)
+            && (is.nil(this.position.top)
+                || is.nil(this.position.bottom))
             && (!this.scrollable || this._isList)) {
-            if (this.position.top == null && this.position.bottom != null) {
+            if (is.nil(this.position.top) && !is.nil(this.position.bottom)) {
                 yi = yl - h - this.iheight;
             } else {
                 yl = yi + h + this.iheight;
@@ -1779,10 +1779,10 @@ export default class Element extends adone.terminal.ui.Node {
     }
 
     _getShrink(xi, xl, yi, yl, get) {
-        let shrinkBox = this._getShrinkBox(xi, xl, yi, yl, get),
-            shrinkContent = this._getShrinkContent(xi, xl, yi, yl, get),
-            xll = xl,
-            yll = yl;
+        const shrinkBox = this._getShrinkBox(xi, xl, yi, yl, get);
+        const shrinkContent = this._getShrinkContent(xi, xl, yi, yl, get);
+        let xll = xl;
+        let yll = yl;
 
         // Figure out which one is bigger and use it.
         if (shrinkBox.xl - shrinkBox.xi > shrinkContent.xl - shrinkContent.xi) {
@@ -1826,21 +1826,21 @@ export default class Element extends adone.terminal.ui.Node {
         //   get = true;
         // }
 
-        let xi = this._getLeft(get),
-            xl = xi + this._getWidth(get),
-            yi = this._getTop(get),
-            yl = yi + this._getHeight(get),
-            base = this.childBase || 0,
-            el = this,
-            fixed = this.fixed,
-            coords,
-            v,
-            noleft,
-            noright,
-            notop,
-            nobot,
-            ppos,
-            b;
+        let xi = this._getLeft(get);
+        let xl = xi + this._getWidth(get);
+        let yi = this._getTop(get);
+        let yl = yi + this._getHeight(get);
+        let base = this.childBase || 0;
+        let el = this;
+        let fixed = this.fixed;
+        let coords;
+        let v;
+        let noleft;
+        let noright;
+        let notop;
+        let nobot;
+        let ppos;
+        let b;
 
         // Attempt to shrink the element base on the size of the content and child elements.
         if (this.shrink) {
@@ -1907,7 +1907,7 @@ export default class Element extends adone.terminal.ui.Node {
                     // Is above.
                     return;
                 } 
-                    // Is partially covered above.
+                // Is partially covered above.
                 notop = true;
                 v = ppos.yi - yi;
                 if (this.border) {
@@ -1924,7 +1924,7 @@ export default class Element extends adone.terminal.ui.Node {
                     // Is below.
                     return;
                 } 
-                    // Is partially covered below.
+                // Is partially covered below.
                 nobot = true;
                 v = yl - ppos.yl;
                 if (this.border) {
@@ -2026,24 +2026,24 @@ export default class Element extends adone.terminal.ui.Node {
             return;
         }
 
-        let lines = this.screen.lines,
-            xi = coords.xi,
-            xl = coords.xl,
-            yi = coords.yi,
-            yl = coords.yl,
-            x,
-            y,
-            cell,
-            attr,
-            ch,
-            content = this._pcontent,
-            ci = this._clines.ci[coords.base],
-            battr,
-            dattr,
-            c,
-            visible,
-            i,
-            bch = this.ch;
+        const lines = this.screen.lines;
+        let xi = coords.xi;
+        let xl = coords.xl;
+        let yi = coords.yi;
+        let yl = coords.yl;
+        let x;
+        let y;
+        let cell;
+        let attr;
+        let ch;
+        const content = this._pcontent;
+        let ci = this._clines.ci[coords.base];
+        let battr;
+        let dattr;
+        let c;
+        let visible;
+        let i;
+        const bch = this.ch;
 
         // Clip content if it's off the edge of the screen
         // if (xi + this.ileft < 0 || yi + this.itop < 0) {
@@ -2575,11 +2575,11 @@ export default class Element extends adone.terminal.ui.Node {
      */
 
     insertLine(i, line) {
-        if (typeof line === "string") {
+        if (is.string(line)) {
             line = line.split("\n");
         }
 
-        if (i !== i || i == null) {
+        if (i !== i || is.nil(i)) {
             i = this._clines.ftor.length;
         }
 
@@ -2593,9 +2593,9 @@ export default class Element extends adone.terminal.ui.Node {
 
         // NOTE: Could possibly compare the first and last ftor line numbers to see
         // if they're the same, or if they fit in the visible region entirely.
-        let start = this._clines.length,
-            diff,
-            real;
+        const start = this._clines.length;
+        let diff;
+        let real;
 
         if (i >= this._clines.ftor.length) {
             real = this._clines.ftor[this._clines.ftor.length - 1];
@@ -2618,9 +2618,9 @@ export default class Element extends adone.terminal.ui.Node {
                 return;
             }
 
-            let height = pos.yl - pos.yi - this.iheight,
-                base = this.childBase || 0,
-                visible = real >= base && real - base < height;
+            const height = pos.yl - pos.yi - this.iheight;
+            const base = this.childBase || 0;
+            const visible = real >= base && real - base < height;
 
             if (pos && visible && this.screen.cleanSides(this)) {
                 this.screen.insertLine(diff,
@@ -2634,7 +2634,7 @@ export default class Element extends adone.terminal.ui.Node {
     deleteLine(i, n) {
         n = n || 1;
 
-        if (i !== i || i == null) {
+        if (i !== i || is.nil(i)) {
             i = this._clines.ftor.length - 1;
         }
 
@@ -2643,9 +2643,9 @@ export default class Element extends adone.terminal.ui.Node {
 
         // NOTE: Could possibly compare the first and last ftor line numbers to see
         // if they're the same, or if they fit in the visible region entirely.
-        let start = this._clines.length,
-            diff,
-            real = this._clines.ftor[i][0];
+        const start = this._clines.length;
+        let diff;
+        const real = this._clines.ftor[i][0];
 
         while (n--) {
             this._clines.fake.splice(i, 1);
@@ -2666,8 +2666,8 @@ export default class Element extends adone.terminal.ui.Node {
 
             height = pos.yl - pos.yi - this.iheight;
 
-            let base = this.childBase || 0,
-                visible = real >= base && real - base < height;
+            const base = this.childBase || 0;
+            const visible = real >= base && real - base < height;
 
             if (pos && visible && this.screen.cleanSides(this)) {
                 this.screen.deleteLine(diff,
@@ -2688,9 +2688,9 @@ export default class Element extends adone.terminal.ui.Node {
     }
 
     insertBottom(line) {
-        let h = (this.childBase || 0) + this.height - this.iheight,
-            i = Math.min(h, this._clines.length),
-            fake = this._clines.rtof[i - 1] + 1;
+        const h = (this.childBase || 0) + this.height - this.iheight;
+        const i = Math.min(h, this._clines.length);
+        const fake = this._clines.rtof[i - 1] + 1;
 
         return this.insertLine(fake, line);
     }
@@ -2701,9 +2701,9 @@ export default class Element extends adone.terminal.ui.Node {
     }
 
     deleteBottom(n) {
-        let h = (this.childBase || 0) + this.height - 1 - this.iheight,
-            i = Math.min(h, this._clines.length - 1),
-            fake = this._clines.rtof[i];
+        const h = (this.childBase || 0) + this.height - 1 - this.iheight;
+        const i = Math.min(h, this._clines.length - 1);
+        const fake = this._clines.rtof[i];
 
         n = n || 1;
 
@@ -2779,13 +2779,13 @@ export default class Element extends adone.terminal.ui.Node {
 
     screenshot(xi, xl, yi, yl) {
         xi = this.lpos.xi + this.ileft + (xi || 0);
-        if (xl != null) {
+        if (!is.nil(xl)) {
             xl = this.lpos.xi + this.ileft + (xl || 0);
         } else {
             xl = this.lpos.xl - this.iright;
         }
         yi = this.lpos.yi + this.itop + (yi || 0);
-        if (yl != null) {
+        if (!is.nil(yl)) {
             yl = this.lpos.yi + this.itop + (yl || 0);
         } else {
             yl = this.lpos.yl - this.ibottom;
@@ -2855,14 +2855,14 @@ export default class Element extends adone.terminal.ui.Node {
         }
 
         // Handle scrolling.
-        let visible = this.height - this.iheight,
-            base = this.childBase,
-            d,
-            p,
-            t,
-            b,
-            max,
-            emax;
+        const visible = this.height - this.iheight;
+        const base = this.childBase;
+        let d;
+        let p;
+        let t;
+        let b;
+        let max;
+        let emax;
 
         if (this.alwaysScroll || always) {
             // Semi-workaround
@@ -2947,7 +2947,7 @@ export default class Element extends adone.terminal.ui.Node {
     }
 
     _recalculateIndex() {
-        let max, emax;
+        let max; let emax;
 
         if (this.detached || !this.scrollable) {
             return 0;
@@ -2993,9 +2993,9 @@ export default class Element extends adone.terminal.ui.Node {
             return s ? -1 : 0; 
         }
 
-        let height = (pos.yl - pos.yi) - this.iheight,
-            i = this.getScrollHeight(),
-            p;
+        const height = (pos.yl - pos.yi) - this.iheight;
+        const i = this.getScrollHeight();
+        let p;
 
         if (height < i) {
             if (this.alwaysScroll) {

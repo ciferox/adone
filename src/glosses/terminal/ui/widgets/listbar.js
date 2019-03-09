@@ -86,7 +86,7 @@ export default class ListBar extends adone.terminal.ui.widget.Element {
     }
 
     setItems(commands) {
-        if (!Array.isArray(commands)) {
+        if (!is.array(commands)) {
             commands = Object.keys(commands).reduce((obj, key, i) => {
                 let cmd = commands[key];
                 let cb;
@@ -96,14 +96,14 @@ export default class ListBar extends adone.terminal.ui.widget.Element {
                     cmd = { callback: cb };
                 }
 
-                if (cmd.text == null) {
+                if (is.nil(cmd.text)) {
                     cmd.text = key; 
                 }
-                if (cmd.prefix == null) {
+                if (is.nil(cmd.prefix)) {
                     cmd.prefix = `${++i}`; 
                 }
 
-                if (cmd.text == null && cmd.callback) {
+                if (is.nil(cmd.text) && cmd.callback) {
                     cmd.text = cmd.callback.name;
                 }
 
@@ -146,7 +146,7 @@ export default class ListBar extends adone.terminal.ui.widget.Element {
 
         if (is.object(item)) {
             cmd = item;
-            if (cmd.prefix == null) {
+            if (is.nil(cmd.prefix)) {
                 cmd.prefix = `${this.items.length + 1}`;
             }
         }
@@ -173,9 +173,9 @@ export default class ListBar extends adone.terminal.ui.widget.Element {
 
         const t = helpers.generateTags(this.style.prefix || { fg: "brightblack" });
 
-        title = (cmd.prefix != null ? `${t.open + cmd.prefix}: ${t.close}` : "") + cmd.text;
+        title = (!is.nil(cmd.prefix) ? `${t.open + cmd.prefix}: ${t.close}` : "") + cmd.text;
 
-        len = ((cmd.prefix != null ? `${cmd.prefix}: ` : "") + cmd.text).length;
+        len = ((!is.nil(cmd.prefix) ? `${cmd.prefix}: ` : "") + cmd.text).length;
 
         const options = {
             screen: this.screen,

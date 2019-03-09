@@ -15,7 +15,7 @@ export default class Table extends adone.terminal.ui.widget.Element {
         delete options.height;
         super(options);
 
-        this.pad = options.pad != null ? options.pad : 2;
+        this.pad = !is.nil(options.pad) ? options.pad : 2;
 
         this.setData(options.rows || options.data);
 
@@ -61,7 +61,7 @@ export default class Table extends adone.terminal.ui.widget.Element {
             delete this.position.width;
         }
 
-        if (this.position.width != null) {
+        if (!is.nil(this.position.width)) {
             const missing = this.width - total;
             const w = missing / maxes.length | 0;
             const wr = missing % maxes.length;

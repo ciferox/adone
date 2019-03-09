@@ -27,7 +27,7 @@ const getFgCode = (color) => {
         return adone.runtime.term.parse(adone.sprintf("{#%02x%02x%02x-fg}", color[0], color[1], color[2]));
     } else if (is.number(color)) { // Number
         return `\x1B[38;5;${color}m`;
-    }  // Default
+    } // Default
     return "\x1B[39m";
 };
 
@@ -38,7 +38,7 @@ const getBgCode = (color) => {
         return adone.runtime.term.parse(adone.sprintf("{#%02x%02x%02x-bg}", color[0], color[1], color[2]));
     } else if (is.number(color)) { // Number
         return `\x1B[48;5;${color}m`;
-    }  // Default
+    } // Default
     return "\x1B[49m";
 };
 
@@ -97,7 +97,7 @@ export default class Canvas1 {
         delimiter = delimiter || "\n";
         const result = [];
 
-        for (let i = 0, j = 0; i < this.content.length; i++ , j++) {
+        for (let i = 0, j = 0; i < this.content.length; i++, j++) {
             if (j === this.width / 2) {
                 result.push(delimiter);
                 j = 0;

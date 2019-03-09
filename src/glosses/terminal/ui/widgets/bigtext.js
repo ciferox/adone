@@ -73,13 +73,13 @@ export default class BigText extends adone.terminal.ui.widget.Element {
     }
 
     render() {
-        if (this.position.width == null || this._shrinkWidth) {
+        if (is.nil(this.position.width) || this._shrinkWidth) {
             // if (this.width - this.iwidth < this.ratio.width * this.text.length + 1) {
             this.position.width = this.ratio.width * this.text.length + 1;
             this._shrinkWidth = true;
             // }
         }
-        if (this.position.height == null || this._shrinkHeight) {
+        if (is.nil(this.position.height) || this._shrinkHeight) {
             // if (this.height - this.iheight < this.ratio.height + 0) {
             this.position.height = this.ratio.height + 0;
             this._shrinkHeight = true;
@@ -122,7 +122,7 @@ export default class BigText extends adone.terminal.ui.widget.Element {
                 }
                 for (let mx = 0; mx < this.ratio.width; mx++) {
                     const mcell = mline[mx];
-                    if (mcell == null) {
+                    if (is.nil(mcell)) {
                         break;
                     }
                     if (this.fch && this.fch !== " ") {

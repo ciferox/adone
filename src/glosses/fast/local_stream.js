@@ -64,12 +64,12 @@ export class FastLocalStream extends adone.fast.Stream {
         originMode = true,
         originTimes = true,
         originOwner = true
-    } = {}) {
+    } = {}) {    
         const isDirFunction = is.function(dir);
         if (!isDirFunction) {
             dir = std.path.resolve(cwd, String(dir));
         }
-        return this.through(async function writing(file) {
+        return this.through(async function writing(file) {    
             if (file.isNull() && !file.isDirectory() && !file.isSymbolic()) {
                 return; // ?
             }
@@ -134,9 +134,9 @@ export const src = (globs, {
 } = {}) => {
     globs = util.arrify(globs).map((x) => helper.resolveGlob(String(x), cwd));
     const source = helper.globSource(globs, { cwd, base, dot, links });
-    const fast = new FastLocalStream(source, { read, buffer, stream, cwd });
-    fast.once("end", () => source.end({ force: true }));
-    return fast;
+    const fastStream = new FastLocalStream(source, { read, buffer, stream, cwd });
+    fastStream.once("end", () => source.end({ force: true }));
+    return fastStream;
 };
 
 export const watchSource = (globs, {

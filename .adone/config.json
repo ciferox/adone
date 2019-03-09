@@ -27,10 +27,27 @@
             ]
         },
         "app": {
-            "description": "ADONE cli utility",
+            "description": "ADONE CLI application",
             "src": "src/app/adone.js",
             "dst": "bin",
-            "task": "transpileExe"
+            "task": "transpileExe",
+            "scheme": {
+                "internals": {
+                    "description": "ADONE CLI internals",
+                    "src": [
+                        "!src/app/adone.js",
+                        "src/app/**/*.js"
+                    ],
+                    "dst": "lib/app",
+                    "task": "transpile"
+                }
+            }
+        },
+        "commands": {
+            "description": "ADONE CLI commands",
+            "src": "src/commands/**/*.js",
+            "dst": "lib/commands",
+            "task": "transpile"
         },
         "index": {
             "description": "ADONE index file",
@@ -107,6 +124,12 @@
                     ],
                     "dst": "lib/glosses/async",
                     "original": "https://github.com/caolan/async"
+                },
+                "cli": {
+                    "description": "CLI utilities",
+                    "src": "src/glosses/cli/**/*.js",
+                    "dst": "lib/glosses/cli",
+                    "task": "transpile"
                 },
                 "collection": {
                     "description": "Implementations of common collections",
@@ -904,15 +927,6 @@
             ],
             "dst": "lib/benchmark",
             "original": "https://github.com/bestiejs/benchmark.js/"
-        },
-        "cli": {
-            "description": "Adone CLI stuff",
-            "src": [
-                "src/cli/**/*",
-                "!src/cli/adone.js"
-            ],
-            "dst": "lib/cli",
-            "task": "adoneTranspile"
         },
         "cmake": {
             "description": "Node.js native addon build tool",

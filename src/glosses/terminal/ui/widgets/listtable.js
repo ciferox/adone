@@ -40,7 +40,7 @@ export default class ListTable extends adone.terminal.ui.widget.List {
             }
         });
 
-        this.pad = options.pad != null ? options.pad : 2;
+        this.pad = !is.nil(options.pad) ? options.pad : 2;
 
         this.setData(options.rows || options.data);
 

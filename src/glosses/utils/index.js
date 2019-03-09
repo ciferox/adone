@@ -85,7 +85,8 @@ adone.lazify({
     bufferFrom: "./buffer_from",
     fromMs: "./from_ms",
     toMs: "./to_ms",
-    omit: "./omit"
+    omit: "./omit",
+    globParent: "./glob_parent"
 }, adone.asNamespace(exports), require);
 
 const irregularPlurals = {
@@ -475,29 +476,6 @@ export const flatten = (array, { depth = Infinity } = {}) => {
         }
     }
     return result;
-};
-
-export const globParent = (str) => {
-    // flip windows path separators
-    if (is.windows && !str.includes("/")) {
-        str = str.split("\\").join("/");
-    }
-
-    // special case for strings ending in enclosure containing path separator
-    if (/[{[].*[/]*.*[}\]]$/.test(str)) {
-        str += "/";
-    }
-
-    // preserves full path in case of trailing path separator
-    str += "a";
-
-    // remove path parts that are globby
-    do {
-        str = std.path.dirname(str);
-    } while (is.glob(str) || /(^|[^\\])([{[]|\([^)]+$)/.test(str));
-
-    // remove escape chars and return result
-    return str.replace(/\\([*?|[\](){}])/g, "$1");
 };
 
 export const toFastProperties = (() => {

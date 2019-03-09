@@ -30,7 +30,7 @@ export default class Gauge extends adone.terminal.ui.widget.Canvas {
             this.setStack(data);
         } else if (typeof (data) === typeof (1)) {
             this.setPercent(data);
-        } else if (typeof (data) === null) {
+        } else if (is.null(typeof (data))) {
         }
     }
 

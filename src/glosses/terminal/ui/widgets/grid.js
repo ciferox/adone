@@ -9,7 +9,7 @@ class DefaultWidget extends adone.terminal.ui.widget.Element {
 
 export default class Grid extends adone.terminal.ui.widget.Element {
     constructor(options = { }) {
-        if ((options.width == null && (options.left == null && options.right == null)) || (options.height == null && (options.top == null && options.bottom == null))) {
+        if ((is.nil(options.width) && (is.nil(options.left) && is.nil(options.right))) || (is.nil(options.height) && (is.nil(options.top) && is.nil(options.bottom)))) {
             options.top = 0;
             options.left = 0;
             options.right = 0;

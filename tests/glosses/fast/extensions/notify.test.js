@@ -2,7 +2,7 @@ describe("fast", "transform", "notify", () => {
     const { fast } = adone;
     const { Stream, File } = fast;
 
-    const plugin = fast.plugin.notify;
+    const plugin = fast.extension.notify;
 
     const mockGenerator = (tester) => {
         tester = tester || function () { };

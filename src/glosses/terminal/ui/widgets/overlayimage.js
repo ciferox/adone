@@ -9,7 +9,7 @@ export default class OverlayImage extends adone.terminal.ui.widget.Element {
             OverlayImage.w3mdisplay = options.w3m;
         }
 
-        if (OverlayImage.hasW3MDisplay == null) {
+        if (is.nil(OverlayImage.hasW3MDisplay)) {
             if (adone.std.fs.existsSync(OverlayImage.w3mdisplay)) {
                 OverlayImage.hasW3MDisplay = true;
             } else if (options.search !== false) {
@@ -93,8 +93,8 @@ export default class OverlayImage extends adone.terminal.ui.widget.Element {
     }
 
     spawn(file, args, opt, callback) {
-        let spawn = require("child_process").spawn,
-            ps;
+        const spawn = require("child_process").spawn;
+        let ps;
 
         opt = opt || {};
         ps = spawn(file, args, opt);
@@ -279,18 +279,18 @@ export default class OverlayImage extends adone.terminal.ui.widget.Element {
                     : callback(null, success);
             });
 
-            let width = this.width * ratio.tw | 0,
-                height = this.height * ratio.th | 0,
-                aleft = this.aleft * ratio.tw | 0,
-                atop = this.atop * ratio.th | 0;
+            const width = this.width * ratio.tw | 0;
+            const height = this.height * ratio.th | 0;
+            const aleft = this.aleft * ratio.tw | 0;
+            const atop = this.atop * ratio.th | 0;
 
             const input = `0;1;${
-                 aleft};${
-                 atop};${
-                 width};${
-                 height};;;;;${
-                 img
-                 }\n4;\n3;\n`;
+                aleft};${
+                atop};${
+                width};${
+                height};;;;;${
+                img
+            }\n4;\n3;\n`;
 
             this._props = {
                 aleft,
@@ -341,10 +341,10 @@ export default class OverlayImage extends adone.terminal.ui.widget.Element {
             return err ? callback(err) : callback(null, success);
         });
 
-        let width = this._props.width + 2,
-            height = this._props.height + 2,
-            aleft = this._props.aleft,
-            atop = this._props.atop;
+        let width = this._props.width + 2;
+        let height = this._props.height + 2;
+        let aleft = this._props.aleft;
+        let atop = this._props.atop;
 
         if (this._drag) {
             aleft -= 10;
@@ -354,11 +354,11 @@ export default class OverlayImage extends adone.terminal.ui.widget.Element {
         }
 
         const input = `6;${
-             aleft};${
-             atop};${
-             width};${
-             height
-             }\n4;\n3;\n`;
+            aleft};${
+            atop};${
+            width};${
+            height
+        }\n4;\n3;\n`;
 
         delete this.file;
         delete this._props;
@@ -548,18 +548,18 @@ export default class OverlayImage extends adone.terminal.ui.widget.Element {
         this.file = _file;
         this._lastSize = _lastSize;
 
-        let width = this.width * ratio.tw | 0,
-            height = this.height * ratio.th | 0,
-            aleft = this.aleft * ratio.tw | 0,
-            atop = this.atop * ratio.th | 0;
+        const width = this.width * ratio.tw | 0;
+        const height = this.height * ratio.th | 0;
+        const aleft = this.aleft * ratio.tw | 0;
+        const atop = this.atop * ratio.th | 0;
 
         const input = `0;1;${
-             aleft};${
-             atop};${
-             width};${
-             height};;;;;${
-             img
-             }\n4;\n3;\n`;
+            aleft};${
+            atop};${
+            width};${
+            height};;;;;${
+            img
+        }\n4;\n3;\n`;
 
         this._props = {
             aleft,
@@ -591,10 +591,10 @@ export default class OverlayImage extends adone.terminal.ui.widget.Element {
             return false;
         }
 
-        let width = this._props.width + 2,
-            height = this._props.height + 2,
-            aleft = this._props.aleft,
-            atop = this._props.atop;
+        let width = this._props.width + 2;
+        let height = this._props.height + 2;
+        let aleft = this._props.aleft;
+        let atop = this._props.atop;
 
         if (this._drag) {
             aleft -= 10;
@@ -604,11 +604,11 @@ export default class OverlayImage extends adone.terminal.ui.widget.Element {
         }
 
         const input = `6;${
-             aleft};${
-             atop};${
-             width};${
-             height
-             }\n4;\n3;\n`;
+            aleft};${
+            atop};${
+            width};${
+            height
+        }\n4;\n3;\n`;
 
         delete this.file;
         delete this._props;

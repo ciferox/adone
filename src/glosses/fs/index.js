@@ -244,7 +244,8 @@ const fs = adone.lazify({
     fuse: "./fuse",
     tmpName: "./tmp_name",
     writeFileAtomic: "./write_file_atomic",
-    upath: "./upath"
+    upath: "./upath",
+    dirname: "./dirname"
 }, adone.asNamespace(exports), require);
 
 const expandReadOptions = (options = {}) => is.string(options) ? { encoding: options } : options;

@@ -196,6 +196,7 @@ adone.lazify({
     archive: "./glosses/archives",
     assertion: "./glosses/assertion",
     async: "./glosses/async",
+    cli: "./glosses/cli",
     collection: "./glosses/collections",
     compressor: "./glosses/compressors",
     configuration: "./glosses/configurations",
@@ -259,7 +260,6 @@ adone.lazify({
 
     // components
     // bundle: "./bundle",
-    cli: "./cli",
     cmake: "./cmake",
     // isolatedVm: "./isolated_vm",
     gyp: "./gyp",

@@ -7,7 +7,8 @@ const {
     util,
     runtime: { term },
     terminal: { chalk },
-    meta: { reflect }
+    meta: { reflect },
+    cli: { kit }
 } = adone;
 
 const noStyleLength = (x) => text.stripAnsi(x).length;
@@ -15,16 +16,16 @@ const noStyleLength = (x) => text.stripAnsi(x).length;
 const hasColorsSupport = Boolean(process.stdout.isTTY);
 
 const defaultColors = {
-    commandName: (x) => term.theme.primary(x),
+    commandName: (x) => kit.theme.primary(x),
     commandHelpMessage: (x) => chalk.italic(x),
     commandSeparator: (x) => x,
-    optionName: (x) => term.theme.secondary(x),
+    optionName: (x) => kit.theme.secondary(x),
     optionVariable: (x) => x,
     optionHelpMessage: (x) => chalk.italic(x),
     // argumentName: (x) => x,
     argumentName: (x) => term.parse(`{#F44336-fg}${x}{/}`),
     argumentHelpMessage: (x) => chalk.italic(x),
-    default: (x) => term.theme.inactive(x),
+    default: (x) => kit.theme.inactive(x),
     // angleBracket: (x) => term.green(x),
     angleBracket: (x) => term.parse(`{#F44336-fg}${x}{/}`),
     squareBracket: (x) => chalk.yellow(x),
@@ -35,7 +36,7 @@ const defaultColors = {
     argumentGroupHeading: (x) => chalk.underline(x),
     optionGroupHeading: (x) => chalk.underline(x),
     value: {
-        string: (x) => term.theme.accent(x),
+        string: (x) => kit.theme.accent(x),
         null: (x) => chalk.yellow(x),
         number: (x) => chalk.yellow(x),
         undefined: (x) => chalk.yellow(x),

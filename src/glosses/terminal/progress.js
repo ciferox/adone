@@ -1,7 +1,8 @@
 const {
     is,
     runtime: { term },
-    text: { unicode: { approx, symbol } }
+    text: { unicode: { approx, symbol } },
+    cli: { kit } // not 
 } = adone;
 
 const placeholder = "\uFFFC";
@@ -128,10 +129,10 @@ export default class ProgressBar {
             timer: null
         };
         this.status = {
-            ok: term.theme.primary(approx(symbol.tick)),
-            error: term.theme.error(approx(symbol.cross)),
-            notice: term.theme.notice("!"),
-            info: term.theme.info("!"),
+            ok: kit.theme.primary(approx(symbol.tick)),
+            error: kit.theme.error(approx(symbol.cross)),
+            notice: kit.theme.notice("!"),
+            info: kit.theme.info("!"),
             ...statusMap
         };
         this.status.true = this.status.ok;

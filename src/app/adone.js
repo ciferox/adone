@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import "..";
+import Configuration from "../lib/app/configuration";
 
 const {
     is,
@@ -12,7 +13,7 @@ const {
     ApplicationMeta
 } = app;
 
-const command = (name) => std.path.join(__dirname, "..", "lib", "cli", "commands", name);
+const command = (name) => std.path.join(__dirname, "..", "lib", "commands", name);
 
 @ApplicationMeta({
     subsystems: [
@@ -33,12 +34,6 @@ const command = (name) => std.path.join(__dirname, "..", "lib", "cli", "commands
             group: "common",
             description: "Realm management",
             subsystem: command("realm")
-        },
-        {
-            name: "info",
-            group: "common",
-            description: "Show available information about object you wish",
-            subsystem: command("info")
         },
         {
             name: "inspect",
@@ -70,7 +65,7 @@ class AdoneCLI extends app.Application {
     async configure() {
         !is.windows && this.exitOnSignal("SIGINT");
 
-        this.config = await adone.cli.Configuration.load();
+        this.config = await Configuration.load();
 
         this._configureLogger();
 

@@ -6318,3 +6318,18 @@ Copyright (c) 2016-present Charlike Mike Reagent <open.source.charlike@gmail.com
 MIT License
 
 Copyright (c) 2018 Matteo Collina
+
+- https://github.com/es128/glob-parent/
+- https://github.com/es128/path-dirname
+
+The ISC License
+
+Copyright (c) 2015 Elan Shanker
+
+- https://github.com/micromatch/is-glob
+
+
+22 lines (17 sloc) 1.06 KB
+The MIT License (MIT)
+
+Copyright (c) 2014-2017, Jon Schlinkert.

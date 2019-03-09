@@ -108,7 +108,7 @@ export default class GpmClient extends event.Emitter {
             //
         }
         let tty = /tty[0-9]+$/.exec(path);
-        if (tty === null) {
+        if (is.null(tty)) {
             // TODO: should  also check for /dev/input/..
         }
 

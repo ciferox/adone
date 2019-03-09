@@ -4,7 +4,7 @@ export default class Log extends adone.terminal.ui.widget.ScrollableText {
     constructor(options = { }) {
         super(options);
 
-        this.scrollback = options.scrollback != null ? options.scrollback : Infinity;
+        this.scrollback = !is.nil(options.scrollback) ? options.scrollback : Infinity;
         this.scrollOnInput = options.scrollOnInput;
 
         this.on("set content", () => {

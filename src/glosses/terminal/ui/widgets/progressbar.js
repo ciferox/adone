@@ -5,7 +5,7 @@ export default class ProgressBar extends adone.terminal.ui.widget.Input {
         super(options);
 
         this.filled = options.filled || 0;
-        if (typeof this.filled === "string") {
+        if (is.string(this.filled)) {
             this.filled = Number(this.filled.slice(0, -1));
         }
         this.value = this.filled;

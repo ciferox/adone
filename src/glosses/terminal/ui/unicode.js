@@ -111,7 +111,7 @@ const floor = Math.floor;
  */
 
 exports.charWidth = function (str, i) {
-    const point = typeof str !== "number"
+    const point = !is.number(str)
         ? exports.codePointAt(str, i || 0)
         : str;
 
@@ -402,7 +402,7 @@ exports.strWidth = function (str) {
 };
 
 exports.isSurrogate = function (str, i) {
-    const point = typeof str !== "number"
+    const point = !is.number(str)
         ? exports.codePointAt(str, i || 0)
         : str;
     return point > 0x00ffff;
@@ -467,7 +467,7 @@ exports.combining = exports.combiningTable.reduce((out, row) => {
 }, {});
 
 exports.isCombining = function (str, i) {
-    const point = typeof str !== "number"
+    const point = !is.number(str)
         ? exports.codePointAt(str, i || 0)
         : str;
     return exports.combining[point] === true;
@@ -478,7 +478,7 @@ exports.isCombining = function (str, i) {
  */
 
 exports.codePointAt = function (str, position) {
-    if (str == null) {
+    if (is.nil(str)) {
         throw TypeError();
     }
     const string = String(str);
@@ -560,16 +560,16 @@ exports.chars.swide = new RegExp("("
 // All wide chars including surrogate pairs.
 exports.chars.all = new RegExp(`(${
     exports.chars.swide.source.slice(1, -1)
-    }|${
+}|${
     exports.chars.wide.source.slice(1, -1)
-    })`, "g");
+})`, "g");
 
 // Regex to detect a surrogate pair.
 exports.chars.surrogate = /[\ud800-\udbff][\udc00-\udfff]/g;
 
 // Regex to find combining characters.
 exports.chars.combining = exports.combiningTable.reduce((out, row) => {
-    let low, high, range;
+    let low; let high; let range;
     if (row[0] > 0x00ffff) {
         low = String.fromCodePoint(row[0]);
         low = [

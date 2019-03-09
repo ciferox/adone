@@ -21,7 +21,7 @@ function ElementArray(count) {
 
     function SetText(value, charMaps) {
         // Get the string of the value passed in
-        if (value === null) {
+        if (is.null(value)) {
             value = "";
         }
         value = value.toString();
@@ -38,7 +38,7 @@ function ElementArray(count) {
             const c = value[e];
             let mask = charMaps[c];
             // Use blank of there is no bitmask for this character
-            if (mask === null || mask === undefined) {
+            if (is.nil(mask)) {
                 mask = this.NullMask;
             }
             this.SetElementValue(e, mask);
@@ -58,22 +58,22 @@ function SixteenSegment(count, canvas, width, height, x, y, options) {
 
     this.SegmentWidth = options.segmentWidth;//(this.ElementWidth * 0.0015) * 5 //0.1;           // Width of segments (% of Element Width)
     this.SegmentInterval = options.segmentInterval;//(this.ElementWidth * 0.0015) * 10 // 0.20;        // Spacing between segments (% of Element Width)
-    this.BevelWidth = 0.01;             // Size of corner bevel (% of Element Width)
-    this.SideBevelEnabled = true;      // Should the sides be beveled
-    this.StrokeLight = options.color;       // Color of an on segment outline
+    this.BevelWidth = 0.01; // Size of corner bevel (% of Element Width)
+    this.SideBevelEnabled = true; // Should the sides be beveled
+    this.StrokeLight = options.color; // Color of an on segment outline
 
-    this.StrokeWidth = options.strokeWidth;               // Width of segment outline
-    this.Padding = options.elementPadding;                   // Padding around the display
-    this.Spacing = options.elementSpacing;                   // Spacing between elements
+    this.StrokeWidth = options.strokeWidth; // Width of segment outline
+    this.Padding = options.elementPadding; // Padding around the display
+    this.Spacing = options.elementSpacing; // Spacing between elements
 
     this.ElementWidth = (width - (this.Spacing * count)) / count;
     this.ElementHeight = height - (this.Padding * 2);
 
     // console.error("w %s h %s", this.ElementWidth, this.ElementHeight);
 
-    this.FillLight = "red";           // Color of an on segment
-    this.FillDark = "cyan";             // Color of an off segment
-    this.StrokeDark = "black";          // Color of an off segment outline
+    this.FillLight = "red"; // Color of an on segment
+    this.FillDark = "cyan"; // Color of an off segment
+    this.StrokeDark = "black"; // Color of an off segment outline
 
     this.X = 0;
     this.Y = 0;
@@ -208,29 +208,29 @@ function SixteenSegment(count, canvas, width, height, x, y, options) {
     }
 
     function CalcPoints() {
-        let d = this.CalcElementDimensions(),
-            w = this.ElementWidth,
-            h = this.ElementHeight,
-            sw = this.SegmentWidth * w,
-            si = this.SegmentInterval * w,
-            bw = this.BevelWidth * sw,
-            ib = (this.SideBevelEnabled) ? 1 : 0,
-            sf = sw * 0.8,
-            slope = h / w,
-            sqrt2 = Math.SQRT2,
-            sqrt3 = Math.sqrt(3);
+        const d = this.CalcElementDimensions();
+        const w = this.ElementWidth;
+        const h = this.ElementHeight;
+        const sw = this.SegmentWidth * w;
+        const si = this.SegmentInterval * w;
+        const bw = this.BevelWidth * sw;
+        const ib = (this.SideBevelEnabled) ? 1 : 0;
+        const sf = sw * 0.8;
+        const slope = h / w;
+        const sqrt2 = Math.SQRT2;
+        const sqrt3 = Math.sqrt(3);
 
         // Base position of points w/out bevel and interval
-        let w0 = w / 2 - sw / 2, h0 = 0,
-            w1 = w / 2, h1 = sw / 2,
-            w2 = w / 2 + sw / 2, h2 = sw,
-            w3 = w - sw, h3 = h / 2 - sw / 2,
-            w4 = w - sw / 2, h4 = h / 2,
-            w5 = w, h5 = h / 2 + sw / 2;
+        const w0 = w / 2 - sw / 2; const h0 = 0;
+        const w1 = w / 2; const h1 = sw / 2;
+        const w2 = w / 2 + sw / 2; const h2 = sw;
+        const w3 = w - sw; const h3 = h / 2 - sw / 2;
+        const w4 = w - sw / 2; const h4 = h / 2;
+        const w5 = w; const h5 = h / 2 + sw / 2;
 
         // Order of segments stored in Points[][]
-        let A1 = 0, A2 = 1, B = 2, C = 3, D1 = 4, D2 = 5, E = 6, F = 7,
-            G1 = 8, G2 = 9, H = 10, I = 11, J = 12, K = 13, L = 14, M = 15;
+        const A1 = 0; const A2 = 1; const B = 2; const C = 3; const D1 = 4; const D2 = 5; const E = 6; const F = 7;
+        const G1 = 8; const G2 = 9; const H = 10; const I = 11; const J = 12; const K = 13; const L = 14; const M = 15;
 
         // Create the points array for all segments
         const points = [];
@@ -274,17 +274,17 @@ function SixteenSegment(count, canvas, width, height, x, y, options) {
             { x: sw + si, y: h2 * slope + sf + si },
             { x: sw + si, y: h2 + si }
         ];
-        points[A2] = this.FlipHorizontal(points[A1], w);    // A2
-        points[C] = this.FlipVertical(points[2], h);       // C
-        points[D1] = this.FlipVertical(points[0], h);       // D1
-        points[D2] = this.FlipHorizontal(points[4], w);     // D2
-        points[E] = this.FlipHorizontal(points[3], w);     // E
-        points[F] = this.FlipHorizontal(points[2], w);     // F
-        points[G1] = this.FlipHorizontal(points[9], w);     // G1
-        points[J] = this.FlipHorizontal(points[10], w);    // J
-        points[K] = this.FlipVertical(points[12], h);      // K
-        points[L] = this.FlipVertical(points[11], h);      // L
-        points[M] = this.FlipVertical(points[10], h);      // M
+        points[A2] = this.FlipHorizontal(points[A1], w); // A2
+        points[C] = this.FlipVertical(points[2], h); // C
+        points[D1] = this.FlipVertical(points[0], h); // D1
+        points[D2] = this.FlipHorizontal(points[4], w); // D2
+        points[E] = this.FlipHorizontal(points[3], w); // E
+        points[F] = this.FlipHorizontal(points[2], w); // F
+        points[G1] = this.FlipHorizontal(points[9], w); // G1
+        points[J] = this.FlipHorizontal(points[10], w); // J
+        points[K] = this.FlipVertical(points[12], h); // K
+        points[L] = this.FlipVertical(points[11], h); // L
+        points[M] = this.FlipVertical(points[10], h); // M
         this.Points = points;
     }
 }
@@ -292,10 +292,10 @@ const CharacterMasks = (function () {
     // Segment Bitmasks for individual segments.
     // Binary Or them together to create bitmasks
     // a1|a2|b|c|d1|d2|e|f|g1|g2|h|i|j|k|l|m
-    let a1 = 1 << 0, a2 = 1 << 1, b = 1 << 2, c = 1 << 3,
-        d1 = 1 << 4, d2 = 1 << 5, e = 1 << 6, f = 1 << 7,
-        g1 = 1 << 8, g2 = 1 << 9, h = 1 << 10, i = 1 << 11,
-        j = 1 << 12, k = 1 << 13, l = 1 << 14, m = 1 << 15;
+    const a1 = 1 << 0; const a2 = 1 << 1; const b = 1 << 2; const c = 1 << 3;
+    const d1 = 1 << 4; const d2 = 1 << 5; const e = 1 << 6; const f = 1 << 7;
+    const g1 = 1 << 8; const g2 = 1 << 9; const h = 1 << 10; const i = 1 << 11;
+    const j = 1 << 12; const k = 1 << 13; const l = 1 << 14; const m = 1 << 15;
     // Character map associates characters with a bit pattern
     return {
         " ": 0,

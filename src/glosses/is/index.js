@@ -738,9 +738,6 @@ export const win32PathAbsolute = (path) => {
 
 export const pathAbsolute = platform === "win32" ? win32PathAbsolute : posixPathAbsolute;
 
-// Checks whether given `str` is glob or extglob (can use for test extglobs with the same performance)
-export const glob = (str) => string(str) && (/[@?!+*]\(/.test(str) || /[*!?{}(|)[\]]/.test(str));
-
 export const dotfile = (str) => {
     if (str.charCodeAt(0) === 46 /* . */ && str.indexOf("/", 1) === -1) {
         return true;
@@ -1016,6 +1013,8 @@ export const after = (str, date = String(new Date())) => {
 };
 
 adone.lazify({
+    glob: "./glob",
+    extGlob: "./ext_glob",
     fqdn: "./fqdn",
     url: "./url",
     email: "./email",

@@ -39,7 +39,7 @@ export default class List extends adone.terminal.ui.widget.Element {
 
         // Legacy: for apps written before the addition of item attributes.
         ["bg", "fg", "bold", "underline", "blink", "inverse", "invisible"].forEach((name) => {
-            if (this.style[name] != null && this.style.item[name] == null) {
+            if (!is.nil(this.style[name]) && is.nil(this.style.item[name])) {
                 this.style.item[name] = this.style[name];
             }
         });
@@ -343,10 +343,10 @@ export default class List extends adone.terminal.ui.widget.Element {
     }
 
     setItems(items) {
-        let original = this.items.slice(),
-            selected = this.selected,
-            sel = this.ritems[this.selected],
-            i = 0;
+        const original = this.items.slice();
+        const selected = this.selected;
+        let sel = this.ritems[this.selected];
+        let i = 0;
 
         items = items.slice();
 
@@ -577,7 +577,7 @@ export default class List extends adone.terminal.ui.widget.Element {
     }
 
     enterSelected(i) {
-        if (i != null) {
+        if (!is.nil(i)) {
             this.select(i);
         }
         this.emit("action", this.items[this.selected], this.selected);
@@ -585,7 +585,7 @@ export default class List extends adone.terminal.ui.widget.Element {
     }
 
     cancelSelected(i) {
-        if (i != null) {
+        if (!is.nil(i)) {
             this.select(i);
         }
         this.emit("action");

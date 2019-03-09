@@ -55,13 +55,13 @@ export default class Canvas2 {
     frame(delimiter) {
         delimiter = delimiter || "\n";
         const result = [];
-        for (let i = 0, j = 0; i < this.content.length; i++ , j++) {
+        for (let i = 0, j = 0; i < this.content.length; i++, j++) {
             if (j === this.width) {
                 result.push(delimiter);
                 j = 0;
             }
 
-            if (this.content[i] == null) {
+            if (is.nil(this.content[i])) {
                 result.push(" ");
             } else {
                 result.push(this.content[i]);
@@ -78,7 +78,7 @@ export default class Canvas2 {
         const coord = this.getCoord(x, y);
 
         const color = colors[this.color];
-        this.content[coord] = `\x1B[4${color}m ` + `\x1B[49m`;
+        this.content[coord] = `\x1B[4${color}m ` + "\x1B[49m";
     }
 
     unset(x, y) {
@@ -94,6 +94,6 @@ export default class Canvas2 {
             return;
         }
         const coord = this.getCoord(x, y);
-        this.content[coord] = this.content[coord] == null ? "p" : null;
+        this.content[coord] = is.nil(this.content[coord]) ? "p" : null;
     }
 }

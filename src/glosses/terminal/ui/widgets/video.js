@@ -3,9 +3,9 @@ const cp = adone.std.child_process;
 const Terminal = require("./terminal");
 
 function Video(options) {
-    let self = this,
-        shell,
-        args;
+    const self = this;
+    let shell;
+    let args;
 
     if (!(this instanceof adone.terminal.ui.widget.Node)) {
         return new Video(options);
@@ -57,8 +57,8 @@ function Video(options) {
         self.tty.pty.write("p");
     });
 
-  // mplayer/mpv cannot resize itself in the terminal, so we have
-  // to restart it at the correct start time.
+    // mplayer/mpv cannot resize itself in the terminal, so we have
+    // to restart it at the correct start time.
     this.on("resize", () => {
         self.tty.destroy();
 
@@ -96,7 +96,7 @@ Video.prototype.type = "video";
 Video.prototype.exists = function (program) {
     try {
         return Boolean(Number(cp.execSync(`type ${
-       program} > /dev/null 2> /dev/null`
+            program} > /dev/null 2> /dev/null`
       + " && echo 1", { encoding: "utf8" }).trim()));
     } catch (e) {
         return false;

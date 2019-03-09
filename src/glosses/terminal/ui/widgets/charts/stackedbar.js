@@ -18,7 +18,7 @@ export default class StackedBar extends adone.terminal.ui.widget.Canvas {
             this.options.barSpacing = this.options.barWidth + 3;
         }
 
-        this.options.xOffset = this.options.xOffset == null ? 5 : this.options.xOffset;
+        this.options.xOffset = is.nil(this.options.xOffset) ? 5 : this.options.xOffset;
         if (this.options.showText === false) {
             this.options.showText = false;
         } else {
@@ -76,16 +76,16 @@ export default class StackedBar extends adone.terminal.ui.widget.Canvas {
     }
 
     renderBar(x, bar, curBarSummedValue, maxBarValue, category) {
-        /*
-        var c = this.ctx
-        c.strokeStyle = 'red';
-        c.fillRect(0,7,4,0)
-        c.strokeStyle = 'blue';
-        c.fillRect(0,4,4,1)
-        c.strokeStyle = 'green';
-        c.fillRect(5,7,4,2)
-        return
-        */
+        /**
+         * var c = this.ctx
+         * c.strokeStyle = 'red';
+         * c.fillRect(0,7,4,0)
+         * c.strokeStyle = 'blue';
+         * c.fillRect(0,4,4,1)
+         * c.strokeStyle = 'green';
+         * c.fillRect(5,7,4,2)
+         * return
+         */
         const c = this.ctx;
         c.strokeStyle = "normal";
         c.fillStyle = "white";
@@ -134,7 +134,9 @@ export default class StackedBar extends adone.terminal.ui.widget.Canvas {
 
         if (currStackHeight > 0) {
             const calcY = y - currStackHeight;
-            /*fillRect starts from the point bottom of start point so we compensate*/
+            /**
+             * fillRect starts from the point bottom of start point so we compensate
+             */
             const calcHeight = Math.max(0, currStackHeight - 1);
             c.fillRect(
                 x,

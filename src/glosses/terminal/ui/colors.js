@@ -1,29 +1,29 @@
 exports.match = function (r1, g1, b1) {
-    if (typeof r1 === "string") {
+    if (is.string(r1)) {
         let hex = r1;
         if (hex[0] !== "#") {
             return -1;
         }
         hex = exports.hexToRGB(hex);
         r1 = hex[0], g1 = hex[1], b1 = hex[2];
-    } else if (Array.isArray(r1)) {
+    } else if (is.array(r1)) {
         b1 = r1[2], g1 = r1[1], r1 = r1[0];
     }
 
     const hash = (r1 << 16) | (g1 << 8) | b1;
 
-    if (exports._cache[hash] != null) {
+    if (!is.nil(exports._cache[hash])) {
         return exports._cache[hash];
     }
 
-    let ldiff = Infinity,
-        li = -1,
-        i = 0,
-        c,
-        r2,
-        g2,
-        b2,
-        diff;
+    let ldiff = Infinity;
+    let li = -1;
+    let i = 0;
+    let c;
+    let r2;
+    let g2;
+    let b2;
+    let diff;
 
     for (; i < exports.vcolors.length; i++) {
         c = exports.vcolors[i];
@@ -48,7 +48,7 @@ exports.match = function (r1, g1, b1) {
 };
 
 exports.RGBToHex = function (r, g, b) {
-    if (Array.isArray(r)) {
+    if (is.array(r)) {
         b = r[2], g = r[1], r = r[0];
     }
 
@@ -71,10 +71,10 @@ exports.hexToRGB = function (hex) {
             + hex[3] + hex[3];
     }
 
-    let col = parseInt(hex.substring(1), 16),
-        r = (col >> 16) & 0xff,
-        g = (col >> 8) & 0xff,
-        b = col & 0xff;
+    const col = parseInt(hex.substring(1), 16);
+    const r = (col >> 16) & 0xff;
+    const g = (col >> 8) & 0xff;
+    const b = col & 0xff;
 
     return [r, g, b];
 };
@@ -102,7 +102,7 @@ exports.mixColors = function (c1, c2, alpha) {
     if (c2 === 0x1ff) {
         c2 = 0; 
     }
-    if (alpha == null) {
+    if (is.nil(alpha)) {
         alpha = 0.5; 
     }
 
@@ -124,10 +124,10 @@ exports.mixColors = function (c1, c2, alpha) {
 };
 
 exports.blend = function blend(attr, attr2, alpha) {
-    let name, i, c, nc;
+    let name; let i; let c; let nc;
 
     let bg = attr & 0x1ff;
-    if (attr2 != null) {
+    if (!is.nil(attr2)) {
         let bg2 = attr2 & 0x1ff;
         if (bg === 0x1ff) {
             bg = 0; 
@@ -137,7 +137,7 @@ exports.blend = function blend(attr, attr2, alpha) {
         }
         bg = exports.mixColors(bg, bg2, alpha);
     } else {
-        if (blend._cache[bg] != null) {
+        if (!is.nil(blend._cache[bg])) {
             bg = blend._cache[bg];
             // } else if (bg < 8) {
             //   bg += 8;
@@ -165,7 +165,7 @@ exports.blend = function blend(attr, attr2, alpha) {
     attr |= bg;
 
     let fg = (attr >> 9) & 0x1ff;
-    if (attr2 != null) {
+    if (!is.nil(attr2)) {
         let fg2 = (attr2 >> 9) & 0x1ff;
         // 0, 7, 188, 231, 251
         if (fg === 0x1ff) {
@@ -181,7 +181,7 @@ exports.blend = function blend(attr, attr2, alpha) {
             fg = exports.mixColors(fg, fg2, alpha);
         }
     } else {
-        if (blend._cache[fg] != null) {
+        if (!is.nil(blend._cache[fg])) {
             fg = blend._cache[fg];
             // } else if (fg < 8) {
             //   fg += 8;
@@ -246,19 +246,19 @@ exports.xterm = [
     "#5c5cff", // rgb:5c/5c/ff
     "#ff00ff", // magenta
     "#00ffff", // cyan
-    "#ffffff"  // white
+    "#ffffff" // white
 ];
 
 // Seed all 256 colors. Assume xterm defaults.
 // Ported from the xterm color generation script.
 exports.colors = (function () {
-    let cols = exports.colors = [],
-        _cols = exports.vcolors = [],
-        r,
-        g,
-        b,
-        i,
-        l;
+    const cols = exports.colors = [];
+    const _cols = exports.vcolors = [];
+    let r;
+    let g;
+    let b;
+    let i;
+    let l;
 
     function hex(n) {
         n = n.toString(16);
@@ -305,9 +305,9 @@ exports.colors = (function () {
 // Map higher colors to the first 8 colors.
 // This allows translation of high colors to low colors on 8-color terminals.
 exports.ccolors = (function () {
-    let _cols = exports.vcolors.slice(),
-        cols = exports.colors.slice(),
-        out;
+    const _cols = exports.vcolors.slice();
+    const cols = exports.colors.slice();
+    let out;
 
     exports.vcolors = exports.vcolors.slice(0, 8);
     exports.colors = exports.colors.slice(0, 8);
@@ -364,16 +364,16 @@ const colorNames = exports.colorNames = {
 };
 
 exports.convert = function (color) {
-    if (typeof color === "number") {
+    if (is.number(color)) {
 
-    } else if (typeof color === "string") {
+    } else if (is.string(color)) {
         color = color.replace(/[\- ]/g, "");
-        if (colorNames[color] != null) {
+        if (!is.nil(colorNames[color])) {
             color = colorNames[color];
         } else {
             color = exports.match(color);
         }
-    } else if (Array.isArray(color)) {
+    } else if (is.array(color)) {
         color = exports.match(color);
     } else {
         color = -1;
@@ -528,7 +528,7 @@ exports.ncolors = [];
 
 Object.keys(exports.ccolors).forEach((name) => {
     exports.ccolors[name].forEach((offset) => {
-        if (typeof offset === "number") {
+        if (is.number(offset)) {
             exports.ncolors[offset] = name;
             exports.ccolors[offset] = exports.colorNames[name];
             return;

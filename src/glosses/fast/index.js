@@ -1,5 +1,6 @@
 const {
-    lazify
+    lazify,
+    asNamespace
 } = adone;
 
 const fast = lazify({
@@ -12,14 +13,14 @@ const fast = lazify({
     LocalMapStream: ["./local_map_stream", (mod) => mod.FastLocalMapStream],
     map: ["./local_map_stream", (mod) => mod.map],
     watchMap: ["./local_map_stream", (mod) => mod.watchMap]
-}, adone.asNamespace(exports), require);
+}, asNamespace(exports), require);
 
 adone.lazifyPrivate({
     Concat: "./__/concat",
     helper: "./__/helpers"
 }, exports, require);
 
-fast.plugin = lazify({
+fast.extension = asNamespace(lazify({
     compress: "./plugins/compress",
     decompress: "./plugins/decompress",
     pack: "./plugins/pack",
@@ -41,4 +42,4 @@ fast.plugin = lazify({
     notifyError: "./plugins/notify"
 }, null, require, {
     mapper: (key, mod) => mod
-});
+}));

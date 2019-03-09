@@ -156,10 +156,10 @@ Terminal.prototype.bootstrap = function () {
             return;
         }
 
-        let b = data.raw[0],
-            x = data.x - self.aleft,
-            y = data.y - self.atop,
-            s;
+        let b = data.raw[0];
+        const x = data.x - self.aleft;
+        const y = data.y - self.atop;
+        let s;
 
         if (self.term.urxvtMouse) {
             if (self.screen.program.sgrMouse) {
@@ -171,15 +171,15 @@ Terminal.prototype.bootstrap = function () {
                 b -= 32;
             }
             s = `\x1b[<${b};${x};${y
-                 }${data.action === "mousedown" ? "M" : "m"}`;
+            }${data.action === "mousedown" ? "M" : "m"}`;
         } else {
             if (self.screen.program.sgrMouse) {
                 b += 32;
             }
             s = `\x1b[M${
-                 String.fromCharCode(b)
-                 }${String.fromCharCode(x + 32)
-                 }${String.fromCharCode(y + 32)}`;
+                String.fromCharCode(b)
+            }${String.fromCharCode(x + 32)
+            }${String.fromCharCode(y + 32)}`;
         }
 
         self.handler(s);
@@ -273,11 +273,11 @@ Terminal.prototype.render = function () {
 
     this.dattr = this.sattr(this.style);
 
-    let xi = ret.xi + this.ileft,
-        xl = ret.xl - this.iright,
-        yi = ret.yi + this.itop,
-        yl = ret.yl - this.ibottom,
-        cursor;
+    const xi = ret.xi + this.ileft;
+    const xl = ret.xl - this.iright;
+    const yi = ret.yi + this.itop;
+    const yl = ret.yl - this.ibottom;
+    let cursor;
 
     const scrollback = this.term.lines.length - (yl - yi);
 
@@ -339,8 +339,8 @@ Terminal.prototype.render = function () {
 
 Terminal.prototype._isMouse = function (buf) {
     let s = buf;
-    if (Buffer.isBuffer(s)) {
-        if (s[0] > 127 && s[1] === undefined) {
+    if (is.buffer(s)) {
+        if (s[0] > 127 && is.undefined(s[1])) {
             s[0] -= 128;
             s = `\x1b${s.toString("utf-8")}`;
         } else {
@@ -390,13 +390,13 @@ Terminal.prototype.setScrollPerc = function (i) {
 
 Terminal.prototype.screenshot = function (xi, xl, yi, yl) {
     xi = 0 + (xi || 0);
-    if (xl != null) {
+    if (!is.nil(xl)) {
         xl = 0 + (xl || 0);
     } else {
         xl = this.term.lines[0].length;
     }
     yi = 0 + (yi || 0);
-    if (yl != null) {
+    if (!is.nil(yl)) {
         yl = 0 + (yl || 0);
     } else {
         yl = this.term.lines.length;

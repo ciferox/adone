@@ -170,7 +170,7 @@ export const resolveGlob = (glob, cwd) => {
 export const globSource = (globs, { cwd = process.cwd(), base = null, dot = true, links = false } = {}) => {
     let globsParents;
     if (!base) {
-        globsParents = globs.map((x) => util.globParent(x));
+        globsParents = globs.filter((glob) => !glob.startsWith("!")).map((x) => util.globParent(x));
     }
     return adone.fs.glob(globs, { dot, index: true })
         .through(async function fileWrapper({ path, index }) {

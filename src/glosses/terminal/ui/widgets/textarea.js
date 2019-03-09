@@ -164,7 +164,7 @@ export default class TextArea extends adone.terminal.ui.widget.Input {
 
             if (err) {
                 self.emit("error", err);
-            } else if (value != null) {
+            } else if (!is.nil(value)) {
                 self.emit("submit", value);
             } else {
                 self.emit("cancel", value);
@@ -252,7 +252,7 @@ export default class TextArea extends adone.terminal.ui.widget.Input {
     }
 
     setValue(value) {
-        if (value == null) {
+        if (is.nil(value)) {
             value = this.value;
         }
         if (this._value !== value) {

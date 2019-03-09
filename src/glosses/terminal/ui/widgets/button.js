@@ -2,7 +2,7 @@
 
 export default class Button extends adone.terminal.ui.widget.Input {
     constructor(options = { }) {
-        if (options.autoFocus == null) {
+        if (is.nil(options.autoFocus)) {
             options.autoFocus = false;
         }
         super(options);

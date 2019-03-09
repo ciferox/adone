@@ -4,8 +4,8 @@ const ticks = ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"];
 
 const sparkline = function (numbers, options) {
     options = options || {};
-    const max = typeof options.max === "number" ? options.max : Math.max.apply(null, numbers);
-    const min = typeof options.min === "number" ? options.min : Math.min.apply(null, numbers);
+    const max = is.number(options.max) ? options.max : Math.max.apply(null, numbers);
+    const min = is.number(options.min) ? options.min : Math.min.apply(null, numbers);
     const results = [];
     let f = ~~(((max - min) << 8) / (ticks.length - 1));
     if (f < 1) {
@@ -54,7 +54,7 @@ export default class SparkLine extends adone.terminal.ui.widget.Element {
             data: {
                 titles: ["Sparkline1", "Sparkline2"],
                 data: [[10, 20, 30, 20, 50, 70, 60, 30, 35, 38],
-                     [40, 10, 40, 50, 20, 30, 20, 20, 19, 40]]
+                    [40, 10, 40, 50, 20, 30, 20, 20, 19, 40]]
             }
         };
     }

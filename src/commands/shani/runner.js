@@ -137,8 +137,8 @@ adone.app.run({
                 failed = true;
             })
             .on("reporterError", (err) => {
-                adone.error("Reporter failed");
-                adone.error(err);
+                console.error("Reporter failed");
+                console.error(adone.pretty.error(err));
                 process.exit(1);
             });
 

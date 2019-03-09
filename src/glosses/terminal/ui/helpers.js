@@ -40,7 +40,7 @@ helpers.hsort = function (obj) {
 
 helpers.findFile = function (start, target) {
     return (function read(dir) {
-        let files, file, stat, out;
+        let files; let file; let stat; let out;
 
         if (dir === "/dev" || dir === "/sys"
             || dir === "/proc" || dir === "/net") {
@@ -108,7 +108,7 @@ helpers.generateTags = function (style, text) {
         }
     });
     close = "{/}";
-    if (text != null) {
+    if (!is.nil(text)) {
         return open + text + close;
     }
 

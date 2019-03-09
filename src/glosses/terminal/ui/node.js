@@ -39,7 +39,7 @@ export default class Node extends adone.terminal.ui.EventEmitter {
         this.children = [];
         this.$ = this._ = this.data = adone.o();
         this.uid = Node.uid++;
-        this.index = this.index != null ? this.index : -1;
+        this.index = !is.nil(this.index) ? this.index : -1;
 
         if (this.type !== "screen") {
             this.detached = true;
@@ -210,7 +210,7 @@ export default class Node extends adone.terminal.ui.EventEmitter {
         const args = Array.prototype.slice(arguments);
         let iter;
 
-        if (typeof args[args.length - 1] === "function") {
+        if (is.function(args[args.length - 1])) {
             iter = args.pop();
         }
 
@@ -226,7 +226,7 @@ export default class Node extends adone.terminal.ui.EventEmitter {
         const args = Array.prototype.slice(arguments);
         let iter;
 
-        if (typeof args[args.length - 1] === "function") {
+        if (is.function(args[args.length - 1])) {
             iter = args.pop();
         }
 

@@ -4,7 +4,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
     const { fast, std: { stream: { Readable } } } = adone;
     const { File, Stream } = fast;
 
-    const plugin = fast.plugin.sourcemapsWrite;
+    const plugin = fast.extension.sourcemapsWrite;
     const { __: { util } } = plugin;
 
     let sourceContent;
