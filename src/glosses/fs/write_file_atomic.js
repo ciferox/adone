@@ -3,8 +3,6 @@ const { join, dirname } = require("path");
 
 let counter = 0;
 
-const id = () => `${process.pid}.${counter++}`;
-
 const cleanup = (dest, err, cb) => unlink(dest, () => cb(err));
 const closeAndCleanup = (fd, dest, err, cb) => close(fd, () => cleanup(dest, err, cb));
 
@@ -40,7 +38,7 @@ const openLoop = (dest, cb) => {
 };
 
 export default function (path, content, cb) {
-    const tmp = join(dirname(path), `.${id()}`);
+    const tmp = join(dirname(path), `.${process.pid}.${counter++}`);
     openLoop(tmp, (err, fd) => {
         if (err) {
             cb(err);

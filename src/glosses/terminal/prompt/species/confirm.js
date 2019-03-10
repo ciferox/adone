@@ -1,5 +1,6 @@
 const {
     is,
+    cli: { kit },
     lodash: _,
     terminal
 } = adone;
@@ -60,7 +61,7 @@ export default class ConfirmPrompt extends terminal.BasePrompt {
         let message = this.getQuestion();
 
         if (is.boolean(answer)) {
-            message += this.term.theme.primary(answer ? "Yes" : "No");
+            message += kit.theme.primary(answer ? "Yes" : "No");
         } else {
             message += this.term.readline.line;
         }

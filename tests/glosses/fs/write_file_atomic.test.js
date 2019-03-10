@@ -312,7 +312,7 @@ describe("fs", "writeFileAtomic", () => {
         });
     });
 
-    it.skip("write 2000 files in parallel", function (done) {
+    it("write 2000 files in parallel", function (done) {
         this.timeout(60 * 1000);
         const MAX = 2000;
         let total = 0;

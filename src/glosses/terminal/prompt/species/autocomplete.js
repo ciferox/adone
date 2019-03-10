@@ -1,7 +1,8 @@
 const {
     error,
     is,
-    terminal
+    terminal,
+    cli: { kit }
 } = adone;
 
 const {
@@ -28,7 +29,7 @@ const listRender = (term, choices, pointer) => {
         let line = (isSelected ? `${adone.text.unicode.symbol.pointer} ` : "  ") + choice.name;
 
         if (isSelected) {
-            line = term.theme.focus(line);
+            line = kit.theme.focus(line);
         }
         output += `${line} \n`;
     });
@@ -101,25 +102,25 @@ export default class AutocompletePrompt extends terminal.BasePrompt {
 
         if (this.firstRender) {
             const suggestText = this.opt.suggestOnly ? ", tab to autocomplete" : "";
-            content += this.term.theme.inactive(`(Use arrow keys or type to search${suggestText})`);
+            content += kit.theme.inactive(`(Use arrow keys or type to search${suggestText})`);
         }
         // Render choices or answer depending on the state
         if (this.status === "answered") {
-            content += this.term.theme.primary(this.shortAnswer || this.answerName || this.answer);
+            content += kit.theme.primary(this.shortAnswer || this.answerName || this.answer);
         } else if (this.searching) {
-            content += this.term.theme.focus(this.rl.line);
-            bottomContent += `  ${this.term.theme.inactive("Searching...")}`;
+            content += kit.theme.focus(this.rl.line);
+            bottomContent += `  ${kit.theme.inactive("Searching...")}`;
         } else if (this.currentChoices.length) {
             const choicesStr = listRender(this.term, this.currentChoices, this.selected);
-            content += this.term.theme.focus(this.rl.line);
+            content += kit.theme.focus(this.rl.line);
             bottomContent += this.paginator.paginate(choicesStr, this.selected, this.opt.pageSize);
         } else {
-            content += this.term.theme.focus(this.rl.line);
+            content += kit.theme.focus(this.rl.line);
             bottomContent += `  ${chalk.yellow("No results...")}`;
         }
 
         if (error) {
-            bottomContent += `\n${this.term.theme.error(">> ")}${error}`;
+            bottomContent += `\n${kit.theme.error(">> ")}${error}`;
         }
 
         this.firstRender = false;

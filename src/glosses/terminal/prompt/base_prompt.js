@@ -3,7 +3,8 @@ const {
     lodash: _,
     terminal,
     event,
-    text: { unicode: { approx, symbol } }
+    text: { unicode: { approx, symbol } },
+    cli: { kit }
 } = adone;
 
 const {
@@ -219,8 +220,8 @@ export default class BasePrompt {
             },
             suffix: "",
             prefix: {
-                default: term.theme.focus("?"),
-                answered: term.theme.primary(approx(symbol.tick))
+                default: kit.theme.focus("?"),
+                answered: kit.theme.primary(approx(symbol.tick))
             },
             spinner: "dots"
         });

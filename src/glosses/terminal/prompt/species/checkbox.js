@@ -1,5 +1,6 @@
 const {
     is,
+    cli: { kit },
     lodash: _,
     terminal,
     text: { unicode: { symbol } }
@@ -189,7 +190,7 @@ export default class CheckboxPrompt extends terminal.BasePrompt {
 
         // Answered
         if (this.status === "answered") {
-            message += this.term.theme.primary(this.selection.join(", "));
+            message += kit.theme.primary(this.selection.join(", "));
             return this.screen.render(message, bottomContent);
         }
 
@@ -410,9 +411,9 @@ export default class CheckboxPrompt extends terminal.BasePrompt {
             } else {
                 // Is the current choice is the selected choice
                 if (index - separatorOffset === pointer) {
-                    output += this.term.theme.focus(symbol.pointer);
+                    output += kit.theme.focus(symbol.pointer);
                     output += `${getCheckbox(choice.checked)} `;
-                    output += this.term.theme.focus(choice.name);
+                    output += kit.theme.focus(choice.name);
                 } else {
                     output += ` ${getCheckbox(choice.checked)} ${choice.name}`;
                 }

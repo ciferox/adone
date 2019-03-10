@@ -1,11 +1,9 @@
 const {
     is,
+    cli: { kit },
     terminal
 } = adone;
 
-const {
-    chalk
-} = terminal;
 
 export default class InputPrompt extends terminal.BasePrompt {
     _run(cb) {
@@ -42,15 +40,15 @@ export default class InputPrompt extends terminal.BasePrompt {
         const transformer = this.opt.transformer;
 
         if (this.status === "answered") {
-            message += this.term.theme.primary(this.answer);
+            message += kit.theme.primary(this.answer);
         } else if (transformer) {
-            message += this.term.theme.focus(transformer(this.term.readline.line, this.answers));
+            message += kit.theme.focus(transformer(this.term.readline.line, this.answers));
         } else {
-            message += this.term.theme.focus(this.term.readline.line);
+            message += kit.theme.focus(this.term.readline.line);
         }
 
         if (error) {
-            bottomContent = this.term.theme.error(">> ") + error;
+            bottomContent = kit.theme.error(">> ") + error;
         }
 
         this.screen.render(message, bottomContent);
