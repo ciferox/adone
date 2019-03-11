@@ -4,7 +4,7 @@ const {
         MainCommandMeta
     },
     std: { path, child_process: cp },
-    runtime: { term, logger },
+    runtime: {  , logger },
     system
 } = adone;
 
@@ -219,8 +219,8 @@ export default class ShaniCLI extends Subsystem {
         });
 
         if (process.stdin.isTTY && process.stdout.isTTY) {
-            term.listen();
-            term.on("keypress", async (ch, key) => {
+            terminal.listen();
+            terminal.on("keypress", async (ch, key) => {
                 switch (key.full) {
                     case "C-q": {
                         // stop testing

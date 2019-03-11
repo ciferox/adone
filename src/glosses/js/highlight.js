@@ -1,6 +1,6 @@
 const {
     js: { tokens, compiler: { esutils } },
-    terminal: { chalk }
+    cli: { chalk }
 } = adone;
 
 const DEFS = {

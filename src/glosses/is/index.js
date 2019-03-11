@@ -806,17 +806,11 @@ export const generator = (value) => {
 export const uint8Array = (value) => value instanceof Uint8Array;
 
 export const windows = platform === "win32";
-
 export const linux = platform === "linux";
-
 export const freebsd = platform === "freebsd";
-
 export const openbsd = platform === "openbsd";
-
 export const darwin = platform === "darwin";
-
 export const sunos = platform === "sunos";
-
 export const aix = platform === "aix";
 
 export const uppercase = (str) => {
@@ -1012,6 +1006,7 @@ export const after = (str, date = String(new Date())) => {
     return Boolean(original && comparison && original > comparison);
 };
 
+
 adone.lazify({
     glob: "./glob",
     extGlob: "./ext_glob",
@@ -1019,6 +1014,8 @@ adone.lazify({
     url: "./url",
     email: "./email",
     safeRegexp: "./safe_regexp",
+    // eslint-disable-next-line adone/no-typeof
+    nodejs: () => Object.prototype.toString.call(typeof process !== "undefined" ? process : 0) === "[object process]",
 
     // All of these predicates should be replced in-place during transpiling
     subsystem: () => (obj) => obj instanceof adone.app.Subsystem,
@@ -1080,5 +1077,5 @@ adone.lazify({
             isContex = object(adone.meta.reflect.getMetadata(adone.netron.meta.CONTEXT_ANNOTATION, target));
         }
         return isContex;
-    }   
+    }
 }, exports, require);

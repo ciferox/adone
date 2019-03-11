@@ -1,5 +1,8 @@
+// Simplified access to frequently used primitives in runtime
+// To correct 
 const runtime = adone.lazify({
-    term: () => new adone.terminal.Terminal(),
+    terminal: () => new adone.cli.Terminal(),
+    cli: () => new adone.cli.Kit(),
     logger: () => {
         const defaultLogger = adone.app.logger.create({
             level: "info"

@@ -97,7 +97,7 @@ class AdoneCLI extends app.Application {
     _configureLogger() {
         const {
             app: { logger: { format } },
-            terminal: { chalk }
+            cli: { chalk }
         } = adone;
 
         adone.runtime.logger.configure({

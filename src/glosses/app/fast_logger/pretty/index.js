@@ -8,7 +8,7 @@ const CONSTANTS = require("./constants");
 
 const {
     is,
-    terminal: { chalk }
+    cli: { chalk }
 } = adone;
 
 const levels = {

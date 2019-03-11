@@ -186,9 +186,9 @@ const _bootstrapApp = async (app, {
 
         app._setAsMain();
 
-        // Track cursor if interactive application (by default) and if tty mode
-        if (app.isInteractiveModeEnabled && adone.runtime.term.output.isTTY) {
-            await new Promise((resolve) => adone.runtime.term.trackCursor(resolve));
+        if (is.nodejs && adone.runtime.terminal.output.isTTY) {
+            // Track cursor if tty mode is enabled
+            await new Promise((resolve) => adone.runtime.terminal.trackCursor(resolve));
         }
     }
 
@@ -203,7 +203,7 @@ const _bootstrapApp = async (app, {
 
             const appHelper = new AppHelper(app);
             app.helper = appHelper;
-            
+
             app._setErrorScope(true);
 
             const sysMeta = reflect.getMetadata(SUBSYSTEM_ANNOTATION, app.constructor);
@@ -276,7 +276,7 @@ const _bootstrapApp = async (app, {
             app._setErrorScope(true);
             await app._configure();
             await app._initialize();
-            code = await app.main();    
+            code = await app.main();
         }
 
         app._setErrorScope(false);
@@ -297,7 +297,7 @@ const _bootstrapApp = async (app, {
 
 export const run = async (App, {
     useArgs = false
-} = {}) => {    
+} = {}) => {
     if (is.null(adone.runtime.app) && is.class(App)) {
         if (useArgs) {
             // mark the default main as internal to be able to distinguish internal from user-defined handlers
@@ -305,7 +305,7 @@ export const run = async (App, {
         }
         const app = new App();
         if (!is.application(app)) {
-            console.error(`${adone.terminal.esc.red.open}Invalid application class (should be derivative of 'adone.app.Application')${adone.terminal.esc.red.close}`);
+            console.error(adone.pretty.error(new adone.error.NotValidException("Invalid application class (should be derivative of 'adone.app.Application'")));
             process.exit(1);
             return;
         }

@@ -222,11 +222,11 @@ async function main(type) {
         return;
     }
 
-    const screen = new adone.terminal.ui.Screen;
+    const screen = new adone.cli.ui.Screen;
 
     // user name
 
-    const prompt = new adone.terminal.ui.widget.Prompt({
+    const prompt = new adone.cli.ui.widget.Prompt({
         parent: screen,
         border: "line",
         height: "shrink",
@@ -235,7 +235,7 @@ async function main(type) {
         left: "center"
     });
 
-    const msg = new adone.terminal.ui.widget.Message({
+    const msg = new adone.cli.ui.widget.Message({
         parent: screen,
         border: "line",
         height: "shrink",
@@ -284,9 +284,9 @@ async function main(type) {
 
     // chat
 
-    const grid = new adone.terminal.ui.layout.Grid({ rows: 12, cols: 12, screen });
+    const grid = new adone.cli.ui.layout.Grid({ rows: 12, cols: 12, screen });
 
-    const logger = grid.set(0, 0, 11, 12, adone.terminal.ui.widget.Log, {
+    const logger = grid.set(0, 0, 11, 12, adone.cli.ui.widget.Log, {
         top: 0,
         left: 0,
         width: "100%",
@@ -294,7 +294,7 @@ async function main(type) {
         tags: true
     });
 
-    const textarea = grid.set(11, 0, 1, 12, adone.terminal.ui.widget.TextArea, {
+    const textarea = grid.set(11, 0, 1, 12, adone.cli.ui.widget.TextArea, {
         top: 0,
         left: 0,
         width: "100%",

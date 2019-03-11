@@ -1,6 +1,6 @@
 const {
     is,
-    terminal: { esc }
+    cli: { esc }
 } = adone;
 
 const CSI_CODES = [

@@ -126,7 +126,7 @@
                     "original": "https://github.com/caolan/async"
                 },
                 "cli": {
-                    "description": "CLI utilities",
+                    "description": "CLI components and utilities",
                     "src": "src/glosses/cli/**/*.js",
                     "dst": "lib/glosses/cli",
                     "task": "transpile"
@@ -840,12 +840,6 @@
                             "dst": "lib/glosses/templating/nunjucks"
                         }
                     }
-                },
-                "terminal": {
-                    "description": "Terminal stuff",
-                    "task": "transpile",
-                    "src": "src/glosses/terminal/**/*.js",
-                    "dst": "lib/glosses/terminal"
                 },
                 "text": {
                     "description": "Text utilites",

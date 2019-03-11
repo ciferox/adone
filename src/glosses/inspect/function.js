@@ -2,7 +2,7 @@ const {
     identity,
     is,
     js,
-    terminal: { chalk }
+    cli: { chalk }
 } = adone;
 
 const STYLE = {

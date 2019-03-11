@@ -1,6 +1,6 @@
 const {
     is,
-    terminal: { chalk },
+    cli: { chalk },
     std: { child_process: child, path },
     shell: { common }
 } = adone;

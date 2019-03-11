@@ -1,7 +1,7 @@
 const {
     is,
     identity,
-    terminal: { esc },
+    cli: { esc },
     text
 } = adone;
 

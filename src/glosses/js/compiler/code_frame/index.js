@@ -1,6 +1,6 @@
 const {
     is,
-    terminal: { chalk }
+    cli: { chalk }
 } = adone;
 
 let deprecationWarningShown = false;

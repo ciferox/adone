@@ -6,9 +6,7 @@ const {
         MainCommandMeta
     },
     lodash: { get },
-    meta,
-    pretty,
-    runtime: { term }
+    pretty
 } = adone;
 
 const GLOBALS = ["adone", "global"];

@@ -1,4 +1,7 @@
-const { is } = adone;
+const {
+    is,
+    cli
+} = adone;
 
 const codeRegex = (capture) => capture ? /\u001b\[((?:\d*;){0,5}\d*)m/g : /\u001b\[(?:\d*;){0,5}\d*m/g;
 
@@ -457,7 +460,7 @@ export class Cell {
         if (this[styleProperty] && this[styleProperty].length) {
             try {
                 // console.log(styleProperty, this[styleProperty]);
-                let colors = adone.terminal.chalk;
+                let colors = cli.chalk;
                 for (let i = this[styleProperty].length; --i >= 0;) {
                     colors = colors[this[styleProperty][i]];
                 }

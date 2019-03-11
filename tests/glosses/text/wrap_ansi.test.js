@@ -1,5 +1,5 @@
 const {
-    terminal: { chalk },
+    cli: { chalk },
     text: { hasAnsi, stripAnsi, wrapAnsi }
 } = adone;
 

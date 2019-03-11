@@ -1,7 +1,7 @@
 const {
     app: { logger: { LEVEL, MESSAGE } },
     is,
-    terminal: { chalk }
+    cli: { chalk }
 } = adone;
 
 /**

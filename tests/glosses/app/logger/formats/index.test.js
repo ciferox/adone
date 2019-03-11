@@ -2,7 +2,7 @@ const {
     is,
     data,
     text: { stripAnsi },
-    terminal: { chalk }
+    cli: { chalk }
 } = adone;
 
 describe("app", "logger", "formats", () => {

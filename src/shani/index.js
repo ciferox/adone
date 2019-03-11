@@ -813,7 +813,7 @@ class ConfigLoader {
     async loadConfigFor(path, context) {
         let dirname = std.path.dirname(path);
         const configChain = [];
-        for ( ; ; ) {
+        for (; ;) {
             const config = this.getConfigFor(dirname);
             if (config) {
                 configChain.unshift(config);
@@ -1755,13 +1755,13 @@ export const consoleReporter = ({
     keepHooks = false,
     onlyStats = false
 } = {}) => {
-    const term = adone.runtime.term;
+    const { terminal } = adone.runtime;
 
     const { isTTY } = process.stdout;
 
     const ansiRegexp = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g;
     const parse = (str) => {
-        str = term.parse(str);
+        str = terminal.parse(str);
         if (!isTTY) {
             str = str.replace(ansiRegexp, "");
         }
@@ -1824,7 +1824,7 @@ export const consoleReporter = ({
                     if (timers || allTimings) {
                         options.timeFormatter = (x) => elapsedToString(x, hook.timeout);
                     }
-                    bar = adone.runtime.term.progress(options);
+                    bar = adone.runtime.cli.progress(options);
                     bar.update(0, {
                         suffix: timers ? " (:elapsed)" : ""
                     });
@@ -1885,7 +1885,7 @@ export const consoleReporter = ({
             if (timers || allTimings) {
                 options.timeFormatter = (x) => elapsedToString(x, test.timeout);
             }
-            return adone.runtime.term.progress(options);
+            return adone.runtime.cli.progress(options);
         };
 
         let firstBlock = true;
@@ -1901,7 +1901,7 @@ export const consoleReporter = ({
         Error.stackTraceLimit = 100;
 
         if (onlyStats) {
-            bar = adone.runtime.term.progress({
+            bar = adone.runtime.cli.progress({
                 schema: "    :spinner executing",
                 clean: true
             });
@@ -2131,7 +2131,7 @@ export const consoleReporter = ({
 };
 
 export const minimalReporter = () => {
-    const term = adone.runtime.term;
+    const terminal = adone.runtime.terminal;
 
     const { isTTY } = process.stdout;
 
@@ -2139,7 +2139,7 @@ export const minimalReporter = () => {
 
     const ansiRegexp = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g;
     const parse = (str) => {
-        str = term.parse(str);
+        str = terminal.parse(str);
         if (!isTTY) {
             str = str.replace(ansiRegexp, "");
         }
@@ -2163,11 +2163,11 @@ export const minimalReporter = () => {
 
         console.log();
 
-        const totalBar = adone.runtime.term.progress({
+        const totalBar = adone.runtime.cli.progress({
             schema: "    :spinner {green-fg}:passed{/green-fg} {red-fg}:failed{/red-fg} {cyan-fg}:pending{/cyan-fg} {yellow-fg}:todos{/yellow-fg} :elapsed"
         });
 
-        const testsBar = adone.runtime.term.progress({
+        const testsBar = adone.runtime.cli.progress({
             schema: "    :path"
         });
 
@@ -2334,13 +2334,13 @@ export const simpleReporter = ({
     showHooks = false,
     onlyStats = false
 } = {}) => {
-    const term = adone.runtime.term;
+    const terminal = adone.runtime.terminal;
     const { text: { unicode: { symbol } } } = adone;
 
     const { isTTY } = process.stdout;
     const ansiRegexp = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g;
     const parse = (str) => {
-        str = term.parse(str);
+        str = terminal.parse(str);
         if (!isTTY) {
             str = str.replace(ansiRegexp, "");
         }
@@ -2512,8 +2512,8 @@ export const simpleReporter = ({
             })
             .on("done", () => {
                 if (onlyStats) {
-                    adone.runtime.term.up(1);
-                    adone.runtime.term.eraseLineAfter();
+                    adone.runtime.terminal.up(1);
+                    adone.runtime.terminal.eraseLineAfter();
                 }
 
                 if (errors.length) {

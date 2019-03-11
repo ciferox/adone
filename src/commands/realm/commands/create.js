@@ -1,6 +1,6 @@
 const {
     app: { Subsystem, MainCommandMeta },
-    cli: { kit },
+    cli,
     fs,
     std,
     project
@@ -90,7 +90,7 @@ export default class extends Subsystem {
     async main(args, opts) {
         let info;
         if (!args.has("name")) {
-            info = await kit.ask([
+            info = await cli.ask([
                 {
                     name: "name",
                     message: "Project name",
@@ -218,7 +218,7 @@ export default class extends Subsystem {
             cwd: std.path.join(process.cwd(), dir)
         });
 
-        await kit.observe("progress", manager);
+        await cli.observe("progress", manager);
 
         await manager.createProject({
             name,

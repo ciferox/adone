@@ -1,7 +1,7 @@
 const {
     is,
     std,
-    terminal: { chalk }
+    cli: { chalk }
 } = adone;
 
 const nodePaths = [

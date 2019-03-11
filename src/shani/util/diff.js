@@ -221,7 +221,7 @@ class Differ extends adone.event.Emitter {
 export const getDiff = (actual, expected) => {
     const differ = new Differ();
 
-    const { chalk } = adone.terminal;
+    const { chalk } = adone.cli;
 
     const colorizer = (obj, type) => {
         switch (type) {

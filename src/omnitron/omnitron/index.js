@@ -411,7 +411,7 @@ class Omnitron extends app.Application {
 
 if (require.main === module) {
     if (!is.function(process.send)) {
-        console.log(adone.terminal.chalk.red("Omnitron cannot be launched directly"));
+        console.log(adone.cli.chalk.red("Omnitron cannot be launched directly"));
         process.exit(app.EXIT_ERROR);
     }
     // Declare omnitron environment

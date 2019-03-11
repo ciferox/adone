@@ -1,7 +1,7 @@
 const {
     is,
     std,
-    runtime: { term },
+    runtime: { terminal },
     app,
     util
 } = adone;
@@ -16,18 +16,16 @@ const ERROR_SCOPE = Symbol.for("adone.app.Application#errorScope");
 const HANDLERS = Symbol();
 const EXITING = Symbol();
 const IS_MAIN = Symbol();
-const INTERACTIVE = Symbol();
 const EXIT_SIGNALS = Symbol();
 
 export default class Application extends app.Subsystem {
-    constructor({ name = std.path.basename(process.argv[1], std.path.extname(process.argv[1])), interactive = true } = {}) {
+    constructor({ name = std.path.basename(process.argv[1], std.path.extname(process.argv[1])) } = {}) {
         super({ name });
 
         this[EXITING] = false;
         this[IS_MAIN] = false;
         this[HANDLERS] = null;
         this[ERROR_SCOPE] = false;
-        this[INTERACTIVE] = interactive;
         this[EXIT_SIGNALS] = null;
 
         this.setRoot(this);
@@ -36,10 +34,6 @@ export default class Application extends app.Subsystem {
 
     get isMain() {
         return this[IS_MAIN];
-    }
-
-    get isInteractiveModeEnabled() {
-        return this[INTERACTIVE];
     }
 
     main() {
@@ -82,15 +76,19 @@ export default class Application extends app.Subsystem {
             code = EXIT_ERROR;
         }
 
+        await this.emitParallel("exit");
+
         // Only main application instance can exit process.
         if (this !== adone.runtime.app) {
             return;
         }
 
+        await this.emitParallel("exit:main");
+
         adone.runtime.logger.close();
 
         if (this[IS_MAIN]) {
-            term.destroy();
+            terminal.destroy();
         }
 
         // Remove acquired locks on exit

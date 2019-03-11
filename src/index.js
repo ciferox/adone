@@ -248,7 +248,6 @@ adone.lazify({
     system: "./glosses/system",
     task: "./glosses/tasks",
     templating: "./glosses/templating",
-    terminal: "./glosses/terminal",
     text: "./glosses/text",
     typeOf: "./glosses/typeof",
     uri: "./glosses/uri",

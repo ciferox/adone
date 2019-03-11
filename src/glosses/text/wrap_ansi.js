@@ -1,6 +1,6 @@
 const {
     text: { width: textWidth, stripAnsi },
-    terminal: { esc }
+    cli: { esc }
 } = adone;
 
 const ESCAPES = new Set([

@@ -5,10 +5,9 @@ const {
     text,
     pretty,
     util,
-    runtime: { term },
-    terminal: { chalk },
-    meta: { reflect },
-    cli: { kit }
+    runtime: { terminal, cli: { style } },
+    cli: { chalk },
+    meta: { reflect }
 } = adone;
 
 const noStyleLength = (x) => text.stripAnsi(x).length;
@@ -16,18 +15,18 @@ const noStyleLength = (x) => text.stripAnsi(x).length;
 const hasColorsSupport = Boolean(process.stdout.isTTY);
 
 const defaultColors = {
-    commandName: (x) => kit.theme.primary(x),
+    commandName: (x) => style.primary(x),
     commandHelpMessage: (x) => chalk.italic(x),
     commandSeparator: (x) => x,
-    optionName: (x) => kit.theme.secondary(x),
+    optionName: (x) => style.secondary(x),
     optionVariable: (x) => x,
     optionHelpMessage: (x) => chalk.italic(x),
     // argumentName: (x) => x,
-    argumentName: (x) => term.parse(`{#F44336-fg}${x}{/}`),
+    argumentName: (x) => terminal.parse(`{#F44336-fg}${x}{/}`),
     argumentHelpMessage: (x) => chalk.italic(x),
-    default: (x) => kit.theme.inactive(x),
-    // angleBracket: (x) => term.green(x),
-    angleBracket: (x) => term.parse(`{#F44336-fg}${x}{/}`),
+    default: (x) => style.inactive(x),
+    // angleBracket: (x) => terminal.green(x),
+    angleBracket: (x) => terminal.parse(`{#F44336-fg}${x}{/}`),
     squareBracket: (x) => chalk.yellow(x),
     curlyBracket: (x) => chalk.yellow(x),
     ellipsis: (x) => chalk.dim(x),
@@ -36,7 +35,7 @@ const defaultColors = {
     argumentGroupHeading: (x) => chalk.underline(x),
     optionGroupHeading: (x) => chalk.underline(x),
     value: {
-        string: (x) => kit.theme.accent(x),
+        string: (x) => style.accent(x),
         null: (x) => chalk.yellow(x),
         number: (x) => chalk.yellow(x),
         undefined: (x) => chalk.yellow(x),
@@ -1237,7 +1236,7 @@ class Command {
 
     getUsageMessage() {
         const chain = this.getCommandChain();
-        const argumentsLength = term.stats.cols - chain.length - 1 - 4;
+        const argumentsLength = terminal.stats.cols - chain.length - 1 - 4;
         const table = new text.table.BorderlessTable({
             colWidths: [4, chain.length + 1, argumentsLength]
         });
@@ -1300,7 +1299,7 @@ class Command {
     getHelpMessage() {
         const helpMessage = [this.getUsageMessage()];
 
-        const totalWidth = term.stats.cols;
+        const totalWidth = terminal.stats.cols;
 
         if (is.string(this.description) && this.description) {
             helpMessage.push("", text.wrapAnsi(this.description, totalWidth));

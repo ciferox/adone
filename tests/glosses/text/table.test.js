@@ -1,7 +1,7 @@
 const {
     is,
     text: { table: { Table, Cell, ColSpanCell, RowSpanCell, util: { strlen, truncate, repeat, pad, wrapWord, colorizeLines } } },
-    terminal: { chalk, gradient }
+    cli: { chalk, gradient }
 } = adone;
 
 describe("Table", () => {

@@ -1,5 +1,5 @@
 const {
-    terminal: { chalk },
+    cli: { chalk },
     text: { stripAnsi },
     js: { compiler: { codeFrame, codeFrameColumns } }
 } = adone;

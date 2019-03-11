@@ -6,7 +6,7 @@ const {
     fs,
     std,
     realm: { BaseTask },
-    runtime: { term: { theme } },
+    runtime: { cli: { theme } },
     util
 } = adone;
 

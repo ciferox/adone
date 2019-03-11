@@ -1,7 +1,7 @@
 const {
     app: { Subsystem, MainCommandMeta },
     fs,
-    cli: { kit },
+    runtime: { cli },
     std
 } = adone;
 
@@ -12,7 +12,7 @@ export default class extends Subsystem {
     async configureCommand() {
         const manager = await this.parent.getRealm();
 
-        const result = await kit.ask([
+        const result = await cli.ask([
             {
                 name: "task",
                 type: "list",
@@ -29,7 +29,7 @@ export default class extends Subsystem {
 
         switch (result.task) {
             case "subproject": {
-                const info = await kit.ask([
+                const info = await cli.ask([
                     {
                         name: "name",
                         message: "Project name",

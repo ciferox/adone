@@ -1,7 +1,6 @@
 const {
     is,
-    util,
-    runtime: { term },
+    runtime: { terminal },
     error
 } = adone;
 
@@ -30,7 +29,7 @@ export default function prettyTable(data, {
     // normalize width
     // dont touch if it is a number
     // if it is a string then
-    // assume it is a percent value and calculate relative width to the term
+    // assume it is a percent value and calculate relative width to the terminal
     let tableWidth = null;
     if (!is.null(width)) {
         if (is.string(width)) {
@@ -40,7 +39,7 @@ export default function prettyTable(data, {
                 bordersWidth += 1 + 1; // left + right border
                 bordersWidth += model.length - 1; // between cells
             }
-            const maxWidth = term.stats.cols - bordersWidth;
+            const maxWidth = terminal.stats.cols - bordersWidth;
             tableWidth = coercePercent(width, maxWidth);
         } else if (is.number(width)) {
             tableWidth = width;
@@ -197,7 +196,7 @@ export default function prettyTable(data, {
                     }
                 }
 
-                str = term.parse(str);
+                str = terminal.parse(str);
                 if (str && m.wordWrap && !is.null(m.colWidth)) {
                     str = str.toString();
                     const maxLen = m.colWidth - padLeft - padRight;

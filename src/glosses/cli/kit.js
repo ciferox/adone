@@ -1,39 +1,57 @@
 const {
     is,
-    app,
-    terminal: __
+    cli,
+    runtime: { terminal }
 } = adone;
 
-const DEFAULT_THEME = adone.lazify({
-    primary: () => __.chalkify("#388E3C"),
-    secondary: () => __.chalkify("#2196F3"),
-    accent: () => __.chalkify("#7C4DFF"),
-    focus: () => __.chalkify("#009688"),
-    inactive: () => __.chalkify("#616161"),
-    error: () => __.chalkify("#D32F2F"),
-    warn: () => __.chalkify("#FF5722"),
-    info: () => __.chalkify("#FFEB3B"),
-    notice: () => __.chalkify("#FFEB3B")
+const { chalkify, prompt } = cli;
+
+const COLOR_SCHEME = Symbol();
+const BAR = Symbol();
+const SILENT = Symbol();
+const ACTIVE_PROMPT = Symbol();
+
+const DEFAULT_COLOR_SCHEME = adone.lazify({
+    primary: () => chalkify("#388E3C"),
+    secondary: () => chalkify("#2196F3"),
+    accent: () => chalkify("#7C4DFF"),
+    focus: () => chalkify("#009688"),
+    inactive: () => chalkify("#616161"),
+    error: () => chalkify("#D32F2F"),
+    warn: () => chalkify("#FF5722"),
+    info: () => chalkify("#FFEB3B"),
+    notice: () => chalkify("#FFEB3B")
 }, null);
 
-
-class CliKit extends app.Subsystem {
+export default class CLIKit {
     constructor() {
-        super();
-        this._bar = null;
-        this._silent = false;
-        this.theme = DEFAULT_THEME;
+        this[BAR] = null;
+        this[SILENT] = false;
+        this[ACTIVE_PROMPT] = null;
+        this[COLOR_SCHEME] = DEFAULT_COLOR_SCHEME;
     }
 
-    uninitialize() {
+    destroy() {
+        if (!is.null(this[ACTIVE_PROMPT])) {
+            // Make sure new prompt start on a newline when closing
+            this[ACTIVE_PROMPT].forceClose();
+        }
+    }
+
+    get style() {
+        return this[COLOR_SCHEME];
+    }
+
+    setColorScheme(scheme) {
+        this[COLOR_SCHEME] = scheme;
     }
 
     setProgressBar(bar) {
-        this._bar = bar;
+        this[BAR] = bar;
     }
 
     setSilent(silent) {
-        this._silent = silent;
+        this[SILENT] = silent;
     }
 
     async observe(what, taskManager) {
@@ -90,35 +108,45 @@ class CliKit extends app.Subsystem {
         } else {
             options = message;
         }
-        if (!this._silent) {
-            this._bar = adone.runtime.term.progress(options);
-            this._bar.update(0);
+        if (!this[SILENT]) {
+            this[BAR] = terminal.progress(options);
+            this[BAR].update(0);
         }
     }
 
     updateProgress({ clean = false, schema, message, status } = {}) {
-        if (is.null(this._bar)) {
+        if (is.null(this[BAR])) {
             this.createProgress(message);
         }
-        if (!this._silent) {
+        if (!this[SILENT]) {
             if (is.string(message)) {
                 schema = `:spinner ${message}`;
             } else if (!is.string(schema)) {
                 schema = ":spinner";
             }
-            this._bar.setSchema(schema);
+            this[BAR].setSchema(schema);
             if (is.boolean(status) || is.string(status)) {
                 if (clean) {
-                    this._bar.clean = true;
+                    this[BAR].clean = true;
                 }
-                this._bar.complete(status);
+                this[BAR].complete(status);
             }
         }
     }
 
-    ask(questions) {
-        return adone.runtime.term.prompt().run(questions);
+    async prompt(questions, customTerminal) {
+        const p = new prompt.Manager(customTerminal || terminal);
+        this[ACTIVE_PROMPT] = p;
+        const result = await p.run(questions);
+        this[ACTIVE_PROMPT] = null;
+        return result;
+    }
+
+    progress(options) {
+        return new cli.Progress(options);
+    }
+
+    separator(value) {
+        return new cli.prompt.Separator(value);
     }
 }
-
-export default new CliKit();

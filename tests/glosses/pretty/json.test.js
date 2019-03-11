@@ -1,6 +1,6 @@
 const {
     text: { pretty },
-    terminal: { chalk }
+    cli: { chalk }
 } = adone;
 
 describe("text", "pretty", "json", () => {
