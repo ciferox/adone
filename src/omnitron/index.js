@@ -3,6 +3,24 @@ const {
     lazify
 } = adone;
 
+// export default {
+//     ROOT_PATH,
+
+//     //     omnitron: {
+//     //         LOGS_PATH: omnitronLogsPath,
+//     //         LOGFILE_PATH: join(omnitronLogsPath, "omnitron.log"),
+//     //         ERRORLOGFILE_PATH: join(omnitronLogsPath, "omnitron-err.log"),
+//     //         PIDFILE_PATH: join(RUNTIME_PATH, "omnitron.pid"),
+//     //         VAR_PATH: omnitronVarPath,
+//     //         DATA_PATH: omnitronDataPath,
+//     //         SERVICES_PATH: join(omnitronVarPath, "services"),
+//     //         DB_PATH: join(omnitronVarPath, "db")
+//     //     }
+//     // };
+
+
+
+
 // Service statuses
 export const STATUS = {
     INVALID: "invalid",

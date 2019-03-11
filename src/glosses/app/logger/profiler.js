@@ -37,4 +37,4 @@ export default class Profiler {
 
         return this.logger.write(info);
     }
-};
+}

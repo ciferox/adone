@@ -350,7 +350,7 @@ describe("realm", () => {
     
             adoneCliPath = std.path.join(realmManager.env.ROOT_PATH, "bin", "adone.js");
             cliConfig = await adone.cli.Configuration.load({
-                cwd: realmManager.env.ETC_ADONE_PATH
+                cwd: adone.ETC_ADONE_PATH
             });
         });
 

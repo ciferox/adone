@@ -1,7 +1,7 @@
 const {
     app: { Subsystem, MainCommandMeta },
+    cli,
     fs,
-    runtime: { cli },
     std
 } = adone;
 

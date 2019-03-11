@@ -2,7 +2,7 @@ const {
     error,
     std: { path },
     is,
-    runtime: { logger },
+    app: { runtime: { logger } },
     templating: { dot },
     util,
     text

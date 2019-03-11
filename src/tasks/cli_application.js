@@ -9,8 +9,7 @@ const TEMPLATE =
 import "adone";
 
 const {
-    app,
-    runtime: { term }
+    app
 } = adone;
 
 const {
@@ -39,8 +38,7 @@ class {{ name }}Application extends app.CliApplication {
         ]
     })
     async main(args, opts) {
-        const color = args.get("color");
-        term.print(\`{\${color}-fg}Main command succesfully executed!{/\${color}-fg}\\n\`);
+        console.log("Main command succesfully executed!");
         return 0;
     }
 
@@ -49,7 +47,7 @@ class {{ name }}Application extends app.CliApplication {
         help: "Test command",
     })
     async testCommand(args, opts) {
-        term.print("{bold}Test command successfully executed!{/}\\n");
+        console.log("Test command successfully executed!");
         return 0;
     }
 

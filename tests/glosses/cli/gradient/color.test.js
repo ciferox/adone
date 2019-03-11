@@ -3,7 +3,7 @@ const {
     cli: { gradient: { Color } }
 } = adone;
 
-describe("terminal", "gradient", "Color", () => {
+describe("cli", "gradient", "Color", () => {
     // Taken from convertWikipediaColors.html
     const conversions = [
         { hex: "#FFFFFF", hex8: "#FFFFFFFF", rgb: { r: "100.0%", g: "100.0%", b: "100.0%" }, hsv: { h: "0", s: "0.000", v: "1.000" }, hsl: { h: "0", s: "0.000", l: "1.000" } },

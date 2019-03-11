@@ -1,8 +1,7 @@
 const {
     is,
-    cli: { prompt: { BasePrompt } },
-    lodash: _,
-    runtime: { cli: { style } }
+    cli: { style, prompt: { BasePrompt } },
+    lodash: _
 } = adone;
 
 export default class ConfirmPrompt extends BasePrompt {

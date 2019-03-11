@@ -5,7 +5,6 @@ const {
     std,
     project,
     util,
-    runtime: { term },
     system: { process: { exec } }
 } = adone;
 
@@ -74,7 +73,7 @@ export default class NpmTask extends project.BaseTask {
 
         for (const pkg of packages) {
             this.manager.notify(this, "progress", {
-                message: `{bold}npm:{/bold} executing ${term.theme.accent(`npm ${pkg.args.join(" ")}`)}`
+                message: `{bold}npm:{/bold} executing ${adone.cli.style.accent(`npm ${pkg.args.join(" ")}`)}`
             });
 
             // eslint-disable-next-line

@@ -100,4 +100,4 @@ export default class Container {
     _delete(id) {
         this.loggers.delete(id);
     }
-};
+}

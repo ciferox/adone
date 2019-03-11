@@ -362,7 +362,13 @@ const inspect_ = (runtime, options, variable) => {
                 str += options.style.type(runtime.forceType);
             } else {
                 if (type === "function" && !options.native) {
-                    str += adone.inspect.function(variable, {}, options.styleName);
+                    let result;
+                    try { 
+                        result = adone.inspect.function(variable, {}, options.styleName);
+                        str += result;
+                    } catch (err) {
+                        str += `${constructor + funcName + length} ${options.style.type(nativeType)}${descriptorStr}`;
+                    }
                 } else {
                     str += `${constructor + funcName + length} ${options.style.type(nativeType)}${descriptorStr}`;
                 }

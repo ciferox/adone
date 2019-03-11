@@ -1,7 +1,6 @@
 const {
     is,
-    cli: { esc },
-    runtime: { terminal: { stats } }
+    cli: { esc, stats }
 } = adone;
 
 const TEMPLATE_REGEX = /(?:\\(u[a-f\d]{4}|x[a-f\d]{2}|.))|(?:\{(~)?(\w+(?:\([^)]*\))?(?:\.\w+(?:\([^)]*\))?)*)(?:[ \t]|(?=\r?\n)))|(\})|((?:.|[\r\n\f])+?)/gi;

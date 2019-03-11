@@ -1,6 +1,6 @@
 adone.app.run({
     async main() {
-        const answers = await adone.runtime.cli.prompt([
+        const answers = await adone.cli.prompt([
             {
                 type: "rawlist",
                 name: "theme",
@@ -8,7 +8,7 @@ adone.app.run({
                 choices: [
                     "Order a pizza",
                     "Make a reservation",
-                    adone.runtime.cli.separator(),
+                    adone.cli.separator(),
                     "Ask opening hours",
                     "Talk to the receptionist"
                 ]

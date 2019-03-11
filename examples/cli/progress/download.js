@@ -2,7 +2,7 @@ adone.app.run({
     main() {
         const contentLength = 128 * 1024;
 
-        const bar = adone.runtime.term.progress({
+        const bar = adone.cli.progress({
             schema: " Downloading [:bar] :percent :eta",
             width: 80,
             total: contentLength

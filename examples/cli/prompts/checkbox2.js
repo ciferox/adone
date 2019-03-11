@@ -2,7 +2,7 @@ const fuzzy = require("fuzzy");
 
 adone.app.run({
     async main() {
-        const answers = await adone.runtime.term.prompt().run([{
+        const answers = await adone.cli.prompt().run([{
             type: "checkbox",
             name: "colors",
             message: "Enter colors (embedded fuzzy searcher)",

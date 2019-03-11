@@ -1,5 +1,5 @@
 const {
-    runtime: { logger }
+    app: { runtime: { logger } }
 } = adone;
 
 export default class CMLog {

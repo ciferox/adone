@@ -1,6 +1,5 @@
 const {
-    app,
-    runtime: { logger }
+    app
 } = adone;
 
 const {
@@ -12,23 +11,23 @@ const {
 export default class Info extends app.Subsystem {
     @MainCommandMeta()
     main() {
-        logger.info(`Node: ${process.version}`);
-        logger.info(`v8: ${process.versions.v8}`);
-        logger.info(`platform: ${process.platform}`);
+        console.info(`Node: ${process.version}`);
+        console.info(`v8: ${process.versions.v8}`);
+        console.info(`platform: ${process.platform}`);
     }
 
     @CommandMeta()
     node() {
-        logger.info(process.version);
+        console.info(process.version);
     }
 
     @CommandMeta()
     v8() {
-        logger.info(process.versions.v8);
+        console.info(process.versions.v8);
     }
 
     @CommandMeta()
     platform() {
-        logger.info(process.platform);
+        console.info(process.platform);
     }
 }

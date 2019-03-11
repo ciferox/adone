@@ -38,7 +38,7 @@ adone.app.run({
             }
         ];
 
-        const answers = await adone.runtime.cli.prompt(questions);
+        const answers = await adone.cli.prompt(questions);
         console.log(JSON.stringify(answers, null, "  "));
     }
 });

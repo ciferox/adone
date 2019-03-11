@@ -1,9 +1,8 @@
 const {
     is,
     lodash: _,
-    cli: { chalk, prompt: { BasePrompt, Choices, Paginator } },
-    text: { unicode: { symbol } },
-    runtime: { cli: { style } }
+    cli: { chalk, style, prompt: { BasePrompt, Choices, Paginator } },
+    text: { unicode: { symbol } }
 } = adone;
 
 /**

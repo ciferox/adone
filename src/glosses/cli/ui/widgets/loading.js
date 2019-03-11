@@ -37,7 +37,7 @@ export default class Loading extends adone.cli.ui.widget.Element {
 
         const renderContent = () => {
             const frames = this._.spinner.frames;
-            this.setContent(`${adone.runtime.term.generateTags(this.options.style.spinner, frames[this._.frame++ % frames.length])} ${this._.message}`);
+            this.setContent(`${adone.cli.generateTags(this.options.style.spinner, frames[this._.frame++ % frames.length])} ${this._.message}`);
             this.screen.render();
         };
 

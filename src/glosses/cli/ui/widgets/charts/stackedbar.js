@@ -2,7 +2,7 @@ const { is } = adone;
 
 function getColorCode(color) {
     if (is.array(color) && color.length === 3) {
-        return adone.runtime.term.parse(adone.sprintf("{#%02x%02x%02x-fg}", color[0], color[1], color[2]));
+        return adone.cli.parse(adone.sprintf("{#%02x%02x%02x-fg}", color[0], color[1], color[2]));
     } 
     return color;    
 }

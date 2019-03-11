@@ -68,7 +68,7 @@ class App extends app.Application {
         name: "command-2",
         help: "{magenta-bg}Help message styling{/}",
         colors: {
-            commandHelpMessage: (x) => adone.cli.chalk.italic(adone.runtime.term.parse(x))
+            commandHelpMessage: (x) => adone.cli.chalk.italic(adone.cli.parse(x))
         }
     })
     cmd2() {}

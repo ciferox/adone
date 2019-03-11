@@ -107,4 +107,4 @@ export default class Console extends TransportStream {
             return set;
         }, {});
     }
-};
+}

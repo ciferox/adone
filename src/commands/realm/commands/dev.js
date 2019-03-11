@@ -1,6 +1,6 @@
 const {
     app: { Subsystem, MainCommandMeta },
-    runtime: { term }
+    cli
 } = adone;
 
 
@@ -22,7 +22,7 @@ export default class extends Subsystem {
     })
     async devCommand(args, opts) {
         try {
-            adone.runtime.logger.watching({
+            adone.app.runtime.logger.watching({
                 message: `${args.has("path") ? args.get("path") : "whole project"}`
             });
 
@@ -30,7 +30,7 @@ export default class extends Subsystem {
             const manager = await this.parent.getRealm();
             await manager.runAndWait("watch", path);
         } catch (err) {
-            term.print(`{red-fg}${err.message}{/}`);
+            console.error(adone.pretty.error(err));
             return 1;
         }
     }

@@ -10,7 +10,7 @@ adone.app.run({
             short: "The long option"
         });
 
-        const answers = await adone.runtime.term.prompt().run([
+        const answers = await adone.cli.prompt().run([
             {
                 type: "list",
                 name: "letter",

@@ -1,7 +1,6 @@
 const {
     is,
-    cli: { prompt: { BasePrompt, Choices, Paginator } },
-    runtime: { cli: { style } }
+    cli: { style, prompt: { BasePrompt, Choices, Paginator } }
 } = adone;
 
 /**

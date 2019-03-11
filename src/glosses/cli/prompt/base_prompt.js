@@ -1,9 +1,8 @@
 const {
     is,
     lodash: _,
-    cli: { chalk },
+    cli: { chalk, style },
     event,
-    runtime: { cli: { style } },
     text: { unicode: { approx, symbol } }
 } = adone;
 

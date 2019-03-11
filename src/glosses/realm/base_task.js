@@ -1,7 +1,6 @@
 const {
     task,
-    error,
-    runtime: { logger }
+    error
 } = adone;
 
 export default class BaseTask extends task.Task {
@@ -51,6 +50,6 @@ export default class BaseTask extends task.Task {
      */
     error(err) {
         // throw err;
-        logger.error(err);
+        console.error(adone.pretty.error(err));
     }
 }

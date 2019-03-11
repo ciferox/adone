@@ -1,7 +1,6 @@
 const {
     app: { Subsystem, MainCommandMeta },
-    is,
-    runtime: { term }
+    is
 } = adone;
 
 
@@ -52,13 +51,12 @@ export default class extends Subsystem {
                     ]
                 }));
             } else {
-                term.print("{white-fg}No packages{/}\n");
+                console.log("No packages\n");
             }
 
             return 0;
         } catch (err) {
-            // console.log(err);
-            term.print(`{red-fg}${err.message}{/}\n`);
+            console.log(adone.pretty.error(err));
             return 1;
         }
     }

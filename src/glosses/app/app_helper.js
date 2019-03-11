@@ -1,12 +1,11 @@
 const {
     is,
+    cli,
     error,
     std,
     text,
     pretty,
     util,
-    runtime: { terminal, cli: { style } },
-    cli: { chalk },
     meta: { reflect }
 } = adone;
 
@@ -14,35 +13,35 @@ const noStyleLength = (x) => text.stripAnsi(x).length;
 
 const hasColorsSupport = Boolean(process.stdout.isTTY);
 
-const defaultColors = {
-    commandName: (x) => style.primary(x),
-    commandHelpMessage: (x) => chalk.italic(x),
+const DEFAULT_COLORS = {
+    commandName: (x) => cli.style.primary(x),
+    commandHelpMessage: (x) => cli.chalk.italic(x),
     commandSeparator: (x) => x,
-    optionName: (x) => style.secondary(x),
+    optionName: (x) => cli.style.secondary(x),
     optionVariable: (x) => x,
-    optionHelpMessage: (x) => chalk.italic(x),
+    optionHelpMessage: (x) => cli.chalk.italic(x),
     // argumentName: (x) => x,
-    argumentName: (x) => terminal.parse(`{#F44336-fg}${x}{/}`),
-    argumentHelpMessage: (x) => chalk.italic(x),
-    default: (x) => style.inactive(x),
+    argumentName: (x) => cli.parse(`{#F44336-fg}${x}{/}`),
+    argumentHelpMessage: (x) => cli.chalk.italic(x),
+    default: (x) => cli.style.inactive(x),
     // angleBracket: (x) => terminal.green(x),
-    angleBracket: (x) => terminal.parse(`{#F44336-fg}${x}{/}`),
-    squareBracket: (x) => chalk.yellow(x),
-    curlyBracket: (x) => chalk.yellow(x),
-    ellipsis: (x) => chalk.dim(x),
-    usage: (x) => chalk.underline(x),
-    commandGroupHeading: (x) => chalk.underline(x),
-    argumentGroupHeading: (x) => chalk.underline(x),
-    optionGroupHeading: (x) => chalk.underline(x),
+    angleBracket: (x) => cli.parse(`{#F44336-fg}${x}{/}`),
+    squareBracket: (x) => cli.chalk.yellow(x),
+    curlyBracket: (x) => cli.chalk.yellow(x),
+    ellipsis: (x) => cli.chalk.dim(x),
+    usage: (x) => cli.chalk.underline(x),
+    commandGroupHeading: (x) => cli.chalk.underline(x),
+    argumentGroupHeading: (x) => cli.chalk.underline(x),
+    optionGroupHeading: (x) => cli.chalk.underline(x),
     value: {
-        string: (x) => style.accent(x),
-        null: (x) => chalk.yellow(x),
-        number: (x) => chalk.yellow(x),
-        undefined: (x) => chalk.yellow(x),
-        boolean: (x) => chalk.yellow(x),
+        string: (x) => cli.style.accent(x),
+        null: (x) => cli.chalk.yellow(x),
+        number: (x) => cli.chalk.yellow(x),
+        undefined: (x) => cli.chalk.yellow(x),
+        boolean: (x) => cli.chalk.yellow(x),
         object: {
             key: (x) => x,
-            separator: (x) => chalk.cyan(x)
+            separator: (x) => cli.chalk.cyan(x)
         }
     }
 };
@@ -409,11 +408,11 @@ class Argument {
         if (!hasColorsSupport) {
             options.colors = false;
         } else if (options.colors === "default") {
-            options.colors = util.clone(defaultColors);
+            options.colors = util.clone(DEFAULT_COLORS);
             options._frozenColors = true;
         } else if (is.object(options.colors)) {
             if (options.colors.inherit === false) {
-                options.colors = util.assignDeep({}, defaultColors, options.colors);
+                options.colors = util.assignDeep({}, DEFAULT_COLORS, options.colors);
                 delete options.colors.inherit;
                 options._frozenColors = true;
             }
@@ -1187,7 +1186,7 @@ class Command {
             options.colors = false;
         } else if (is.object(options.colors)) {
             if (!options.colors.inherit) {
-                options.colors = util.assignDeep({}, defaultColors, options.colors);
+                options.colors = util.assignDeep({}, DEFAULT_COLORS, options.colors);
                 delete options.colors.inherit;
                 options._frozenColors = true;
             }
@@ -1199,7 +1198,7 @@ class Command {
             if (postInit) {
                 options.colors = adone.null;
             } else {
-                options.colors = util.clone(defaultColors);
+                options.colors = util.clone(DEFAULT_COLORS);
                 options._frozenColors = true;
             }
         }
@@ -1236,7 +1235,7 @@ class Command {
 
     getUsageMessage() {
         const chain = this.getCommandChain();
-        const argumentsLength = terminal.stats.cols - chain.length - 1 - 4;
+        const argumentsLength = cli.stats.cols - chain.length - 1 - 4;
         const table = new text.table.BorderlessTable({
             colWidths: [4, chain.length + 1, argumentsLength]
         });
@@ -1299,7 +1298,7 @@ class Command {
     getHelpMessage() {
         const helpMessage = [this.getUsageMessage()];
 
-        const totalWidth = terminal.stats.cols;
+        const totalWidth = cli.stats.cols;
 
         if (is.string(this.description) && this.description) {
             helpMessage.push("", text.wrapAnsi(this.description, totalWidth));

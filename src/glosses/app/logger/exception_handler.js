@@ -231,4 +231,4 @@ export default class ExceptionHandler {
             return transport.handleExceptions;
         });
     }
-};
+}

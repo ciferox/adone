@@ -20,7 +20,7 @@ adone.app.run({
         this._ask();
     },
     _ask() {
-        adone.runtime.term.prompt().run(this.questions).then((answers) => {
+        adone.cli.prompt().run(this.questions).then((answers) => {
             this.output.push(answers.tvShow);
             if (answers.askAgain) {
                 this._ask();

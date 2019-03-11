@@ -1,7 +1,6 @@
 const {
     is,
-    cli: { prompt: { BasePrompt } },
-    runtime: { cli: { style } }
+    cli: { style, prompt: { BasePrompt } }
 } = adone;
 
 export default class InputPrompt extends BasePrompt {

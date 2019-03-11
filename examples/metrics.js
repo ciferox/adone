@@ -5,7 +5,7 @@ const {
 } = adone;
 
 const shi = async function () {
-    const term = adone.runtime.term;
+    const term = adone.cli;
     const system = adone.metrics.system;
     console.log(term.parse("{white-fg}{bold}Operating system:{/}\n"));
     console.log(term.parse(`{green-fg}Manufaturer: {/}{white-fg}${system.manufacturer}{/}`));

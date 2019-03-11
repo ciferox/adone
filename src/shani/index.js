@@ -1755,13 +1755,13 @@ export const consoleReporter = ({
     keepHooks = false,
     onlyStats = false
 } = {}) => {
-    const { terminal } = adone.runtime;
+    const { cli } = adone;
 
     const { isTTY } = process.stdout;
 
     const ansiRegexp = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g;
     const parse = (str) => {
-        str = terminal.parse(str);
+        str = cli.parse(str);
         if (!isTTY) {
             str = str.replace(ansiRegexp, "");
         }
@@ -1824,7 +1824,7 @@ export const consoleReporter = ({
                     if (timers || allTimings) {
                         options.timeFormatter = (x) => elapsedToString(x, hook.timeout);
                     }
-                    bar = adone.runtime.cli.progress(options);
+                    bar = cli.progress(options);
                     bar.update(0, {
                         suffix: timers ? " (:elapsed)" : ""
                     });
@@ -1885,7 +1885,7 @@ export const consoleReporter = ({
             if (timers || allTimings) {
                 options.timeFormatter = (x) => elapsedToString(x, test.timeout);
             }
-            return adone.runtime.cli.progress(options);
+            return new cli.Progress(options);
         };
 
         let firstBlock = true;
@@ -1901,7 +1901,7 @@ export const consoleReporter = ({
         Error.stackTraceLimit = 100;
 
         if (onlyStats) {
-            bar = adone.runtime.cli.progress({
+            bar = cli.progress({
                 schema: "    :spinner executing",
                 clean: true
             });
@@ -2131,7 +2131,7 @@ export const consoleReporter = ({
 };
 
 export const minimalReporter = () => {
-    const terminal = adone.runtime.terminal;
+    const { cli } = adone;
 
     const { isTTY } = process.stdout;
 
@@ -2139,7 +2139,7 @@ export const minimalReporter = () => {
 
     const ansiRegexp = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g;
     const parse = (str) => {
-        str = terminal.parse(str);
+        str = cli.parse(str);
         if (!isTTY) {
             str = str.replace(ansiRegexp, "");
         }
@@ -2163,11 +2163,11 @@ export const minimalReporter = () => {
 
         console.log();
 
-        const totalBar = adone.runtime.cli.progress({
+        const totalBar = cli.progress({
             schema: "    :spinner {green-fg}:passed{/green-fg} {red-fg}:failed{/red-fg} {cyan-fg}:pending{/cyan-fg} {yellow-fg}:todos{/yellow-fg} :elapsed"
         });
 
-        const testsBar = adone.runtime.cli.progress({
+        const testsBar = cli.progress({
             schema: "    :path"
         });
 
@@ -2334,13 +2334,13 @@ export const simpleReporter = ({
     showHooks = false,
     onlyStats = false
 } = {}) => {
-    const terminal = adone.runtime.terminal;
+    const { cli } = adone;
     const { text: { unicode: { symbol } } } = adone;
 
     const { isTTY } = process.stdout;
     const ansiRegexp = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g;
     const parse = (str) => {
-        str = terminal.parse(str);
+        str = cli.parse(str);
         if (!isTTY) {
             str = str.replace(ansiRegexp, "");
         }
@@ -2512,8 +2512,8 @@ export const simpleReporter = ({
             })
             .on("done", () => {
                 if (onlyStats) {
-                    adone.runtime.terminal.up(1);
-                    adone.runtime.terminal.eraseLineAfter();
+                    cli.up(1);
+                    cli.eraseLineAfter();
                 }
 
                 if (errors.length) {

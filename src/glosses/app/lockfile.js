@@ -1,11 +1,10 @@
 const {
+    app: { runtime: { lockFiles } },
     is,
     fs,
     std,
     util: { retry }
 } = adone;
-
-const { locks } = adone.private(adone.app);
 
 adone.asNamespace(exports);
 
@@ -67,15 +66,15 @@ const compromisedLock = (file, lock, err) => {
 
     lock.updateTimeout && clearTimeout(lock.updateTimeout); // Cancel lock mtime update
 
-    if (locks[file] === lock) {
-        delete locks[file];
+    if (lockFiles[file] === lock) {
+        delete lockFiles[file];
     }
 
     lock.compromised(err);
 };
 
 const updateLock = (file, options) => {
-    const lock = locks[file];
+    const lock = lockFiles[file];
 
     /* istanbul ignore next */
     if (lock.updateTimeout) {
@@ -149,7 +148,7 @@ export const release = async (file, options) => {
     // Resolve to a canonical file path
     const realFile = await canonicalPath(file, options);
     // Skip if the lock is not acquired
-    const lock = locks[realFile];
+    const lock = lockFiles[realFile];
 
     if (!lock) {
         throw Object.assign(new Error("Lock is not acquired/owned by you"), { code: "ENOTACQUIRED" });
@@ -157,7 +156,7 @@ export const release = async (file, options) => {
 
     lock.updateTimeout && clearTimeout(lock.updateTimeout); // Cancel lock mtime update
     lock.released = true; // Signal the lock has been released
-    delete locks[realFile]; // Delete from locks
+    delete lockFiles[realFile]; // Delete from locks
 
     return options.fs.rm(getLockFile(realFile, options));
 };
@@ -198,7 +197,7 @@ export const create = async (file, options, compromised = (err) => {
             }
 
             // We now own the lock
-            const lock = locks[realFile] = {
+            const lock = lockFiles[realFile] = {
                 options,
                 compromised,
                 lastUpdate: Date.now()

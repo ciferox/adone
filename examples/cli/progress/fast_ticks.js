@@ -2,7 +2,7 @@ adone.app.run({
     async main() {
         const N = 5000;
 
-        const bar = adone.runtime.term.progress({
+        const bar = adone.cli.progress({
             total: N,
             schema: ":bar :spinner :current/:total (:elapsed)",
             spinner: {

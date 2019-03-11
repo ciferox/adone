@@ -1,6 +1,6 @@
 const {
-    app: { Subsystem, MainCommandMeta },
-    runtime: { term, logger }
+    app: { Subsystem, MainCommandMeta, runtime: { logger } },
+    cli
 } = adone;
 
 
@@ -46,7 +46,7 @@ export default class extends Subsystem {
 
             return 0;
         } catch (err) {
-            term.print(`{red-fg}${err.message}{/}`);
+            console.error(adone.pretty.error(err));
             return 1;
         }
     }

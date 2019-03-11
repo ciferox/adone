@@ -1,11 +1,11 @@
 adone.app.run({
     main() {
-        const bar1 = adone.runtime.term.progress({
+        const bar1 = adone.cli.progress({
             schema: "progress: \n[:bar]",
             current: 10
         });
 
-        //var bar2 = adone.runtime.term.progress();
+        //var bar2 = adone.cli.progress();
         //bar1.tick()
 
         const iv = setInterval(() => {

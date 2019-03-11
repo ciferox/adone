@@ -1,4 +1,4 @@
-describe("terminal", "Chalk", () => {
+describe("cli", "Chalk", () => {
     const {
         cli: { chalk }
     } = adone;

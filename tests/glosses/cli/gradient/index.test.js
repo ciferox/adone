@@ -2,7 +2,7 @@ const {
     cli: { gradient }
 } = adone;
 
-describe("terminal", "gradient", () => {
+describe("cli", "gradient", () => {
     // Asset that actual is equal to at least one element of expected
     const assertEqualOne = (actual, expected) => {
         assert.isTrue(expected.indexOf(actual) > -1);

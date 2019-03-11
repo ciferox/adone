@@ -100,7 +100,7 @@ class AdoneCLI extends app.Application {
             cli: { chalk }
         } = adone;
 
-        adone.runtime.logger.configure({
+        adone.app.runtime.logger.configure({
             level: "verbose",
             format: format.combine(
                 format.colorize({

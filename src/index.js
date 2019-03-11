@@ -48,7 +48,8 @@ const adone = Object.create({
                         try {
                             mod = _require(value);
                         } catch (err) {
-                            adone.runtime.app.fireException(err);
+                            console.log(err.stack);
+                            adone.app.runtime.app.fireException(err);
                         }
                     } else if (Array.isArray(value) && value.length >= 1 && typeof value[0] === "string") { // eslint-disable-line
                         mod = value.reduce((mod, entry, i) => {
@@ -143,6 +144,16 @@ adone.lazify({
     package: "../package.json",
 
     ROOT_PATH: () => adone.std.path.join(__dirname, ".."),
+    RUNTIME_PATH: () => adone.std.path.join(adone.ROOT_PATH, "run"),
+    ETC_PATH: () => adone.std.path.join(adone.ROOT_PATH, "etc"),
+    ETC_ADONE_PATH: () => adone.std.path.join(adone.ETC_PATH, "adone"),
+    OPT_PATH: () => adone.std.path.join(adone.ROOT_PATH, "opt"),
+    VAR_PATH: () => adone.std.path.join(adone.ROOT_PATH, "var"),
+    SHARE_PATH: () => adone.std.path.join(adone.ROOT_PATH, "share"),
+    LOGS_PATH: () => adone.std.path.join(adone.VAR_PATH, "logs"),
+    KEYS_PATH: () => adone.std.path.join(adone.ROOT_PATH, "keys"),
+    PACKAGES_PATH: () => adone.std.path.join(adone.ROOT_PATH, "packages"),
+    LOCKFILE_PATH: () => adone.std.path.join(adone.ROOT_PATH, "realm.lock"),
     EMPTY_BUFFER: () => Buffer.allocUnsafe(0),
     LOGO: () => adone.fs.readFileSync(adone.std.path.join(adone.realm.getRootRealm().env.SHARE_PATH, "media", "adone.txt"), { encoding: "utf8" }),
 
@@ -238,7 +249,6 @@ adone.lazify({
     realm: "./glosses/realm",
     regex: "./glosses/regex",
     require: "./glosses/require",
-    runtime: "./glosses/runtime",
     schema: "./glosses/schema",
     semver: "./glosses/semver",
     shell: "./glosses/shell",
@@ -263,7 +273,7 @@ adone.lazify({
     // isolatedVm: "./isolated_vm",
     gyp: "./gyp",
     // napa: "./napa",
-    omnitron: "./omnitron",
+    // omnitron: "./omnitron",
     shani: "./shani",
     // specter: "./specter"
 }, adone);

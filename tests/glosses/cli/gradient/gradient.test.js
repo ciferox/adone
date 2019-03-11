@@ -2,7 +2,7 @@ const {
     cli: { gradient: { Gradient } }
 } = adone;
 
-describe("terminal", "gradient", "Gradient", () => {
+describe("cli", "gradient", "Gradient", () => {
     it("should throw an error on invalid steps/colors number", () => {
         assert.throws(() => {
             new Gradient("red");

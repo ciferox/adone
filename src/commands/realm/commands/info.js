@@ -1,8 +1,7 @@
 const {
     app: { Subsystem, MainCommandMeta },
     is,
-    pretty,
-    runtime: { term }
+    pretty
 } = adone;
 
 

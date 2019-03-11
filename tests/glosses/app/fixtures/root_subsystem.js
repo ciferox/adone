@@ -4,7 +4,7 @@ const {
 
 class Sys111 extends app.Subsystem {
     configure() {
-        console.log(this.root === adone.runtime.app);
+        console.log(this.root === adone.app.runtime.app);
     }
 }
 
@@ -13,7 +13,7 @@ class Sys11 extends app.Subsystem {
         this.addSubsystem({
             subsystem: new Sys111()
         });
-        console.log(this.root === adone.runtime.app);
+        console.log(this.root === adone.app.runtime.app);
     }
 }
 
@@ -22,7 +22,7 @@ class Sys1 extends app.Subsystem {
         this.addSubsystem({
             subsystem: new Sys11()
         });
-        console.log(this.root === adone.runtime.app);
+        console.log(this.root === adone.app.runtime.app);
     }
 }
 

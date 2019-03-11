@@ -40,7 +40,7 @@ export default class extends Subsystem {
                     message: "no networks",
                     status: "notice"
                 });
-                // adone.runtime.term.print("{white-fg}No networks{/}\n");
+                // adone.cli.print("{white-fg}No networks{/}\n");
             }
             return 0;
         } catch (err) {

@@ -2,7 +2,7 @@ adone.app.run({
     main() {
         // simulated download, passing the chunk lengths to tick()
 
-        const bar = adone.runtime.term.progress({
+        const bar = adone.cli.progress({
             schema: " downloading [:bar] :percent :etas",
             completed: "=",
             blank: " ",

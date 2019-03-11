@@ -1,7 +1,7 @@
 const {
+    cli,
     is,
     std,
-    runtime: { terminal },
     app: { MainCommandMeta, Subsystem }
 } = adone;
 
@@ -97,18 +97,18 @@ export default class extends Subsystem {
                 const diff = target.hz - oldResult[target.name].hz;
                 const percent = (diff / oldResult[target.name].hz * 100).toFixed(2);
                 if (diff >= 0) {
-                    message += terminal.parse(` ({#4CAF50-fg}+${formatNumber(diff.toFixed(diff < 100 ? 2 : 0))} : +${percent}%{/})`);
+                    message += cli.parse(` ({#4CAF50-fg}+${formatNumber(diff.toFixed(diff < 100 ? 2 : 0))} : +${percent}%{/})`);
                 } else {
-                    message += terminal.parse(` ({#F44336-fg}${formatNumber(diff.toFixed(diff > -100 ? 2 : 0))} : ${percent}%{/})`);
+                    message += cli.parse(` ({#F44336-fg}${formatNumber(diff.toFixed(diff > -100 ? 2 : 0))} : ${percent}%{/})`);
                 }
             }
             message += ` ops/sec ±${target.stats.rme.toFixed(2)}% (${size} run${size === 1 ? "" : "s"} sampled)`;
             if (oldResult) {
                 const diff = target.stats.sample.length - oldResult[target.name].sampleLength;
                 if (diff >= 0) {
-                    message += terminal.parse(` ({#4CAF50-fg}+${diff}{/})`);
+                    message += cli.parse(` ({#4CAF50-fg}+${diff}{/})`);
                 } else {
-                    message += terminal.parse(` ({#F44336-fg}${diff}{/})`);
+                    message += cli.parse(` ({#F44336-fg}${diff}{/})`);
                 }
             }
             return `${message} : ${target.name}`;
@@ -117,13 +117,13 @@ export default class extends Subsystem {
         const defaultOptions = {
             defer: opts.get("defer"),
             onCycle: (event) => {
-                terminal.column(0);
-                terminal.eraseLine();
-                terminal.write(`${formatEventMessage(event)}`);
+                cli.column(0);
+                cli.eraseLine();
+                cli.write(`${formatEventMessage(event)}`);
             },
             onComplete: () => {
-                terminal.column(0);
-                terminal.eraseLine();
+                cli.column(0);
+                cli.eraseLine();
             }
         };
 
@@ -158,7 +158,7 @@ export default class extends Subsystem {
         }
 
         for (const suite of suites) {
-            terminal.print(`Suite: {escape}${suite.name}{/escape}\n`);
+            cli.print(`Suite: {escape}${suite.name}{/escape}\n`);
             const result = {};
             let oldResult = db ? await db.findOne({ name: suite.name }) : null;  // eslint-disable-line
             if (oldResult) {
@@ -174,7 +174,7 @@ export default class extends Subsystem {
                             hz: target.hz,
                             sampleLength: target.stats.sample.length
                         };
-                        terminal.write(`${formatEventMessage(event, oldResult)}\n`);
+                        cli.write(`${formatEventMessage(event, oldResult)}\n`);
                     })
                     .on("complete", function onComplete() {
                         console.log(`Fastest is ${this.filter("fastest").map("name")}`);

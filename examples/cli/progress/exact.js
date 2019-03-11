@@ -1,6 +1,6 @@
 adone.app.run({
     main() {
-        const bar = adone.runtime.term.progress({
+        const bar = adone.cli.progress({
             schema: " Progress [:bar] :percent :eta"
         });
 

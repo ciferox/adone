@@ -1,4 +1,4 @@
-describe("terminal", "esc", () => {
+describe("cli", "esc", () => {
     const {
         is,
         cli: {

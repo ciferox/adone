@@ -36,17 +36,12 @@ describe("Application", () => {
     it("should not run invalid application", async () => {
         const err = await assert.throws(async () => forkProcess(fixture("invalid.js")));
         assert.equal(err.code, 1);
-        assert.equal(err.stderr, "\u001b[31mInvalid application class (should be derivative of 'adone.app.Application')\u001b[39m\n");
+        assert.equal(adone.text.stripAnsi(err.stderr), "Invalid application class\n");
     });
 
     it("no public properties instead of application's reserved", async () => {
         const result = await forkProcess(fixture("no_public_props_and_getters.js"));
         assert.equal(result.stdout, "true");
-    });
-
-    it("'isMain' is not writable", async () => {
-        const result = await forkProcess(fixture("is_main_not_writable.js"));
-        assert.equal(result.stdout, "ok");
     });
 
     it("correct application error handling during uninitialization", async () => {

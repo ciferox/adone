@@ -3,8 +3,8 @@ const {
         Subsystem,
         MainCommandMeta
     },
+    cli,
     std: { path, child_process: cp },
-    runtime: {  , logger },
     system
 } = adone;
 
@@ -219,8 +219,8 @@ export default class ShaniCLI extends Subsystem {
         });
 
         if (process.stdin.isTTY && process.stdout.isTTY) {
-            terminal.listen();
-            terminal.on("keypress", async (ch, key) => {
+            cli.listen();
+            cli.on("keypress", async (ch, key) => {
                 switch (key.full) {
                     case "C-q": {
                         // stop testing
@@ -242,7 +242,7 @@ export default class ShaniCLI extends Subsystem {
 
         if (code !== 0) {
             if (signal) {
-                logger.info(`Died due to ${signal}`);
+                console.info(`Died due to ${signal}`);
             }
             return 1;
         }

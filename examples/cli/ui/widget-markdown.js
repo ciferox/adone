@@ -5,7 +5,7 @@ adone.app.run({
 
         // screen.append(markdown);
         // markdown.setOptions({
-        //     firstHeading: adone.runtime.term.red.italic
+        //     firstHeading: adone.cli.red.italic
         // });
         // // markdown.setMarkdown("# Hello \n This is **markdown** printed in the `terminal` 11");
 

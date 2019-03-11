@@ -1,6 +1,6 @@
 const {
     is,
-    runtime: { terminal },
+    cli,
     error
 } = adone;
 
@@ -39,7 +39,7 @@ export default function prettyTable(data, {
                 bordersWidth += 1 + 1; // left + right border
                 bordersWidth += model.length - 1; // between cells
             }
-            const maxWidth = terminal.stats.cols - bordersWidth;
+            const maxWidth = cli.stats.cols - bordersWidth;
             tableWidth = coercePercent(width, maxWidth);
         } else if (is.number(width)) {
             tableWidth = width;
@@ -196,7 +196,7 @@ export default function prettyTable(data, {
                     }
                 }
 
-                str = terminal.parse(str);
+                str = cli.parse(str);
                 if (str && m.wordWrap && !is.null(m.colWidth)) {
                     str = str.toString();
                     const maxLen = m.colWidth - padLeft - padRight;

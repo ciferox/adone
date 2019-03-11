@@ -1,4 +1,5 @@
 const {
+    cli,
     crypto,
     error,
     is,
@@ -6,7 +7,6 @@ const {
     fs,
     std,
     realm: { BaseTask },
-    runtime: { cli: { theme } },
     util
 } = adone;
 
@@ -52,7 +52,7 @@ export default class extends BaseTask {
         }
 
         this.manager.notify({
-            message: `initializing realm at ${theme.accent(this.destPath)}`
+            message: `initializing realm at ${cli.style.accent(this.destPath)}`
         });
 
         await fs.mkdirp(this.destPath);
@@ -244,7 +244,7 @@ export default class extends BaseTask {
         }
 
         this.manager.notify(this, "progress", {
-            message: `fork ${theme.accent(this.destPath)} successfully created`,
+            message: `fork ${cli.style.accent(this.destPath)} successfully created`,
             status: true
         });
 

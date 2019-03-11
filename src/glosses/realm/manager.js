@@ -31,7 +31,7 @@ const loadTasks = (path, index) => {
     }
     const fullPath = std.path.join(path, indexFile);
     if (fs.existsSync(fullPath)) {
-        const mod = require(fullPath);
+        const mod = adone.require(fullPath);
         return mod.default
             ? mod.default
             : mod;
@@ -50,23 +50,26 @@ export default class RealmManager extends task.Manager {
         this.tasks = {};
 
         adone.lazify({
-            config: () => Configuration.loadSync({
-                cwd
-            }),
-            package: std.path.join(cwd, "package.json"),
-            env: std.path.join(cwd, ".adone", "env"),
-            identity: std.path.join(cwd, ".adone", "identity.json") // remove (adone specific)
-        }, this, adone.require);
+            config: () => {
+                const conf = Configuration.loadSync({
+                    cwd
+                });
 
-        if (is.object(this.config.raw.tasks) && is.string(this.config.raw.tasks.basePath)) {
-            const basePath = std.path.join(this.cwd, this.config.raw.tasks.basePath);
-            if (fs.existsSync(basePath)) {
-                this.tasks = {
-                    ...loadTasks(basePath, this.config.raw.tasks.index),
-                    ...loadTasks(basePath, this.config.raw.tasks.indexDev)
-                };
-            }
-        }
+                if (is.object(conf.raw.tasks) && is.string(conf.raw.tasks.basePath)) {
+                    const basePath = std.path.join(this.cwd, conf.raw.tasks.basePath);
+                    if (fs.existsSync(basePath)) {
+                        this.tasks = {
+                            ...loadTasks(basePath, conf.raw.tasks.index),
+                            ...loadTasks(basePath, conf.raw.tasks.indexDev)
+                        };
+                    }
+                }
+
+                return conf;
+            },
+            package: std.path.join(cwd, "package.json"),
+            identity: std.path.join(cwd, ".adone", "identity.json") // remove (adone specific)
+        }, this);
 
         this.typeHandler = null;
         // this.peerInfo = null;
@@ -160,17 +163,17 @@ export default class RealmManager extends task.Manager {
     }
 
     async lock() {
-        return lockfile.create(this.env.ROOT_PATH, {
-            lockfilePath: this.env.LOCKFILE_PATH
+        return lockfile.create(adone.ROOT_PATH, {
+            lockfilePath: adone.LOCKFILE_PATH
         });
     }
 
     async unlock() {
         const options = {
-            lockfilePath: this.env.LOCKFILE_PATH
+            lockfilePath: adone.LOCKFILE_PATH
         };
-        if (await lockfile.check(this.env.ROOT_PATH, options)) {
-            return lockfile.release(this.env.ROOT_PATH, options);
+        if (await lockfile.check(adone.ROOT_PATH, options)) {
+            return lockfile.release(adone.ROOT_PATH, options);
         }
     }
 }

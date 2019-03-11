@@ -90,7 +90,7 @@ adone.app.run({
             }
         ];
 
-        const answers = await adone.runtime.term.prompt().run(questions);
+        const answers = await adone.cli.prompt().run(questions);
         console.log("\nOrder receipt:");
         console.log(JSON.stringify(answers, null, "  "));
     }

@@ -1,6 +1,5 @@
 const {
-    app: { Subsystem, MainCommandMeta },
-    runtime: { term }
+    app: { Subsystem, MainCommandMeta }
 } = adone;
 
 
@@ -25,7 +24,7 @@ export default class extends Subsystem {
             await this.cleanCommand(args, opts);
             return this.buildCommand(args, opts);
         } catch (err) {
-            term.print(`{red-fg}${err.message}{/}`);
+            console.err(adone.pretty.error(err));
             return 1;
         }
     }

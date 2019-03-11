@@ -8,37 +8,37 @@ adone.app.run({
 
         const tokens = "{underline}{magenta-fg}:current{/}/{italic}{green-fg}:total{/} {bold}{yellow-fg}:percent{/} {italic}{blue-fg}:elapsed{/} {italic}{cyan-fg}:eta{/}";
 
-        const bar0 = adone.runtime.term.progress({
+        const bar0 = adone.cli.progress({
             schema: "    [:bar] :current/:total :percent :elapsed :eta",
             width: 70,
             current: 0
         });
 
-        const bar1 = adone.runtime.term.progress({
+        const bar1 = adone.cli.progress({
             schema: "    [:bar] :current/:total :percent :elapsed :eta",
             width: 70,
             current: 10
         });
 
-        const bar2 = adone.runtime.term.progress({
+        const bar2 = adone.cli.progress({
             schema: "    {white-fg}[{/}{greenbright-fg}:filled{/}{yellowbright-fg}:blank{/}{white-fg}]{/} {red-fg}:current{/}/{gray-fg}:total{/} {green-fg}:percent{/} :elapsed :eta",
             width: 70,
             current: 20
         });
 
-        const bar3 = adone.runtime.term.progress({
+        const bar3 = adone.cli.progress({
             schema: "    [:bar] :current/:total :percent :elapsed :eta",
             width: 70,
             current: 30
         });
 
-        const bar4 = adone.runtime.term.progress({
+        const bar4 = adone.cli.progress({
             schema: "    [:bar] :current/:total :percent :elapsed :eta",
             width: 70,
             current: 40
         });
 
-        const bar5 = adone.runtime.term.progress({
+        const bar5 = adone.cli.progress({
             schema: "    {white-fg}[{/}:filled:blank] :current/:total :percent :elapsed :eta",
             width: 70,
             current: 50

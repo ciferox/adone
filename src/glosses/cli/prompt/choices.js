@@ -51,7 +51,7 @@ export default class Choices {
         this.choices = choices.map((val) => {
             if (val.type === "separator") {
                 if (!(val instanceof Separator)) {
-                    val = new Separator(this.term, val.line);
+                    val = new Separator(val.line);
                 }
                 return val;
             }

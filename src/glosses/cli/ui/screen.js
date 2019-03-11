@@ -112,7 +112,7 @@ export default class Screen extends adone.cli.ui.Node {
 
         Screen.bind(this);
 
-        this.term = adone.runtime.term;
+        this.term = adone.cli;
         // Redefine process.stderr to null.
         this._devNull = new DevNull();
         this._oldStderrGetter = Object.getOwnPropertyDescriptor(process, "stderr").get;

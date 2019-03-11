@@ -1,12 +1,12 @@
 adone.app.run({
     async main() {
-        const answers = await adone.runtime.cli.prompt([
+        const answers = await adone.cli.prompt([
             {
                 type: "checkbox",
                 message: "Select toppings",
                 name: "toppings",
                 choices: [
-                    adone.runtime.cli.separator(" = The Meats = "),
+                    adone.cli.separator(" = The Meats = "),
                     {
                         name: "Pepperoni"
                     },
@@ -19,7 +19,7 @@ adone.app.run({
                     {
                         name: "Bacon"
                     },
-                    adone.runtime.cli.separator(" = The Cheeses = "),
+                    adone.cli.separator(" = The Cheeses = "),
                     {
                         name: "Mozzarella",
                         checked: true
@@ -30,14 +30,14 @@ adone.app.run({
                     {
                         name: "Parmesan"
                     },
-                    adone.runtime.cli.separator(" = The usual ="),
+                    adone.cli.separator(" = The usual ="),
                     {
                         name: "Mushroom"
                     },
                     {
                         name: "Tomato"
                     },
-                    adone.runtime.cli.separator(" = The extras = "),
+                    adone.cli.separator(" = The extras = "),
                     {
                         name: "Pineapple"
                     },

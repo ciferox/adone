@@ -1,6 +1,6 @@
 const {
     app: { logger: { format, MESSAGE } },
-    data:{ json }
+    data: { json }
 } = adone;
 
 /**

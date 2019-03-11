@@ -1,6 +1,6 @@
 const {
     is,
-    runtime: { terminal, cli: { style } },
+    cli,
     text: { unicode: { approx, symbol } }
 } = adone;
 
@@ -17,8 +17,8 @@ const newlineHandler = (count) => {
         return;
     }
 
-    const row = terminal.y;
-    const col = terminal.x;
+    const row = cli.y;
+    const col = cli.x;
 
     let minRow = 0;
 
@@ -39,7 +39,7 @@ const newlineHandler = (count) => {
     });
 
     // append empty row for the new lines, the screen will scroll up, then we can move the bars to their's new position.
-    terminal.moveTo(row, col).write("\n".repeat(count));
+    cli.moveTo(row, col).write("\n".repeat(count));
 
     instances.forEach((instance) => {
         if (instance.rendered && (!instance.completed || instance.tough)) {
@@ -47,12 +47,12 @@ const newlineHandler = (count) => {
         }
     });
 
-    terminal.moveTo(row - count, col);
+    cli.moveTo(row - count, col);
 
     endUpdate();
 };
 
-terminal.output.on("newlines:before", newlineHandler);
+cli.output.on("newlines:before", newlineHandler);
 process.stderr.on("newlines:before", newlineHandler);
 
 const toFixed = (value, precision) => {
@@ -128,10 +128,10 @@ export default class ProgressBar {
             timer: null
         };
         this.status = {
-            ok: style.primary(approx(symbol.tick)),
-            error: style.error(approx(symbol.cross)),
-            notice: style.notice("!"),
-            info: style.info("!"),
+            ok: cli.style.primary(approx(symbol.tick)),
+            error: cli.style.error(approx(symbol.cross)),
+            notice: cli.style.notice("!"),
+            info: cli.style.info("!"),
             ...statusMap
         };
         this.status.true = this.status.ok;
@@ -252,7 +252,7 @@ export default class ProgressBar {
             .replace(/:percent/g, `${toFixed(percent, 0)}%`);
 
         let result = output;
-        const cols = terminal.stats.cols;
+        const cols = cli.stats.cols;
         let width = this.width;
 
         width = width < 1 ? cols * width : width;
@@ -282,8 +282,8 @@ export default class ProgressBar {
         }
 
         const current = {
-            row: terminal.y,
-            col: terminal.x
+            row: cli.y,
+            col: cli.x
         };
         beginUpdate();
 
@@ -291,8 +291,8 @@ export default class ProgressBar {
             this.origin = current;
         }
 
-        if (this.origin.row === (terminal.stats.rows - 1)) {
-            terminal.write("\n".repeat(this.rows));
+        if (this.origin.row === (cli.stats.rows - 1)) {
+            cli.write("\n".repeat(this.rows));
 
             instances.forEach((instance) => {
                 if (instance.origin) {
@@ -306,7 +306,7 @@ export default class ProgressBar {
 
         // move the cursor to the current position.
         if (this.rendered) {
-            terminal.moveTo(current.row, current.col);
+            cli.moveTo(current.row, current.col);
         }
 
         this.output = output;
@@ -316,21 +316,21 @@ export default class ProgressBar {
     }
 
     print(output) {
-        terminal.moveTo(this.origin.row, this.origin.col);
+        cli.moveTo(this.origin.row, this.origin.col);
         const content = output.replace(new RegExp(placeholder, "g"), "");
         if (content !== "") {
-            terminal.print(content);
+            cli.print(content);
         }
-        terminal.write("\n");
+        cli.write("\n");
     }
 
     clear() {
         if (!is.null(this.output)) {
-            terminal.moveTo(this.origin.row, this.origin.col);
+            cli.moveTo(this.origin.row, this.origin.col);
             for (let i = 0; i < this.rows; i++) {
-                terminal.eraseLine().down();
+                cli.eraseLine().down();
             }
-            terminal.moveTo(this.origin.row, this.origin.col);
+            cli.moveTo(this.origin.row, this.origin.col);
         }
     }
 

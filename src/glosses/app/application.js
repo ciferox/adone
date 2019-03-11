@@ -1,7 +1,6 @@
 const {
     is,
     std,
-    runtime: { terminal },
     app,
     util
 } = adone;
@@ -15,7 +14,6 @@ const {
 const ERROR_SCOPE = Symbol.for("adone.app.Application#errorScope");
 const HANDLERS = Symbol();
 const EXITING = Symbol();
-const IS_MAIN = Symbol();
 const EXIT_SIGNALS = Symbol();
 
 export default class Application extends app.Subsystem {
@@ -23,17 +21,12 @@ export default class Application extends app.Subsystem {
         super({ name });
 
         this[EXITING] = false;
-        this[IS_MAIN] = false;
         this[HANDLERS] = null;
         this[ERROR_SCOPE] = false;
         this[EXIT_SIGNALS] = null;
 
         this.setRoot(this);
         this.setMaxListeners(Infinity);
-    }
-
-    get isMain() {
-        return this[IS_MAIN];
     }
 
     main() {
@@ -79,31 +72,10 @@ export default class Application extends app.Subsystem {
         await this.emitParallel("exit");
 
         // Only main application instance can exit process.
-        if (this !== adone.runtime.app) {
-            return;
+        if (this === adone.app.runtime.app) {
+            await this.emitParallel("exit:main");
+            process.exit(code);
         }
-
-        await this.emitParallel("exit:main");
-
-        adone.runtime.logger.close();
-
-        if (this[IS_MAIN]) {
-            terminal.destroy();
-        }
-
-        // Remove acquired locks on exit
-        const locks = adone.private(app).locks;
-        const lockFiles = Object.keys(locks);
-        for (const file of lockFiles) {
-            try {
-                const options = locks[file].options;
-                await locks[file].options.fs.rm(app.lockfile.getLockFile(file, options)); // eslint-disable-line
-            } catch (e) {
-                //
-            }
-        }
-
-        process.exit(code);
     }
 
     removeProcessHandlers() {
@@ -149,10 +121,6 @@ export default class Application extends app.Subsystem {
     }
 
     // Helper methods used in bootstraping code.
-
-    _setAsMain() {
-        this[IS_MAIN] = true;
-    }
 
     _setHandlers(handlers) {
         this[HANDLERS] = handlers;

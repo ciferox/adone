@@ -1,8 +1,7 @@
 const {
     error,
     is,
-    cli: { chalk, prompt: { BasePrompt, Paginator, Choices } },
-    runtime: { cli: { style } }
+    cli: { chalk, style, prompt: { BasePrompt, Paginator, Choices } }
 } = adone;
 
 /**

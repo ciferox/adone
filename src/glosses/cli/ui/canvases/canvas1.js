@@ -24,7 +24,7 @@ const getFgCode = (color) => {
     if (is.string(color) && color !== "normal") { // String Value
         return `\x1B[3${colors[color]}m`;
     } else if (is.array(color) && color.length === 3) { // RGB Value
-        return adone.runtime.term.parse(adone.sprintf("{#%02x%02x%02x-fg}", color[0], color[1], color[2]));
+        return adone.cli.parse(adone.sprintf("{#%02x%02x%02x-fg}", color[0], color[1], color[2]));
     } else if (is.number(color)) { // Number
         return `\x1B[38;5;${color}m`;
     } // Default
@@ -35,7 +35,7 @@ const getBgCode = (color) => {
     if (is.string(color) && color !== "normal") { // String Value
         return `\x1B[4${colors[color]}m`;
     } else if (is.array(color) && color.length === 3) { // RGB Value
-        return adone.runtime.term.parse(adone.sprintf("{#%02x%02x%02x-bg}", color[0], color[1], color[2]));
+        return adone.cli.parse(adone.sprintf("{#%02x%02x%02x-bg}", color[0], color[1], color[2]));
     } else if (is.number(color)) { // Number
         return `\x1B[48;5;${color}m`;
     } // Default

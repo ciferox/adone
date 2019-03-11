@@ -1,6 +1,5 @@
 const {
-    app: { Subsystem, MainCommandMeta },
-    runtime: { logger }
+    app: { Subsystem, MainCommandMeta, runtime: { logger } }
 } = adone;
 
 export default class extends Subsystem {
@@ -29,7 +28,7 @@ export default class extends Subsystem {
             const manager = await this.parent.getRealm();
             // await adone.cli.kit.observe("logInfo", manager);
             await manager.runAndWait("clean", path);
-            
+
             logger.success({
                 message: "Successfully cleaned"
             });

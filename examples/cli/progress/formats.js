@@ -5,7 +5,7 @@ let bar4 = null;
 let bar5 = null;
 
 bar2 = () => {
-    const bar = adone.runtime.term.progress({
+    const bar = adone.cli.progress({
         schema: " processing: [:bar]",
         completed: "*",
         blank: " ",
@@ -22,7 +22,7 @@ bar2 = () => {
 };
 
 bar3 = () => {
-    const bar = adone.runtime.term.progress({
+    const bar = adone.cli.progress({
         schema: " download |:bar| :percent",
         completed: "=",
         blank: " ",
@@ -40,7 +40,7 @@ bar3 = () => {
 };
 
 bar4 = () => {
-    const bar = adone.runtime.term.progress({
+    const bar = adone.cli.progress({
         schema: " :current of :total :percent",
         total: 20
     });
@@ -55,7 +55,7 @@ bar4 = () => {
 };
 
 bar5 = () => {
-    const bar = adone.runtime.term.progress({
+    const bar = adone.cli.progress({
         schema: " [:bar] :elapsed elapsed, eta :eta",
         width: 8,
         total: 50
@@ -71,7 +71,7 @@ bar5 = () => {
 
 adone.app.run({
     main() {
-        bar = adone.runtime.term.progress({
+        bar = adone.cli.progress({
             schema: " :bar :title",
             total: 10
         });

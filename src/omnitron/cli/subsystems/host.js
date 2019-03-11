@@ -29,7 +29,7 @@ export default class Host extends Subsystem {
             if (hosts.length > 0) {
                 console.log(adone.pretty.json(hosts));
             } else {
-                adone.runtime.term.print("{white-fg}No hosts{/}\n");
+                adone.cli.print("{white-fg}No hosts{/}\n");
             }
             return 0;
         } catch (err) {

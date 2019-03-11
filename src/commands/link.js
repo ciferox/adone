@@ -1,8 +1,8 @@
 const {
     app,
+    cli,
     fs,
     is,
-    runtime: { term },
     std,
     templating
 } = adone;
@@ -67,11 +67,11 @@ export default class LinkManager extends app.Subsystem {
                     ]
                 }));
             } else {
-                term.print("{white-fg}No links{/}\n");
+                cli.print("{white-fg}No links{/}\n");
             }
 
         } catch (err) {
-            term.print(`{red-fg}${err.message}{/}\n`);
+            cli.print(`{red-fg}${err.message}{/}\n`);
         }
     }
 
@@ -146,9 +146,9 @@ export default class LinkManager extends app.Subsystem {
                 chain: strChain
             }, true);
 
-            term.print(`Global link '${linkName}' to ${isAdone ? `'${chain[0]}'` : `'${strChain}' command chain`} successfully created\n`);
+            cli.print(`Global link '${linkName}' to ${isAdone ? `'${chain[0]}'` : `'${strChain}' command chain`} successfully created\n`);
         } catch (err) {
-            term.print(`{red-fg}${err.message}{/}\n`);
+            cli.print(`{red-fg}${err.message}{/}\n`);
         }
     }
 
@@ -192,9 +192,9 @@ export default class LinkManager extends app.Subsystem {
                 await fs.unlink(linkInfo.path);
             }
             await cliConfig.deleteLink(linkName);
-            term.print(`Global link to ${linkInfo.chain === "adone" ? "'adone'" : `'${linkInfo.chain}' command chain`} successfully deleted\n`);
+            cli.print(`Global link to ${linkInfo.chain === "adone" ? "'adone'" : `'${linkInfo.chain}' command chain`} successfully deleted\n`);
         } catch (err) {
-            term.print(`{red-fg}${err.message}{/}\n`);
+            cli.print(`{red-fg}${err.message}{/}\n`);
         }
     }
 

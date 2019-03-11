@@ -112,9 +112,8 @@ export default class Configuration extends adone.configuration.Generic {
     }
 
     static async load({ cwd } = {}) {
-        const rootRealm = adone.realm.getRootRealm();
         if (!is.string(cwd)) {
-            cwd = rootRealm.env.ETC_ADONE_PATH;
+            cwd = adone.ETC_ADONE_PATH;
         }
 
         const config = new Configuration({

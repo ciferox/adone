@@ -1,6 +1,5 @@
 const {
-    app: { Subsystem, MainCommandMeta },
-    runtime: { logger }
+    app: { Subsystem, MainCommandMeta, runtime: { logger } }
 } = adone;
 
 export default class extends Subsystem {

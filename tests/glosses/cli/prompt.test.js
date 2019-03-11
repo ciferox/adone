@@ -6,7 +6,7 @@ const {
 
 assertion.use(assertion.extension.dirty);
 
-describe("terminal", "prompt", () => {
+describe("cli", "prompt", () => {
     class TerminfoMock extends Terminfo {
         setup() {
             //
@@ -2079,7 +2079,7 @@ describe("terminal", "prompt", () => {
             });
 
             it("shouldn't process Separator object", () => {
-                const sep = new Choice(new Separator(term));
+                const sep = new Choice(new Separator());
                 expect(sep).to.be.instanceOf(Separator);
             });
 
@@ -2101,14 +2101,14 @@ describe("terminal", "prompt", () => {
             });
 
             it("should not process Separator object", () => {
-                const sep = new Separator(term);
+                const sep = new Separator();
                 const choices = new Choices(term, ["Bar", sep]);
                 expect(choices.get(0).name).to.equal("Bar");
                 expect(choices.get(1)).to.equal(sep);
             });
 
             it("should provide access to length information", () => {
-                const choices = new Choices(term, ["Bar", new Separator(term), "foo"]);
+                const choices = new Choices(term, ["Bar", new Separator(), "foo"]);
                 expect(choices.length).to.equal(3);
                 expect(choices.realLength).to.equal(2);
 
@@ -2155,7 +2155,7 @@ describe("terminal", "prompt", () => {
 
             it("should façade push and update the realChoices internally", () => {
                 const choices = new Choices(term, ["a"]);
-                choices.push("b", new Separator(term));
+                choices.push("b", new Separator());
                 expect(choices.length).to.equal(3);
                 expect(choices.realLength).to.equal(2);
                 expect(choices.getChoice(1)).to.be.instanceOf(Choice);
@@ -2169,27 +2169,27 @@ describe("terminal", "prompt", () => {
             const { stripAnsi } = adone.text;
 
             it("should set a default", () => {
-                const sep = new Separator(term);
+                const sep = new Separator();
                 expect(stripAnsi(sep.toString())).to.equal("──────────────");
             });
 
             it("should set user input as separator", () => {
-                const sep = new Separator(term, "foo bar");
+                const sep = new Separator("foo bar");
                 expect(stripAnsi(sep.toString())).to.equal("foo bar");
             });
 
             it("instances should be stringified when appended to a string", () => {
-                const sep = new Separator(term, "foo bar");
+                const sep = new Separator("foo bar");
                 expect(stripAnsi(String(sep))).to.equal("foo bar");
             });
 
             it("should expose a helper function to check for separator", () => {
                 expect(Separator.exclude({})).to.be.true();
-                expect(Separator.exclude(new Separator(term))).to.be.false();
+                expect(Separator.exclude(new Separator())).to.be.false();
             });
 
             it("give the type 'separator' to its object", () => {
-                const sep = new Separator(term);
+                const sep = new Separator();
                 expect(sep.type).to.equal("separator");
             });
         });

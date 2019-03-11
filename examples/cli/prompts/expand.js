@@ -1,6 +1,6 @@
 adone.app.run({
     async main() {
-        const answers = await adone.runtime.term.prompt().run([
+        const answers = await adone.cli.prompt().run([
             {
                 type: "expand",
                 message: "Conflict on `file.js`: ",
@@ -21,7 +21,7 @@ adone.app.run({
                         name: "Show diff",
                         value: "diff"
                     },
-                    adone.runtime.term.separator(),
+                    adone.cli.separator(),
                     {
                         key: "x",
                         name: "Abort",

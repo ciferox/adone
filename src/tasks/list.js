@@ -55,11 +55,11 @@ export default class ListTask extends task.Task {
 
         // Reading commands from cli configuration and check
         const cliConfig = await adone.cli.Configuration.load({
-            cwd: this.manager.config.ETC_ADONE_PATH
+            cwd: adone.ETC_ADONE_PATH
         });
 
         for (const cmd of cliConfig.raw.commands) {
-            const name = std.path.relative(this.manager.config.PACKAGES_PATH, cmd.subsystem).split(std.path.sep)[0];
+            const name = std.path.relative(adone.PACKAGES_PATH, cmd.subsystem).split(std.path.sep)[0];
             const index = result.findIndex((x) => x.name === name);
             if (index === -1) {
                 result.push({

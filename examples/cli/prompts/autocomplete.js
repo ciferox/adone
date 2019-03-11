@@ -1,5 +1,5 @@
 const {
-    runtime: { cli },
+    cli,
     text
 } = adone;
 

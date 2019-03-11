@@ -105,7 +105,7 @@ export const CommandMeta = (commandInfo = {}) => (target, key, descriptor) => {
     }
 };
 
-adone.lazify({
+const __ = adone.lazify({
     Subsystem: "./subsystem",
     Application: "./application",
     AppHelper: "./app_helper",
@@ -115,9 +115,14 @@ adone.lazify({
     lockfile: "./lockfile"
 }, adone.asNamespace(exports), require);
 
-adone.definePrivate({
-    locks: {} // used by adone.app.lockfile
-}, exports);
+// application runtime
+export const runtime = {
+    app: null,
+    lockFiles: {},
+    logger: __.logger.create({
+        level: "info"
+    })
+};
 
 export const configureReport = ({
     events = process.env.ADONE_REPORT_EVENTS || "exception+fatalerror+signal+apicall",
@@ -147,14 +152,8 @@ const INTERNAL = Symbol.for("adone.app.Application#internal");
 const _bootstrapApp = async (app, {
     useArgs
 }) => {
-    if (is.null(adone.runtime.app)) {
-        // setup the main application
-        // Prevent double initialization of global application instance
-        // (for cases where two or more Applications run in-process, the first app will be common).
-        if (!is.null(adone.runtime.app)) {
-            throw new adone.error.IllegalStateException("It is impossible to have several main applications");
-        }
-        adone.runtime.app = app;
+    if (is.null(runtime.app)) {
+        runtime.app = app;
 
         if (process.env.ADONE_ENABLE_REPORT) {
             adone.app.configureReport();
@@ -184,12 +183,27 @@ const _bootstrapApp = async (app, {
         process.on("rejectionHandled", rejectionHandled);
         process.on("beforeExit", beforeExit);
 
-        app._setAsMain();
-
-        if (is.nodejs && adone.runtime.terminal.output.isTTY) {
+        if (adone.is.nodejs && adone.cli.output.isTTY) {
             // Track cursor if tty mode is enabled
-            await new Promise((resolve) => adone.runtime.terminal.trackCursor(resolve));
+            await new Promise((resolve) => adone.cli.trackCursor(resolve));
         }
+
+
+        app.on("exit:main", async () => {
+            adone.cli.destroy();
+
+            // Remove acquired locks on exit
+            const locks = runtime.lockFiles;
+            const lockFiles = Object.keys(locks);
+            for (const file of lockFiles) {
+                try {
+                    const options = locks[file].options;
+                    await locks[file].options.fs.rm(app.lockfile.getLockFile(file, options)); // eslint-disable-line
+                } catch (e) {
+                    //
+                }
+            }
+        });
     }
 
     try {
@@ -298,14 +312,14 @@ const _bootstrapApp = async (app, {
 export const run = async (App, {
     useArgs = false
 } = {}) => {
-    if (is.null(adone.runtime.app) && is.class(App)) {
+    if (is.null(runtime.app) && is.class(App)) {
         if (useArgs) {
             // mark the default main as internal to be able to distinguish internal from user-defined handlers
             App.prototype.main[INTERNAL] = true;
         }
         const app = new App();
         if (!is.application(app)) {
-            console.error(adone.pretty.error(new adone.error.NotValidException("Invalid application class (should be derivative of 'adone.app.Application'")));
+            console.error(adone.cli.chalk.red("Invalid application class"));
             process.exit(1);
             return;
         }
@@ -319,9 +333,9 @@ export const run = async (App, {
     const _App = is.class(App) ? App.prototype : App;
     const allProps = util.entries(_App, { enumOnly: false });
 
-    if (!is.null(adone.runtime.app)) {
-        await adone.runtime.app._uninitialize();
-        adone.runtime.app = null;
+    if (!is.null(runtime.app)) {
+        await runtime.app._uninitialize();
+        runtime.app = null;
     }
 
     if (useArgs) {

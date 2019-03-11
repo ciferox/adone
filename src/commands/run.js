@@ -183,7 +183,7 @@ export default class Run extends Subsystem {
                 save: true
             });
     
-            const answers = await adone.runtime.term.prompt().run([
+            const answers = await adone.cli.prompt().run([
                 {
                     type: "confirm",
                     name: "execute",

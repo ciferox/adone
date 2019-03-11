@@ -511,7 +511,7 @@ class Omnitron extends Subsystem {
                     ]
                 }));
             } else {
-                adone.runtime.term.print("{white-fg}No services{/}\n");
+                adone.cli.print("{white-fg}No services{/}\n");
             }
             return 0;
         } catch (err) {

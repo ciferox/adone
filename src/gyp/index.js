@@ -155,7 +155,7 @@ export class Gyp extends adone.event.Emitter {
             if (!completed && !code) {
                 log.error("Completion callback never invoked!");
                 issueMessage();
-                adone.runtime.app.exit(6);
+                adone.app.runtime.app.exit(6);
             }
         });
 
@@ -163,7 +163,7 @@ export class Gyp extends adone.event.Emitter {
             log.error("UNCAUGHT EXCEPTION");
             log.error("stack", err.stack);
             issueMessage();
-            adone.runtime.app.exit(7);
+            adone.app.runtime.app.exit(7);
         });
 
         // start running the given commands!

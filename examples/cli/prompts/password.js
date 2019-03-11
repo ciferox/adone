@@ -7,7 +7,7 @@ adone.app.run({
             return "Password need to have at least a letter and a number";
         };
 
-        const answers = await adone.runtime.cli.prompt([
+        const answers = await adone.cli.prompt([
             {
                 type: "password",
                 message: "Enter a password",
