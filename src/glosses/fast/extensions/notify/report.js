@@ -10,10 +10,10 @@ const {
 
 const defaults = {
     error: {
-        icon: path.join(adone.realm.getRootRealm().env.SHARE_PATH, "media", "logo-err.png")
+        icon: path.join(adone.realm.rootRealm.env.SHARE_PATH, "media", "logo-err.png")
     },
     regular: {
-        icon: path.join(adone.realm.getRootRealm().env.SHARE_PATH, "media", "logo-norm.png")
+        icon: path.join(adone.realm.rootRealm.env.SHARE_PATH, "media", "logo-norm.png")
     }
 };
 

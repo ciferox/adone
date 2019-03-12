@@ -3,7 +3,7 @@ const {
     error,
     is,
     fs,
-    realm: { Configuration },
+    realm,
     task,
     std
 } = adone;
@@ -39,6 +39,21 @@ const loadTasks = (path, index) => {
     return {};
 };
 
+export const path = {
+    // ROOT_PATH: () => std.path.join(__dirname, ".."),
+    RUNTIME: "run",
+    ETC: "etc",
+    // ETC_ADONE_PATH: std.path.join(adone.ETC_PATH, "adone",
+    OPT: "opt",
+    VAR: "var",
+    SHARE: "share",
+    LOGS: std.path.join("var", "logs"),
+    KEYS: "keys",
+    PACKAGES: "packages",
+    LOCKFILE: "realm.lock"
+};
+
+
 export default class RealmManager extends task.Manager {
     constructor({ cwd = process.cwd() } = {}) {
         super();
@@ -47,25 +62,40 @@ export default class RealmManager extends task.Manager {
             throw new error.NotValidException(`Invalid type of cwd: ${adone.typeOf(cwd)}`);
         }
         this.cwd = cwd;
-        this.tasks = {};
+
+        this.ROOT_PATH = std.path.join(cwd);
+        this.BIN_PATH = std.path.join(cwd, "bin");
+        this.RUNTIME_PATH = std.path.join(cwd, "run");
+        this.ETC_PATH = std.path.join(cwd, "etc");
+        this.OPT_PATH = std.path.join(cwd, "opt");
+        this.VAR_PATH = std.path.join(cwd, "var");
+        this.SHARE_PATH = std.path.join(cwd, "share");
+        this.LOGS_PATH = std.path.join(cwd, "var", "logs");
+        this.KEYS_PATH = std.path.join(cwd, "keys");
+        this.PACKAGES_PATH = std.path.join(cwd, "packages");
+        this.LOCKFILE_PATH = std.path.join(cwd, "realm.lock");
 
         adone.lazify({
             config: () => {
-                const conf = Configuration.loadSync({
+                const conf = realm.Configuration.loadSync({
                     cwd
                 });
 
-                if (is.object(conf.raw.tasks) && is.string(conf.raw.tasks.basePath)) {
-                    const basePath = std.path.join(this.cwd, conf.raw.tasks.basePath);
+                return conf;
+            },
+            tasks: () => {
+                let tasks = {};
+                if (is.object(this.config.raw.tasks) && is.string(this.config.raw.tasks.basePath)) {
+                    const basePath = std.path.join(this.cwd, this.config.raw.tasks.basePath);
                     if (fs.existsSync(basePath)) {
-                        this.tasks = {
-                            ...loadTasks(basePath, conf.raw.tasks.index),
-                            ...loadTasks(basePath, conf.raw.tasks.indexDev)
+                        tasks = {
+                            ...loadTasks(basePath, this.config.raw.tasks.index),
+                            ...loadTasks(basePath, this.config.raw.tasks.indexDev)
                         };
                     }
                 }
 
-                return conf;
+                return tasks;
             },
             package: std.path.join(cwd, "package.json"),
             identity: std.path.join(cwd, ".adone", "identity.json") // remove (adone specific)
@@ -82,7 +112,7 @@ export default class RealmManager extends task.Manager {
 
     async initialize() {
         if (this[INITIALIZED]) {
-            throw new error.IllegalStateException("Realm manager already initialized");
+            return;
         }
         this[INITIALIZED] = true;
 
@@ -163,17 +193,17 @@ export default class RealmManager extends task.Manager {
     }
 
     async lock() {
-        return lockfile.create(adone.ROOT_PATH, {
-            lockfilePath: adone.LOCKFILE_PATH
+        return lockfile.create(this.ROOT_PATH, {
+            lockfilePath: this.LOCKFILE_PATH
         });
     }
 
     async unlock() {
         const options = {
-            lockfilePath: adone.LOCKFILE_PATH
+            lockfilePath: this.LOCKFILE_PATH
         };
-        if (await lockfile.check(adone.ROOT_PATH, options)) {
-            return lockfile.release(adone.ROOT_PATH, options);
+        if (await lockfile.check(this.ROOT_PATH, options)) {
+            return lockfile.release(this.ROOT_PATH, options);
         }
     }
 }

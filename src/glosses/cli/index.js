@@ -3018,7 +3018,7 @@ class Terminal extends adone.event.Emitter {
 
 
 
-
+    // High-level CLI functions
 
     get style() {
         return this[COLOR_SCHEME];
@@ -3041,11 +3041,17 @@ class Terminal extends adone.event.Emitter {
             for (const w of what) {
                 this.observe(w, taskManager);
             }
-
             return;
         }
 
-        switch (what) {
+        let notifName;
+        if (is.object(what)) {
+            notifName = what.name;
+        } else {
+            notifName = what;
+        }
+
+        switch (notifName) {
             case "progress": {
                 this.progress("preparing");
                 await taskManager.onNotification("progress", (sender, name, info) => {
@@ -3053,14 +3059,8 @@ class Terminal extends adone.event.Emitter {
                 });
                 break;
             }
-            default: {
-                if (what.startsWith("log") && is.function(adone[what])) {
-                    await taskManager.onNotification(what, (sender, name, ...args) => {
-                        adone[what](...args);
-                    });
-                }
-                break;
-            }
+            default:
+                throw new adone.error.UnknownException(`Unknown notification name: ${what}`);
         }
     }
 

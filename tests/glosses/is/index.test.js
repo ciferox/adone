@@ -594,6 +594,10 @@ describe("is", () => {
                 const obj = adone.asNamespace(b);
                 assert.isTrue(is.namespace(obj));
             });
+
+            it("realm", () => {
+                assert.isTrue(is.realm(adone.realm.rootRealm));
+            });
         });
     });
 });

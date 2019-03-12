@@ -35,9 +35,9 @@ export default async (ctx) => {
         ctx.runtime.realmManager = realmManager;
 
         // hijacking realm
-        adone.realm.getRootRealm().manager = realmManager;
-        adone.realm.getRootRealm().config = adone.runtime.config = realmManager.config;
-        adone.realm.getRootRealm().identity = realmManager.config.identity.server;
+        adone.realm.rootRealm.manager = realmManager;
+        adone.realm.rootRealm.config = adone.runtime.config = realmManager.config;
+        adone.realm.rootRealm.identity = realmManager.config.identity.server;
     });
 
     ctx.after(async () => {

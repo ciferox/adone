@@ -4700,11 +4700,6 @@ merge-options@^1.0.1:
   dependencies:
     is-plain-obj "^1.1"
 
-merge-recursive@^0.0.3:
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/merge-recursive/-/merge-recursive-0.0.3.tgz#de7901efcaecc906d8cab2ad1e9c470f5a3dae84"
-  integrity sha1-3nkB78rsyQbYyrKtHpxHD1o9roQ=
-
 merge2@^1.2.3:
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/merge2/-/merge2-1.2.3.tgz#7ee99dbd69bb6481689253f018488a1b902b0ed5"

@@ -157,15 +157,15 @@ export default class TaskManager extends adone.event.AsyncEmitter {
             name = selector;
         } else if (is.function(selector)) {
             filter = selector;
-        } else if (is.plainObject(selector)) {
+        } else if (is.object(selector)) {
             if (is.string(selector.name)) {
                 name = selector.name;
             }
 
-            if (is.string(selector.tasks)) {
-                filter = (task) => task.name === selector.tasks;
+            if (is.string(selector.task)) {
+                filter = (task) => task.observer.taskName === selector.task;
             } else if (is.array(selector.tasks)) {
-                filter = (task) => selector.tasks.includes(task.name);
+                filter = (task) => selector.task.includes(task.observer.taskName);
             }
         }
 
@@ -178,9 +178,8 @@ export default class TaskManager extends adone.event.AsyncEmitter {
                 }];
                 this[NOTIFICATIONS_SYMBOL].set(name, observers);
             } else {
-                const exists = observers.findIndex((info) => info.observer === observer) >= 0;
-                if (exists) {
-                    throw new error.ExistsException("Observer already exists");
+                if (observers.findIndex((info) => info.observer === observer) >= 0) {
+                    throw new error.ExistsException("Shuch observer already exists");
                 }
 
                 observers.push({
@@ -190,6 +189,9 @@ export default class TaskManager extends adone.event.AsyncEmitter {
             }
         } else {
             const anyNotif = this[NOTIFICATIONS_SYMBOL].get(ANY_NOTIFICATION);
+            if (anyNotif.findIndex((info) => info.observer === observer) >= 0) {
+                throw new error.ExistsException("Shuch observer already exists");
+            }
             anyNotif.push({
                 filter,
                 observer
@@ -360,7 +362,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
                 case "std": {
                     return async (args) => {
                         const instance = await this._createTaskInstance(taskInfo);
-        
+
                         const taskObserver = new adone.task.TaskObserver(instance, taskInfo.name);
                         taskObserver.state = adone.task.STATE.RUNNING;
                         try {
@@ -371,7 +373,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
                             }
                             taskObserver.result = Promise.reject(err);
                         }
-        
+
                         if (is.promise(taskObserver.result)) {
                             // Wrap promise if task has undo method.
                             if (is.function(taskObserver.task.undo)) {
@@ -380,7 +382,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
                                     throw err;
                                 });
                             }
-        
+
                             taskObserver.result.then(() => {
                                 taskObserver.state = (taskObserver.state === adone.task.STATE.CANCELLING) ? adone.task.STATE.CANCELLED : adone.task.STATE.COMPLETED;
                             }).catch((err) => {

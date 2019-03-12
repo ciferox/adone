@@ -1034,6 +1034,8 @@ adone.lazify({
     taskObserver: () => (obj) => obj instanceof adone.task.TaskObserver,
     taskManager: () => (obj) => obj instanceof adone.task.Manager,
 
+    realm: () => (obj) => obj instanceof adone.realm.Manager,
+
     // crypto
     identity: () => (obj) => obj instanceof adone.crypto.Identity,
 

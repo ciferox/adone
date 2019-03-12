@@ -235,7 +235,7 @@ describe("logger", () => {
                         })
                         .pipe(split())
                         .on("data", (d) => {
-                            assert.atLeast(++read, logged);
+                            assert.isAtLeast(++read, logged);
                             assert.strictEqual(d, info[MESSAGE]);
                         })
                         .on("end", () => {

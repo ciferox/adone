@@ -2224,7 +2224,7 @@ const addressIs = (addressString, descriptors) => {
                 it("converts to a byte array and back", () => {
                     const byteArray = address6.toByteArray();
 
-                    assert.atMost(byteArray.length, 16);
+                    assert.isAtMost(byteArray.length, 16);
 
                     const converted = IP6.fromByteArray(byteArray);
 
@@ -2234,7 +2234,7 @@ const addressIs = (addressString, descriptors) => {
                 it("converts to an unsigned byte array and back", () => {
                     const byteArray = address6.toUnsignedByteArray();
 
-                    assert.atMost(byteArray.length, 16);
+                    assert.isAtMost(byteArray.length, 16);
 
                     const converted = IP6.fromUnsignedByteArray(byteArray);
 

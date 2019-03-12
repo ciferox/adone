@@ -1,10 +1,11 @@
 const {
+    cli: { style },
     error,
     configuration,
     is,
     fs,
     std,
-    realm,
+    realm
 } = adone;
 
 const __ = adone.lazify({
@@ -12,7 +13,7 @@ const __ = adone.lazify({
 }, null, require);
 
 export default class extends realm.BaseTask {
-    async run(info = {}) {        
+    async run(info = {}) {
         if (!is.string(info.basePath)) {
             throw new error.InvalidArgumentException("Invalid base path");
         }
@@ -25,7 +26,7 @@ export default class extends realm.BaseTask {
             await fs.mkdirp(info.basePath);
         }
 
-        const cwd = std.path.join(info.basePath, info.dirName || info.name);
+        const cwd = std.path.join(info.basePath, info.dir || info.name);
         if (await fs.exists(cwd)) {
             throw new error.ExistsException(`Path '${cwd}' already exists`);
         }
@@ -33,45 +34,47 @@ export default class extends realm.BaseTask {
         info.cwd = cwd;
 
         this.manager.notify(this, "progress", {
-            message: "initialize {bold}empty project{/bold}"
+            message: "initializing"
         });
 
         await fs.mkdirp(std.path.join(cwd, ".adone"));
 
         this.manager.notify(this, "progress", {
-            message: `creating {bold}${configuration.Npm.configName}{/bold}`
+            message: `creating ${style.primary(configuration.Npm.configName)}`
         });
-        
+
         await __.helper.packageConfig.create(info);
 
         this.manager.notify(this, "progress", {
-            message: `creating realm {bold}${realm.Configuration.configName}{/bold}`
+            message: `creating ${style.primary(realm.Configuration.configName)}`
         });
-        
+
         await __.helper.realmConfig.create(info);
 
         info = adone.lodash.defaults(info, {
-            skipGit: false,
-            skipNpm: false,
-            skipJsconfig: false,
-            skipEslint: false
+            initGit: false,
+            initNpm: false,
+            initJsconfig: false,
+            initEslint: false
         });
-    
-        if (!info.skipJsconfig) {
+
+        if (info.initJsconfig) {
             this.manager.notify(this, "progress", {
-                message: "creating {bold}jsconfig.json{/bold}"
+                message: `creating ${style.primary("jsconfig.json")}`
             });
             await __.helper.jsconfig.create(info);
         }
 
-        if (!info.skipEslint) {
+        if (info.initEslint) {
             this.manager.notify(this, "progress", {
-                message: "creating {bold}.eslintrc.js{/bold}"
+                message: `creating ${style.primary(".eslintrc.js")}`
             });
             await __.helper.eslintrc.create(info);
         }
 
-        if (!info.skipGit) {
+        if (info.initGit) {
+            // Check git is installed
+            await adone.fs.which("git");
             this.manager.notify(this, "progress", {
                 message: "initializing git repo"
             });
@@ -83,6 +86,11 @@ export default class extends realm.BaseTask {
         // } catch (err) {
         //     await fs.rm(cwd);
         // }
+
+        this.manager.notify(this, "progress", {
+            message: `Realm ${style.primary.bold(info.name)} successfully created`,
+            status: true
+        });
     }
 
     // async createSubProject(info) {

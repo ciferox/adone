@@ -52,11 +52,11 @@ const __ = lazify({
     Dispatcher: "./dispatcher",
     dispatcher: () => new __.Dispatcher(),
     LOCAL_PEER_INFO: () => {
-        const peerInfo = adone.net.p2p.PeerInfo.create(adone.realm.getRootRealm().identity);
+        const peerInfo = adone.net.p2p.PeerInfo.create(adone.realm.rootRealm.identity);
         peerInfo.multiaddrs.add(__.DEFAULT_ADDRESS);
         return peerInfo;
     },
     DEFAULT_ADDRESS: () => is.windows
-        ? `//winpipe/\\\\.\\pipe\\${adone.realm.getRootRealm().identity.id}\\omnitron.sock`
+        ? `//winpipe/\\\\.\\pipe\\${adone.realm.rootRealm.identity.id}\\omnitron.sock`
         : `//unix${adone.std.path.join(adone.runtime.config.RUNTIME_PATH, "omnitron.sock")}`
 }, adone.asNamespace(exports), require);

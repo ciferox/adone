@@ -80,7 +80,7 @@ describe("realm", () => {
         assert.isTrue(is.class(adone.realm.BaseTask));
         assert.isTrue(is.class(adone.realm.TransformTask));
         assert.isTrue(is.class(adone.realm.Configuration));
-        assert.isFunction(adone.realm.getRootRealm);
+        assert.isTrue(is.realm(adone.realm.rootRealm));
     });
 
     describe("tasks configuration", () => {
@@ -115,9 +115,9 @@ describe("realm", () => {
 
     describe("root realm", () => {
         it("pre initialize", () => {
-            rootRealm = realm.getRootRealm();
+            rootRealm = realm.rootRealm;
             assert.instanceOf(rootRealm, adone.realm.Manager);
-            assert.equal(rootRealm.env.ROOT_PATH, adone.ROOT_PATH);
+            assert.equal(rootRealm.ROOT_PATH, adone.ROOT_PATH);
             assert.deepEqual(rootRealm.package, adone.package);
             assert.isObject(rootRealm.config);
         });
@@ -132,12 +132,13 @@ describe("realm", () => {
             assert.sameMembers(rootRealm.getTaskNames(), CORE_TASKS);
         });
 
-        it("initialize realm manager second time should be thrown", async () => {
-            const err = await assert.throws(async () => {
+        it("initialize realm manager repeatedly shouldn't be thrown", async () => {
+            let i;
+            for (i = 0; i < 10; i++) {
+                // eslint-disable-next-line no-await-in-loop
                 await rootRealm.initialize();
-            });
-            assert.instanceOf(err, error.IllegalStateException);
-            assert.equal(err.message, "Realm manager already initialized");
+            }
+            assert.equal(i, 10);
         });    
     });
 
@@ -147,7 +148,7 @@ describe("realm", () => {
         });
     });
 
-    describe("create empty realm", () => {
+    describe("create realm", () => {
         before(async () => {
             await fs.mkdirp(newRealmsPath);
         });
@@ -162,7 +163,7 @@ describe("realm", () => {
             }, error.InvalidArgumentException);
         });
 
-        it("create realm with default 'basePath' should be thrown", async () => {
+        it("create realm without 'basePath' should be thrown", async () => {
             await assert.throws(async () => {
                 await rootRealm.runAndWait("createRealm", {
                     name: "realm1"
@@ -194,10 +195,10 @@ describe("realm", () => {
             assert.isTrue(await fs.exists(info.cwd));
             assert.isTrue(await fs.isFile(std.path.join(info.cwd, realm.Configuration.configName)));
             assert.isTrue(await fs.isFile(std.path.join(info.cwd, configuration.Npm.configName)));
-            assert.isTrue(await fs.isFile(std.path.join(info.cwd, ".gitignore")));
-            assert.isTrue(await fs.isDirectory(std.path.join(info.cwd, ".git")));
-            assert.isTrue(await fs.isFile(std.path.join(info.cwd, ".eslintrc.js")));
-            assert.isTrue(await fs.isFile(std.path.join(info.cwd, "jsconfig.json")));
+            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".gitignore")));
+            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".git")));
+            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".eslintrc.js")));
+            assert.isFalse(await fs.exists(std.path.join(info.cwd, "jsconfig.json")));
 
             const packageConfig = await configuration.Npm.load({
                 cwd: info.cwd
@@ -208,77 +209,84 @@ describe("realm", () => {
             assert.equal(std.path.basename(info.cwd), name);
         });
 
-        it("create realm with specified 'dirName'", async () => {
+        it("create realm with specified 'dir'", async () => {
             const name = "myproject";
-            const dirName = getRealmName();
+            const dir = getRealmName();
             
             const info = {
                 name,
-                dirName,
+                dir,
                 basePath: newRealmsPath
             };
 
             await rootRealm.runAndWait("createRealm", info);
 
-            assert.equal(info.cwd, std.path.join(newRealmsPath, info.dirName));
+            assert.equal(info.cwd, std.path.join(newRealmsPath, info.dir));
+            assert.isTrue(await fs.exists(info.cwd));
+            assert.isTrue(await fs.isFile(std.path.join(info.cwd, realm.Configuration.configName)));
+            assert.isTrue(await fs.isFile(std.path.join(info.cwd, configuration.Npm.configName)));
+            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".gitignore")));
+            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".git")));
+            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".eslintrc.js")));
+            assert.isFalse(await fs.exists(std.path.join(info.cwd, "jsconfig.json")));
 
             const packageConfig = await configuration.Npm.load({
                 cwd: info.cwd
             });
             
             assert.equal(packageConfig.raw.name, name);
-            assert.equal(std.path.basename(info.cwd), dirName);
+            assert.equal(std.path.basename(info.cwd), dir);
         });
 
-        it("create realm without git initialization", async () => {
+        it("create realm with git initialization", async () => {
             const name = getRealmName();
             
             const info = {
                 name,
-                skipGit: true,
-                basePath: newRealmsPath
-            };
-
-            await rootRealm.runAndWait("createRealm", info);
-
-            assert.isTrue(await fs.exists(std.path.join(info.cwd, ".eslintrc.js")));
-            assert.isTrue(await fs.isFile(std.path.join(info.cwd, "jsconfig.json")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".gitignore")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".git")));
-        });
-
-        it("create realm without 'eslintrc.js' config", async () => {
-            const name = getRealmName();
-            
-            const info = {
-                name,
-                skipEslint: true,
+                initGit: true,
                 basePath: newRealmsPath
             };
 
             await rootRealm.runAndWait("createRealm", info);
 
             assert.isFalse(await fs.exists(std.path.join(info.cwd, ".eslintrc.js")));
-            assert.isTrue(await fs.isFile(std.path.join(info.cwd, "jsconfig.json")));
-            assert.isTrue(await fs.exists(std.path.join(info.cwd, ".gitignore")));
-            assert.isTrue(await fs.exists(std.path.join(info.cwd, ".git")));
+            assert.isFalse(await fs.exists(std.path.join(info.cwd, "jsconfig.json")));
+            assert.isTrue(await fs.isFile(std.path.join(info.cwd, ".gitignore")));
+            assert.isTrue(await fs.isDirectory(std.path.join(info.cwd, ".git")));
         });
 
-        it("create realm without 'jsconfig.json' config", async () => {
+        it("create realm with 'eslintrc.js' config", async () => {
             const name = getRealmName();
             
             const info = {
                 name,
-                skipJsconfig: true,
+                initEslint: true,
                 basePath: newRealmsPath
             };
 
             await rootRealm.runAndWait("createRealm", info);
 
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, "jsconfig.json")));
             assert.isTrue(await fs.isFile(std.path.join(info.cwd, ".eslintrc.js")));
-            assert.isTrue(await fs.isFile(std.path.join(info.cwd, ".gitignore")));
-            assert.isTrue(await fs.exists(std.path.join(info.cwd, ".git")));
+            assert.isFalse(await fs.exists(std.path.join(info.cwd, "jsconfig.json")));
+            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".gitignore")));
+            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".git")));
+        });
+
+        it("create realm with 'jsconfig.json' config", async () => {
+            const name = getRealmName();
+            
+            const info = {
+                name,
+                initJsconfig: true,
+                basePath: newRealmsPath
+            };
+
+            await rootRealm.runAndWait("createRealm", info);
+
+            assert.isTrue(await fs.isFile(std.path.join(info.cwd, "jsconfig.json")));
+            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".eslintrc.js")));
+            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".gitignore")));
+            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".git")));
         });
     });
 

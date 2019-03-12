@@ -144,18 +144,16 @@ adone.lazify({
     package: "../package.json",
 
     ROOT_PATH: () => adone.std.path.join(__dirname, ".."),
+    BIN_PATH: () => adone.std.path.join(adone.ROOT_PATH, "bin"),
     RUNTIME_PATH: () => adone.std.path.join(adone.ROOT_PATH, "run"),
     ETC_PATH: () => adone.std.path.join(adone.ROOT_PATH, "etc"),
-    ETC_ADONE_PATH: () => adone.std.path.join(adone.ETC_PATH, "adone"),
     OPT_PATH: () => adone.std.path.join(adone.ROOT_PATH, "opt"),
     VAR_PATH: () => adone.std.path.join(adone.ROOT_PATH, "var"),
     SHARE_PATH: () => adone.std.path.join(adone.ROOT_PATH, "share"),
     LOGS_PATH: () => adone.std.path.join(adone.VAR_PATH, "logs"),
     KEYS_PATH: () => adone.std.path.join(adone.ROOT_PATH, "keys"),
-    PACKAGES_PATH: () => adone.std.path.join(adone.ROOT_PATH, "packages"),
-    LOCKFILE_PATH: () => adone.std.path.join(adone.ROOT_PATH, "realm.lock"),
     EMPTY_BUFFER: () => Buffer.allocUnsafe(0),
-    LOGO: () => adone.fs.readFileSync(adone.std.path.join(adone.realm.getRootRealm().env.SHARE_PATH, "media", "adone.txt"), { encoding: "utf8" }),
+    LOGO: () => adone.fs.readFileSync(adone.std.path.join(adone.SHARE_PATH, "media", "adone.txt"), { encoding: "utf8" }),
 
     assert: () => adone.assertion.assert,
 

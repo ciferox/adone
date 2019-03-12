@@ -1,0 +1,12 @@
+{
+    "groups": [
+        {
+            "name": "common",
+            "description": "Common"
+        },
+        {
+            "name": "subsystem",
+            "description": "Еhird party commands"
+        }
+    ]
+}

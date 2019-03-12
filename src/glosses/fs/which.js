@@ -1,51 +1,52 @@
-const { is } = adone;
+const {
+    fs,
+    is,
+    std
+} = adone;
 const isWindows = is.windows || process.env.OSTYPE === "cygwin" || process.env.OSTYPE === "msys";
 const COLON = isWindows ? ";" : ":";
 
 const getNotFoundError = (cmd) => {
-    const err = new Error(`not found: ${cmd}`);
+    const err = new adone.error.NotFoundException(`Not found: ${cmd}`);
     err.code = "ENOENT";
     return err;
 };
 
-const getPathInfo = (cmd, opt) => {
-    const colon = opt.colon || COLON;
-    let pathEnv = opt.path || process.env.PATH || "";
-    let pathExt = [""];
+const getPathInfo = (cmd, { colon = COLON, path = process.env.PATH || "", pathExt = process.env.PATHEXT || ".EXE;.CMD;.BAT;.COM" } = {}) => {
+    let env = path.split(colon);
+    let ext = [""];
 
-    pathEnv = pathEnv.split(colon);
-
-    let pathExtExe = "";
+    let extExe = "";
     if (isWindows) {
-        pathEnv.unshift(process.cwd());
-        pathExtExe = (opt.pathExt || process.env.PATHEXT || ".EXE;.CMD;.BAT;.COM");
-        pathExt = pathExtExe.split(colon);
+        env.unshift(process.cwd());
+        extExe = pathExt;
+        ext = extExe.split(colon);
 
 
         // Always test the cmd itself first.  isexe will check to make sure
         // it's found in the pathExt set.
-        if (cmd.indexOf(".") !== -1 && pathExt[0] !== "") {
-            pathExt.unshift("");
+        if (cmd.includes(".") && ext[0] !== "") {
+            ext.unshift("");
         }
     }
 
     // If it has a slash, then we don't bother searching the pathenv.
     // just check the file itself, and that's it.
     if (cmd.match(/\//) || isWindows && cmd.match(/\\/)) {
-        pathEnv = [""];
+        env = [""];
     }
 
     return {
-        env: pathEnv,
-        ext: pathExt,
-        extExe: pathExtExe
+        env,
+        ext,
+        extExe
     };
 };
 
-export const which = async (cmd, opt = {}) => {
-    const info = getPathInfo(cmd, opt);
+export const which = async (cmd, { colon, path, pathExt, all = false, nothrow = false } = {}) => {
+    const info = getPathInfo(cmd, { colon, path, pathExt });
     const pathEnv = info.env;
-    const pathExt = info.ext;
+    const ext = info.ext;
     const pathExtExe = info.extExe;
     const found = [];
 
@@ -55,19 +56,20 @@ export const which = async (cmd, opt = {}) => {
             pathPart = pathPart.slice(1, -1);
         }
 
-        let p = adone.std.path.join(pathPart, cmd);
-        if (!pathPart && /^\.[\\\/]/.test(cmd)) {
+        let p = std.path.join(pathPart, cmd);
+        if (!pathPart && /^\.[\\/]/.test(cmd)) {
             p = cmd.slice(0, 2) + p;
         }
-        for (let j = 0, ll = pathExt.length; j < ll; j++) {
-            const cur = p + pathExt[j];
-            let is;
+        for (let j = 0, ll = ext.length; j < ll; j++) {
+            const cur = p + ext[j];
+            let isExe;
             try {
-                is = await adone.fs.isExecutable(cur, {
+                // eslint-disable-next-line no-await-in-loop
+                isExe = await fs.isExecutable(cur, {
                     pathExt: pathExtExe
                 });
-                if (is) {
-                    if (opt.all) {
+                if (isExe) {
+                    if (all) {
                         found.push(cur);
                     } else {
                         return cur;
@@ -79,21 +81,21 @@ export const which = async (cmd, opt = {}) => {
         }
     }
 
-    if (opt.all && found.length) {
+    if (all && found.length) {
         return found;
     }
 
-    if (opt.nothrow) {
+    if (nothrow) {
         return null;
     }
 
     throw getNotFoundError(cmd);
 };
 
-export const whichSync = (cmd, opt = {}) => {
-    const info = getPathInfo(cmd, opt);
+export const whichSync = (cmd, { colon, path, pathExt, all = false, nothrow = false } = {}) => {
+    const info = getPathInfo(cmd, { colon, path, pathExt });
     const pathEnv = info.env;
-    const pathExt = info.ext;
+    const ext = info.ext;
     const pathExtExe = info.extExe;
     const found = [];
 
@@ -103,17 +105,17 @@ export const whichSync = (cmd, opt = {}) => {
             pathPart = pathPart.slice(1, -1);
         }
 
-        let p = adone.std.path.join(pathPart, cmd);
-        if (!pathPart && /^\.[\\\/]/.test(cmd)) {
+        let p = std.path.join(pathPart, cmd);
+        if (!pathPart && /^\.[\\/]/.test(cmd)) {
             p = cmd.slice(0, 2) + p;
         }
-        for (let j = 0, ll = pathExt.length; j < ll; j++) {
-            const cur = p + pathExt[j];
-            let is;
+        for (let j = 0, ll = ext.length; j < ll; j++) {
+            const cur = p + ext[j];
+            let isExe;
             try {
-                is = adone.fs.isExecutableSync(cur, { pathExt: pathExtExe });
-                if (is) {
-                    if (opt.all) {
+                isExe = fs.isExecutableSync(cur, { pathExt: pathExtExe });
+                if (isExe) {
+                    if (all) {
                         found.push(cur);
                     } else {
                         return cur;
@@ -125,11 +127,11 @@ export const whichSync = (cmd, opt = {}) => {
         }
     }
 
-    if (opt.all && found.length) {
+    if (all && found.length) {
         return found;
     }
 
-    if (opt.nothrow) {
+    if (nothrow) {
         return null;
     }
 

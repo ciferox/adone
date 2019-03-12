@@ -18,17 +18,6 @@ const realm = adone.lazify({
     Manager: "./manager",
     BaseTask: "./base_task",
     TransformTask: "./transform_task",
-    TypeHandler: "./type_handler"
+    TypeHandler: "./type_handler",
+    rootRealm: () => new realm.Manager({ cwd: adone.ROOT_PATH })
 }, adone.asNamespace(exports), require);
-
-
-let rootRealm = null;
-
-export const getRootRealm = () => {
-    if (is.null(rootRealm)) {
-        rootRealm = new realm.Manager({
-            cwd: adone.std.path.join(__dirname, "..", "..", "..")
-        });
-    }
-    return rootRealm;
-};

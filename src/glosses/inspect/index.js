@@ -107,31 +107,19 @@ const specialObjectSubstitution = (object, runtime, options) => {
         // Some objects have no constructor, e.g.: Object.create(null)
         //console.error( object ) ;
         return;
-    }
-
-    if (object instanceof String) {
+    } else if (object instanceof String) {
         return object.toString();
-    }
-
-    if (object instanceof RegExp) {
+    } else if (object instanceof RegExp) {
         return object.toString();
-    }
-
-    if (object instanceof Date) {
+    } else if (object instanceof Date) {
         return `${object.toString()} [${object.getTime()}]`;
-    }
-
-    if (is.function(Set) && object instanceof Set) {
+    } else if (object instanceof Set) {
         // This is an ES6 'Set' Object
         return Array.from(object);
-    }
-
-    if (is.function(Map) && object instanceof Map) {
+    } else if (object instanceof Map) {
         // This is an ES6 'Map' Object
         return Array.from(object);
-    }
-
-    if (object instanceof Promise) {
+    } else if (object instanceof Promise) {
         if (process && process.binding && process.binding("util") && process.binding("util").getPromiseDetails) {
             const details = process.binding("util").getPromiseDetails(object);
             const state = promiseStates[details[0]];
@@ -188,7 +176,7 @@ const specialObjectSubstitution = (object, runtime, options) => {
 const COMPLEX_TYPES = ["global", "Array", "Object", "object", "class", "function", "Error", "namespace"];
 
 /**
- * Inspect a variable, return a string ready to be displayed with console.log(), or even as an HTML output.
+ * Inspect an object, return a string ready to be displayed with console.log(), or even as an HTML output.
  *
  * Options:
  * style:
@@ -215,7 +203,7 @@ const COMPLEX_TYPES = ["global", "Array", "Object", "object", "class", "function
  * asObject: interpret as plain object
  * useInspect: use .inspect() method when available on an object (default to false)
  */
-const inspect_ = (runtime, options, variable) => {
+const inspect_ = (runtime, options, obj) => {
     let i;
     let funcName;
     let length;
@@ -234,21 +222,21 @@ const inspect_ = (runtime, options, variable) => {
 
     let type;
     if (options.native) {
-        type = is.object(variable) && options.asObject ? "object" : typeof variable;
-    } else if (options.asObject && !is.primitive(variable)) {
+        type = is.object(obj) && options.asObject ? "object" : typeof obj;
+    } else if (options.asObject && !is.primitive(obj)) {
         type = "object";
     } else {
-        type = adone.typeOf(variable);
+        type = adone.typeOf(obj);
     }
 
-    const isNamespace = is.namespace(variable);
+    const isNamespace = is.namespace(obj);
     if (!options.native && isNamespace) {
         type = "namespace";
     } else if (type === "function" && isNamespace) {
         type = "namespace";
     }
 
-    const nativeType = typeof variable;
+    const nativeType = typeof obj;
 
     const indent = options.style.tab.repeat(runtime.depth);
 
@@ -298,31 +286,31 @@ const inspect_ = (runtime, options, variable) => {
 
     const pre = runtime.noPre ? "" : indent + key;
 
-    if (is.undefined(variable)) {
+    if (is.undefined(obj)) {
         str += pre + options.style.constant("undefined") + descriptorStr + options.style.newline;
-    } else if (variable === EMPTY) {
+    } else if (obj === EMPTY) {
         str += pre + options.style.constant("[empty]") + descriptorStr + options.style.newline;
-    } else if (is.null(variable)) {
+    } else if (is.null(obj)) {
         str += pre + options.style.constant("null") + descriptorStr + options.style.newline;
-    } else if (variable === false) {
+    } else if (obj === false) {
         str += pre + options.style.constant("false") + descriptorStr + options.style.newline;
-    } else if (variable === true) {
+    } else if (obj === true) {
         str += pre + options.style.constant("true") + descriptorStr + options.style.newline;
     } else if (type === "number") {
-        str += pre + options.style.number(variable.toString()) +
+        str += pre + options.style.number(obj.toString()) +
             (options.noType ? "" : ` ${options.style.type("number")}`) +
             descriptorStr + options.style.newline;
     } else if (type === "string") {
-        if (variable.length > options.maxLength) {
-            str += `${pre}"${options.style.string(text.escape.control(variable.slice(0, options.maxLength - 1)))}…"${
-                options.noType ? "" : ` ${options.style.type("string")}${options.style.length(`(${variable.length} - TRUNCATED)`)}`}${descriptorStr}${options.style.newline}`;
+        if (obj.length > options.maxLength) {
+            str += `${pre}"${options.style.string(text.escape.control(obj.slice(0, options.maxLength - 1)))}…"${
+                options.noType ? "" : ` ${options.style.type("string")}${options.style.length(`(${obj.length} - TRUNCATED)`)}`}${descriptorStr}${options.style.newline}`;
         } else {
-            str += `${pre}"${options.style.string(text.escape.control(variable))}"${
-                options.noType ? "" : ` ${options.style.type("string")}${options.style.length(`(${variable.length})`)}`}${descriptorStr}${options.style.newline}`;
+            str += `${pre}"${options.style.string(text.escape.control(obj))}"${
+                options.noType ? "" : ` ${options.style.type("string")}${options.style.length(`(${obj.length})`)}`}${descriptorStr}${options.style.newline}`;
         }
-    } else if (is.buffer(variable)) {
-        str += pre + options.style.inspect(variable.inspect()) +
-            (options.noType ? "" : ` ${options.style.type("Buffer")}${options.style.length(`(${variable.length})`)}`) +
+    } else if (is.buffer(obj)) {
+        str += pre + options.style.inspect(obj.inspect()) +
+            (options.noType ? "" : ` ${options.style.type("Buffer")}${options.style.length(`(${obj.length})`)}`) +
             descriptorStr + options.style.newline;
     } else if (COMPLEX_TYPES.includes(type)) {
         funcName = length = "";
@@ -330,30 +318,30 @@ const inspect_ = (runtime, options, variable) => {
 
         if (type === "function") {
             isFunc = true;
-            funcName = ` ${options.style.funcName((variable.name ? variable.name : "(anonymous)"))}`;
-            length = options.style.length(`(${variable.length})`);
+            funcName = ` ${options.style.funcName((obj.name ? obj.name : "(anonymous)"))}`;
+            length = options.style.length(`(${obj.length})`);
         }
 
         isArray = false;
-        if (is.array(variable)) {
+        if (is.array(obj)) {
             isArray = true;
-            length = options.style.length(`(${variable.length})`);
+            length = options.style.length(`(${obj.length})`);
         }
 
         if (type === "namespace" || isNamespace) {
             constructor = "Namespace";
         } else if (type === "class") {
-            constructor = `Class ${variable.name}`;
-        } else if (!variable.constructor) {
+            constructor = `Class ${obj.name}`;
+        } else if (!obj.constructor) {
             constructor = "(no constructor)";
-        } else if (!variable.constructor.name) {
+        } else if (!obj.constructor.name) {
             constructor = "(anonymous)";
         } else {
-            constructor = variable.constructor.name;
+            constructor = obj.constructor.name;
         }
 
         constructor = options.style.constructorName(constructor);
-        proto = Object.getPrototypeOf(variable);
+        proto = Object.getPrototypeOf(obj);
 
         str += pre;
 
@@ -363,8 +351,8 @@ const inspect_ = (runtime, options, variable) => {
             } else {
                 if (type === "function" && !options.native) {
                     let result;
-                    try { 
-                        result = adone.inspect.function(variable, {}, options.styleName);
+                    try {
+                        result = adone.inspect.function(obj, {}, options.styleName);
                         str += result;
                     } catch (err) {
                         str += `${constructor + funcName + length} ${options.style.type(nativeType)}${descriptorStr}`;
@@ -380,9 +368,13 @@ const inspect_ = (runtime, options, variable) => {
         }
 
         if (isArray && options.noArrayProperty) {
-            propertyList = [...Array(variable.length).keys()];
+            propertyList = [...Array(obj.length).keys()];
         } else {
-            propertyList = Object.getOwnPropertyNames(variable);
+            if (isNamespace && is.propertyDefined(obj, "__proto__")) {
+                propertyList = adone.util.keys(obj, { all: true });
+            } else {
+                propertyList = Object.getOwnPropertyNames(obj);
+            }
         }
 
         if (options.sort) {
@@ -390,7 +382,7 @@ const inspect_ = (runtime, options, variable) => {
         }
 
         // Special Objects
-        specialObject = specialObjectSubstitution(variable, runtime, options);
+        specialObject = specialObjectSubstitution(obj, runtime, options);
 
         if (options.protoBlackList && options.protoBlackList.has(proto)) {
             str += options.style.limit("[skip]") + options.style.newline;
@@ -418,14 +410,14 @@ const inspect_ = (runtime, options, variable) => {
             } else {
                 str += options.style.newline;
             }
-        } else if (runtime.ancestors.indexOf(variable) !== -1) {
+        } else if (runtime.ancestors.indexOf(obj) !== -1) {
             str += options.style.limit("[circular]") + options.style.newline;
         } else {
             str += (isArray && options.noType && options.noArrayProperty ? "[" : "{") + options.style.newline;
 
             // Do not use .concat() here, it doesn't works as expected with arrays...
             nextAncestors = runtime.ancestors.slice();
-            nextAncestors.push(variable);
+            nextAncestors.push(obj);
 
             for (i = 0; i < propertyList.length && str.length < options.outputMaxLength; i++) {
                 if (!isArray && options.propertyBlackList && options.propertyBlackList.has(propertyList[i])) {
@@ -433,7 +425,7 @@ const inspect_ = (runtime, options, variable) => {
                     continue;
                 }
 
-                if (isArray && options.noArrayProperty && !(propertyList[i] in variable)) {
+                if (isArray && options.noArrayProperty && !(propertyList[i] in obj)) {
                     // Hole in the array (sparse array, item deleted, ...)
                     str += inspect_(
                         {
@@ -447,7 +439,7 @@ const inspect_ = (runtime, options, variable) => {
                     );
                 } else {
                     try {
-                        descriptor = Object.getOwnPropertyDescriptor(variable, propertyList[i]);
+                        descriptor = Object.getOwnPropertyDescriptor(obj, propertyList[i]);
                         if (!descriptor.enumerable && options.enumOnly) {
                             continue;
                         }
@@ -476,7 +468,7 @@ const inspect_ = (runtime, options, variable) => {
                                     descriptor: options.noDescriptor ? undefined : descriptor
                                 },
                                 options,
-                                variable[propertyList[i]]
+                                obj[propertyList[i]]
                             );
                         }
                     } catch (error) {
@@ -530,7 +522,7 @@ const inspect_ = (runtime, options, variable) => {
 };
 
 
-const inspect = (variable, options = {}) => {
+const inspect = (obj, options = {}) => {
     const runtime = { depth: 0, ancestors: [] };
 
     options.styleName = options.style;
@@ -541,7 +533,7 @@ const inspect = (variable, options = {}) => {
     } else {
         options.style = Object.assign({}, defaultStyle, options.style);
     }
-    
+
     if (is.undefined(options.depth)) {
         options.depth = 3;
     }
@@ -567,7 +559,7 @@ const inspect = (variable, options = {}) => {
         options.proto = false;
     }
 
-    let str = inspect_(runtime, options, variable);
+    let str = inspect_(runtime, options, obj);
 
     if (str.length > options.outputMaxLength) {
         str = `${str.slice(0, options.outputMaxLength - 1)}…`;

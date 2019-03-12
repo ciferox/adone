@@ -75,7 +75,7 @@ describe("omnitron", () => {
             const info = await iOmnitron.getInfo();
 
             assert.equal(info.version.adone, adone.package.version);
-            assert.equal(info.realm.id, adone.realm.getRootRealm().identity.id);
+            assert.equal(info.realm.id, adone.realm.rootRealm.identity.id);
         });
 
         it("should not be any services initially", async () => {

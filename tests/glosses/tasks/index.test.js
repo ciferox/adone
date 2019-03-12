@@ -365,7 +365,7 @@ describe("task", () => {
                 counter++;
                 inc++;
                 if (maxVal) {
-                    assert.atMost(inc, maxVal);
+                    assert.isAtMost(inc, maxVal);
                 }
                 if (check) {
                     assert.equal(counter, inc);
@@ -385,7 +385,7 @@ describe("task", () => {
             async run(maxVal, timeout) {
                 this.inc++;
                 if (maxVal) {
-                    assert.atMost(this.inc, maxVal);
+                    assert.isAtMost(this.inc, maxVal);
                 }
                 await promise.delay(timeout);
                 this.inc--;
@@ -423,7 +423,7 @@ describe("task", () => {
                 results.push(observer.result);
             }
 
-            assert.atLeast(counter, 10);
+            assert.isAtLeast(counter, 10);
             await Promise.all(results);
             assert.strictEqual(counter, 10);
         });
@@ -1087,6 +1087,18 @@ describe("task", () => {
             }
         }
 
+        it("add same observer second time shoud have thrown", async () => {
+            const observer = () => {};
+            manager.onNotification("progress", observer);
+            assert.throws(() => manager.onNotification("progress", observer), adone.error.ExistsException);
+        });
+
+        it("add same observer for any notification second time shoud have thrown", async () => {
+            const observer = () => {};
+            manager.onNotification(null, observer);
+            assert.throws(() => manager.onNotification(null, observer), adone.error.ExistsException);
+        });
+
         it("observe all notifications", async () => {
             await manager.addTask("1", Task1);
 
@@ -1100,8 +1112,7 @@ describe("task", () => {
                 assert.strictEqual(`step${i++}`, data.message);
             });
 
-            const observer = await manager.run("1");
-            await observer.result;
+            await manager.runAndWait("1");
 
             assert.strictEqual(i, 4);
         });
@@ -1115,7 +1126,7 @@ describe("task", () => {
 
             manager.onNotification({
                 name: "progress",
-                tasks: "1"
+                task: "1"
             }, (task, name, data) => {
                 assert.isTrue(is.task(task));
                 assert.strictEqual(name, "progress");
@@ -1124,10 +1135,11 @@ describe("task", () => {
             });
 
             await Promise.all([
-                (await manager.run("1")).result,
-                (await manager.run("2")).result
+                manager.runAndWait("1"),
+                manager.runAndWait("2")
             ]);
 
+            // await promise.delay(300);
             assert.strictEqual(i, 4);
         });
 
@@ -1162,9 +1174,9 @@ describe("task", () => {
             const values = [0.2, 0.6, 0.8];
             const messages = ["bam1", "bam2", "bam3"];
 
-            manager.onNotification((task) => task.name === "2", (task, name, data) => {
+            manager.onNotification((task) => task.observer.taskName === "2", (task, name, data) => {
                 assert.isTrue(is.task(task));
-                assert.isTrue(task.name === "2");
+                assert.isTrue(task.observer.taskName === "2");
                 assert.isTrue(values.includes(data.value));
                 assert.isTrue(messages.includes(data.message));
                 i++;
@@ -1176,37 +1188,6 @@ describe("task", () => {
             ]);
 
             assert.strictEqual(i, 3);
-        });
-
-        describe.skip("standart notifications", () => {
-            class TaskWithLoggers extends task.Task {
-                async run() {
-                    // this.log(".log");
-                    // this.logFatal(".logFatal");
-                    // this.logError(".logError");
-                    // this.logWarn(".logWarn");
-                    // this.logInfo(".logInfo");
-                    // this.logDebug(".logDebug");
-                    // this.logTrace(".logTrace");
-                }
-            }
-
-            const names = ["log", "logFatal", "logError", "logWarn", "logInfo", "logDebug", "logTrace"];
-            for (const name of names) {
-                // eslint-disable-next-line
-                it(`${name} notification`, async (done) => {
-                    await manager.addTask("1", TaskWithLoggers);
-
-                    manager.onNotification(name, (sender, nn, ...args) => {
-                        assert.strictEqual(`.${name}`, args[0]);
-                        done();
-                    });
-
-                    await (await manager.run("1")).result;
-
-                    await adone.promise.delay(100);
-                });
-            }
         });
     });
 

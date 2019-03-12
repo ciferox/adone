@@ -2,8 +2,7 @@ const {
     app: { Subsystem, MainCommandMeta },
     cli,
     fs,
-    std,
-    project
+    std
 } = adone;
 
 
@@ -46,54 +45,60 @@ export default class extends Subsystem {
         ],
         options: [
             {
+                name: ["--base-path", "-P"],
+                type: String,
+                default: process.cwd(),
+                help: "Base path in which realm will be created"
+            },
+            {
                 name: "--dir",
                 type: String,
-                required: false,
+                default: "",
                 help: "Directory name of project used instead of project name"
             },
             {
-                name: ["--description", "--descr"],
+                name: ["--description", "-D"],
                 type: String,
                 default: "",
-                help: "Project description"
+                help: "Realm description"
             },
             {
-                name: ["--version", "--ver"],
+                name: ["--version", "-V"],
                 type: String,
                 default: "0.0.0",
-                help: "Project initial version"
+                help: "Initial version"
             },
             {
                 name: "--author",
                 type: String,
                 default: "",
-                help: "Project author"
+                help: "Author name"
             },
             {
-                name: "--skip-git",
-                help: "Skip initializing git repository"
+                name: "--init-git",
+                help: "Initialize git repository"
             },
             {
-                name: "--skip-npm",
-                help: "Skip installing npm packages"
+                name: "--init-npm",
+                help: "Install npm packages"
             },
             {
-                name: "--skip-eslint",
-                help: "Skip generating .eslintrc.js"
+                name: "--init-eslint",
+                help: "Generate .eslintrc.js"
             },
             {
-                name: "--skip-jsconfig",
-                help: "Skip generating jsconfig.js"
+                name: "--init-jsconfig",
+                help: "Generate jsconfig.js"
             }
         ]
     })
     async main(args, opts) {
         let info;
         if (!args.has("name")) {
-            info = await cli.ask([
+            info = await cli.prompt([
                 {
                     name: "name",
-                    message: "Project name",
+                    message: "Realm/project name",
                     async validate(value) {
                         if (!value) {
                             return "Please enter a valid project name";
@@ -196,40 +201,17 @@ export default class extends Subsystem {
         } else {
             info = {
                 name: args.get("name"),
-                type: opts.get("type"),
-                description: opts.get("descr"),
-                version: opts.get("version"),
-                author: opts.has("author") ? opts.get("author") : undefined,
-                child: opts.has("child"),
-                skipGit: opts.has("skipGit"),
-                skipNpm: opts.has("skipNpm"),
-                skipEslint: opts.has("skipEslint"),
-                skipJsconfig: opts.has("skipJsconfig")
+                ...opts.getAll()
             };
-
-            info.dir = opts.has("dir") ? opts.get("dir") : info.name;
         }
 
         return this._initProject(info);
     }
 
-    async _initProject({ name, type, description, version, author, dir, skipGit, skipNpm, skipEslint, skipJsconfig } = {}) {
-        const manager = new project.Manager({
-            cwd: std.path.join(process.cwd(), dir)
-        });
-
+    async _initProject(info) {
+        const manager = adone.realm.rootRealm;
+        await manager.initialize();
         await cli.observe("progress", manager);
-
-        await manager.createProject({
-            name,
-            type,
-            description,
-            version,
-            author,
-            skipGit,
-            skipNpm,
-            skipEslint,
-            skipJsconfig
-        });
+        await manager.runAndWait("createRealm", info);
     }
 }
