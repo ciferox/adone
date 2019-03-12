@@ -39,21 +39,6 @@ const loadTasks = (path, index) => {
     return {};
 };
 
-export const path = {
-    // ROOT_PATH: () => std.path.join(__dirname, ".."),
-    RUNTIME: "run",
-    ETC: "etc",
-    // ETC_ADONE_PATH: std.path.join(adone.ETC_PATH, "adone",
-    OPT: "opt",
-    VAR: "var",
-    SHARE: "share",
-    LOGS: std.path.join("var", "logs"),
-    KEYS: "keys",
-    PACKAGES: "packages",
-    LOCKFILE: "realm.lock"
-};
-
-
 export default class RealmManager extends task.Manager {
     constructor({ cwd = process.cwd() } = {}) {
         super();

@@ -113,7 +113,7 @@ export default class Configuration extends adone.configuration.Generic {
 
     static async load({ cwd } = {}) {
         if (!is.string(cwd)) {
-            cwd = adone.ETC_ADONE_PATH;
+            cwd = std.path.join(adone.ETC_PATH, "adone");
         }
 
         const config = new Configuration({
