@@ -269,26 +269,25 @@ class ConnectionFSM extends BaseConnection {
             this.theirPeerInfo.disconnect();
         }
 
-        // Clean up stored connections
-        if (this.muxer) {
-            this.muxer.end();
-        }
-
         this.switch.connection.remove(this);
 
         delete this.switch.conns[this.theirB58Id];
-        delete this.muxer;
+
+        // Clean up stored connections
+        if (this.muxer) {
+            this.muxer.end();
+            delete this.muxer;
+            this.switch.emit("peer-mux-closed", this.theirPeerInfo);
+        }
 
         // If we have the base connection, abort it
         if (this.conn) {
             this.conn.source(true, () => {
                 this._state("done");
-                this.switch.emit("peer-mux-closed", this.theirPeerInfo);
                 delete this.conn;
             });
         } else {
             this._state("done");
-            this.switch.emit("peer-mux-closed", this.theirPeerInfo);
         }
     }
 

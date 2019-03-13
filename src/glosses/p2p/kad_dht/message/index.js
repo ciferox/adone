@@ -11,6 +11,29 @@ const {
 const MESSAGE_TYPE = pbm.Message.MessageType;
 const CONNECTION_TYPE = pbm.Message.ConnectionType;
 
+
+const toPbPeer = function (peer) {
+    const res = {
+        id: peer.id.id,
+        addrs: peer.multiaddrs.toArray().map((m) => m.buffer)
+    };
+
+    if (peer.isConnected()) {
+        res.connection = CONNECTION_TYPE.CONNECTED;
+    } else {
+        res.connection = CONNECTION_TYPE.NOT_CONNECTED;
+    }
+
+    return res;
+};
+
+const fromPbPeer = function (peer) {
+    const info = new PeerInfo(new PeerId(peer.id));
+    peer.addrs.forEach((a) => info.multiaddrs.add(a));
+
+    return info;
+};
+
 /**
  * Represents a single DHT control message.
  */
@@ -96,32 +119,5 @@ class Message {
 
 Message.TYPES = MESSAGE_TYPE;
 Message.CONNECTION_TYPES = CONNECTION_TYPE;
-
-function toPbPeer(peer) {
-    const res = {
-        id: peer.id.id,
-        addrs: peer.multiaddrs.toArray().map((m) => m.buffer)
-    };
-
-    if (peer.isConnected()) {
-        res.connection = CONNECTION_TYPE.CONNECTED;
-    } else {
-        res.connection = CONNECTION_TYPE.NOT_CONNECTED;
-    }
-
-    return res;
-}
-
-function fromPbPeer(peer) {
-    const info = new PeerInfo(new PeerId(peer.id));
-    peer.addrs.forEach((a) => info.multiaddrs.add(a));
-
-    // TODO: upgrade protobuf to send the address connected on
-    if (peer.connection === CONNECTION_TYPE.CONNECTED) {
-        info.connect(peer.addrs[0]);
-    }
-
-    return info;
-}
 
 module.exports = Message;

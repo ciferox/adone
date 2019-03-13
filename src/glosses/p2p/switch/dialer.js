@@ -1,7 +1,7 @@
 const ConnectionFSM = require("./connection");
 const getPeerInfo = require("./get-peer-info");
 const once = require("once");
-const setImmediate = require("async/setImmediate");
+const nextTick = require("async/nextTick");
 
 const {
     is,
@@ -25,7 +25,7 @@ const maybePerformHandshake = function ({ protocol, proxyConnection, connection,
         });
     }
 
-    callback();
+    nextTick(callback);
 };
 
 /**
@@ -92,7 +92,7 @@ const dial = function (_switch, returnFSM) {
             });
         }
 
-        setImmediate(() => {
+        nextTick(() => {
             // If we have a muxed connection, attempt the protocol handshake
             if (connection.getState() === "MUXED") {
                 maybePerformHandshake({

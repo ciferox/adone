@@ -370,4 +370,17 @@ describe("multiformat", "CID", () => {
             });
         });
     });
+
+    describe("buffer reuse", () => {
+        it("should cache CID as buffer", (done) => {
+            multihashingAsync(Buffer.from(`TEST${Date.now()}`), "sha2-256", (err, hash) => {
+                if (err) {
+                    return done(err);
+                }
+                const cid = new CID(1, "dag-pb", hash);
+                expect(cid.buffer).to.equal(cid.buffer);
+                done();
+            });
+        });
+    });
 });

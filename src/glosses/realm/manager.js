@@ -56,7 +56,7 @@ export default class RealmManager extends task.Manager {
         this.VAR_PATH = std.path.join(cwd, "var");
         this.SHARE_PATH = std.path.join(cwd, "share");
         this.LOGS_PATH = std.path.join(cwd, "var", "logs");
-        this.KEYS_PATH = std.path.join(cwd, "keys");
+        this.REALMS_PATH = std.path.join(cwd, "realms");
         this.PACKAGES_PATH = std.path.join(cwd, "packages");
         this.LOCKFILE_PATH = std.path.join(cwd, "realm.lock");
 
