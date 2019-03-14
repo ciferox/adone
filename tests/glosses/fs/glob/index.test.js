@@ -1,5 +1,13 @@
 describe("fs", "glob", () => {
-    const { is, fs, std } = adone;
+    const {
+        assertion,
+        is,
+        fs,
+        std
+    } = adone;
+
+    assertion.use(assertion.extension.dirty);
+
     const { glob } = fs;
     const { Glob } = glob;
     const { delay } = adone.promise;

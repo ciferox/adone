@@ -21,25 +21,25 @@ adone.lazifyPrivate({
 }, exports, require);
 
 fast.extension = asNamespace(lazify({
-    compress: "./plugins/compress",
-    decompress: "./plugins/decompress",
-    pack: "./plugins/pack",
-    unpack: "./plugins/unpack",
-    archive: "./plugins/archive",
-    transpile: "./plugins/transpile",
-    deleteLines: "./plugins/delete_lines",
-    rename: "./plugins/rename",
-    concat: "./plugins/concat",
-    flatten: "./plugins/flatten",
-    sourcemapsInit: "./plugins/sourcemaps",
-    sourcemapsWrite: "./plugins/sourcemaps",
-    wrap: "./plugins/wrap",
-    replace: "./plugins/replace",
-    revisionHash: "./plugins/revision_hash",
-    revisionHashReplace: "./plugins/revision_hash_replace",
-    chmod: "./plugins/chmod",
-    notify: "./plugins/notify",
-    notifyError: "./plugins/notify"
+    compress: "./extensions/compress",
+    decompress: "./extensions/decompress",
+    pack: "./extensions/pack",
+    unpack: "./extensions/unpack",
+    archive: "./extensions/archive",
+    transpile: "./extensions/transpile",
+    deleteLines: "./extensions/delete_lines",
+    rename: "./extensions/rename",
+    concat: "./extensions/concat",
+    flatten: "./extensions/flatten",
+    sourcemapsInit: "./extensions/sourcemaps",
+    sourcemapsWrite: "./extensions/sourcemaps",
+    wrap: "./extensions/wrap",
+    replace: "./extensions/replace",
+    revisionHash: "./extensions/revision_hash",
+    revisionHashReplace: "./extensions/revision_hash_replace",
+    chmod: "./extensions/chmod",
+    notify: "./extensions/notify",
+    notifyError: "./extensions/notify"
 }, null, require, {
     mapper: (key, mod) => mod
 }));

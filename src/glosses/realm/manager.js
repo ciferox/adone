@@ -8,7 +8,7 @@ const {
     std
 } = adone;
 
-const INITIALIZED = Symbol();
+const CONNECTED = Symbol();
 
 const checkEntry = (entry) => {
     if (is.nil(entry.dst)) {
@@ -55,9 +55,12 @@ export default class RealmManager extends task.Manager {
         this.OPT_PATH = std.path.join(cwd, "opt");
         this.VAR_PATH = std.path.join(cwd, "var");
         this.SHARE_PATH = std.path.join(cwd, "share");
+        this.LIB_PATH = std.path.join(cwd, "lib");
         this.LOGS_PATH = std.path.join(cwd, "var", "logs");
-        this.REALMS_PATH = std.path.join(cwd, "realms");
-        this.PACKAGES_PATH = std.path.join(cwd, "packages");
+        this.SPECIAL_PATH = std.path.join(cwd, ".adone");
+        this.SRC_PATH = std.path.join(cwd, "src");
+        this.TESTS_PATH = std.path.join(cwd, "tests");
+        this.PACKAGES_PATH = std.path.join(cwd, "node_modules");
         this.LOCKFILE_PATH = std.path.join(cwd, "realm.lock");
 
         adone.lazify({
@@ -82,45 +85,43 @@ export default class RealmManager extends task.Manager {
 
                 return tasks;
             },
-            package: std.path.join(cwd, "package.json"),
-            identity: std.path.join(cwd, ".adone", "identity.json") // remove (adone specific)
+            package: std.path.join(cwd, "package.json")
         }, this);
 
-        this.typeHandler = null;
-        // this.peerInfo = null;
-        this[INITIALIZED] = false;
+        // this.typeHandler = null;
+        this[CONNECTED] = false;
     }
 
-    get initialized() {
-        return this[INITIALIZED];
+    get name() {
+        return this.package.name;
     }
 
-    async initialize() {
-        if (this[INITIALIZED]) {
+    get isConnected() {
+        return this[CONNECTED];
+    }
+
+    async connect() {
+        if (this[CONNECTED]) {
             return;
         }
-        this[INITIALIZED] = true;
+        this[CONNECTED] = true;
 
         // Load realm tasks
-        try {
-            const tasks = this.tasks;
-            for (const [name, TaskClass] of Object.entries(tasks)) {
-                // eslint-disable-next-line no-await-in-loop
-                await this.addTask(name, TaskClass);
-            }
-        } catch (err) {
-            //
+        const tasks = this.tasks;
+        for (const [name, TaskClass] of Object.entries(tasks)) {
+            // eslint-disable-next-line no-await-in-loop
+            await this.addTask(name, TaskClass);
         }
 
         // Add default type handlers
-        const handlerNames = (await adone.fs.readdir(std.path.join(__dirname, "handlers"))).filter((name) => name.endsWith(".js"));
-        const handlers = {};
+        // const handlerNames = (await adone.fs.readdir(std.path.join(__dirname, "handlers"))).filter((name) => name.endsWith(".js"));
+        // const handlers = {};
 
-        for (const name of handlerNames) {
-            handlers[std.path.basename(name, ".js").replace(/_/g, ".")] = `.${adone.std.path.sep}${std.path.join("handlers", name)}`;
-        }
+        // for (const name of handlerNames) {
+        //     handlers[std.path.basename(name, ".js").replace(/_/g, ".")] = `.${adone.std.path.sep}${std.path.join("handlers", name)}`;
+        // }
 
-        this.typeHandler = adone.lazify(handlers, null, require);
+        // this.typeHandler = adone.lazify(handlers, null, require);
     }
 
     getEntries({ path, onlyNative = false, excludeVirtual = true } = {}) {
@@ -142,33 +143,33 @@ export default class RealmManager extends task.Manager {
             : entries;
     }
 
-    addTypeHandler(typeName, handler) {
-    }
+    // addTypeHandler(typeName, handler) {
+    // }
 
-    getTypeHandler(typeName) {
-        const HandlerClass = this.typeHandler[typeName];
+    // getTypeHandler(typeName) {
+    //     const HandlerClass = this.typeHandler[typeName];
 
-        if (!is.class(HandlerClass)) {
-            throw new error.NotSupportedException(`Unsupported type: ${typeName}`);
-        }
+    //     if (!is.class(HandlerClass)) {
+    //         throw new error.NotSupportedException(`Unsupported type: ${typeName}`);
+    //     }
 
-        return new HandlerClass(this);
-    }
+    //     return new HandlerClass(this);
+    // }
 
-    getAllTypeHandlers() {
-        return Object.keys(this.typeHandler).map((name) => {
-            const THClass = this.typeHandler[name];
-            return new THClass(this);
-        });
-    }
+    // getAllTypeHandlers() {
+    //     return Object.keys(this.typeHandler).map((name) => {
+    //         const THClass = this.typeHandler[name];
+    //         return new THClass(this);
+    //     });
+    // }
 
-    registerComponent(adoneConf, destPath) {
-        return this.getTypeHandler(adoneConf.raw.type).register(adoneConf, destPath);
-    }
+    // registerComponent(adoneConf, destPath) {
+    //     return this.getTypeHandler(adoneConf.raw.type).register(adoneConf, destPath);
+    // }
 
-    unregisterComponent(adoneConf) {
-        return this.getTypeHandler(adoneConf.raw.type).unregister(adoneConf);
-    }
+    // unregisterComponent(adoneConf) {
+    //     return this.getTypeHandler(adoneConf.raw.type).unregister(adoneConf);
+    // }
 
     async runSafe(name, ...args) {
         await this.lock();

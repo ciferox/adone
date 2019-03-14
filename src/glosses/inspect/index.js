@@ -173,7 +173,7 @@ const specialObjectSubstitution = (object, runtime, options) => {
     }
 };
 
-const COMPLEX_TYPES = ["global", "Array", "Object", "object", "class", "function", "Error", "namespace"];
+const COMPLEX_TYPES = ["global", "Array", "Object", "object", "class", "function", "Error", "namespace", "process"];
 
 /**
  * Inspect an object, return a string ready to be displayed with console.log(), or even as an HTML output.

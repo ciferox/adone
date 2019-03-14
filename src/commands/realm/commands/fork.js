@@ -1,6 +1,7 @@
 const {
     app: { Subsystem, MainCommandMeta },
-    is
+    cli,
+    realm
 } = adone;
 
 
@@ -15,53 +16,27 @@ export default class extends Subsystem {
         ],
         options: [
             {
-                name: ["--path", "-p"],
+                name: ["--path", "-P"],
                 type: String,
-                default: adone.system.env.home(),
-                help: "Path where realm will be deploy"
-            },
-            {
-                name: ["--bits", "-B"],
-                type: Number,
-                default: 2048,
-                help: "Realm identity's RSA key size"
-            },
-            {
-                name: "--with-src",
-                help: "With source code directory"
-            },
-            {
-                name: ["--compress", "-C"],
-                type: String,
-                nargs: "*",
-                default: is.windows ? "zip" : "tar.gz",
-                help: "Create archive instead of a directory"
-            },
-            {
-                name: "--clean",
-                help: "Clean version of adone (without tasks, configs, etc.)"
+                required: true,
+                help: "Destination path"
             }
         ]
     })
-    async forkCommand(args, opts) {
+    async main(args, opts) {
         try {
-            const realmManager = await this.getRealm();
-            await realmManager.runAndWait("forkRealm", {
-                basePath: opts.get("path"),
+            const manager = realm.rootRealm;
+            await manager.connect();
+            await cli.observe("progress", manager);
+            await manager.runAndWait("forkRealm", {
+                srcRealm: process.cwd(),
                 name: args.get("name"),
-                bits: opts.get("bits"),
-                withSrc: opts.has("withSrc"),
-                clean: opts.has("clean"),
-                compress: opts.has("compress") ? opts.get("compress") : false
+                basePath: opts.get("path")
             });
 
             return 0;
         } catch (err) {
-            this.root.kit.updateProgress({
-                message: err.message,
-                status: false
-            });
-
+            console.log(adone.pretty.error(err));
             return 1;
         }
     }

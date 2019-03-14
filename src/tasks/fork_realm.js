@@ -1,21 +1,14 @@
 const {
     cli,
-    crypto,
     error,
     is,
     fast,
     fs,
     std,
-    realm: { BaseTask },
-    util
+    realm
 } = adone;
 
-const { path: { join } } = std;
-
-const REQUIRED_DIRS = ["bin", "lib", "etc", "share"];
-const COMPRESS_FORMATS = ["zip", "tar.gz", "tar.xz"];
-
-export default class extends BaseTask {
+export default class extends realm.BaseTask {
     get arch() {
         const arch = process.arch;
         switch (arch) {
@@ -32,223 +25,105 @@ export default class extends BaseTask {
         }
     }
 
-    async run({ basePath, name, bits = 2048, withSrc = false, clean = false, compress = false, keys = false } = {}) {        
+    async run({ srcRealm, basePath, name, exclude } = {}) {
         this.manager.notify(this, "progress", {
             message: "checking"
         });
 
-        if (!is.string(basePath)) {
-            throw new error.NotValidException(`Invalid type of 'basePath': ${adone.typeOf(basePath)}`);
+        if (is.string(srcRealm)) {
+            srcRealm = new realm.Manager({ cwd: srcRealm });
         }
 
-        if (!is.string(name)) {
-            throw new error.NotValidException(`Invalid type of 'name': ${adone.typeOf(name)}`);
+        if (!srcRealm || !is.realm(srcRealm)) {
+            throw new error.NotValidException(`Invalid type of srcRealm: ${adone.typeOf(srcRealm)}`);
         }
 
-        this.destPath = compress ? basePath : std.path.resolve(basePath, name);
-
-        if (await fs.exists(this.destPath) && !compress) {
-            throw new error.ExistsException(`Path '${this.destPath}' already exists`);
+        if (!is.string(basePath) || basePath.length === 0) {
+            throw new error.NotValidException(`Invalid basePath: ${adone.inspect(basePath)}`);
         }
 
-        this.manager.notify({
-            message: `initializing realm at ${cli.style.accent(this.destPath)}`
-        });
-
-        await fs.mkdirp(this.destPath);
-
-        if (compress) {
-            const tmpPath = await adone.fs.tmpName({
-                prefix: "realm-"
-            });
-            await fs.mkdirp(tmpPath);
-            this.destPath = tmpPath;
-        }
-
-        const CWD = this.destPath;
-        // const RUNTIME_PATH = join(CWD, "runtime");
-        const VAR_PATH = join(CWD, "var");
-        const ADONE_SPECIAL_PATH = join(CWD, ".adone");
-        const ETC_PATH = join(CWD, "etc");
-        const ETC_ADONE_PATH = join(ETC_PATH, "adone");
-        const LOGS_PATH = join(VAR_PATH, "logs");
-        const KEYS_PATH = join(CWD, "keys");
-        const PACKAGES_PATH = join(CWD, "packages");
-        // const LOCKFILE_PATH = join(CWD, "realm.lock");
-
-        // runtime dir + lockfile
-        // if (!(await fs.exists(LOCKFILE_PATH))) {
-        //     // Create lockfile
-        //     await fs.writeFile(LOCKFILE_PATH, "");
-        // }
-
-        // var dir
-        if (!(await fs.exists(VAR_PATH))) {
-            await fs.mkdirp(VAR_PATH);
-        }
-
-        // logs dir
-        if (!(await fs.exists(LOGS_PATH))) {
-            await fs.mkdirp(LOGS_PATH);
-        }
-
-        // packages dir
-        if (!(await fs.exists(PACKAGES_PATH))) {
-            await fs.mkdirp(PACKAGES_PATH);
-        }
-
-        // keys dir
-        if (keys) {
-            if (!(await fs.exists(KEYS_PATH))) {
-                // Create realm identity
-                await fs.mkdirp(KEYS_PATH);
-            }
-        }
-
-        if (!clean) {
-            const identityConfig = new adone.configuration.Generic({
-                cwd: ETC_ADONE_PATH
-            });
-
-            try {
-                await identityConfig.load("identity.json");
-            } catch (err) {
-                const serverIdentity = crypto.Identity.create({
-                    bits
-                });
-
-                const clientIdentity = crypto.Identity.create({
-                    bits
-                });
-
-                identityConfig.raw = {
-                    server: {
-                        id: serverIdentity.asBase58(),
-                        privKey: serverIdentity.privKey.bytes.toString("base64")
-                    },
-                    client: {
-                        id: clientIdentity.asBase58(),
-                        privKey: clientIdentity.privKey.bytes.toString("base64")
-                    }
-                };
-
-                await identityConfig.save("identity.json", null, {
-                    space: "    "
-                });
-            }
+        if (!is.string(name) || name.length === 0) {
+            throw new error.NotValidException(`Invalid name: ${adone.inspect(name)}`);
         }
 
         this.manager.notify(this, "progress", {
-            message: "copying files"
+            message: "connecting to source realm"
         });
 
-        // For production stage and if clean-mode is enabled '.adone' directory should be empty
-        const dirs = REQUIRED_DIRS;
-        if (clean) {
-            await fs.mkdir(ADONE_SPECIAL_PATH);
-        } else {
-            dirs.push(".adone");
+        // Connect to source realm
+        await srcRealm.connect();
+
+        this.manager.notify(this, "progress", {
+            message: "preparing to copy common realm files"
+        });
+
+        const cwd = std.path.resolve(basePath, name);
+
+        if (await fs.exists(cwd)) {
+            throw new error.ExistsException(`Path '${cwd}' already exists`);
         }
 
-        const targets = [
-            "!**/*.map",
-            "package.json",
-            "adone.json",
-            "README.md",
-            "LICENSE",
-            ...dirs.map((x) => util.globize(x, { recursive: true }))
+        await fs.mkdirp(cwd);
+
+        this.destRealm = new realm.Manager({
+            cwd
+        });
+        // const srcGlob = util.arrify(exclude).map((glob) => glob.startsWith("!")
+        //     ? glob
+        //     : `!${glob}`
+        // );
+
+        const DIRS = [
+            std.path.relative(srcRealm.cwd, srcRealm.BIN_PATH),
+            std.path.relative(srcRealm.cwd, srcRealm.RUNTIME_PATH),
+            std.path.relative(srcRealm.cwd, srcRealm.ETC_PATH),
+            std.path.relative(srcRealm.cwd, srcRealm.OPT_PATH),
+            std.path.relative(srcRealm.cwd, srcRealm.VAR_PATH),
+            std.path.relative(srcRealm.cwd, srcRealm.SHARE_PATH),
+            std.path.relative(srcRealm.cwd, srcRealm.LIB_PATH),
+            std.path.relative(srcRealm.cwd, srcRealm.SPECIAL_PATH),
+            std.path.relative(srcRealm.cwd, srcRealm.SRC_PATH),
+            std.path.relative(srcRealm.cwd, srcRealm.PACKAGES_PATH),
+            std.path.relative(srcRealm.cwd, srcRealm.TESTS_PATH)
         ];
 
-        if (withSrc) {
-            targets.push("src");
-            targets.push("!src/**/native/build/**/*");
-        }
+        const rootFileNames = (await fs.readdir(srcRealm.ROOT_PATH)).filter((name) => !DIRS.includes(name));
 
-        await fast.src(targets, { base: adone.ROOT_PATH }).dest(this.destPath, {
+        this.manager.notify(this, "progress", {
+            message: "copying root files"
+        });
+
+
+        await fast.src(rootFileNames, {
+            cwd: srcRealm.ROOT_PATH,
+            base: srcRealm.ROOT_PATH
+        }).dest(this.destRealm.cwd, {
             produceFiles: true
         });
 
-        // force transpile and build native addons
-
-        // const targetProjManager = await project.Manager.load({
-        //     cwd: destPath
-        // });
-        // targetProjManager.setSilent(true);
-
-        // const entries = targetProjManager.getProjectEntries();
-        // const entriesWithNative = targetProjManager.getProjectEntries({
-        //     onlyNative: true
-        // }).map((entry) => entry.id);
-
-        // for (const entry of entries) {
-        //     this.root.kit.updateProgress({
-        //         message: `transpiling: ${entry.id}`
-        //     });
-        //     const entryId = new RegExp(`${entry.id}$`);
-        //     /* eslint-disable */
-        //     observer = await targetProjManager.build(entryId);
-        //     await observer.result;
-
-        //     if (entriesWithNative.includes(entry.id)) {
-        //         this.root.kit.updateProgress({
-        //             message: `addon building: ${entry.id}`
-        //         });
-
-        //         observer = await targetProjManager.nbuild(entryId, {
-        //             clean: true
-        //         });
-        //         await observer.result;
-        //     }
-        //     /* eslint-enable */
-        // }
-
-        // if (!withSrc) {
-        //     this.root.kit.updateProgress({
-        //         message: "deleting unnecessary files"
-        //     });
-
-        //     await fs.rm(std.path.join(destPath, "src"));
-        //     await fs.rm(util.globize(std.path.join(destPath, "lib"), {
-        //         recursive: true,
-        //         ext: ".js.map"
-        //     }));
-        // }
-
-        if (compress) {
-            let format;
-            if (is.string(compress)) {
-                format = compress;
-            } else {
-                format = is.windows ? "zip" : "tar.gz";
-            }
-
-            if (!COMPRESS_FORMATS.includes(format)) {
-                throw new error.NotSupportedException(`Unsupported compression format: ${format}`);
-            }
-
+        for (const dir of DIRS) {
             this.manager.notify(this, "progress", {
-                message: "compressing"
+                message: `copying ${cli.style.accent(dir)}`
             });
-
-            const fileName = `${name}-v${adone.package.version}-node-v${process.version.match(/^v(\d+)\./)[1]}-${this.os}-${this.arch}.${format}`;
-
-            await fast.src(adone.util.globize(this.destPath, {
-                ext: "*",
-                recursive: true
-            }), { base: adone.rootPath })
-                .archive(format, fileName)
-                .dest(basePath);
-
-            await fs.rm(this.destPath);
-            this.destPath = std.path.join(basePath, fileName);
+    
+            const cwd = std.path.join(srcRealm.ROOT_PATH, dir);
+            const base = cwd;
+            const dstPath = std.path.join(this.destRealm.cwd, dir);
+            // eslint-disable-next-line no-await-in-loop
+            await fast.src("**/*", {
+                cwd,
+                base
+            }).dest(dstPath, {
+                produceFiles: true
+            });
         }
 
         this.manager.notify(this, "progress", {
-            message: `fork ${cli.style.accent(this.destPath)} successfully created`,
+            message: `realm ${cli.style.primary(srcRealm.name)} successfully forked into ${cli.style.accent(this.destRealm.cwd)}`,
             status: true
         });
 
-        return this.destPath;
+        return this.destRealm;
     }
 
     async undo(err) {
@@ -257,8 +132,6 @@ export default class extends BaseTask {
             status: false
         });
 
-        if (!(err instanceof error.ExistsException)) {
-            is.string(this.destPath) && await fs.rm(this.destPath);
-        }
+        is.realm(this.destRealm) && await fs.rm(this.destRealm.cwd);
     }
 }

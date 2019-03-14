@@ -1,31 +1,25 @@
+import { realmPathFor, createManagerFor, fixturePath, getRealmName } from "./utils";
+
 const {
     configuration,
     is,
     fs,
     error,
-    // cli,
     realm,
-    std,
-    // text
+    std
 } = adone;
 
 // const PACKAGES_PATH = std.path.join(__dirname, "packages");
 const FIXTURES_PATH = std.path.join(__dirname, "fixtures");
-const fixturePath = (...args) => std.path.join(FIXTURES_PATH, ...args);
-const realmPathFor = (...args) => std.path.join(__dirname, "realms", ...args);
 
 // // NOTE: tests order matters
 
 describe("realm", () => {
-    let rootRealm;
+    const { rootRealm } = realm;
     let realmManager;
     let realmPath;
     // let adoneCliPath;
     // let cliConfig;
-    let realmCounter = 1;
-    const getRealmName = () => `project${realmCounter++}`;
-
-    const newRealmsPath = fixturePath("new_realms");
 
     const CORE_TASKS = [
         "createRealm",
@@ -58,7 +52,7 @@ describe("realm", () => {
         const manager = new realm.Manager({
             cwd: realmPathFor(name)
         });
-        shouldInit && await manager.initialize();
+        shouldInit && await manager.connect();
         return manager;
     };
 
@@ -86,304 +80,62 @@ describe("realm", () => {
     describe("tasks configuration", () => {
         it("realm without tasks", async () => {
             const mgr = await createRealmFor("no_tasks");
-    
+
             assert.isObject(mgr.config.raw.scheme);
             assert.lengthOf(mgr.getTaskNames(), 0);
         });
-    
+
         it("realm with configuration tasks defaults", async () => {
             const mgr = await createRealmFor("realm1");
-    
+
             assert.isObject(mgr.config.raw.scheme);
             assert.sameMembers(mgr.getTaskNames(), ["task1", "task2"]);
         });
-    
+
         it("realm with configuration tasks with custom index", async () => {
             const mgr = await createRealmFor("realm2");
-    
+
             assert.isObject(mgr.config.raw.scheme);
             assert.sameMembers(mgr.getTaskNames(), ["task1", "task2"]);
         });
-    
+
         it("realm with configuration tasks with dev index", async () => {
             const mgr = await createRealmFor("realm2");
-    
+
             assert.isObject(mgr.config.raw.scheme);
             assert.sameMembers(mgr.getTaskNames(), ["task1", "task2"]);
         });
     });
 
     describe("root realm", () => {
-        it("pre initialize", () => {
-            rootRealm = realm.rootRealm;
+        it("before connect", () => {
             assert.instanceOf(rootRealm, adone.realm.Manager);
             assert.equal(rootRealm.ROOT_PATH, adone.ROOT_PATH);
             assert.deepEqual(rootRealm.package, adone.package);
             assert.isObject(rootRealm.config);
         });
 
-        it("after initialize", async () => {
-            assert.isNull(rootRealm.typeHandler);
-    
+        it("after connect", async () => {
             assert.lengthOf(rootRealm.getTaskNames(), 0);
-    
-            await rootRealm.initialize();
-    
+
+            await rootRealm.connect();
+
             assert.sameMembers(rootRealm.getTaskNames(), CORE_TASKS);
         });
 
-        it("initialize realm manager repeatedly shouldn't be thrown", async () => {
+        it("connect to realm repeatedly shouldn't be thrown", async () => {
             let i;
             for (i = 0; i < 10; i++) {
                 // eslint-disable-next-line no-await-in-loop
-                await rootRealm.initialize();
+                await rootRealm.connect();
             }
             assert.equal(i, 10);
-        });    
+        });
     });
 
     describe.skip("type handlers", () => {
         it("", async () => {
 
-        });
-    });
-
-    describe("create realm", () => {
-        before(async () => {
-            await fs.mkdirp(newRealmsPath);
-        });
-
-        after(async () => {
-            await fs.rm(fixturePath());
-        });
-
-        it("create realm without 'name' should be thrown", async () => {
-            await assert.throws(async () => {
-                await rootRealm.runAndWait("createRealm");
-            }, error.InvalidArgumentException);
-        });
-
-        it("create realm without 'basePath' should be thrown", async () => {
-            await assert.throws(async () => {
-                await rootRealm.runAndWait("createRealm", {
-                    name: "realm1"
-                });
-            }, error.InvalidArgumentException);
-        });
-
-        it("create realm at existing location should have thrown", async () => {
-            await assert.throws(async () => {
-                await rootRealm.runAndWait("createRealm", {
-                    name: "no_tasks",
-                    basePath: realmPathFor()
-                });
-            }, error.ExistsException);
-        });
-
-        it("create realm", async () => {
-            const name = getRealmName();
-            
-            const info = {
-                name,
-                description: "Sample project",
-                basePath: newRealmsPath
-            };
-
-            await rootRealm.runAndWait("createRealm", info);
-
-            assert.equal(info.cwd, std.path.join(newRealmsPath, info.name));
-            assert.isTrue(await fs.exists(info.cwd));
-            assert.isTrue(await fs.isFile(std.path.join(info.cwd, realm.Configuration.configName)));
-            assert.isTrue(await fs.isFile(std.path.join(info.cwd, configuration.Npm.configName)));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".gitignore")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".git")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".eslintrc.js")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, "jsconfig.json")));
-
-            const packageConfig = await configuration.Npm.load({
-                cwd: info.cwd
-            });
-
-            assert.equal(packageConfig.raw.name, name);
-            assert.equal(packageConfig.raw.description, "Sample project");
-            assert.equal(std.path.basename(info.cwd), name);
-        });
-
-        it("create realm with specified 'dir'", async () => {
-            const name = "myproject";
-            const dir = getRealmName();
-            
-            const info = {
-                name,
-                dir,
-                basePath: newRealmsPath
-            };
-
-            await rootRealm.runAndWait("createRealm", info);
-
-            assert.equal(info.cwd, std.path.join(newRealmsPath, info.dir));
-            assert.isTrue(await fs.exists(info.cwd));
-            assert.isTrue(await fs.isFile(std.path.join(info.cwd, realm.Configuration.configName)));
-            assert.isTrue(await fs.isFile(std.path.join(info.cwd, configuration.Npm.configName)));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".gitignore")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".git")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".eslintrc.js")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, "jsconfig.json")));
-
-            const packageConfig = await configuration.Npm.load({
-                cwd: info.cwd
-            });
-            
-            assert.equal(packageConfig.raw.name, name);
-            assert.equal(std.path.basename(info.cwd), dir);
-        });
-
-        it("create realm with git initialization", async () => {
-            const name = getRealmName();
-            
-            const info = {
-                name,
-                initGit: true,
-                basePath: newRealmsPath
-            };
-
-            await rootRealm.runAndWait("createRealm", info);
-
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".eslintrc.js")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, "jsconfig.json")));
-            assert.isTrue(await fs.isFile(std.path.join(info.cwd, ".gitignore")));
-            assert.isTrue(await fs.isDirectory(std.path.join(info.cwd, ".git")));
-        });
-
-        it("create realm with 'eslintrc.js' config", async () => {
-            const name = getRealmName();
-            
-            const info = {
-                name,
-                initEslint: true,
-                basePath: newRealmsPath
-            };
-
-            await rootRealm.runAndWait("createRealm", info);
-
-            assert.isTrue(await fs.isFile(std.path.join(info.cwd, ".eslintrc.js")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, "jsconfig.json")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".gitignore")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".git")));
-        });
-
-        it("create realm with 'jsconfig.json' config", async () => {
-            const name = getRealmName();
-            
-            const info = {
-                name,
-                initJsconfig: true,
-                basePath: newRealmsPath
-            };
-
-            await rootRealm.runAndWait("createRealm", info);
-
-            assert.isTrue(await fs.isFile(std.path.join(info.cwd, "jsconfig.json")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".eslintrc.js")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".gitignore")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".git")));
-        });
-    });
-
-    describe.skip("fork realm", () => {
-        it("fork without 'basePath' should be thrown", async () => {
-            const observer = await rootRealm.runSafe("forkRealm", {
-                name: "test"
-            });
-            const err = await assert.throws(async () => observer.result);
-            assert.instanceOf(err, error.NotValidException);
-        });
-    
-        it("fork without 'name' should be thrown", async () => {
-            realmPath = await fs.tmpName({
-                prefix: "realm-"
-            });
-    
-            const observer = await rootRealm.runSafe("forkRealm", {
-                basePath: realmPath
-            });
-            const err = await assert.throws(async () => observer.result);
-            assert.instanceOf(err, error.NotValidException);
-        });
-    
-        it("fork", async () => {
-            realmPath = await fs.tmpName({
-                prefix: "realm-"
-            });
-    
-            assert.isFalse(await fs.exists(realmPath));
-    
-            // rootRealm.onNotification("progress", (task, name, info) => {
-            //     console.log(info.message);
-            // });
-    
-            const name = std.path.basename(realmPath);
-            const basePath = std.path.dirname(realmPath);
-    
-            const observer = await rootRealm.runSafe("forkRealm", {
-                basePath,
-                name
-            });
-            const destPath = await observer.result;
-    
-            assert.isTrue(await fs.exists(realmPath));
-            assert.isTrue(await fs.isDirectory(realmPath));
-            assert.strictEqual(destPath, realmPath);
-    
-            realmManager = new realm.Manager({
-                cwd: destPath
-            });
-            await realmManager.initialize();
-    
-            const files = await fs.readdir(realmManager.cwd);
-            assert.includeMembers(files, [
-                ".adone",
-                "LICENSE",
-                "README.md",
-                "adone.json",
-                "bin",
-                "etc",
-                "lib",
-                "share",
-                "package.json",
-                "packages",
-                // "run",
-                "var"
-            ]);
-    
-            adoneCliPath = std.path.join(realmManager.env.ROOT_PATH, "bin", "adone.js");
-            cliConfig = await adone.cli.Configuration.load({
-                cwd: adone.ETC_ADONE_PATH
-            });
-        });
-
-        it("lock/unlock", async () => {
-            const options = {
-                lockfilePath: adone.std.path.join(realmManager.env.ROOT_PATH, "realm.lock")
-            };
-    
-            await realmManager.lock();
-            assert.isTrue(await fs.exists(options.lockfilePath));
-            assert.isTrue(await adone.app.lockfile.check(realmManager.env.ROOT_PATH, options));
-            await realmManager.unlock();
-            assert.isFalse(await fs.exists(options.lockfilePath));
-            assert.isFalse(await adone.app.lockfile.check(realmManager.env.ROOT_PATH, options));
-        });
-    
-        it("default tasks", async () => {
-            assert.sameMembers(realmManager.getTaskNames(), CORE_TASKS);
-        });
-    
-        it("default type handlers", async () => {
-            assert.sameMembers(Object.keys(realmManager.typeHandler), [
-                "cli.command",
-                "omnitron.service"
-            ]);
         });
     });
 

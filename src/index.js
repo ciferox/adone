@@ -11,13 +11,11 @@ const asNamespace = (obj) => {
 };
 
 const adone = Object.create({
-    null: Symbol.for("adone::null"),
+    null: Symbol.for("adone:null"),
     noop: () => { },
     identity: (x) => x,
     truly: () => true,
     falsely: () => false,
-    ok: "ok",
-    bad: "bad",
     o: (...props) => props.length > 0 ? Object.assign({}, ...props) : {},
     Date: global.Date,
     hrtime: process.hrtime,
@@ -28,6 +26,7 @@ const adone = Object.create({
     setImmediate: global.setImmediate,
     clearImmediate: global.clearImmediate,
     lazify: (modules, _obj, _require = require, {
+        asNamespace = false,
         configurable = false,
         enumerable = true,
         writable = false,
@@ -48,7 +47,10 @@ const adone = Object.create({
                         try {
                             mod = _require(value);
                         } catch (err) {
-                            console.log(err.stack);
+                            // console.log(adone.inspect(err, { asObject: true }));
+                            if (err.code !== "MODULE_NOT_FOUND") {
+                                throw err;
+                            }
                             adone.app.runtime.app.fireException(err);
                         }
                     } else if (Array.isArray(value) && value.length >= 1 && typeof value[0] === "string") { // eslint-disable-line
@@ -76,7 +78,17 @@ const adone = Object.create({
                         value: mod
                     });
 
-                    return mod;
+                    let result;
+                    try {
+                        result = asNamespace
+                            ? adone.asNamespace(mod)
+                            : mod;
+                    } catch (err) {
+                        console.log(key);
+                        console.log(adone.pretty.error(err));
+                    }
+
+                    return result;
                 }
             });
         });
@@ -121,8 +133,13 @@ const adone = Object.create({
 
 // Mark adone as namespace
 asNamespace(adone);
+
 // Mark global as namespace
 asNamespace(global);
+
+// Mark some globals as namespaces
+asNamespace(global.process);
+asNamespace(global.console);
 
 Object.defineProperty(global, "adone", {
     enumerable: true,
@@ -149,8 +166,12 @@ adone.lazify({
     ETC_PATH: () => adone.std.path.join(adone.ROOT_PATH, "etc"),
     OPT_PATH: () => adone.std.path.join(adone.ROOT_PATH, "opt"),
     VAR_PATH: () => adone.std.path.join(adone.ROOT_PATH, "var"),
+    PACKAGES_PATH: () => adone.std.path.join(adone.ROOT_PATH, "node_modules"),
     SHARE_PATH: () => adone.std.path.join(adone.ROOT_PATH, "share"),
+    LIB_PATH: () => adone.std.path.join(adone.ROOT_PATH, "lib"),
     LOGS_PATH: () => adone.std.path.join(adone.VAR_PATH, "logs"),
+    SPECIAL_PATH: () => adone.std.path.join(adone.ROOT_PATH, ".adone"),
+    SRC_PATH: () => adone.std.path.join(adone.ROOT_PATH, "src"),
     EMPTY_BUFFER: () => Buffer.allocUnsafe(0),
     LOGO: () => adone.fs.readFileSync(adone.std.path.join(adone.SHARE_PATH, "media", "adone.txt"), { encoding: "utf8" }),
 
@@ -166,7 +187,6 @@ adone.lazify({
         child_process: "child_process", // eslint-disable-line
         cluster: "cluster",
         console: "console",
-        constants: "constants",
         crypto: "crypto",
         dgram: "dgram",
         dns: "dns",
@@ -196,8 +216,9 @@ adone.lazify({
         util: "util",
         v8: "v8",
         vm: "vm",
+        worker_threads: "worker_threads", // eslint-disable-line
         zlib: "zlib"
-    })),
+    }, null, require, { asNamespace: true })),
 
     // glosses
     app: "./glosses/app",
@@ -274,6 +295,11 @@ adone.lazify({
     shani: "./shani",
     // specter: "./specter"
 }, adone);
+
+// lazify non-extendable objects in std
+adone.lazify({
+    constants: "constants"
+}, adone.std);
 
 if (process.env.ADONE_SOURCEMAPS) {
     adone.sourcemap.support(Error).install();

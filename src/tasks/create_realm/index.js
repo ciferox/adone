@@ -31,7 +31,7 @@ export default class extends realm.BaseTask {
             throw new error.ExistsException(`Path '${cwd}' already exists`);
         }
 
-        info.cwd = cwd;
+        info.cwd = this.cwd = cwd;
 
         this.manager.notify(this, "progress", {
             message: "initializing"
@@ -74,69 +74,27 @@ export default class extends realm.BaseTask {
 
         if (info.initGit) {
             // Check git is installed
-            await adone.fs.which("git");
+            await fs.which("git");
             this.manager.notify(this, "progress", {
                 message: "initializing git repo"
             });
             await __.helper.git.init(info);
         }
 
-        // try {
-        //     await this.runAndWait(`${is.string(info.type) ? text.toCamelCase(info.type) : "empty"}Project`, info);
-        // } catch (err) {
-        //     await fs.rm(cwd);
-        // }
-
         this.manager.notify(this, "progress", {
-            message: `Realm ${style.primary.bold(info.name)} successfully created`,
+            message: `realm ${style.primary.bold(info.name)} successfully created`,
             status: true
         });
+
+        return new realm.Manager({ cwd });
     }
 
-    // async createSubProject(info) {
-    //     this._checkLoaded();
-    //     const context = await this._createSubProject(info);
-    //     await this.config.load();
+    async undo(err) {
+        this.manager.notify(this, "progress", {
+            message: err.message,
+            status: false
+        });
 
-    //     this.notify(this, "progress", {
-    //         message: `sub project ${term.theme.primary.bold(info.name)} successfully created`,
-    //         status: true
-    //     });
-    //     return context;
-    // }
-
-    // async _createSubProject(info) {
-    //     const cwd = std.path.join(this.owner.cwd, info.dirName || info.name);
-    //     const context = {};
-
-    //     await this._checkAndCreateProject({
-    //         name: this.owner.config.raw.name,
-    //         description: this.owner.config.raw.description,
-    //         version: this.owner.config.raw.version,
-    //         author: this.owner.config.raw.author,
-    //         ...info,
-    //         cwd,
-    //         skipGit: true,
-    //         skipJsconfig: true
-    //     }, context);
-
-    //     this.contexts.set(cwd, context);
-
-    //     // Adone parent adone.json
-    //     const subName = info.dirName || info.name;
-    //     this.owner.config.set(["struct", subName], std.path.relative(this.owner.cwd, cwd));
-    //     await this.owner.config.save();
-
-    //     if (is.string(info.type)) {
-    //         // Update parent jsconfig.json if it exists
-    //         if (await fs.exists(std.path.join(this.owner.cwd, configuration.Jsconfig.configName))) {
-    //             await this.runAndWait("jsconfig", {
-    //                 cwd: this.owner.cwd,
-    //                 include: [std.path.relative(this.owner.cwd, std.path.join(cwd, "src"))]
-    //             }, this.contexts.get(this.owner.cwd));
-    //         }
-    //     }
-
-    //     return context;
-    // }
+        is.string(this.cwd) && await fs.rm(this.cwd);
+    }
 }

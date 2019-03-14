@@ -107,34 +107,6 @@ export default class extends Subsystem {
                     }
                 },
                 {
-                    type: "list",
-                    name: "type",
-                    search: true,
-                    message: "Select project type",
-                    choices: [
-                        {
-                            name: "Empty",
-                            value: "empty"
-                        },
-                        {
-                            name: "Adone application",
-                            value: "application"
-                        },
-                        {
-                            name: "Adone CLI application",
-                            value: "cli.application"
-                        },
-                        {
-                            name: "Adone CLI command",
-                            value: "cli.command"
-                        },
-                        {
-                            name: "Omnitron service",
-                            value: "omnitron.service"
-                        }
-                    ]
-                },
-                {
                     name: "description",
                     message: "Project description"
                 },
@@ -149,33 +121,24 @@ export default class extends Subsystem {
                     message: "Options",
                     search: true,
                     asObject: true,
-                    choices(answers) {
-                        const choices = [
-                            {
-                                name: "Skip git initialization",
-                                value: "skipGit"
-                            },
-                            {
-                                name: "No jsconfig config",
-                                value: "skipJsconfig"
-                            },
-                            {
-                                name: "No eslint config",
-                                value: "skipEslint"
-                            },
-                            {
-                                name: "Skip npm initialization",
-                                value: "skipNpm"
-                            }
-                        ];
-
-                        if (answers.type === "default") {
-                            choices[2].checked = true; // skitpEslint
-                            choices[3].checked = true; // skipNpm
+                    choices: [
+                        {
+                            name: "Initialize git repository",
+                            value: "initGit"
+                        },
+                        {
+                            name: "Generate jsconfig.js config",
+                            value: "initJsconfig"
+                        },
+                        {
+                            name: "Generate .eslintrc.js config",
+                            value: "initEslint"
+                        },
+                        {
+                            name: "Install npm packages",
+                            value: "initNpm"
                         }
-
-                        return choices;
-                    }
+                    ]
                 },
                 {
                     name: "dir",
@@ -205,13 +168,26 @@ export default class extends Subsystem {
             };
         }
 
-        return this._initProject(info);
-    }
+        try {
+            const manager = adone.realm.rootRealm;
+            await manager.initialize();
+            await cli.observe("progress", manager);
+            const newRealm = manager.runAndWait("createRealm", info);
 
-    async _initProject(info) {
-        const manager = adone.realm.rootRealm;
-        await manager.initialize();
-        await cli.observe("progress", manager);
-        await manager.runAndWait("createRealm", info);
+            const { merge } = await cli.prompt({
+                type: "confirm",
+                name: "merge",
+                message: `Whould you like to merge ${cli.style.primary(info.name)} realm into ADONE?`
+            });
+
+            if (merge) {
+                await adone.realm.rootRealm.runaAndWait("mergeRealm", newRealm);
+            }
+
+            return 0;
+        } catch (err) {
+            console.log(adone.pretty.error(err));
+            return 1;
+        }
     }
 }

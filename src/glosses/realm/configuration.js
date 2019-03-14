@@ -49,7 +49,7 @@ export default class Configuration extends adone.configuration.Generic {
         await super.load(Configuration.configName);
     }
 
-    async loadSync() {
+    loadSync() {
         super.loadSync(Configuration.configName);
     }
 

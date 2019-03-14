@@ -2,7 +2,6 @@ const {
     error,
     std: { path },
     is,
-    app: { runtime: { logger } },
     templating: { dot },
     util,
     text
@@ -10,19 +9,19 @@ const {
 
 const defaults = {
     error: {
-        icon: path.join(adone.realm.rootRealm.env.SHARE_PATH, "media", "logo-err.png")
+        icon: path.join(adone.SHARE_PATH, "media", "logo-err.png")
     },
     regular: {
-        icon: path.join(adone.realm.rootRealm.env.SHARE_PATH, "media", "logo-norm.png")
+        icon: path.join(adone.SHARE_PATH, "media", "logo-norm.png")
     }
 };
 
 const log = (options, isError) => {
     const message = `[${options.title}] ${options.message}`;
     if (isError) {
-        logger.error(message);
+        console.error(message);
     } else {
-        logger.info(message);
+        console.info(message);
     }
 };
 

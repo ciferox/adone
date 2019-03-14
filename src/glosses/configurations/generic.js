@@ -98,7 +98,7 @@ export default class Generic extends adone.configuration.Base {
     }
 
     async load(confPath, name, options) {
-        const conf = await this._checkPath(confPath, true);
+        const conf = this._checkPath(confPath, true);
         if (conf.st.isDirectory()) {
             conf.path = adone.util.globize(conf.path, { ext: Object.keys(this[SERIALIZER]) });
             await fs.glob(conf.path).map(async (p) => this.load(p, name, options));
@@ -136,7 +136,7 @@ export default class Generic extends adone.configuration.Base {
     }
 
     loadSync(confPath, name, options) {
-        const conf = this._checkPathSync(confPath, true);
+        const conf = this._checkPath(confPath, true);
         if (conf.st.isDirectory()) {
             throw new adone.error.NotSupportedException("Load directory is not supported in sync mode");
         } else if (conf.st.isFile()) {
@@ -151,7 +151,6 @@ export default class Generic extends adone.configuration.Base {
                     key: correctName
                 }, options));
             } catch (err) {
-                adone.logError(err);
                 if (err instanceof SyntaxError) {
                     throw new error.NotValidException("Config is not valid");
                 }
@@ -173,7 +172,7 @@ export default class Generic extends adone.configuration.Base {
     }
 
     async save(confPath, name, options) {
-        const conf = await this._checkPath(confPath, false);
+        const conf = this._checkPath(confPath, false);
 
         let obj;
         if (is.nil(name)) {
@@ -187,49 +186,7 @@ export default class Generic extends adone.configuration.Base {
         await fs.writeFile(conf.path, await conf.serializer.encode(obj, options));
     }
 
-    async _checkPath(confPath, checkExists) {
-        let path;
-        if (std.path.isAbsolute(confPath)) {
-            path = confPath;
-        } else {
-            path = std.path.join(this[CWD_PATH], confPath);
-        }
-
-        let ext = null;
-        let serializer = null;
-        ext = std.path.extname(path);
-
-        if (ext.length > 0) {
-            if (!is.propertyOwned(this[SERIALIZER], ext)) {
-                throw new error.NotSupportedException(`Unsupported format: ${ext}`);
-            }
-            serializer = this[SERIALIZER][ext];
-            if (!checkExists && !is.function(serializer.encode)) {
-                throw new error.NotSupportedException(`Format '${ext}' is not saveable`);
-            }
-        }
-
-        if (checkExists) {
-            try {
-                return {
-                    path,
-                    ext,
-                    serializer,
-                    st: await fs.stat(path)
-                };
-            } catch (err) {
-                throw new error.NotExistsException(`${path} not exists`);
-            }
-        }
-
-        return {
-            path,
-            ext,
-            serializer
-        };
-    }
-
-    _checkPathSync(confPath, checkExists) {
+    _checkPath(confPath, checkExists) {
         let path;
         if (std.path.isAbsolute(confPath)) {
             path = confPath;
@@ -251,23 +208,16 @@ export default class Generic extends adone.configuration.Base {
             }
         }
 
+        let st;
         if (checkExists) {
-            try {
-                return {
-                    path,
-                    ext,
-                    serializer,
-                    st: fs.statSync(path)
-                };
-            } catch (err) {
-                throw new error.NotExistsException(`${path} not exists`);
-            }
+            st = fs.statSync(path);
         }
 
         return {
             path,
             ext,
-            serializer
+            serializer,
+            st
         };
     }
 }

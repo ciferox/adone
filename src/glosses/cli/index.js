@@ -3135,9 +3135,18 @@ const terminal = new Terminal();
 terminal.Terminal = Terminal;
 terminal.Terminfo = Terminfo;
 
+adone.lazify({
+    BasePrompt: "./prompt/base_prompt",
+    Manager: "./prompt/manager",
+    Separator: "./prompt/separator",
+    Paginator: "./prompt/paginator",
+    Choices: "./prompt/choices",
+    type: "./prompt/types"
+}, adone.asNamespace(terminal.prompt), require);
+
+
 const __ = adone.lazify({
     Progress: "./progress",
-    prompt: "./prompt",
     esc: "./esc",
     Chalk: "./chalk",
     chalk: () => __.Chalk(),
