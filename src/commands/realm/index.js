@@ -142,13 +142,10 @@ export default class extends app.Subsystem {
         return path;
     }
 
-    async getRealm() {
-        if (!this._manager) {
-            this._manager = new adone.realm.Manager();
-            await this._manager.initialize();
-            // adone.cli.kit.observe("progress", this._manager);
-        }
-
-        return this._manager;
+    async connectRealm() {
+        const manager = adone.realm.rootRealm;
+        await manager.connect();
+        await cli.observe("progress", manager);
+        return manager;
     }
 }

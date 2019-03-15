@@ -78,17 +78,13 @@ const adone = Object.create({
                         value: mod
                     });
 
-                    let result;
                     try {
-                        result = asNamespace
+                        return asNamespace
                             ? adone.asNamespace(mod)
                             : mod;
                     } catch (err) {
-                        console.log(key);
-                        console.log(adone.pretty.error(err));
+                        return mod;
                     }
-
-                    return result;
                 }
             });
         });

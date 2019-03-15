@@ -377,7 +377,6 @@ class Terminal extends adone.event.Emitter {
         super();
 
         this[BAR] = null;
-        this[SILENT] = false;
         this[ACTIVE_PROMPT] = null;
         this[COLOR_SCHEME] = adone.lazify({
             primary: () => this.chalkify("#388E3C"),
@@ -3032,10 +3031,6 @@ class Terminal extends adone.event.Emitter {
         this[BAR] = bar;
     }
 
-    setSilent(silent) {
-        this[SILENT] = silent;
-    }
-
     async observe(what, taskManager) {
         if (is.array(what)) {
             for (const w of what) {
@@ -3090,29 +3085,25 @@ class Terminal extends adone.event.Emitter {
         } else {
             options = message;
         }
-        if (!this[SILENT]) {
-            this[BAR] = new this.Progress(options);
-            this[BAR].update(0);
-        }
+        this[BAR] = new this.Progress(options);
+        this[BAR].update(0);
     }
 
     updateProgress({ clean = false, schema, message, status } = {}) {
         if (is.null(this[BAR])) {
             this.progress(message);
         }
-        if (!this[SILENT]) {
-            if (is.string(message)) {
-                schema = `:spinner ${message}`;
-            } else if (!is.string(schema)) {
-                schema = ":spinner";
+        if (is.string(message)) {
+            schema = `:spinner ${message}`;
+        } else if (!is.string(schema)) {
+            schema = ":spinner";
+        }
+        this[BAR].setSchema(schema);
+        if (is.boolean(status) || is.string(status)) {
+            if (clean) {
+                this[BAR].clean = true;
             }
-            this[BAR].setSchema(schema);
-            if (is.boolean(status) || is.string(status)) {
-                if (clean) {
-                    this[BAR].clean = true;
-                }
-                this[BAR].complete(status);
-            }
+            this[BAR].complete(status);
         }
     }
 

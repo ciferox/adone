@@ -1,7 +1,5 @@
 const {
-    app: { Subsystem, MainCommandMeta },
-    cli,
-    realm
+    app: { Subsystem, MainCommandMeta }
 } = adone;
 
 
@@ -25,10 +23,8 @@ export default class extends Subsystem {
     })
     async main(args, opts) {
         try {
-            const manager = realm.rootRealm;
-            await manager.connect();
-            await cli.observe("progress", manager);
-            await manager.runAndWait("forkRealm", {
+            const rootRealm = await this.parent.connectRealm();
+            await rootRealm.runAndWait("forkRealm", {
                 srcRealm: process.cwd(),
                 name: args.get("name"),
                 basePath: opts.get("path")
@@ -36,7 +32,7 @@ export default class extends Subsystem {
 
             return 0;
         } catch (err) {
-            console.log(adone.pretty.error(err));
+            // console.log(adone.pretty.error(err));
             return 1;
         }
     }

@@ -98,10 +98,10 @@ export default class extends Subsystem {
             info = await cli.prompt([
                 {
                     name: "name",
-                    message: "Realm/project name",
+                    message: "Realm name",
                     async validate(value) {
                         if (!value) {
-                            return "Please enter a valid project name";
+                            return "Please enter a valid name";
                         }
                         return true;
                     }
@@ -141,6 +141,11 @@ export default class extends Subsystem {
                     ]
                 },
                 {
+                    name: "basePath",
+                    message: "Realm base path",
+                    default: process.cwd()
+                },
+                {
                     name: "dir",
                     message: "Directory name",
                     default: (answers) => answers.name,
@@ -169,10 +174,8 @@ export default class extends Subsystem {
         }
 
         try {
-            const manager = adone.realm.rootRealm;
-            await manager.initialize();
-            await cli.observe("progress", manager);
-            const newRealm = manager.runAndWait("createRealm", info);
+            const rootRealm = await this.parent.connectRealm();
+            const newRealm = await rootRealm.runAndWait("createRealm", info);
 
             const { merge } = await cli.prompt({
                 type: "confirm",
@@ -186,7 +189,7 @@ export default class extends Subsystem {
 
             return 0;
         } catch (err) {
-            console.log(adone.pretty.error(err));
+            // console.log(adone.pretty.error(err));
             return 1;
         }
     }

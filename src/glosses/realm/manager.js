@@ -9,6 +9,7 @@ const {
 } = adone;
 
 const CONNECTED = Symbol();
+const SUPER_REALM = Symbol();
 
 const checkEntry = (entry) => {
     if (is.nil(entry.dst)) {
@@ -89,6 +90,30 @@ export default class RealmManager extends task.Manager {
         }, this);
 
         // this.typeHandler = null;
+
+        // Super realm instance
+        this[SUPER_REALM] = null;
+        // Scan parent realms
+        const parentPath = std.path.dirname(this.cwd);
+        const baseName = std.path.basename(parentPath);
+        if (baseName === "opt") {
+            const superRealm = new realm.Manager({
+                cwd: std.path.dirname(parentPath)
+            });
+            try {
+                // Validation...
+
+                // try to require realm config
+                require(std.path.join(superRealm.SPECIAL_PATH, "config.json"));
+                
+                // try to require package.json
+                require(std.path.join(superRealm.ROOT_PATH, "package.json"));
+                this[SUPER_REALM] = superRealm;
+            } catch (err) {
+                // 
+            }
+        }
+        
         this[CONNECTED] = false;
     }
 
@@ -96,8 +121,12 @@ export default class RealmManager extends task.Manager {
         return this.package.name;
     }
 
-    get isConnected() {
+    get connected() {
         return this[CONNECTED];
+    }
+
+    get superRealm() {
+        return this[SUPER_REALM];
     }
 
     async connect() {
@@ -105,6 +134,14 @@ export default class RealmManager extends task.Manager {
             return;
         }
         this[CONNECTED] = true;
+
+        // Scan parent realms
+        if (!is.null(this.superRealm)) {
+            await this.superRealm.connect();
+        }
+
+        // Load tasks from super-realms
+
 
         // Load realm tasks
         const tasks = this.tasks;

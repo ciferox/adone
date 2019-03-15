@@ -1,6 +1,7 @@
 const {
     realm,
-    std
+    std,
+    util
 } = adone;
 
 const FIXTURES_PATH = std.path.join(__dirname, "fixtures");
@@ -12,9 +13,9 @@ export const getRealmName = () => `project${realmCounter++}`;
 
 export const realmPathFor = (...args) => std.path.join(__dirname, "realms", ...args);
 
-export const createManagerFor = async (name, connect = true) => {
+export const createManagerFor = async ({ name, connect = true }) => {
     const manager = new realm.Manager({
-        cwd: realmPathFor(name)
+        cwd: realmPathFor(...util.arrify(name))
     });
     connect && await manager.connect();
     return manager;

@@ -48,13 +48,6 @@ describe("realm", () => {
 
     // const randomName = (prefix = "test") => `${prefix}${text.random(4)}_${text.random(5)}_${text.random(6)}`;
 
-    const createRealmFor = async (name, shouldInit = true) => {
-        const manager = new realm.Manager({
-            cwd: realmPathFor(name)
-        });
-        shouldInit && await manager.connect();
-        return manager;
-    };
 
     // before(async () => {
     //     await realm.init(".adone_test");
@@ -79,28 +72,28 @@ describe("realm", () => {
 
     describe("tasks configuration", () => {
         it("realm without tasks", async () => {
-            const mgr = await createRealmFor("no_tasks");
+            const mgr = await createManagerFor({ name: "no_tasks" });
 
             assert.isObject(mgr.config.raw.scheme);
             assert.lengthOf(mgr.getTaskNames(), 0);
         });
 
         it("realm with configuration tasks defaults", async () => {
-            const mgr = await createRealmFor("realm1");
+            const mgr = await createManagerFor({ name: "realm1" });
 
             assert.isObject(mgr.config.raw.scheme);
             assert.sameMembers(mgr.getTaskNames(), ["task1", "task2"]);
         });
 
         it("realm with configuration tasks with custom index", async () => {
-            const mgr = await createRealmFor("realm2");
+            const mgr = await createManagerFor({ name: "realm2" });
 
             assert.isObject(mgr.config.raw.scheme);
             assert.sameMembers(mgr.getTaskNames(), ["task1", "task2"]);
         });
 
         it("realm with configuration tasks with dev index", async () => {
-            const mgr = await createRealmFor("realm2");
+            const mgr = await createManagerFor({ name: "realm2" });
 
             assert.isObject(mgr.config.raw.scheme);
             assert.sameMembers(mgr.getTaskNames(), ["task1", "task2"]);
@@ -119,7 +112,8 @@ describe("realm", () => {
             assert.lengthOf(rootRealm.getTaskNames(), 0);
 
             await rootRealm.connect();
-
+            
+            assert.strictEqual(rootRealm.connected, true);
             assert.sameMembers(rootRealm.getTaskNames(), CORE_TASKS);
         });
 
@@ -130,6 +124,28 @@ describe("realm", () => {
                 await rootRealm.connect();
             }
             assert.equal(i, 10);
+        });
+    });
+
+    describe.only("nested reams", () => {
+        it("super realm should be instantiated before connect", async () => {
+            const n1 = await createManagerFor({
+                name: ["with_one_nested_realm", "opt", "nested"],
+                connect: false
+            });
+            assert.isTrue(is.realm(n1.superRealm));
+        });
+
+        it("after connect super realm should be connected as well", async () => {
+            const n1 = await createManagerFor({
+                name: ["with_one_nested_realm", "opt", "nested"],
+                connect: false
+            });
+            await n1.connect();
+            const superRealm = n1.superRealm;
+            
+            assert.strictEqual(n1.connected, true);
+            assert.strictEqual(superRealm.connected, true);
         });
     });
 
