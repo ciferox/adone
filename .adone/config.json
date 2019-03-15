@@ -951,27 +951,6 @@
             "src": "src/bundle/**/*.js",
             "dst": "lib/bundle"
         },
-        "isolatedVm": {
-            "description": "Access to multiple isolates in nodejs",
-            "task": "transpile",
-            "src": "src/isolated_vm/**/*.js",
-            "dst": "lib/isolated_vm",
-            "native": {
-                "src": "src/isolated_vm/native",
-                "dst": "lib/isolated_vm/native",
-                "type": "gyp"
-            }
-        },
-        "napa": {
-            "description": "Napa.js: a multi-threaded JavaScript runtime",
-            "task": "transpile",
-            "src": "src/napa/**/*.js",
-            "dst": "lib/napa",
-            "native": {
-                "src": "src/napa/native",
-                "dst": "lib/napa/native"
-            }
-        },
         "omnitron": {
             "task": "adoneTranspile",
             "src": "src/omnitron/**/*.js",

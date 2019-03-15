@@ -284,11 +284,9 @@ adone.lazify({
     // components
     // bundle: "./bundle",
     cmake: "./cmake",
-    // isolatedVm: "./isolated_vm",
     gyp: "./gyp",
-    // napa: "./napa",
     // omnitron: "./omnitron",
-    shani: "./shani",
+    shani: "./shani"
     // specter: "./specter"
 }, adone);
 
