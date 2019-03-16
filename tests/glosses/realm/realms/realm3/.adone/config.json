@@ -1,8 +1,10 @@
 {
     "tasks": {
         "basePath": "lib/tasks",
-        "index": "common",
-        "indexDev": "dev"
+        "tags": {
+            "pub": "common",
+            "dev": "dev"
+        }
     },
     "scheme": {
         "tasks": {

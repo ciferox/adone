@@ -22,8 +22,10 @@ describe("realm", () => {
     // let cliConfig;
 
     const CORE_TASKS = [
-        "createRealm",
-        "forkRealm",
+        "realmCreate",
+        "realmFork",
+        "realmMerge",
+        "realmInfo",
         "install",
         "uninstall",
         "mount",
@@ -78,21 +80,21 @@ describe("realm", () => {
             assert.lengthOf(mgr.getTaskNames(), 0);
         });
 
-        it("realm with configuration tasks defaults", async () => {
+        it("realm with default tasks configuration", async () => {
             const mgr = await createManagerFor({ name: "realm1" });
 
             assert.isObject(mgr.config.raw.scheme);
             assert.sameMembers(mgr.getTaskNames(), ["task1", "task2"]);
         });
 
-        it("realm with configuration tasks with custom index", async () => {
+        it("realm with configuration tasks with pub tag", async () => {
             const mgr = await createManagerFor({ name: "realm2" });
 
             assert.isObject(mgr.config.raw.scheme);
             assert.sameMembers(mgr.getTaskNames(), ["task1", "task2"]);
         });
 
-        it("realm with configuration tasks with dev index", async () => {
+        it("realm with configuration tasks with dev tag", async () => {
             const mgr = await createManagerFor({ name: "realm2" });
 
             assert.isObject(mgr.config.raw.scheme);
@@ -127,10 +129,10 @@ describe("realm", () => {
         });
     });
 
-    describe.only("nested reams", () => {
+    describe("nested realms", () => {
         it("super realm should be instantiated before connect", async () => {
             const n1 = await createManagerFor({
-                name: ["with_one_nested_realm", "opt", "nested"],
+                name: ["simple_nested_realm", "opt", "nested"],
                 connect: false
             });
             assert.isTrue(is.realm(n1.superRealm));
@@ -138,7 +140,7 @@ describe("realm", () => {
 
         it("after connect super realm should be connected as well", async () => {
             const n1 = await createManagerFor({
-                name: ["with_one_nested_realm", "opt", "nested"],
+                name: ["simple_nested_realm", "opt", "nested"],
                 connect: false
             });
             await n1.connect();
@@ -146,6 +148,42 @@ describe("realm", () => {
             
             assert.strictEqual(n1.connected, true);
             assert.strictEqual(superRealm.connected, true);
+        });
+
+        it("allow only pub tasks of super realm", async () => {
+            const nr = await createManagerFor({
+                name: ["nested_realm_with_tasks", "opt", "nested"],
+                connect: false
+            });
+
+            assert.isTrue(is.realm(nr.superRealm));
+            await nr.connect();
+
+            assert.sameMembers(nr.getTaskNames(), ["nestedA", "nestedB", "pubA", "pubB", "dummy"]);
+        });
+
+        it("run task of super realm", async () => {
+            const nr = await createManagerFor({
+                name: ["nested_realm_with_tasks", "opt", "nested"],
+                connect: false
+            });
+
+            assert.isTrue(is.realm(nr.superRealm));
+            await nr.connect();
+
+            assert.equal(await nr.runAndWait("pubA"), "pub aaa");
+        });
+
+        it("task with the same name as in the super sphere should be executed according to nesting", async () => {
+            const nr = await createManagerFor({
+                name: ["nested_realm_with_tasks", "opt", "nested"],
+                connect: false
+            });
+
+            assert.isTrue(is.realm(nr.superRealm));
+            await nr.connect();
+
+            assert.equal(await nr.runAndWait("dummy"), "nested dummy");
         });
     });
 

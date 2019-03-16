@@ -1,6 +1,5 @@
 const {
     app: { Subsystem, MainCommandMeta },
-    is,
     pretty
 } = adone;
 
@@ -24,11 +23,15 @@ export default class extends Subsystem {
     })
     async info(args, opts) {
         try {
-            const manager = await this.parent.getRealm();
+            const rootRealm = await this.parent.connectRealm();
+            const result = await rootRealm.runAndWait("realmInfo", {
+                cwd: process.cwd(),
+                ...opts.getAll()
+            });
 
-            if (opts.has("common") || !opts.hasSomething()) {
+            if (result.common) {
                 console.log();
-                console.log(adone.pretty.table(this._getCommonInfo(manager), {
+                console.log(pretty.table(result.common, {
                     width: "100%",
                     borderless: true,
                     noHeader: true,
@@ -49,14 +52,9 @@ export default class extends Subsystem {
                 }));
             }
 
-            if (opts.has("tasks") || !opts.hasSomething()) {
+            if (result.tasks) {
                 console.log();
-                console.log(adone.pretty.table([
-                    {
-                        key: "Tasks:",
-                        value: manager.getTaskNames().sort().join(", ")
-                    }
-                ], {
+                console.log(pretty.table(result.tasks, {
                     width: "100%",
                     borderless: true,
                     noHeader: true,
@@ -78,64 +76,16 @@ export default class extends Subsystem {
                 }));
             }
 
-            if (opts.has("struct") || !opts.hasSomething()) {
+            if (result.struct) {
                 console.log();
                 console.log("Namespaces:");
-                const entries = manager.getEntries({
-                    path: null,
-                    onlyNative: opts.has("native"),
-                    excludeVirtual: false // TODO: make it configurable
-                });
-                const structure = {};
-                if (opts.has("full")) {
-                    for (const entry of entries) {
-                        structure[entry.id] = adone.util.omit(entry, "id");
-                    }
-                } else {
-                    for (const entry of entries) {
-                        structure[entry.id] = entry.description || "";
-                    }
-                }
-                console.log(adone.pretty.json(structure));
+                console.log(pretty.json(result.struct));
             }
 
             return 0;
         } catch (err) {
-            console.error(pretty.error(err));
+            // console.error(pretty.error(err));
             return 1;
         }
-    }
-
-    _getCommonInfo(manager) {
-        const info = [];
-        if (is.string(manager.package.name)) {
-            info.push({
-                key: "Name:",
-                value: manager.package.name
-            });
-        }
-
-        if (is.string(manager.package.version)) {
-            info.push({
-                key: "Version:",
-                value: manager.package.version
-            });
-        }
-
-        if (is.string(manager.package.description)) {
-            info.push({
-                key: "Description:",
-                value: manager.package.description
-            });
-        }
-
-        if (is.string(manager.package.author)) {
-            info.push({
-                key: "Author:",
-                value: manager.package.author
-            });
-        }
-
-        return info;
     }
 }

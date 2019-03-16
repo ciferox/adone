@@ -5,10 +5,12 @@ const {
     fs,
     realm,
     task,
-    std
+    std,
+    util
 } = adone;
 
 const CONNECTED = Symbol();
+const CONNECTING = Symbol();
 const SUPER_REALM = Symbol();
 
 const checkEntry = (entry) => {
@@ -40,6 +42,24 @@ const loadTasks = (path, index) => {
     return {};
 };
 
+const trySuperRealmAt = (cwd) => {
+    let superRealm = new realm.Manager({
+        cwd
+    });
+    try {
+        // Validation...
+
+        // try to require realm config
+        require(std.path.join(superRealm.SPECIAL_PATH, "config.json"));
+
+        // try to require package.json
+        require(std.path.join(superRealm.ROOT_PATH, "package.json"));
+    } catch (err) {
+        superRealm = null;
+    }
+    return superRealm;
+};
+
 export default class RealmManager extends task.Manager {
     constructor({ cwd = process.cwd() } = {}) {
         super();
@@ -64,57 +84,29 @@ export default class RealmManager extends task.Manager {
         this.PACKAGES_PATH = std.path.join(cwd, "node_modules");
         this.LOCKFILE_PATH = std.path.join(cwd, "realm.lock");
 
-        adone.lazify({
-            config: () => {
-                const conf = realm.Configuration.loadSync({
-                    cwd
-                });
-
-                return conf;
-            },
-            tasks: () => {
-                let tasks = {};
-                if (is.object(this.config.raw.tasks) && is.string(this.config.raw.tasks.basePath)) {
-                    const basePath = std.path.join(this.cwd, this.config.raw.tasks.basePath);
-                    if (fs.existsSync(basePath)) {
-                        tasks = {
-                            ...loadTasks(basePath, this.config.raw.tasks.index),
-                            ...loadTasks(basePath, this.config.raw.tasks.indexDev)
-                        };
-                    }
-                }
-
-                return tasks;
-            },
-            package: std.path.join(cwd, "package.json")
-        }, this);
+        this.config = realm.Configuration.loadSync({
+            cwd
+        });
+        this.package = require(std.path.join(cwd, "package.json"));
 
         // this.typeHandler = null;
 
         // Super realm instance
         this[SUPER_REALM] = null;
-        // Scan parent realms
+
+        // Scan for super realm
         const parentPath = std.path.dirname(this.cwd);
         const baseName = std.path.basename(parentPath);
         if (baseName === "opt") {
-            const superRealm = new realm.Manager({
-                cwd: std.path.dirname(parentPath)
-            });
-            try {
-                // Validation...
-
-                // try to require realm config
-                require(std.path.join(superRealm.SPECIAL_PATH, "config.json"));
-                
-                // try to require package.json
-                require(std.path.join(superRealm.ROOT_PATH, "package.json"));
-                this[SUPER_REALM] = superRealm;
-            } catch (err) {
-                // 
-            }
+            this[SUPER_REALM] = trySuperRealmAt(std.path.dirname(parentPath));
         }
-        
+        // check 'dev' section for merge information
+        if (is.null(this[SUPER_REALM]) && is.object(this.config.raw.dev) && is.string(this.config.raw.dev.merged)) {
+            this[SUPER_REALM] = trySuperRealmAt(this.config.raw.dev.merged);
+        }
+
         this[CONNECTED] = false;
+        this[CONNECTING] = false;
     }
 
     get name() {
@@ -129,36 +121,116 @@ export default class RealmManager extends task.Manager {
         return this[SUPER_REALM];
     }
 
-    async connect() {
-        if (this[CONNECTED]) {
+    async connect({ tag } = {}) {
+        if (this[CONNECTED] || this[CONNECTING]) {
             return;
         }
-        this[CONNECTED] = true;
+        this[CONNECTING] = true;
 
-        // Scan parent realms
+        try {
+            if (!is.null(this.superRealm)) {
+                await this.superRealm.connect({ tag: realm.TAG_PUB });
+            }
+
+            const tags = {};
+            tag = util.arrify(tag);
+            const tasksConfig = this.config.raw.tasks;
+            if (is.object(tasksConfig) && is.string(tasksConfig.basePath)) {
+                const basePath = std.path.join(this.cwd, tasksConfig.basePath);
+                if (fs.existsSync(basePath)) {
+                    if (is.object(tasksConfig.tags)) {
+                        for (const [t, indexFile] of Object.entries(tasksConfig.tags)) {
+                            if (tag.length === 0 || tag.includes(t)) {
+                                tags[t] = loadTasks(basePath, indexFile);
+                            }
+                        }
+                    } else if (tag.length === 0 || tag.includes(realm.TAG_PUB)) {
+                        // If tags not specified in config, then allow only pub tasks with default index file
+                        tags[realm.TAG_PUB] = loadTasks(basePath, "index.js");
+                    }
+                }
+            }
+
+            for (const [tag, tasks] of Object.entries(tags)) {
+                for (const [name, TaskClass] of Object.entries(tasks)) {
+                    // eslint-disable-next-line no-await-in-loop
+                    await this.addTask(name, TaskClass, {
+                        tag
+                    });
+                }
+            }
+
+            // Add default type handlers
+            // const handlerNames = (await adone.fs.readdir(std.path.join(__dirname, "handlers"))).filter((name) => name.endsWith(".js"));
+            // const handlers = {};
+
+            // for (const name of handlerNames) {
+            //     handlers[std.path.basename(name, ".js").replace(/_/g, ".")] = `.${adone.std.path.sep}${std.path.join("handlers", name)}`;
+            // }
+
+            // this.typeHandler = adone.lazify(handlers, null, require);
+            this[CONNECTED] = true;
+        } catch (err) {
+            this[CONNECTED] = false;
+            throw err;
+        } finally {
+            this[CONNECTING] = false;
+        }
+    }
+
+    hasTask(name) {
+        let result = super.hasTask(name);
+        if (!result && !is.null(this.superRealm)) {
+            result = this.superRealm.hasTask(name);
+        }
+        return result;
+    }
+
+    getTask(name) {
+        let taskInfo;
+        try {
+            taskInfo = super.getTask(name);
+        } catch (err) {
+            if (!is.null(this.superRealm)) {
+                return this.superRealm.getTask(name);
+            }
+            throw err;
+        }
+        return taskInfo;
+    }
+
+    getTaskClass(name) {
+        let TaskCls;
+        try {
+            TaskCls = super.getTaskClass(name);
+        } catch (err) {
+            if (!is.null(this.superRealm)) {
+                return this.superRealm.getTaskClass(name);
+            }
+            throw err;
+        }
+        return TaskCls;
+    }
+
+    getTaskNames() {
+        const result = super.getTaskNames();
         if (!is.null(this.superRealm)) {
-            await this.superRealm.connect();
+            const superTasks = this.superRealm.getTaskNames();
+            result.push(...superTasks.filter((name) => !result.includes(name)));
         }
+        return result;
+    }
 
-        // Load tasks from super-realms
+    deleteTask(/*name*/) {
+        throw new error.NotAllowedException("Not allowed to delete task");
+    }
 
+    async deleteAllTasks() {
+        throw new error.NotAllowedException("Not allowed to delete all tasks");
+    }
 
-        // Load realm tasks
-        const tasks = this.tasks;
-        for (const [name, TaskClass] of Object.entries(tasks)) {
-            // eslint-disable-next-line no-await-in-loop
-            await this.addTask(name, TaskClass);
-        }
-
-        // Add default type handlers
-        // const handlerNames = (await adone.fs.readdir(std.path.join(__dirname, "handlers"))).filter((name) => name.endsWith(".js"));
-        // const handlers = {};
-
-        // for (const name of handlerNames) {
-        //     handlers[std.path.basename(name, ".js").replace(/_/g, ".")] = `.${adone.std.path.sep}${std.path.join("handlers", name)}`;
-        // }
-
-        // this.typeHandler = adone.lazify(handlers, null, require);
+    async deleteTasksByTag(/*tag*/) {
+        throw new error.NotAllowedException("Not allowed to delete task by tag");
     }
 
     getEntries({ path, onlyNative = false, excludeVirtual = true } = {}) {
@@ -207,6 +279,18 @@ export default class RealmManager extends task.Manager {
     // unregisterComponent(adoneConf) {
     //     return this.getTypeHandler(adoneConf.raw.type).unregister(adoneConf);
     // }
+
+    async run(name, ...args) {
+        try {
+            const result = await super.run(name, ...args);
+            return result;
+        } catch (err) {
+            if (err instanceof error.NotExistsException && !is.null(this.superRealm)) {
+                return this.superRealm.run(name, ...args);
+            }
+            throw err;
+        }
+    }
 
     async runSafe(name, ...args) {
         await this.lock();

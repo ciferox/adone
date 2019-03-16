@@ -1,7 +1,9 @@
 {
     "tasks": {
         "basePath": "lib",
-        "index": "tasks"
+        "tags": {
+            "pub": "tasks"
+        }
     },
     "scheme": {
         "tasks": {

@@ -3027,10 +3027,6 @@ class Terminal extends adone.event.Emitter {
         this[COLOR_SCHEME] = scheme;
     }
 
-    setProgressBar(bar) {
-        this[BAR] = bar;
-    }
-
     async observe(what, taskManager) {
         if (is.array(what)) {
             for (const w of what) {
@@ -3104,6 +3100,9 @@ class Terminal extends adone.event.Emitter {
                 this[BAR].clean = true;
             }
             this[BAR].complete(status);
+            if (status) {
+                this[BAR] = null;
+            }
         }
     }
 

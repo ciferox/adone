@@ -58,6 +58,7 @@ export class IncorrectException extends Exception { }
 export class NotAllowedException extends Exception { }
 export class LimitExceededException extends Exception { }
 export class EncodingException extends Exception { }
+export class ImmutableException extends Exception { }
 
 export class NetworkException extends Exception { }
 export class BindException extends NetworkException { }
@@ -163,6 +164,7 @@ export const idExceptionMap = {
     27: NotAllowedException,
     28: LimitExceededException,
     29: EncodingException,
+    30: ImmutableException,
     99: AggregateException,
 
     100: NetworkException,

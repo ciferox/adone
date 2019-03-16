@@ -1,4 +1,4 @@
-export default class extends adone.realm.TransformTask {
+export default class TranspileTask extends adone.realm.TransformTask {
     transform(stream, params) {
         const transpileOptions = {
             sourceMap: true,

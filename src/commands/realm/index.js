@@ -1,12 +1,12 @@
 const {
     app,
     is,
-    std
+    std,
+    cli
 } = adone;
 
 const {
-    SubsystemMeta,
-    CommandMeta
+    SubsystemMeta
 } = app;
 
 const subCommand = (name) => std.path.join(__dirname, "commands", name);

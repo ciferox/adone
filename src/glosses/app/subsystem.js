@@ -52,7 +52,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     }
 
     set name(val) {
-        throw new error.NotAllowedException("Subsystem name is immutable");
+        throw new error.ImmutableException("Subsystem name is immutable");
     }
 
     /**
@@ -63,7 +63,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     }
 
     set root(val) {
-        throw new error.NotAllowedException("Subsystem root is immutable");
+        throw new error.ImmutableException("Subsystem root is immutable");
     }
 
     /**
@@ -83,7 +83,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     }
 
     set parent(val) {
-        throw new error.NotAllowedException("Subsytem parent is immutable");
+        throw new error.ImmutableException("Subsytem parent is immutable");
     }
 
     /**
@@ -94,7 +94,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     }
 
     set state(val) {
-        throw new error.NotAllowedException("Subsystem state is immutable");
+        throw new error.ImmutableException("Subsystem state is immutable");
     }
 
     get isOwned() {

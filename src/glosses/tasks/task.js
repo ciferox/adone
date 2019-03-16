@@ -17,7 +17,7 @@ export class Task {
     }
 
     set observer(val) {
-        throw new error.NotAllowedException("Task's 'observer' is immutable");
+        throw new error.ImmutableException("Task's 'observer' is immutable");
     }
 
     get manager() {
@@ -25,7 +25,7 @@ export class Task {
     }
 
     set manager(val) {
-        throw new error.NotAllowedException("Task's 'manager' is immutable");
+        throw new error.ImmutableException("Task's 'manager' is immutable");
     }
 
     /**

@@ -104,8 +104,8 @@ describe("task", () => {
         assert.isTrue(is.task(t));
         assert.isNull(t.manager);
         assert.isNull(t.observer);
-        assert.throws(() => t.manager = undefined, adone.error.NotAllowedException);
-        assert.throws(() => t.observer = undefined, adone.error.NotAllowedException);
+        assert.throws(() => t.manager = undefined, adone.error.ImmutableException);
+        assert.throws(() => t.observer = undefined, adone.error.ImmutableException);
 
         assert.isFunction(t.run);
         assert.throws(() => t.run(), adone.error.NotImplementedException);
@@ -194,7 +194,7 @@ describe("task", () => {
 
         for (const prop of props) {
             assert.strictEqual(taskA[prop.name], prop.expected);
-            assert.throws(() => taskA[prop.name] = prop.createNew(), adone.error.NotAllowedException);
+            assert.throws(() => taskA[prop.name] = prop.createNew(), adone.error.ImmutableException);
         }
     });
 
@@ -280,6 +280,39 @@ describe("task", () => {
         assert.lengthOf(manager.getTaskNames(), 0);
     });
 
+    it("delete all tasks", async () => {
+        class TasksA extends task.Task {
+            run() { }
+        }
+
+        class TasksB extends task.Task {
+            run() { }
+        }
+
+        class TasksC extends task.Task {
+            run() { }
+        }
+
+        class TasksD extends task.Task {
+            run() { }
+        }
+
+        await manager.addTask("a", TasksA);
+        await manager.addTask("b", TasksB);
+        await manager.addTask("c", TasksC);
+        await manager.addTask("d", TasksD);
+
+        assert.sameMembers(manager.getTaskNames(), ["a", "b", "c", "d"]);
+
+        await manager.deleteTask("b");
+
+        assert.sameMembers(manager.getTaskNames(), ["a", "c", "d"]);
+
+        await manager.deleteAllTasks();
+
+        assert.lengthOf(manager.getTaskNames(), 0);
+    });
+
     it("run task once", async () => {
         const observer = await manager.runOnce(SimpleTask, adone.package.version);
         assert.lengthOf(manager.getTaskNames(), 0);
@@ -320,6 +353,64 @@ describe("task", () => {
         assert.isTrue(observer.isRunning());
         assert.equal(await observer.result, `adone ${adone.package.version}`);
         assert.isTrue(observer.isCompleted());
+    });
+
+    describe("tags", () => {
+        class TaskA extends task.Task {
+            run() { }
+        }
+
+        class TaskB extends task.Task {
+            run() { }
+        }
+
+        class TaskC extends task.Task {
+            run() { }
+        }
+
+        class TaskD extends task.Task {
+            run() { }
+        }
+
+        it("add tasks with tag", async () => {
+            await manager.addTask("a", TaskA);
+            await manager.addTask("b", TaskB, {
+                tag: "group1"
+            });
+
+            await manager.addTask("c", TaskC, {
+                tag: "group2"
+            });
+            await manager.addTask("d", TaskD, {
+                tag: "group2"
+            });
+
+            assert.sameMembers(manager.getTaskNames(), ["a", "b", "c", "d"]);
+
+            assert.sameMembers(manager.getTasksByTag("group1").map((taskInfo) => taskInfo.name), ["b"]);
+            assert.sameMembers(manager.getTasksByTag("group2").map((taskInfo) => taskInfo.name), ["c", "d"]);
+        });
+
+        it("delete tasks by tag", async () => {
+            await manager.addTask("a", TaskA);
+            await manager.addTask("b", TaskB, {
+                tag: "group1"
+            });
+
+            await manager.addTask("c", TaskC, {
+                tag: "group2"
+            });
+            await manager.addTask("d", TaskD, {
+                tag: "group2"
+            });
+
+            assert.sameMembers(manager.getTaskNames(), ["a", "b", "c", "d"]);
+
+            await manager.deleteTasksByTag("group2");
+
+            assert.sameMembers(manager.getTaskNames(), ["a", "b"]);
+            assert.lengthOf(manager.getTasksByTag("group2"), 0);
+        });
     });
 
     describe("singleton tasks", () => {
@@ -1088,13 +1179,13 @@ describe("task", () => {
         }
 
         it("add same observer second time shoud have thrown", async () => {
-            const observer = () => {};
+            const observer = () => { };
             manager.onNotification("progress", observer);
             assert.throws(() => manager.onNotification("progress", observer), adone.error.ExistsException);
         });
 
         it("add same observer for any notification second time shoud have thrown", async () => {
-            const observer = () => {};
+            const observer = () => { };
             manager.onNotification(null, observer);
             assert.throws(() => manager.onNotification(null, observer), adone.error.ExistsException);
         });

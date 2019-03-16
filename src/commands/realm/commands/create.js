@@ -175,21 +175,24 @@ export default class extends Subsystem {
 
         try {
             const rootRealm = await this.parent.connectRealm();
-            const newRealm = await rootRealm.runAndWait("createRealm", info);
+            const srcRealm = await rootRealm.runAndWait("realmCreate", info);
 
             const { merge } = await cli.prompt({
                 type: "confirm",
                 name: "merge",
-                message: `Whould you like to merge ${cli.style.primary(info.name)} realm into ADONE?`
+                message: `Whould you like to merge ${cli.style.primary(info.name)} realm into ADONE realm?`
             });
 
             if (merge) {
-                await adone.realm.rootRealm.runaAndWait("mergeRealm", newRealm);
+                await adone.realm.rootRealm.runAndWait("realmMerge", {
+                    srcRealm,
+                    symlink: true
+                });
             }
 
             return 0;
         } catch (err) {
-            // console.log(adone.pretty.error(err));
+            console.log(adone.pretty.error(err));
             return 1;
         }
     }
