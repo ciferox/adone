@@ -2,7 +2,8 @@ const {
     app,
     is,
     std,
-    cli
+    cli,
+    realm
 } = adone;
 
 const {
@@ -58,18 +59,6 @@ const subCommand = (name) => std.path.join(__dirname, "commands", name);
             group: "local",
             description: "Uninstall adone glosses, extensions, applications, etc.",
             subsystem: subCommand("uninstall")
-        },
-        {
-            name: "mount",
-            group: "local",
-            description: "Mount new namespace to 'adone.dev'",
-            subsystem: subCommand("mount")
-        },
-        {
-            name: "unmount",
-            group: "local",
-            description: "Unmount namespace from 'adone.dev'",
-            subsystem: subCommand("unmount")
         },
         {
             name: "list",
@@ -142,10 +131,15 @@ export default class extends app.Subsystem {
         return path;
     }
 
-    async connectRealm() {
-        const manager = adone.realm.rootRealm;
+    async connectRealm({ cwd, progress = true } = {}) {
+        let manager;
+        if (is.string(cwd)) {
+            manager = new realm.Manager({ cwd });
+        } else {
+            manager = realm.rootRealm;
+        }
         await manager.connect();
-        await cli.observe("progress", manager);
+        progress && await cli.observe("progress", manager);
         return manager;
     }
 }

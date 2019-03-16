@@ -121,7 +121,7 @@ export default class RealmManager extends task.Manager {
         return this[SUPER_REALM];
     }
 
-    async connect({ tag } = {}) {
+    async connect() {
         if (this[CONNECTED] || this[CONNECTING]) {
             return;
         }
@@ -129,28 +129,26 @@ export default class RealmManager extends task.Manager {
 
         try {
             if (!is.null(this.superRealm)) {
-                await this.superRealm.connect({ tag: realm.TAG_PUB });
+                await this.superRealm.connect();
             }
 
             const tags = {};
-            tag = util.arrify(tag);
             const tasksConfig = this.config.raw.tasks;
             if (is.object(tasksConfig) && is.string(tasksConfig.basePath)) {
                 const basePath = std.path.join(this.cwd, tasksConfig.basePath);
                 if (fs.existsSync(basePath)) {
                     if (is.object(tasksConfig.tags)) {
                         for (const [t, indexFile] of Object.entries(tasksConfig.tags)) {
-                            if (tag.length === 0 || tag.includes(t)) {
-                                tags[t] = loadTasks(basePath, indexFile);
-                            }
+                            tags[t] = loadTasks(basePath, indexFile);
                         }
-                    } else if (tag.length === 0 || tag.includes(realm.TAG_PUB)) {
-                        // If tags not specified in config, then allow only pub tasks with default index file
+                    } else {
+                        // Load only default index
                         tags[realm.TAG_PUB] = loadTasks(basePath, "index.js");
                     }
                 }
             }
 
+            // Add self contained tasks
             for (const [tag, tasks] of Object.entries(tags)) {
                 for (const [name, TaskClass] of Object.entries(tasks)) {
                     // eslint-disable-next-line no-await-in-loop
@@ -158,6 +156,11 @@ export default class RealmManager extends task.Manager {
                         tag
                     });
                 }
+            }
+            
+            // Add all public tasks from all super realms.
+            if (!is.null(this.superRealm)) {
+                await this._addTasksFromSuperRealm(this.superRealm);
             }
 
             // Add default type handlers
@@ -176,61 +179,6 @@ export default class RealmManager extends task.Manager {
         } finally {
             this[CONNECTING] = false;
         }
-    }
-
-    hasTask(name) {
-        let result = super.hasTask(name);
-        if (!result && !is.null(this.superRealm)) {
-            result = this.superRealm.hasTask(name);
-        }
-        return result;
-    }
-
-    getTask(name) {
-        let taskInfo;
-        try {
-            taskInfo = super.getTask(name);
-        } catch (err) {
-            if (!is.null(this.superRealm)) {
-                return this.superRealm.getTask(name);
-            }
-            throw err;
-        }
-        return taskInfo;
-    }
-
-    getTaskClass(name) {
-        let TaskCls;
-        try {
-            TaskCls = super.getTaskClass(name);
-        } catch (err) {
-            if (!is.null(this.superRealm)) {
-                return this.superRealm.getTaskClass(name);
-            }
-            throw err;
-        }
-        return TaskCls;
-    }
-
-    getTaskNames() {
-        const result = super.getTaskNames();
-        if (!is.null(this.superRealm)) {
-            const superTasks = this.superRealm.getTaskNames();
-            result.push(...superTasks.filter((name) => !result.includes(name)));
-        }
-        return result;
-    }
-
-    deleteTask(/*name*/) {
-        throw new error.NotAllowedException("Not allowed to delete task");
-    }
-
-    async deleteAllTasks() {
-        throw new error.NotAllowedException("Not allowed to delete all tasks");
-    }
-
-    async deleteTasksByTag(/*tag*/) {
-        throw new error.NotAllowedException("Not allowed to delete task by tag");
     }
 
     getEntries({ path, onlyNative = false, excludeVirtual = true } = {}) {
@@ -312,5 +260,20 @@ export default class RealmManager extends task.Manager {
         if (await lockfile.check(this.ROOT_PATH, options)) {
             return lockfile.release(this.ROOT_PATH, options);
         }
+    }
+
+    async _addTasksFromSuperRealm(superRealm) {
+        if (is.null(superRealm)) {
+            return;
+        }
+        const tasks = superRealm.getTasksByTag(realm.TAG_PUB);
+        for (const taskInfo of tasks) {
+            if (!this.hasTask(taskInfo.name)) {
+                // eslint-disable-next-line no-await-in-loop
+                await this.addTask(taskInfo.name, taskInfo.Class, util.pick(taskInfo, ["concurrency", "interval", "singleton", "description", "tag"]));
+            }
+        }
+
+        return this._addTasksFromSuperRealm(superRealm.superRealm);
     }
 }

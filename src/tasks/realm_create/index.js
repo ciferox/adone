@@ -43,7 +43,7 @@ export default class extends realm.BaseTask {
             message: `creating ${style.primary(configuration.Npm.configName)}`
         });
 
-        await __.helper.packageConfig.create(info);
+        const npmConfig = await __.helper.packageConfig.create(info);
 
         this.manager.notify(this, "progress", {
             message: `creating ${style.primary(realm.Configuration.configName)}`
@@ -69,7 +69,7 @@ export default class extends realm.BaseTask {
             this.manager.notify(this, "progress", {
                 message: `creating ${style.primary(".eslintrc.js")}`
             });
-            await __.helper.eslintrc.create(info);
+            await __.helper.eslintrc.create({ cwd, npmConfig });
         }
 
         if (info.initGit) {
@@ -79,6 +79,13 @@ export default class extends realm.BaseTask {
                 message: "initializing git repo"
             });
             await __.helper.git.init(info);
+        }
+
+        if (info.initNpm) {
+            this.manager.notify(this, "progress", {
+                message: "installing npm packages"
+            });
+            await __.helper.packageManager.runInstall({ cwd });
         }
 
         this.manager.notify(this, "progress", {

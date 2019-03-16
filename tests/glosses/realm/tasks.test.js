@@ -1,6 +1,7 @@
 import { realmPathFor, createManagerFor, fixturePath, getRealmName } from "./utils";
 
 const {
+    is,
     configuration,
     error,
     fs,
@@ -167,7 +168,7 @@ describe("realm", "common tasks", () => {
 
         after(async () => {
             await fs.rm(fixturePath());
-            if (await fs.exists(tmpPath)) {
+            if (is.string(tmpPath) && await fs.exists(tmpPath)) {
                 await fs.rm(tmpPath);
             }
         });
@@ -251,7 +252,7 @@ describe("realm", "common tasks", () => {
         });
 
         it("fork adone realm", async function () {
-            this.timeout(80000);
+            this.timeout(120 * 1000);
             const destRealm = await rootRealm.runAndWait("realmFork", {
                 srcRealm: rootRealm,
                 name: ".adone",

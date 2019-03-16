@@ -1,5 +1,5 @@
 export default class extends adone.realm.BaseTask {
-    async main(path) {
+    async main({ path } = {}) {
         const observer = await this.manager.runInParallel(this.manager.getEntries({ path }).map((entry) => ({
             task: entry.task,
             args: entry

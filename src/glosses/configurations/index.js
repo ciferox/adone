@@ -52,8 +52,8 @@ export class Base {
         if (!is.object(obj)) {
             return this.set(key, adone.lodash.assign(...args));
         }
-        
-        for (let i = args.length; --i >= 0; ) {
+
+        for (let i = args.length; --i >= 0;) {
             if (is.configuration(args[i])) {
                 args[i] = args[i].raw;
             }
@@ -75,13 +75,13 @@ export class Base {
         if (!is.object(obj)) {
             return this.set(key, adone.lodash.assign(...args));
         }
-        
-        for (let i = args.length; --i >= 0; ) {
+
+        for (let i = args.length; --i >= 0;) {
             if (is.configuration(args[i])) {
                 args[i] = args[i].raw;
             }
         }
-        
+
         return adone.lodash.merge(obj, ...args);
     }
 
@@ -133,5 +133,11 @@ const lazy = adone.lazify({
 export const load = async (path, name, options) => {
     const config = new lazy.Generic(options);
     await config.load(path, name, options);
+    return config;
+};
+
+export const loadSync = (path, name, options) => {
+    const config = new lazy.Generic(options);
+    config.loadSync(path, name, options);
     return config;
 };

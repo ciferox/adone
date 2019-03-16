@@ -25,9 +25,9 @@ export default class extends Subsystem {
             });
 
             const path = this.parent.resolvePath(args, opts);
-            const manager = await this.parent.getRealm();
-            // await adone.cli.kit.observe("logInfo", manager);
-            await manager.runAndWait("clean", path);
+            const r = await this.parent.connectRealm({ cwd: process.cwd() });
+            // await adone.cli.kit.observe("logInfo", r);
+            await r.runAndWait("clean", { path });
 
             logger.success({
                 message: "Successfully cleaned"

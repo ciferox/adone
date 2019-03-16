@@ -41,7 +41,7 @@ const clean = async function (manager, entry) {
 };
 
 export default class extends BaseTask {
-    async main(path) {
+    async main({ path } = {}) {
         const observer = await this.manager.runInParallel(this.manager.getEntries({ path }).map((entry) => ({
             task: clean,
             args: [this.manager, entry]

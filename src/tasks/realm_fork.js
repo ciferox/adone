@@ -57,17 +57,14 @@ export default class extends realm.BaseTask {
             message: "preparing to copy common realm files"
         });
 
-        const cwd = std.path.resolve(basePath, name);
+        this.destCwd = std.path.resolve(basePath, name);
 
-        if (await fs.exists(cwd)) {
-            throw new error.ExistsException(`Path '${cwd}' already exists`);
+        if (await fs.exists(this.destCwd)) {
+            throw new error.ExistsException(`Path '${this.destCwd}' already exists`);
         }
 
-        await fs.mkdirp(cwd);
+        await fs.mkdirp(this.destCwd);
 
-        this.destRealm = new realm.Manager({
-            cwd
-        });
         // const srcGlob = util.arrify(exclude).map((glob) => glob.startsWith("!")
         //     ? glob
         //     : `!${glob}`
@@ -97,7 +94,7 @@ export default class extends realm.BaseTask {
         await fast.src(rootFileNames, {
             cwd: srcRealm.ROOT_PATH,
             base: srcRealm.ROOT_PATH
-        }).dest(this.destRealm.cwd, {
+        }).dest(this.destCwd, {
             produceFiles: true
         });
 
@@ -108,7 +105,7 @@ export default class extends realm.BaseTask {
     
             const cwd = std.path.join(srcRealm.ROOT_PATH, dir);
             const base = cwd;
-            const dstPath = std.path.join(this.destRealm.cwd, dir);
+            const dstPath = std.path.join(this.destCwd, dir);
             // eslint-disable-next-line no-await-in-loop
             await fast.src("**/*", {
                 cwd,
@@ -119,8 +116,12 @@ export default class extends realm.BaseTask {
         }
 
         this.manager.notify(this, "progress", {
-            message: `realm ${cli.style.primary(srcRealm.name)} successfully forked into ${cli.style.accent(this.destRealm.cwd)}`,
+            message: `realm ${cli.style.primary(srcRealm.name)} successfully forked into ${cli.style.accent(this.destCwd)}`,
             status: true
+        });
+
+        this.destRealm = new realm.Manager({
+            cwd: this.destCwd
         });
 
         return this.destRealm;
@@ -132,6 +133,6 @@ export default class extends realm.BaseTask {
             status: false
         });
 
-        is.realm(this.destRealm) && await fs.rm(this.destRealm.cwd);
+        is.string(this.destCwd) && await fs.rm(this.destCwd);
     }
 }

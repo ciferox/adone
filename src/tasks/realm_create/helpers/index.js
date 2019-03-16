@@ -4,5 +4,6 @@ adone.lazify({
     jsconfig: "./jsconfig",
     eslintrc: "./eslintrc",
     git: "./git",
-    createFile: "./create_file"
+    createFile: "./create_file",
+    packageManager: "./package_manager"
 }, exports, require);
