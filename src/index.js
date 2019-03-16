@@ -220,7 +220,6 @@ adone.lazify({
     app: "./glosses/app",
     archive: "./glosses/archives",
     assertion: "./glosses/assertion",
-    async: "./glosses/async",
     cli: "./glosses/cli",
     collection: "./glosses/collections",
     compressor: "./glosses/compressors",
@@ -246,7 +245,6 @@ adone.lazify({
     ipfs: "./glosses/ipfs",
     is: "./glosses/is",
     js: "./glosses/js",
-    lodash: "./glosses/lodash",
     math: "./glosses/math",
     meta: "./glosses/meta",
     metrics: "./glosses/metrics",
@@ -294,6 +292,14 @@ adone.lazify({
 adone.lazify({
     constants: "constants"
 }, adone.std);
+
+// lazify third-party libraries
+adone.lazify({
+    async: "./glosses/async",
+    lodash: "./glosses/lodash"
+}, adone, require, {
+    asNamespace: true
+});
 
 if (process.env.ADONE_SOURCEMAPS) {
     adone.sourcemap.support(Error).install();

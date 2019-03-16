@@ -1,11 +1,11 @@
 const Hapi = require("hapi");
 const path = require("path");
 // const epimetheus = require("epimetheus");
-const merge = require("merge-recursive").recursive;
 const defaultConfig = require("./config");
 
 const {
-    is
+    is,
+    lodash: { merge }
 } = adone;
 
 exports = module.exports;
