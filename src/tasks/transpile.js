@@ -14,6 +14,7 @@ export default class TranspileTask extends adone.realm.TransformTask {
     plugins() {
         return [
             "syntax.asyncGenerators",
+            "syntax.optionalCatchBinding",
             "transform.flowStripTypes",
             ["transform.decorators", {
                 legacy: true

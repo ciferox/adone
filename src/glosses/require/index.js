@@ -23,6 +23,7 @@ if (process.env.ADONE_COVERAGE) {
         "syntax.numericSeparator",
         "syntax.exponentiationOperator",
         "syntax.exportNamespaceFrom",
+        "syntax.optionalCatchBinding",
         adone.js.coverage.plugin
     );
 }

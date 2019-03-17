@@ -16,7 +16,8 @@ const plugins = {
         numericSeparator: "./syntax/numeric_separator",
         exponentiationOperator: "./syntax/exponentiation_operator",
         exportNamespaceFrom: "./syntax/export_namespace_from",
-        dynamicImport: "./syntax/dynamic_import"
+        dynamicImport: "./syntax/dynamic_import",
+        optionalCatchBinding: "./syntax/optional_catch_binding"
     }, null, require),
     transform: lazify({
         asyncGeneratorFunctions: "./transform/async_generator_functions",
