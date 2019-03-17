@@ -3,8 +3,8 @@ const Joi = require('joi')
 const Boom = require('boom')
 const { cidToString } = require('../../../utils/cid')
 const debug = require('debug')
-const log = debug('jsipfs:http-api:object')
-log.error = debug('jsipfs:http-api:object:error')
+const log = debug('ipfs:http-api:object')
+log.error = debug('ipfs:http-api:object:error')
 
 const {
     ipfs: { multipart, ipld: { dagPb } },

@@ -117,7 +117,8 @@ adone.lazify({
     jsonDoubleline: "./json_doubleline",
     goodbye: "./goodbye",
     serializer: "./serializer",
-    many: "./many"
+    many: "./many",
+    pullToStream: "./pull_to_stream"
 }, core, require);
 
 export default adone.asNamespace(core);

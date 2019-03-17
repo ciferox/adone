@@ -1,5 +1,4 @@
 const FSM = require("fsm-event");
-const EventEmitter = require("events").EventEmitter;
 const debug = require("debug");
 const log = debug("libp2p");
 log.error = debug("libp2p:error");
@@ -18,6 +17,7 @@ const getPeerInfo = require("./get-peer-info");
 const validateConfig = require("./config").validate;
 
 const {
+    event,
     is,
     p2p: { PeerBook, ConnectionManager, Switch, Ping, transport: { WS } }
 } = adone;
@@ -37,7 +37,7 @@ const notStarted = (action, state) => {
  * @fires Node#start Emitted when the node and its services has started
  * @fires Node#stop Emitted when the node and its services has stopped
  */
-class Node extends EventEmitter {
+export default class Node extends event.Emitter {
     constructor(_options) {
         super();
         // validateConfig will ensure the config is correct,
@@ -166,7 +166,7 @@ class Node extends EventEmitter {
     }
 
     /**
-     * Overrides EventEmitter.emit to conditionally emit errors
+     * Overrides Emitter.emit to conditionally emit errors
      * if there is a handler. If not, errors will be logged.
      * @param {string} eventName
      * @param  {...any} args
@@ -489,5 +489,3 @@ class Node extends EventEmitter {
         });
     }
 }
-
-module.exports = Node;

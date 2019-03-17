@@ -1,6 +1,6 @@
 const debug = require('debug')
-const log = debug('jsipfs:http-gateway')
-log.error = debug('jsipfs:http-gateway:error')
+const log = debug('ipfs:http-gateway')
+log.error = debug('ipfs:http-gateway:error')
 const fileType = require('file-type')
 const mime = require('mime-types')
 const { PassThrough } = require('readable-stream')

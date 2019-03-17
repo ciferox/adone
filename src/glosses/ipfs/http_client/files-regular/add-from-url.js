@@ -1,70 +1,68 @@
-'use strict'
-
-const promisify = require('promisify-es6')
-const { URL } = require('url')
-const request = require('../utils/request')
-const SendOneFile = require('../utils/send-one-file-multiple-results')
-const FileResultStreamConverter = require('../utils/file-result-stream-converter')
+const promisify = require("promisify-es6");
+const { URL } = require("iso-url");
+const { getRequest } = require("iso-stream-http");
+const SendOneFile = require("../utils/send-one-file-multiple-results");
+const FileResultStreamConverter = require("../utils/file-result-stream-converter");
 
 module.exports = (send) => {
-  const sendOneFile = SendOneFile(send, 'add')
+    const sendOneFile = SendOneFile(send, "add");
 
-  return promisify((url, opts, callback) => {
-    if (typeof (opts) === 'function' &&
-        callback === undefined) {
-      callback = opts
-      opts = {}
-    }
+    return promisify((url, opts, callback) => {
+        if (typeof (opts) === "function" &&
+            callback === undefined) {
+            callback = opts;
+            opts = {};
+        }
 
-    // opts is the real callback --
-    // 'callback' is being injected by promisify
-    if (typeof opts === 'function' &&
-        typeof callback === 'function') {
-      callback = opts
-      opts = {}
-    }
+        // opts is the real callback --
+        // 'callback' is being injected by promisify
+        if (typeof opts === "function" &&
+            typeof callback === "function") {
+            callback = opts;
+            opts = {};
+        }
 
-    if (!validUrl(url)) {
-      return callback(new Error('"url" param must be an http(s) url'))
-    }
+        if (!validUrl(url)) {
+            return callback(new Error('"url" param must be an http(s) url'));
+        }
 
-    requestWithRedirect(url, opts, sendOneFile, callback)
-  })
-}
+        requestWithRedirect(url, opts, sendOneFile, callback);
+    });
+};
 
-const validUrl = (url) => typeof url === 'string' && url.startsWith('http')
+const validUrl = (url) => typeof url === "string" && url.startsWith("http");
 
 const requestWithRedirect = (url, opts, sendOneFile, callback) => {
-  const parsedUrl = new URL(url)
+    const parsedUrl = new URL(url);
 
-  const req = request(parsedUrl.protocol)(url, (res) => {
-    if (res.statusCode >= 400) {
-      return callback(new Error(`Failed to download with ${res.statusCode}`))
-    }
+    const req = getRequest(parsedUrl, (res) => {
+        if (res.statusCode >= 400) {
+            return callback(new Error(`Failed to download with ${res.statusCode}`));
+        }
 
-    const redirection = res.headers.location
+        const redirection = res.headers.location;
 
-    if (res.statusCode >= 300 && res.statusCode < 400 && redirection) {
-      if (!validUrl(redirection)) {
-        return callback(new Error('redirection url must be an http(s) url'))
-      }
+        if (res.statusCode >= 300 && res.statusCode < 400 && redirection) {
+            if (!validUrl(redirection)) {
+                return callback(new Error("redirection url must be an http(s) url"));
+            }
 
-      requestWithRedirect(redirection, opts, sendOneFile, callback)
-    } else {
-      const requestOpts = {
-        qs: opts,
-        converter: FileResultStreamConverter
-      }
-      const fileName = decodeURIComponent(parsedUrl.pathname.split('/').pop())
+            requestWithRedirect(redirection, opts, sendOneFile, callback);
+        } else {
+            const requestOpts = {
+                qs: opts,
+                converter: FileResultStreamConverter
+            };
+            const fileName = decodeURIComponent(parsedUrl.pathname.split("/").pop());
 
-      sendOneFile({
-        content: res,
-        path: fileName
-      }, requestOpts, callback)
-    }
-  })
+            sendOneFile({
+                content: res,
+                path: fileName
+            }, requestOpts, callback);
+        }
+    });
 
-  req.once('error', callback)
+    req.once("error", callback);
 
-  req.end()
-}
+    req.end();
+};

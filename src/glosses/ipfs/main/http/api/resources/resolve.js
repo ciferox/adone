@@ -4,8 +4,8 @@ const {
     multiformat: { multibase }
 } = adone;
 
-const log = debug('jsipfs:http-api:resolve')
-log.error = debug('jsipfs:http-api:resolve:error')
+const log = debug('ipfs:http-api:resolve')
+log.error = debug('ipfs:http-api:resolve:error')
 
 module.exports = {
     validate: {

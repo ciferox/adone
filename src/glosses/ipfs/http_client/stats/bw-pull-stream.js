@@ -1,30 +1,30 @@
-const transformChunk = require('./bw-util')
+const transformChunk = require("./bw-util");
 
 const {
     stream: { pull2: pull }
 } = adone;
-const { defer, streamToPullStream } = pull;
+const { defer, streamToPullStream, map } = pull;
 
 module.exports = (send) => {
     return (opts) => {
-        opts = opts || {}
+        opts = opts || {};
 
-        const p = defer.source()
+        const p = defer.source();
 
         send({
-            path: 'stats/bw',
+            path: "stats/bw",
             qs: opts
         }, (err, stream) => {
             if (err) {
-                return p.end(err)
+                return p.end(err);
             }
 
             p.resolve(pull(
                 streamToPullStream.source(stream),
-                pull.map(transformChunk)
-            ))
-        })
+                map(transformChunk)
+            ));
+        });
 
-        return p
-    }
-}
+        return p;
+    };
+};

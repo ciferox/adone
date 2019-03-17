@@ -9,8 +9,8 @@ const {
     ipfs: { ipns }
 } = adone;
 
-const log = debug('jsipfs:ipns:republisher')
-log.error = debug('jsipfs:ipns:republisher:error')
+const log = debug('ipfs:ipns:republisher')
+log.error = debug('ipfs:ipns:republisher:error')
 
 const minute = 60 * 1000
 const hour = 60 * minute

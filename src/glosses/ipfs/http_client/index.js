@@ -1,6 +1,8 @@
 const {
     is,
-    multiformat: { multiaddr }
+    p2p: { PeerId, PeerInfo },
+    multiformat: { CID, multiaddr, multibase, multihash, multicodec },
+    ipfs: { isIPFS }
 } = adone;
 
 const loadCommands = require("./utils/load-commands");
@@ -50,7 +52,6 @@ export default function httpClient(hostOrMultiaddr, port, opts) {
     const requestAPI = sendRequest(config);
     const cmds = loadCommands(requestAPI, config);
     cmds.send = requestAPI;
-    cmds.Buffer = Buffer; // Added buffer in types (this should be removed once a breaking change is release)
 
     return cmds;
 }
@@ -61,3 +62,5 @@ adone.lazify({
     swarm: "./swarm",
     defaultConfig: "./utils/default-config"
 }, httpClient, require);
+
+Object.assign(httpClient, { isIPFS, Buffer, CID, multiaddr, multibase, multicodec, multihash, PeerId, PeerInfo });

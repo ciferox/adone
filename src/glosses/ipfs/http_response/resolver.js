@@ -1,8 +1,8 @@
 const promisify = require('promisify-es6')
 const reduce = require('async/reduce')
 const debug = require('debug')
-const log = debug('jsipfs:http:response:resolver')
-log.error = debug('jsipfs:http:response:resolver:error')
+const log = debug('ipfs:http:response:resolver')
+log.error = debug('ipfs:http:response:resolver:error')
 
 const dirView = require('./dir-view')
 const pathUtil = require('./utils/path')

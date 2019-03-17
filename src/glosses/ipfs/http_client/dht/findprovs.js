@@ -1,7 +1,7 @@
-const promisify = require('promisify-es6')
-const streamToValueWithTransformer = require('../utils/stream-to-value-with-transformer')
+const promisify = require("promisify-es6");
+const streamToValueWithTransformer = require("../utils/stream-to-value-with-transformer");
 
-const errcode = require('err-code')
+const errcode = require("err-code");
 
 const {
     p2p: { PeerId, PeerInfo }
@@ -9,19 +9,24 @@ const {
 
 module.exports = (send) => {
     return promisify((cid, opts, callback) => {
-        if (typeof opts === 'function' && !callback) {
-            callback = opts
-            opts = {}
+        if (typeof opts === "function" && !callback) {
+            callback = opts;
+            opts = {};
         }
 
         // opts is the real callback --
         // 'callback' is being injected by promisify
-        if (typeof opts === 'function' && typeof callback === 'function') {
-            callback = opts
-            opts = {}
+        if (typeof opts === "function" && typeof callback === "function") {
+            callback = opts;
+            opts = {};
         }
 
         const handleResult = (res, callback) => {
+            // // callback with an empty array if no providers are found
+            // if (!res) {
+            //     const responses = [];
+            //     return callback(null, responses);
+            // }
             // // Inconsistent return values in the browser vs node
             // if (Array.isArray(res)) {
             //     res = res[0]
@@ -48,18 +53,18 @@ module.exports = (send) => {
 
             // callback(null, responses)
             callback(null, res);
-        }
+        };
 
         send({
-            path: 'dht/findprovs',
+            path: "dht/findprovs",
             args: cid,
             qs: opts
         }, (err, result) => {
             if (err) {
-                return callback(err)
+                return callback(err);
             }
 
-            streamToValueWithTransformer(result, handleResult, callback)
-        })
-    })
-}
+            streamToValueWithTransformer(result, handleResult, callback);
+        });
+    });
+};

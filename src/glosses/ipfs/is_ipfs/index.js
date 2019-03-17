@@ -1,7 +1,7 @@
 const base58 = require('bs58')
 
 const {
-    multiformat: { CID, multibase, multihash }
+    multiformat: { CID, mafmt, multiaddr: Multiaddr, multibase, multihash }
 } = adone;
 
 
@@ -40,6 +40,21 @@ function isCID(hash) {
     } catch (e) {
         return false
     }
+}
+
+function isMultiaddr(input) {
+    if (!input) return false
+    if (Multiaddr.isMultiaddr(input)) return true
+    try {
+        new Multiaddr(input) // eslint-disable-line no-new
+        return true
+    } catch (e) {
+        return false
+    }
+}
+
+function isPeerMultiaddr(input) {
+    return isMultiaddr(input) && mafmt.IPFS.matches(input)
 }
 
 function isIpfs(input, pattern, protocolMatch = defaultProtocolMatch, hashMatch = defaultHashMath) {
@@ -116,6 +131,8 @@ const ipnsSubdomain = (url) => isIpns(url, fqdnPattern, fqdnProtocolMatch, fqdnH
 
 module.exports = {
     multihash: isMultihash,
+    multiaddr: isMultiaddr,
+    peerMultiaddr: isPeerMultiaddr,
     cid: isCID,
     base32cid: (cid) => (isMultibase(cid) === 'base32' && isCID(cid)),
     ipfsSubdomain: ipfsSubdomain,

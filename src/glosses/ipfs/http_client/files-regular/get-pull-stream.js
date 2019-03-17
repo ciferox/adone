@@ -5,7 +5,7 @@ const {
     stream: { pull2: pull },
     ipfs: { isIPFS }
 } = adone;
-const { defer, streamToPullStream } = pull;
+const { map, defer, streamToPullStream } = pull;
 
 module.exports = (send) => {
     return (path, opts) => {
@@ -32,7 +32,7 @@ module.exports = (send) => {
             p.resolve(
                 pull(
                     streamToPullStream.source(stream),
-                    pull.map((file) => {
+                    map((file) => {
                         const { path, content } = file;
                         return content ? { path, content: streamToPullStream.source(content) } : file;
                     })

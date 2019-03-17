@@ -1,91 +1,98 @@
-const setImmediate = require('async/setImmediate')
-const retry = require('async/retry')
-const debug = require('debug')
-const preload = require('./runtime/preload-nodejs')
+const setImmediate = require("async/setImmediate");
+const retry = require("async/retry");
+const debug = require("debug");
+const preload = require("./runtime/preload-nodejs");
 
 const {
     multiformat: { CID, multiaddrToUri: toUri }
 } = adone;
 
-const log = debug('jsipfs:preload')
-log.error = debug('jsipfs:preload:error')
+const log = debug("ipfs:preload");
+log.error = debug("ipfs:preload:error");
 
-const noop = (err) => { if (err) log.error(err) }
+const noop = (err) => {
+    if (err) {
+        log.error(err);
+    }
+};
 
-module.exports = self => {
-    const options = self._options.preload || {}
-    options.enabled = Boolean(options.enabled)
-    options.addresses = options.addresses || []
+module.exports = (self) => {
+    const options = self._options.preload || {};
+    options.enabled = Boolean(options.enabled);
+    options.addresses = options.addresses || [];
 
     if (!options.enabled || !options.addresses.length) {
+        log("preload disabled")
         const api = (_, callback) => {
             if (callback) {
-                setImmediate(() => callback())
+                setImmediate(() => callback());
             }
-        }
-        api.start = () => { }
-        api.stop = () => { }
-        return api
+        };
+        api.start = () => { };
+        api.stop = () => { };
+        return api;
     }
 
-    let stopped = true
-    let requests = []
-    const apiUris = options.addresses.map(apiAddrToUri)
+    let stopped = true;
+    let requests = [];
+    const apiUris = options.addresses.map(apiAddrToUri);
 
     const api = (cid, callback) => {
-        callback = callback || noop
+        callback = callback || noop;
 
-        if (typeof cid !== 'string') {
+        if (typeof cid !== "string") {
             try {
-                cid = new CID(cid).toBaseEncodedString()
+                cid = new CID(cid).toBaseEncodedString();
             } catch (err) {
-                return setImmediate(() => callback(err))
+                return setImmediate(() => callback(err));
             }
         }
 
-        const fallbackApiUris = Array.from(apiUris)
-        let request
-        const now = Date.now()
+        const fallbackApiUris = Array.from(apiUris);
+        let request;
+        const now = Date.now();
 
         retry({ times: fallbackApiUris.length }, (cb) => {
-            if (stopped) return cb(new Error(`preload aborted for ${cid}`))
-
-            // Remove failed request from a previous attempt
-            requests = requests.filter(r => r !== request)
-
-            const apiUri = fallbackApiUris.shift()
-
-            request = preload(`${apiUri}/api/v0/refs?r=true&arg=${cid}`, cb)
-            requests = requests.concat(request)
-        }, (err) => {
-            requests = requests.filter(r => r !== request)
-
-            if (err) {
-                return callback(err)
+            if (stopped) {
+                return cb(new Error(`preload aborted for ${cid}`));
             }
 
-            log(`preloaded ${cid} in ${Date.now() - now}ms`)
-            callback()
-        })
-    }
+            // Remove failed request from a previous attempt
+            requests = requests.filter((r) => r !== request);
+
+            const apiUri = fallbackApiUris.shift();
+
+            request = preload(`${apiUri}/api/v0/refs?r=true&arg=${cid}`, cb);
+            requests = requests.concat(request);
+        }, (err) => {
+            requests = requests.filter((r) => r !== request);
+
+            if (err) {
+                return callback(err);
+            }
+
+            log(`preloaded ${cid} in ${Date.now() - now}ms`);
+            callback();
+        });
+    };
 
     api.start = () => {
-        stopped = false
-    }
+        stopped = false;
+    };
 
     api.stop = () => {
-        stopped = true
-        log(`canceling ${requests.length} pending preload request(s)`)
-        requests.forEach(r => r.cancel())
-        requests = []
-    }
+        stopped = true;
+        log(`canceling ${requests.length} pending preload request(s)`);
+        requests.forEach((r) => r.cancel());
+        requests = [];
+    };
 
-    return api
-}
+    return api;
+};
 
 function apiAddrToUri(addr) {
-    if (!(addr.endsWith('http') || addr.endsWith('https'))) {
-        addr = addr + '/http'
+    if (!(addr.endsWith("http") || addr.endsWith("https"))) {
+        addr = addr + "/http";
     }
-    return toUri(addr)
+    return toUri(addr);
 }

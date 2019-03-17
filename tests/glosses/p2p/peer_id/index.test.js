@@ -1,10 +1,9 @@
 const parallel = require("async/parallel");
 
-const util = require("util");
-
 const {
     multiformat: { multihash: mh },
-    p2p: { PeerId, crypto }
+    p2p: { PeerId, crypto },
+    std: { util }
 } = adone;
 
 const testId = require("./fixtures/sample-id");
@@ -284,7 +283,7 @@ describe("p2p", "PeerId", () => {
             k1.public.hash((err, digest) => {
                 expect(err).to.not.exist();
                 expect(() => new PeerId(digest, k1, k2.public))
-                    .to.throw(/inconsistent arguments/);
+                    .to.throw(/Inconsistent arguments/);
                 done();
             });
         });
@@ -293,13 +292,13 @@ describe("p2p", "PeerId", () => {
             k1.public.hash((err, digest) => {
                 expect(err).to.not.exist();
                 expect(() => new PeerId(digest, k1, k3.public))
-                    .to.throw(/inconsistent arguments/);
+                    .to.throw(/Inconsistent arguments/);
                 done();
             });
         });
 
         it("invalid id", () => {
-            expect(() => new PeerId("hello world")).to.throw(/invalid id/);
+            expect(() => new PeerId("hello world")).to.throw(/Invalid id/);
         });
     });
 });

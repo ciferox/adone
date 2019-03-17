@@ -7,8 +7,8 @@ const {
 } = adone;
 const { pushable: Pushable } = pull;
 
-const log = debug('jsipfs:pingPullStream')
-log.error = debug('jsipfs:pingPullStream:error')
+const log = debug('ipfs:pingPullStream')
+log.error = debug('ipfs:pingPullStream:error')
 
 module.exports = function pingPullStream(self) {
     return (peerId, opts) => {
