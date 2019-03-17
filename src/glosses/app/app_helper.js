@@ -5,8 +5,7 @@ const {
     std,
     text,
     pretty,
-    util,
-    meta: { reflect }
+    util
 } = adone;
 
 const noStyleLength = (x) => text.stripAnsi(x).length;
@@ -1705,7 +1704,7 @@ export default class AppHelper {
             });
         } else {
             subsystem = this.app.instantiateSubsystem(subsystem, { transpile });
-            let sysMeta = reflect.getMetadata(SUBSYSTEM_ANNOTATION, subsystem.constructor);
+            let sysMeta = Reflect.getMetadata(SUBSYSTEM_ANNOTATION, subsystem.constructor);
             if (sysMeta) {
                 sysMeta.name = sysMeta.name || name;
                 sysMeta.description = sysMeta.description || description;
@@ -1883,7 +1882,7 @@ export default class AppHelper {
                                     await this.app._configureSubsystem(sysInfo); // eslint-disable-line
 
                                     // Check for meta data and if exists define sub commands, ...
-                                    const sysMeta = reflect.getMetadata(SUBSYSTEM_ANNOTATION, sysInfo.instance.constructor);
+                                    const sysMeta = Reflect.getMetadata(SUBSYSTEM_ANNOTATION, sysInfo.instance.constructor);
                                     if (sysMeta) {
                                         this._defineCommandFromSubsystem(sysInfo.instance, sysMeta, [
                                             "description", // ??

@@ -1,7 +1,6 @@
 const {
     is,
     util,
-    meta: { reflect },
     error
 } = adone;
 
@@ -111,24 +110,24 @@ export const Context = (info) => (target) => {
 
             // Methods
             for (const [key, info] of Object.entries(meta.methods)) {
-                reflect.defineMetadata(METHOD_ANNOTATION(key), info.meta, target);
+                Reflect.defineMetadata(METHOD_ANNOTATION(key), info.meta, target);
             }
 
             // Properties
             for (const [key, info] of Object.entries(meta.props)) {
-                reflect.defineMetadata(PROPERTY_ANNOTATION(key), info.meta, target);
+                Reflect.defineMetadata(PROPERTY_ANNOTATION(key), info.meta, target);
             }
         } else {
             // TODO: Force methods to be private if them in private-list.
         }
     }
 
-    reflect.defineMetadata(CONTEXT_ANNOTATION, contextInfo || {}, target);
+    Reflect.defineMetadata(CONTEXT_ANNOTATION, contextInfo || {}, target);
 };
 
-export const Public = (info) => reflect.metadata(PUBLIC_ANNOTATION, info || {});
-// export const Property = (name, info) => reflect.metadata(PROPERTY_ANNOTATION(name), info || {});
-// export const Method = (name, info) => reflect.metadata(METHOD_ANNOTATION(name), info || {});
+export const Public = (info) => Reflect.metadata(PUBLIC_ANNOTATION, info || {});
+// export const Property = (name, info) => Reflect.metadata(PROPERTY_ANNOTATION(name), info || {});
+// export const Method = (name, info) => Reflect.metadata(METHOD_ANNOTATION(name), info || {});
 
 export const isDynamicContext = (obj) => is.plainObject(obj[CONTEXTIFY_SYMBOL]);
 
@@ -363,12 +362,12 @@ export class Reflection {
     _processPropertyMeta(instance, key, value) {
         if (is.function(value)) {
             const methodInfo = {};
-            const methodMeta = reflect.getMetadata(PUBLIC_ANNOTATION, instance, key);
+            const methodMeta = Reflect.getMetadata(PUBLIC_ANNOTATION, instance, key);
             if (!is.undefined(methodMeta)) {
                 Object.assign(methodInfo, getMethodInfo(value, methodMeta));
             }
 
-            const exMethodMeta = reflect.getMetadata(METHOD_ANNOTATION(key), this.class);
+            const exMethodMeta = Reflect.getMetadata(METHOD_ANNOTATION(key), this.class);
             if (!is.undefined(exMethodMeta)) {
                 adone.lodash.merge(methodInfo, getMethodInfo(null, exMethodMeta));
             }
@@ -378,12 +377,12 @@ export class Reflection {
             }
         } else {
             const propertyInfo = {};
-            const propertyMeta = reflect.getMetadata(PUBLIC_ANNOTATION, instance, key);
+            const propertyMeta = Reflect.getMetadata(PUBLIC_ANNOTATION, instance, key);
             if (!is.undefined(propertyMeta)) {
                 Object.assign(propertyInfo, getPropertyInfo(value, propertyMeta));
             }
 
-            const exPropertyMeta = reflect.getMetadata(PROPERTY_ANNOTATION(key), this.class);
+            const exPropertyMeta = Reflect.getMetadata(PROPERTY_ANNOTATION(key), this.class);
             if (!is.undefined(exPropertyMeta)) {
                 adone.lodash.merge(propertyInfo, getPropertyInfo(null, exPropertyMeta));
             }
@@ -448,7 +447,7 @@ export class Reflection {
                 });
             }
         } else {
-            info = reflect.getMetadata(CONTEXT_ANNOTATION, r.class);
+            info = Reflect.getMetadata(CONTEXT_ANNOTATION, r.class);
 
             for (const [key, val] of util.entries(instance, { all: true })) {
                 r._processPropertyMeta(instance, key, val);

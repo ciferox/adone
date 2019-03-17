@@ -54,9 +54,9 @@ export const EXIT_ERROR = 1;
 export const SUBSYSTEM_ANNOTATION = "subsystem";
 
 const SubsystemDecorator = (sysInfo = {}) => (target) => {
-    const info = adone.meta.reflect.getMetadata(SUBSYSTEM_ANNOTATION, target);
+    const info = Reflect.getMetadata(SUBSYSTEM_ANNOTATION, target);
     if (is.undefined(info)) {
-        adone.meta.reflect.defineMetadata(SUBSYSTEM_ANNOTATION, sysInfo, target);
+        Reflect.defineMetadata(SUBSYSTEM_ANNOTATION, sysInfo, target);
     } else {
         Object.assign(info, sysInfo);
     }
@@ -65,7 +65,7 @@ const SubsystemDecorator = (sysInfo = {}) => (target) => {
 export const SubsystemMeta = SubsystemDecorator;
 export const ApplicationMeta = SubsystemDecorator;
 export const MainCommandMeta = (mainCommand = {}) => (target, key, descriptor) => {
-    let sysMeta = adone.meta.reflect.getMetadata(SUBSYSTEM_ANNOTATION, target.constructor);
+    let sysMeta = Reflect.getMetadata(SUBSYSTEM_ANNOTATION, target.constructor);
     mainCommand.handler = descriptor.value;
     if (is.undefined(sysMeta)) {
         if (target instanceof adone.app.Application) {
@@ -75,7 +75,7 @@ export const MainCommandMeta = (mainCommand = {}) => (target, key, descriptor) =
         } else {
             sysMeta = mainCommand;
         }
-        adone.meta.reflect.defineMetadata(SUBSYSTEM_ANNOTATION, sysMeta, target.constructor);
+        Reflect.defineMetadata(SUBSYSTEM_ANNOTATION, sysMeta, target.constructor);
     } else {
         if (target instanceof adone.app.Application) {
             sysMeta.mainCommand = mainCommand;
@@ -85,7 +85,7 @@ export const MainCommandMeta = (mainCommand = {}) => (target, key, descriptor) =
     }
 };
 export const CommandMeta = (commandInfo = {}) => (target, key, descriptor) => {
-    let sysMeta = adone.meta.reflect.getMetadata(SUBSYSTEM_ANNOTATION, target.constructor);
+    let sysMeta = Reflect.getMetadata(SUBSYSTEM_ANNOTATION, target.constructor);
     commandInfo.handler = descriptor.value;
     if (is.undefined(sysMeta)) {
         sysMeta = {
@@ -93,7 +93,7 @@ export const CommandMeta = (commandInfo = {}) => (target, key, descriptor) => {
                 commandInfo
             ]
         };
-        adone.meta.reflect.defineMetadata(SUBSYSTEM_ANNOTATION, sysMeta, target.constructor);
+        Reflect.defineMetadata(SUBSYSTEM_ANNOTATION, sysMeta, target.constructor);
     } else {
         if (!is.array(sysMeta.commands)) {
             sysMeta.commands = [
@@ -211,8 +211,7 @@ const _bootstrapApp = async (app, {
 
         if (useArgs) {
             const {
-                app: { AppHelper },
-                meta: { reflect }
+                app: { AppHelper }
             } = adone;
 
             const appHelper = new AppHelper(app);
@@ -220,7 +219,7 @@ const _bootstrapApp = async (app, {
 
             app._setErrorScope(true);
 
-            const sysMeta = reflect.getMetadata(SUBSYSTEM_ANNOTATION, app.constructor);
+            const sysMeta = Reflect.getMetadata(SUBSYSTEM_ANNOTATION, app.constructor);
             if (sysMeta) {
                 if (sysMeta.mainCommand) {
                     appHelper.defineMainCommand(sysMeta.mainCommand);

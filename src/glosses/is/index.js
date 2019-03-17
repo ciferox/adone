@@ -1076,7 +1076,7 @@ adone.lazify({
             target = obj.__proto__.constructor;
         }
         if (!undefined_(target)) {
-            isContex = object(adone.meta.reflect.getMetadata(adone.netron.meta.CONTEXT_ANNOTATION, target));
+            isContex = object(Reflect.getMetadata(adone.netron.meta.CONTEXT_ANNOTATION, target));
         }
         return isContex;
     }

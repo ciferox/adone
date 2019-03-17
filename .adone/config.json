@@ -554,20 +554,6 @@
                         "type": "gyp"
                     }
                 },
-                "meta": {
-                    "description": "Meta utilites and implementation of adone-specific inspection",
-                    "task": "transpile",
-                    "src": "src/glosses/meta/**/*.js",
-                    "dst": "lib/glosses/meta",
-                    "scheme": {
-                        "reflect": {
-                            "description": "Prototype for a Metadata Reflection API for ECMAScript",
-                            "task": "transpile",
-                            "src": "src/glosses/meta/reflect.js",
-                            "dst": "lib/glosses/meta"
-                        }
-                    }
-                },
                 "metrics": {
                     "description": "Different metrics",
                     "task": "transpile",
@@ -728,6 +714,12 @@
                     "task": "transpile",
                     "src": "src/glosses/realm/**/*.js",
                     "dst": "lib/glosses/realm"
+                },
+                "reflect": {
+                    "description": "Prototype for a Metadata Reflection API for ECMAScript",
+                    "task": "transpile",
+                    "src": "src/glosses/reflect/index.js",
+                    "dst": "lib/glosses/reflect"
                 },
                 "require": {
                     "description": "Advanced require with ES2018 support",

@@ -210,18 +210,18 @@ export class CommonTypes { }
 
 for (const ct of commonTypes) {
     CommonTypes.prototype[`_${ct.name}`] = ct.value;
-    adone.meta.reflect.defineMetadata(adone.netron.meta.PUBLIC_ANNOTATION, {}, CommonTypes.prototype, `_${ct.name}`);
+    Reflect.defineMetadata(adone.netron.meta.PUBLIC_ANNOTATION, {}, CommonTypes.prototype, `_${ct.name}`);
 
     CommonTypes.prototype[ct.name] = function () {
         return this[`_${ct.name}`];
     };
-    adone.meta.reflect.defineMetadata(adone.netron.meta.PUBLIC_ANNOTATION, {}, CommonTypes.prototype, ct.name);
+    Reflect.defineMetadata(adone.netron.meta.PUBLIC_ANNOTATION, {}, CommonTypes.prototype, ct.name);
 
     CommonTypes.prototype[`set_${ct.name}`] = function (val) {
         this[`_${ct.name}`] = val;
         return val;
     };
-    adone.meta.reflect.defineMetadata(adone.netron.meta.PUBLIC_ANNOTATION, {}, CommonTypes.prototype, `set_${ct.name}`);
+    Reflect.defineMetadata(adone.netron.meta.PUBLIC_ANNOTATION, {}, CommonTypes.prototype, `set_${ct.name}`);
 }
 
 export const DocumentTypes = {
@@ -563,7 +563,7 @@ for (const AdoneError of adoneErrors) {
                     throw new AdoneError("description");
                 };
             }
-            adone.meta.reflect.defineMetadata(adone.netron.meta.PUBLIC_ANNOTATION, {}, AdoneErrs.prototype, fnName);
+            Reflect.defineMetadata(adone.netron.meta.PUBLIC_ANNOTATION, {}, AdoneErrs.prototype, fnName);
         }
     }
 }
@@ -597,6 +597,6 @@ export class NonStdErr {
 //         }
 //         throw new Exc("Hello World!");
 //     };
-//     adone.meta.reflect.defineMetadata(adone.netron.meta.PUBLIC_ANNOTATION, {}, NodeErrs.prototype, fnName);
+//     Reflect.defineMetadata(adone.netron.meta.PUBLIC_ANNOTATION, {}, NodeErrs.prototype, fnName);
 
 // }

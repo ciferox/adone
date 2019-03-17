@@ -246,7 +246,6 @@ adone.lazify({
     is: "./glosses/is",
     js: "./glosses/js",
     math: "./glosses/math",
-    meta: "./glosses/meta",
     metrics: "./glosses/metrics",
     model: "./glosses/models",
     multiformat: "./glosses/multiformats",
@@ -300,6 +299,9 @@ adone.lazify({
 }, adone, require, {
     asNamespace: true
 });
+
+// Be here until it appears in the official implementation
+require("./glosses/reflect");
 
 if (process.env.ADONE_SOURCEMAPS) {
     adone.sourcemap.support(Error).install();

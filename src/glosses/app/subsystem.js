@@ -3,7 +3,6 @@ const {
     fs,
     std,
     error,
-    meta: { reflect },
     app: {
         humanizeState,
         STATE,
@@ -22,7 +21,7 @@ const getSortedList = (subsystem) => {
     const subsystems = subsystem[SUBSYSTEMS_SYMBOL].slice();
     const edges = [];
     for (const sysInfo of subsystems) {
-        const sysMeta = reflect.getMetadata(SUBSYSTEM_ANNOTATION, sysInfo.instance.constructor);
+        const sysMeta = Reflect.getMetadata(SUBSYSTEM_ANNOTATION, sysInfo.instance.constructor);
         if (sysMeta) {
             const deps = adone.util.arrify(sysMeta.dependencies);
             for (const name of deps) {

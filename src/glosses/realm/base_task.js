@@ -16,6 +16,7 @@ export default class BaseTask extends task.Task {
             await this.uninitialize(...args);
         } catch (err) {
             await this.error(err);
+            return;
         }
         return this.result;
     }

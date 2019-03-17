@@ -27,7 +27,10 @@ export default class extends Subsystem {
             });
 
             const path = this.parent.resolvePath(args, opts);
-            const manager = await this.parent.getRealm();
+            const manager = await this.parent.connectRealm({
+                cwd: process.cwd(),
+                progress: false
+            });
             await manager.runAndWait("watch", path);
         } catch (err) {
             console.error(adone.pretty.error(err));

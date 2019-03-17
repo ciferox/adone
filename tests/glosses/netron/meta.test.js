@@ -215,7 +215,7 @@ describe("meta", () => {
         });
     });
 
-    describe("complex contexts", () => {
+    describe.only("complex contexts", () => {
         @Context({
             public: {
                 prop5: {

@@ -1,8 +1,6 @@
 const {
     is,
-    meta: { reflect },
-    error,
-    tag
+    error
 } = adone;
 
 export const NETRON_PROTOCOL = "/netron/1.0.0";
