@@ -1,5 +1,5 @@
-const { ensureMultiaddr } = require("./utils");
-const MultiaddrSet = require("./multiaddr-set");
+import { ensureMultiaddr } from "./utils";
+import MultiaddrSet from "./multiaddr_set";
 
 const {
     error,

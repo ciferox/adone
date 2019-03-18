@@ -6,7 +6,7 @@ const {
 } = adone;
 
 // Because JavaScript doesn't let you overload the compare in Set()..
-class MultiaddrSet {
+export default class MultiaddrSet {
     constructor(multiaddrs) {
         this._multiaddrs = multiaddrs || [];
         this._observedMultiaddrs = [];
@@ -36,6 +36,7 @@ class MultiaddrSet {
                 this._observedMultiaddrs.splice(i, 1);
                 return true;
             }
+            return false;
         });
         if (!check) {
             this._observedMultiaddrs.push(ma);
@@ -56,10 +57,10 @@ class MultiaddrSet {
 
     filterBy(maFmt) {
         if (typeof maFmt !== "object" ||
-      !is.function(maFmt.matches) ||
-      !is.function(maFmt.partialMatch) ||
-      !is.function(maFmt.toString)) {
-            return []; 
+            !is.function(maFmt.matches) ||
+            !is.function(maFmt.partialMatch) ||
+            !is.function(maFmt.toString)) {
+            return [];
         }
 
         return this._multiaddrs.filter((ma) => maFmt.matches(ma));
@@ -78,6 +79,7 @@ class MultiaddrSet {
                 this._multiaddrs.splice(i, 1);
                 return true;
             }
+            return false;
         });
     }
 
@@ -107,5 +109,3 @@ class MultiaddrSet {
         });
     }
 }
-
-module.exports = MultiaddrSet;

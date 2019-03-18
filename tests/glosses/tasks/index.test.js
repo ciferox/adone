@@ -18,17 +18,15 @@ describe("task", () => {
             this.reallyResumed = false;
         }
 
-        async run(suspendable = false, cancelable = false, maxTimeout = 1000) {
+        async _run(maxTimeout = 1000) {
             this._maxTicks = maxTimeout / 10;
-            this._suspendable = suspendable;
-            this._cancelable = cancelable;
             this.data = 0;
             this._runDefer = promise.defer();
-            this._run();
+            this.main();
             return this._runDefer.promise;
         }
 
-        async _run() {
+        async main() {
             this.reallySuspended = false;
             for (; ;) {
                 await promise.delay(10); // eslint-disable-line
@@ -53,14 +51,6 @@ describe("task", () => {
             }
         }
 
-        isSuspendable() {
-            return this._suspendable;
-        }
-
-        isCancelable() {
-            return this._cancelable;
-        }
-
         suspend(defer) {
             this._suspendDefer = defer;
         }
@@ -68,7 +58,7 @@ describe("task", () => {
         async resume(defer) {
             adone.promise.delay(200).then(() => {
                 this._suspendDefer = null;
-                this._run();
+                this.main();
                 this.reallyResumed = true;
                 defer.resolve();
             });
@@ -85,7 +75,7 @@ describe("task", () => {
             this.value = 0;
         }
 
-        async run(value, timeout) {
+        async main(value, timeout) {
             this.value++;
             if (is.number(timeout)) {
                 await adone.promise.delay(timeout);
@@ -104,28 +94,16 @@ describe("task", () => {
         assert.isTrue(is.task(t));
         assert.isNull(t.manager);
         assert.isNull(t.observer);
-        assert.throws(() => t.manager = undefined, adone.error.ImmutableException);
-        assert.throws(() => t.observer = undefined, adone.error.ImmutableException);
+        assert.throws(() => t.manager = undefined, error.ImmutableException);
+        assert.throws(() => t.observer = undefined, error.ImmutableException);
 
-        assert.isFunction(t.run);
-        assert.throws(() => t.run(), adone.error.NotImplementedException);
-
-        assert.isFunction(t.isSuspendable);
-        assert.isFunction(t.isCancelable);
+        assert.isFunction(t._run);
+        assert.isFunction(t.main);
+        assert.throws(() => t.main(), error.NotImplementedException);
 
         assert.isFunction(t.suspend);
         assert.isFunction(t.resume);
         assert.isFunction(t.cancel);
-    });
-
-    it("by default, task should not be suspendable", () => {
-        const t = new adone.task.Task();
-        assert.isFalse(t.isSuspendable());
-    });
-
-    it("by default, task should not be cancelable", () => {
-        const t = new adone.task.Task();
-        assert.isFalse(t.isCancelable());
     });
 
     it("construct manager", () => {
@@ -144,13 +122,13 @@ describe("task", () => {
         const InvalidTask1 = null;
         const InvalidTask2 = {};
         class InvalidTask3 {
-            run() {
+            main() {
                 return "invalid";
             }
         }
 
         class ValidTask extends task.Task {
-            run() {
+            main() {
                 return "ok";
             }
         }
@@ -185,7 +163,7 @@ describe("task", () => {
         ];
 
         class TaskA extends task.Task {
-            run() {
+            main() {
             }
         }
 
@@ -194,7 +172,7 @@ describe("task", () => {
 
         for (const prop of props) {
             assert.strictEqual(taskA[prop.name], prop.expected);
-            assert.throws(() => taskA[prop.name] = prop.createNew(), adone.error.ImmutableException);
+            assert.throws(() => taskA[prop.name] = prop.createNew(), error.ImmutableException);
         }
     });
 
@@ -202,9 +180,9 @@ describe("task", () => {
         await manager.addTask("a", SimpleTask);
         const observer = await manager.run("a", adone.package.version);
         assert.isTrue(adone.is.taskObserver(observer));
-        assert.isTrue(observer.isCompleted());
+        assert.isTrue(observer.completed);
         assert.equal(await observer.result, adone.package.version);
-        assert.isTrue(observer.isCompleted());
+        assert.isTrue(observer.completed);
     });
 
     it("regular task is stateless", async () => {
@@ -216,40 +194,66 @@ describe("task", () => {
         assert.strictEqual(observer1.task.value, observer1.task.value);
     });
 
+    it("observer should contain common task information", async () => {
+        class TaskA extends task.Task {
+            main() {
+                return promise.delay(10);
+            }
+        }
+
+        await manager.addTask("a", TaskA);
+        const observer = await manager.run("a", adone.package.version);
+        assert.equal(observer.taskName, "a");
+        assert.equal(observer.suspendable, false);
+        assert.equal(observer.cancelable, false);
+        assert.isTrue(observer.running);
+        assert.isFalse(observer.cancelled);
+        assert.isFalse(observer.completed);
+        assert.isFalse(observer.failed);
+        assert.isFalse(observer.finished);
+        assert.isFalse(observer.suspended);
+        assert.isTrue(is.promise(observer.result));
+
+        await observer.result;
+        assert.isFalse(observer.running);
+        assert.isTrue(observer.completed);
+        assert.isTrue(observer.finished);
+    });
+
     it("observer should contain correct error info for sync task", async () => {
         class TaskA extends task.Task {
-            run() {
-                throw new adone.error.RuntimeException("sad");
+            main() {
+                throw new error.RuntimeException("sad");
             }
         }
 
         await manager.addTask("a", TaskA);
         const observer = await manager.run("a", adone.package.version);
         const err = await assert.throws(async () => observer.result);
-        assert.isTrue(observer.isFailed());
-        assert.instanceOf(observer.error, adone.error.RuntimeException);
-        assert.instanceOf(err, adone.error.RuntimeException);
+        assert.isTrue(observer.failed);
+        assert.instanceOf(observer.error, error.RuntimeException);
+        assert.instanceOf(err, error.RuntimeException);
     });
 
     it("observer should contain correct error info for async task", async () => {
         class TaskA extends task.Task {
-            async run() {
+            async main() {
                 await promise.delay(10);
-                throw new adone.error.RuntimeException("sad");
+                throw new error.RuntimeException("sad");
             }
         }
 
         await manager.addTask("a", TaskA);
         const observer = await manager.run("a", adone.package.version);
         const err = await assert.throws(async () => observer.result);
-        assert.isTrue(observer.isFailed());
-        assert.instanceOf(observer.error, adone.error.RuntimeException);
-        assert.instanceOf(err, adone.error.RuntimeException);
+        assert.isTrue(observer.failed);
+        assert.instanceOf(observer.error, error.RuntimeException);
+        assert.instanceOf(err, error.RuntimeException);
     });
 
     it("run async task", async () => {
         class TaskA extends task.Task {
-            async run(version) {
+            async main(version) {
                 await promise.delay(10);
                 return `adone ${version}`;
             }
@@ -257,19 +261,19 @@ describe("task", () => {
 
         await manager.addTask("a", TaskA);
         const observer = await manager.run("a", adone.package.version);
-        assert.isTrue(observer.isRunning());
+        assert.isTrue(observer.running);
         assert.equal(await observer.result, `adone ${adone.package.version}`);
-        assert.isTrue(observer.isCompleted());
+        assert.isTrue(observer.completed);
     });
 
     it("delete nonexisting task", async () => {
         const err = await assert.throws(async () => manager.deleteTask("unknown"));
-        assert.instanceOf(err, adone.error.NotExistsException);
+        assert.instanceOf(err, error.NotExistsException);
     });
 
     it("delete existing task", async () => {
         class TaskA extends task.Task {
-            run() {
+            main() {
                 return 0;
             }
         }
@@ -282,19 +286,19 @@ describe("task", () => {
 
     it("delete all tasks", async () => {
         class TasksA extends task.Task {
-            run() { }
+            main() { }
         }
 
         class TasksB extends task.Task {
-            run() { }
+            main() { }
         }
 
         class TasksC extends task.Task {
-            run() { }
+            main() { }
         }
 
         class TasksD extends task.Task {
-            run() { }
+            main() { }
         }
 
         await manager.addTask("a", TasksA);
@@ -316,14 +320,14 @@ describe("task", () => {
     it("run task once", async () => {
         const observer = await manager.runOnce(SimpleTask, adone.package.version);
         assert.lengthOf(manager.getTaskNames(), 0);
-        assert.isTrue(observer.isCompleted());
+        assert.isTrue(observer.completed);
         assert.equal(await observer.result, adone.package.version);
-        assert.isTrue(observer.isCompleted());
+        assert.isTrue(observer.completed);
     });
 
     it("run async task once", async () => {
         class TaskA extends task.Task {
-            async run(version) {
+            async main(version) {
                 await promise.delay(10);
                 return `adone ${version}`;
             }
@@ -331,14 +335,14 @@ describe("task", () => {
 
         const observer = await manager.runOnce(TaskA, adone.package.version);
         assert.lengthOf(manager.getTaskNames(), 0);
-        assert.isTrue(observer.isRunning());
+        assert.isTrue(observer.running);
         assert.equal(await observer.result, `adone ${adone.package.version}`);
-        assert.isTrue(observer.isCompleted());
+        assert.isTrue(observer.completed);
     });
 
     it("run deleted but still running task should have thrown", async () => {
         class TaskA extends task.Task {
-            async run(version) {
+            async main(version) {
                 await promise.delay(100);
                 return `adone ${version}`;
             }
@@ -347,29 +351,29 @@ describe("task", () => {
         await manager.addTask("a", TaskA);
         const observer = await manager.run("a", adone.package.version);
         await manager.deleteTask("a");
-        await assert.throws(async () => manager.run("a", adone.package.version), adone.error.NotExistsException);
+        await assert.throws(async () => manager.run("a", adone.package.version), error.NotExistsException);
 
         assert.lengthOf(manager.getTaskNames(), 0);
-        assert.isTrue(observer.isRunning());
+        assert.isTrue(observer.running);
         assert.equal(await observer.result, `adone ${adone.package.version}`);
-        assert.isTrue(observer.isCompleted());
+        assert.isTrue(observer.completed);
     });
 
     describe("tags", () => {
         class TaskA extends task.Task {
-            run() { }
+            main() { }
         }
 
         class TaskB extends task.Task {
-            run() { }
+            main() { }
         }
 
         class TaskC extends task.Task {
-            run() { }
+            main() { }
         }
 
         class TaskD extends task.Task {
-            run() { }
+            main() { }
         }
 
         it("add tasks with tag", async () => {
@@ -413,6 +417,86 @@ describe("task", () => {
         });
     });
 
+    describe("isomorphic tasks", () => {
+        class BadTask extends task.IsomorphicTask {
+        }
+
+        class IsomorphicA extends task.IsomorphicTask {
+            main(data) {
+                return adone.typeOf(data);
+            }
+        }
+
+        it("should throw if #main() is not implemented", async () => {
+            await manager.addTask("bad", BadTask);
+
+            await assert.throws(async () => manager.runAndWait("bad", {}), error.NotImplementedException);
+        });
+
+        it("throw in #main()", async () => {
+            class A extends task.IsomorphicTask {
+                main() {
+                    throw new Error("bad bad bad");
+                }
+            }
+
+            await manager.addTask("a", A);
+            await assert.throws(async () => manager.runAndWait("a"), Error, /bad bad bad/);
+        });
+
+        it("should throw if pass more then one argument", async () => {
+            await manager.addTask("a", IsomorphicA);
+
+            await assert.throws(async () => manager.runAndWait("a", { a: 1 }, { b: 2 }), error.InvalidNumberOfArgumentsException);
+        });
+
+        describe("should throw if non-object argument is passed", () => {
+            const vars = [
+                12,
+                "abc",
+                String("abc"),
+                new Date(),
+                /^word/,
+                ["a", "b"],
+                adone.task.Task,
+                new Map(),
+                new Set(),
+                new Int16Array(),
+                new Error()
+            ];
+
+            for (const v of vars) {
+                // eslint-disable-next-line no-loop-func
+                it(adone.typeOf(v), async () => {
+                    await manager.addTask("a", IsomorphicA);
+
+                    await assert.throws(async () => manager.runAndWait("a", v), error.InvalidArgumentException);
+                });
+            }
+        });
+
+        describe("allowed arguments", () => {
+            const allowed = {
+                adone: [adone],
+                global: [global],
+                "Object.create(null)": [Object.create(null)],
+                "{}": [{}],
+                "new adone.task.Task()": [new adone.task.Task()],
+                null: [null],
+                undefined: [undefined]
+            };
+
+            for (const [key, val] of Object.entries(allowed)) {
+                // eslint-disable-next-line no-loop-func
+                it(key, async () => {
+                    await manager.addTask("a", IsomorphicA);
+
+                    assert.equal(await manager.runAndWait("a", ...val), adone.typeOf(val[0]));
+                });
+            }
+        });
+    });
+
     describe("singleton tasks", () => {
         it("correct value of 'manager' property in task", async () => {
             await manager.addTask("a", SimpleTask, {
@@ -445,6 +529,20 @@ describe("task", () => {
             assert.lengthOf(manager.getTaskNames(), 0);
             await observer.result;
         });
+
+        it("singleton task cannot be suspendable", async () => {
+            await assert.throws(async () => manager.addTask("a", SimpleTask, {
+                singleton: true,
+                suspendable: true
+            }), error.NotAllowedException, / suspendable/);
+        });
+
+        it("singleton task cannot be cancelable", async () => {
+            await assert.throws(async () => manager.addTask("a", SimpleTask, {
+                singleton: true,
+                cancelable: true
+            }), error.NotAllowedException, / cancelable/);
+        });
     });
 
     describe("concurrency", () => {
@@ -452,7 +550,7 @@ describe("task", () => {
         let inc;
 
         class TaskA extends task.Task {
-            async run(maxVal, timeout, check) {
+            async main(maxVal, timeout, check) {
                 counter++;
                 inc++;
                 if (maxVal) {
@@ -473,7 +571,7 @@ describe("task", () => {
                 this.inc = 0;
             }
 
-            async run(maxVal, timeout) {
+            async main(maxVal, timeout) {
                 this.inc++;
                 if (maxVal) {
                     assert.isAtMost(this.inc, maxVal);
@@ -552,127 +650,157 @@ describe("task", () => {
     describe("suspend/resume/cancel", () => {
         it("suspend/resume non suspendable task", async () => {
             await manager.addTask("a", SCTask);
-            const observer = await manager.run("a", false);
+            const observer = await manager.run("a");
             await promise.delay(200);
             await observer.suspend();
-            assert.isFalse(observer.isSuspended());
+            assert.isFalse(observer.suspended);
             assert.equal(await observer.result, 100);
         });
 
         it("cancel non cancelable task", async () => {
             await manager.addTask("a", SCTask);
-            const observer = await manager.run("a", false, false);
+            const observer = await manager.run("a");
             await promise.delay(200);
             const err = await assert.throws(async () => observer.cancel());
-            assert.instanceOf(err, adone.error.NotAllowedException);
+            assert.instanceOf(err, error.NotAllowedException);
             assert.equal(await observer.result, 100);
-            assert.isTrue(observer.isCompleted());
-            assert.isFalse(observer.isCancelled());
+            assert.isTrue(observer.completed);
+            assert.isFalse(observer.cancelled);
         });
 
         it("suspend/resume suspendable task", async () => {
-            await manager.addTask("a", SCTask);
-            const observer = await manager.run("a", true);
+            await manager.addTask("a", SCTask, { suspendable: true });
+            const observer = await manager.run("a");
             await promise.delay(200);
             await observer.suspend();
             assert.isTrue(observer.task.reallySuspended);
-            assert.isTrue(observer.isSuspended());
+            assert.isTrue(observer.suspended);
             await promise.delay(100);
             await observer.resume();
             assert.isTrue(observer.task.reallyResumed);
-            assert.isTrue(observer.isRunning());
+            assert.isTrue(observer.running);
             assert.equal(await observer.result, 100);
         });
 
         it("cancel cancelable task", async () => {
-            await manager.addTask("a", SCTask);
-            const observer = await manager.run("a", false, true);
+            await manager.addTask("a", SCTask, { cancelable: true });
+            const observer = await manager.run("a");
             await promise.delay(200);
             await observer.cancel();
-            assert.isTrue(observer.isCancelled());
+            assert.isTrue(observer.cancelled);
             assert.notEqual(await observer.result, 100);
-            assert.isFalse(observer.isCompleted());
+            assert.isFalse(observer.completed);
         });
     });
 
     describe("flows", () => {
         class TaskA extends task.Task {
-            async run() {
+            async main() {
                 await promise.delay(10);
                 return 1;
             }
         }
 
         class TaskBadA extends task.Task {
-            async run() {
+            async main() {
                 await promise.delay(10);
-                throw new adone.error.Exception("some error");
+                throw new error.Exception("some error");
             }
         }
 
         class TaskB extends task.Task {
-            async run(suffix) {
+            async main(suffix) {
                 await promise.delay(10);
                 return `suffix-${suffix}`;
             }
         }
 
         class TaskC extends task.Task {
-            run(suffix) {
+            main(suffix) {
                 return suffix;
             }
         }
+
+        it("should throw if pass more them one argument", async () => {
+            await manager.addTask("a", TaskA);
+            await manager.addTask("b", TaskB);
+            await manager.addTask("series", task.SeriesFlowTask);
+
+            await assert.throws(async () => manager.runAndWait("series", {
+                args: "adone",
+                tasks: ["a", "b"]
+            }, {}), error.InvalidNumberOfArgumentsException);
+        });
+
+        it("should throw if pass non object argument", async () => {
+            await manager.addTask("a", TaskA);
+            await manager.addTask("b", TaskB);
+            await manager.addTask("series", task.SeriesFlowTask);
+
+            await assert.throws(async () => manager.runAndWait("series", ["a", "b"]), error.InvalidArgumentException);
+        });
 
         describe("series", () => {
             it("managed tasks", async () => {
                 await manager.addTask("a", TaskA);
                 await manager.addTask("b", TaskB);
-                await manager.addTask("series", task.flow.Series);
+                await manager.addTask("series", task.SeriesFlowTask);
 
-                const observer = await manager.run("series", ["a", "b"], null, "adone");
+                const observer = await manager.run("series", {
+                    args: "adone",
+                    tasks: ["a", "b"]
+                });
                 assert.deepEqual(await observer.result, [1, "suffix-adone"]);
             });
 
             it("managed+unmanaged tasks", async () => {
                 await manager.addTask("a", TaskA);
                 await manager.addTask("b", TaskB);
-                await manager.addTask("series", task.flow.Series);
+                await manager.addTask("series", task.SeriesFlowTask);
 
-                const observer = await manager.run("series", ["a", "b", TaskC], null, "adone");
+                const observer = await manager.run("series", {
+                    args: "adone",
+                    tasks: ["a", "b", TaskC]
+                });
                 assert.deepEqual(await observer.result, [1, "suffix-adone", "adone"]);
             });
 
             it("run tasks with separate args", async () => {
                 class SomeTask extends task.Task {
-                    run(val) {
+                    main(val) {
                         return val;
                     }
                 }
 
                 await manager.addTask("a", SomeTask);
                 await manager.addTask("b", SomeTask);
-                await manager.addTask("series", task.flow.Series);
+                await manager.addTask("series", task.SeriesFlowTask);
 
-                const observer = await manager.run("series", [{ task: "a", args: "adone" }, { task: "b", args: 888 }]);
+                const observer = await manager.run("series", {
+                    tasks: [
+                        { task: "a", args: "adone" },
+                        { task: "b", args: 888 }
+                    ]
+                });
                 assert.deepEqual(await observer.result, ["adone", 888]);
             });
 
             it("should stop follow-up tasks is one of the task has thrown", async () => {
                 const results = [];
                 class TaskA extends task.Task {
-                    run() {
+                    main() {
                         results.push(666);
                     }
                 }
 
                 class TaskB extends task.Task {
-                    run() {
-                        throw new adone.error.RuntimeException("Task error");
+                    main() {
+                        throw new error.RuntimeException("Task error");
                     }
                 }
 
                 class TaskC extends task.Task {
-                    run() {
+                    main() {
                         results.push(777);
                     }
                 }
@@ -680,11 +808,12 @@ describe("task", () => {
                 await manager.addTask("a", TaskA);
                 await manager.addTask("b", TaskB);
                 await manager.addTask("c", TaskC);
-                await manager.addTask("series", task.flow.Series);
+                await manager.addTask("series", task.SeriesFlowTask);
 
-                const observer = await manager.run("series", ["a", "b", "c"]);
-                const err = await assert.throws(async () => observer.result);
-                assert.instanceOf(err, adone.error.RuntimeException);
+                const observer = await manager.run("series", {
+                    tasks: ["a", "b", "c"]
+                });
+                await assert.throws(async () => observer.result, error.RuntimeException);
 
                 assert.lengthOf(results, 1);
                 assert.equal(results[0], 666);
@@ -697,13 +826,15 @@ describe("task", () => {
                 class SCTaskB extends SCTask {
                 }
 
-                await manager.addTask("a", SCTaskA);
-                await manager.addTask("b", SCTaskB);
-                await manager.addTask("series", task.flow.Series);
+                await manager.addTask("a", SCTaskA, { cancelable: true });
+                await manager.addTask("b", SCTaskB, { cancelable: true });
+                await manager.addTask("series", task.SeriesFlowTask, { cancelable: true });
 
-                const observer = await manager.run("series", ["a", "b"], null, false, true);
+                const observer = await manager.run("series", {
+                    tasks: ["a", "b"]
+                });
                 await adone.promise.delay(100);
-                assert.isTrue(observer.isCancelable());
+                assert.isTrue(observer.cancelable);
 
                 await observer.cancel();
 
@@ -716,7 +847,7 @@ describe("task", () => {
 
             it("cancel flow with first non-cancelable task should cancel flow", async () => {
                 class TaskA extends task.Task {
-                    async run() {
+                    async main() {
                         await adone.promise.delay(1000);
                         return 888;
                     }
@@ -726,19 +857,16 @@ describe("task", () => {
                 }
 
                 await manager.addTask("a", TaskA);
-                await manager.addTask("b", SCTaskB);
-                await manager.addTask("series", task.flow.Series);
+                await manager.addTask("b", SCTaskB, { cancelable: true });
+                await manager.addTask("series", task.SeriesFlowTask, { cancelable: true });
 
-                const observer = await manager.run("series", ["a", "b"], null, false, true);
+                const observer = await manager.run("series", {
+                    tasks: ["a", "b"]
+                });
                 await adone.promise.delay(300);
-                assert.isFalse(observer.isCancelable());
-
-                const err = await assert.throws(async () => observer.cancel());
-                assert.instanceOf(err, adone.error.NotAllowedException);
+                assert.isTrue(observer.cancelable);
 
                 await adone.promise.delay(800);
-
-                assert.isTrue(observer.isCancelable());
 
                 await observer.cancel();
 
@@ -755,9 +883,12 @@ describe("task", () => {
             it("managed tasks", async () => {
                 await manager.addTask("a", TaskA);
                 await manager.addTask("b", TaskB);
-                await manager.addTask("parallel", task.flow.Parallel);
+                await manager.addTask("parallel", task.ParallelFlowTask);
 
-                const observer = await manager.run("parallel", ["a", "b"], null, "adone");
+                const observer = await manager.run("parallel", {
+                    args: "adone",
+                    tasks: ["a", "b"]
+                });
                 assert.deepEqual(await observer.result, {
                     a: 1,
                     b: "suffix-adone"
@@ -767,9 +898,12 @@ describe("task", () => {
             it("managed+unmanaged tasks", async () => {
                 await manager.addTask("a", TaskA);
                 await manager.addTask("b", TaskB);
-                await manager.addTask("parallel", task.flow.Parallel);
+                await manager.addTask("parallel", task.ParallelFlowTask);
 
-                const observer = await manager.run("parallel", ["a", "b", TaskC], null, "adone");
+                const observer = await manager.run("parallel", {
+                    args: "adone",
+                    tasks: ["a", "b", TaskC]
+                });
                 assert.deepEqual(await observer.result, {
                     a: 1,
                     b: "suffix-adone",
@@ -779,16 +913,21 @@ describe("task", () => {
 
             it("run tasks with separate args", async () => {
                 class SomeTask extends task.Task {
-                    run(val) {
+                    main(val) {
                         return val;
                     }
                 }
 
                 await manager.addTask("a", SomeTask);
                 await manager.addTask("b", SomeTask);
-                await manager.addTask("parallel", task.flow.Parallel);
+                await manager.addTask("parallel", task.ParallelFlowTask);
 
-                const observer = await manager.run("parallel", [{ task: "a", args: "adone" }, { task: "b", args: 888 }]);
+                const observer = await manager.run("parallel", {
+                    tasks: [
+                        { task: "a", args: "adone" },
+                        { task: "b", args: 888 }
+                    ]
+                });
                 assert.deepEqual(await observer.result, {
                     a: "adone",
                     b: 888
@@ -798,19 +937,19 @@ describe("task", () => {
             it("should not stop follow-up tasks is one of the task has thrown", async () => {
                 const results = [];
                 class TaskA extends task.Task {
-                    run() {
+                    main() {
                         results.push(666);
                     }
                 }
 
                 class TaskB extends task.Task {
-                    run() {
-                        throw new adone.error.RuntimeException("Task error");
+                    main() {
+                        throw new error.RuntimeException("Task error");
                     }
                 }
 
                 class TaskC extends task.Task {
-                    run() {
+                    main() {
                         results.push(777);
                     }
                 }
@@ -818,11 +957,13 @@ describe("task", () => {
                 await manager.addTask("a", TaskA);
                 await manager.addTask("b", TaskB);
                 await manager.addTask("c", TaskC);
-                await manager.addTask("parallel", task.flow.Parallel);
+                await manager.addTask("parallel", task.ParallelFlowTask);
 
-                const observer = await manager.run("parallel", ["a", "b", "c"]);
+                const observer = await manager.run("parallel", {
+                    tasks: ["a", "b", "c"]
+                });
                 const err = await assert.throws(async () => observer.result);
-                assert.instanceOf(err, adone.error.RuntimeException);
+                assert.instanceOf(err, error.RuntimeException);
 
                 await adone.promise.delay(300);
 
@@ -836,13 +977,15 @@ describe("task", () => {
                 class SCTaskB extends SCTask {
                 }
 
-                await manager.addTask("a", SCTaskA);
-                await manager.addTask("b", SCTaskB);
-                await manager.addTask("parallel", task.flow.Parallel);
+                await manager.addTask("a", SCTaskA, { cancelable: true });
+                await manager.addTask("b", SCTaskB, { cancelable: true });
+                await manager.addTask("parallel", task.ParallelFlowTask, { cancelable: true });
 
-                const observer = await manager.run("parallel", ["a", "b"], null, false, true);
+                const observer = await manager.run("parallel", {
+                    tasks: ["a", "b"]
+                });
                 await adone.promise.delay(100);
-                assert.isTrue(observer.isCancelable());
+                assert.isTrue(observer.cancelable);
 
                 await observer.cancel();
 
@@ -853,9 +996,9 @@ describe("task", () => {
                 await observer.result;
             });
 
-            it("cancel flow with one non-cancelable task should not cancel flow", async () => {
+            it("cancel flow with one non-cancelable and one cancelable", async () => {
                 class TaskA extends task.Task {
-                    async run() {
+                    async main() {
                         await adone.promise.delay(1000);
                         return 888;
                     }
@@ -865,27 +1008,31 @@ describe("task", () => {
                 }
 
                 await manager.addTask("a", TaskA);
-                await manager.addTask("b", SCTaskB);
-                await manager.addTask("parallel", task.flow.Parallel);
+                await manager.addTask("b", SCTaskB, { cancelable: true });
+                await manager.addTask("parallel", task.ParallelFlowTask, { cancelable: true });
 
-                const observer = await manager.run("parallel", ["a", "b"], null, false, true);
+                const observer = await manager.run("parallel", {
+                    tasks: ["a", "b"]
+                });
+
                 await adone.promise.delay(300);
-                assert.isFalse(observer.isCancelable());
-
-                let err = await assert.throws(async () => observer.cancel());
-                assert.instanceOf(err, adone.error.NotAllowedException);
+                assert.isTrue(observer.cancelable);
 
                 await adone.promise.delay(1000);
 
-                assert.isFalse(observer.isCancelable());
-                err = await assert.throws(async () => observer.cancel());
-                assert.instanceOf(err, adone.error.NotAllowedException);
+                await observer.cancel();
 
                 const result = await observer.result;
-                assert.equal(result.a, 888);
-                assert.equal(result.b, 100);
+                assert.deepEqual(result, {
+                    a: 888,
+                    b: 100
+                });
 
                 await observer.result;
+            });
+
+            it.todo("correct process of case when one of non-cancelable task throws", async () => {
+
             });
         });
 
@@ -893,17 +1040,23 @@ describe("task", () => {
             it("managed tasks", async () => {
                 await manager.addTask("badA", TaskBadA);
                 await manager.addTask("b", TaskB);
-                await manager.addTask("try", task.flow.Try);
+                await manager.addTask("try", task.TryFlowTask);
 
-                const observer = await manager.run("try", ["badA", "b"], null, "adone");
+                const observer = await manager.run("try", {
+                    args: "adone",
+                    tasks: ["badA", "b"]
+                });
                 assert.equal(await observer.result, "suffix-adone");
             });
 
             it("managed+unmanaged tasks", async () => {
                 await manager.addTask("badA", TaskBadA);
-                await manager.addTask("try", task.flow.Try);
+                await manager.addTask("try", task.TryFlowTask);
 
-                const observer = await manager.run("try", ["badA", TaskC], null, "adone");
+                const observer = await manager.run("try", {
+                    args: "adone",
+                    tasks: ["badA", TaskC]
+                });
                 assert.equal(await observer.result, "adone");
             });
 
@@ -911,23 +1064,28 @@ describe("task", () => {
                 await manager.addTask("a", TaskBadA);
                 await manager.addTask("b", TaskBadA);
                 await manager.addTask("c", TaskBadA);
-                await manager.addTask("try", task.flow.Try);
+                await manager.addTask("try", task.TryFlowTask);
 
-                const observer = await manager.run("try", ["a", "b", "c"], null, "adone");
+                const observer = await manager.run("try", {
+                    args: "adone",
+                    tasks: ["a", "b", "c"]
+                });
                 const err = await assert.throws(async () => observer.result);
-                assert.instanceOf(err, adone.error.AggregateException);
+                assert.instanceOf(err, error.AggregateException);
             });
+
+            // TODO: add more tests for canceling and other cases
         });
 
         describe("waterfall", () => {
             class TaskD extends task.Task {
-                async run(num) {
+                async main(num) {
                     return [num, 7];
                 }
             }
 
             class TaskE extends task.Task {
-                async run(num1, num2) {
+                async main(num1, num2) {
                     await promise.delay(10);
                     return num1 * num2;
                 }
@@ -936,24 +1094,30 @@ describe("task", () => {
             it("managed tasks", async () => {
                 await manager.addTask("d", TaskD);
                 await manager.addTask("e", TaskE);
-                await manager.addTask("waterfall", task.flow.Waterfall);
+                await manager.addTask("waterfall", task.WaterfallFlowTask);
 
-                const observer = await manager.run("waterfall", ["d", "e"], null, 3);
+                const observer = await manager.run("waterfall", {
+                    args: 3,
+                    tasks: ["d", "e"]
+                });
                 assert.equal(await observer.result, 21);
             });
 
             it("managed+unmanaged tasks", async () => {
                 class TaskF extends task.Task {
-                    async run(sum) {
+                    async main(sum) {
                         await promise.delay(10);
                         return `sum = ${sum}`;
                     }
                 }
                 await manager.addTask("d", TaskD);
                 await manager.addTask("e", TaskE);
-                await manager.addTask("waterfall", task.flow.Waterfall);
+                await manager.addTask("waterfall", task.WaterfallFlowTask);
 
-                const observer = await manager.run("waterfall", ["d", "e", TaskF], null, 3);
+                const observer = await manager.run("waterfall", {
+                    args: 3,
+                    tasks: ["d", "e", TaskF]
+                });
                 const result = await observer.result;
                 assert.isTrue(is.string(result));
                 assert.equal(result, "sum = 21");
@@ -962,14 +1126,14 @@ describe("task", () => {
 
         describe("race", () => {
             class TaskD extends task.Task {
-                async run() {
+                async main() {
                     await promise.delay(500);
                     return 3;
                 }
             }
 
             class TaskE extends task.Task {
-                async run() {
+                async main() {
                     await promise.delay(300);
                     return 5;
                 }
@@ -978,30 +1142,35 @@ describe("task", () => {
             it("managed tasks", async () => {
                 await manager.addTask("d", TaskD);
                 await manager.addTask("e", TaskE);
-                await manager.addTask("race", task.flow.Race);
+                await manager.addTask("race", task.RaceFlowTask);
 
-                const observer = await manager.run("race", ["d", "e"], null);
+                const observer = await manager.run("race", {
+                    tasks: ["d", "e"]
+                });
                 assert.equal(await observer.result, 5);
             });
 
             it("managed+unmanaged tasks", async () => {
                 class TaskF extends task.Task {
-                    async run() {
+                    async main() {
                         await promise.delay(100);
                         return 7;
                     }
                 }
                 await manager.addTask("d", TaskD);
                 await manager.addTask("e", TaskE);
-                await manager.addTask("race", task.flow.Race);
+                await manager.addTask("race", task.RaceFlowTask);
 
-                const observer = await manager.run("race", ["d", "e", TaskF], null, 3);
+                const observer = await manager.run("race", {
+                    args: 3,
+                    tasks: ["d", "e", TaskF]
+                });
                 assert.equal(await observer.result, 7);
             });
         });
     });
 
-    it("runInSeries() with functions", async () => {
+    it("runSeries() with functions", async () => {
         const task1 = async () => {
             await adone.promise.delay(100);
             return 777;
@@ -1011,7 +1180,7 @@ describe("task", () => {
             return 888;
         };
 
-        const observer = await manager.runInSeries([
+        const observer = await task.runSeries(manager, [
             task1,
             task2
         ]);
@@ -1019,7 +1188,7 @@ describe("task", () => {
         assert.deepEqual(await observer.result, [777, 888]);
     });
 
-    it("runInParallel() with functions", async () => {
+    it("runParallel() with functions", async () => {
         const task1 = async () => {
             await adone.promise.delay(100);
             return 777;
@@ -1029,7 +1198,7 @@ describe("task", () => {
             return 888;
         };
 
-        const observer = await manager.runInParallel([
+        const observer = await task.runParallel(manager, [
             task1,
             task2
         ]);
@@ -1043,7 +1212,7 @@ describe("task", () => {
         it("finally function should be executed atomically (async)", async () => {
             let val;
             class TaskA extends task.Task {
-                async run() {
+                async main() {
                     await promise.delay(100);
                     val = 1;
                 }
@@ -1063,7 +1232,7 @@ describe("task", () => {
         it("finally function should be executed atomically (async)", async () => {
             let val = 0;
             class TaskA extends task.Task {
-                run() {
+                main() {
                     val = 1;
                 }
             }
@@ -1083,11 +1252,11 @@ describe("task", () => {
             const data = [];
 
             class TaskA extends task.Task {
-                async run() {
+                async main() {
                     data.push(1);
                     await promise.delay(100);
                     data.push(2);
-                    throw new adone.error.RuntimeException("task error");
+                    throw new error.RuntimeException("task error");
                 }
 
                 async undo() {
@@ -1109,10 +1278,10 @@ describe("task", () => {
             const data = [];
 
             class TaskA extends task.Task {
-                run() {
+                main() {
                     data.push(1);
                     data.push(2);
-                    throw new adone.error.RuntimeException("task error");
+                    throw new error.RuntimeException("task error");
                 }
 
                 async undo() {
@@ -1133,7 +1302,7 @@ describe("task", () => {
 
     describe("task notifications", () => {
         class Task1 extends task.Task {
-            async run() {
+            async main() {
                 this.manager.notify(this, "progress", {
                     value: 0.1,
                     message: "step1"
@@ -1156,7 +1325,7 @@ describe("task", () => {
         }
 
         class Task2 extends task.Task {
-            async run() {
+            async main() {
                 this.manager.notify(this, "p", {
                     value: 0.2,
                     message: "bam1"
@@ -1181,13 +1350,13 @@ describe("task", () => {
         it("add same observer second time shoud have thrown", async () => {
             const observer = () => { };
             manager.onNotification("progress", observer);
-            assert.throws(() => manager.onNotification("progress", observer), adone.error.ExistsException);
+            assert.throws(() => manager.onNotification("progress", observer), error.ExistsException);
         });
 
         it("add same observer for any notification second time shoud have thrown", async () => {
             const observer = () => { };
             manager.onNotification(null, observer);
-            assert.throws(() => manager.onNotification(null, observer), adone.error.ExistsException);
+            assert.throws(() => manager.onNotification(null, observer), error.ExistsException);
         });
 
         it("observe all notifications", async () => {
@@ -1282,39 +1451,39 @@ describe("task", () => {
         });
     });
 
-    // describe.only("contexts", () => {
-    //     const {
-    //         task: { Manager }
-    //     } = adone;
+    // // describe.only("contexts", () => {
+    // //     const {
+    // //         task: { Manager }
+    // //     } = adone;
 
-    //     it("manager api", () => {
-    //         const manager = new Manager();
+    // //     it("manager api", () => {
+    // //         const manager = new Manager();
 
 
-    //         assert.isFunction(manager.getIsolate);
-    //         assert.isFunction(manager.getContextBook);
-    //     });
+    // //         assert.isFunction(manager.getIsolate);
+    // //         assert.isFunction(manager.getContextBook);
+    // //     });
 
-    //     it("create std context with defaults", async () => {
-    //         const manager = new Manager();
-    //         const stdContext = await manager.getContextBook().createContext("main");
-    //         assert.isObject(stdContext);
+    // //     it("create std context with defaults", async () => {
+    // //         const manager = new Manager();
+    // //         const stdContext = await manager.getContextBook().createContext("main");
+    // //         assert.isObject(stdContext);
 
-    //         class MyTask extends task.Task {
-    //             run(a, b) {
-    //                 global.a = a;
-    //                 global.b = b;
-    //                 global.c = a + b;
-    //                 return global.c;
-    //             }
-    //         }
+    // //         class MyTask extends task.Task {
+    // //             run(a, b) {
+    // //                 global.a = a;
+    // //                 global.b = b;
+    // //                 global.c = a + b;
+    // //                 return global.c;
+    // //             }
+    // //         }
 
-    //         manager.addTask("my", MyTask);
-    //         const observer = await manager.runInContext(stdContext, "my", 1, 2);
-    //         const result = await observer.result;
-    //         console.log(result);
-    //     });
+    // //         manager.addTask("my", MyTask);
+    // //         const observer = await manager.runInContext(stdContext, "my", 1, 2);
+    // //         const result = await observer.result;
+    // //         console.log(result);
+    // //     });
 
-    // });
+    // // });
 
 });

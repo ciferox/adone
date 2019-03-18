@@ -57,7 +57,7 @@ export default class extends BaseTask {
             return null;
         }
 
-        const observer = await this.manager.runInParallel(entries.map((entry) => ({
+        const observer = await adone.task.runParallel(this.manager, entries.map((entry) => ({
             task: build,
             args: [this.manager, entry]
         })));

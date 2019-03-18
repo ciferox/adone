@@ -42,7 +42,7 @@ const clean = async function (manager, entry) {
 
 export default class extends BaseTask {
     async main({ path } = {}) {
-        const observer = await this.manager.runInParallel(this.manager.getEntries({ path }).map((entry) => ({
+        const observer = await adone.task.runParallel(this.manager, this.manager.getEntries({ path }).map((entry) => ({
             task: clean,
             args: [this.manager, entry]
         })));

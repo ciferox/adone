@@ -58,12 +58,14 @@ export default class TaskManager extends adone.event.AsyncEmitter {
         let TaskClass;
         if (is.class(task)) {
             TaskClass = task;
-        } else {
+        } else if (is.function(task)) {
             TaskClass = class extends adone.task.Task {
-                run(...args) {
+                main(...args) {
                     return task(...args);
                 }
             };
+        } else {
+            throw new error.InvalidArgumentException(`Invalid type of task argument: ${adone.typeOf(task)}`);
         }
 
         taskInfo.Class = TaskClass;
@@ -298,24 +300,6 @@ export default class TaskManager extends adone.event.AsyncEmitter {
     }
 
     /**
-     * Runs task in series.
-     * 
-     * @param {array} tasks array of task names
-     */
-    runInSeries(tasks, options, ...args) {
-        return this.runOnce(adone.task.flow.Series, tasks, options, ...args);
-    }
-
-    /**
-     * Runs tasks in parallel.
-     * 
-     * @param {array} tasks array of tasks
-     */
-    runInParallel(tasks, options, ...args) {
-        return this.runOnce(adone.task.flow.Parallel, tasks, options, ...args);
-    }
-
-    /**
      * Runs task once.
      * 
      * @param {class} task 
@@ -373,10 +357,10 @@ export default class TaskManager extends adone.event.AsyncEmitter {
         return async (args) => {
             const instance = await this._createTaskInstance(taskInfo);
 
-            const taskObserver = new adone.task.TaskObserver(instance, taskInfo.name);
+            const taskObserver = new adone.task.TaskObserver(instance, taskInfo);
             taskObserver.state = adone.task.STATE.RUNNING;
             try {
-                taskObserver.result = taskInfo.throttle(() => instance.run(...args));
+                taskObserver.result = taskInfo.throttle(() => instance._run(...args));
             } catch (err) {
                 if (is.function(taskObserver.task.undo)) {
                     await taskObserver.task.undo(err);
@@ -421,10 +405,20 @@ export default class TaskManager extends adone.event.AsyncEmitter {
         instance[MANAGER_SYMBOL] = this;
         return instance;
     }
+    
+    _initTaskInfo({ name, suspendable = false, cancelable = false, concurrency = Infinity, interval, singleton = false, description = "", tag } = {}) {
+        if (suspendable && singleton) {
+            throw new error.NotAllowedException("Singleton task cannot be suspendable");
+        }
 
-    _initTaskInfo({ name, concurrency = Infinity, interval, singleton = false, description = "", tag } = {}) {
+        if (cancelable && singleton) {
+            throw new error.NotAllowedException("Singleton task cannot be cancelable");
+        }
+
         const taskInfo = {
             name,
+            suspendable,
+            cancelable,
             concurrency,
             interval,
             singleton,

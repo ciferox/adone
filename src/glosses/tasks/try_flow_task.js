@@ -2,8 +2,8 @@
  * This flow runs each task in series but stops whenever any of the task were successful and the result of this task will be returned.
  * If all tasks fail, flow throw AggregateException with all errors.
  */
-export default class TryFlow extends adone.task.Flow {
-    async _run() {
+export default class TryFlowTask extends adone.task.FlowTask {
+    async main() {
         let result;
         const errors = [];
 

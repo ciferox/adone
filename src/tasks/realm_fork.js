@@ -25,7 +25,7 @@ export default class extends realm.BaseTask {
         }
     }
 
-    async run({ srcRealm, basePath, name, exclude } = {}) {
+    async main({ srcRealm, basePath, name, exclude } = {}) {
         this.manager.notify(this, "progress", {
             message: "checking"
         });

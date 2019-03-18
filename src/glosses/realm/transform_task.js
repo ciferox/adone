@@ -19,7 +19,8 @@ export default class TransformTask extends BaseTask {
         };
     }
 
-    initialize(params) {
+
+    main(params) {
         if (is.null(this.stream)) {
             this.stream = fast.src(params.src, this.streamOptions());
         }
@@ -28,9 +29,7 @@ export default class TransformTask extends BaseTask {
         
         this.notify(this.stream, params);
         this.notifyError(this.stream, params);
-    }
-
-    main(params) {
+        
         if (is.fastLocalStream(this.stream)) {
             return this.stream.dest(params.dst);
         }

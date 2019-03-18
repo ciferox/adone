@@ -281,5 +281,9 @@ describe("Generic", () => {
         it("class", () => {
             assert.equal(typeOf(A), "class");
         });
+
+        it("adone", () => {
+            assert.equal(typeOf(adone), "adone");
+        });
     });
 });

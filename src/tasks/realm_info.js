@@ -22,7 +22,7 @@ export default class extends realm.BaseTask {
         }
     }
 
-    async run({ cwd, common = false, struct = false, tasks = false, onlyNative = false, structFull = false } = {}) {
+    async main({ cwd, common = false, struct = false, tasks = false, onlyNative = false, structFull = false } = {}) {
         if (!is.string(cwd)) {
             throw new error.NotValidException(`Invalid type of cwd: ${adone.typeOf(cwd)}`);
         }

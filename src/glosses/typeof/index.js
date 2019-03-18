@@ -61,52 +61,47 @@ export default function (obj) {
      */
     const typeofObj = typeof obj;
     if (typeofObj !== "object") {
-        return isClass(obj) 
+        return isClass(obj)
             ? "class"
             : typeofObj;
-    }
+    } else if (obj === null) {
+        /* ! Speed optimisation
+        * Pre:
+        *   null               x 28,645,765 ops/sec ±1.17% (82 runs sampled)
+        * Post:
+        *   null               x 36,428,962 ops/sec ±1.37% (84 runs sampled)
+        */
 
-    /* ! Speed optimisation
-     * Pre:
-     *   null               x 28,645,765 ops/sec ±1.17% (82 runs sampled)
-     * Post:
-     *   null               x 36,428,962 ops/sec ±1.37% (84 runs sampled)
-     */
-    if (obj === null) {
         return "null";
-    }
+    } else if (obj === globalObject) {
+        /* ! Spec Conformance
+        * Test: `Object.prototype.toString.call(window)``
+        *  - Node === "[object global]"
+        *  - Chrome === "[object global]"
+        *  - Firefox === "[object Window]"
+        *  - PhantomJS === "[object Window]"
+        *  - Safari === "[object Window]"
+        *  - IE 11 === "[object Window]"
+        *  - IE Edge === "[object Window]"
+        * Test: `Object.prototype.toString.call(this)``
+        *  - Chrome Worker === "[object global]"
+        *  - Firefox Worker === "[object DedicatedWorkerGlobalScope]"
+        *  - Safari Worker === "[object DedicatedWorkerGlobalScope]"
+        *  - IE 11 Worker === "[object WorkerGlobalScope]"
+        *  - IE Edge Worker === "[object WorkerGlobalScope]"
+        */
 
-    /* ! Spec Conformance
-     * Test: `Object.prototype.toString.call(window)``
-     *  - Node === "[object global]"
-     *  - Chrome === "[object global]"
-     *  - Firefox === "[object Window]"
-     *  - PhantomJS === "[object Window]"
-     *  - Safari === "[object Window]"
-     *  - IE 11 === "[object Window]"
-     *  - IE Edge === "[object Window]"
-     * Test: `Object.prototype.toString.call(this)``
-     *  - Chrome Worker === "[object global]"
-     *  - Firefox Worker === "[object DedicatedWorkerGlobalScope]"
-     *  - Safari Worker === "[object DedicatedWorkerGlobalScope]"
-     *  - IE 11 Worker === "[object WorkerGlobalScope]"
-     *  - IE Edge Worker === "[object WorkerGlobalScope]"
-     */
-    if (obj === globalObject) {
         return "global";
-    }
+    } else if (obj === adone) {
+        return "adone";
+    } else if (Array.isArray(obj) && (symbolToStringTagExists === false || !(Symbol.toStringTag in obj))) { // eslint-disable-line adone/no-array-isarray
+        /* ! Speed optimisation
+        * Pre:
+        *   array literal      x 2,888,352 ops/sec ±0.67% (82 runs sampled)
+        * Post:
+        *   array literal      x 22,479,650 ops/sec ±0.96% (81 runs sampled)
+        */
 
-    /* ! Speed optimisation
-     * Pre:
-     *   array literal      x 2,888,352 ops/sec ±0.67% (82 runs sampled)
-     * Post:
-     *   array literal      x 22,479,650 ops/sec ±0.96% (81 runs sampled)
-     */
-    if (
-        // eslint-disable-next-line adone/no-array-isarray
-        Array.isArray(obj) &&
-        (symbolToStringTagExists === false || !(Symbol.toStringTag in obj))
-    ) {
         return "Array";
     }
 

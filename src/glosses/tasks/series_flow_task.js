@@ -1,14 +1,10 @@
-const {
-    is
-} = adone;
-
 /**
  * This flow run the tasks in series, each one running once the previous task has completed.
  * If any task in the series throw, no more tasks are run.
  * If all tasks has finished, the result will be an array of all tasks results.
  */
-export default class SeriesFlow extends adone.task.Flow {
-    async _run() {
+export default class SeriesFlowTask extends adone.task.FlowTask {
+    async main() {
         const results = [];
         this._activeObserver = null;
         this._shouldStop = false;
@@ -23,12 +19,11 @@ export default class SeriesFlow extends adone.task.Flow {
         return results;
     }
 
-    isCancelable() {
-        return !is.null(this._activeObserver) && this._activeObserver.isCancelable();
-    }
-
     cancel(defer) {
         this._shouldStop = true;
-        return this._activeObserver.cancel().then(() => defer.resolve());
+
+        if (this._activeObserver.cancelable) {
+            return this._activeObserver.cancel().then(() => defer.resolve());
+        }
     }
 }

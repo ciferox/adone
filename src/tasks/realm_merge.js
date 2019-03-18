@@ -9,7 +9,7 @@ const {
 } = adone;
 
 export default class extends realm.BaseTask {
-    async run({ srcRealm, symlink = false } = {}) {
+    async main({ srcRealm, symlink = false } = {}) {
         this.srcRealm = srcRealm;
         if (is.string(srcRealm)) {
             this.srcRealm = new realm.Manager({
