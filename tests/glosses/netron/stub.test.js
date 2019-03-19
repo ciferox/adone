@@ -5,7 +5,7 @@ const {
     netron: { Netron, meta: { Reflection }, Stub, Definition }
 } = adone;
 
-describe("Stub", () => {
+describe.todo("Stub", () => {
     let netron;
 
     before(() => {

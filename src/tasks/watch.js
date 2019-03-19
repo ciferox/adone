@@ -63,10 +63,6 @@ class WatchTask extends TransformTask {
         !is.null(this.stream) && this.stream.destroy();
         defer.resolve();
     }
-
-    isCancelable() {
-        return true;
-    }
 }
 
 export default class extends BaseTask {
@@ -75,6 +71,9 @@ export default class extends BaseTask {
             task: WatchTask,
             args: entry
         })));
+        
+        observer.task.manager.getTask(observer.taskName).cancelable = true; // Big hack!
+
         return observer.result;
     }
 }

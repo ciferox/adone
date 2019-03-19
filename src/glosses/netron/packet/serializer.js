@@ -1,11 +1,12 @@
 const {
-    crypto: { Identity },
-    net: { p2p: { PeerInfo } },
+    data: { mpak },
+    // crypto: { Identity },
+    // p2p: { PeerInfo },
     netron: { Definition, Definitions, Reference }
 } = adone;
 
-const s = new adone.data.mpak.Serializer();
-adone.data.mpak.registerCommonTypesFor(s);
+const s = new mpak.Serializer();
+mpak.registerCommonTypesFor(s);
 
 // Netron specific encoders/decoders
 s.register(109, Definition, (obj, buf) => {

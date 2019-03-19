@@ -5,10 +5,6 @@ const {
 } = adone;
 
 export default class OwnPeer extends AbstractPeer {
-    isConnected() {
-        return true; // always connected
-    }
-
     set(defId, name, data) {
         const stub = this.netron._stubs.get(defId);
         if (is.undefined(stub)) {
@@ -30,7 +26,9 @@ export default class OwnPeer extends AbstractPeer {
     }
 
     subscribe(eventName, handler, once = false) {
-        return (once) ? this.netron.once(eventName, handler) : this.netron.addListener(eventName, handler);
+        return once
+            ? this.netron.once(eventName, handler)
+            : this.netron.addListener(eventName, handler);
     }
 
     unsubscribe(eventName, handler) {
@@ -62,7 +60,7 @@ export default class OwnPeer extends AbstractPeer {
     }
 
     _runTask(task) {
-        return this.netron._runPeerTask(this, task);
+        return this.netron.runTask(this, task);
     }
 
     _getContextDefinition(ctxId) {

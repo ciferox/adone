@@ -14,7 +14,7 @@ export default class InterfaceFactory {
     create(def, peer) {
         const defId = def.id;
         const base58Str = peer.info.id.asBase58();
-        let iInstance = peer.interfaces.get(defId);
+        let iInstance = peer._getInterface(defId);
         if (!is.undefined(iInstance)) {
             return iInstance;
         }
@@ -109,7 +109,7 @@ export default class InterfaceFactory {
         //     }
         // }
 
-        peer.interfaces.set(defId, iInstance);
+        peer._addInterface(defId, iInstance);
         return iInstance;
     }
 

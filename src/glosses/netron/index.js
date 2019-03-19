@@ -114,57 +114,10 @@ export class Definitions {
     }
 }
 
-const MAX_INTEGER = Number.MAX_SAFE_INTEGER >>> 0;
-
-export class FastUniqueId {
-    constructor() {
-        this.id = 0 >>> 0;
-    }
-
-    get() {
-        if (this.id === MAX_INTEGER) {
-            this.id = 1;
-        } else {
-            this.id++;
-        }
-        return this.id;
-    }
-
-    isEqual(id1, id2) {
-        return id1 === id2;
-    }
-}
-
 adone.lazify({
     contextify: () => adone.netron.meta.contextify,
-    UniqueId: () => {
-        const { math: { Long } } = adone;
-        const ONE_LONG = new Long(1, 0, true);
-        const ZERO = 0 >>> 0;
-        const ONE = 1 >>> 0;
-        class UniqueId {
-            constructor() {
-                this.id = new Long(0, 0, true);
-            }
-
-            get() {
-                if (this.id.equals(Long.MAX_UNSIGNED_VALUE)) {
-                    this.id.low = ONE;
-                    this.id.high = ZERO;
-                } else {
-                    this.id = this.id.add(ONE_LONG);
-                }
-                return this.id;
-            }
-
-            isEqual(id1, id2) {
-                return id1.equals(id2);
-            }
-        }
-
-        return UniqueId;
-    },
     meta: "./meta",
+    StubManager: "./stub_manager",
     Stub: "./stub",
     RemoteStub: "./remote_stub",
     Netron: "./netron",
@@ -172,5 +125,8 @@ adone.lazify({
     OwnPeer: "./own_peer",
     RemotePeer: "./remote_peer",
     packet: "./packet",
-    task: "./tasks"
+    task: "./tasks",
+    uid: "./uids",
+    IPCNetCore: "./ipc_net_core",
+    P2PNetCore: "./p2p_net_core"
 }, adone.asNamespace(exports), require);

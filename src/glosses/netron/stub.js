@@ -5,8 +5,8 @@ const {
 } = adone;
 
 export default class Stub {
-    constructor(netron, obj) {
-        this.netron = netron;
+    constructor(manager, obj) {
+        this.manager = manager;
         if (is.netronContext(obj)) {
             this.instance = obj;
             this.reflection = netronMeta.Reflection.from(obj);
@@ -22,7 +22,7 @@ export default class Stub {
             const r = this.reflection;
             const def = this._def = new Definition();
 
-            def.id = this.netron._defUniqueId.get();
+            def.id = this.manager.uid.create();
             def.parentId = 0;
             def.name = r.getName();
             def.description = r.getDescription();
@@ -103,7 +103,7 @@ export default class Stub {
 
     _processResult(peer, result) {
         if (is.netronContext(result)) {
-            result = this.netron.refContext(peer.info, result);
+            result = this.manager.netron.refContext(peer.info, result);
             result.parentId = result.parentId || this._def.id;
             result.uid = peer.info.id.asBase58(); // definition owner
         } else if (is.netronDefinitions(result)) {
@@ -129,14 +129,10 @@ export default class Stub {
 
     _processObject(peer, obj) {
         if (is.netronReference(obj)) {
-            const stub = this.netron._getStub(obj.defId);
-            if (is.undefined(stub)) {
-                throw new error.UnknownException(`Unknown definition id ${obj.defId}`);
-            }
-            return stub.instance;
+            return this.manager.getStub(obj.defId).instance;
         } else if (is.netronDefinition(obj)) {
             peer._updateDefinitions({ weak: obj });
-            return this.netron.interfaceFactory.create(obj, peer);
+            return this.manager.netron.interfaceFactory.create(obj, peer);
         } else if (is.netronDefinitions(obj)) {
             for (let i = 0; i < obj.length; i++) {
                 obj.set(i, this._processObject(peer, obj.get(i)));

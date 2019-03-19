@@ -1,20 +1,22 @@
 export default class SubscribeTask extends adone.task.Task {
-    run(peer, eventName) {
+    run({ netron, peer, args }) {
+        const [eventName] = args;
+
         const fn = (...args) => {
             // Ignore event with own contexts 
-            // if (this.manager.options.proxyContexts) {
+            // if (this.manager.options.proxifyContexts) {
             //     if (peer._ownDefIds.includes(args[0].defId)) {
             //         return;
             //     }
             // }
 
             return peer.runTask({
-                task: "emitEvent",
+                task: "netronEmitEvent",
                 args: [eventName, ...args]
             });
         };
 
         peer._remoteSubscriptions.set(eventName, fn);
-        this.manager.on(eventName, fn);        
+        netron.on(eventName, fn);
     }
 }

@@ -1,8 +1,9 @@
 export default class UnsubscribeTask extends adone.task.Task {
-    run(peer, eventName) {
+    run({ netron, peer, args }) {
+        const [eventName] = args;
         const fn = peer._remoteSubscriptions.get(eventName);
         if (!adone.is.undefined(fn)) {
-            this.manager.removeListener(eventName, fn);
+            netron.removeListener(eventName, fn);
             peer._remoteSubscriptions.delete(eventName);
         }
     }

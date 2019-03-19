@@ -6,35 +6,19 @@ const {
 
 const __ = adone.private(adone.netron);
 
+const INTERFACES = Symbol();
+
 export default class AbstractPeer extends AsyncEmitter {
-    constructor(info, netron) {
+    constructor(netron) {
         super();
 
-        this.info = info;
+        // this.info = peerInfo;
         this.netron = netron;
-        this.interfaces = new Map();
-        this.connectedTime = null;
+        this[INTERFACES] = new Map();
+        // this.connectedTime = null;
         this.task = {}; // task's results
 
         // this.options = Object.assign({}, options);
-    }
-
-    get id() {
-        return this.info.id.asBase58();
-    }
-
-    /**
-     * Disconnects peer.
-     */
-    disconnect() {
-        throw new adone.error.NotImplementedException("Method disconnect() is not implemented");
-    }
-
-    /**
-     * Checks peer is connected using netron protocol.
-     */
-    isConnected() {
-        throw new adone.error.NotImplementedException("Method isConnected() is not implemented");
     }
 
     /**
@@ -88,7 +72,10 @@ export default class AbstractPeer extends AsyncEmitter {
     }
 
     /**
-     * Run one or more tasks on associated netron and store results in 'task' property.
+     * Run one or more tasks on the side of associated netron and store results in 'task' property.
+     * 
+     * @param {string|object|array} task Name of the task, object{ name, ...args } or array of names|objects.
+     * @returns {Promise<object>} Object where keys are names of tasks and values are objects with result or error.
      */
     async runTask(task) {
         const result = await this._runTask(task);
@@ -99,15 +86,15 @@ export default class AbstractPeer extends AsyncEmitter {
         return result;
     }
 
-    /**
-     * Returns task result or adone.null if it not exists.
-     * 
-     * @param {string} name - task name
-     */
-    getTaskResult(name) {
-        const taskObj = this.task[name];
-        return taskObj ? taskObj.result : adone.null;
-    }
+    // /**
+    //  * Returns task result or adone.null if it not exists.
+    //  * 
+    //  * @param {string} name - task name
+    //  */
+    // getTaskResult(name) {
+    //     const taskObj = this.task[name];
+    //     return taskObj ? taskObj.result : adone.null;
+    // }
 
     subscribe(/*eventName, handler*/) {
         throw new adone.error.NotImplementedException("Method subscribe() is not implemented");
@@ -183,7 +170,7 @@ export default class AbstractPeer extends AsyncEmitter {
         if (!is.netronInterface(iInstance)) {
             throw new error.NotValidException("Object is not a netron interface");
         }
-        this.interfaces.delete(iInstance[__.I_DEFINITION_SYMBOL].id);
+        this[INTERFACES].delete(iInstance[__.I_DEFINITION_SYMBOL].id);
     }
 
     /**
@@ -211,6 +198,22 @@ export default class AbstractPeer extends AsyncEmitter {
      */
     _queryInterfaceByDefinition(/*defId*/) {
         throw new adone.error.NotImplementedException("Method _queryInterfaceByDefinition() is not implemented");
+    }
+
+    _addInterface(defId, iInstance) {
+        this[INTERFACES].set(defId, iInstance);
+    }
+
+    _getInterface(defId) {
+        this[INTERFACES].get(defId);
+    }
+
+    _deleteInterface(defId) {
+        this[INTERFACES].delete(defId);
+    }
+
+    _deleteAllInterfaces() {
+        this[INTERFACES].clear();
     }
 
     // // _removeRelatedDefinitions(proxyDef) {

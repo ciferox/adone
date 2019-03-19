@@ -2,8 +2,8 @@ const {
     netron: { Netron }
 } = adone;
 
-export const createNetron = (peerId, addrs) => {
-    const netron = new Netron(peerId);
+export const createNetron = (peerInfo, addrs) => {
+    const netron = new Netron(peerInfo);
     netron.createNetCore("default", {
         addrs
     });

@@ -30,6 +30,7 @@ adone.lazifyPrivate({
 /**
  * Runs task in series.
  * 
+ * @param {adone.task.Manager} manager
  * @param {array} tasks array of task names
  */
 export const runSeries = (manager, tasks, ...args) => manager.runOnce(adone.task.SeriesFlowTask, { args, tasks });
@@ -37,6 +38,7 @@ export const runSeries = (manager, tasks, ...args) => manager.runOnce(adone.task
 /**
  * Runs tasks in parallel.
  * 
+ * @param {adone.task.Manager} manager
  * @param {array} tasks array of tasks
  */
 export const runParallel = (manager, tasks, ...args) => manager.runOnce(adone.task.ParallelFlowTask, { args, tasks });

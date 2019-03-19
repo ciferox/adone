@@ -1044,7 +1044,9 @@ adone.lazify({
     fastLocalStream: () => (obj) => obj instanceof adone.fast.LocalStream,
     fastLocalMapStream: () => (obj) => obj instanceof adone.fast.LocalMapStream,
 
-    // net/p2p
+    // peer/p2p/net
+    peerId: () => (obj) => obj instanceof adone.p2p.PeerId,
+    peerInfo: () => (obj) => obj instanceof adone.p2p.PeerInfo,
     p2pPeerInfo: () => (obj) => obj instanceof adone.net.p2p.PeerInfo,
     p2pCore: () => (obj) => obj instanceof adone.net.p2p.Core,
 

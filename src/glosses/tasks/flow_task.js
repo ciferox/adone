@@ -14,8 +14,8 @@ const normalizeAndCheck = (manager, tasks) => {
                 task: t
             };
         } else if (is.object(t)) {
-            if (!is.string(t.task)) {
-                throw new error.NotValidException("Missing task name");
+            if (!is.exist(t.task)) {
+                throw new error.NotValidException("Missing task property");
             }
             item = t;
         } else {

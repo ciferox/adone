@@ -1,59 +1,53 @@
 import testInterface from "./interface";
-import { createNetron } from "../common";
+// import { createNetron } from "../common";
 
 const {
-    net: { p2p: { PeerInfo } },
-    netron: { Netron }
+    netron: { Netron, AbstractPeer }
 } = adone;
 
-describe("OwnPeer", () => {
+describe.todo("OwnPeer", () => {
     describe("specific", () => {
-        let peerInfo;
         let netron;
         let peer;
 
-        before(() => {
-            peerInfo = PeerInfo.create();
-        });
-
         beforeEach(() => {
-            netron = new Netron(peerInfo);
+            netron = new Netron();
             peer = netron.peer;
         });
 
-        it("isConnected() always return true", () => {
-            assert.isTrue(peer.isConnected());
+        it("should be inherited from AbstractPeer", () => {
+            assert.isTrue(peer instanceof AbstractPeer);
+        });
+
+        it("should have correct instance of projected netron", () => {
+            assert.strictEqual(peer.netron, netron);
         });
     });
 
     class TestInterface {
         constructor() {
+            this.peerInfo = null;
+
             this._reset();
         }
 
         before() {
-            this.peerInfo = PeerInfo.create();
         }
 
         after() {
         }
 
         async beforeEach() {
-            this.netron = createNetron(this.peerInfo, "//ip4/0.0.0.0//tcp/0");
+            this.netron = new Netron();
             this.peer = this.netron.peer;
-
-            await this.netron.start();
-
             return [this.netron, this.peer];
         }
 
         async afterEach() {
-            await this.netron.stop();
             this._reset();
         }
 
         _reset() {
-            this.peerInfo = null;
             this.netron = null;
             this.peer = null;
         }

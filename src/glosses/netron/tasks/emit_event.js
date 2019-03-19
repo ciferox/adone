@@ -1,5 +1,6 @@
 export default class EmitEventTask extends adone.task.Task {
-    run(peer, eventName, ...args) {
+    run({ peer, args: taskArgs }) {
+        const [eventName, ...args] = taskArgs;
         const handlers = peer._remoteEvents.get(eventName);
         if (!adone.is.undefined(handlers)) {
             const promises = [];

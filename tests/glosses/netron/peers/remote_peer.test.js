@@ -1,11 +1,11 @@
 import testInterface from "./interface";
 
 const {
-    net: { p2p: { PeerInfo } },
+    p2p: { PeerInfo },
     netron: { Netron }
 } = adone;
 
-describe("RemotePeer", () => {
+describe.todo("RemotePeer", () => {
     describe("specific", () => {
         let peerInfo;
         let netron;

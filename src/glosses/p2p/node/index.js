@@ -13,7 +13,7 @@ const peerRouting = require("./peer-routing");
 const contentRouting = require("./content-routing");
 const dht = require("./dht");
 const pubsub = require("./pubsub");
-const getPeerInfo = require("./get-peer-info");
+const getPeerInfo = require("./get_peer_info");
 const validateConfig = require("./config").validate;
 
 const {
