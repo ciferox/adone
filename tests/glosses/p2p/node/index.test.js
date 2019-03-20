@@ -147,7 +147,7 @@ describe("configuration", () => {
                     transport: []
                 }
             });
-        }).to.throw();
+        }).to.throw('ERROR_EMPTY');
     });
 
     it("should add defaults to missing items", () => {
@@ -187,7 +187,7 @@ describe("configuration", () => {
                 },
                 dht: {
                     kBucketSize: 20,
-                    enabled: true,
+                    enabled: false,
                     randomWalk: {
                         enabled: false,
                         queriesPerPeriod: 1,
@@ -244,8 +244,8 @@ describe("configuration", () => {
                 transport: [WS]
             },
             config: {
-                EXPERIMENTAL: {
-                    dht: true
+                dht: {
+                    enabled: true
                 }
             }
         };
@@ -289,7 +289,7 @@ describe("configuration", () => {
                 },
                 dht: {
                     kBucketSize: 20,
-                    enabled: true,
+                    enabled: false,
                     randomWalk: {
                         enabled: false,
                         queriesPerPeriod: 1,

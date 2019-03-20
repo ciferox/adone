@@ -1,9 +1,9 @@
-const doUntil = require('async/doUntil')
-const joinPath = require('path').join
-const osPathSep = require('path').sep
-const map = require('async/map')
-const waterfall = require('async/waterfall')
-const mergeOptions = require('merge-options')
+const doUntil = require("async/doUntil");
+const joinPath = require("path").join;
+const osPathSep = require("path").sep;
+const map = require("async/map");
+const waterfall = require("async/waterfall");
+const mergeOptions = require("merge-options");
 
 const {
     multiformat: { CID },
@@ -16,154 +16,154 @@ function noop() { }
 
 class IPLDResolver {
     constructor(userOptions) {
-        const options = mergeOptions(IPLDResolver.defaultOptions, userOptions)
+        const options = mergeOptions(IPLDResolver.defaultOptions, userOptions);
 
         if (!options.blockService) {
-            throw new Error('Missing blockservice')
+            throw new Error("Missing blockservice");
         }
-        this.bs = options.blockService
+        this.bs = options.blockService;
 
         // Object with current list of active resolvers
-        this.resolvers = {}
+        this.resolvers = {};
 
         // API entry point
-        this.support = {}
+        this.support = {};
 
         // Adds support for an IPLD format
         this.support.add = (multicodec, resolver, util) => {
             if (this.resolvers[multicodec]) {
-                throw new Error('Resolver already exists for codec "' + multicodec + '"')
+                throw new Error('Resolver already exists for codec "' + multicodec + '"');
             }
 
             this.resolvers[multicodec] = {
                 resolver: resolver,
                 util: util
-            }
-        }
+            };
+        };
 
         this.support.load = options.loadFormat || ((codec, callback) => {
-            callback(new Error(`No resolver found for codec "${codec}"`))
-        })
+            callback(new Error(`No resolver found for codec "${codec}"`));
+        });
 
         this.support.rm = (multicodec) => {
             if (this.resolvers[multicodec]) {
-                delete this.resolvers[multicodec]
+                delete this.resolvers[multicodec];
             }
-        }
+        };
 
         // Enable all supplied formats
         for (const format of options.formats) {
-            const { resolver, util } = format
-            const multicodec = resolver.multicodec
-            this.support.add(multicodec, resolver, util)
+            const { resolver, util } = format;
+            const multicodec = resolver.multicodec;
+            this.support.add(multicodec, resolver, util);
         }
     }
 
     get(cid, path, options, callback) {
-        if (typeof path === 'function') {
-            callback = path
-            path = undefined
+        if (typeof path === "function") {
+            callback = path;
+            path = undefined;
         }
 
-        if (typeof options === 'function') {
-            callback = options
-            options = {}
+        if (typeof options === "function") {
+            callback = options;
+            options = {};
         }
 
         // this removes occurrences of ./, //, ../
         // makes sure that path never starts with ./ or /
         // path.join is OS specific. Need to convert back to POSIX format.
-        if (typeof path === 'string') {
-            path = joinPath('/', path)
+        if (typeof path === "string") {
+            path = joinPath("/", path)
                 .substr(1)
                 .split(osPathSep)
-                .join('/')
+                .join("/");
         }
 
-        if (path === '' || !path) {
+        if (path === "" || !path) {
             return this._get(cid, (err, node) => {
                 if (err) {
-                    return callback(err)
+                    return callback(err);
                 }
                 callback(null, {
                     value: node,
-                    remainderPath: '',
+                    remainderPath: "",
                     cid
-                })
-            })
+                });
+            });
         }
 
-        let value
+        let value;
 
         doUntil(
             (cb) => {
                 this._getFormat(cid.codec, (err, format) => {
-                    if (err) return cb(err)
+                    if (err) return cb(err);
 
                     // get block
                     // use local resolver
                     // update path value
                     this.bs.get(cid, (err, block) => {
                         if (err) {
-                            return cb(err)
+                            return cb(err);
                         }
 
                         format.resolver.resolve(block.data, path, (err, result) => {
                             if (err) {
-                                return cb(err)
+                                return cb(err);
                             }
-                            value = result.value
-                            path = result.remainderPath
-                            cb()
-                        })
-                    })
-                })
+                            value = result.value;
+                            path = result.remainderPath;
+                            cb();
+                        });
+                    });
+                });
             },
             () => {
-                const endReached = !path || path === '' || path === '/'
-                const isTerminal = value && !IPLDResolver._maybeCID(value)
+                const endReached = !path || path === "" || path === "/";
+                const isTerminal = value && !IPLDResolver._maybeCID(value);
 
                 if ((endReached && isTerminal) || options.localResolve) {
-                    cid = IPLDResolver._maybeCID(value) || cid
+                    cid = IPLDResolver._maybeCID(value) || cid;
 
-                    return true
+                    return true;
                 } else {
-                    value = IPLDResolver._maybeCID(value)
+                    value = IPLDResolver._maybeCID(value);
                     // continue traversing
                     if (value) {
-                        cid = value
+                        cid = value;
                     }
-                    return false
+                    return false;
                 }
             },
             (err, results) => {
                 if (err) {
-                    return callback(err)
+                    return callback(err);
                 }
                 return callback(null, {
                     value: value,
                     remainderPath: path,
                     cid
-                })
+                });
             }
-        )
+        );
     }
 
     getStream(cid, path, options) {
-        const deferred = pullDeferSource()
+        const deferred = pullDeferSource();
 
         this.get(cid, path, options, (err, result) => {
             if (err) {
                 return deferred.resolve(
                     pull.error(err)
-                )
+                );
             }
             deferred.resolve(
                 pull.values([result])
-            )
-        })
+            );
+        });
 
-        return deferred
+        return deferred;
     }
 
     /**
@@ -175,83 +175,83 @@ class IPLDResolver {
      */
     getMany(cids, callback) {
         if (!Array.isArray(cids)) {
-            return callback(new Error('Argument must be an array of CIDs'))
+            return callback(new Error("Argument must be an array of CIDs"));
         }
         this.bs.getMany(cids, (err, blocks) => {
             if (err) {
-                return callback(err)
+                return callback(err);
             }
             map(blocks, (block, mapCallback) => {
                 this._getFormat(block.cid.codec, (err, format) => {
-                    if (err) return mapCallback(err)
-                    format.util.deserialize(block.data, mapCallback)
-                })
+                    if (err) return mapCallback(err);
+                    format.util.deserialize(block.data, mapCallback);
+                });
             },
-                callback)
-        })
+                callback);
+        });
     }
 
     put(node, options, callback) {
-        if (typeof options === 'function') {
-            callback = options
+        if (typeof options === "function") {
+            callback = options;
             return setImmediate(() => callback(
-                new Error('IPLDResolver.put requires options')
-            ))
+                new Error("IPLDResolver.put requires options")
+            ));
         }
-        callback = callback || noop
+        callback = callback || noop;
 
         if (options.cid && CID.isCID(options.cid)) {
             if (options.onlyHash) {
-                return setImmediate(() => callback(null, options.cid))
+                return setImmediate(() => callback(null, options.cid));
             }
 
-            return this._put(options.cid, node, callback)
+            return this._put(options.cid, node, callback);
         }
 
         this._getFormat(options.format, (err, format) => {
-            if (err) return callback(err)
+            if (err) return callback(err);
 
             format.util.cid(node, options, (err, cid) => {
                 if (err) {
-                    return callback(err)
+                    return callback(err);
                 }
 
                 if (options.onlyHash) {
-                    return callback(null, cid)
+                    return callback(null, cid);
                 }
 
-                this._put(cid, node, callback)
-            })
-        })
+                this._put(cid, node, callback);
+            });
+        });
     }
 
     treeStream(cid, path, options) {
-        if (typeof path === 'object') {
-            options = path
-            path = undefined
+        if (typeof path === "object") {
+            options = path;
+            path = undefined;
         }
 
-        options = options || {}
+        options = options || {};
 
-        let p
+        let p;
 
         if (!options.recursive) {
-            p = pullDeferSource()
+            p = pullDeferSource();
 
             waterfall([
                 (cb) => this._getFormat(cid.codec, cb),
                 (format, cb) => this.bs.get(cid, (err, block) => {
-                    if (err) return cb(err)
-                    cb(null, format, block)
+                    if (err) return cb(err);
+                    cb(null, format, block);
                 }),
                 (format, block, cb) => format.resolver.tree(block.data, cb)
             ], (err, paths) => {
                 if (err) {
-                    p.abort(err)
-                    return p
+                    p.abort(err);
+                    return p;
                 }
-                p.resolve(pull.values(paths))
-            })
+                p.resolve(pull.values(paths));
+            });
         }
 
         // recursive
@@ -265,59 +265,59 @@ class IPLDResolver {
                     // continue traversing the graph by returning
                     // the next cids with deferred
 
-                    if (typeof el === 'string') {
-                        return pull.empty()
+                    if (typeof el === "string") {
+                        return pull.empty();
                     }
 
-                    const deferred = pullDeferSource()
-                    const cid = el.cid
+                    const deferred = pullDeferSource();
+                    const cid = el.cid;
 
                     waterfall([
                         (cb) => this._getFormat(cid.codec, cb),
                         (format, cb) => this.bs.get(cid, (err, block) => {
-                            if (err) return cb(err)
-                            cb(null, format, block)
+                            if (err) return cb(err);
+                            cb(null, format, block);
                         }),
                         (format, block, cb) => format.resolver.tree(block.data, (err, paths) => {
                             if (err) {
-                                return cb(err)
+                                return cb(err);
                             }
                             map(paths, (p, cb) => {
                                 format.resolver.isLink(block.data, p, (err, link) => {
                                     if (err) {
-                                        return cb(err)
+                                        return cb(err);
                                     }
-                                    cb(null, { path: p, link: link })
-                                })
-                            }, cb)
+                                    cb(null, { path: p, link: link });
+                                });
+                            }, cb);
                         })
                     ], (err, paths) => {
                         if (err) {
-                            deferred.abort(err)
-                            return deferred
+                            deferred.abort(err);
+                            return deferred;
                         }
 
                         deferred.resolve(pull.values(paths.map((p) => {
-                            const base = el.basePath ? el.basePath + '/' + p.path : p.path
+                            const base = el.basePath ? el.basePath + "/" + p.path : p.path;
                             if (p.link) {
                                 return {
                                     basePath: base,
                                     cid: IPLDResolver._maybeCID(p.link)
-                                }
+                                };
                             }
-                            return base
-                        })))
-                    })
-                    return deferred
+                            return base;
+                        })));
+                    });
+                    return deferred;
                 }),
                 pull.map((e) => {
-                    if (typeof e === 'string') {
-                        return e
+                    if (typeof e === "string") {
+                        return e;
                     }
-                    return e.basePath
+                    return e.basePath;
                 }),
                 pull.filter(Boolean)
-            )
+            );
         }
 
         // filter out by path
@@ -326,19 +326,19 @@ class IPLDResolver {
                 p,
                 pull.map((el) => {
                     if (el.indexOf(path) === 0) {
-                        el = el.slice(path.length + 1)
-                        return el
+                        el = el.slice(path.length + 1);
+                        return el;
                     }
                 }),
                 pull.filter(Boolean)
-            )
+            );
         }
 
-        return p
+        return p;
     }
 
     remove(cids, callback) {
-        this.bs.delete(cids, callback)
+        this.bs.delete(cids, callback);
     }
 
     /*           */
@@ -349,35 +349,35 @@ class IPLDResolver {
         waterfall([
             (cb) => this._getFormat(cid.codec, cb),
             (format, cb) => this.bs.get(cid, (err, block) => {
-                if (err) return cb(err)
-                cb(null, format, block)
+                if (err) return cb(err);
+                cb(null, format, block);
             }),
             (format, block, cb) => {
                 format.util.deserialize(block.data, (err, deserialized) => {
                     if (err) {
-                        return cb(err)
+                        return cb(err);
                     }
-                    cb(null, deserialized)
-                })
+                    cb(null, deserialized);
+                });
             }
-        ], callback)
+        ], callback);
     }
 
     _getFormat(codec, callback) {
         if (this.resolvers[codec]) {
-            return callback(null, this.resolvers[codec])
+            return callback(null, this.resolvers[codec]);
         }
 
         // If not supported, attempt to dynamically load this format
         this.support.load(codec, (err, format) => {
-            if (err) return callback(err)
-            this.resolvers[codec] = format
-            callback(null, format)
-        })
+            if (err) return callback(err);
+            this.resolvers[codec] = format;
+            callback(null, format);
+        });
     }
 
     _put(cid, node, callback) {
-        callback = callback || noop
+        callback = callback || noop;
 
         waterfall([
             (cb) => this._getFormat(cid.codec, cb),
@@ -385,10 +385,10 @@ class IPLDResolver {
             (buf, cb) => this.bs.put(new Block(buf, cid), cb)
         ], (err) => {
             if (err) {
-                return callback(err)
+                return callback(err);
             }
-            callback(null, cid)
-        })
+            callback(null, cid);
+        });
     }
 
     /**
@@ -402,12 +402,12 @@ class IPLDResolver {
      */
     static _maybeCID(link) {
         if (CID.isCID(link)) {
-            return link
+            return link;
         }
-        if (link && link['/'] !== undefined) {
-            return new CID(link['/'])
+        if (link && link["/"] !== undefined) {
+            return new CID(link["/"]);
         }
-        return null
+        return null;
     }
 }
 
@@ -416,6 +416,6 @@ class IPLDResolver {
  */
 IPLDResolver.defaultOptions = {
     formats: [ipldDagCbor, ipldDagPb, ipldRaw]
-}
+};
 
-module.exports = IPLDResolver
+module.exports = IPLDResolver;

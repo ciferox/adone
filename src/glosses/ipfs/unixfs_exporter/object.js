@@ -4,30 +4,30 @@ const {
 } = adone;
 const { values, error } = pull;
 
-module.exports = (cid, node, name, path, pathRest, resolve, size, dag, parent, depth) => {
-    let newNode
+module.exports = (cid, node, name, path, pathRest, resolve, dag, parent, depth) => {
+    let newNode;
     if (pathRest.length) {
-        const pathElem = pathRest[0]
-        newNode = node[pathElem]
-        const newName = path + '/' + pathElem
+        const pathElem = pathRest[0];
+        newNode = node[pathElem];
+        const newName = path + "/" + pathElem;
         if (!newNode) {
-            return error(new Error(`not found`))
+            return error(new Error("not found"));
         }
 
-        const isCID = CID.isCID(newNode)
+        const isCID = CID.isCID(newNode);
 
         return pull(
             values([{
-                depth: depth,
+                depth,
                 name: pathElem,
                 path: newName,
                 pathRest: pathRest.slice(1),
-                multihash: isCID && newNode,
+                cid: isCID && newNode,
                 object: !isCID && newNode,
-                parent: parent
+                parent
             }]),
-            resolve)
+            resolve);
     } else {
-        return error(new Error('invalid node type'))
+        return error(new Error("invalid node type"));
     }
-}
+};

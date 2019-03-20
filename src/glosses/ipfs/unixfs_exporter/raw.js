@@ -1,4 +1,4 @@
-const extractDataFromBlock = require('./extract-data-from-block')
+const extractDataFromBlock = require("./extract-data-from-block");
 
 const {
     stream: { pull }
@@ -6,57 +6,57 @@ const {
 const { empty, once, error } = pull;
 
 // Logic to export a single raw block
-module.exports = (cid, node, name, path, pathRest, resolve, size, dag, parent, depth, options) => {
-    const accepts = pathRest[0]
+module.exports = (cid, node, name, path, pathRest, resolve, dag, parent, depth, options) => {
+    const accepts = pathRest[0];
 
     if (accepts !== undefined && accepts !== path) {
-        return empty()
+        return empty();
     }
 
-    size = size || node.length
+    const size = node.length;
 
-    let offset = options.offset
-    let length = options.length
+    let offset = options.offset;
+    let length = options.length;
 
     if (offset < 0) {
-        return error(new Error('Offset must be greater than or equal to 0'))
+        return error(new Error("Offset must be greater than or equal to 0"));
     }
 
     if (offset > size) {
-        return error(new Error('Offset must be less than the file size'))
+        return error(new Error("Offset must be less than the file size"));
     }
 
     if (length < 0) {
-        return error(new Error('Length must be greater than or equal to 0'))
+        return error(new Error("Length must be greater than or equal to 0"));
     }
 
     if (length === 0) {
         return once({
             depth,
             content: once(Buffer.alloc(0)),
-            hash: cid,
+            cid,
             name,
             path,
             size,
-            type: 'raw'
-        })
+            type: "raw"
+        });
     }
 
     if (!offset) {
-        offset = 0
+        offset = 0;
     }
 
     if (!length || (offset + length > size)) {
-        length = size - offset
+        length = size - offset;
     }
 
     return once({
         depth,
         content: once(extractDataFromBlock(node, 0, offset, offset + length)),
-        hash: cid,
+        cid,
         name,
         path,
         size,
-        type: 'raw'
-    })
-}
+        type: "raw"
+    });
+};

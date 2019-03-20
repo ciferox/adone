@@ -1,39 +1,40 @@
+/* eslint-disable func-style */
 const {
     stream: { pull },
     multiformat: { CID }
 } = adone;
 const { values, error, filter, map } = pull;
 
-const createResolver = require('./resolve').createResolver
+const createResolver = require("./resolve").createResolver;
 
 function pathBaseAndRest(path) {
     // Buffer -> raw multihash or CID in buffer
-    let pathBase = path
-    let pathRest = '/'
+    let pathBase = path;
+    let pathRest = "/";
 
     if (Buffer.isBuffer(path)) {
-        pathBase = (new CID(path)).toBaseEncodedString()
+        pathBase = (new CID(path)).toBaseEncodedString();
     }
 
-    if (typeof path === 'string') {
-        if (path.indexOf('/ipfs/') === 0) {
-            path = pathBase = path.substring(6)
+    if (typeof path === "string") {
+        if (path.indexOf("/ipfs/") === 0) {
+            path = pathBase = path.substring(6);
         }
-        const subtreeStart = path.indexOf('/')
+        const subtreeStart = path.indexOf("/");
         if (subtreeStart > 0) {
-            pathBase = path.substring(0, subtreeStart)
-            pathRest = path.substring(subtreeStart)
+            pathBase = path.substring(0, subtreeStart);
+            pathRest = path.substring(subtreeStart);
         }
     } else if (CID.isCID(pathBase)) {
-        pathBase = pathBase.toBaseEncodedString()
+        pathBase = pathBase.toBaseEncodedString();
     }
 
-    pathBase = (new CID(pathBase)).toBaseEncodedString()
+    pathBase = (new CID(pathBase)).toBaseEncodedString();
 
     return {
         base: pathBase,
         rest: toPathComponents(pathRest)
-    }
+    };
 }
 
 const defaultOptions = {
@@ -41,26 +42,26 @@ const defaultOptions = {
     offset: undefined,
     length: undefined,
     fullPath: false
-}
+};
 
 module.exports = (path, dag, options) => {
-    options = Object.assign({}, defaultOptions, options)
+    options = Object.assign({}, defaultOptions, options);
 
-    let dPath
+    let dPath;
     try {
-        dPath = pathBaseAndRest(path)
+        dPath = pathBaseAndRest(path);
     } catch (err) {
-        return error(err)
+        return error(err);
     }
 
     const pathLengthToCut = join(
-        [dPath.base].concat(dPath.rest.slice(0, dPath.rest.length - 1))).length
+        [dPath.base].concat(dPath.rest.slice(0, dPath.rest.length - 1))).length;
 
-    const cid = new CID(dPath.base)
+    const cid = new CID(dPath.base);
 
     return pull(
         values([{
-            multihash: cid.buffer,
+            cid,
             name: dPath.base,
             path: dPath.base,
             pathRest: dPath.rest,
@@ -74,42 +75,42 @@ module.exports = (path, dag, options) => {
                 name: node.name,
                 path: options.fullPath ? node.path : finalPathFor(node),
                 size: node.size,
-                hash: node.multihash,
+                cid: node.cid,
                 content: node.content,
                 type: node.type
-            }
+            };
         })
-    )
+    );
 
     function finalPathFor(node) {
         if (!dPath.rest.length) {
-            return node.path
+            return node.path;
         }
 
-        let retPath = node.path.substring(pathLengthToCut)
-        if (retPath.charAt(0) === '/') {
-            retPath = retPath.substring(1)
+        let retPath = node.path.substring(pathLengthToCut);
+        if (retPath.charAt(0) === "/") {
+            retPath = retPath.substring(1);
         }
         if (!retPath) {
-            retPath = dPath.rest[dPath.rest.length - 1] || dPath.base
+            retPath = dPath.rest[dPath.rest.length - 1] || dPath.base;
         }
-        return retPath
+        return retPath;
     }
-}
+};
 
 function join(paths) {
     return paths.reduce((acc, path) => {
         if (acc.length) {
-            acc += '/'
+            acc += "/";
         }
-        return acc + path
-    }, '')
+        return acc + path;
+    }, "");
 }
 
-const toPathComponents = (path = '') => {
+const toPathComponents = (path = "") => {
     // split on / unless escaped with \
     return (path
         .trim()
         .match(/([^\\^/]|\\\/)+/g) || [])
-        .filter(Boolean)
-}
+        .filter(Boolean);
+};

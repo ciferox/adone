@@ -1,11 +1,11 @@
-const waterfall = require('async/waterfall')
+const waterfall = require("async/waterfall");
 const {
     loadNode,
     formatCid,
     toMfsPath,
     FILE_SEPARATOR,
     FILE_TYPES
-} = require('./utils')
+} = require("./utils");
 
 const {
     ipfs: { UnixFs, unixfsExporter: exporter }
@@ -18,25 +18,25 @@ const { defer, collect, asyncMap, once, error, filter } = pull;
 
 const defaultOptions = {
     long: false,
-    cidBase: 'base58btc'
-}
+    cidBase: "base58btc"
+};
 
 module.exports = (context) => {
     return function mfsLs(path, options = {}) {
-        if (typeof path === 'object') {
-            options = path
-            path = FILE_SEPARATOR
+        if (typeof path === "object") {
+            options = path;
+            path = FILE_SEPARATOR;
         }
 
         if (path === undefined) {
-            path = FILE_SEPARATOR
+            path = FILE_SEPARATOR;
         }
 
-        options = Object.assign({}, defaultOptions, options)
+        options = Object.assign({}, defaultOptions, options);
 
-        options.long = options.l || options.long
+        options.long = options.l || options.long;
 
-        const deferred = defer.source()
+        const deferred = defer.source();
 
         waterfall([
             (cb) => toMfsPath(context, path, cb),
@@ -48,24 +48,24 @@ module.exports = (context) => {
 
                     collect((err, files) => {
                         if (err) {
-                            return cb(err)
+                            return cb(err);
                         }
 
                         if (files.length > 1) {
-                            return cb(new Error(`Path ${path} had ${files.length} roots`))
+                            return cb(new Error(`Path ${path} had ${files.length} roots`));
                         }
 
-                        const file = files[0]
+                        const file = files[0];
 
                         if (!file) {
-                            return cb(new Error(`${path} does not exist`))
+                            return cb(new Error(`${path} does not exist`));
                         }
 
-                        if (file.type !== 'dir') {
-                            return cb(null, once(file))
+                        if (file.type !== "dir") {
+                            return cb(null, once(file));
                         }
 
-                        let first = true
+                        let first = true;
 
                         return cb(null, pull(
                             exporter(mfsPath, context.ipld, {
@@ -74,15 +74,15 @@ module.exports = (context) => {
                             // first item in list is the directory node
                             filter(() => {
                                 if (first) {
-                                    first = false
-                                    return false
+                                    first = false;
+                                    return false;
                                 }
 
-                                return true
+                                return true;
                             })
-                        ))
+                        ));
                     })
-                )
+                );
             },
             (source, cb) => {
                 cb(null,
@@ -96,38 +96,38 @@ module.exports = (context) => {
                                     name: file.name,
                                     type: 0,
                                     size: 0,
-                                    hash: ''
-                                })
+                                    hash: ""
+                                });
                             }
 
                             loadNode(context, {
-                                cid: file.hash
+                                cid: file.cid
                             }, (err, result) => {
                                 if (err) {
-                                    return cb(err)
+                                    return cb(err);
                                 }
 
-                                const meta = UnixFs.unmarshal(result.node.data)
+                                const meta = UnixFs.unmarshal(result.node.data);
 
                                 cb(null, {
                                     name: file.name,
                                     type: FILE_TYPES[meta.type],
-                                    hash: formatCid(file.hash, options.cidBase),
+                                    hash: formatCid(file.cid, options.cidBase),
                                     size: meta.fileSize() || 0
-                                })
-                            })
+                                });
+                            });
                         })
                     )
-                )
+                );
             }
         ], (err, source) => {
             if (err) {
-                return deferred.resolve(error(err))
+                return deferred.resolve(error(err));
             }
 
-            deferred.resolve(source)
-        })
+            deferred.resolve(source);
+        });
 
-        return deferred
-    }
-}
+        return deferred;
+    };
+};

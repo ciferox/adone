@@ -118,7 +118,9 @@ adone.lazify({
     goodbye: "./goodbye",
     serializer: "./serializer",
     many: "./many",
-    pullToStream: "./pull_to_stream"
+    pullToStream: "./pull_to_stream",
+    bufferStream: "./buffer_stream",
+    zip: "./zip"
 }, core, require);
 
 export default adone.asNamespace(core);

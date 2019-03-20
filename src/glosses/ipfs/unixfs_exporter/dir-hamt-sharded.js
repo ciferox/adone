@@ -1,6 +1,7 @@
-const Bucket = require('hamt-sharding/src/bucket')
-const DirSharded = require('../unixfs_importer/importer/dir-sharded')
-const waterfall = require('async/waterfall')
+/* eslint-disable func-style */
+const Bucket = require("hamt-sharding/src/bucket");
+const DirSharded = require("../unixfs_importer/importer/dir-sharded");
+const waterfall = require("async/waterfall");
 
 const {
     stream: { pull }
@@ -8,24 +9,24 @@ const {
 const { defer, cat, values, error, filter, map } = pull;
 
 // Logic to export a unixfs directory.
-module.exports = shardedDirExporter
+module.exports = shardedDirExporter;
 
-function shardedDirExporter(cid, node, name, path, pathRest, resolve, size, dag, parent, depth, options) {
-    let dir
+function shardedDirExporter(cid, node, name, path, pathRest, resolve, dag, parent, depth, options) {
+    let dir;
     if (!parent || (parent.path !== path)) {
         dir = {
-            name: name,
-            depth: depth,
-            path: path,
-            multihash: cid.buffer,
-            size: node.size,
-            type: 'dir'
-        }
+            name,
+            depth,
+            path,
+            cid,
+            size: 0,
+            type: "dir"
+        };
     }
 
     // we are at the max depth so no need to descend into children
     if (options.maxDepth && options.maxDepth <= depth) {
-        return values([dir])
+        return values([dir]);
     }
 
     if (!pathRest.length) {
@@ -36,30 +37,30 @@ function shardedDirExporter(cid, node, name, path, pathRest, resolve, size, dag,
                 values(node.links),
                 map((link) => {
                     // remove the link prefix (2 chars for the bucket index)
-                    const entryName = link.name.substring(2)
-                    const entryPath = entryName ? path + '/' + entryName : path
+                    const entryName = link.name.substring(2);
+                    const entryPath = entryName ? path + "/" + entryName : path;
 
                     return {
                         depth: entryName ? depth + 1 : depth,
                         name: entryName,
                         path: entryPath,
-                        multihash: link.cid.buffer,
+                        cid: link.cid,
                         pathRest: entryName ? pathRest.slice(1) : pathRest,
                         parent: dir || parent
-                    }
+                    };
                 }),
                 resolve
             )
-        ]
+        ];
 
         // place dir before if not specifying subtree
-        streams.unshift(values([dir]))
+        streams.unshift(values([dir]));
 
-        return cat(streams)
+        return cat(streams);
     }
 
-    const deferred = defer.source()
-    const targetFile = pathRest[0]
+    const deferred = defer.source();
+    const targetFile = pathRest[0];
 
     // recreate our level of the HAMT so we can load only the subshard in pathRest
     waterfall([
@@ -67,133 +68,133 @@ function shardedDirExporter(cid, node, name, path, pathRest, resolve, size, dag,
             if (!options.rootBucket) {
                 options.rootBucket = new Bucket({
                     hashFn: DirSharded.hashFn
-                })
-                options.hamtDepth = 1
+                });
+                options.hamtDepth = 1;
 
-                return addLinksToHamtBucket(node.links, options.rootBucket, options.rootBucket, cb)
+                return addLinksToHamtBucket(node.links, options.rootBucket, options.rootBucket, cb);
             }
 
-            return addLinksToHamtBucket(node.links, options.lastBucket, options.rootBucket, cb)
+            return addLinksToHamtBucket(node.links, options.lastBucket, options.rootBucket, cb);
         },
         (cb) => findPosition(targetFile, options.rootBucket, cb),
         (position, cb) => {
-            let prefix = toPrefix(position.pos)
-            const bucketPath = toBucketPath(position)
+            let prefix = toPrefix(position.pos);
+            const bucketPath = toBucketPath(position);
 
             if (bucketPath.length > (options.hamtDepth)) {
-                options.lastBucket = bucketPath[options.hamtDepth]
+                options.lastBucket = bucketPath[options.hamtDepth];
 
-                prefix = toPrefix(options.lastBucket._posAtParent)
+                prefix = toPrefix(options.lastBucket._posAtParent);
             }
 
             const streams = [
                 pull(
                     values(node.links),
                     map((link) => {
-                        const entryPrefix = link.name.substring(0, 2)
-                        const entryName = link.name.substring(2)
-                        const entryPath = entryName ? path + '/' + entryName : path
+                        const entryPrefix = link.name.substring(0, 2);
+                        const entryName = link.name.substring(2);
+                        const entryPath = entryName ? path + "/" + entryName : path;
 
                         if (entryPrefix !== prefix) {
                             // not the entry or subshard we're looking for
-                            return false
+                            return false;
                         }
 
                         if (entryName && entryName !== targetFile) {
                             // not the entry we're looking for
-                            return false
+                            return false;
                         }
 
                         if (!entryName) {
                             // we are doing to descend into a subshard
-                            options.hamtDepth++
+                            options.hamtDepth++;
                         } else {
                             // we've found the node we are looking for, remove the context
                             // so we don't affect further hamt traversals
-                            delete options.rootBucket
-                            delete options.lastBucket
-                            delete options.hamtDepth
+                            delete options.rootBucket;
+                            delete options.lastBucket;
+                            delete options.hamtDepth;
                         }
 
                         return {
                             depth: entryName ? depth + 1 : depth,
                             name: entryName,
                             path: entryPath,
-                            multihash: link.cid.buffer,
+                            cid: link.cid,
                             pathRest: entryName ? pathRest.slice(1) : pathRest,
                             parent: dir || parent
-                        }
+                        };
                     }),
                     filter(Boolean),
                     resolve
                 )
-            ]
+            ];
 
             if (options.fullPath) {
-                streams.unshift(values([dir]))
+                streams.unshift(values([dir]));
             }
 
-            cb(null, streams)
+            cb(null, streams);
         }
     ], (err, streams) => {
         if (err) {
-            return deferred.resolve(error(err))
+            return deferred.resolve(error(err));
         }
 
-        deferred.resolve(cat(streams))
-    })
+        deferred.resolve(cat(streams));
+    });
 
-    return deferred
+    return deferred;
 }
 
 const addLinksToHamtBucket = (links, bucket, rootBucket, callback) => {
     Promise.all(
         links.map(link => {
             if (link.name.length === 2) {
-                const pos = parseInt(link.name, 16)
+                const pos = parseInt(link.name, 16);
 
                 return bucket._putObjectAt(pos, new Bucket({
                     hashFn: DirSharded.hashFn
-                }, bucket, pos))
+                }, bucket, pos));
             }
 
-            return rootBucket.put(link.name.substring(2), true)
+            return rootBucket.put(link.name.substring(2), true);
         })
     )
-        .then(() => callback(), callback)
-}
+        .then(() => callback(), callback);
+};
 
 const toPrefix = (position) => {
     return position
-        .toString('16')
+        .toString("16")
         .toUpperCase()
-        .padStart(2, '0')
-        .substring(0, 2)
-}
+        .padStart(2, "0")
+        .substring(0, 2);
+};
 
 const findPosition = (file, bucket, cb) => {
     bucket._findNewBucketAndPos(file)
         .then(position => {
             if (!cb) {
                 // would have errored in catch block above
-                return
+                return;
             }
 
-            cb(null, position)
-        }, cb)
-}
+            cb(null, position);
+        }, cb);
+};
 
 const toBucketPath = (position) => {
-    let bucket = position.bucket
-    const path = []
+    let bucket = position.bucket;
+    const path = [];
 
     while (bucket._parent) {
-        path.push(bucket)
+        path.push(bucket);
 
-        bucket = bucket._parent
+        bucket = bucket._parent;
     }
 
-    path.push(bucket)
+    path.push(bucket);
 
-    return path.reverse()
-}
+    return path.reverse();
+};

@@ -1,8 +1,8 @@
-const waterfall = require('async/waterfall')
-const log = require('debug')('ipfs:mfs:mkdir')
-const {
-    multiformat: { CID }
-} = adone;
+const waterfall = require("async/waterfall");
+const log = require("debug")("ipfs:mfs:mkdir");
+// const {
+//     multiformat: { CID }
+// } = adone;
 
 const {
     createNode,
@@ -11,7 +11,7 @@ const {
     updateMfsRoot,
     updateTree,
     FILE_SEPARATOR
-} = require('./utils')
+} = require("./utils");
 
 const {
     ipfs: { unixfsExporter: exporter }
@@ -24,49 +24,49 @@ const { asyncMap, collect, filter, map } = pull;
 
 const defaultOptions = {
     parents: false,
-    hashAlg: 'sha2-256',
+    hashAlg: "sha2-256",
     cidVersion: 0,
     shardSplitThreshold: 1000,
-    format: 'dag-pb',
+    format: "dag-pb",
     flush: true
-}
+};
 
 module.exports = (context) => {
     return function mfsMkdir(path, options, callback) {
-        if (typeof options === 'function') {
-            callback = options
-            options = {}
+        if (typeof options === "function") {
+            callback = options;
+            options = {};
         }
 
-        options = Object.assign({}, defaultOptions, options)
+        options = Object.assign({}, defaultOptions, options);
 
-        options.parents = options.p || options.parents
-        options.cidVersion = options.cidVersion || 0
+        options.parents = options.p || options.parents;
+        options.cidVersion = options.cidVersion || 0;
 
         if (!path) {
-            return callback(new Error('no path given to Mkdir'))
+            return callback(new Error("no path given to Mkdir"));
         }
 
-        path = path.trim()
+        path = path.trim();
 
         if (path === FILE_SEPARATOR) {
-            return callback(options.parents ? null : new Error(`cannot create directory '${FILE_SEPARATOR}': Already exists`))
+            return callback(options.parents ? null : new Error(`cannot create directory '${FILE_SEPARATOR}': Already exists`));
         }
 
-        log(`Creating ${path}`)
+        log(`Creating ${path}`);
 
-        const pathComponents = toPathComponents(path)
+        const pathComponents = toPathComponents(path);
 
         waterfall([
             (cb) => toMfsPath(context, path, cb),
             // figure out the CID of the containing folder
             ({ mfsDirectory, mfsPath, root }, cb) => {
                 const toExport = toPathComponents(mfsPath)
-                    .slice(1)
+                    .slice(1);
 
-                let depth = 0
+                let depth = 0;
 
-                let exported = ''
+                let exported = "";
 
                 pull(
                     exporter(mfsPath, context.ipld, {
@@ -75,38 +75,38 @@ module.exports = (context) => {
                     // find the directory from each level in the filesystem
                     filter(node => {
                         if (node.name === toExport[depth]) {
-                            depth++
+                            depth++;
 
-                            return true
+                            return true;
                         }
 
-                        return false
+                        return false;
                     }),
                     // load DAGNode for the containing folder
                     map((node) => {
-                        const currentPath = `${exported}${exported ? '/' : ''}${toExport[node.depth]}`
+                        const currentPath = `${exported}${exported ? "/" : ""}${toExport[node.depth]}`;
 
-                        if (node.type !== 'dir') {
-                            throw new Error(`cannot access ${currentPath}: Not a directory`)
+                        if (node.type !== "dir") {
+                            throw new Error(`cannot access ${currentPath}: Not a directory`);
                         }
-                        exported = currentPath
+                        exported = currentPath;
 
                         return {
-                            cid: new CID(node.hash),
+                            cid: node.cid,
                             name: node.name
-                        }
+                        };
                     }),
                     collect(cb)
-                )
+                );
             },
             // Update the MFS tree from the containingFolder upwards
             (trail, cb) => {
-                pathComponents.unshift('/')
+                pathComponents.unshift("/");
 
                 // we managed to load all of the requested path segments so the
                 // directory already exists
                 if (trail.length === pathComponents.length) {
-                    return cb(new Error('file already exists'))
+                    return cb(new Error("file already exists"));
                 }
 
                 asyncMap(pathComponents.map((part, index) => ({ part, index })), ({ part, index }, cb) => {
@@ -114,26 +114,26 @@ module.exports = (context) => {
                         return cb(null, {
                             name: part,
                             ...trail[index]
-                        })
+                        });
                     }
 
                     // if we are not at the last path component and we are
                     // not creating intermediate directories make a fuss
                     if (index !== pathComponents.length - 1 && !options.parents) {
-                        return cb(new Error('file does not exist'))
+                        return cb(new Error("file does not exist"));
                     }
 
                     waterfall([
-                        (done) => createNode(context, 'directory', options, done),
+                        (done) => createNode(context, "directory", options, done),
                         ({ cid, node }, done) => {
                             done(null, {
                                 cid,
                                 size: node.size,
                                 name: part
-                            })
+                            });
                         }
-                    ], cb)
-                }, cb)
+                    ], cb);
+                }, cb);
             },
 
             // update the tree from the leaf to the root
@@ -142,13 +142,13 @@ module.exports = (context) => {
             // Update the MFS record with the new CID for the root of the tree
             ({ cid }, cb) => updateMfsRoot(context, cid, cb)
         ], (error) => {
-            if (error && error.message.includes('file already exists') && options.parents) {
+            if (error && error.message.includes("file already exists") && options.parents) {
                 // when the directory already exists and we are creating intermediate
                 // directories, do not error out (consistent with mkdir -p)
-                error = null
+                error = null;
             }
 
-            callback(error)
-        })
-    }
-}
+            callback(error);
+        });
+    };
+};

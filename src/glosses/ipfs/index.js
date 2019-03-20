@@ -2,6 +2,7 @@ export const version = "0.35.0";
 
 adone.lazify({
     ipld: "./ipld",
+    ipldInMemory: "./ipld_in_memory",
     ipns: "./ipns",
     isIPFS: "./is_ipfs",
     httpClient: "./http_client",

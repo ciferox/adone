@@ -1,4 +1,4 @@
-const extractDataFromBlock = require('./extract-data-from-block')
+const extractDataFromBlock = require("./extract-data-from-block");
 
 const {
     ipfs: { UnixFs },
@@ -7,77 +7,77 @@ const {
 const { empty, traverse, once, values, paramap, flatten, error, filter, map } = pull;
 
 // Logic to export a single (possibly chunked) unixfs file.
-module.exports = (cid, node, name, path, pathRest, resolve, size, dag, parent, depth, options) => {
-    const accepts = pathRest[0]
+module.exports = (cid, node, name, path, pathRest, resolve, dag, parent, depth, options) => {
+    const accepts = pathRest[0];
 
     if (accepts !== undefined && accepts !== path) {
-        return empty()
+        return empty();
     }
 
-    let file
+    let file;
 
     try {
-        file = UnixFs.unmarshal(node.data)
+        file = UnixFs.unmarshal(node.data);
     } catch (err) {
-        return error(err)
+        return error(err);
     }
 
-    const fileSize = size || file.fileSize()
+    const fileSize = file.fileSize();
 
-    let offset = options.offset
-    let length = options.length
+    let offset = options.offset;
+    let length = options.length;
 
     if (offset < 0) {
-        return error(new Error('Offset must be greater than or equal to 0'))
+        return error(new Error("Offset must be greater than or equal to 0"));
     }
 
     if (offset > fileSize) {
-        return error(new Error('Offset must be less than the file size'))
+        return error(new Error("Offset must be less than the file size"));
     }
 
     if (length < 0) {
-        return error(new Error('Length must be greater than or equal to 0'))
+        return error(new Error("Length must be greater than or equal to 0"));
     }
 
     if (length === 0) {
         return once({
-            depth: depth,
+            depth,
             content: once(Buffer.alloc(0)),
-            name: name,
-            path: path,
-            multihash: cid.buffer,
+            name,
+            path,
+            cid,
             size: fileSize,
-            type: 'file'
-        })
+            type: "file"
+        });
     }
 
     if (!offset) {
-        offset = 0
+        offset = 0;
     }
 
     if (!length || (offset + length > fileSize)) {
-        length = fileSize - offset
+        length = fileSize - offset;
     }
 
-    const content = streamBytes(dag, node, fileSize, offset, length)
+    const content = streamBytes(dag, node, fileSize, offset, length);
 
     return values([{
-        depth: depth,
-        content: content,
-        name: name,
-        path: path,
-        multihash: cid.buffer,
+        depth,
+        content,
+        name,
+        path,
+        cid,
         size: fileSize,
-        type: 'file'
-    }])
-}
+        type: "file"
+    }]);
+};
 
 function streamBytes(dag, node, fileSize, offset, length) {
     if (offset === fileSize || length === 0) {
-        return once(Buffer.alloc(0))
+        return once(Buffer.alloc(0));
     }
 
-    const end = offset + length
+    const end = offset + length;
 
     return pull(
         traverse.depthFirst({
@@ -87,58 +87,58 @@ function streamBytes(dag, node, fileSize, offset, length) {
         }, getChildren(dag, offset, end)),
         map(extractData(offset, end)),
         filter(Boolean)
-    )
+    );
 }
 
 function getChildren(dag, offset, end) {
     // as we step through the children, keep track of where we are in the stream
     // so we can filter out nodes we're not interested in
-    let streamPosition = 0
+    let streamPosition = 0;
 
     return function visitor({ node }) {
         if (Buffer.isBuffer(node)) {
             // this is a leaf node, can't traverse any further
-            return empty()
+            return empty();
         }
 
-        let file
+        let file;
 
         try {
-            file = UnixFs.unmarshal(node.data)
+            file = UnixFs.unmarshal(node.data);
         } catch (err) {
-            return error(err)
+            return error(err);
         }
 
-        const nodeHasData = Boolean(file.data && file.data.length)
+        const nodeHasData = Boolean(file.data && file.data.length);
 
         // handle case where data is present on leaf nodes and internal nodes
         if (nodeHasData && node.links.length) {
-            streamPosition += file.data.length
+            streamPosition += file.data.length;
         }
 
         // work out which child nodes contain the requested data
         const filteredLinks = node.links
             .map((link, index) => {
                 const child = {
-                    link: link,
+                    link,
                     start: streamPosition,
                     end: streamPosition + file.blockSizes[index],
                     size: file.blockSizes[index]
-                }
+                };
 
-                streamPosition = child.end
+                streamPosition = child.end;
 
-                return child
+                return child;
             })
             .filter((child) => {
                 return (offset >= child.start && offset < child.end) || // child has offset byte
                     (end > child.start && end <= child.end) || // child has end byte
-                    (offset < child.start && end > child.end) // child is between offset and end bytes
-            })
+                    (offset < child.start && end > child.end); // child is between offset and end bytes
+            });
 
         if (filteredLinks.length) {
             // move stream position to the first node we're going to return data from
-            streamPosition = filteredLinks[0].start
+            streamPosition = filteredLinks[0].start;
         }
 
         return pull(
@@ -146,64 +146,64 @@ function getChildren(dag, offset, end) {
             paramap((children, cb) => {
                 dag.getMany(children.map(child => child.link.cid), (err, results) => {
                     if (err) {
-                        return cb(err)
+                        return cb(err);
                     }
 
                     cb(null, results.map((result, index) => {
-                        const child = children[index]
+                        const child = children[index];
 
                         return {
                             start: child.start,
                             end: child.end,
                             node: result,
                             size: child.size
-                        }
-                    }))
-                })
+                        };
+                    }));
+                });
             }),
             flatten()
-        )
-    }
+        );
+    };
 }
 
 function extractData(requestedStart, requestedEnd) {
-    let streamPosition = -1
+    let streamPosition = -1;
 
     return function getData({ node, start, end }) {
-        let block
+        let block;
 
         if (Buffer.isBuffer(node)) {
-            block = node
+            block = node;
         } else {
             try {
-                const file = UnixFs.unmarshal(node.data)
+                const file = UnixFs.unmarshal(node.data);
 
                 if (!file.data) {
                     if (file.blockSizes.length) {
-                        return
+                        return;
                     }
 
-                    return Buffer.alloc(0)
+                    return Buffer.alloc(0);
                 }
 
-                block = file.data
+                block = file.data;
             } catch (err) {
-                throw new Error(`Failed to unmarshal node - ${err.message}`)
+                throw new Error(`Failed to unmarshal node - ${err.message}`);
             }
         }
 
         if (block && block.length) {
             if (streamPosition === -1) {
-                streamPosition = start
+                streamPosition = start;
             }
 
-            const output = extractDataFromBlock(block, streamPosition, requestedStart, requestedEnd)
+            const output = extractDataFromBlock(block, streamPosition, requestedStart, requestedEnd);
 
-            streamPosition += block.length
+            streamPosition += block.length;
 
-            return output
+            return output;
         }
 
-        return Buffer.alloc(0)
-    }
+        return Buffer.alloc(0);
+    };
 }

@@ -2,13 +2,13 @@ const {
     formatCid,
     toMfsPath,
     loadNode
-} = require('./utils')
-const waterfall = require('async/waterfall')
-const log = require('debug')('ipfs:mfs:stat')
+} = require("./utils");
+const waterfall = require("async/waterfall");
+const log = require("debug")("ipfs:mfs:stat");
 
 const {
     stream: { pull },
-    multiformat: { CID }
+    // multiformat: { CID }
 } = adone;
 const { collect, asyncMap } = pull;
 
@@ -20,19 +20,19 @@ const defaultOptions = {
     hash: false,
     size: false,
     withLocal: false,
-    cidBase: 'base58btc'
-}
+    cidBase: "base58btc"
+};
 
 module.exports = (context) => {
     return function mfsStat(path, options, callback) {
-        if (typeof options === 'function') {
-            callback = options
-            options = {}
+        if (typeof options === "function") {
+            callback = options;
+            options = {};
         }
 
-        options = Object.assign({}, defaultOptions, options)
+        options = Object.assign({}, defaultOptions, options);
 
-        log(`Fetching stats for ${path}`)
+        log(`Fetching stats for ${path}`);
 
         waterfall([
             (cb) => toMfsPath(context, path, cb),
@@ -45,61 +45,61 @@ module.exports = (context) => {
                     asyncMap((file, cb) => {
                         if (options.hash) {
                             return cb(null, {
-                                hash: formatCid(new CID(file.hash), options.cidBase)
-                            })
+                                hash: formatCid(file.cid, options.cidBase)
+                            });
                         }
 
                         if (options.size) {
                             return cb(null, {
                                 size: file.size
-                            })
+                            });
                         }
 
                         loadNode(context, {
-                            cid: file.hash
+                            cid: file.cid
                         }, (err, result) => {
                             if (err) {
-                                return cb(err)
+                                return cb(err);
                             }
 
                             const {
                                 node, cid
-                            } = result
+                            } = result;
 
-                            const meta = unmarshal(node.data)
-                            let blocks = node.links.length
+                            const meta = unmarshal(node.data);
+                            let blocks = node.links.length;
 
-                            if (meta.type === 'file') {
-                                blocks = meta.blockSizes.length
+                            if (meta.type === "file") {
+                                blocks = meta.blockSizes.length;
                             }
 
                             cb(null, {
                                 hash: formatCid(cid, options.cidBase),
                                 size: meta.fileSize() || 0,
                                 cumulativeSize: node.size,
-                                blocks: blocks,
+                                blocks,
                                 type: meta.type,
                                 local: undefined,
                                 sizeLocal: undefined,
                                 withLocality: false
-                            })
-                        })
+                            });
+                        });
                     }),
                     collect((error, results) => {
                         if (error) {
-                            return cb(error)
+                            return cb(error);
                         }
 
                         if (!results.length) {
-                            return cb(new Error(`${path} does not exist`))
+                            return cb(new Error(`${path} does not exist`));
                         }
 
-                        log(`Stats for ${path}`, results[0])
+                        log(`Stats for ${path}`, results[0]);
 
-                        return cb(null, results[0])
+                        return cb(null, results[0]);
                     })
-                )
+                );
             }
-        ], callback)
-    }
-}
+        ], callback);
+    };
+};
