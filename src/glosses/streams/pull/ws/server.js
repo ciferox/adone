@@ -1,78 +1,72 @@
+const ws = require("./");
+const WebSocket = require("ws");
+const url = require("url");
+
 const {
     is,
-    event,
-    stream: { pull },
-    std: {
-        http,
-        https
-    }
+    std: { http, https }
 } = adone;
 
-const {
-    ws: {
-        duplex
+const EventEmitter = require("events").EventEmitter;
+module.exports = !WebSocket.Server ? null : function (opts, onConnection) {
+    const emitter = new EventEmitter();
+    var server;
+    if (is.function(opts)) {
+        onConnection = opts;
+        opts = null;
     }
-} = pull;
+    opts = opts || {};
 
-export default class Server extends event.Emitter {
-    constructor(opts, onConnection) {
-        super();
+    if (onConnection) {
+        emitter.on("connection", onConnection);
+    }
 
-        if (is.function(opts)) {
-            onConnection = opts;
-            opts = null;
+    function proxy(server, event) {
+        return server.on(event, function () {
+            const args = [].slice.call(arguments);
+            args.unshift(event);
+            emitter.emit.apply(emitter, args);
+        });
+    }
+
+    var server = opts.server ||
+        (opts.key && opts.cert ? https.createServer(opts) : http.createServer());
+
+    const wsServer = new WebSocket.Server({
+        server,
+        perMessageDeflate: false,
+        verifyClient: opts.verifyClient
+    });
+
+    proxy(server, "listening");
+    proxy(server, "request");
+    proxy(server, "close");
+
+    wsServer.on("connection", (socket) => {
+        const stream = ws(socket);
+        stream.remoteAddress = socket.upgradeReq.socket.remoteAddress;
+        emitter.emit("connection", stream);
+    });
+
+    emitter.listen = function (addr, onListening) {
+        if (onListening) {
+            emitter.once("listening", onListening);
         }
-        this.opts = opts || {};
+        server.listen(addr.port || addr);
+        return emitter;
+    };
 
-        is.function(onConnection) && this.on("connection", onConnection);
+    emitter.close = function (onClose) {
+        server.close(onClose);
+        wsServer.close();
+        return emitter;
+    };
 
-        this.server = this.opts.server || (this.opts.key && this.opts.cert ? https.createServer(this.opts) : http.createServer());
-        this.server.on("listening", () => this.emit("listening"));
-        this.server.on("request", (req, res) => this.emit("request", req, res));
-        this.server.on("close", () => this.emit("close"));
+    emitter.address = server.address.bind(server);
+    return emitter;
+};
 
-        this.wsServer = null;
-    }
 
-    listen(addr, callback) {
-        const errorHandler = (err) => {
-            is.function(callback) && callback(err);
-        };
 
-        this.server.on("error", errorHandler);
-        this.server.listen(addr.port || addr, () => {
-            this.server.removeListener("error", errorHandler);
 
-            this.wsServer = new adone.net.ws.Server({
-                server: this.server,
-                perMessageDeflate: false,
-                verifyClient: this.opts.verifyClient
-            });
 
-            this.wsServer.on("connection", (socket, req) => {
-                const stream = duplex(socket);
-                stream.remoteAddress = req.socket.remoteAddress;
-                this.emit("connection", stream);
-            });
-
-            is.function(callback) && callback();
-        });
-
-        return this;
-    }
-
-    close(onClose) {
-        setImmediate(() => {
-            if (!is.null(this.wsServer)) {
-                this.wsServer.close(() => {
-                    this.server.close(onClose);
-                });
-            }
-        });
-        return this;
-    }
-
-    address() {
-        return this.server.address();
-    }
-}

@@ -2,25 +2,23 @@ const {
     is
 } = adone;
 
-export default function (socket, callback) {
+module.exports = function (socket, callback) {
     const remove = socket && (socket.removeEventListener || socket.removeListener);
 
-    const cleanup = () => {
+    function cleanup() {
         if (is.function(remove)) {
             remove.call(socket, "open", handleOpen);
             remove.call(socket, "error", handleErr);
         }
-    };
+    }
 
-    const handleOpen = (evt) => {
-        cleanup();
-        callback();
-    };
+    function handleOpen(evt) {
+        cleanup(); callback();
+    }
 
-    const handleErr = (evt) => {
-        cleanup();
-        callback(evt);
-    };
+    function handleErr(evt) {
+        cleanup(); callback(evt);
+    }
 
     // if the socket is closing or closed, return end
     if (socket.readyState >= 2) {
@@ -34,4 +32,4 @@ export default function (socket, callback) {
 
     socket.addEventListener("open", handleOpen);
     socket.addEventListener("error", handleErr);
-}
+};

@@ -1,4 +1,5 @@
 const EventEmitter = require("events").EventEmitter;
+const once = require("once");
 const debug = require("debug");
 const log = debug("spdy");
 log.error = debug("spdy:error");
@@ -6,7 +7,7 @@ log.error = debug("spdy:error");
 const {
     noop,
     p2p: { Connection },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { catch: pullCatch, streamToPullStream: toPull } = pull;
 
@@ -102,7 +103,10 @@ module.exports = class Muxer extends EventEmitter {
     }
 
     end(cb) {
-        cb = cb || noop;
+        cb = once(cb || noop);
+        this.spdy.once("error", (err) => {
+            cb(err);
+        });
         this.spdy.end((err) => {
             if (err && /ok/i.test(err.message)) {
                 return cb();

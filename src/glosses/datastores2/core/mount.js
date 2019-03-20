@@ -3,7 +3,7 @@ const each = require("async/each");
 const {
     is,
     datastore2: { KeyTransformDatastore, interface: { Key, error, util: { asyncFilter, asyncSort, replaceStartWith } } },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { many } = pull;
 

@@ -10,7 +10,7 @@ const { cidToString } = require('../../../utils/cid')
 
 const {
     ipfs: { isIPFS, multipart },
-    stream: { pull2: pull },
+    stream: { pull },
     multiformat: { multibase }
 } = adone;
 const { abortable, ndjson, streamToPullStream: toPull, pullStreamToStream: toStream, pushable } = pull;

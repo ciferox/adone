@@ -12,7 +12,7 @@ const {
     multiformat: { mafmt },
     noop,
     p2p: { Connection },
-    stream: { pull2: { streamToPullStream } }
+    stream: { pull: { streamToPullStream } }
 } = adone;
 
 class TCP {

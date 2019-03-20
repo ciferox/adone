@@ -2,7 +2,7 @@ const readPullStream = require("./read-pull-stream");
 
 const {
     is,
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { collect } = pull;
 

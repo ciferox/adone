@@ -8,7 +8,7 @@ const {
     is,
     datastore2: { interface: { Key } },
     p2p: { crypto },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { collect } = pull;
 

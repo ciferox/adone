@@ -3,7 +3,7 @@ const series = require("run-series");
 
 const {
     multiformat: { multistream },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { lengthPrefixed: pullLP } = pull;
 

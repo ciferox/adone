@@ -1,17 +1,16 @@
 const {
     is,
-    stream: { pull }
+    stream: { pull: { through2 } }
 } = adone;
 
-const lazyConcat = (buffers) => {
+const lazyConcat = function (buffers) {
     if (buffers.length === 1) {
         return buffers[0];
-
     }
     return Buffer.concat(buffers);
 };
 
-const lazySlice = (buf, begin, end) => {
+const lazySlice = function (buf, begin, end) {
     if (begin === 0 && end === buf.length) {
         return buf;
 
@@ -19,12 +18,11 @@ const lazySlice = (buf, begin, end) => {
     return buf.slice(begin, end);
 };
 
-export default function block(size, opts) {
+export default function (size, opts) {
     if (!opts) {
         opts = {};
-
     }
-    if (is.object(size)) {
+    if (typeof size === "object") {
         opts = size;
         size = opts.size;
     }
@@ -43,7 +41,7 @@ export default function block(size, opts) {
     let bufferSkip = 0;
     let emittedChunk = false;
 
-    return pull.transform(function transform(data) {
+    return through2(function transform(data) {
         if (is.number(data)) {
             data = Buffer.from([data]);
         }
@@ -54,11 +52,10 @@ export default function block(size, opts) {
             let targetLength = 0;
             const target = [];
             let index = 0;
-            let end;
-            let out;
+            var b, end, out;
 
             while (targetLength < size) {
-                const b = buffered[index];
+                b = buffered[index];
 
                 // Slice as much as we can from the next buffer.
                 end = Math.min(bufferSkip + size - targetLength, b.length);
@@ -83,7 +80,7 @@ export default function block(size, opts) {
 
             emittedChunk = true;
         }
-    }, function flush() {
+    }, function flush(end) {
         if ((opts.emitEmpty && !emittedChunk) || bufferedBytes) {
             if (zeroPadding) {
                 const zeroes = Buffer.alloc(size - bufferedBytes);

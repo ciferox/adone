@@ -5,7 +5,7 @@ const map = require('async/map')
 const errCode = require('err-code')
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { cat, defer, pushable } = pull;
 

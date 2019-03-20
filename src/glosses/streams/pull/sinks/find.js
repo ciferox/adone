@@ -1,19 +1,20 @@
-import prop from "../util/prop"; // todo
 
-const {
-    stream: { pull }
-} = adone;
 
-export default function find(test, cb) {
+function id(e) {
+    return e; 
+}
+const prop = require("../util/prop");
+const drain = require("./drain");
+
+module.exports = function find(test, cb) {
     let ended = false;
     if (!cb) {
-        cb = test, test = adone.identity;
+        cb = test, test = id; 
     } else {
-        test = prop(test) || adone.identity;
-
+        test = prop(test) || id; 
     }
 
-    return pull.drain((data) => {
+    return drain((data) => {
         if (test(data)) {
             ended = true;
             cb(null, data);
@@ -21,9 +22,12 @@ export default function find(test, cb) {
         }
     }, (err) => {
         if (ended) {
-            return;
-
+            return; 
         } //already called back
         cb(err === true ? null : err, null);
     });
-}
+};
+
+
+
+

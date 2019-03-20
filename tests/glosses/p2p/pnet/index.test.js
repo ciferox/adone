@@ -2,7 +2,7 @@ const parallel = require("async/parallel");
 
 const {
     p2p: { Protector, PeerId, Connection },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { pair } = pull;
 

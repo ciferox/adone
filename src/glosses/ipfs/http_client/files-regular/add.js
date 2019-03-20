@@ -6,7 +6,7 @@ const FileResultStreamConverter = require("../utils/file-result-stream-converter
 const SendFilesStream = require("../utils/send-files-stream");
 
 const {
-    stream: { pull2: { is: { source: isSource } } }
+    stream: { pull: { is: { source: isSource } } }
 } = adone;
 
 module.exports = (send) => {

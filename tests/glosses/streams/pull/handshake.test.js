@@ -1,32 +1,32 @@
-describe("stream", "pull", "handshake", () => {
-    const {
-        stream: { pull },
-        std: { crypto }
-    } = adone;
-    const { handshake } = pull;
+const {
+    stream: { pull },
+    std: { crypto }
+} = adone;
+const { handshake, hang: Hang } = pull;
 
-    const R = Buffer.from(crypto.randomBytes(16).toString("hex"), "ascii");
+const R = Buffer.from(crypto.randomBytes(16).toString("hex"), "ascii");
 
-    const agreement = function (timeout, cb) {
-        if (!cb) {
-            cb = timeout, timeout = null;
+const agreement = function (timeout, cb) {
+    if (!cb) {
+        cb = timeout, timeout = null;
+    }
+
+    const stream = handshake({ timeout: timeout || 100 }, cb);
+    const shake = stream.handshake;
+    shake.write(R);
+    shake.read(32, (err, data) => {
+        if (err) {
+            cb(err);
+        } else {
+            assert.deepEqual(data, R);
+            cb(null, shake.rest());
         }
+    });
 
-        const stream = handshake({ timeout: timeout || 100 }, cb);
-        const shake = stream.handshake;
-        shake.write(R);
-        shake.read(32, (err, data) => {
-            if (err) {
-                cb(err);
-            } else {
-                assert.deepEqual(data, R);
-                cb(null, shake.rest());
-            }
-        });
+    return stream;
+};
 
-        return stream;
-    };
-
+describe("stream", "pull", "handshake", () => {
     it("simple", (done) => {
 
         const hello = Buffer.from("hello there did it work?", "ascii");
@@ -40,6 +40,7 @@ describe("stream", "pull", "handshake", () => {
                         Buffer.concat(data),
                         Buffer.concat([hello, hello, hello])
                     );
+                    // console.log("done");
                     done();
                 })
             );
@@ -49,7 +50,7 @@ describe("stream", "pull", "handshake", () => {
             pull(stream, stream); //ECHO
         });
 
-        const logger = (name) => {
+        const logger = function (name) {
             return pull.through((data) => {
                 // console.log(name, data.toString("utf8"));
             });
@@ -60,7 +61,7 @@ describe("stream", "pull", "handshake", () => {
     });
 
 
-    const abort = (cb) => {
+    const abort = function (cb) {
         const stream = handshake({ timeout: 100 }, cb);
         const shake = stream.handshake;
         shake.read(16, (err, data) => {
@@ -90,6 +91,7 @@ describe("stream", "pull", "handshake", () => {
         let timeout = false;
         const client = agreement(200, (err, stream) => {
             assert.ok(timeout);
+            // console.log(err);
             assert.ok(err);
             done();
         });
@@ -99,7 +101,7 @@ describe("stream", "pull", "handshake", () => {
         }, 100);
 
         pull(
-            pull.hang(),
+            Hang(),
             client
         );
 
@@ -125,6 +127,7 @@ describe("stream", "pull", "handshake", () => {
         pull(
             reader.handshake.rest(),
             pull.collect((err, ary) => {
+                // console.log(err);
                 assert.notOk(err);
                 assert.deepEqual(ary, []);
                 done();

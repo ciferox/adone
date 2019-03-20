@@ -1,22 +1,30 @@
 const {
-    stream: { pull },
+    stream: { pull: { utf8Decoder } },
     std: { fs }
 } = adone;
-
+/**
+ * # pull-file
+ *
+ * This is a simple module which uses raw file reading methods available in
+ * the node `fs` module to read files on-demand.  It's a work in progress
+ * and feedback is welcome :)
+ *
+ * ## Example Usage
+ *
+ * <<< examples/ipsum-chunks.js
+ *
+ */
 export default function (filename, opts) {
-    const mode = opts && opts.mode || 0o666;
+    const mode = opts && opts.mode || 0x1B6; // 0666
     const bufferSize = opts && opts.bufferSize || 1024 * 64;
     let start = opts && opts.start || 0;
     const end = opts && opts.end || Number.MAX_SAFE_INTEGER;
     let fd = opts && opts.fd;
 
-    let ended;
-    let closeNext;
-    let busy;
+    let ended; let closeNext; let busy;
     let _buffer = Buffer.alloc(bufferSize);
     let live = opts && Boolean(opts.live);
-    let liveCb;
-    let closeCb;
+    let liveCb; let closeCb;
     let watcher;
     if (live) {
         watcher = fs.watch(filename, {
@@ -30,41 +38,12 @@ export default function (filename, opts) {
                 readNext(cb);
             }
         });
+
     }
 
     const flags = opts && opts.flags || "r";
 
-    const close = (cb) => {
-        if (!cb) {
-            throw new Error("close must have cb");
-
-        }
-        if (watcher) {
-            watcher.close();
-        }
-        //if auto close is disabled, then user manages fd.
-        if (opts && opts.autoClose === false) {
-            return cb(true);
-        } else if (busy) {
-            //wait until we have got out of bed, then go back to bed.
-            //or if we are reading, wait till we read, then go back to bed.
-            closeCb = cb;
-            return closeNext = true;
-        } else if (!fd) {
-            //first read was close, don't even get out of bed.
-            return cb(true);
-        }
-
-        //go back to bed
-
-        fs.close(fd, (err) => {
-            fd = null;
-            cb(err || true);
-        });
-    };
-
-
-    const readNext = (cb) => {
+    const readNext = function (cb) {
         if (closeNext) {
             if (!live) {
                 close(cb);
@@ -110,10 +89,10 @@ export default function (filename, opts) {
                 }
             }
         );
-        _buffer = Buffer.allocUnsafe(Math.min(end - start, bufferSize));
+        _buffer = Buffer.alloc(Math.min(end - start, bufferSize));
     };
 
-    const open = (cb) => {
+    const open = function (cb) {
         busy = true;
         fs.open(filename, flags, mode, (err, descriptor) => {
             // save the file descriptor
@@ -134,7 +113,40 @@ export default function (filename, opts) {
         });
     };
 
-    const source = (end, cb) => {
+    const close = function (cb) {
+        if (!cb) {
+            throw new Error("close must have cb");
+        }
+        if (watcher) {
+            watcher.close();
+        }
+        //if auto close is disabled, then user manages fd.
+        if (opts && opts.autoClose === false) {
+            return cb(true);
+        }
+
+        //wait until we have got out of bed, then go back to bed.
+        //or if we are reading, wait till we read, then go back to bed.
+        else if (busy) {
+            closeCb = cb;
+            return closeNext = true;
+        }
+
+        //first read was close, don't even get out of bed.
+        else if (!fd) {
+            return cb(true);
+        }
+
+        //go back to bed
+
+        fs.close(fd, (err) => {
+            fd = null;
+            cb(err || true);
+        });
+
+    };
+
+    const source = function (end, cb) {
         if (end) {
             ended = end;
             live = false;
@@ -142,10 +154,11 @@ export default function (filename, opts) {
                 liveCb(end || true);
             }
             close(cb);
-        } else if (ended) {
-            // if we have already received the end notification, abort further
+        }
+        // if we have already received the end notification, abort further
+        else if (ended) {
             cb(ended);
-        } else if (! fd) {
+        } else if (!fd) {
             open(cb);
         } else {
             readNext(cb);
@@ -154,9 +167,8 @@ export default function (filename, opts) {
 
     //read directly to text
     if (opts && opts.encoding) {
-        return pull.utf8decoder(opts.encoding)(source);
+        return utf8Decoder(opts.encoding)(source);
     }
 
     return source;
 }
-

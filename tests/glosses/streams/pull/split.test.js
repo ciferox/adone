@@ -1,19 +1,19 @@
+const {
+    stream: { pull }
+} = adone;
+const { split } = pull;
+
 describe("stream", "pull", "split", () => {
-    const { stream: { pull } } = adone;
-    const { split } = pull;
-
     it("read this file", (done) => {
-
         const fs = require("fs");
         const file = fs.readFileSync(__filename).toString();
         const lines = file.split("\n");
-        let i = 0, block = 300;
+        let i = 0; const block = 300;
 
         pull(
             (end, cb) => {
                 if (i > file.length) {
                     cb(true);
-
                 } else {
                     const _i = i;
                     i += block;
@@ -34,11 +34,11 @@ describe("stream", "pull", "split", () => {
             1, 2, { okay: true }, "whatever"
         ];
 
-
         it("split into json lines", (done) => {
 
             pull(
-                pull.values([input.map(JSON.stringify).join("\n")]),
+                pull.values([input.map(JSON.stringify).join("\n")]
+                ),
                 split(null, JSON.parse),
                 pull.collect((err, ary) => {
                     if (err) {
@@ -81,7 +81,6 @@ describe("stream", "pull", "split", () => {
                 pull.collect((err, ary) => {
                     if (err) {
                         throw err;
-
                     }
                     assert.deepEqual(ary, input);
                     done();
@@ -96,7 +95,7 @@ describe("stream", "pull", "split", () => {
             const fs = require("fs");
             const file = fs.readFileSync(__filename).toString();
             const lines = file.split("\n").reverse();
-            let i = file.length, block = 300;
+            let i = file.length; const block = 300;
 
             pull(
                 (end, cb) => {
@@ -122,12 +121,12 @@ describe("stream", "pull", "split", () => {
 
     describe("skip last", () => {
         it("read this file", (done) => {
+
             const fs = require("fs");
             const file = fs.readFileSync(__filename).toString();
             const lines = file.split("\n");
             assert.equal(lines.pop(), "");
-            let i = 0;
-            const block = 300;
+            let i = 0; const block = 300;
 
             pull(
                 (end, cb) => {

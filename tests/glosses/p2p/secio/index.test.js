@@ -4,7 +4,7 @@ const series = require("async/series");
 const {
     multiformat: { multistream },
     p2p: { secio, Connection, PeerId },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { pair } = pull;
 const { Listener, Dialer } = multistream;

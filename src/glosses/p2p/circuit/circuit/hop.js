@@ -12,7 +12,7 @@ const multicodec = require("./../multicodec");
 const {
     multiformat: { multiaddr },
     p2p: { PeerId, PeerInfo },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 
 const log = debug("libp2p:circuit:relay");

@@ -6,7 +6,7 @@ const { createInfos } = utils;
 
 const {
     p2p: { identify, secio, Switch, PeerBook, transport: { TCP }, muxer: { mplex } },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { lengthPrefixed: lp } = pull;
 

@@ -1,6 +1,6 @@
 const {
     p2p: { Connection },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 
 /**

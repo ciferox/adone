@@ -9,7 +9,7 @@ const Message = require("./message");
 const utils = require("./utils");
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { lengthPrefixed: lp } = pull;
 

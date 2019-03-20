@@ -6,7 +6,7 @@ const tryEcho = utils.tryEcho;
 
 const {
     p2p: { Switch, PeerBook, transport: { WS, TCP } },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 
 describe("transports", () => {

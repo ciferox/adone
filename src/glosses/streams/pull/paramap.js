@@ -1,38 +1,17 @@
+import looper from "./looper4";
+
 const {
     is
 } = adone;
 
-const looper = function (fn) {
-    let active = false;
-    let called = 0;
-    return function () {
-        called = true;
-        if (!active) {
-            active = true;
-            while (called) {
-                called = false;
-                fn();
-            }
-            active = false;
-        }
-    };
-};
-
-export default function (map, width, inOrder) {
+module.exports = function (map, width, inOrder) {
     inOrder = is.undefined(inOrder) ? true : inOrder;
-    let reading = false;
-    let abort;
+    let reading = false; let abort;
     return function (read) {
-        let i = 0;
-        let j = 0;
-        let last = 0;
-        const seen = [];
-        let started = false;
-        let ended = false;
-        let _cb;
-        let error;
+        let i = 0; let j = 0; let last = 0;
+        const seen = []; let started = false; let ended = false; let _cb; let error;
 
-        const drain = () => {
+        const drain = function () {
             if (_cb) {
                 const cb = _cb;
                 if (error) {
@@ -45,7 +24,6 @@ export default function (map, width, inOrder) {
                     cb(null, data);
                     if (width) {
                         start();
-
                     }
                 } else if (j >= last && ended) {
                     _cb = null;
@@ -79,14 +57,12 @@ export default function (map, width, inOrder) {
                         }
                         if (err) {
                             error = err;
-
                         }
                         drain();
                     });
 
                     if (!ended) {
                         start();
-
                     }
 
                 }
@@ -109,5 +85,5 @@ export default function (map, width, inOrder) {
             }
         };
     };
-}
+};
 

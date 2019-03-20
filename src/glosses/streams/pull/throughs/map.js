@@ -1,8 +1,13 @@
-import prop from "../util/prop"; // todo
 
-export default function map(mapper) {
+
+function id(e) {
+    return e; 
+}
+const prop = require("../util/prop");
+
+module.exports = function map(mapper) {
     if (!mapper) {
-        return adone.identity;
+        return id; 
     }
     mapper = prop(mapper);
     return function (read) {
@@ -19,4 +24,4 @@ export default function map(mapper) {
             });
         };
     };
-}
+};

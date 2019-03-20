@@ -8,7 +8,7 @@ const Dir = require('./dir')
 const toPathComponents = require('../utils/to-path-components')
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { write: writable, pushable } = pull;
 

@@ -1,5 +1,6 @@
-const lengthPrefixed = adone.lazify({
-    encode: "./encode",
-    decode: "./decode",
-    decodeFromReader: () => lengthPrefixed.decode.fromReader
-}, exports, require);
+const encode = require("./encode");
+const d = require("./decode");
+
+exports.encode = encode;
+exports.decode = d.decode;
+exports.decodeFromReader = d.decodeFromReader;

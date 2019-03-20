@@ -2,7 +2,7 @@ const series = require("async/series");
 
 const {
     multiformat: { multiaddr },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 
 module.exports = (create) => {

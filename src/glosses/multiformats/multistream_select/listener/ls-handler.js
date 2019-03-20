@@ -1,7 +1,7 @@
 const varint = require("varint");
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { values, lengthPrefixed } = pull;
 

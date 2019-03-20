@@ -1,5 +1,5 @@
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { asyncMap, collect, pushable, pair: pullPair, batch } = pull;
 

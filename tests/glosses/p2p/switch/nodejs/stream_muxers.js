@@ -4,7 +4,7 @@ const { createInfos, tryEcho } = utils;
 
 const {
     p2p: { Switch, PeerBook, transport: { TCP }, muxer: { mplex, pullMplex, spdy } },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 
 describe("Stream Multiplexing", () => {

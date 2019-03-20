@@ -6,7 +6,7 @@ const {
 const {
     multiformat: { multiaddr },
     p2p: { PeerId, transport: { WSStarMulti } },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 
 const servers = [

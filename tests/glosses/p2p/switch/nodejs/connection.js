@@ -3,7 +3,7 @@ const parallel = require("async/parallel");
 
 const {
     p2p: { Protector, Switch, Connection, secio, PeerBook, transport: { WS }, muxer: { spdy, pullMplex } },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 
 const generatePSK = Protector.generate;

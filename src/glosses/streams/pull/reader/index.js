@@ -1,10 +1,10 @@
+const State = require("./state");
+
 const {
     is
 } = adone;
 
-const isInteger = (i) => is.finite(i);
-
-const maxDelay = (fn, delay) => {
+const maxDelay = function (fn, delay) {
     if (!delay) {
         return fn;
     }
@@ -18,37 +18,41 @@ const maxDelay = (fn, delay) => {
         });
 
     };
-
 };
 
-export default function createReader(timeout) {
+module.exports = function (timeout) {
     const queue = [];
     let read;
     let readTimed;
     let reading = false;
-    const state = createReader.state();
+    const state = State();
     let ended;
     let streaming;
     let abort;
 
-    const drain = () => {
+    const drain = function () {
         while (queue.length) {
             if (is.nil(queue[0].length) && state.has(1)) {
                 queue.shift().cb(null, state.get());
             } else if (state.has(queue[0].length)) {
                 const next = queue.shift();
                 next.cb(null, state.get(next.length));
+            } else if (ended === true && queue[0].length && state.length < queue[0].length) {
+                const msg = `stream ended with:${state.length} but wanted:${queue[0].length}`;
+                queue.shift().cb(new Error(msg));
             } else if (ended) {
                 queue.shift().cb(ended);
+
             } else {
                 return Boolean(queue.length);
+
             }
         }
         //always read a little data
         return queue.length || !state.has(1) || abort;
     };
 
-    const more = () => {
+    const more = function () {
         const d = drain();
         if (d && !reading) {
             if (read && !reading && !streaming) {
@@ -66,10 +70,11 @@ export default function createReader(timeout) {
         }
     };
 
-    const reader = (_read) => {
+    const reader = function (_read) {
         if (abort) {
             while (queue.length) {
                 queue.shift().cb(abort);
+
             }
             return cb && cb(abort);
         }
@@ -85,6 +90,7 @@ export default function createReader(timeout) {
             read(abort, () => {
                 while (queue.length) {
                     queue.shift().cb(abort);
+
                 }
                 cb && cb(abort);
             });
@@ -96,9 +102,10 @@ export default function createReader(timeout) {
     reader.read = function (len, _timeout, cb) {
         if (is.function(_timeout)) {
             cb = _timeout, _timeout = timeout;
+
         }
         if (is.function(cb)) {
-            queue.push({ length: isInteger(len) ? len : null, cb });
+            queue.push({ length: is.finite(len) ? len : null, cb });
             more();
         } else {
             //switch into streaming mode for the rest of the stream.
@@ -122,9 +129,4 @@ export default function createReader(timeout) {
     };
 
     return reader;
-}
-
-
-adone.lazify({
-    state: "./state"
-}, createReader, require);
+};

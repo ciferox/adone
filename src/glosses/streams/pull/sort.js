@@ -1,17 +1,20 @@
 const {
-    stream: { pull }
+    stream: { pull: { error, values, collect, defer: { source } } }
 } = adone;
 
-export default function sort(compare) {
-    const source = pull.defer.source();
+module.exports = function (compare) {
+    const src = source();
 
-    const sink = pull.collect((err, ary) => {
-        source.resolve(pull.values(ary.sort(compare)));
+    const sink = collect((err, ary) => {
+        if (err) {
+            return src.resolve(error(err));
+        }
+
+        src.resolve(values(ary.sort(compare)));
     });
 
     return function (read) {
         sink(read);
-        return source;
+        return src;
     };
-
-}
+};

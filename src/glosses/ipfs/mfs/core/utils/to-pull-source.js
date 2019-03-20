@@ -5,7 +5,7 @@ const log = require('debug')('ipfs:mfs:utils:to-pull-source')
 const waterfall = require('async/waterfall')
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { streamToPullStream: toPull, is: { source: isSource } } = pull;
 

@@ -2,7 +2,7 @@ const { normalizePath } = require("./utils");
 
 const {
     ipfs: { unixfsExporter: exporter },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { defer: deferred } = pull;
 

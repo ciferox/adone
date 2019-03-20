@@ -2,7 +2,7 @@ const {
     is,
     lodash: _,
     p2p: { PeerId, PeerInfo },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { lengthPrefixed: lp } = pull;
 

@@ -3,7 +3,7 @@ const constants = require("./constants");
 const util = require("./util");
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { empty, handshake } = pull;
 

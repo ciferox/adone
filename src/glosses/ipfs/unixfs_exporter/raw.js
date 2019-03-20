@@ -1,7 +1,7 @@
 const extractDataFromBlock = require('./extract-data-from-block')
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { empty, once, error } = pull;
 

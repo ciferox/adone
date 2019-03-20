@@ -1,5 +1,5 @@
 const {
-    stream: { pull2: { handshake, defer: deferred } }
+    stream: { pull: { handshake, defer: deferred } }
 } = adone;
 
 class State {

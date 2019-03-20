@@ -6,7 +6,7 @@ const parallel = require("async/parallel");
 const {
     datastore2: { ShardingDatastore, shard: sh, interface: { Key, util }, backend: { FsDatastore } },
     std: { fs, path },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 
 describe("datastore", "backend", "FsDatastore", () => {

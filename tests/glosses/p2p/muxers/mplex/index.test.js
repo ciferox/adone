@@ -1,6 +1,6 @@
 const {
     p2p: { muxer: { mplex } },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { pair } = pull;
 

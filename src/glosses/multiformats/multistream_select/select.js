@@ -2,7 +2,7 @@ const util = require("./util");
 const writeEncoded = util.writeEncoded;
 
 const {
-    stream: { pull2: { handshake, lengthPrefixed } }
+    stream: { pull: { handshake, lengthPrefixed } }
 } = adone;
 
 const select = function (multicodec, callback, log) {

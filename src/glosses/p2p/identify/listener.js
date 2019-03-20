@@ -1,7 +1,7 @@
 const msg = require("./message");
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { values, lengthPrefixed: lp } = pull;
 

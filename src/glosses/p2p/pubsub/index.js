@@ -10,7 +10,7 @@ const message = require("./message");
 const nextTick = require("async/nextTick");
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { empty } = pull;
 

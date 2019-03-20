@@ -5,7 +5,7 @@ const map = require("async/map");
 const {
     multiformat: { multiaddr },
     p2p: { PeerId, transport: { WSStar } },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 
 describe("p2p", "transport", "WSStar", () => {

@@ -1,8 +1,8 @@
-const {
-    stream: { pull }
-} = adone;
+
+
+const unique = require("./unique");
 
 //passes an item through when you see it for the second time.
-export default function nonUnique(field) {
-    return pull.unique(field, true);
-}
+module.exports = function nonUnique(field) {
+    return unique(field, true);
+};

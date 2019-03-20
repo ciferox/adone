@@ -1,5 +1,5 @@
 const {
-    stream: { pull2: pull },
+    stream: { pull },
     multiformat: { CID }
 } = adone;
 const { values, error } = pull;

@@ -2,7 +2,7 @@ const series = require("async/series");
 
 const {
     p2p: { KadDHT, transport: { TCP }, Switch, PeerBook, Connection, muxer: { mplex } },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { lengthPrefixed: lp } = pull;
 

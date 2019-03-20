@@ -3,7 +3,7 @@ const Boom = require('boom')
 const {
     ipfs: { isIPFS, unixfsExporter: exporter },
     multiformat: { toB58String },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 
 const fileTypeMap = {

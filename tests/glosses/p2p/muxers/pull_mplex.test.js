@@ -1,6 +1,6 @@
 const {
     p2p: { Connection, muxer: { pullMplex } },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { abortable, defer, pushable, through2, lengthPrefixed, pair } = pull;
 

@@ -1,25 +1,33 @@
+const {
+    is,
+    stream: { pull }
+    // std: { fs, path, crypto }
+} = adone;
+const { generate } = pull;
+
+// const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "streams", "pull", ...args);
+
+// const sources = require("pull-stream/sources");
+// const sinks = require("pull-stream/sinks");
+
+// const pipeableSource = pull.pipeableSource;
+// const pipeable = pull.pipeable;
+// const pipeableSink = pull.pipeableSink;
+
+const arrayReader = function (read, cb) {
+    const array = [];
+    read(null, function next(end, data) {
+
+        if (end) {
+            return cb(end === true ? null : end, array);
+        }
+
+        array.push(data);
+        read(null, next);
+    });
+};
+
 describe("stream", "pull", "generate", () => {
-    const { stream: { pull }, is } = adone;
-
-    const { generate } = pull;
-
-    const pipeableSource = pull.pipeableSource;
-    const pipeableSink = pull.pipeableSink;
-
-    const arrayReader = (read, cb) => {
-        const array = [];
-        read(null, function next(end, data) {
-
-            if (end) {
-                return cb(end === true ? null : end, array);
-
-            }
-
-            array.push(data);
-            read(null, next);
-        });
-    };
-
     it("basics", (done) => {
         const read = generate(1, (state, cb) => {
             cb(state > 3 ? true : null, state, state + 1);
@@ -49,6 +57,7 @@ describe("stream", "pull", "generate", () => {
             cb(state > 3 ? true : null, state, state + 1);
         });
         arrayReader(read, (err, _array) => {
+            // console.log("END?");
             assert.deepEqual(_array, array);
             done();
         });
@@ -75,7 +84,7 @@ describe("stream", "pull", "generate", () => {
         const read = pipeableSource(generate)(1, (state, cb) => {
             cb(state > 3 ? true : null, state, state + 1);
         });
-        const arrayWriter = pull.writeArray;
+        arrayWriter = pull.writeArray;
 
         assert.equal("function", typeof read);
         assert.equal("function", typeof read.pipe);
@@ -84,13 +93,13 @@ describe("stream", "pull", "generate", () => {
             .pipe((read) => {
                 return function (end, cb) {
                     read(end, (end, data) => {
-                        console.log(end, data);
+                        // console.log(end, data);
                         cb(end, !is.nil(data) ? data * 2 : null);
                     });
                 };
             })
             .pipe(arrayWriter((err, _array) => {
-                console.log(_array);
+                // console.log(_array);
                 assert.equal(err, null);
                 assert.deepEqual(_array, array.map((e) => {
                     return e * 2;
@@ -101,12 +110,12 @@ describe("stream", "pull", "generate", () => {
     });
 
     it("passes expand err downstream", (done) => {
-        const err = new Error("boom");
-        let endErr;
+        const err = new Error("boom"); let endErr;
         let onEndCount = 0;
         const read = generate(1, (state, cb) => {
             cb(state > 3 ? err : null, state, state + 1);
         }, (endErr) => {
+            // console.log("onEnd");
             onEndCount++;
             assert.equal(endErr, err);
             assert.equal(onEndCount, 1);
@@ -127,6 +136,7 @@ describe("stream", "pull", "generate", () => {
                         assert.equal(e, err);
                         assert.ok(is.nil(d), "nullish");
                         read(null, (e, d) => {
+                            // console.log("end");
                             assert.equal(e, err);
                             assert.ok(is.nil(d), "nullish");
                         });

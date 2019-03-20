@@ -1,16 +1,15 @@
-const abortAll = (ary, abort, cb) => {
+const abortAll = function (ary, abort, cb) {
     let n = ary.length;
     if (!n) {
         return cb(abort);
     }
-    const next = () => {
+
+    const next = function () {
         if (--n) {
             return;
-
         }
         cb(abort);
     };
-
 
     ary.forEach((f) => {
         if (f) {
@@ -22,7 +21,6 @@ const abortAll = (ary, abort, cb) => {
 
     if (!n) {
         next();
-
     }
 };
 
@@ -33,7 +31,6 @@ export default function (streams) {
                 abortAll(streams, abort, cb);
             } else if (!streams.length) {
                 cb(true);
-
             } else if (!streams[0]) {
                 streams.shift(), next();
             } else {
@@ -52,4 +49,4 @@ export default function (streams) {
             }
         })();
     };
-};
+}

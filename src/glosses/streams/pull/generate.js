@@ -1,31 +1,25 @@
-const abortCb = (cb, abort, onAbort) => {
+const abortCb = function (cb, abort, onAbort) {
     cb(abort);
     onAbort && onAbort(abort === true ? null : abort);
 };
 
 export default function (initialState, expand, onAbort) {
-    let state = initialState;
-    let ended;
+    let state = initialState; let ended;
 
     return function (abort, cb) {
         if (ended) {
             cb(ended);
-            return;
-        }
-        ended = abort;
-        if (ended) {
+        } else if (ended = abort) {
             abortCb(cb, abort, onAbort);
-            return;
+        } else {
+            expand(state, (err, data, newState) => {
+                state = newState;
+                if (ended = err) {
+                    abortCb(cb, err, onAbort);
+                } else {
+                    cb(null, data);
+                }
+            });
         }
-        expand(state, (err, data, newState) => {
-            state = newState;
-            ended = err;
-            if (ended) {
-                abortCb(cb, err, onAbort);
-            } else {
-                cb(null, data);
-            }
-        });
     };
 }
-

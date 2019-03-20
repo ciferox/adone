@@ -1,6 +1,6 @@
 const {
     datastore2: { interface: { Key, util } },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 
 const pathSep = "/";

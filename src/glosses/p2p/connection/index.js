@@ -1,5 +1,5 @@
 const {
-    stream: { pull2: { defer } }
+    stream: { pull: { defer } }
 } = adone;
 
 export default class Connection {

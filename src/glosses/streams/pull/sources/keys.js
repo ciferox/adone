@@ -1,7 +1,7 @@
-const {
-    stream: { pull }
-} = adone;
 
-export default function (object) {
-    return pull.values(Object.keys(object));
-}
+const values = require("./values");
+module.exports = function (object) {
+    return values(Object.keys(object));
+};
+
+

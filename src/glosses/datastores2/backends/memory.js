@@ -3,7 +3,7 @@ const setImmediate = require("async/setImmediate");
 const {
     is,
     datastore2: { interface: { Key, error, util: { asyncFilter, asyncSort } } },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 
 class MemoryDatastore {

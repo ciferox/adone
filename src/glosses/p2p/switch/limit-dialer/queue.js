@@ -6,7 +6,7 @@ const once = require("once");
 const {
     is,
     p2p: { Connection },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { empty } = pull;
 

@@ -2,7 +2,7 @@ const path = require('path')
 const glob = require('glob')
 
 const {
-    stream: { pull2: pull },
+    stream: { pull },
     multiformat: { CID }
 } = adone;
 const { file } = pull;

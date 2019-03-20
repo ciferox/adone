@@ -1,35 +1,27 @@
-const {
-    std: {
-        string_decoder: {
-            StringDecoder: Decode
-        }
-    }
-} = adone;
 
-export default function utf8decoder(enc) {
-    const decoder = new Decode(enc);
-    let ended;
+const Decode = require("string_decoder").StringDecoder;
+
+module.exports = function (enc) {
+    const decoder = new Decode(enc); let ended;
     return function (read) {
         return function (abort, cb) {
             if (ended) {
-                return cb(ended);
-
+                return cb(ended); 
             }
             read(abort, (end, data) => {
                 ended = end;
                 if (end === true) {
-                    data = decoder.end();
-                    if (data) {
-                        cb(null, data);
+                    if (data = decoder.end()) {
+                        cb(null, data); 
                     } else {
-                        cb(true);
+                        cb(true); 
                     }
-                } else if (end && end !== true) {
-                    cb(end);
+                } else if (end && (end !== true)) {
+                    cb(end); 
                 } else {
-                    cb(null, decoder.write(data));
+                    cb(null, decoder.write(data)); 
                 }
             });
         };
     };
-}
+};

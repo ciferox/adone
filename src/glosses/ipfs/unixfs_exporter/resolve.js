@@ -2,7 +2,7 @@ const waterfall = require('async/waterfall')
 
 const {
     ipfs: { UnixFs },
-    stream: { pull2: pull },
+    stream: { pull },
     multiformat: { CID }
 } = adone;
 const { paramap, flatten, error, filter, map } = pull;

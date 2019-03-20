@@ -7,7 +7,7 @@ const {
     is,
     datastore2: { interface: { Key } },
     std: { crypto },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 
 /**

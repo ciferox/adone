@@ -23,7 +23,6 @@ adone.lazify({
     core: "./core",
     AssertByteCountStream: "./assert_byte_count",
     pull: "./pull",
-    pull2: "./pull2",
     pump: "./pump",
     CombinedStream: "./combined_stream",
     DelayedStream: "./delayed_stream"

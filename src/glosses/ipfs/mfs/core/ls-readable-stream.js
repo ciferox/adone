@@ -1,7 +1,7 @@
 const lsPullStream = require("./ls-pull-stream");
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { pullStreamToStream } = pull;
 

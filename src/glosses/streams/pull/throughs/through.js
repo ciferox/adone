@@ -1,11 +1,12 @@
+
+
 //a pass through stream that doesn't change the value.
-export default function through(op, onEnd) {
+module.exports = function through(op, onEnd) {
     let a = false;
 
-    const once = (abort) => {
+    const once = function (abort) {
         if (a || !onEnd) {
             return;
-
         }
         a = true;
         onEnd(abort === true ? null : abort);
@@ -19,13 +20,11 @@ export default function through(op, onEnd) {
             return read(end, (end, data) => {
                 if (!end) {
                     op && op(data);
-
                 } else {
                     once(end);
-
                 }
                 cb(end, data);
             });
         };
     };
-}
+};

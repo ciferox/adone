@@ -9,7 +9,7 @@ const {
 } = adone;
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { collect, through, values, paramap: paraMap, through2: pullThrough } = pull;
 

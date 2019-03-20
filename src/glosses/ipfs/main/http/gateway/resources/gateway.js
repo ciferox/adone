@@ -11,7 +11,7 @@ const PathUtils = require('../utils/path')
 const { cidToString } = require('../../../utils/cid')
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { pushable, pullStreamToStream: toStream } = pull;
 

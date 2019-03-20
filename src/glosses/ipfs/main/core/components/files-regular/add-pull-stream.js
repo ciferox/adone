@@ -4,7 +4,7 @@ const { parseChunkerString } = require('./utils')
 const {
     multiformat: { CID },
     ipfs: { unixfsImporter: importer },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { streamToPullStream: toPull, is: { source: isSource } } = pull;
 

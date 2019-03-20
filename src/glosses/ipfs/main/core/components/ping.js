@@ -2,7 +2,7 @@ const promisify = require("promisify-es6");
 
 const {
     is,
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 
 module.exports = function ping(self) {

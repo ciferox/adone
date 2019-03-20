@@ -1,5 +1,5 @@
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 
 const plan = function (n, done) {

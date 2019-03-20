@@ -8,7 +8,7 @@ const {
     is,
     multiformat: { multiaddr },
     p2p: { Switch, PeerId, PeerInfo, PeerBook },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { pair } = pull;
 

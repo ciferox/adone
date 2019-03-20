@@ -1,21 +1,14 @@
-const {
-    stream: { pull }
-} = adone;
+const source = require("./source");
+const sink = require("./sink");
 
-const {
-    ws: {
-        source,
-        sink
-    }
-} = pull;
+module.exports = duplex;
 
-export default function duplex(ws, opts) {
+function duplex(ws, opts) {
     const req = ws.upgradeReq || {};
     if (opts && opts.binaryType) {
-        ws.binaryType = opts.binaryType;
-
+        ws.binaryType = opts.binaryType; 
     } else if (opts && opts.binary) {
-        ws.binaryType = "arraybuffer";
+        ws.binaryType = "arraybuffer"; 
     }
     return {
         source: source(ws, opts && opts.onConnect),
@@ -28,3 +21,4 @@ export default function duplex(ws, opts) {
         method: req.method
     };
 }
+

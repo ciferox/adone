@@ -1,6 +1,6 @@
 const {
     p2p: { KadDHT, Connection, PeerBook, Switch, transport: { TCP }, muxer: { mplex } },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { lengthPrefixed: lp } = pull;
 

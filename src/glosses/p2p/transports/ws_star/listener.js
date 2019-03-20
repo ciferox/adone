@@ -13,7 +13,7 @@ const ERRORS = require("./errors");
 const {
     is,
     p2p: { crypto, Connection },
-    stream: { pull2: pull },
+    stream: { pull },
     multiformat: { multiaddr }
 } = adone;
 const { through, socketioPullStream: sp } = pull;

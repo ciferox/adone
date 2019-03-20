@@ -1,4 +1,5 @@
-export default function (first) {
+module.exports = function (first) {
+
     let end;
     let data;
     let waiting;
@@ -10,7 +11,6 @@ export default function (first) {
             end = _end; data = _data;
             if (first) {
                 first(end, data);
-
             }
             if (waiting) {
                 const cb = waiting;
@@ -32,9 +32,7 @@ export default function (first) {
             } else {
                 //if we are streaming as normal.
                 read(_abort, cb);
-
             }
         };
     };
-}
-
+};

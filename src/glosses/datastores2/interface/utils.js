@@ -2,7 +2,7 @@ const uuid = require("uuid/v4");
 
 const {
     std: { path, os },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { defer } = pull;
 

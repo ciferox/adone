@@ -1,37 +1,45 @@
+
+
+//load websocket library if we are not in the browser
+const WebSocket = require("./web-socket");
+const duplex = require("./duplex");
+const wsurl = require("./ws-url");
+
 const {
-    is,
-    stream: { pull }
+    is
 } = adone;
 
-const {
-    ws: {
-        duplex,
-        wsurl
-    }
-} = pull;
+function isFunction(f) {
+    return is.function(f);
+}
 
-export default function (addr, opts) {
-    if (is.function(opts)) {
-        opts = { onConnect: opts };
+module.exports = function (addr, opts) {
+    if (isFunction(opts)) {
+        opts = { onConnect: opts }; 
     }
 
-    const url = wsurl(addr, {});
-    const socket = new adone.net.ws.Client(url);
+    // eslint-disable-next-line adone/no-typeof
+    const location = typeof window === "undefined" ? {} : window.location;
+
+    const url = wsurl(addr, location);
+    const socket = new WebSocket(url);
 
     const stream = duplex(socket, opts);
     stream.remoteAddress = url;
     stream.close = function (cb) {
-        if (is.function(cb)) {
+        if (isFunction(cb)) {
             socket.addEventListener("close", cb);
         }
         socket.close();
     };
 
     socket.addEventListener("open", (e) => {
-        if (opts && is.function(opts.onConnect)) {
+        if (opts && isFunction(opts.onConnect)) {
             opts.onConnect(null, stream);
         }
     });
 
     return stream;
-}
+};
+
+module.exports.connect = module.exports;

@@ -3,7 +3,7 @@ const moduleConfig = require('./utils/module-config')
 const PingMessageStream = require('./utils/ping-message-stream')
 
 const {
-    stream: { pull2: { defer, streamToPullStream } }
+    stream: { pull: { defer, streamToPullStream } }
 } = adone;
 
 module.exports = (arg) => {

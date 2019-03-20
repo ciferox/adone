@@ -1,7 +1,8 @@
-describe("stream", "pull", "hang", () => {
-    const { stream: { pull } } = adone;
-    const { hang } = pull;
+const {
+    stream: { pull: { hang } }
+} = adone;
 
+describe("stream", "pull", "hang", () => {
     it("hang does nothing until you abort", (done) => {
         let aborted;
         let ended;
@@ -19,6 +20,5 @@ describe("stream", "pull", "hang", () => {
             assert.ok(ended);
             done();
         });
-
     });
 });

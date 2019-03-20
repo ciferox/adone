@@ -5,7 +5,7 @@ const sinon = require("sinon");
 const {
     multiformat: { multiaddr },
     p2p: { Connection, PeerId, PeerInfo },
-    stream: { pull2: pull },
+    stream: { pull },
     std: { path }
 } = adone;
 const { collect, handshake, lengthPrefixed: lp, values, asyncMap, pair, protocolBuffers: pb } = pull;

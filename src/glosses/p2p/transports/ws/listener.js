@@ -1,7 +1,7 @@
 const {
     noop,
     p2p: { Connection },
-    stream: { pull2: { ws: { createServer } } },
+    stream: { pull: { ws: { createServer } } },
     std: { os },
     multiformat: { multiaddr }
 } = adone;

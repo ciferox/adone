@@ -2,7 +2,7 @@ const cleanCID = require("../utils/clean-cid");
 const TarStreamToObjects = require("../utils/tar-stream-to-objects");
 
 const {
-    stream: { pull2: pull },
+    stream: { pull },
     ipfs: { isIPFS }
 } = adone;
 const { map, defer, streamToPullStream } = pull;

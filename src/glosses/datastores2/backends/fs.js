@@ -8,7 +8,7 @@ const {
     is,
     fs: { writeFileAtomic },
     datastore2: { interface: { Key, error, util: { asyncFilter, asyncSort } } },
-    stream: { pull2: pull },
+    stream: { pull },
     std: { fs, path }
 } = adone;
 

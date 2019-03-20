@@ -2,7 +2,7 @@ const parallel = require("async/parallel");
 
 const {
     p2p: { PeerId, PeerInfo },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 
 const fixtures = require("./test-data/ids.json").infos;

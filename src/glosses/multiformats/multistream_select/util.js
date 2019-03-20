@@ -2,7 +2,7 @@ const debug = require("debug");
 
 const {
     is,
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { collect, values, lengthPrefixed } = pull;
 

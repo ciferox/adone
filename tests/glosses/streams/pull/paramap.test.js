@@ -1,6 +1,9 @@
+const {
+    stream: { pull }
+} = adone;
+const { paramap, abortable: Abortable } = pull;
+
 describe("stream", "pull", "paramap", () => {
-    const { stream: { pull } } = adone;
-    const { paramap } = pull;
     const ordered = [];
     const unordered = [];
     const unordered2 = [];
@@ -17,13 +20,14 @@ describe("stream", "pull", "paramap", () => {
             }, null, false),
 
             pull.collect((err, data) => {
+                // console.log(err, data);
+                // console.log(result);
                 assert.deepEqual(data, result, "should emit events in the order they arrive");
                 done();
             }));
     });
 
     it("paralell, but output is ordered", (done) => {
-
         pull(
             pull.count(100),
             pull.through((i) => {
@@ -42,12 +46,13 @@ describe("stream", "pull", "paramap", () => {
                 }, Math.random() * 100);
             }),
             pull.collect((err, ary) => {
-                const sort = (a) => {
+                const sort = function (a) {
                     return a.slice()
                         .sort((a, b) => {
                             return a - b;
                         });
                 };
+                // console.log(unordered);
                 assert.deepEqual(ordered, ary);
                 assert.deepEqual(ordered, sort(unordered), "ordered == sort(unordered)");
                 assert.deepEqual(ordered, sort(unordered2), "ordered == sort(unordered2)");
@@ -61,13 +66,13 @@ describe("stream", "pull", "paramap", () => {
 
 
     it("paralell, but output is ordered", (done) => {
-        const breaky = (i, cb) => {
+        const m = 0;
+        const breaky = function (i, cb) {
             if (i !== 33) {
                 setTimeout(() => {
                     unordered.push(i);
                     cb(null, i);
                 }, Math.random() * 100);
-
             } else {
                 setTimeout(() => {
                     cb(new Error("an error"));
@@ -82,6 +87,7 @@ describe("stream", "pull", "paramap", () => {
             }),
             paramap(breaky),
             pull.collect((err, ary) => {
+                // console.log(err, ary);
                 assert.ok(err);
                 done();
             })
@@ -91,8 +97,7 @@ describe("stream", "pull", "paramap", () => {
 
 
     it("parallel, but `max` items at once", (done) => {
-        let n = 0;
-        const input = [];
+        let n = 0; const input = [];
         pull(
             pull.count(100),
             pull.through((i) => {
@@ -115,14 +120,13 @@ describe("stream", "pull", "paramap", () => {
     });
 
     it("abort a stalled stream", (done) => {
-        const abortable = pull.abortable();
-        const err = new Error("intentional");
-        let i = 2;
 
+        const abortable = Abortable(); const err = new Error("intentional");
+        let i = 2;
         pull(
             pull.values([1, 2, 3], (_err) => {
                 assert.equal(_err, err);
-                if (--i === 0) {
+                if (--i == 0) {
                     done();
                 }
             }),
@@ -130,7 +134,6 @@ describe("stream", "pull", "paramap", () => {
                 setTimeout(() => {
                     if (data === 1) {
                         cb(null, 1);
-
                     }
                     //else stall
                 });
@@ -164,13 +167,13 @@ describe("stream", "pull", "paramap", () => {
     });
 
     it("abort calls back", (done) => {
-        pull(
+        const read = pull(
             pull.values([1, 2, 3]),
             paramap((data, cb) => {
                 cb(null, data);
             }),
             pull.drain((e) => {
-                if (e === 2) {
+                if (e == 2) {
                     return false;
                 }
             }, (err, data) => {
@@ -180,7 +183,7 @@ describe("stream", "pull", "paramap", () => {
     });
 
     it("abort passes along errors", (done) => {
-        pull(
+        const read = pull(
             function read(abort, cb) {
                 cb(new Error("Failure"));
             },
@@ -206,6 +209,27 @@ describe("stream", "pull", "paramap", () => {
                 done();
             })
         );
+    });
 
+    it("order", (done) => {
+        const interleavings = require("./interleavings");
+
+        interleavings.test((async) => {
+            let m = -1;
+            pull(
+                pull.values([0, 1, 2]),
+                async.through("input"),
+                paramap((i, cb) => {
+                    // console.log(i);
+                    assert.ok(i > m, `ordered:${i} > ${m}`);
+                    m = i;
+                    async(cb, "cb")(null, i);
+                }, 2),
+                pull.drain(null, () => {
+                    async.done();
+                    setTimeout(done, 300);
+                })
+            );
+        });
     });
 });

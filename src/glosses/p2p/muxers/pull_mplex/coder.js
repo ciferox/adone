@@ -3,7 +3,7 @@ const debug = require("debug");
 
 const {
     is,
-    stream: { pull2: { through2 } }
+    stream: { pull: { through2 } }
 } = adone;
 
 const log = debug("pull-plex:coder");

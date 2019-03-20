@@ -3,7 +3,7 @@ const OFFLINE_ERROR = require('../utils').OFFLINE_ERROR
 
 const {
     p2p: { PeerId },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { pushable: Pushable } = pull;
 

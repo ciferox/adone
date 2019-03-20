@@ -2,7 +2,7 @@ const sinon = require("sinon");
 
 const {
     p2p: { muxer: { spdy } },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { pair, pullStreamToStream } = pull;
 

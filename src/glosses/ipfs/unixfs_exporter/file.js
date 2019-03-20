@@ -2,7 +2,7 @@ const extractDataFromBlock = require('./extract-data-from-block')
 
 const {
     ipfs: { UnixFs },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { empty, traverse, once, values, paramap, flatten, error, filter, map } = pull;
 

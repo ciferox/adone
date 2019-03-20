@@ -4,7 +4,7 @@ const mkdirp = require('mkdirp')
 const print = require('../utils').print
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { streamToPullStream: toPull } = pull;
 

@@ -8,7 +8,7 @@ const utils = require("./utils");
 const {
     datastore2: { interface: { Key } },
     p2p: { PeerId },
-    stream: { pull2: pull },
+    stream: { pull },
     multiformat: { CID }
 } = adone;
 /**

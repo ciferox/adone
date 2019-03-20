@@ -3,7 +3,7 @@ const DirSharded = require('../unixfs_importer/importer/dir-sharded')
 const waterfall = require('async/waterfall')
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { defer, cat, values, error, filter, map } = pull;
 

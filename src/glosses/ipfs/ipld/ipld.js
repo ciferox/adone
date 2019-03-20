@@ -8,7 +8,7 @@ const mergeOptions = require('merge-options')
 const {
     multiformat: { CID },
     ipfs: { Block, ipld: { dagCbor: ipldDagCbor, dagPb: ipldDagPb, raw: ipldRaw } },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { defer: { source: pullDeferSource }, traverse: pullTraverse } = pull;
 

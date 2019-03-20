@@ -2,7 +2,7 @@ const { Transform } = require("readable-stream");
 const isNode = require("detect-node");
 
 const {
-    stream: { pull2: { pullToStream, is: { source: isSource } } }
+    stream: { pull: { pullToStream, is: { source: isSource } } }
 } = adone;
 
 const PADDING = "--";

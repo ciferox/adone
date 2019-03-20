@@ -4,7 +4,7 @@ const utils = require("../utils");
 const c = require("../constants");
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { lengthPrefixed: lp } = pull;
 

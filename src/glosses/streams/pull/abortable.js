@@ -1,10 +1,9 @@
-export default function abortable(onEnd) {
+export default function (onEnd) {
     let aborted = false;
     let ended = false;
-    let _cb;
-    let _read;
+    let _cb; let _read;
 
-    const doEnd = () => {
+    const doEnd = function () {
         if (!onEnd) {
             return;
         }
@@ -13,21 +12,19 @@ export default function abortable(onEnd) {
         }
         if (ended && ended !== true) {
             return onEnd(ended);
-
         }
         return onEnd(null);
     };
 
-    const terminate = (err) => {
+    const terminate = function (err) {
         doEnd();
         const cb = _cb; _cb = null;
         if (cb) {
             cb(aborted || ended);
-
         }
     };
 
-    const cancel = () => {
+    const cancel = function () {
         ended = ended || true;
         terminate(aborted || ended);
         if (_read) {
@@ -39,7 +36,7 @@ export default function abortable(onEnd) {
         }
     };
 
-    const reader = (read) => {
+    const reader = function (read) {
         _read = read;
         return function (abort, cb) {
             _cb = cb;
@@ -52,10 +49,11 @@ export default function abortable(onEnd) {
             if (aborted) {
                 return;
             }
+            // let reading = true;
             read(abort, (end, data) => {
+                // reading = false;
                 if (aborted) {
-                    return !abort && read(aborted, () => {});
-
+                    return !abort && read(aborted, () => { });
                 }
                 if (!_cb) {
                     return;

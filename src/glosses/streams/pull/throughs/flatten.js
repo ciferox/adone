@@ -1,10 +1,12 @@
 const {
-    is,
-    stream: { pull }
+    is
 } = adone;
 
-// convert a stream of arrays or streams into just a stream.
-export default function flatten() {
+const values = require("../sources/values");
+const once = require("../sources/once");
+
+//convert a stream of arrays or streams into just a stream.
+module.exports = function flatten() {
     return function (read) {
         let _read;
         return function (abort, cb) {
@@ -12,47 +14,42 @@ export default function flatten() {
                 _read ? _read(abort, (err) => {
                     read(err || abort, cb);
                 }) : read(abort, cb);
-                return;
+            } else if (_read) {
+                nextChunk(); 
+            } else {
+                nextStream(); 
             }
 
-            const nextChunk = () => {
+            function nextChunk() {
                 _read(null, (err, data) => {
                     if (err === true) {
-                        nextStream();
-
+                        nextStream(); 
                     } else if (err) {
                         read(true, (abortErr) => {
                             // TODO: what do we do with the abortErr?
                             cb(err);
                         });
                     } else {
-                        cb(null, data);
+                        cb(null, data); 
                     }
                 });
-            };
-
-            const nextStream = () => {
+            }
+            function nextStream() {
                 _read = null;
                 read(null, (end, stream) => {
                     if (end) {
-                        return cb(end);
+                        return cb(end); 
                     }
-                    if (is.array(stream) || (stream && is.object(stream) && !is.function(stream))) {
-                        stream = pull.values(stream);
+                    if (is.array(stream) || stream && typeof stream === "object") {
+                        stream = values(stream); 
                     } else if (!is.function(stream)) {
-                        stream = pull.once(stream);
+                        stream = once(stream); 
                     }
                     _read = stream;
                     nextChunk();
                 });
-            };
-
-            if (_read) {
-                nextChunk();
-            } else {
-                nextStream();
             }
         };
     };
-}
+};
 

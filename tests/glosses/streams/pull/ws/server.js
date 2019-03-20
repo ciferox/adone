@@ -1,10 +1,10 @@
-const WebSocketServer = require("ws").Server;
-const mapleTree = require("mapleTree");
-const port = process.env.ZUUL_PORT || process.env.PORT || 3000;
-
 const {
     is
 } = adone;
+
+const WebSocketServer = require("ws").Server;
+const mapleTree = require("mapleTree");
+const port = process.env.ZUUL_PORT || process.env.PORT || 3000;
 
 module.exports = function () {
     const router = new mapleTree.RouteTree();
@@ -12,7 +12,7 @@ module.exports = function () {
 
     router.define("/read", (ws) => {
         const values = ["a", "b", "c", "d"];
-        var timer = setInterval(() => {
+        const timer = setInterval(() => {
             const next = values.shift();
             if (next) {
                 ws.send(next);
@@ -25,6 +25,7 @@ module.exports = function () {
 
     router.define("/echo", (ws) => {
         ws.on("message", (data) => {
+            // console.log("received message: ", data);
             ws.send(data);
         });
     });
@@ -37,5 +38,4 @@ module.exports = function () {
     });
 
     return wss;
-
 };

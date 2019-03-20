@@ -2,9 +2,8 @@ const {
     is
 } = adone;
 
-export default function () {
-    let buffers = [];
-    let length = 0;
+module.exports = function () {
+    let buffers = []; let length = 0;
 
     return {
         length,
@@ -29,7 +28,7 @@ export default function () {
                 length = 0;
                 const _buffers = buffers;
                 buffers = [];
-                if (_buffers.length === 1) {
+                if (_buffers.length == 1) {
                     return _buffers[0];
                 }
                 return Buffer.concat(_buffers);
@@ -43,8 +42,7 @@ export default function () {
                 length -= n;
                 return buf;
             } else if (n < length) {
-                const out = [];
-                let len = 0;
+                const out = []; let len = 0;
 
                 while ((len + buffers[0].length) < n) {
                     const b = buffers.shift();
@@ -58,9 +56,7 @@ export default function () {
                     this.length = length = length - n;
                 }
                 return Buffer.concat(out);
-            }
-            throw new Error(`could not get ${n} bytes`);
+            } throw new Error(`could not get ${n} bytes`);
         }
     };
-
-}
+};

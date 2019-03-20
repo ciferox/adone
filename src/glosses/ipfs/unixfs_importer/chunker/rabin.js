@@ -1,5 +1,5 @@
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { streamToPullStream: toPull, through2: through } = pull;
 

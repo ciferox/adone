@@ -4,7 +4,7 @@ const series = require("async/series");
 const {
     multiformat: { multiaddr },
     p2p: { transport: { TCP } },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { pair } = pull;
 

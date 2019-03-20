@@ -1,10 +1,11 @@
-import tester from "../util/tester";
 
-const {
-    stream: { pull }
-} = adone;
 
-export default function filterNot(test) {
+const tester = require("../util/tester");
+const filter = require("./filter");
+
+module.exports = function filterNot(test) {
     test = tester(test);
-    return pull.filter((data) => !test(data));
-}
+    return filter((data) => {
+        return !test(data); 
+    });
+};

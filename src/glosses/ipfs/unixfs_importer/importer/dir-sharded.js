@@ -8,7 +8,7 @@ const Bucket = require('hamt-sharding')
 const {
     multiformat: { multihashingAsync: multihashing },
     ipfs: { UnixFs, ipld: { dagPb } },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { asyncMap, asyncIteratorToPullStream, onEnd } = pull;
 

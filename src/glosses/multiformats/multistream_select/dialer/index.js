@@ -7,7 +7,7 @@ const PROTOCOL_ID = require("./../constants").PROTOCOL_ID;
 
 const {
     p2p: { Connection },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { collect, map, take, lengthPrefixed } = pull;
 

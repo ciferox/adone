@@ -2,5 +2,5 @@ adone.lazify({
     source: "./source",
     through: "./through",
     sink: "./sink",
-    duplex: "./duplex"
+    duplex: "./duplex"    
 }, exports, require);

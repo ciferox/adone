@@ -1,7 +1,9 @@
-describe("stream", "pull", "pushable", () => {
-    const { stream: { pull } } = adone;
-    const { pushable } = pull;
+const {
+    stream: { pull }
+} = adone;
+const { pushable } = pull;
 
+describe("stream", "pull", "pushable", () => {
     it("pushable", (done) => {
         const buf = pushable();
 
@@ -17,6 +19,7 @@ describe("stream", "pull", "pushable", () => {
         pull(
             buf,
             pull.collect((end, array) => {
+                // console.log(array);
                 assert.deepEqual(array, [1, 2, 3]);
                 done();
             })
@@ -32,8 +35,8 @@ describe("stream", "pull", "pushable", () => {
     it("pushable with separated functions", (done) => {
         const { push, end, source, buffer } = pushable(true);
 
-        assert.equal(typeof source, "function", "is a function");
-        assert.equal(source.length, 2, "is a source stream");
+        expect(typeof source).to.equal("function");
+        expect(source.length).to.equal(2);
 
         push(1);
         push(2);
@@ -46,7 +49,8 @@ describe("stream", "pull", "pushable", () => {
                 if (err) {
                     throw err;
                 }
-                assert.deepEqual(data, [1, 2, 3], "got expected output");
+                // console.log(data);
+                expect(data).to.eql([1, 2, 3]);
                 done();
             })
         );
@@ -58,52 +62,59 @@ describe("stream", "pull", "pushable", () => {
     describe("abort", () => {
         it("abort after a read", (done) => {
             const _err = new Error("test error");
-            const s1 = spy();
-            const s2 = spy();
-
-            const p = pushable(s1);
+            const p = pushable((err) => {
+                // console.log("on close");
+                assert.equal(err, _err);
+            });
 
             // manual read.
-            p(null, s2);
+            p(null, (err, data) => {
+                // console.log("read cb");
+                assert.equal(err, _err);
+            });
 
             p(_err, () => {
-                expect(s1).to.have.been.calledWith(_err);
-                expect(s2).to.have.been.calledWith(_err);
+                // console.log("abort cb");
                 done();
             });
         });
 
         it("abort without a read", (done) => {
             const _err = new Error("test error");
-            const s1 = spy();
-            const p = pushable(s1);
+            const p = pushable((err) => {
+                // console.log("on close");
+                assert.equal(err, _err);
+            });
 
             p(_err, () => {
-                expect(s1).to.have.been.calledWith(_err);
+                // console.log("abort cb");
                 done();
             });
         });
 
         it("abort without a read, with data", (done) => {
             const _err = new Error("test error");
-            const s1 = spy();
-            const p = pushable(s1);
+            const p = pushable((err) => {
+                // console.log("on close");
+                assert.equal(err, _err);
+            });
 
             p(_err, () => {
-                expect(s1).to.have.been.calledWith(_err);
+                // console.log("abort cb");
                 done();
             });
 
             p.push(1);
         });
+
     });
 
     describe("end", () => {
         it("pushable", (done) => {
             const buf = pushable();
 
-            assert.equal("function", typeof buf);
-            assert.equal(2, buf.length);
+            expect("function").to.equal(typeof buf);
+            expect(2).to.equal(buf.length);
 
             buf.push(1);
             buf.push(2);
@@ -111,16 +122,16 @@ describe("stream", "pull", "pushable", () => {
             buf.end();
 
             buf(null, (end, data) => {
-                assert.equal(data, 1);
+                expect(data).to.equal(1);
                 assert.notOk(end);
                 buf(null, (end, data) => {
-                    assert.equal(data, 2);
+                    expect(data).to.equal(2);
                     assert.notOk(end);
                     buf(null, (end, data) => {
-                        assert.equal(data, 3);
+                        expect(data).to.equal(3);
                         assert.notOk(end);
                         buf(null, (end, data) => {
-                            assert.equal(data, undefined);
+                            expect(data).to.equal(undefined);
                             assert.ok(end);
                             done();
                         });
@@ -138,6 +149,7 @@ describe("stream", "pull", "pushable", () => {
                 if (err) {
                     throw err;
                 }
+                // console.log("ended", err);
                 assert.equal(i, 3);
                 done();
             });
@@ -146,8 +158,9 @@ describe("stream", "pull", "pushable", () => {
                 p,
                 pull.take(3),
                 pull.drain((d) => {
+                    // console.log(d);
                     assert.equal(d, ++i);
-                })
+                }, console.log.bind(console, "end"))
             );
 
             p.push(1);

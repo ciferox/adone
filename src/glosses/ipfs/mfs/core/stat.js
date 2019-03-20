@@ -7,7 +7,7 @@ const waterfall = require('async/waterfall')
 const log = require('debug')('ipfs:mfs:stat')
 
 const {
-    stream: { pull2: pull },
+    stream: { pull },
     multiformat: { CID }
 } = adone;
 const { collect, asyncMap } = pull;

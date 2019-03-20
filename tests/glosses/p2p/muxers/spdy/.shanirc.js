@@ -1,7 +1,7 @@
 const {
     multiformat: { multiaddr },
     p2p: { muxer: { spdy }, transport: { WS } },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 
 export default (ctx) => {

@@ -1,19 +1,18 @@
 const {
-    is,
-    data: { varint }
+    is
 } = adone;
 
 const poolSize = 10 * 1024;
 
 const createPool = () => Buffer.alloc(poolSize);
 
-export default function encode(opts) {
-    opts = {
-        fixed: false,
-        ...opts
-    };
+module.exports = function (opts) {
+    opts = Object.assign({
+        fixed: false
+    }, opts || {});
 
     // Only needed for varint
+    const varint = require("varint");
     let pool = opts.fixed ? null : createPool();
     let used = 0;
 
@@ -61,4 +60,4 @@ export default function encode(opts) {
             ]));
         });
     };
-}
+};

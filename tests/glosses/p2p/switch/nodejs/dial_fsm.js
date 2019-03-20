@@ -5,7 +5,7 @@ const createInfos = utils.createInfos;
 
 const {
     p2p: { PeerBook, transport: { WS, TCP }, secio, Switch, muxer: { pullMplex } },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 
 describe("dialFSM", () => {

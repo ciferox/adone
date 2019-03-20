@@ -1,9 +1,9 @@
-const {
-    stream: { pull }
-} = adone;
 
-export default function log(done) {
-    return pull.drain((data) => {
+
+const drain = require("./drain");
+
+module.exports = function log(done) {
+    return drain((data) => {
         console.log(data);
     }, done);
-}
+};

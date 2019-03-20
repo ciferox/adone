@@ -1,21 +1,19 @@
+const {
+    stream: { pull }
+} = adone;
+const { block, pushable: Pushable, lengthPrefixed: lp, reader: Reader } = pull;
+
+const varint = require("varint");
+
+const delay = function (time) {
+    return pull.asyncMap((val, cb) => {
+        setTimeout(() => {
+            cb(null, val);
+        }, time);
+    });
+};
+
 describe("stream", "pull", "lengthPrefixed", () => {
-    const {
-        data: { varint },
-        stream: { pull }
-    } = adone;
-
-    const {
-        lengthPrefixed: lp
-    } = pull;
-
-    const delay = (time) => {
-        return pull.asyncMap((val, cb) => {
-            setTimeout(() => {
-                cb(null, val);
-            }, time);
-        });
-    };
-
     it("basics", (done) => {
         const input = [
             Buffer.from("hello "),
@@ -55,7 +53,7 @@ describe("stream", "pull", "lengthPrefixed", () => {
                             input
                         ).to.be.eql(
                             output
-                            );
+                        );
                         done();
                     })
                 );
@@ -74,8 +72,7 @@ describe("stream", "pull", "lengthPrefixed", () => {
             lp.encode(),
             pull.collect((err, encoded) => {
                 if (err) {
-                    throw err
-                    ;
+                    throw err;
                 }
 
                 const helloLen = varint.encode("hello ".length);
@@ -96,12 +93,10 @@ describe("stream", "pull", "lengthPrefixed", () => {
                 pull(
                     pull.values(encoded),
                     lp.decode({ maxLength: 1 }),
-                    pull.collect((err, output) => {
-                        expect(
-                            err
-                        ).to.be.eql(
-                            "size longer than max permitted length of 1!"
-                            );
+                    pull.collect((err) => {
+                        expect(err).to.include({
+                            message: "size longer than max permitted length of 1!"
+                        });
                         done();
                     })
                 );
@@ -110,12 +105,11 @@ describe("stream", "pull", "lengthPrefixed", () => {
     });
 
     it("push time based", (done) => {
-        const p = pull.pushable();
+        const p = new Pushable();
         const input = [];
         let i = 0;
 
-        push();
-        function push() {
+        const push = function () {
             setTimeout(() => {
                 const val = Buffer.from(`hello ${i}`);
                 p.push(val);
@@ -128,7 +122,8 @@ describe("stream", "pull", "lengthPrefixed", () => {
                     p.end();
                 }
             }, 10);
-        }
+        };
+        push();
 
         pull(
             p,
@@ -136,14 +131,34 @@ describe("stream", "pull", "lengthPrefixed", () => {
             lp.decode(),
             pull.collect((err, output) => {
                 if (err) {
-                    throw err
-                    ;
+                    throw err;
                 }
                 expect(
                     input
                 ).to.be.eql(
                     output
-                    );
+                );
+                done();
+            })
+        );
+    });
+
+    it("invalid prefix", (done) => {
+        const input = [
+            Buffer.from("br34k mai h34rt")
+        ];
+
+        pull(
+            // encode valid input
+            pull.values(input),
+            lp.encode(),
+            // corrupt data
+            pull.map((data) => data.slice(0, -6)),
+            // attempt decode
+            lp.decode(),
+            pull.collect((err, output) => {
+                expect(err).to.be.instanceof(Error);
+                expect(output).to.deep.equal([]);
                 done();
             })
         );
@@ -165,12 +180,11 @@ describe("stream", "pull", "lengthPrefixed", () => {
             pull(
                 pull.values(input),
                 lp.encode(),
-                pull.block(size, { nopad: true }),
+                block(size, { nopad: true }),
                 lp.decode(),
                 pull.collect((err, res) => {
                     if (err) {
-                        throw err
-                        ;
+                        throw err;
                     }
 
                     expect(
@@ -208,8 +222,7 @@ describe("stream", "pull", "lengthPrefixed", () => {
                 lp.decode(),
                 pull.collect((err, res) => {
                     if (err) {
-                        throw err
-                        ;
+                        throw err;
                     }
 
                     expect(res).to.be.eql(input);
@@ -227,8 +240,7 @@ describe("stream", "pull", "lengthPrefixed", () => {
                 lp.decode(),
                 pull.collect((err, res) => {
                     if (err) {
-                        throw err
-                        ;
+                        throw err;
                     }
 
                     expect(res).to.be.eql(input);
@@ -239,100 +251,149 @@ describe("stream", "pull", "lengthPrefixed", () => {
         });
     });
 
-    // ?? remove
     describe("fixed", () => {
-        it("basics", (done) => {
-            const input = [
-                Buffer.from("hello "),
-                Buffer.from("world")
-            ];
-            const bytes = 4;
+        describe("pull-length-prefixed", () => {
+            it("basics", (done) => {
+                const input = [
+                    Buffer.from("hello "),
+                    Buffer.from("world")
+                ];
+                const bytes = 4;
 
-            pull(
-                pull.values(input),
-                lp.encode({ fixed: true, bytes }),
-                pull.collect((err, encoded) => {
-                    if (err) {
-                        throw err
-                        ;
-                    }
+                pull(
+                    pull.values(input),
+                    lp.encode({ fixed: true, bytes }),
+                    pull.collect((err, encoded) => {
+                        if (err) {
+                            throw err;
+                        }
 
-                    expect(
-                        encoded
-                    ).to.be.eql([
-                        Buffer.concat([
-                            Buffer.alloc(bytes, "00000006", "hex"),
-                            Buffer.from("hello ")
-                        ]),
-                        Buffer.concat([
-                            Buffer.alloc(bytes, "00000005", "hex"),
-                            Buffer.from("world")
-                        ])
-                    ]);
+                        expect(
+                            encoded
+                        ).to.be.eql([
+                            Buffer.concat([
+                                Buffer.alloc(bytes, "00000006", "hex"),
+                                Buffer.from("hello ")
+                            ]),
+                            Buffer.concat([
+                                Buffer.alloc(bytes, "00000005", "hex"),
+                                Buffer.from("world")
+                            ])
+                        ]);
 
-                    pull(
-                        pull.values(encoded),
-                        lp.decode({ fixed: true, bytes }),
-                        pull.collect((err, output) => {
-                            if (err) {
-                                throw err;
-                            }
-                            expect(
-                                input
-                            ).to.be.eql(
-                                output
+                        pull(
+                            pull.values(encoded),
+                            lp.decode({ fixed: true, bytes }),
+                            pull.collect((err, output) => {
+                                if (err) {
+                                    throw err;
+                                }
+                                expect(
+                                    input
+                                ).to.be.eql(
+                                    output
                                 );
-                            done();
-                        })
-                    );
-                })
-            );
+                                done();
+                            })
+                        );
+                    })
+                );
+            });
+
+            it("max length", (done) => {
+                const input = [
+                    Buffer.from("hello "),
+                    Buffer.from("world")
+                ];
+
+                const bytes = 4;
+
+                pull(
+                    pull.values(input),
+                    lp.encode({ fixed: true, bytes }),
+                    pull.collect((err, encoded) => {
+                        if (err) {
+                            throw err;
+                        }
+
+                        expect(
+                            encoded
+                        ).to.be.eql([
+                            Buffer.concat([
+                                Buffer.alloc(bytes, "00000006", "hex"),
+                                Buffer.from("hello ")
+                            ]),
+                            Buffer.concat([
+                                Buffer.alloc(bytes, "00000005", "hex"),
+                                Buffer.from("world")
+                            ])
+                        ]);
+
+                        pull(
+                            pull.values(encoded),
+                            lp.decode({ fixed: true, maxLength: 1 }),
+                            pull.collect((err) => {
+                                expect(err).to.include({
+                                    message: "size longer than max permitted length of 1!"
+                                });
+                                done();
+                            })
+                        );
+                    })
+                );
+            });
         });
+    });
 
-        it("max length", (done) => {
-            const input = [
-                Buffer.from("hello "),
-                Buffer.from("world")
-            ];
+    describe("fromReader", () => {
+        describe("pull-length-prefixed decodeFromReader", () => {
+            it("basic", (done) => {
+                const input = [
+                    Buffer.from("haay wuurl!")
+                ];
 
-            const bytes = 4;
+                const reader = Reader(1e3);
 
-            pull(
-                pull.values(input),
-                lp.encode({ fixed: true, bytes }),
-                pull.collect((err, encoded) => {
+                // length-prefix encode input
+                pull(
+                    pull.values(input),
+                    lp.encode(),
+                    reader
+                );
+
+                // decode from reader
+                lp.decodeFromReader(reader, (err, output) => {
                     if (err) {
-                        throw err
-                        ;
+                        throw err;
                     }
-
                     expect(
-                        encoded
-                    ).to.be.eql([
-                        Buffer.concat([
-                            Buffer.alloc(bytes, "00000006", "hex"),
-                            Buffer.from("hello ")
-                        ]),
-                        Buffer.concat([
-                            Buffer.alloc(bytes, "00000005", "hex"),
-                            Buffer.from("world")
-                        ])
-                    ]);
-
-                    pull(
-                        pull.values(encoded),
-                        lp.decode({ fixed: true, maxLength: 1 }),
-                        pull.collect((err, output) => {
-                            expect(
-                                err
-                            ).to.be.eql(
-                                "size longer than max permitted length of 1!"
-                                );
-                            done();
-                        })
+                        output
+                    ).to.be.eql(
+                        input[0]
                     );
-                })
-            );
+                    done();
+                });
+            });
+
+            it("empty input", (done) => {
+                const input = [];
+
+                const reader = Reader(1e3);
+
+                // length-prefix encode input
+                pull(
+                    pull.values(input),
+                    lp.encode(),
+                    reader
+                );
+
+                // decode from reader
+                lp.decodeFromReader(reader, (err, output) => {
+                    expect(err).to.be.instanceof(Error);
+                    expect(output).to.equal(undefined);
+                    done();
+                });
+            });
         });
     });
 });

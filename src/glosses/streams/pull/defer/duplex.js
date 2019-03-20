@@ -1,12 +1,11 @@
-const {
-    stream: {
-        pull: { defer }
-    }
-} = adone;
 
-export default function () {
-    const source = defer.source();
-    const sink = defer.sink();
+const Source = require("./source");
+const Sink = require("./sink");
+
+module.exports = function () {
+
+    const source = Source();
+    const sink = Sink();
 
     return {
         source,
@@ -17,4 +16,6 @@ export default function () {
 
         }
     };
+
+
 };

@@ -6,7 +6,7 @@ const config = require("./config");
 
 const {
     p2p: { PubsubBaseProtocol },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { lengthPrefixed: lp } = pull;
 

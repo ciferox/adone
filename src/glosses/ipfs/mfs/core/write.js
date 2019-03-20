@@ -22,7 +22,7 @@ const mkdir = require('./mkdir')
 
 const {
     ipfs: { UnixFs: { unmarshal }, unixfsExporter: exporter, unixfsImporter: importer },
-    stream: { pull2: pull },
+    stream: { pull },
     multiformat: { CID }
 } = adone;
 const { defer: deferred, cat, values, empty, collect, error: err } = pull;

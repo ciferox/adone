@@ -1,15 +1,10 @@
-export default function () {
-    let read;
-    let reader;
-    let cb;
-    let abort;
-    let stream;
+module.exports = function () {
+    let read; let reader; let cb; let abort; let stream;
 
-    const delayed = (_read) => {
+    const delayed = function (_read) {
         //if we already have the stream, go!
         if (stream) {
             return stream(_read);
-
         }
 
         read = _read;
@@ -18,7 +13,6 @@ export default function () {
                 reader(_abort, _cb);
             } else {
                 abort = _abort, cb = _cb;
-
             }
 
         };
@@ -27,21 +21,18 @@ export default function () {
     delayed.resolve = function (_stream) {
         if (stream) {
             throw new Error("already resolved");
-
         }
         stream = _stream;
         if (!stream) {
             throw new Error("resolve *must* be passed a transform stream");
-
         }
         if (read) {
             reader = stream(read);
             if (cb) {
                 reader(abort, cb);
-
             }
         }
     };
 
     return delayed;
-}
+};

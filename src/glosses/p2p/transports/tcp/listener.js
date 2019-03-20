@@ -12,7 +12,7 @@ const {
     lodash: { includes },
     noop,
     p2p: { Connection },
-    stream: { pull2: { streamToPullStream } },
+    stream: { pull: { streamToPullStream } },
     std: { net, os }
 } = adone;
 

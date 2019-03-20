@@ -1,25 +1,30 @@
-describe("stream", "pull", "utf8decoder", () => {
-    const fs = require("fs");
-    const file = fs.readFileSync(__filename, "utf-8").split(/(\n)/).map((e) => {
-        return Buffer.from(e);
-    });
-    const { stream: { pull } } = adone;
-    const { utf8decoder: decode } = pull;
+const {
+    stream: { pull },
+    std: { fs }
+} = adone;
+const { utf8Decoder } = pull;
 
-    //handle old node and new node
-    const A = (buf) => {
-        return [].slice.call(buf);
-    };
+const file = fs.readFileSync(__filename, "utf-8").split(/(\n)/).map((e) => Buffer.from(e));
 
+// console.log(file);
+
+//handle old node and new node
+// eslint-disable-next-line func-style
+function A(buf) {
+    return [].slice.call(buf);
+}
+
+describe("stream", "pull", "utf8Decoder", () => {
     it("lines", (done) => {
+
         pull(
             pull.values(file),
-            decode("utf8"),
+            utf8Decoder("utf8"),
             pull.collect((err, ary) => {
                 if (err) {
                     throw err;
-
                 }
+                // console.log(ary.join(""));
                 assert.equal(file.map(String).join(""), ary.join(""));
                 done();
             })
@@ -40,7 +45,7 @@ describe("stream", "pull", "utf8decoder", () => {
             return a.concat(b);
         });
 
-        const rSplit = () => {
+        const rSplit = function () {
             const s = coinage.slice();
             const a = [];
             while (s.length) {
@@ -52,20 +57,17 @@ describe("stream", "pull", "utf8decoder", () => {
             });
         };
 
+        expect(100).checks(done);
         let N = 100;
-        let i = 0;
+
         while (N--) {
             pull(
                 pull.values(rSplit()),
-                decode(),
+                utf8Decoder(),
                 pull.collect((err, ary) => {
-                    assert.equal(ary.join(""), expected);
-                    if (++i === 100) {
-                        done();
-                    }
+                    expect(ary.join("")).to.equal(expected).mark();
                 })
             );
         }
-
     });
 });

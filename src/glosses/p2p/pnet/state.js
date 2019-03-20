@@ -2,7 +2,7 @@ const crypto = require("crypto");
 const debug = require("debug");
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { cat, defer: deferred, reader: Reader, pair } = pull;
 

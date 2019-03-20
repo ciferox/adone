@@ -1,7 +1,7 @@
 const Duplex = require('readable-stream').Duplex
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { pushable } = pull;
 

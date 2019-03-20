@@ -9,7 +9,7 @@ const {
     multiformat: { mafmt, multiaddrToUri: toUri },
     is,
     p2p: { Connection },
-    stream: { pull2: { ws: { connect } } }
+    stream: { pull: { ws: { connect } } }
 } = adone;
 
 class WebSockets {

@@ -1,15 +1,15 @@
 const {
-    is,
     stream: { pull }
 } = adone;
+const { split } = pull;
 
-export default function serializer(ps, _JSON, opts) {
+export default function (ps, _JSON, opts) {
     _JSON = _JSON || JSON;
     opts = opts || {};
     const separator = opts.separator || "\n";
     return {
         sink: pull(
-            pull.split(separator),
+            split(separator),
             pull.map((data) => {
                 if (data === "") {
                     return data;
@@ -29,10 +29,10 @@ export default function serializer(ps, _JSON, opts) {
         source: pull(
             ps.source,
             pull.map((data) => {
-                if (!is.undefined(data)) {
+                if (data !== void 0) {
                     return _JSON.stringify(data) + separator;
                 }
             })
         )
     };
-}
+};

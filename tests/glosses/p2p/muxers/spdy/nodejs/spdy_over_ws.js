@@ -3,7 +3,7 @@ const sinon = require("sinon");
 const {
     multiformat: { multiaddr },
     p2p: { muxer: { spdy }, transport: { WS } },
-    stream: { pull2: pull },
+    stream: { pull },
     std: { fs, path }
 } = adone;
 const { file } = pull;

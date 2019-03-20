@@ -5,7 +5,7 @@ const chunkers = require('../chunker')
 
 const {
     assertion: { assert },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { pause, pushable, write: writable, map } = pull;
 

@@ -4,7 +4,7 @@ const human = require('human-to-milliseconds')
 const errCode = require('err-code')
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { pullStreamToStream: toStream, pushable: Pushable } = pull;
 

@@ -3,7 +3,7 @@ const isStream = require('is-stream')
 const isString = require('lodash/isString')
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { sort, is: { source: isSource } } = pull;
 

@@ -1,7 +1,7 @@
 const debug = require("debug");
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { abortable } = pull;
 

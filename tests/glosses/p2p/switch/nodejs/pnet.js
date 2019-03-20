@@ -6,7 +6,7 @@ const tryEcho = utils.tryEcho;
 
 const {
     p2p: { Switch, PeerBook, Protector, secio, transport: { TCP }, muxer: { pullMplex } },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 
 const generatePSK = Protector.generate;

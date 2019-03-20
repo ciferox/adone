@@ -5,7 +5,7 @@ const KEY_LENGTH = require("./key-generator").KEY_LENGTH;
 
 const {
     is,
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 
 const log = debug("libp2p:pnet");

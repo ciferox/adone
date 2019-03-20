@@ -8,7 +8,7 @@ const {
 } = adone;
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { defer, asyncMap, collect, once, flatten, filter } = pull;
 

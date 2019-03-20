@@ -10,7 +10,7 @@ const {
     is,
     noop,
     p2p: { Connection },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { catch: pullCatch, streamToPullStream: toPull } = pull;
 

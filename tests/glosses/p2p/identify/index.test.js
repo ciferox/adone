@@ -1,6 +1,6 @@
 const {
     p2p: { identify, PeerInfo },
-    stream: { pull2: pull },
+    stream: { pull },
     multiformat: { multiaddr }
 } = adone;
 const { collect, pair, values, lengthPrefixed: lp } = pull;

@@ -1,11 +1,6 @@
-const __ = adone.lazify({
-    duplex: "./duplex",
-    source: "./source",
-    sink: "./sink",
-    Server: "./server",
-    connect: "./client",
-    wsurl: "./wsurl",
-    ready: "./ready"
-}, exports, require);
+const exports = module.exports = require("./duplex");
 
-export const createServer = (opts, onConnection) => new __.Server(opts, onConnection);
+exports.source = require("./source");
+exports.sink = require("./sink");
+exports.createServer = require("./server");
+exports.connect = require("./client");

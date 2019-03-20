@@ -1,6 +1,6 @@
 const {
     is,
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { collect, values, empty, lengthPrefixed: lp, handshake } = pull;
 

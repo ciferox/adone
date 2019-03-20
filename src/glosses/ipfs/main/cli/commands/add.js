@@ -7,7 +7,7 @@ const { cidToString } = require('../../utils/cid')
 const globSource = require('../../utils/files/glob-source')
 
 const {
-    stream: { pull2: pull },
+    stream: { pull },
     multiformat: { multihash: mh, multibase }
 } = adone;
 const { streamToPullStream: toPull } = pull;

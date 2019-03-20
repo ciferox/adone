@@ -1,7 +1,7 @@
 const {
     multiformat: { multiaddr },
     p2p: { transport: { WS } },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { goodbye } = pull;
 

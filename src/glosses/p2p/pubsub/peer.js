@@ -4,7 +4,7 @@ const EventEmitter = require("events");
 const rpc = require("./message").rpc.RPC;
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { pushable: Pushable, lengthPrefixed: lp } = pull;
 

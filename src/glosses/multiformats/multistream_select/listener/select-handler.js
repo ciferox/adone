@@ -3,7 +3,7 @@ const some = require("async/some");
 
 const {
     p2p: { Connection },
-    stream: { pull2: { lengthPrefixed, handshake } }
+    stream: { pull: { lengthPrefixed, handshake } }
 } = adone;
 
 const selectHandler = function (rawConn, handlersMap, log) {

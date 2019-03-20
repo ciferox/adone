@@ -3,7 +3,7 @@ const msg = require("./message");
 const {
     is,
     p2p: { PeerId, PeerInfo },
-    stream: { pull2: pull },
+    stream: { pull },
     multiformat: { multiaddr }
 } = adone;
 const { take, collect, lengthPrefixed: lp } = pull;

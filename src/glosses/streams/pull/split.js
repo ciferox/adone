@@ -1,52 +1,53 @@
 const {
     is,
-    stream: { pull }
+    stream: { pull: { through2 } }
 } = adone;
 
-export default function split(matcher, mapper, reverse, last) {
+module.exports = function split(matcher, mapper, reverse, last) {
     let soFar = "";
     if (is.function(matcher)) {
         mapper = matcher, matcher = null;
     }
     if (!matcher) {
         matcher = "\n";
-
     }
 
-    const map = (stream, piece) => {
+    const map = function (stream, piece) {
         if (mapper) {
             piece = mapper(piece);
             if (!is.undefined(piece)) {
                 stream.queue(piece);
-
             }
         } else {
             stream.queue(piece);
         }
-    };
+    }
 
-    return pull.transform(function (buffer) {
+    return through2(function (buffer) {
         const stream = this;
-        const pieces = (reverse ? buffer + soFar : soFar + buffer).split(matcher);
+        const pieces = (reverse
+            ? buffer + soFar
+            : soFar + buffer
+        ).split(matcher);
 
         soFar = reverse ? pieces.shift() : pieces.pop();
         const l = pieces.length;
         for (let i = 0; i < l; i++) {
-            map(stream, pieces[reverse ? l - 1 - i : i ]);
+            map(stream, pieces[reverse ? l - 1 - i : i]);
         }
-    }, function () {
-        if (last && soFar === "") {
-            return this.queue(null);
+    },
+        function () {
+            if (last && soFar == "") {
+                return this.queue(null);
+            }
 
-        }
+            (!is.nil(soFar));
+            // && (last && soFar != ''))
+            map(this, soFar);
 
-        (!is.nil(soFar));
-        // && (last && soFar != ''))
-        map(this, soFar);
-
-        this.queue(null);
-    });
-}
+            this.queue(null);
+        });
+};
 
 
 

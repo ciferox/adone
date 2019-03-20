@@ -5,7 +5,7 @@ const {
     database: { level },
     datastore2: { MountDatastore, interface: { Key, util }, backend: { LevelDatastore } },
     std: { path },
-    stream: { pull2: pull },
+    stream: { pull },
     multiformat: { CID }
 } = adone;
 const tesInterface = require("../interface");

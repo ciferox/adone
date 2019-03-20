@@ -3,7 +3,7 @@ const log = require('debug')('ipfs:mfs:utils:to-trail')
 
 const {
     ipfs: { unixfsExporter: exporter },
-    stream: { pull2: pull },
+    stream: { pull },
     multiformat: { CID }
 } = adone;
 const { collect, filter, map } = pull;

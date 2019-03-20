@@ -7,7 +7,7 @@ const etm = require("../etm");
 const crypto = require("./crypto");
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { handshake, error: pullError } = pull;
 

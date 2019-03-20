@@ -10,7 +10,7 @@ const State = require("./state");
 const {
     is,
     p2p: { Connection, PeerInfo },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 
 module.exports = {

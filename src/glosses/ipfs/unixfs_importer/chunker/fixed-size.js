@@ -1,7 +1,7 @@
 const BufferList = require('bl')
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { through2: through } = pull;
 

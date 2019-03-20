@@ -7,7 +7,7 @@ const CONSTANTS = require('./constants')
 const logger = require('./utils').logger
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { lengthPrefixed: lp } = pull;
 

@@ -1,11 +1,14 @@
-describe("stream", "pull", "cat", () => {
-    const { stream: { pull } } = adone;
-    const { cat } = pull;
+const {
+    stream: { pull }
+} = adone;
+const { cat, pushable: Pushable, abortable: Abortable } = pull;
 
+describe("stream", "pull", "cat", () => {
     it("cat", (done) => {
         pull(
             cat([pull.values([1, 2, 3]), pull.values([4, 5, 6])]),
             pull.collect((err, ary) => {
+                // console.log(err, ary);
                 assert.notOk(err);
                 assert.deepEqual(ary, [1, 2, 3, 4, 5, 6]);
                 done();
@@ -17,6 +20,7 @@ describe("stream", "pull", "cat", () => {
         pull(
             cat([pull.values([1, 2, 3]), null, pull.values([4, 5, 6])]),
             pull.collect((err, ary) => {
+                // console.log(err, ary);
                 assert.notOk(err);
                 assert.deepEqual(ary, [1, 2, 3, 4, 5, 6]);
                 done();
@@ -33,6 +37,7 @@ describe("stream", "pull", "cat", () => {
         pull(
             cat([pull.values([1, 2, 3]), justEnd, pull.values([4, 5, 6])]),
             pull.collect((err, ary) => {
+                // console.log(err, ary);
                 assert.ok(ended);
                 assert.notOk(err);
                 assert.deepEqual(ary, [1, 2, 3, 4, 5, 6]);
@@ -62,6 +67,7 @@ describe("stream", "pull", "cat", () => {
                 cb(err);
             }]),
             pull.collect((_err) => {
+                // console.log("COLLECT END", _err);
                 assert.equal(_err, err);
                 done();
             })
@@ -69,18 +75,9 @@ describe("stream", "pull", "cat", () => {
     });
 
     it("abort stalled", (done) => {
-        const err = new Error("intentional");
-        let n = 2;
-        const next = () => {
-            if (--n) {
-                return;
-
-            }
-            done();
-        };
-
-        const abortable = pull.abortable();
-        const pushable = pull.pushable((_err) => {
+        const err = new Error("intentional"); let n = 2;
+        const abortable = Abortable();
+        const pushable = Pushable((_err) => {
             assert.equal(_err, err);
             next();
         });
@@ -91,7 +88,7 @@ describe("stream", "pull", "cat", () => {
             cat([pull.values([1, 2, 3]), undefined, pushable]),
             abortable,
             pull.drain((item) => {
-                if (item === 4) {
+                if (item == 4) {
                     process.nextTick(() => {
                         abortable.abort(err);
                     });
@@ -100,6 +97,13 @@ describe("stream", "pull", "cat", () => {
                 next();
             })
         );
+
+        function next() {
+            if (--n) {
+                return;
+            }
+            done();
+        }
     });
 
     it("abort empty", (done) => {
@@ -129,6 +133,7 @@ describe("stream", "pull", "cat", () => {
                 pull(pull.values([8, 7, 6, 5]), pull.take(3))
             ]),
             pull.collect((err, data) => {
+                assert.notExists(err);
                 assert.deepEqual(data, [1, 2, 8, 7, 6]);
                 done();
             })
@@ -144,7 +149,7 @@ describe("stream", "pull", "cat", () => {
             }, function (_err, cb) {
                 //this stream should be aborted.
                 aborted = true;
-                assert.equal(_err, err);
+                assert.strictEqual(_err, err);
                 cb();
             }]),
             pull.collect((_err) => {

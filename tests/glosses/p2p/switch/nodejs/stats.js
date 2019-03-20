@@ -8,7 +8,7 @@ const { createInfos, tryEcho } = utils;
 
 const {
     p2p: { secio, Switch, PeerBook, transport: { TCP }, muxer: { mplex } },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 
 describe("Stats", () => {

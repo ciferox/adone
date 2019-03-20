@@ -1,7 +1,7 @@
 const EventEmitter = require("events");
 
 const {
-    stream: { pull2: { map } }
+    stream: { pull: { map } }
 } = adone;
 
 /**

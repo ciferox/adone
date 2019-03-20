@@ -5,7 +5,7 @@ const { createInfos, tryEcho } = utils;
 
 const {
     p2p: { Switch, PeerBook, transport: { TCP, WS }, muxer: { pullMplex, spdy } },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 
 describe("Switch (everything all together)", () => {

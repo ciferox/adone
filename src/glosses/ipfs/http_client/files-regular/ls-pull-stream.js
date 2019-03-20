@@ -3,7 +3,7 @@ const cleanCID = require("../utils/clean-cid");
 
 const {
     ipfs: { isIPFS },
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { defer: deferred, values } = pull;
 

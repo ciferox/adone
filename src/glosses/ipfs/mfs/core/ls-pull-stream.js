@@ -12,7 +12,7 @@ const {
 } = adone;
 
 const {
-    stream: { pull2: pull }
+    stream: { pull }
 } = adone;
 const { defer, collect, asyncMap, once, error, filter } = pull;
 
