@@ -2,7 +2,7 @@ const withIs = require('class-is')
 
 const {
     ipfs: { ipns },
-    datastore2: { backend: { PubsubDatastore } },
+    datastore: { backend: { PubsubDatastore } },
     multiformat: { multihash: { fromB58String, toB58String } }
 } = adone;
 

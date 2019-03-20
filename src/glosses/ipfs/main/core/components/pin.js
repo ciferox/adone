@@ -14,7 +14,7 @@ const { resolvePath } = require('../utils')
 
 const {
     ipfs: { ipld: { dagPb } },
-    datastore2: { interface: { Key } },
+    datastore: { interface: { Key } },
     multiformat: { CID },
     multiformat: { multibase }
 } = adone;

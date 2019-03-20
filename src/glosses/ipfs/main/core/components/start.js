@@ -10,7 +10,7 @@ const createLibp2pBundle = require('./libp2p')
 
 const {
     ipfs: { Bitswap },
-    datastore2: { TieredDatastore }
+    datastore: { TieredDatastore }
 } = adone;
 
 module.exports = (self) => {

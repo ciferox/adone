@@ -1,5 +1,6 @@
 adone.lazify({
-    Memory: "./memory",
-    Fs: "./fs",
-    Level: "./level"
+    MemoryDatastore: "./memory",
+    FsDatastore: "./fs",
+    LevelDatastore: "./level",
+    PubsubDatastore: "./pubsub"
 }, exports, require);

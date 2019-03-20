@@ -1,7 +1,10 @@
 adone.lazify({
-    Key: "./key",
-    utils: "./utils",
-    shard: "./shard",
+    interface: "./interface",
     backend: "./backends",
-    wrapper: "./wrappers"
-}, exports, require);
+    KeyTransformDatastore: "./core/key_transform",
+    ShardingDatastore: "./core/sharding",
+    MountDatastore: "./core/mount",
+    TieredDatastore: "./core/tiered",
+    NamespaceDatastore: "./core/namespace",
+    shard: "./core/shard"
+}, adone.asNamespace(exports), require);

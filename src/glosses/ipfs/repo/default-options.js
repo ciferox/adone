@@ -1,7 +1,7 @@
 // Default configuration for a repo in node.js
 
 const {
-    datastore2: { backend: { FsDatastore, LevelDatastore } }
+    datastore: { backend: { FsDatastore, LevelDatastore } }
 } = adone;
 
 module.exports = {

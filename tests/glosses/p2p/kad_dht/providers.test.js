@@ -6,7 +6,7 @@ const each = require("async/each");
 const eachSeries = require("async/eachSeries");
 
 const {
-    datastore2: { backend: { MemoryDatastore, LevelDatastore } },
+    datastore: { backend: { MemoryDatastore, LevelDatastore } },
     lodash: { range },
     std: { os, path },
     multiformat: { CID, multihashingAsync: multihashing }

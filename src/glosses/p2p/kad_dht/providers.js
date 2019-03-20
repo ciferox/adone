@@ -6,7 +6,7 @@ const c = require("./constants");
 const utils = require("./utils");
 
 const {
-    datastore2: { interface: { Key } },
+    datastore: { interface: { Key } },
     p2p: { PeerId },
     stream: { pull },
     multiformat: { CID }

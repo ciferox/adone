@@ -1,83 +1,64 @@
+const eachSeries = require("async/eachSeries");
+
 const {
-    is,
-    fs,
-    datastore: { Key, backend: { Level }, wrapper: { Mount } }
+    database: { level },
+    datastore: { backend: { LevelDatastore } }
 } = adone;
 
-const tmpdir = () => adone.fs.tmpName({
-    prefix: "",
-    nameGenerator: adone.util.uuid.v4
-});
-
-
 describe("datastore", "backend", "LevelDatastore", () => {
-    describe("interface (memory)", () => {
-        require("../../interface")({
-            async setup() {
-                const ds = new Level({
-                    db: adone.database.level.backend.Memory
-                });
+    describe("initialization", () => {
+        it("should default to a leveldown database", (done) => {
+            const levelStore = new LevelDatastore("init-default");
 
-                await ds.open();
-                return ds;
-            },
-            teardown() {
-            }
+            levelStore.open((err) => {
+                expect(err).to.not.exist();
+                expect(levelStore.db.db.db instanceof level.backend.LevelDB).to.equal(true);
+                expect(levelStore.db.options).to.include({
+                    createIfMissing: true,
+                    errorIfExists: false
+                });
+                expect(levelStore.db.db.codec.opts).to.include({
+                    valueEncoding: "binary"
+                });
+                done();
+            });
+        });
+
+        it("should be able to override the database", (done) => {
+            const levelStore = new LevelDatastore("init-default", {
+                db: level.backend.Memory,
+                createIfMissing: true,
+                errorIfExists: true
+            });
+
+            levelStore.open((err) => {
+                expect(err).to.not.exist();
+                expect(levelStore.db.db.db instanceof level.backend.Memory).to.equal(true);
+                expect(levelStore.db.options).to.include({
+                    createIfMissing: true,
+                    errorIfExists: true
+                });
+                done();
+            });
         });
     });
 
-    describe("interface (leveldb)", () => {
-        let dir;
-        require("../../interface")({
-            async setup() {
-                if (is.undefined(dir)) {
-                    dir = await tmpdir();
+    eachSeries([
+        level.backend.Memory,
+        level.backend.LevelDB
+    ], (Database) => {
+        describe(`interface-datastore ${Database.name}`, () => {
+            require("../interface")({
+                setup(callback) {
+                    callback(null, new LevelDatastore("datastore-test", { db: Database }));
+                },
+                teardown(callback) {
+                    // memdown.clearGlobalStore();
+                    callback();
                 }
-                const ds = new Level({
-                    location: dir
-                });
-                await ds.open();
-                return ds;
-            },
-            async teardown() {
-                await fs.rm(dir);
-            }
+            });
         });
-    });
-
-    describe("interface (mount(leveldown, leveldown, leveldown))", () => {
-        const dirs = [];
-
-        require("../../interface")({
-            async setup() {
-                if (dirs.length === 0) {
-                    dirs.push(await tmpdir(), await tmpdir(), await tmpdir());
-                }
-                const ds = new Mount([{
-                    prefix: new Key("/a"),
-                    datastore: new Level({
-                        location: dirs[0]
-                    })
-                }, {
-                    prefix: new Key("/q"),
-                    datastore: new Level({
-                        location: dirs[1]
-                    })
-                }, {
-                    prefix: new Key("/z"),
-                    datastore: new Level({
-                        location: dirs[2]
-                    })
-                }]);
-
-                await ds.open();
-                return ds;
-            },
-            async teardown() {
-                for (const dir of dirs) {
-                    await fs.rm(dir); // eslint-disable-line
-                }
-            }
-        });
+    }, (err) => {
+        expect(err).to.not.exist();
     });
 });

@@ -6,7 +6,7 @@ const CMS = require("./cms");
 
 const {
     is,
-    datastore2: { interface: { Key } },
+    datastore: { interface: { Key } },
     p2p: { crypto },
     stream: { pull }
 } = adone;

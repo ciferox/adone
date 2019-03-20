@@ -1,5 +1,5 @@
 const {
-    datastore2: { interface: { Key } }
+    datastore: { interface: { Key } }
 } = adone;
 
 const series = require('async/series')

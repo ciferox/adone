@@ -19,7 +19,7 @@ const defaultsDeep = require("@nodeutils/defaults-deep");
 
 const {
     is,
-    datastore2: { backend: { MemoryDatastore } },
+    datastore: { backend: { MemoryDatastore } },
     p2p: { crypto, record: libp2pRecord, PeerId, PeerInfo }
 } = adone;
 

@@ -1,5 +1,5 @@
 const {
-    datastore2: { backend: { MemoryDatastore } }
+    datastore: { backend: { MemoryDatastore } }
 } = adone;
 
 const createNode = require("../utils/create_node");

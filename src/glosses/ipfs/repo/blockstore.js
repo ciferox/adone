@@ -5,7 +5,7 @@ const pull = require('pull-stream')
 
 const {
     ipfs: { Block },
-    datastore2: { shard: sh, ShardingDatastore, interface: { Key } },
+    datastore: { shard: sh, ShardingDatastore, interface: { Key } },
     multiformat: { CID }
 } = adone;
 

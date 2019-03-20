@@ -72,7 +72,7 @@ export default class extends BaseTask {
             args: entry
         })));
         
-        observer.task.manager.getTask(observer.taskName).cancelable = true; // Big hack!
+        observer.taskInfo.cancelable = true; // Big hack!
 
         return observer.result;
     }

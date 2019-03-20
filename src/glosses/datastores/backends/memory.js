@@ -1,66 +1,88 @@
-const { asyncFilter, asyncSort } = require("../utils");
+const setImmediate = require("async/setImmediate");
 
 const {
     is,
+    datastore: { interface: { Key, error, util: { asyncFilter, asyncSort } } },
     stream: { pull }
 } = adone;
 
-export default class MemoryDatastore {
+class MemoryDatastore {
+    /**
+     * :: data: {[key: string]: Buffer}
+     */
+
     constructor() {
         this.data = {};
     }
 
-    async open() {
+    open(callback /* : Callback<void> */) /* : void */ {
+        setImmediate(callback);
     }
 
-    async put(key, val) {
+    put(key /* : Key */, val /* : Buffer */, callback /* : Callback<void> */) /* : void */ {
         this.data[key.toString()] = val;
+
+        setImmediate(callback);
     }
 
-    async get(key) {
-        if (!this.has(key)) {
-            throw new Error("No value");
-        }
+    get(key /* : Key */, callback /* : Callback<Buffer> */) /* : void */ {
+        this.has(key, (err, exists) => {
+            if (err) {
+                return callback(err);
+            }
 
-        return this.data[key.toString()];
+            if (!exists) {
+                return callback(error.notFoundError());
+            }
+
+            callback(null, this.data[key.toString()]);
+        });
     }
 
-    async has(key) {
-        return !is.undefined(this.data[key.toString()]);
+    has(key /* : Key */, callback /* : Callback<bool> */) /* : void */ {
+        setImmediate(() => {
+            callback(null, !is.undefined(this.data[key.toString()]));
+        });
     }
 
-    async delete(key) {
+    delete(key /* : Key */, callback /* : Callback<void> */) /* : void */ {
         delete this.data[key.toString()];
+
+        setImmediate(() => {
+            callback();
+        });
     }
 
-    batch() {
+    batch() /* : Batch<Buffer> */ {
         let puts = [];
-        let deletes = [];
+        let dels = [];
 
         return {
-            put(key, value) {
+            put(key /* : Key */, value /* : Buffer */) /* : void */ {
                 puts.push([key, value]);
             },
-            delete(key) {
-                deletes.push(key);
+            delete(key /* : Key */) /* : void */ {
+                dels.push(key);
             },
-            commit: async () => {
+            commit: (callback /* : Callback<void> */) /* : void */ => {
                 puts.forEach((v) => {
                     this.data[v[0].toString()] = v[1];
                 });
 
                 puts = [];
-                deletes.forEach((key) => {
+                dels.forEach((key) => {
                     delete this.data[key.toString()];
                 });
-                deletes = [];
+                dels = [];
+
+                setImmediate(callback);
             }
         };
     }
 
-    async query(q) {
+    query(q /* : Query<Buffer> */) /* : QueryResult<Buffer> */ {
         let tasks = [pull.keys(this.data), pull.map((k) => ({
-            key: new adone.datastore.Key(k),
+            key: new Key(k),
             value: this.data[k]
         }))];
 
@@ -83,6 +105,7 @@ export default class MemoryDatastore {
 
         if (!is.nil(q.offset)) {
             let i = 0;
+            // $FlowFixMe
             tasks.push(pull.filter(() => i++ >= q.offset));
         }
 
@@ -97,6 +120,9 @@ export default class MemoryDatastore {
         return pull.apply(null, tasks);
     }
 
-    close() {
+    close(callback /* : Callback<void> */) /* : void */ {
+        setImmediate(callback);
     }
 }
+
+module.exports = MemoryDatastore;

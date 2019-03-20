@@ -1,14 +1,15 @@
 const {
-    datastore: { backend: { Memory } }
+    datastore: { backend: { MemoryDatastore } }
 } = adone;
 
-describe("datastore", "backend", "Memory", () => {
+describe("datastore", "backend", "MemoryDatastore", () => {
     describe("interface", () => {
-        require("../interface")({
-            setup() {
-                return new Memory();
+        require("./interface")({
+            setup(callback) {
+                callback(null, new MemoryDatastore());
             },
-            teardown() {
+            teardown(callback) {
+                callback();
             }
         });
     });

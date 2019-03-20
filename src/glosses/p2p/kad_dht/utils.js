@@ -6,7 +6,7 @@ const setImmediate = require("async/setImmediate");
 
 const {
     multiformat: { multihashingAsync: multihashing, multihash: mh },
-    datastore2: { interface: { Key } },
+    datastore: { interface: { Key } },
     p2p: { PeerId, record: { Record } }
 } = adone;
 

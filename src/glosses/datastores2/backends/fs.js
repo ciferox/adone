@@ -7,7 +7,7 @@ const mkdirp = require("mkdirp");
 const {
     is,
     fs: { writeFileAtomic },
-    datastore2: { interface: { Key, error, util: { asyncFilter, asyncSort } } },
+    datastore: { interface: { Key, error, util: { asyncFilter, asyncSort } } },
     stream: { pull },
     std: { fs, path }
 } = adone;

@@ -16,7 +16,7 @@ const ERRORS = require('./errors')
 
 const {
     p2p: { crypto, PeerId },
-    datastore2: { interface: { Key } }
+    datastore: { interface: { Key } }
 } = adone;
 
 

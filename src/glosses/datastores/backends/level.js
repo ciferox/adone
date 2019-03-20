@@ -1,75 +1,128 @@
 const {
     is,
-    database: { level: { DB } },
-    datastore: { Key, utils: { asyncFilter, asyncSort } },
+    database: { level },
+    datastore: { interface: { Key, error, util: { asyncFilter, asyncSort } } },
     stream: { pull }
 } = adone;
 
 /**
  * A datastore backed by leveldb.
  */
-export default class Level {
-    constructor(options) {
-        this.db = new DB({
-            compression: false,
-            valueEncoding: "binary",
-            ...options
+/**
+ * :: export type LevelOptions = {
+ * createIfMissing?: bool,
+ * errorIfExists?: bool,
+ * compression?: bool,
+ * cacheSize?: number,
+ * db?: Object
+ */
+class LevelDatastore {
+    /**
+     * :: db: levelup
+     */
+
+    constructor(path /* : string */, opts /* : ?LevelOptions */) {
+        let Database;
+
+        if (opts && opts.db) {
+            Database = opts.db;
+            delete opts.db;
+        } else {
+            Database = level.backend.LevelDB;
+        }
+
+        this.db = new level.DB(
+            new level.backend.Encoding(new Database(path), { valueEncoding: "binary" }),
+            Object.assign({}, opts, {
+                compression: false // same default as go
+            }),
+            (err) => {
+                // Prevent an uncaught exception error on duplicate locks
+                if (err) {
+                    throw err;
+                }
+            }
+        );
+    }
+
+    open(callback /* : Callback<void> */) /* : void */ {
+        this.db.open((err) => {
+            if (err) {
+                return callback(error.dbOpenFailedError(err));
+            }
+            callback();
         });
     }
 
-    open() {
-        return this.db.open();
-    }
-
-    put(key, value) {
-        return this.db.put(key.toString(), value);
-    }
-
-    get(key) {
-        return this.db.get(key.toString());
-    }
-
-    async has(key) {
-        try {
-            await this.db.get(key.toString());
-            return true;
-        } catch (err) {
-            if (err instanceof adone.error.NotFoundException) {
-                return false;
+    put(key /* : Key */, value /* : Buffer */, callback /* : Callback<void> */) /* : void */ {
+        this.db.put(key.toString(), value, (err) => {
+            if (err) {
+                return callback(error.dbWriteFailedError(err));
             }
-            throw err;
-        }
+            callback();
+        });
     }
 
-    delete(key) {
-        return this.db.del(key.toString());
+    get(key /* : Key */, callback /* : Callback<Buffer> */) /* : void */ {
+        this.db.get(key.toString(), (err, data) => {
+            if (err) {
+                return callback(error.notFoundError(err));
+            }
+            callback(null, data);
+        });
     }
 
-    close() {
-        return this.db.close();
+    has(key /* : Key */, callback /* : Callback<bool> */) /* : void */ {
+        this.db.get(key.toString(), (err, res) => {
+            if (err) {
+                if (err instanceof adone.error.NotFoundException) {
+                    callback(null, false);
+                    return;
+                }
+                callback(err);
+                return;
+            }
+
+            callback(null, true);
+        });
     }
 
-    batch() {
+    delete(key /* : Key */, callback /* : Callback<void> */) /* : void */ {
+        this.db.del(key.toString(), (err) => {
+            if (err) {
+                return callback(error.dbDeleteFailedError(err));
+            }
+            callback();
+        });
+    }
+
+    close(callback /* : Callback<void> */) /* : void */ {
+        this.db.close(callback);
+    }
+
+    batch() /* : Batch<Buffer> */ {
         const ops = [];
         return {
-            put: (key, value) => {
+            put: (key /* : Key */, value /* : Buffer */) /* : void */ => {
                 ops.push({
                     type: "put",
                     key: key.toString(),
                     value
                 });
             },
-            delete: (key) => {
+            delete: (key /* : Key */) /* : void */ => {
                 ops.push({
                     type: "del",
                     key: key.toString()
                 });
             },
-            commit: () => this.db.batch(ops)
+            commit: (callback /* : Callback<void> */) /* : void */ => {
+                this.db.batch(ops, callback);
+            }
         };
     }
 
-    async query(q) {
+    query(q /* : Query<Buffer> */) /* : QueryResult<Buffer> */ {
         let values = true;
         if (!is.nil(q.keysOnly)) {
             values = !q.keysOnly;
@@ -83,20 +136,28 @@ export default class Level {
 
         const rawStream = (end, cb) => {
             if (end) {
-                return iter.end().catch(cb).then(() => cb(end));
+                return iter.end((err) => {
+                    cb(err || end);
+                });
             }
 
-            iter.next().catch(cb).then((result) => {
-                if (is.nil(result)) {
-                    return iter.end().catch(cb).then(() => cb(true));
+            iter.next((err, key, value) => {
+                if (err) {
+                    return cb(err);
                 }
 
-                const res = {
-                    key: new Key(result.key, false)
+                if (is.nil(err) && is.nil(key) && is.nil(value)) {
+                    return iter.end((err) => {
+                        cb(err || true);
+                    });
+                }
+
+                const res /* : QueryEntry<Buffer> */ = {
+                    key: new Key(key, false)
                 };
 
                 if (values) {
-                    res.value = Buffer.from(result.value);
+                    res.value = Buffer.from(value);
                 }
 
                 cb(null, res);
@@ -133,3 +194,5 @@ export default class Level {
         return pull.apply(null, tasks);
     }
 }
+
+module.exports = LevelDatastore;

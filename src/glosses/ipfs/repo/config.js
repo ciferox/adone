@@ -3,7 +3,7 @@ const waterfall = require('async/waterfall')
 
 const {
     lodash: { get: _get, set: _set, has: _has },
-    datastore2: { interface: { Key } }
+    datastore: { interface: { Key } }
 } = adone;
 
 const configKey = new Key('config')

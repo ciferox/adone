@@ -1,13 +1,30 @@
+const glob = require("glob");
+const setImmediate = require("async/setImmediate");
+const waterfall = require("async/series");
+const each = require("async/each");
+const mkdirp = require("mkdirp");
+
 const {
     is,
-    fs,
+    fs: { writeFileAtomic },
+    datastore: { interface: { Key, error, util: { asyncFilter, asyncSort } } },
     stream: { pull },
-    datastore: { utils, Key },
-    std: { path }
+    std: { fs, path }
 } = adone;
 
-const { asyncFilter, asyncSort } = utils;
-
+/**
+ * :: export type FsInputOptions = {
+ * createIfMissing?: bool,
+ * errorIfExists?: bool,
+ * extension?: string
+ * }
+ *
+ * type FsOptions = {
+ * createIfMissing: bool,
+ * errorIfExists: bool,
+ * extension: string
+ * }
+ */
 
 /**
  * A datastore backed by the file system.
@@ -15,22 +32,32 @@ const { asyncFilter, asyncSort } = utils;
  * Keys need to be sanitized before use, as they are written
  * to the file system as is.
  */
-export default class FsDatastore {
-    constructor(location, options) {
+class FsDatastore {
+    /**
+     * :: path: string
+     */
+    /**
+     * :: opts: FsOptions
+     */
+
+    constructor(location /* : string */, opts /* : ?FsInputOptions */) {
         this.path = path.resolve(location);
-        this.options = {
+        this.opts = Object.assign({}, {
             createIfMissing: true,
             errorIfExists: false,
-            extension: ".data",
-            ...options
-        };
+            extension: ".data"
+        }, opts);
+
+        if (this.opts.createIfMissing) {
+            this._openOrCreate();
+        } else {
+            this._open();
+        }
     }
 
-    open() {
-        if (this.options.createIfMissing) {
-            return this._openOrCreate();
-        }
-        return this._open();
+    open(callback /* : Callback<void> */) /* : void */ {
+        this._openOrCreate();
+        setImmediate(callback);
     }
 
     /**
@@ -38,13 +65,13 @@ export default class FsDatastore {
      * @private
      * @returns {void}
      */
-    async _open() {
-        if (!(await fs.exists(this.path))) {
-            throw new Error(`Datastore directory ${this.path} does not exist`);
+    _open() {
+        if (!fs.existsSync(this.path)) {
+            throw new Error(`Datastore directory: ${this.path} does not exist`);
         }
 
-        if (this.options.errorIfExists) {
-            throw new Error(`Datastore directory ${this.path} already exists`);
+        if (this.opts.errorIfExists) {
+            throw new Error(`Datastore directory: ${this.path} already exists`);
         }
     }
 
@@ -55,7 +82,7 @@ export default class FsDatastore {
      * @returns {void}
      */
     _create() {
-        return fs.mkdirp(this.path);
+        mkdirp.sync(this.path, { fs });
     }
 
     /**
@@ -64,12 +91,12 @@ export default class FsDatastore {
      * @private
      * @returns {void}
      */
-    async _openOrCreate() {
+    _openOrCreate() {
         try {
-            await this._open();
+            this._open();
         } catch (err) {
             if (err.message.match("does not exist")) {
-                await this._create();
+                this._create();
                 return;
             }
 
@@ -84,11 +111,11 @@ export default class FsDatastore {
      * @param {Key} key
      * @returns {{string, string}}
      */
-    _encode(key) {
+    _encode(key /* : Key */) /* : {dir: string, file: string} */ {
         const parent = key.parent().toString();
         const dir = path.join(this.path, parent);
         const name = key.toString().slice(parent.length);
-        const file = path.join(dir, name + this.options.extension);
+        const file = path.join(dir, name + this.opts.extension);
 
         return {
             dir,
@@ -103,8 +130,8 @@ export default class FsDatastore {
      * @param {string} file
      * @returns {Key}
      */
-    _decode(file) {
-        const ext = this.options.extension;
+    _decode(file /* : string */) /* : Key */ {
+        const ext = this.opts.extension;
         if (path.extname(file) !== ext) {
             throw new Error(`Invalid extension: ${path.extname(file)}`);
         }
@@ -121,13 +148,16 @@ export default class FsDatastore {
      *
      * @param {Key} key
      * @param {Buffer} val
+     * @param {function(Error)} callback
      * @returns {void}
      */
-    async putRaw(key, val) {
+    putRaw(key /* : Key */, val /* : Buffer */, callback /* : Callback<void> */) /* : void */ {
         const parts = this._encode(key);
-        const file = parts.file.slice(0, -this.options.extension.length);
-        await fs.mkdirp(parts.dir);
-        await fs.writeFileAtomic(file, val);
+        const file = parts.file.slice(0, -this.opts.extension.length);
+        waterfall([
+            (cb) => mkdirp(parts.dir, { fs }, cb),
+            (cb) => writeFileAtomic(file, val, cb)
+        ], (err) => callback(err));
     }
 
     /**
@@ -135,62 +165,87 @@ export default class FsDatastore {
      *
      * @param {Key} key
      * @param {Buffer} val
+     * @param {function(Error)} callback
      * @returns {void}
      */
-    async put(key, val) {
+    put(key /* : Key */, val /* : Buffer */, callback /* : Callback<void> */) /* : void */ {
         const parts = this._encode(key);
-        await fs.mkdirp(parts.dir);
-        await fs.writeFileAtomic(parts.file, val);
+        waterfall([
+            (cb) => mkdirp(parts.dir, { fs }, cb),
+            (cb) => writeFileAtomic(parts.file, val, cb)
+        ], (err) => {
+            if (err) {
+                return callback(error.dbWriteFailedError(err));
+            }
+            callback();
+        });
     }
 
     /**
      * Read from the file system without extension.
      *
      * @param {Key} key
+     * @param {function(Error, Buffer)} callback
      * @returns {void}
      */
-    getRaw(key) {
+    getRaw(key /* : Key */, callback /* : Callback<Buffer> */) /* : void */ {
         const parts = this._encode(key);
         let file = parts.file;
-        file = file.slice(0, -this.options.extension.length);
-        return fs.readFile(file);
+        file = file.slice(0, -this.opts.extension.length);
+        fs.readFile(file, (err, data) => {
+            if (err) {
+                return callback(error.notFoundError(err));
+            }
+            callback(null, data);
+        });
     }
 
     /**
      * Read from the file system.
      *
      * @param {Key} key
+     * @param {function(Error, Buffer)} callback
      * @returns {void}
      */
-    get(key) {
+    get(key /* : Key */, callback /* : Callback<Buffer> */) /* : void */ {
         const parts = this._encode(key);
-        return fs.readFile(parts.file);
+        fs.readFile(parts.file, (err, data) => {
+            if (err) {
+                return callback(error.notFoundError(err));
+            }
+            callback(null, data);
+        });
     }
 
     /**
      * Check for the existence of the given key.
      *
      * @param {Key} key
+     * @param {function(Error, bool)} callback
+     * @returns {void}
      */
-    async has(key) {
+    has(key /* : Key */, callback /* : Callback<bool> */) /* : void */ {
         const parts = this._encode(key);
-        try {
-            await fs.access(parts.file);
-            return true;
-        } catch (err) {
-            return false;
-        }
+        fs.access(parts.file, (err) => {
+            callback(null, !err);
+        });
     }
 
     /**
      * Delete the record under the given key.
      *
      * @param {Key} key
+     * @param {function(Error)} callback
      * @returns {void}
      */
-    delete(key) {
+    delete(key /* : Key */, callback /* : Callback<void> */) /* : void */ {
         const parts = this._encode(key);
-        return fs.unlink(parts.file);
+        fs.unlink(parts.file, (err) => {
+            if (err) {
+                return callback(error.dbDeleteFailedError(err));
+            }
+            callback();
+        });
     }
 
     /**
@@ -198,28 +253,25 @@ export default class FsDatastore {
      *
      * @returns {Batch}
      */
-    batch() {
+    batch() /* : Batch<Buffer> */ {
         const puts = [];
         const deletes = [];
         return {
-            put(key, value) {
+            put(key /* : Key */, value /* : Buffer */) /* : void */ {
                 puts.push({ key, value });
             },
-            delete(key) {
+            delete(key /* : Key */) /* : void */ {
                 deletes.push(key);
             },
-            commit: async () => {
-                const promises = [];
-                for (const p of puts) {
-                    promises.push(this.put(p.key, p.value));
-                }
-                await Promise.all(promises);
-
-                promises.length = 0;
-                for (const k of deletes) {
-                    promises.push(this.delete(k));
-                }
-                await Promise.all(promises);
+            commit: (callback /* : (err: ?Error) => void */) => {
+                waterfall([
+                    (cb) => each(puts, (p, cb) => {
+                        this.put(p.key, p.value, cb);
+                    }, cb),
+                    (cb) => each(deletes, (k, cb) => {
+                        this.delete(k, cb);
+                    }, cb)
+                ], (err) => callback(err));
             }
         };
     }
@@ -230,26 +282,26 @@ export default class FsDatastore {
      * @param {Object} q
      * @returns {PullStream}
      */
-    async query(q) {
+    query(q /* : Query<Buffer> */) /* : QueryResult<Buffer> */ {
         // glob expects a POSIX path
         const prefix = q.prefix || "**";
         const pattern = path
-            .join(this.path, prefix, `*${this.options.extension}`)
+            .join(this.path, prefix, `*${this.opts.extension}`)
             .split(path.sep)
             .join("/");
-        let tasks = [pull.values(await fs.glob(pattern))];
+        let tasks = [pull.values(glob.sync(pattern))];
 
         if (!q.keysOnly) {
-            tasks.push(pull.asyncMap(async (f, cb) => {
-                try {
-                    const buf = await fs.readFile(f);
+            tasks.push(pull.asyncMap((f, cb) => {
+                fs.readFile(f, (err, buf) => {
+                    if (err) {
+                        return cb(err);
+                    }
                     cb(null, {
                         key: this._decode(f),
                         value: buf
                     });
-                } catch (err) {
-                    return cb(err);
-                }
+                });
             }));
         } else {
             tasks.push(pull.map((f) => ({ key: this._decode(f) })));
@@ -275,6 +327,15 @@ export default class FsDatastore {
         return pull.apply(null, tasks);
     }
 
-    close() {
+    /**
+     * Close the store.
+     *
+     * @param {function(Error)} callback
+     * @returns {void}
+     */
+    close(callback /* : (err: ?Error) => void */) /* : void */ {
+        setImmediate(callback);
     }
 }
+
+module.exports = FsDatastore;

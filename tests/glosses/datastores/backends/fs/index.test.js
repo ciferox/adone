@@ -1,106 +1,113 @@
+const mkdirp = require("mkdirp");
+const rimraf = require("rimraf");
+const waterfall = require("async/waterfall");
+const parallel = require("async/parallel");
+
 const {
-    async: { waterfall, parallel },
-    is,
-    fs,
-    stream: { pull },
-    datastore: { Key, shard: sh, wrapper: { Sharding }, backend: { Fs } },
-    std: { path }
+    datastore: { ShardingDatastore, shard: sh, interface: { Key, util }, backend: { FsDatastore } },
+    std: { fs, path },
+    stream: { pull }
 } = adone;
 
-const tmpdir = () => adone.fs.tmpName({
-    prefix: "",
-    nameGenerator: adone.util.uuid.v4
-});
-
-describe("datastore", "backend", "Fs", () => {
+describe("datastore", "backend", "FsDatastore", () => {
     describe("construction", () => {
-        it("defaults - folder missing", async () => {
-            const dir = await tmpdir();
-            const fsd = new Fs(dir);
-            await fsd.open();
+        it("defaults - folder missing", () => {
+            const dir = util.tmpdir();
+            expect(
+                () => new FsDatastore(dir)
+            ).to.not.throw();
         });
 
-        it("defaults - folder exists", async () => {
-            const dir = await tmpdir();
-            await fs.mkdirp(dir);
-            const fsd = new Fs(dir);
-            await fsd.open();
+        it("defaults - folder exists", () => {
+            const dir = util.tmpdir();
+            mkdirp.sync(dir);
+            expect(
+                () => new FsDatastore(dir)
+            ).to.not.throw();
         });
 
-        it("createIfMissing: false - folder missing", async () => {
-            const dir = await tmpdir();
-            const fsd = new Fs(dir, { createIfMissing: false });
-            await assert.throws(async () => fsd.open());
+        it("createIfMissing: false - folder missing", () => {
+            const dir = util.tmpdir();
+            expect(
+                () => new FsDatastore(dir, { createIfMissing: false })
+            ).to.throw();
         });
 
-        it("errorIfExists: true - folder exists", async () => {
-            const dir = await tmpdir();
-            await fs.mkdirp(dir);
-            const fsd = new Fs(dir, { errorIfExists: true });
-            await assert.throws(async () => fsd.open());
+        it("errorIfExists: true - folder exists", () => {
+            const dir = util.tmpdir();
+            mkdirp.sync(dir);
+            expect(
+                () => new FsDatastore(dir, { errorIfExists: true })
+            ).to.throw();
         });
     });
 
-    it("_encode and _decode", async () => {
-        const dir = await tmpdir();
-        const fsd = new Fs(dir);
-        await fsd.open();
+    it("_encode and _decode", () => {
+        const dir = util.tmpdir();
+        const fs = new FsDatastore(dir);
 
-        expect(fsd._encode(new Key("hello/world"))).to.eql({
+        expect(
+            fs._encode(new Key("hello/world"))
+        ).to.eql({
             dir: path.join(dir, "hello"),
             file: path.join(dir, "hello", "world.data")
         });
 
-        expect(fsd._decode(fsd._encode(new Key("hello/world/test:other")).file)).to.eql(new Key("hello/world/test:other"));
+        expect(
+            fs._decode(fs._encode(new Key("hello/world/test:other")).file)
+        ).to.eql(
+            new Key("hello/world/test:other")
+        );
     });
 
-    it("sharding files", async () => {
-        const dir = await tmpdir();
-        const fstore = new Fs(dir);
-        await fstore.open();
+    it("sharding files", (done) => {
+        const dir = util.tmpdir();
+        const fstore = new FsDatastore(dir);
         const shard = new sh.NextToLast(2);
-
-        await Sharding.create(fstore, shard);
-        const file = await fs.readFile(path.join(dir, sh.SHARDING_FN));
-        expect(file.toString()).to.be.eql("/repo/flatfs/shard/v1/next-to-last/2\n");
-        const readme = await fs.readFile(path.join(dir, sh.README_FN));
-        expect(readme.toString()).to.be.eql(sh.readme);
-
-        await fs.rm(dir);
+        waterfall([
+            (cb) => ShardingDatastore.create(fstore, shard, cb),
+            (cb) => fs.readFile(path.join(dir, sh.SHARDING_FN), cb),
+            (file, cb) => {
+                expect(file.toString()).to.be.eql("/repo/flatfs/shard/v1/next-to-last/2\n");
+                fs.readFile(path.join(dir, sh.README_FN), cb);
+            },
+            (readme, cb) => {
+                expect(readme.toString()).to.be.eql(sh.readme);
+                cb();
+            },
+            (cb) => rimraf(dir, cb)
+        ], done);
     });
 
-    it("query", async (done) => {
-        const fsd = new Fs(path.join(__dirname, "test-repo", "blocks"));
-        await fsd.open();
+    it("query", (done) => {
+        const fs = new FsDatastore(path.join(__dirname, "test-repo", "blocks"));
+
         pull(
-            await fsd.query({}),
+            fs.query({}),
             pull.collect((err, res) => {
-                assert.notExists(err);
+                expect(err).to.not.exist();
                 expect(res).to.have.length(23);
                 done();
             })
         );
     });
 
-    it("interop with go", async (done) => {
+    it("interop with go", (done) => {
         const repodir = path.join(__dirname, "/test-repo/blocks");
-        const fstore = new Fs(repodir);
-        await fstore.open();
+        const fstore = new FsDatastore(repodir);
         const key = new Key("CIQGFTQ7FSI2COUXWWLOQ45VUM2GUZCGAXLWCTOKKPGTUWPXHBNIVOY");
-        const expected = await fs.readFile(path.join(repodir, "VO", `${key.toString()}.data`));
+        const expected = fs.readFileSync(path.join(repodir, "VO", `${key.toString()}.data`));
 
-        const flatfs = await Sharding.open(fstore);
         waterfall([
-            (cb) => parallel([
-                (cb) => flatfs.query({}).then((src) => {
-                    pull(
-                        src,
-                        pull.collect(cb)
-                    );
-                }),
-                (cb) => flatfs.get(key).then((val) => cb(null, val), cb)
+            (cb) => ShardingDatastore.open(fstore, cb),
+            (flatfs, cb) => parallel([
+                (cb) => pull(
+                    flatfs.query({}),
+                    pull.collect(cb)
+                ),
+                (cb) => flatfs.get(key, cb)
             ], (err, res) => {
-                assert.notExists(err);
+                expect(err).to.not.exist();
                 expect(res[0]).to.have.length(23);
                 expect(res[1]).to.be.eql(expected);
 
@@ -109,37 +116,29 @@ describe("datastore", "backend", "Fs", () => {
         ], done);
     });
 
-    describe("interface", () => {
-        let dir;
+    describe("interface-datastore", () => {
+        const dir = util.tmpdir();
 
-        require("../../interface")({
-            async setup() {
-                if (is.undefined(dir)) {
-                    dir = await tmpdir();
-                }
-                return new Fs(dir);
+        require("../interface")({
+            setup(callback) {
+                callback(null, new FsDatastore(dir));
             },
-            async teardown() {
-                await fs.rm(dir);
+            teardown(callback) {
+                rimraf(dir, callback);
             }
         });
     });
 
-    describe("interface (sharding(fs))", () => {
-        let dir;
+    describe("interface-datastore (sharding(fs))", () => {
+        const dir = util.tmpdir();
 
-        require("../../interface")({
-            async setup() {
-                if (is.undefined(dir)) {
-                    dir = await tmpdir();
-                }
+        require("../interface")({
+            setup(callback) {
                 const shard = new sh.NextToLast(2);
-                const fs = new Fs(dir);
-                await fs.open();
-                return Sharding.createOrOpen(fs, shard);
+                ShardingDatastore.createOrOpen(new FsDatastore(dir), shard, callback);
             },
-            async teardown() {
-                await fs.rm(dir);
+            teardown(callback) {
+                rimraf(dir, callback);
             }
         });
     });

@@ -229,7 +229,6 @@ adone.lazify({
     data: "./glosses/data",
     database: "./glosses/databases",
     datastore: "./glosses/datastores",
-    datastore2: "./glosses/datastores2",
     datetime: "./glosses/datetime",
     diff: "./glosses/diff",
     error: "./glosses/errors",

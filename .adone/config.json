@@ -350,16 +350,10 @@
                     }
                 },
                 "datastore": {
-                    "description": "Datastores",
+                    "description": "Key-value datastore interface and implementation",
                     "task": "transpile",
                     "src": "src/glosses/datastores/**/*.js",
                     "dst": "lib/glosses/datastores"
-                },
-                "datastore2": {
-                    "description": "Key-value datastore interface and implementation",
-                    "task": "transpile",
-                    "src": "src/glosses/datastores2/**/*.js",
-                    "dst": "lib/glosses/datastores2"
                 },
                 "datetime": {
                     "description": "Datetime utilites",

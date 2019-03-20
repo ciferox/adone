@@ -13,14 +13,14 @@ export default class TaskObserver {
     constructor(task, taskInfo) {
         this.task = task;
         this.task[OBSERVER_SYMBOL] = this;
-        this[TASK_INFO] = taskInfo;
+        this.taskInfo = taskInfo;
         this.state = STATE.IDLE;
         this.result = undefined;
         this.error = undefined;
     }
 
     get taskName() {
-        return this[TASK_INFO].name;
+        return this.taskInfo.name;
     }
 
     set taskName(val) {
@@ -32,7 +32,7 @@ export default class TaskObserver {
      */
     async cancel() {
         if (!this.cancelable) {
-            throw new error.NotAllowedException(`Task '${this[TASK_INFO].name}' is not cancelable`);
+            throw new error.NotAllowedException(`Task '${this.taskInfo.name}' is not cancelable`);
         }
         if (this.state === STATE.RUNNING) {
             this.state = STATE.CANCELLING;
@@ -100,14 +100,14 @@ export default class TaskObserver {
      * Returns true if the task is suspendable.
      */
     get suspendable() {
-        return this[TASK_INFO].suspendable;
+        return this.taskInfo.suspendable;
     }
 
     /**
      * Returns true if the task is cancelable.
      */
     get cancelable() {
-        return this[TASK_INFO].cancelable;
+        return this.taskInfo.cancelable;
     }
 
     /**
