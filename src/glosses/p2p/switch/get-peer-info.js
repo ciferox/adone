@@ -14,9 +14,10 @@ const {
 function getPeerInfo(peer, peerBook) {
     let peerInfo;
 
-    // Already a PeerInfo instance
+    // Already a PeerInfo instance,
+    // add to the peer book and return the latest value
     if (PeerInfo.isPeerInfo(peer)) {
-        return peer;
+        return peerBook.put(peer);
     }
 
     // Attempt to convert from Multiaddr instance (not string)
@@ -37,7 +38,7 @@ function getPeerInfo(peer, peerBook) {
         try {
             return peerBook.get(peerIdB58Str);
         } catch (err) {
-            throw new Error("Couldnt get PeerInfo");
+            throw new Error(`Couldnt get PeerInfo for ${peerIdB58Str}`);
         }
     }
 

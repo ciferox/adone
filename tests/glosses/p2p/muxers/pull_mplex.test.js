@@ -710,4 +710,20 @@ describe("p2p", "muxer", "pullMplex", () => {
             }
         });
     });
+
+
+    it("multiple calls to end should call back", (done) => {
+        const p = pair.duplex();
+        const dialer = pullMplex.dialer(p[0]);
+
+        expect(2).checks(done);
+
+        dialer.end((err) => {
+            expect(err).to.not.exist().mark();
+        });
+
+        dialer.end((err) => {
+            expect(err).to.not.exist().mark();
+        });
+    });
 });

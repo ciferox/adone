@@ -1,4 +1,6 @@
-
+const {
+    p2p: { Circuit }
+} = adone;
 
 const FSM = require("fsm-event");
 const EventEmitter = require("events").EventEmitter;
@@ -8,7 +10,7 @@ const series = require("async/series");
 const TransportManager = require("./transport");
 const ConnectionManager = require("./connection/manager");
 const getPeerInfo = require("./get-peer-info");
-const dial = require("./dialer");
+const getDialer = require("./dialer");
 const connectionHandler = require("./connection/handler");
 const ProtocolMuxer = require("./protocol-muxer");
 const plaintext = require("./plaintext");
@@ -65,10 +67,6 @@ class Switch extends EventEmitter {
         this.stats = Stats(this.observer, this._options.stats);
         this.protocolMuxer = ProtocolMuxer(this.protocols, this.observer);
 
-        // higher level (public) API
-        this.dial = dial(this);
-        this.dialFSM = dial(this, true);
-
         // All purpose connection handler for managing incoming connections
         this._connectionHandler = connectionHandler(this);
 
@@ -111,6 +109,11 @@ class Switch extends EventEmitter {
             log.error(err);
             this.emit("error", err);
         });
+
+        // higher level (public) API
+        const dialer = getDialer(this);
+        this.dial = dialer.dial;
+        this.dialFSM = dialer.dialFSM;
     }
 
     /**
@@ -125,9 +128,9 @@ class Switch extends EventEmitter {
 
         // Only listen on transports we actually have addresses for
         return myTransports.filter((ts) => this.transports[ts].filter(myAddrs).length > 0)
-        // push Circuit to be the last proto to be dialed
+            // push Circuit to be the last proto to be dialed
             .sort((a) => {
-                return a === "Circuit" ? 1 : 0;
+                return a === Circuit.tag ? 1 : 0;
             });
     }
 
@@ -146,6 +149,7 @@ class Switch extends EventEmitter {
             handlerFunc,
             matchFunc
         };
+        this._peerInfo.protocols.add(protocol);
     }
 
     /**
@@ -158,6 +162,7 @@ class Switch extends EventEmitter {
         if (this.protocols[protocol]) {
             delete this.protocols[protocol];
         }
+        this._peerInfo.protocols.delete(protocol);
     }
 
     /**
@@ -184,7 +189,7 @@ class Switch extends EventEmitter {
      * @returns {boolean}
      */
     hasTransports() {
-        const transports = Object.keys(this.transports).filter((t) => t !== "Circuit");
+        const transports = Object.keys(this.transports).filter((t) => t !== Circuit.tag);
         return transports && transports.length > 0;
     }
 
@@ -194,8 +199,8 @@ class Switch extends EventEmitter {
      * @param {function} callback deprecated: Listening for the `error` and `start` events are recommended
      * @returns {void}
      */
-    start(callback = () => {}) {
-    // Add once listener for deprecated callback support
+    start(callback = () => { }) {
+        // Add once listener for deprecated callback support
         this.once("start", callback);
 
         this.state("start");
@@ -207,8 +212,8 @@ class Switch extends EventEmitter {
      * @param {function} callback deprecated: Listening for the `error` and `stop` events are recommended
      * @returns {void}
      */
-    stop(callback = () => {}) {
-    // Add once listener for deprecated callback support
+    stop(callback = () => { }) {
+        // Add once listener for deprecated callback support
         this.once("stop", callback);
 
         this.state("stop");
@@ -250,7 +255,7 @@ class Switch extends EventEmitter {
                     }, cb);
                 }, cb);
             },
-            (cb) => each([...this.connection.getAll()], (conn, cb) => {
+            (cb) => each(this.connection.getAll(), (conn, cb) => {
                 conn.once("close", cb);
                 conn.close();
             }, cb)

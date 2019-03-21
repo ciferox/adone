@@ -8,21 +8,6 @@ const {
 } = adone;
 const { take, collect, lengthPrefixed: lp } = pull;
 
-const hasObservedAddr = (input) => input.observedAddr && input.observedAddr.length > 0;
-const getObservedAddrs = (input) => {
-    if (!hasObservedAddr(input)) {
-        return [];
-    }
-
-    let addrs = input.observedAddr;
-
-    if (!is.array(addrs)) {
-        addrs = [addrs];
-    }
-
-    return addrs.map((oa) => multiaddr(oa));
-};
-
 module.exports = (conn, expectedPeerInfo, callback) => {
     if (is.function(expectedPeerInfo)) {
         callback = expectedPeerInfo;
@@ -72,8 +57,29 @@ module.exports = (conn, expectedPeerInfo, callback) => {
                     return callback(err);
                 }
 
+                // Copy the protocols
+                peerInfo.protocols = new Set(input.protocols);
+
                 callback(null, peerInfo, observedAddr);
             });
         })
     );
 };
+
+function getObservedAddrs(input) {
+    if (!hasObservedAddr(input)) {
+        return [];
+    }
+
+    let addrs = input.observedAddr;
+
+    if (!is.array(addrs)) {
+        addrs = [addrs];
+    }
+
+    return addrs.map((oa) => multiaddr(oa));
+}
+
+function hasObservedAddr(input) {
+    return input.observedAddr && input.observedAddr.length > 0;
+}

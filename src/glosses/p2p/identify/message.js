@@ -1,5 +1,3 @@
-
-
 const protons = require("protons");
 const schema = `
 message Identify {

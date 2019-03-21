@@ -16,9 +16,7 @@ const psk2 = Buffer.alloc(95);
 generatePSK(psk);
 generatePSK(psk2);
 
-describe("Private Network", function () {
-    this.timeout(20 * 1000);
-
+describe("Private Network", () => {
     let switchA;
     let switchB;
     let switchC;
@@ -74,8 +72,7 @@ describe("Private Network", function () {
         ], done);
     }));
 
-    after(function (done) {
-        this.timeout(3 * 1000);
+    after((done) => {
         parallel([
             (cb) => switchA.stop(cb),
             (cb) => switchB.stop(cb),

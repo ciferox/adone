@@ -1,5 +1,3 @@
-
-
 const EventEmitter = require("events").EventEmitter;
 const debug = require("debug");
 const withIs = require("class-is");
@@ -24,7 +22,7 @@ class BaseConnection extends EventEmitter {
         if (this._state._state === "DISCONNECTING") {
             return; 
         }
-        this.log(`closing connection to ${this.theirB58Id}`);
+        this.log("closing connection to %s", this.theirB58Id);
         if (err && this._events.error) {
             this.emit("error", err);
         }
@@ -82,7 +80,7 @@ class BaseConnection extends EventEmitter {
      * @returns {void}
      */
     _onDisconnected() {
-        this.log(`disconnected from ${this.theirB58Id}`);
+        this.log("disconnected from %s", this.theirB58Id);
         this.emit("close");
         this.removeAllListeners();
     }
@@ -94,7 +92,6 @@ class BaseConnection extends EventEmitter {
      * @returns {void}
      */
     _onPrivatized() {
-        this.log("successfully privatized incoming connection");
         this.emit("private", this.conn);
     }
 
@@ -115,7 +112,7 @@ class BaseConnection extends EventEmitter {
                 return this.close(err);
             }
 
-            this.log(`successfully privatized conn to ${this.theirB58Id}`);
+            this.log("successfully privatized conn to %s", this.theirB58Id);
             this.conn.setPeerInfo(this.theirPeerInfo);
             this._state("done");
         });

@@ -4,12 +4,12 @@ const utils = require("../utils");
 const { createInfos, tryEcho } = utils;
 
 const {
-    p2p: { Switch, PeerBook, transport: { TCP, WS }, muxer: { pullMplex, spdy } },
+    p2p: { Switch, PeerBook, transport: { TCP, WS }, muxer: { pullMplex, spdy, mplex } },
     stream: { pull }
 } = adone;
 
 describe("Switch (everything all together)", () => {
-    [pullMplex, spdy].forEach((muxer) => {
+    [pullMplex, spdy, mplex].forEach((muxer) => {
         describe(muxer.multicodec, () => {
             let switchA; // tcp
             let switchB; // tcp+ws
@@ -35,9 +35,7 @@ describe("Switch (everything all together)", () => {
                 done();
             }));
 
-            after(function (done) {
-                this.timeout(3 * 1000);
-
+            after((done) => {
                 parallel([
                     (cb) => switchA.stop(cb),
                     (cb) => switchB.stop(cb),
@@ -156,15 +154,15 @@ describe("Switch (everything all together)", () => {
                 });
             });
 
-            it("dial from tcp to tcp+ws (returned conn)", (done) => {
+            it("dial from tcp to tcp+ws", (done) => {
                 switchB.handle("/grapes/1.0.0", (protocol, conn) => pull(conn, conn));
 
-                const conn = switchA.dial(switchB._peerInfo, "/grapes/1.0.0", (err, conn) => {
+                switchA.dial(switchB._peerInfo, "/grapes/1.0.0", (err, conn) => {
                     expect(err).to.not.exist();
                     expect(switchA.connection.getAll()).to.have.length(1);
-                });
 
-                tryEcho(conn, done);
+                    tryEcho(conn, done);
+                });
             });
 
             it("dial from tcp+ws to tcp+ws", (done) => {

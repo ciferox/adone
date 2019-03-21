@@ -246,6 +246,10 @@ describe("circuit", () => {
                         return done(err);
                     }
 
+                    if (bootstrapSwitch._peerBook.getAllArray().length === 4) {
+                        return done();
+                    }
+
                     done = once(done);
                     // Wait for everyone to connect, before we try relaying
                     bootstrapSwitch.on("peer-mux-established", () => {
@@ -256,6 +260,10 @@ describe("circuit", () => {
                 });
             });
         }));
+
+        before("wait so hop status can be negotiated", (done) => {
+            setTimeout(done, 1000);
+        });
 
         after((done) => {
             parallel([
@@ -274,6 +282,7 @@ describe("circuit", () => {
                     done();
                 }
             });
+            
             tcpSwitch1.dial(tcpPeer2, (err, connection) => {
                 expect(err).to.not.exist();
                 // We're not dialing a protocol, so we won't get a connection back

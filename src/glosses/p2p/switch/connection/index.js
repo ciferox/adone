@@ -1,6 +1,9 @@
+
+
 const FSM = require("fsm-event");
 const withIs = require("class-is");
 const BaseConnection = require("./base");
+const parallel = require("async/parallel");
 
 const observeConnection = require("../observe-connection");
 const {
@@ -34,7 +37,7 @@ const {
  */
 class ConnectionFSM extends BaseConnection {
     /**
-     * @param {ConnectionOptions} param0
+     * @param {ConnectionOptions} connectionOptions
      * @constructor
      */
     constructor({ _switch, peerInfo, muxer, conn, type = "out" }) {
@@ -103,7 +106,7 @@ class ConnectionFSM extends BaseConnection {
                 done: "DISCONNECTED",
                 disconnect: "DISCONNECTING"
             },
-            ABORTED: {}, // A severe event occurred
+            ABORTED: { }, // A severe event occurred
             ERRORED: { // An error occurred, but future dials may be allowed
                 disconnect: "DISCONNECTING" // There could be multiple options here, but this is a likely action
             }
@@ -116,17 +119,17 @@ class ConnectionFSM extends BaseConnection {
         this._state.on("PRIVATIZED", () => this._onPrivatized());
         this._state.on("ENCRYPTING", () => this._onEncrypting());
         this._state.on("ENCRYPTED", () => {
-            this.log(`successfully encrypted connection to ${this.theirB58Id}`);
+            this.log("successfully encrypted connection to %s", this.theirB58Id);
             this.emit("encrypted", this.conn);
         });
         this._state.on("UPGRADING", () => this._onUpgrading());
         this._state.on("MUXED", () => {
-            this.log(`successfully muxed connection to ${this.theirB58Id}`);
+            this.log("successfully muxed connection to %s", this.theirB58Id);
             delete this.switch.conns[this.theirB58Id];
             this.emit("muxed", this.muxer);
         });
         this._state.on("CONNECTED", () => {
-            this.log(`unmuxed connection opened to ${this.theirB58Id}`);
+            this.log("unmuxed connection opened to %s", this.theirB58Id);
             this.emit("unmuxed", this.conn);
         });
         this._state.on("DISCONNECTING", () => this._onDisconnecting());
@@ -159,7 +162,7 @@ class ConnectionFSM extends BaseConnection {
      * @returns {void}
      */
     shake(protocol, callback) {
-        // If there is no protocol set yet, don't perform the handshake
+    // If there is no protocol set yet, don't perform the handshake
         if (!protocol) {
             return callback(null, null);
         }
@@ -170,7 +173,7 @@ class ConnectionFSM extends BaseConnection {
                     return callback(err, null);
                 }
 
-                this.log(`created new stream to ${this.theirB58Id}`);
+                this.log("created new stream to %s", this.theirB58Id);
                 this._protocolHandshake(protocol, stream, callback);
             });
         }
@@ -195,7 +198,7 @@ class ConnectionFSM extends BaseConnection {
      * @returns {void}
      */
     _onDialing() {
-        this.log(`dialing ${this.theirB58Id}`);
+        this.log("dialing %s", this.theirB58Id);
 
         if (!this.switch.hasTransports()) {
             return this.close(NO_TRANSPORTS_REGISTERED());
@@ -227,7 +230,7 @@ class ConnectionFSM extends BaseConnection {
                 this.theirPeerInfo.multiaddrs.add(`/p2p-circuit/p2p/${this.theirB58Id}`);
             }
 
-            this.log(`dialing transport ${transport}`);
+            this.log("dialing transport %s", transport);
             this.switch.transport.dial(transport, this.theirPeerInfo, (errors, _conn) => {
                 if (errors) {
                     this.emit("error:connection_attempt_failed", errors);
@@ -251,7 +254,7 @@ class ConnectionFSM extends BaseConnection {
      * @returns {void}
      */
     _onDialed() {
-        this.log(`successfully dialed ${this.theirB58Id}`);
+        this.log("successfully dialed %s", this.theirB58Id);
 
         this.emit("connected", this.conn);
     }
@@ -262,7 +265,7 @@ class ConnectionFSM extends BaseConnection {
      * @returns {void}
      */
     _onDisconnecting() {
-        this.log(`disconnecting from ${this.theirB58Id}`);
+        this.log("disconnecting from %s", this.theirB58Id, Boolean(this.muxer));
 
         // Issue disconnects on both Peers
         if (this.theirPeerInfo) {
@@ -273,22 +276,31 @@ class ConnectionFSM extends BaseConnection {
 
         delete this.switch.conns[this.theirB58Id];
 
+        const tasks = [];
+
         // Clean up stored connections
         if (this.muxer) {
-            this.muxer.end();
-            delete this.muxer;
-            this.switch.emit("peer-mux-closed", this.theirPeerInfo);
+            tasks.push((cb) => {
+                this.muxer.end(() => {
+                    delete this.muxer;
+                    this.switch.emit("peer-mux-closed", this.theirPeerInfo);
+                    cb();
+                });
+            });
         }
 
         // If we have the base connection, abort it
+        // Ignore abort errors, since we're closing
         if (this.conn) {
-            this.conn.source(true, () => {
-                this._state("done");
-                delete this.conn;
-            });
-        } else {
-            this._state("done");
+            try {
+                this.conn.source.abort();
+            } catch (_) { }
+            delete this.conn;
         }
+
+        parallel(tasks, () => {
+            this._state("done");
+        });
     }
 
     /**
@@ -336,7 +348,7 @@ class ConnectionFSM extends BaseConnection {
      */
     _onUpgrading() {
         const muxers = Object.keys(this.switch.muxers);
-        this.log(`upgrading connection to ${this.theirB58Id}`);
+        this.log("upgrading connection to %s", this.theirB58Id);
 
         if (muxers.length === 0) {
             return this._state("stop");
@@ -367,8 +379,6 @@ class ConnectionFSM extends BaseConnection {
                     const conn = observeConnection(null, key, _conn, this.switch.observer);
 
                     this.muxer = this.switch.muxers[key].dialer(conn);
-                    // this.switch.muxedConns[this.theirB58Id] = this
-                    this.switch.connection.add(this);
 
                     this.muxer.once("close", () => {
                         this.close();
@@ -376,13 +386,12 @@ class ConnectionFSM extends BaseConnection {
 
                     // For incoming streams, in case identify is on
                     this.muxer.on("stream", (conn) => {
-                        this.log(`new stream created via muxer to ${this.theirB58Id}`);
+                        this.log("new stream created via muxer to %s", this.theirB58Id);
                         conn.setPeerInfo(this.theirPeerInfo);
                         this.switch.protocolMuxer(null)(conn);
                     });
 
                     this.switch.emit("peer-mux-established", this.theirPeerInfo);
-
                     this._didUpgrade(null);
                 });
             };
@@ -431,12 +440,12 @@ class ConnectionFSM extends BaseConnection {
 
             msDialer.select(protocol, (err, _conn) => {
                 if (err) {
-                    this.log("could not perform protocol handshake: ", err);
+                    this.log("could not perform protocol handshake:", err);
                     return callback(err, null);
                 }
 
                 const conn = observeConnection(null, protocol, _conn, this.switch.observer);
-                this.log(`successfully performed handshake of ${protocol} to ${this.theirB58Id}`);
+                this.log("successfully performed handshake of %s to %s", protocol, this.theirB58Id);
                 this.emit("connection", conn);
                 callback(null, conn);
             });

@@ -3,6 +3,7 @@ const nextTick = require("async/nextTick");
 const debug = require("debug");
 
 const {
+    noop,
     p2p: { Connection }
 } = adone;
 
@@ -10,8 +11,6 @@ const MULTIPLEX_CODEC = require("./codec");
 
 const log = debug("libp2p-mplex:muxer");
 log.err = debug("libp2p-mplex:muxer:error");
-
-function noop() { }
 
 class MultiplexMuxer extends EventEmitter {
     /**
@@ -57,9 +56,13 @@ class MultiplexMuxer extends EventEmitter {
     /**
      * Ends the connection and all of its streams
      * @param {function(Error)} callback
+     * @returns {void}
      */
     end(callback) {
         callback = callback || noop;
+        if (this.multiplex.destroyed) {
+            return nextTick(callback);
+        }
         this.multiplex.once("close", callback);
         this.multiplex.close();
     }

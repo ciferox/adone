@@ -2,7 +2,6 @@ const {
     p2p: { identify }
 } = adone;
 
-
 /**
  * For a given multistream, registers to handle the given connection
  * @param {MultistreamDialer} multistream

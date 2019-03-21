@@ -1,4 +1,6 @@
-
+const {
+    is
+} = adone;
 
 const setImmediate = require("async/setImmediate");
 
@@ -9,7 +11,7 @@ const setImmediate = require("async/setImmediate");
 module.exports = {
     tag: "/plaintext/1.0.0",
     encrypt(myId, conn, remoteId, callback) {
-        if (adone.is.function(remoteId)) {
+        if (is.function(remoteId)) {
             callback = remoteId;
             remoteId = undefined;
         }

@@ -1,8 +1,8 @@
-const EventEmitter = require("events");
-
 const {
     stream: { pull: { map } }
 } = adone;
+
+const EventEmitter = require("events");
 
 /**
  * Takes a Switch and returns an Observer that can be used in conjunction with

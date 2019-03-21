@@ -23,7 +23,8 @@ module.exports = (conn, pInfoSelf) => {
             agentVersion: "na",
             publicKey,
             listenAddrs: pInfoSelf.multiaddrs.toArray().map((ma) => ma.buffer),
-            observedAddr: observedAddrs ? observedAddrs.buffer : Buffer.from("")
+            observedAddr: observedAddrs ? observedAddrs.buffer : Buffer.from(""),
+            protocols: Array.from(pInfoSelf.protocols)
         });
 
         pull(

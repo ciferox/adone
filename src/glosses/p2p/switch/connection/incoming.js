@@ -8,13 +8,14 @@ const {
 } = adone;
 
 class IncomingConnectionFSM extends BaseConnection {
-    constructor({ connection, _switch, transportKey }) {
+    constructor({ connection, _switch, transportKey, peerInfo }) {
         super({
             _switch,
             name: `inc:${_switch._peerInfo.id.toB58String().slice(0, 8)}`
         });
         this.conn = connection;
-        this.theirPeerInfo = null;
+        this.theirPeerInfo = peerInfo || null;
+        this.theirB58Id = this.theirPeerInfo ? this.theirPeerInfo.id.toB58String() : null;
         this.ourPeerInfo = this.switch._peerInfo;
         this.transportKey = transportKey;
         this.protocolMuxer = this.switch.protocolMuxer(this.transportKey);
@@ -58,12 +59,12 @@ class IncomingConnectionFSM extends BaseConnection {
         this._state.on("PRIVATIZED", () => this._onPrivatized());
         this._state.on("ENCRYPTING", () => this._onEncrypting());
         this._state.on("ENCRYPTED", () => {
-            this.log(`successfully encrypted connection to ${this.theirB58Id || "unknown peer"}`);
+            this.log("successfully encrypted connection to %s", this.theirB58Id || "unknown peer");
             this.emit("encrypted", this.conn);
         });
         this._state.on("UPGRADING", () => this._onUpgrading());
         this._state.on("MUXED", () => {
-            this.log(`successfully muxed connection to ${this.theirB58Id || "unknown peer"}`);
+            this.log("successfully muxed connection to %s", this.theirB58Id || "unknown peer");
             this.emit("muxed", this.conn);
         });
         this._state.on("DISCONNECTING", () => {
@@ -82,7 +83,7 @@ class IncomingConnectionFSM extends BaseConnection {
      * @returns {void}
      */
     _onEncrypting() {
-        this.log(`encrypting connection via ${this.switch.crypto.tag}`);
+        this.log("encrypting connection via %s", this.switch.crypto.tag);
 
         this.msListener.addHandler(this.switch.crypto.tag, (protocol, _conn) => {
             this.conn = this.switch.crypto.encrypt(this.ourPeerInfo.id, _conn, undefined, (err) => {

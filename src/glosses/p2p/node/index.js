@@ -277,13 +277,13 @@ export default class Node extends event.Emitter {
                 return callback(err);
             }
 
-            const connFSM = this._switch.dialFSM(peerInfo, protocol, (err) => {
+            this._switch.dialFSM(peerInfo, protocol, (err, connFSM) => {
                 if (!err) {
                     this.peerBook.put(peerInfo);
                 }
-            });
 
-            callback(null, connFSM);
+                callback(null, connFSM);
+            });
         });
     }
 

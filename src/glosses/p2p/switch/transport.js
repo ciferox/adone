@@ -1,13 +1,13 @@
+const {
+    is
+} = adone;
+
 const parallel = require("async/parallel");
 const once = require("once");
 const debug = require("debug");
 const log = debug("libp2p:switch:transport");
 
 const LimitDialer = require("./limit-dialer");
-
-const {
-    is
-} = adone;
 
 // number of concurrent outbound dials to make per peer, same as go-libp2p-swtch
 const defaultPerPeerRateLimit = 8;
@@ -213,9 +213,10 @@ class TransportManager {
             return transportAddrs;
         }
 
+        const ourAddrs = peerInfo.multiaddrs.toArray();
         return transportAddrs.filter((addr) => {
             // If our address is in the destination address, filter it out
-            return !peerInfo.multiaddrs.toArray().find((pAddr) => {
+            return !ourAddrs.find((pAddr) => {
                 try {
                     addr.decapsulate(pAddr);
                 } catch (err) {
