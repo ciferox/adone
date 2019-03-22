@@ -10,12 +10,11 @@ export default function (lib, util) {
         }
 
         const chain = function () {
-            expect(count).below(total,
-                "Target checkmarks already reached");
-            count += 1;
+            expect(count).below(total, "Target checkmarks already reached");
         };
 
-        const mark = function () {
+        const mark = function (incValue = 1) {
+            count += incValue;
             if (count === total && done) {
                 setImmediate(done, 0);
             }

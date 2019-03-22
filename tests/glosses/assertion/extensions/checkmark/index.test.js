@@ -76,4 +76,18 @@ describe("assertion", "extension", "checkmark", () => {
             expect(subject).to.throw(AssertionError);
         });
     });
+
+    it("custom mark increment value", (done) => {
+        const mark = expect(9).checks(() => {
+            assert.equal(mark.getCount(), 9);
+            done();
+        });
+
+        expect(true).to.be.true.mark();
+        expect(true).to.be.true.mark(2);
+        expect(true).to.be.true.mark();
+        expect(true).to.be.true.mark(3);
+        expect(true).to.be.true.mark();
+        expect(true).to.be.true.mark(1);
+    });
 });
