@@ -10,20 +10,14 @@ export default adone.js.compiler.helper.pluginUtils.declare((api, options) => {
         throw new Error("'legacy' must be a boolean.");
     }
 
-    if (legacy !== true) {
-        throw new Error(
-            "The new decorators proposal is not supported yet." +
-            ' You must pass the `"legacy": true` option to' +
-            " @babel/plugin-syntax-decorators",
-        );
-    }
-
     const { decoratorsBeforeExport } = options;
     if (is.undefined(decoratorsBeforeExport)) {
         if (!legacy) {
             throw new Error(
                 "The '@babel/plugin-syntax-decorators' plugin requires a" +
-                " 'decoratorsBeforeExport' option, whose value must be a boolean.",
+                " 'decoratorsBeforeExport' option, whose value must be a boolean." +
+                " If you want to use the legacy decorators semantics, you can set" +
+                " the 'legacy: true' option.",
             );
         }
     } else {
@@ -38,6 +32,8 @@ export default adone.js.compiler.helper.pluginUtils.declare((api, options) => {
     }
 
     return {
+        name: "syntax-decorators",
+
         manipulateOptions(opts, parserOpts) {
             parserOpts.plugins.push(
                 legacy

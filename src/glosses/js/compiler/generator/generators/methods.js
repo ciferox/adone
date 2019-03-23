@@ -1,4 +1,7 @@
-import * as t from "@babel/types";
+const {
+    js: { compiler: { types: t } }
+} = adone;
+
 
 export function _params(node: Object) {
     this.print(node.typeParameters, node);

@@ -1,4 +1,6 @@
-import * as t from "@babel/types";
+const {
+    js: { compiler: { types: t } }
+} = adone;
 
 const PRECEDENCE = {
     "||": 0,

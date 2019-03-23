@@ -1,15 +1,13 @@
 const plugins = [
     // "syntax.asyncGenerators",
-    // "transform.flowStripTypes",
-    // ["transform.decorators", {
-    //     legacy: true
-    // }],
-    // ["transform.classProperties", { loose: true }],
+    "transform.flowStripTypes",
+    ["transform.decorators", { legacy: true }],
+    ["transform.classProperties", { loose: true }],
     // "transform.asyncGeneratorFunctions",
     "transform.modulesCommonjs",
     // "transform.functionBind",
     // "transform.objectRestSpread",
-    // "transform.numericSeparator",
+    "transform.numericSeparator",
     // "transform.exponentiationOperator",
     // "transform.exportNamespaceFrom"
 ];

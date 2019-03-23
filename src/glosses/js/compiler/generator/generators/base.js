@@ -1,3 +1,7 @@
+const {
+    is
+} = adone;
+
 export function File(node: Object) {
     if (node.program) {
     // Print this here to ensure that Program node 'leadingComments' still

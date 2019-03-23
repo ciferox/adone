@@ -13,7 +13,7 @@ adone.lazify({
     // hoistVariables: "./hoist_variables",
     // explodeAssignableExpression: "./explode_assignable_expression",
     // builderBinaryAssignmentOperatorVisitor: "./builder_binary_assignment_operator_visitor",
-    // optimiseCallExpression: "./optimise_call_expression",
+    optimiseCallExpression: "./optimise_call_expression",
     // ReplaceSupers: "./replace_supers",
     // defineMap: "./define_map",
     // wrapFunction: "./wrap_function",
@@ -24,7 +24,9 @@ adone.lazify({
     simpleAccess: "./simple_access",
     splitExportDeclaration: "./split_export_declaration",
     pluginUtils: "./plugin_utils",
-    // memberExpressionToFunctions: "./member_expression_to_functions"
+    memberExpressionToFunctions: "./member_expression_to_functions",
+    createClassFeaturesPlugin: "./create_class_features_plugin",
+    replaceSupers: "./replace_supers"
 }, exports, require);
 
 function makePath(path) {

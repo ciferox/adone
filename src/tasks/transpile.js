@@ -13,19 +13,16 @@ export default class TranspileTask extends adone.realm.TransformTask {
 
     plugins() {
         return [
-            "syntax.asyncGenerators",
-            "syntax.optionalCatchBinding",
+            // "syntax.optionalCatchBinding",
             "transform.flowStripTypes",
-            ["transform.decorators", {
-                legacy: true
-            }],
+            ["transform.decorators", { legacy: true }],
             ["transform.classProperties", { loose: true }],
             // "transform.asyncGeneratorFunctions",
             "transform.modulesCommonjs",
-            "transform.functionBind",
-            "transform.objectRestSpread",
+            // "transform.functionBind",
+            // "transform.objectRestSpread",
             "transform.numericSeparator",
-            "transform.exponentiationOperator"
+            // "transform.exponentiationOperator"
         ];
     }
 }

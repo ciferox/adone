@@ -23,16 +23,14 @@ export default {
     },
     transpiler: {
         plugins: [
-            // "transform.flowStripTypes",
-            // ["transform.decorators", {
-            //     legacy: true
-            // }],
-            // ["transform.classProperties", { loose: true }],
+            "transform.flowStripTypes",
+            ["transform.decorators", { legacy: true }],
+            ["transform.classProperties", { loose: true }],
             // "transform.asyncGeneratorFunctions",
-            // "transform.modulesCommonjs",
+            "transform.modulesCommonjs",
             // "transform.functionBind",
             // "transform.objectRestSpread",
-            // "transform.numericSeparator",
+            "transform.numericSeparator",
             // "transform.exponentiationOperator",
             // ["transform.importReplace", {
             //     old: "adone",

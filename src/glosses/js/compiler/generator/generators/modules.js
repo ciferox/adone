@@ -1,4 +1,7 @@
-import * as t from "@babel/types";
+const {
+    js: { compiler: { types: t } }
+} = adone;
+
 
 export function ImportSpecifier(node: Object) {
     if (node.importKind === "type" || node.importKind === "typeof") {

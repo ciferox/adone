@@ -1,8 +1,11 @@
-import * as t from "@babel/types";
+const {
+    is,
+    js: { compiler: { types: t } }
+} = adone;
 
 type WhitespaceObject = {
-  before?: boolean,
-  after?: boolean,
+    before?: boolean,
+    after?: boolean,
 };
 
 /**
@@ -17,7 +20,7 @@ function crawl(node, state = {}) {
     if (t.isMemberExpression(node)) {
         crawl(node.object, state);
         if (node.computed) {
-            crawl(node.property, state); 
+            crawl(node.property, state);
         }
     } else if (t.isBinary(node) || t.isAssignmentExpression(node)) {
         crawl(node.left, state);
@@ -49,18 +52,18 @@ function isHelper(node) {
         return (
             (t.isIdentifier(node.left) && isHelper(node.left)) || isHelper(node.right)
         );
-    } 
+    }
     return false;
-  
+
 }
 
 function isType(node) {
     return (
         t.isLiteral(node) ||
-    t.isObjectExpression(node) ||
-    t.isArrayExpression(node) ||
-    t.isIdentifier(node) ||
-    t.isMemberExpression(node)
+        t.isObjectExpression(node) ||
+        t.isArrayExpression(node) ||
+        t.isIdentifier(node) ||
+        t.isMemberExpression(node)
     );
 }
 
@@ -91,8 +94,8 @@ export const nodes = {
         return {
             before: node.consequent.length || parent.cases[0] === node,
             after:
-        !node.consequent.length &&
-        parent.cases[parent.cases.length - 1] === node
+                !node.consequent.length &&
+                parent.cases[parent.cases.length - 1] === node
         };
     },
 
@@ -191,7 +194,7 @@ nodes.ObjectTypeCallProperty = function (
 ): ?WhitespaceObject {
     if (
         parent.callProperties[0] === node &&
-    (!parent.properties || !parent.properties.length)
+        (!parent.properties || !parent.properties.length)
     ) {
         return {
             before: true
@@ -202,8 +205,8 @@ nodes.ObjectTypeCallProperty = function (
 nodes.ObjectTypeIndexer = function (node: Object, parent): ?WhitespaceObject {
     if (
         parent.indexers[0] === node &&
-    (!parent.properties || !parent.properties.length) &&
-    (!parent.callProperties || !parent.callProperties.length)
+        (!parent.properties || !parent.properties.length) &&
+        (!parent.callProperties || !parent.callProperties.length)
     ) {
         return {
             before: true
@@ -217,9 +220,9 @@ nodes.ObjectTypeInternalSlot = function (
 ): ?WhitespaceObject {
     if (
         parent.internalSlots[0] === node &&
-    (!parent.properties || !parent.properties.length) &&
-    (!parent.callProperties || !parent.callProperties.length) &&
-    (!parent.indexers || !parent.indexers.length)
+        (!parent.properties || !parent.properties.length) &&
+        (!parent.callProperties || !parent.callProperties.length) &&
+        (!parent.indexers || !parent.indexers.length)
     ) {
         return {
             before: true

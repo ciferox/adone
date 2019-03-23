@@ -1,28 +1,29 @@
-import visitor from "./transformer";
-import legacyVisitor from "./transformer-legacy";
-
 const {
     is,
-    js: { compiler: { helper: { pluginUtils: { declare } } } }
+    js: { compiler: { helper: { pluginUtils: { declare }, createClassFeaturesPlugin: { createClassFeaturePlugin, FEATURES } } } }
 } = adone;
+
+import legacyVisitor from "./transformer-legacy";
 
 export default declare((api, options) => {
     api.assertVersion(7);
 
-    const { legacy = false, decoratorsBeforeExport } = options;
+    const { legacy = false } = options;
     if (!is.boolean(legacy)) {
         throw new Error("'legacy' must be a boolean.");
     }
 
-    if (legacy !== true) {
-        throw new Error(
-            "The new decorators proposal is not supported yet." +
-            ' You must pass the `"legacy": true` option to' +
-            " @babel/plugin-proposal-decorators",
-        );
-    }
-    if (!is.undefined(decoratorsBeforeExport)) {
-        if (legacy && decoratorsBeforeExport) {
+    const { decoratorsBeforeExport } = options;
+    if (is.undefined(decoratorsBeforeExport)) {
+        if (!legacy) {
+            throw new Error(
+                "The decorators plugin requires a 'decoratorsBeforeExport' option," +
+                " whose value must be a boolean. If you want to use the legacy" +
+                " decorators semantics, you can set the 'legacy: true' option.",
+            );
+        }
+    } else {
+        if (legacy) {
             throw new Error(
                 "'decoratorsBeforeExport' can't be used with legacy decorators.",
             );
@@ -32,13 +33,26 @@ export default declare((api, options) => {
         }
     }
 
-    return {
-        inherits: adone.js.compiler.plugin.syntax.decorators,
+    if (legacy) {
+        return {
+            name: "proposal-decorators",
+            inherits: adone.js.compiler.plugin.syntax.decorators,
+            manipulateOptions({ generatorOpts }) {
+                generatorOpts.decoratorsBeforeExport = decoratorsBeforeExport;
+            },
+            visitor: legacyVisitor
+        };
+    }
 
-        manipulateOptions({ generatorOpts }) {
+    return createClassFeaturePlugin({
+        name: "proposal-decorators",
+
+        feature: FEATURES.decorators,
+        // loose: options.loose, Not supported
+
+        manipulateOptions({ generatorOpts, parserOpts }) {
+            parserOpts.plugins.push(["decorators", { decoratorsBeforeExport }]);
             generatorOpts.decoratorsBeforeExport = decoratorsBeforeExport;
-        },
-
-        visitor: legacy ? legacyVisitor : visitor
-    };
+        }
+    });
 });

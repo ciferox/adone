@@ -1,5 +1,8 @@
-import * as t from "@babel/types";
-import jsesc from "jsesc";
+const {
+    is,
+    js: { compiler: { types: t } },
+    util: { jsesc }
+} = adone;
 
 export function Identifier(node: Object) {
     this.exactSource(node.loc, () => {
@@ -50,11 +53,11 @@ export function ObjectProperty(node: Object) {
         this.print(node.key, node);
         this.token("]");
     } else {
-    // print `({ foo: foo = 5 } = {})` as `({ foo = 5 } = {});`
+        // print `({ foo: foo = 5 } = {})` as `({ foo = 5 } = {});`
         if (
             t.isAssignmentPattern(node.value) &&
-      t.isIdentifier(node.key) &&
-      node.key.name === node.value.left.name
+            t.isIdentifier(node.key) &&
+            node.key.name === node.value.left.name
         ) {
             this.print(node.value, node);
             return;
@@ -65,9 +68,9 @@ export function ObjectProperty(node: Object) {
         // shorthand!
         if (
             node.shorthand &&
-      (t.isIdentifier(node.key) &&
-        t.isIdentifier(node.value) &&
-        node.key.name === node.value.name)
+            (t.isIdentifier(node.key) &&
+                t.isIdentifier(node.value) &&
+                node.key.name === node.value.name)
         ) {
             return;
         }
@@ -89,11 +92,11 @@ export function ArrayExpression(node: Object) {
         const elem = elems[i];
         if (elem) {
             if (i > 0) {
-                this.space(); 
+                this.space();
             }
             this.print(elem, node);
             if (i < len - 1) {
-                this.token(","); 
+                this.token(",");
             }
         } else {
             // If the array expression ends with a hole, that hole

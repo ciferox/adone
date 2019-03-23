@@ -1,4 +1,6 @@
-import * as t from "@babel/types";
+const {
+    js: { compiler: { types: t } }
+} = adone;
 
 export function WithStatement(node: Object) {
     this.word("with");

@@ -1,11 +1,11 @@
 const {
-    js: { compiler: { types: t, helper: { pluginUtils } } }
+    js: { compiler: { types: t, helper: { pluginUtils: { declare } } } }
 } = adone;
 
-export default pluginUtils.declare((api) => {
+export default declare((api) => {
     api.assertVersion(7);
 
-    const replaceNumberArg = function ({ node }) {
+    function replaceNumberArg({ node }) {
         if (node.callee.name !== "Number") {
             return;
         }
@@ -16,9 +16,10 @@ export default pluginUtils.declare((api) => {
         }
 
         arg.value = arg.value.replace(/_/g, "");
-    };
+    }
 
     return {
+        name: "proposal-numeric-separator",
         inherits: adone.js.compiler.plugin.syntax.numericSeparator,
 
         visitor: {

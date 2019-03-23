@@ -41,13 +41,15 @@ function applyEnsureOrdering(path) {
     ).reduce((acc, prop) => acc.concat(prop.node.decorators || []), []);
 
     const identDecorators = decorators.filter(
-        decorator => !t.isIdentifier(decorator.expression),
+        (decorator) => !t.isIdentifier(decorator.expression),
     );
-    if (identDecorators.length === 0) return;
+    if (identDecorators.length === 0) {
+        return; 
+    }
 
     return t.sequenceExpression(
         identDecorators
-            .map(decorator => {
+            .map((decorator) => {
                 const expression = decorator.expression;
                 const id = (decorator.expression = path.scope.generateDeclaredUidIdentifier(
                     "dec",
@@ -63,7 +65,9 @@ function applyEnsureOrdering(path) {
  * with the proper decorated behavior.
  */
 function applyClassDecorators(classPath) {
-    if (!hasClassDecorators(classPath.node)) return;
+    if (!hasClassDecorators(classPath.node)) {
+        return; 
+    }
 
     const decorators = classPath.node.decorators || [];
     classPath.node.decorators = null;
@@ -71,19 +75,19 @@ function applyClassDecorators(classPath) {
     const name = classPath.scope.generateDeclaredUidIdentifier("class");
 
     return decorators
-        .map(dec => dec.expression)
+        .map((dec) => dec.expression)
         .reverse()
-        .reduce(function (acc, decorator) {
+        .reduce((acc, decorator) => {
             return buildClassDecorator({
                 CLASS_REF: t.cloneNode(name),
                 DECORATOR: t.cloneNode(decorator),
-                INNER: acc,
+                INNER: acc
             }).expression;
         }, classPath.node);
 }
 
 function hasClassDecorators(classNode) {
-    return !!(classNode.decorators && classNode.decorators.length);
+    return Boolean(classNode.decorators && classNode.decorators.length);
 }
 
 /**
@@ -91,13 +95,15 @@ function hasClassDecorators(classNode) {
  * with the proper decorated behavior.
  */
 function applyMethodDecorators(path, state) {
-    if (!hasMethodDecorators(path.node.body.body)) return;
+    if (!hasMethodDecorators(path.node.body.body)) {
+        return; 
+    }
 
     return applyTargetDecorators(path, state, path.node.body.body);
 }
 
 function hasMethodDecorators(body) {
-    return body.some(node => node.decorators && node.decorators.length);
+    return body.some((node) => node.decorators && node.decorators.length);
 }
 
 /**
@@ -105,7 +111,9 @@ function hasMethodDecorators(body) {
  * with the proper decorated behavior.
  */
 function applyObjectDecorators(path, state) {
-    if (!hasMethodDecorators(path.node.properties)) return;
+    if (!hasMethodDecorators(path.node.properties)) {
+        return; 
+    }
 
     return applyTargetDecorators(path, state, path.node.properties);
 }
@@ -118,11 +126,13 @@ function applyTargetDecorators(path, state, decoratedProps) {
         path.isClass() ? "class" : "obj",
     );
 
-    const exprs = decoratedProps.reduce(function (acc, node) {
+    const exprs = decoratedProps.reduce((acc, node) => {
         const decorators = node.decorators || [];
         node.decorators = null;
 
-        if (decorators.length === 0) return acc;
+        if (decorators.length === 0) {
+            return acc; 
+        }
 
         if (node.computed) {
             throw path.buildCodeFrameError(
@@ -137,7 +147,7 @@ function applyTargetDecorators(path, state, decoratedProps) {
         const target =
             path.isClass() && !node.static
                 ? buildClassPrototype({
-                    CLASS_REF: name,
+                    CLASS_REF: name
                 }).expression
                 : name;
 
@@ -167,7 +177,7 @@ function applyTargetDecorators(path, state, decoratedProps) {
                         t.cloneNode(target),
                         t.cloneNode(property),
                         t.arrayExpression(
-                            decorators.map(dec => t.cloneNode(dec.expression)),
+                            decorators.map((dec) => t.cloneNode(dec.expression)),
                         ),
                         t.objectExpression([
                             t.objectProperty(
@@ -182,28 +192,28 @@ function applyTargetDecorators(path, state, decoratedProps) {
                                 t.identifier("writable"),
                                 t.booleanLiteral(true),
                             ),
-                            t.objectProperty(t.identifier("initializer"), initializer),
-                        ]),
+                            t.objectProperty(t.identifier("initializer"), initializer)
+                        ])
                     ]),
-                ),
+                )
             ]);
         } else {
             acc = acc.concat(
                 t.callExpression(state.addHelper("applyDecoratedDescriptor"), [
                     t.cloneNode(target),
                     t.cloneNode(property),
-                    t.arrayExpression(decorators.map(dec => t.cloneNode(dec.expression))),
+                    t.arrayExpression(decorators.map((dec) => t.cloneNode(dec.expression))),
                     t.isObjectProperty(node) || t.isClassProperty(node, { static: true })
                         ? buildGetObjectInitializer({
                             TEMP: path.scope.generateDeclaredUidIdentifier("init"),
                             TARGET: t.cloneNode(target),
-                            PROPERTY: t.cloneNode(property),
+                            PROPERTY: t.cloneNode(property)
                         }).expression
                         : buildGetDescriptor({
                             TARGET: t.cloneNode(target),
-                            PROPERTY: t.cloneNode(property),
+                            PROPERTY: t.cloneNode(property)
                         }).expression,
-                    t.cloneNode(target),
+                    t.cloneNode(target)
                 ]),
             );
         }
@@ -214,7 +224,7 @@ function applyTargetDecorators(path, state, decoratedProps) {
     return t.sequenceExpression([
         t.assignmentExpression("=", t.cloneNode(name), path.node),
         t.sequenceExpression(exprs),
-        t.cloneNode(name),
+        t.cloneNode(name)
     ]);
 }
 
@@ -228,14 +238,16 @@ function decoratedClassToExpression({ node, scope }) {
         : scope.generateUidIdentifier("class");
 
     return t.variableDeclaration("let", [
-        t.variableDeclarator(ref, t.toExpression(node)),
+        t.variableDeclarator(ref, t.toExpression(node))
     ]);
 }
 
 export default {
     ExportDefaultDeclaration(path) {
         const decl = path.get("declaration");
-        if (!decl.isClassDeclaration()) return;
+        if (!decl.isClassDeclaration()) {
+            return; 
+        }
 
         const replacement = decoratedClassToExpression(decl);
         if (replacement) {
@@ -245,8 +257,8 @@ export default {
                     t.exportSpecifier(
                         t.cloneNode(replacement.declarations[0].id),
                         t.identifier("default"),
-                    ),
-                ]),
+                    )
+                ])
             ]);
         }
     },
@@ -264,25 +276,31 @@ export default {
             applyClassDecorators(path, state) ||
             applyMethodDecorators(path, state);
 
-        if (decoratedClass) path.replaceWith(decoratedClass);
+        if (decoratedClass) {
+            path.replaceWith(decoratedClass); 
+        }
     },
     ObjectExpression(path, state) {
         const decoratedObject =
             applyEnsureOrdering(path) || applyObjectDecorators(path, state);
 
-        if (decoratedObject) path.replaceWith(decoratedObject);
+        if (decoratedObject) {
+            path.replaceWith(decoratedObject); 
+        }
     },
 
     AssignmentExpression(path, state) {
-        if (!WARNING_CALLS.has(path.node.right)) return;
+        if (!WARNING_CALLS.has(path.node.right)) {
+            return; 
+        }
 
         path.replaceWith(
             t.callExpression(state.addHelper("initializerDefineProperty"), [
                 t.cloneNode(path.get("left.object").node),
                 t.stringLiteral(path.get("left.property").node.name),
                 t.cloneNode(path.get("right.arguments")[0].node),
-                t.cloneNode(path.get("right.arguments")[1].node),
+                t.cloneNode(path.get("right.arguments")[1].node)
             ]),
         );
-    },
+    }
 };

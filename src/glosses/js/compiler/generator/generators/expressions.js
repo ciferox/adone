@@ -1,4 +1,7 @@
-import * as t from "@babel/types";
+const {
+    is,
+    js: { compiler: { types: t } }
+} = adone;
 import * as n from "../node";
 
 export function UnaryExpression(node: Object) {
