@@ -5,6 +5,7 @@ const keys = {
     kLogLevel: Symbol("fastify.logLevel"),
     kHooks: Symbol("fastify.hooks"),
     kSchemas: Symbol("fastify.schemas"),
+    kSchemaCompiler: Symbol("fastify.schemaCompiler"),
     kContentTypeParser: Symbol("fastify.contentTypeParser"),
     kReply: Symbol("fastify.Reply"),
     kRequest: Symbol("fastify.Request"),

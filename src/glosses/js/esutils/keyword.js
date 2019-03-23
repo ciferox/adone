@@ -1,5 +1,5 @@
 const {
-    js: { compiler: { esutils: { code } } }
+    js: { esutils: { code } }
 } = adone;
 
 const isStrictModeReservedWordES6 = function (id) {

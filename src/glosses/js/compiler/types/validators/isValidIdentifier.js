@@ -1,6 +1,6 @@
 const {
     is,
-    js: { compiler: { esutils } }
+    js: { esutils }
 } = adone;
 
 /**

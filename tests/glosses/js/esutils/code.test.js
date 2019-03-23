@@ -1,8 +1,8 @@
 const {
-    js: { compiler: { esutils } }
+    js: { esutils }
 } = adone;
 
-describe("js", "compiler", "esutils", "code", () => {
+describe("js", "esutils", "code", () => {
     describe("isDecimalDigit", () => {
         it("returns true if provided code is decimal digit", () => {
             let ch;

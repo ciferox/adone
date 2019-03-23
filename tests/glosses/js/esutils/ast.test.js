@@ -1,12 +1,12 @@
 const {
-    js: { compiler: { esutils } }
+    js: { esutils }
 } = adone;
 
 const EMPTY = {
     type: "EmptyStatement"
 };
 
-describe("js", "compiler", "esutils", "ast", () => {
+describe("js", "esutils", "ast", () => {
     describe("isExpression", () => {
         it("returns false if input is not node", () => {
             expect(esutils.ast.isExpression(0)).to.be.false();

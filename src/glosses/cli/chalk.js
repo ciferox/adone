@@ -1,7 +1,19 @@
+/* eslint-disable func-style */
+
 const {
     is,
-    cli: { esc, stats }
+    cli: { esc: ansiStyles, stats: { stdout: stdoutColor } }
 } = adone;
+
+const matchOperatorsRe = /[|\\{}()[\]^$+*?.]/g;
+
+const escapeStringRegexp = function (str) {
+    if (!is.string(str)) {
+        throw new TypeError("Expected a string");
+    }
+
+    return str.replace(matchOperatorsRe, "\\$&");
+};
 
 const TEMPLATE_REGEX = /(?:\\(u[a-f\d]{4}|x[a-f\d]{2}|.))|(?:\{(~)?(\w+(?:\([^)]*\))?(?:\.\w+(?:\([^)]*\))?)*)(?:[ \t]|(?=\r?\n)))|(\})|((?:.|[\r\n\f])+?)/gi;
 const STYLE_REGEX = /(?:^|\.)(\w+)(?:\(([^)]*)\))?/g;
@@ -21,17 +33,17 @@ const ESCAPES = new Map([
     ["a", "\u0007"]
 ]);
 
-const unescape = function (c) {
+function unescape(c) {
     if ((c[0] === "u" && c.length === 5) || (c[0] === "x" && c.length === 3)) {
         return String.fromCharCode(parseInt(c.slice(1), 16));
     }
 
     return ESCAPES.get(c) || c;
-};
+}
 
-const parseArguments = function (name, args) {
+function parseArguments(name, arguments_) {
     const results = [];
-    const chunks = args.trim().split(/\s*,\s*/g);
+    const chunks = arguments_.trim().split(/\s*,\s*/g);
     let matches;
 
     for (const chunk of chunks) {
@@ -46,9 +58,9 @@ const parseArguments = function (name, args) {
     }
 
     return results;
-};
+}
 
-const parseStyle = function (style) {
+function parseStyle(style) {
     STYLE_REGEX.lastIndex = 0;
 
     const results = [];
@@ -59,16 +71,16 @@ const parseStyle = function (style) {
 
         if (matches[2]) {
             const args = parseArguments(name, matches[2]);
-            results.push([name, ...args]);
+            results.push([name].concat(args));
         } else {
             results.push([name]);
         }
     }
 
     return results;
-};
+}
 
-const buildStyle = function (chalk, styles) {
+function buildStyle(chalk, styles) {
     const enabled = {};
 
     for (const layer of styles) {
@@ -78,31 +90,28 @@ const buildStyle = function (chalk, styles) {
     }
 
     let current = chalk;
-    for (const styleName of Object.keys(enabled)) {
-        if (!is.array(enabled[styleName])) {
+    for (const [styleName, styles] of Object.entries(enabled)) {
+        if (!is.array(styles)) {
             continue;
         }
+
         if (!(styleName in current)) {
             throw new Error(`Unknown Chalk style: ${styleName}`);
         }
 
-        if (enabled[styleName].length > 0) {
-            current = current[styleName](...enabled[styleName]);
-        } else {
-            current = current[styleName];
-        }
+        current = styles.length > 0 ? current[styleName](...styles) : current[styleName];
     }
 
     return current;
-};
+}
 
-const template = (chalk, tmp) => {
+const template = (chalk, temporary) => {
     const styles = [];
     const chunks = [];
     let chunk = [];
 
     // eslint-disable-next-line max-params
-    tmp.replace(TEMPLATE_REGEX, (m, escapeCharacter, inverse, style, close, character) => {
+    temporary.replace(TEMPLATE_REGEX, (m, escapeCharacter, inverse, style, close, character) => {
         if (escapeCharacter) {
             chunk.push(unescape(escapeCharacter));
         } else if (style) {
@@ -133,73 +142,98 @@ const template = (chalk, tmp) => {
     return chunks.join("");
 };
 
-
-const matchOperatorsRe = /[|\\{}()[\]^$+*?.]/g;
-
-const escapeStringRegexp = function (str) {
-    if (!is.string(str)) {
-        throw new TypeError("Expected a string");
-    }
-
-    return str.replace(matchOperatorsRe, "\\$&");
-};
-
-const isSimpleWindowsTerm = is.windows && !(process.env.TERM || "").toLowerCase().startsWith("xterm");
-
-// `supportsColor.level` → `esc.color[name]` mapping
-const levelMapping = ["ansi", "ansi", "ansi256", "ansi16m"];
+// `supportsColor.level` → `ansiStyles.color[name]` mapping
+const levelMapping = [
+    "ansi",
+    "ansi",
+    "ansi256",
+    "ansi16m"
+];
 
 // `color-convert` models to exclude from the Chalk API due to conflicts and such
 const skipModels = new Set(["gray"]);
 
 const styles = Object.create(null);
 
-// Use bright blue on Windows as the normal blue color is illegible
-if (isSimpleWindowsTerm) {
-    esc.blue.open = "\u001B[94m";
+const applyOptions = (object, options = {}) => {
+    if (options.level > 3 || options.level < 0) {
+        throw new Error("The `level` option should be an integer from 0 to 3");
+    }
+
+    // Detect level if not set manually
+    const colorLevel = stdoutColor ? stdoutColor.level : 0;
+    object.level = is.undefined(options.level) ? colorLevel : options.level;
+    object.enabled = "enabled" in options ? options.enabled : object.level > 0;
+};
+
+class ChalkClass {
+    constructor(options) {
+        return chalkFactory(options);
+    }
 }
 
-for (const key of Object.keys(esc)) {
-    esc[key].closeRe = new RegExp(escapeStringRegexp(esc[key].close), "g");
+const chalkFactory = (options) => {
+    const chalk = {};
+    applyOptions(chalk, options);
 
-    styles[key] = {
+    chalk.template = (...arguments_) => chalkTag(chalk.template, ...arguments_);
+
+    Object.setPrototypeOf(chalk, Chalk.prototype);
+    Object.setPrototypeOf(chalk.template, chalk);
+
+    chalk.template.constructor = () => {
+        throw new Error("`chalk.constructor()` is deprecated. Use `new chalk.Instance()` instead.");
+    };
+
+    chalk.template.Instance = ChalkClass;
+
+    return chalk.template;
+};
+
+function Chalk(options) {
+    return chalkFactory(options);
+}
+
+for (const [styleName, style] of Object.entries(ansiStyles)) {
+    style.closeRe = new RegExp(escapeStringRegexp(style.close), "g");
+
+    styles[styleName] = {
         get() {
-            const codes = esc[key];
-            return build.call(this, [...(this._styles || []), codes], this._empty, key);
+            return createBuilder(this, [...(this._styles || []), style], this._isEmpty);
         }
     };
 }
 
 styles.visible = {
     get() {
-        return build.call(this, this._styles || [], true, "visible");
+        return createBuilder(this, this._styles || [], true);
     }
 };
 
-esc.color.closeRe = new RegExp(escapeStringRegexp(esc.color.close), "g");
-for (const model of Object.keys(esc.color.ansi)) {
+ansiStyles.color.closeRe = new RegExp(escapeStringRegexp(ansiStyles.color.close), "g");
+for (const model of Object.keys(ansiStyles.color.ansi)) {
     if (skipModels.has(model)) {
         continue;
     }
 
     styles[model] = {
         get() {
-            const level = this.level;
-            return function (...args) {
-                const open = esc.color[levelMapping[level]][model](...args);
+            const { level } = this;
+            return function (...arguments_) {
+                const open = ansiStyles.color[levelMapping[level]][model](...arguments_);
                 const codes = {
                     open,
-                    close: esc.color.close,
-                    closeRe: esc.color.closeRe
+                    close: ansiStyles.color.close,
+                    closeRe: ansiStyles.color.closeRe
                 };
-                return build.call(this, [...(this._styles || []), codes], this._empty, model);
+                return createBuilder(this, [...(this._styles || []), codes], this._isEmpty);
             };
         }
     };
 }
 
-esc.bgColor.closeRe = new RegExp(escapeStringRegexp(esc.bgColor.close), "g");
-for (const model of Object.keys(esc.bgColor.ansi)) {
+ansiStyles.bgColor.closeRe = new RegExp(escapeStringRegexp(ansiStyles.bgColor.close), "g");
+for (const model of Object.keys(ansiStyles.bgColor.ansi)) {
     if (skipModels.has(model)) {
         continue;
     }
@@ -207,64 +241,26 @@ for (const model of Object.keys(esc.bgColor.ansi)) {
     const bgModel = `bg${model[0].toUpperCase()}${model.slice(1)}`;
     styles[bgModel] = {
         get() {
-            const level = this.level;
-            return function (...args) {
-                const open = esc.bgColor[levelMapping[level]][model](...args);
+            const { level } = this;
+            return function (...arguments_) {
+                const open = ansiStyles.bgColor[levelMapping[level]][model](...arguments_);
                 const codes = {
                     open,
-                    close: esc.bgColor.close,
-                    closeRe: esc.bgColor.closeRe
+                    close: ansiStyles.bgColor.close,
+                    closeRe: ansiStyles.bgColor.closeRe
                 };
-                return build.call(this, [...(this._styles || []), codes], this._empty, model);
+                return createBuilder(this, [...(this._styles || []), codes], this._isEmpty);
             };
         }
     };
 }
 
-const applyStyle = function (...args) {
-    let string = args.join(" ");
-
-    if (!this.enabled || this.level <= 0 || !string) {
-        return this._empty ? "" : string;
-    }
-
-    // Turns out that on Windows dimmed gray text becomes invisible in cmd.exe,
-    // see https://github.com/chalk/chalk/issues/58
-    // If we're on Windows and we're dealing with a gray color, temporarily make 'dim' a noop.
-    const originalDim = esc.dim.open;
-    if (isSimpleWindowsTerm && this.hasGrey) {
-        esc.dim.open = "";
-    }
-
-    for (const code of this._styles.slice().reverse()) {
-        // Replace any instances already present with a re-opening code
-        // otherwise only the part of the string until said closing code
-        // will be colored, and the rest will simply be 'plain'.
-        string = code.open + string.replace(code.closeRe, code.open) + code.close;
-
-        // Close the styling before a linebreak and reopen
-        // after next line to fix a bleed issue on macOS
-        // https://github.com/chalk/chalk/pull/92
-        string = string.replace(/\r?\n/g, `${code.close}$&${code.open}`);
-    }
-
-    // Reset the original `dim` if we changed it to work around the Windows dimmed gray issue
-    esc.dim.open = originalDim;
-
-    return string;
-};
-
 const proto = Object.defineProperties(() => { }, styles);
 
-const build = function (_styles, _empty, key) {
-    const builder = function (...args) {
-        return applyStyle.apply(builder, args);
-    };
-
+const createBuilder = (self, _styles, _isEmpty) => {
+    const builder = (...arguments_) => applyStyle(builder, ...arguments_);
     builder._styles = _styles;
-    builder._empty = _empty;
-
-    const self = this;
+    builder._isEmpty = _isEmpty;
 
     Object.defineProperty(builder, "level", {
         enumerable: true,
@@ -286,9 +282,6 @@ const build = function (_styles, _empty, key) {
         }
     });
 
-    // See below for fix regarding invisible grey/dim combination on Windows
-    builder.hasGrey = this.hasGrey || key === "gray" || key === "grey";
-
     // `__proto__` is used because we must return a function, but there is
     // no way to create a function with a different prototype
     builder.__proto__ = proto; // eslint-disable-line no-proto
@@ -296,55 +289,48 @@ const build = function (_styles, _empty, key) {
     return builder;
 };
 
-const applyOptions = (instance, { enabled, level } = {}) => {
-    if (level > 3 || level < 0) {
-        throw new adone.error.InvalidArgumentException("The 'level' option should be an integer from 0 to 3");
+const applyStyle = (self, ...arguments_) => {
+    let string = arguments_.join(" ");
+
+    if (!self.enabled || self.level <= 0 || !string) {
+        return self._isEmpty ? "" : string;
     }
-    const scLevel = stats.stdout ? stats.stdout.level : 0;
-    instance.level = is.undefined(level) ? scLevel : level;
-    instance.enabled = is.undefined(enabled) ? instance.level > 0 : enabled;
+
+    for (const code of self._styles.slice().reverse()) {
+        // Replace any instances already present with a re-opening code
+        // otherwise only the part of the string until said closing code
+        // will be colored, and the rest will simply be 'plain'.
+        string = code.open + string.replace(code.closeRe, code.open) + code.close;
+
+        // Close the styling before a linebreak and reopen
+        // after next line to fix a bleed issue on macOS
+        // https://github.com/chalk/chalk/pull/92
+        string = string.replace(/\r?\n/g, `${code.close}$&${code.open}`);
+    }
+
+    return string;
 };
 
-const chalkTag = function (chalk, strings) {
-    if (!is.array(strings)) {
+const chalkTag = (chalk, ...strings) => {
+    const [firstString] = strings;
+
+    if (!is.array(firstString)) {
         // If chalk() was called by itself or with a string,
         // return the string itself as a string.
-        return [].slice.call(arguments, 1).join(" ");
+        return strings.join(" ");
     }
 
-    const args = [].slice.call(arguments, 2);
-    const parts = [strings.raw[0]];
+    const arguments_ = strings.slice(1);
+    const parts = [firstString.raw[0]];
 
-    for (let i = 1; i < strings.length; i++) {
+    for (let i = 1; i < firstString.length; i++) {
         parts.push(
-            String(args[i - 1]).replace(/[{}\\]/g, "\\$&"),
-            String(strings.raw[i])
+            String(arguments_[i - 1]).replace(/[{}\\]/g, "\\$&"),
+            String(firstString.raw[i])
         );
     }
 
     return template(chalk, parts.join(""));
-};
-
-const Chalk = function (options) {
-    // We check for this.template here since calling `chalk.constructor()`
-    // by itself will have a `this` of a previously constructed chalk object
-    if (!this || !(this instanceof Chalk) || this.template) {
-        const chalk = {};
-        applyOptions(chalk, options);
-
-        chalk.template = function (...args) {
-            return chalkTag(...[chalk.template, ...args]);
-        };
-
-        Object.setPrototypeOf(chalk, Chalk.prototype);
-        Object.setPrototypeOf(chalk.template, chalk);
-
-        chalk.template.constructor = Chalk;
-
-        return chalk.template;
-    }
-
-    applyOptions(this, options);
 };
 
 Object.defineProperties(Chalk.prototype, styles);

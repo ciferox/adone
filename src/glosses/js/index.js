@@ -3,6 +3,7 @@ adone.lazify({
     coverage: "./coverage",
     Module: "./module",
     adone: "./adone",
+    esutils: "./esutils",
     parseFunction: "./parse_function",
     tokens: "./tokens",
     highlight: "./highlight"

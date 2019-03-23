@@ -4,7 +4,6 @@ adone.lazify({
     core: "./core",
     // jsTokens: "./js_tokens",
     // matchToToken: ["./js_tokens", (mod) => mod.matchToToken],
-    esutils: "./esutils",
     codeFrame: ["./code_frame", (x) => x.codeFrame],
     codeFrameColumns: ["./code_frame", (x) => x.codeFrameColumns],
     types: "./types",

@@ -1,9 +1,15 @@
+/**
+ *  eslint-disable func-style
+ */
 const {
-    js: { tokens, compiler: { esutils } },
-    cli: { chalk }
+    js: { tokens: { matchToToken, regex: jsTokens }, esutils },
+    cli: { chalk, stats }
 } = adone;
 
-const DEFS = {
+/**
+ * Chalk styles for token types.
+ */
+const getDefs = (chalk) => ({
     keyword: chalk.cyan,
     capitalized: chalk.yellow,
     jsx_tag: chalk.yellow,
@@ -14,7 +20,7 @@ const DEFS = {
     regex: chalk.magenta,
     comment: chalk.grey,
     invalid: chalk.white.bgRed.bold
-};
+});
 
 /**
  * RegExp to test for newlines in terminal.
@@ -34,9 +40,9 @@ const BRACKET = /^[()[\]{}]$/;
 /**
  * Get the type of token, specifying punctuator type.
  */
-const getTokenType = function (match) {
+const getTokenType = (match) => {
     const [offset, text] = match.slice(-2);
-    const token = tokens.matchToToken(match);
+    const token = matchToToken(match);
 
     if (token.type === "name") {
         if (esutils.keyword.isReservedWordES6(token.value)) {
@@ -69,16 +75,47 @@ const getTokenType = function (match) {
     return token.type;
 };
 
-export default function highlight(code) {
-    return code.replace(tokens.regex, (...args) => {
-        const type = getTokenType(args);
-        const colorize = DEFS[type];
-        if (colorize) {
-            return args[0]
-                .split(NEWLINE)
-                .map((str) => colorize(str))
-                .join("\n");
-        }
-        return args[0];
-    });
+/**
+ * Highlight `text` using the token definitions in `defs`.
+ */
+const highlightTokens = (defs: Object, text: string) => text.replace(jsTokens, (...args) => {
+    const type = getTokenType(args);
+    const colorize = defs[type];
+    if (colorize) {
+        return args[0]
+            .split(NEWLINE)
+            .map((str) => colorize(str))
+            .join("\n");
+    }
+    return args[0];
+});
+
+type Options = {
+    forceColor?: boolean,
+};
+
+/**
+ * Whether the code should be highlighted given the passed options.
+ */
+const shouldHighlight = (options: Options): boolean => stats.stdout || options.forceColor;
+
+/**
+ * The Chalk instance that should be used given the passed options.
+ */
+const getChalk = (options: Options) => options.forceColor
+    ? new chalk.Instance({ enabled: true, level: 1 })
+    : chalk;
+
+
+/**
+ * Highlight `code`.
+ */
+export default function highlight(code: string, options: Options = {}): string {
+    if (shouldHighlight(options)) {
+        const defs = getDefs(getChalk(options));
+        return highlightTokens(defs, code);
+    }
+    return code;
 }
+
+highlight.shouldHighlight = shouldHighlight;

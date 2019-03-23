@@ -1,12 +1,12 @@
 const {
-    js: { compiler: { esutils } }
+    js: { esutils }
 } = adone;
 
 const KW = ["if", "in", "do", "var", "for", "new", "try", "this", "else", "case", "void", "with", "enum", "while", "break", "catch", "throw", "const", "class", "super", "return", "typeof", "delete", "switch", "export", "import", "default", "finally", "extends", "function", "continue", "debugger", "instanceof"];
 
 const SRW = ["implements", "interface", "package", "private", "protected", "public", "static", "let"];
 
-describe("js", "compiler", "esutils", "keyword", () => {
+describe("js", "esutils", "keyword", () => {
     describe("isKeywordES6", () => {
         it("returns true if provided string is keyword under non-strict mode", () => {
             let i;

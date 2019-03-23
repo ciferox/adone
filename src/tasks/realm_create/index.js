@@ -13,7 +13,7 @@ const __ = adone.lazify({
 }, null, require);
 
 export default class extends realm.BaseTask {
-    async run(info = {}) {
+    async main(info = {}) {
         if (!is.string(info.basePath)) {
             throw new error.InvalidArgumentException("Invalid base path");
         }

@@ -2,7 +2,7 @@ import Terminfo from "./terminfo";
 
 const {
     is,
-    std: { fs, string_decoder: stringDecoder },
+    std: { fs, string_decoder: stringDecoder }
 } = adone;
 
 const COLOR_SCHEME = Symbol();
@@ -294,23 +294,51 @@ const emitKeys = (stream, s) => {
 };
 
 let forceColor;
-
 if ("FORCE_COLOR" in env) {
-    forceColor = env.FORCE_COLOR.length === 0 || parseInt(env.FORCE_COLOR, 10) !== 0;
+    if (env.FORCE_COLOR === "true") {
+        forceColor = 1;
+    } else if (env.FORCE_COLOR === "false") {
+        forceColor = 0;
+    } else {
+        forceColor = env.FORCE_COLOR.length === 0 ? 1 : Math.min(parseInt(env.FORCE_COLOR, 10), 3);
+    }
 }
 
+const translateLevel = function (level) {
+    if (level === 0) {
+        return false;
+    }
+
+    return {
+        level,
+        hasBasic: true,
+        has256: level >= 2,
+        has16m: level >= 3
+    };
+};
+
 const supportsColor = function (stream) {
-    if (forceColor === false) {
+    if (forceColor === 0) {
         return 0;
     }
 
-    if (stream && !stream.isTTY && forceColor !== true) {
+    if (stream && !stream.isTTY && is.undefined(forceColor)) {
         return 0;
     }
 
-    const min = forceColor ? 1 : 0;
+    const min = forceColor || 0;
+
+    if (env.TERM === "dumb") {
+        return min;
+    }
 
     if (is.windows) {
+        // Node.js 7.5.0 is the first version of Node.js to include a patch to
+        // libuv that enables 256 color output on Windows. Anything earlier and it
+        // won't work. However, here we target Node.js 8 at minimum as it is an LTS
+        // release, and Node.js 7 is not. Windows 10 build 10586 is the first Windows
+        // release that supports 256 colors. Windows 10 build 14931 is the first release
+        // that supports 16m/TrueColor.
         const osRelease = adone.std.os.release().split(".");
         if (
             Number(process.versions.node.split(".")[0]) >= 8 &&
@@ -321,6 +349,18 @@ const supportsColor = function (stream) {
         }
 
         return 1;
+    }
+
+    if ("CI" in env) {
+        if (["TRAVIS", "CIRCLECI", "APPVEYOR", "GITLAB_CI"].some((sign) => sign in env) || env.CI_NAME === "codeship") {
+            return 1;
+        }
+
+        return min;
+    }
+
+    if ("TEAMCITY_VERSION" in env) {
+        return /^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/.test(env.TEAMCITY_VERSION) ? 1 : 0;
     }
 
     if (env.COLORTERM === "truecolor") {
@@ -343,7 +383,7 @@ const supportsColor = function (stream) {
         return 2;
     }
 
-    if (/^screen|^xterm|^vt100|^rxvt|color|ansi|cygwin|linux/i.test(env.TERM)) {
+    if (/^screen|^xterm|^vt100|^vt220|^rxvt|color|ansi|cygwin|linux/i.test(env.TERM)) {
         return 1;
     }
 
@@ -351,25 +391,7 @@ const supportsColor = function (stream) {
         return 1;
     }
 
-    if (env.TERM === "dumb") {
-        return min;
-    }
-
     return min;
-};
-
-const getColorsInfo = function (stream) {
-    const level = supportsColor(stream);
-    if (level === 0) {
-        return false;
-    }
-
-    return {
-        level,
-        hasBasic: true,
-        has256: level >= 2,
-        has16m: level >= 3
-    };
 };
 
 class Terminal extends adone.event.Emitter {
@@ -431,8 +453,8 @@ class Terminal extends adone.event.Emitter {
         // xterm and rxvt - not accurate
         stats.isRxvt = /rxvt/i.test(env.COLORTERM);
 
-        stats.stdout = getColorsInfo(process.stdout);
-        stats.stderr = getColorsInfo(process.stderr);
+        stats.stdout = this.getSupportLevel(process.stdout);
+        stats.stderr = this.getSupportLevel(process.stderr);
 
         this.terminfo = new Terminfo();
         this.input = process.stdin;
@@ -474,6 +496,11 @@ class Terminal extends adone.event.Emitter {
             process.on("SIGWINCH", this.output._resizeHandler);
         }
         this.setMaxListeners(Infinity);
+    }
+
+    getSupportLevel(stream) {
+        const level = supportsColor(stream);
+        return translateLevel(level);
     }
 
     async syncCursor() {
