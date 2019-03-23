@@ -1,9 +1,36 @@
-import SourceMap from "./source_map";
-import Printer from "./printer";
+import SourceMap from "./source-map";
+import Printer, { type Format } from "./printer";
 
 const {
     is
 } = adone;
+
+/**
+ * Babel's code generator, turns an ast into code, maintaining sourcemaps,
+ * user preferences, and valid output.
+ */
+
+class Generator extends Printer {
+    constructor(ast, opts = {}, code) {
+        const format = normalizeOptions(code, opts);
+        const map = opts.sourceMaps ? new SourceMap(opts, code) : null;
+        super(format, map);
+
+        this.ast = ast;
+    }
+
+  ast: Object;
+
+  /**
+   * Generate code and sourcemap from ast.
+   *
+   * Appends comments that weren't attached to any node to the end of the generated output.
+   */
+
+  generate() {
+      return super.generate(this.ast);
+  }
+}
 
 /**
  * Normalize generator options, setting defaults.
@@ -12,7 +39,7 @@ const {
  * - If `opts.compact = "auto"` and the code is over 500KB, `compact` will be set to `true`.
  */
 
-const normalizeOptions = function (code, opts) {
+function normalizeOptions(code, opts): Format {
     const format = {
         auxiliaryCommentBefore: opts.auxiliaryCommentBefore,
         auxiliaryCommentAfter: opts.auxiliaryCommentAfter,
@@ -41,13 +68,13 @@ const normalizeOptions = function (code, opts) {
         format.compact = true;
 
         format.shouldPrintComment =
-            format.shouldPrintComment || (() => format.comments);
+      format.shouldPrintComment || (() => format.comments);
     } else {
         format.shouldPrintComment =
-            format.shouldPrintComment ||
-            ((value) =>
-                format.comments ||
-                (value.includes("@license") || value.includes("@preserve")));
+      format.shouldPrintComment ||
+      ((value) =>
+          format.comments ||
+        (value.indexOf("@license") >= 0 || value.indexOf("@preserve") >= 0));
     }
 
     if (format.compact === "auto") {
@@ -56,7 +83,7 @@ const normalizeOptions = function (code, opts) {
         if (format.compact) {
             console.error(
                 "[BABEL] Note: The code generator has deoptimised the styling of " +
-                `${opts.filename} as it exceeds the max of ${"500KB"}.`,
+          `${opts.filename} as it exceeds the max of ${"500KB"}.`,
             );
         }
     }
@@ -66,35 +93,7 @@ const normalizeOptions = function (code, opts) {
     }
 
     return format;
-};
-
-/**
- * Babel's code generator, turns an ast into code, maintaining sourcemaps,
- * user preferences, and valid output.
- */
-
-class Generator extends Printer {
-    constructor(ast, opts = {}, code) {
-        const format = normalizeOptions(code, opts);
-        const map = opts.sourceMaps ? new SourceMap(opts, code) : null;
-        super(format, map);
-
-        this.ast = ast;
-    }
-
-    ast;
-
-    /**
-     * Generate code and sourcemap from ast.
-     *
-     * Appends comments that weren't attached to any node to the end of the generated output.
-     */
-
-    generate() {
-        return super.generate(this.ast);
-    }
 }
-
 
 /**
  * We originally exported the Generator class above, but to make it extra clear that it is a private API,
@@ -112,7 +111,7 @@ export class CodeGenerator {
     }
 }
 
-export default function (ast, opts, code) {
+export default function (ast: Object, opts: Object, code: string): Object {
     const gen = new Generator(ast, opts, code);
     return gen.generate();
 }

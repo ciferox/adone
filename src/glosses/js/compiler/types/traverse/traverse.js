@@ -1,23 +1,54 @@
+// @flow
 import { VISITOR_KEYS } from "../definitions";
 
 const {
     is
 } = adone;
 
-const traverseSimpleImpl = function (
-    node,
-    enter,
-    exit,
-    state,
-    ancestors,
+export type TraversalAncestors = Array<{
+  node: BabelNode,
+  key: string,
+  index?: number,
+}>;
+export type TraversalHandler<T> = (BabelNode, TraversalAncestors, T) => void;
+export type TraversalHandlers<T> = {
+  enter?: TraversalHandler<T>,
+  exit?: TraversalHandler<T>,
+};
+
+/**
+ * A general AST traversal with both prefix and postfix handlers, and a
+ * state object. Exposes ancestry data to each handler so that more complex
+ * AST data can be taken into account.
+ */
+export default function traverse<T>(
+    node: BabelNode,
+    handlers: TraversalHandler<T> | TraversalHandlers<T>,
+    state?: T,
+): void {
+    if (is.function(handlers)) {
+        handlers = { enter: handlers };
+    }
+
+    const { enter, exit } = (handlers: TraversalHandlers<T>);
+
+    traverseSimpleImpl(node, enter, exit, state, []);
+}
+
+function traverseSimpleImpl<T>(
+    node: Object,
+    enter: ?Function,
+    exit: ?Function,
+    state: ?T,
+    ancestors: TraversalAncestors,
 ) {
     const keys = VISITOR_KEYS[node.type];
     if (!keys) {
-        return;
+        return; 
     }
 
     if (enter) {
-        enter(node, ancestors, state);
+        enter(node, ancestors, state); 
     }
 
     for (const key of keys) {
@@ -27,7 +58,7 @@ const traverseSimpleImpl = function (
             for (let i = 0; i < subNode.length; i++) {
                 const child = subNode[i];
                 if (!child) {
-                    continue;
+                    continue; 
                 }
 
                 ancestors.push({
@@ -53,26 +84,6 @@ const traverseSimpleImpl = function (
     }
 
     if (exit) {
-        exit(node, ancestors, state);
+        exit(node, ancestors, state); 
     }
-};
-
-
-/**
- * A general AST traversal with both prefix and postfix handlers, and a
- * state object. Exposes ancestry data to each handler so that more complex
- * AST data can be taken into account.
- */
-export default function traverse(
-    node,
-    handlers,
-    state,
-) {
-    if (is.function(handlers)) {
-        handlers = { enter: handlers };
-    }
-
-    const { enter, exit } = handlers;
-
-    traverseSimpleImpl(node, enter, exit, state, []);
 }

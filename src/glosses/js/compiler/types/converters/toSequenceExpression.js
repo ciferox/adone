@@ -1,3 +1,5 @@
+// @flow
+import type { Scope } from "@babel/traverse";
 import gatherSequenceExpressions from "./gatherSequenceExpressions";
 
 /**
@@ -8,15 +10,18 @@ import gatherSequenceExpressions from "./gatherSequenceExpressions";
  *
  * Expression statements are just resolved to their expression.
  */
-export default function toSequenceExpression(nodes, scope) {
+export default function toSequenceExpression(
+    nodes: Array<Object>,
+    scope: Scope,
+): ?Object {
     if (!nodes || !nodes.length) {
-        return;
+        return; 
     }
 
     const declars = [];
     const result = gatherSequenceExpressions(nodes, scope, declars);
     if (!result) {
-        return;
+        return; 
     }
 
     for (const declar of declars) {

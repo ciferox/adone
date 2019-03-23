@@ -1,3 +1,9 @@
+// @flow
+
+const {
+    is
+} = adone;
+
 import type {
     ConfigFileSearch,
     BabelrcSearch,
@@ -12,12 +18,9 @@ import type {
     CompactOption,
     RootInputSourceMapOption,
     NestingPath,
-    CallerMetadata
+    CallerMetadata,
+    RootMode
 } from "./options";
-
-const {
-    is
-} = adone;
 
 export type ValidatorSet = {
   [string]: Validator<any>,
@@ -61,6 +64,20 @@ type AccessPath = $ReadOnly<{
   parent: GeneralPath,
 }>;
 type GeneralPath = OptionPath | AccessPath;
+
+export function assertRootMode(loc: OptionPath, value: mixed): RootMode | void {
+    if (
+        !is.undefined(value) &&
+    value !== "root" &&
+    value !== "upward" &&
+    value !== "upward-optional"
+    ) {
+        throw new Error(
+            `${msg(loc)} must be a "root", "upward", "upward-optional" or undefined`,
+        );
+    }
+    return value;
+}
 
 export function assertSourceMaps(
     loc: OptionPath,
@@ -279,7 +296,7 @@ export function assertBabelrcSearch(
     value: mixed,
 ): BabelrcSearch | void {
     if (is.undefined(value) || is.boolean(value)) {
-        return value;
+        return value; 
     }
 
     if (is.array(value)) {

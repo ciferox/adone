@@ -2,7 +2,7 @@ const {
     js: { compiler: { types: t } }
 } = adone;
 
-describe("js", "compiler", "types", "asserts", () => {
+describe("asserts", () => {
     const consoleTrace = console.trace;
 
     beforeEach(() => {
@@ -20,7 +20,7 @@ describe("js", "compiler", "types", "asserts", () => {
             it(nodeType, () => {
                 expect(() => {
                     t[k]({ type: "FlavorTownDeclaration" }, {});
-                }).throw(
+                }).to.throw(
                     `Expected type "${nodeType}" with option {}, but instead got "FlavorTownDeclaration".`,
                 );
             });

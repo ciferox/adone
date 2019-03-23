@@ -76,4 +76,42 @@ describe("js", "highlight", () => {
             });
         });
     });
+
+    describe("getChalk", () => {
+        describe("when colors are supported", () => {
+            stubColorSupport(true);
+
+            describe("when forceColor is not passed", () => {
+                it("returns a Chalk instance", () => {
+                    expect(highlight.getChalk({}).constructor).to.be.equal(chalk.constructor);
+                });
+            });
+
+            describe("when forceColor is passed", () => {
+                it("returns a Chalk instance", () => {
+                    expect(highlight.getChalk({ forceColor: true }).Instance).to.eql(
+                        chalk.Instance,
+                    );
+                });
+            });
+        });
+
+        describe("when colors are supported", () => {
+            stubColorSupport(true);
+
+            describe("when forceColor is not passed", () => {
+                it("returns a Chalk instance", () => {
+                    expect(highlight.getChalk({}).Instance).to.eql(chalk.Instance);
+                });
+            });
+
+            describe("when forceColor is passed", () => {
+                it("returns a Chalk instance", () => {
+                    expect(highlight.getChalk({ forceColor: true }).Instance).to.eql(
+                        chalk.Instance,
+                    );
+                });
+            });
+        });
+    });
 });

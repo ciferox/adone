@@ -1,3 +1,6 @@
+// @flow
+import isPlainObject from "lodash/isPlainObject";
+import isRegExp from "lodash/isRegExp";
 import isValidIdentifier from "../validators/isValidIdentifier";
 import {
     identifier,
@@ -14,11 +17,10 @@ import {
 } from "../builders/generated";
 
 const {
-    is,
-    lodash: { isPlainObject, isRegExp }
+    is
 } = adone;
 
-export default function valueToNode(value) {
+export default function valueToNode(value: any): Object {
     // undefined
     if (is.undefined(value)) {
         return identifier("undefined");
@@ -79,7 +81,7 @@ export default function valueToNode(value) {
     // object
     if (isPlainObject(value)) {
         const props = [];
-        for (const key in value) {
+        for (const key of Object.keys(value)) {
             let nodeKey;
             if (isValidIdentifier(key)) {
                 nodeKey = identifier(key);

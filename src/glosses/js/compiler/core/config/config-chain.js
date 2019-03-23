@@ -1,3 +1,11 @@
+// @flow
+
+const {
+    is
+} = adone;
+
+import path from "path";
+import buildDebug from "debug";
 import {
     validate,
     type ValidatedOptions,
@@ -7,6 +15,8 @@ import {
     type CallerMetadata
 } from "./validation/options";
 import pathPatternToRegex from "./pattern-to-regex";
+
+const debug = buildDebug("babel:config:config-chain");
 
 import {
     findPackageData,
@@ -28,29 +38,24 @@ import {
     type ValidatedFile
 } from "./config-descriptors";
 
-const {
-    is,
-    std: { path }
-} = adone;
-
 export type ConfigChain = {
-    plugins: Array<UnloadedDescriptor>,
-    presets: Array<UnloadedDescriptor>,
-    options: Array<ValidatedOptions>,
+  plugins: Array<UnloadedDescriptor>,
+  presets: Array<UnloadedDescriptor>,
+  options: Array<ValidatedOptions>,
 };
 
 export type PresetInstance = {
-    options: ValidatedOptions,
-    alias: string,
-    dirname: string,
+  options: ValidatedOptions,
+  alias: string,
+  dirname: string,
 };
 
 export type ConfigContext = {
-    filename: string | void,
-    cwd: string,
-    root: string,
-    envName: string,
-    caller: CallerMetadata | void,
+  filename: string | void,
+  cwd: string,
+  root: string,
+  envName: string,
+  caller: CallerMetadata | void,
 };
 
 /**
@@ -62,19 +67,19 @@ export function buildPresetChain(
 ): ConfigChain | null {
     const chain = buildPresetChainWalker(arg, context);
     if (!chain) {
-        return null;
+        return null; 
     }
 
     return {
         plugins: dedupDescriptors(chain.plugins),
         presets: dedupDescriptors(chain.presets),
-        options: chain.options
+        options: chain.options.map((o) => normalizeOptions(o))
     };
 }
 
 export const buildPresetChainWalker: (
-    arg: PresetInstance,
-    context: *,
+  arg: PresetInstance,
+  context: *,
 ) => * = makeChainWalker({
     init: (arg) => arg,
     root: (preset) => loadPresetDescriptors(preset),
@@ -122,9 +127,9 @@ const loadPresetOverridesEnvDescriptors = makeWeakCache(
 );
 
 export type RootConfigChain = ConfigChain & {
-    babelrc: ConfigFile | void,
-    config: ConfigFile | void,
-    ignore: IgnoreFile | void,
+  babelrc: ConfigFile | void,
+  config: ConfigFile | void,
+  ignore: IgnoreFile | void,
 };
 
 /**
@@ -142,7 +147,7 @@ export function buildRootChain(
         context,
     );
     if (!programmaticChain) {
-        return null;
+        return null; 
     }
 
     let configFile;
@@ -158,13 +163,14 @@ export function buildRootChain(
     }
 
     let { babelrc, babelrcRoots } = opts;
+    let babelrcRootsDirectory = context.cwd;
 
     const configFileChain = emptyChain();
     if (configFile) {
         const validatedFile = validateConfigFile(configFile);
         const result = loadFileChain(validatedFile, context);
         if (!result) {
-            return null;
+            return null; 
         }
 
         // Allow config files to toggle `.babelrc` resolution on and off and
@@ -173,6 +179,7 @@ export function buildRootChain(
             babelrc = validatedFile.options.babelrc;
         }
         if (is.undefined(babelrcRoots)) {
+            babelrcRootsDirectory = validatedFile.dirname;
             babelrcRoots = validatedFile.options.babelrcRoots;
         }
 
@@ -180,26 +187,27 @@ export function buildRootChain(
     }
 
     const pkgData =
-        is.string(context.filename)
-            ? findPackageData(context.filename)
-            : null;
+    is.string(context.filename)
+        ? findPackageData(context.filename)
+        : null;
 
     let ignoreFile; let babelrcFile;
     const fileChain = emptyChain();
     // resolve all .babelrc files
     if (
         (babelrc === true || is.undefined(babelrc)) &&
-        pkgData &&
-        babelrcLoadEnabled(context, pkgData, babelrcRoots)
+    pkgData &&
+    babelrcLoadEnabled(context, pkgData, babelrcRoots, babelrcRootsDirectory)
     ) {
         ({ ignore: ignoreFile, config: babelrcFile } = findRelativeConfig(
             pkgData,
             context.envName,
+            context.caller,
         ));
 
         if (
             ignoreFile &&
-            shouldIgnore(context, ignoreFile.ignore, null, ignoreFile.dirname)
+      shouldIgnore(context, ignoreFile.ignore, null, ignoreFile.dirname)
         ) {
             return null;
         }
@@ -207,7 +215,7 @@ export function buildRootChain(
         if (babelrcFile) {
             const result = loadFileChain(validateBabelrcFile(babelrcFile), context);
             if (!result) {
-                return null;
+                return null; 
             }
 
             mergeChain(fileChain, result);
@@ -235,9 +243,10 @@ function babelrcLoadEnabled(
     context: ConfigContext,
     pkgData: FilePackageData,
     babelrcRoots: BabelrcSearch | void,
+    babelrcRootsDirectory: string,
 ): boolean {
     if (is.boolean(babelrcRoots)) {
-        return babelrcRoots;
+        return babelrcRoots; 
     }
 
     const absoluteRoot = context.root;
@@ -250,10 +259,12 @@ function babelrcLoadEnabled(
 
     let babelrcPatterns = babelrcRoots;
     if (!is.array(babelrcPatterns)) {
-        babelrcPatterns = [babelrcPatterns];
+        babelrcPatterns = [babelrcPatterns]; 
     }
     babelrcPatterns = babelrcPatterns.map((pat) => {
-        return is.string(pat) ? path.resolve(context.cwd, pat) : pat;
+        return is.string(pat)
+            ? path.resolve(babelrcRootsDirectory, pat)
+            : pat;
     });
 
     // Fast path to avoid having to match patterns if the babelrc is just
@@ -264,11 +275,11 @@ function babelrcLoadEnabled(
 
     return babelrcPatterns.some((pat) => {
         if (is.string(pat)) {
-            pat = pathPatternToRegex(pat, context.cwd);
+            pat = pathPatternToRegex(pat, babelrcRootsDirectory);
         }
 
         return pkgData.directories.some((directory) => {
-            return matchPattern(pat, context.cwd, directory, context);
+            return matchPattern(pat, babelrcRootsDirectory, directory, context);
         });
     });
 }
@@ -385,7 +396,7 @@ function buildOverrideDescriptors(
 ) {
     const opts = options.overrides && options.overrides[index];
     if (!opts) {
-        throw new Error("Assertion failure - missing override");
+        throw new Error("Assertion failure - missing override"); 
     }
 
     return descriptors(dirname, opts, `${alias}.overrides[${index}]`);
@@ -400,7 +411,7 @@ function buildOverrideEnvDescriptors(
 ) {
     const override = options.overrides && options.overrides[index];
     if (!override) {
-        throw new Error("Assertion failure - missing override");
+        throw new Error("Assertion failure - missing override"); 
     }
 
     const opts = override.env && override.env[envName];
@@ -419,10 +430,10 @@ function makeChainWalker<ArgT: { options: ValidatedOptions, dirname: string }>({
     overrides,
     overridesEnv
 }: {
-    root: ArgT => OptionsAndDescriptors,
-        env: (ArgT, string) => OptionsAndDescriptors | null,
-            overrides: (ArgT, number) => OptionsAndDescriptors,
-                overridesEnv: (ArgT, number, string) => OptionsAndDescriptors | null,
+  root: ArgT => OptionsAndDescriptors,
+  env: (ArgT, string) => OptionsAndDescriptors | null,
+  overrides: (ArgT, number) => OptionsAndDescriptors,
+  overridesEnv: (ArgT, number, string) => OptionsAndDescriptors | null,
 }): (ArgT, ConfigContext, Set<ConfigFile> | void) => ConfigChain | null {
     return (input, context, files = new Set()) => {
         const { dirname } = input;
@@ -446,7 +457,7 @@ function makeChainWalker<ArgT: { options: ValidatedOptions, dirname: string }>({
                     const overrideEnvOpts = overridesEnv(input, index, context.envName);
                     if (
                         overrideEnvOpts &&
-                        configIsApplicable(overrideEnvOpts, dirname, context)
+            configIsApplicable(overrideEnvOpts, dirname, context)
                     ) {
                         flattenedConfigs.push(overrideEnvOpts);
                     }
@@ -486,7 +497,7 @@ function mergeExtendsChain(
     files: Set<ConfigFile>,
 ): boolean {
     if (is.undefined(opts.extends)) {
-        return true;
+        return true; 
     }
 
     const file = loadConfig(
@@ -499,7 +510,7 @@ function mergeExtendsChain(
     if (files.has(file)) {
         throw new Error(
             `${`Configuration cycle detected loading ${file.filepath}.\n` +
-            "File already loaded following the config chain:\n"}${
+        "File already loaded following the config chain:\n"}${ 
                 Array.from(files, (file) => ` - ${file.filepath}`).join("\n")}`,
         );
     }
@@ -509,7 +520,7 @@ function mergeExtendsChain(
     files.delete(file);
 
     if (!fileChain) {
-        return false;
+        return false; 
     }
 
     mergeChain(chain, fileChain);
@@ -562,7 +573,7 @@ function normalizeOptions(opts: ValidatedOptions): ValidatedOptions {
 
     // "sourceMap" is just aliased to sourceMap, so copy it over as
     // we merge the options together.
-    if (options.sourceMap) {
+    if (options.hasOwnProperty("sourceMap")) {
         options.sourceMaps = options.sourceMap;
         delete options.sourceMap;
     }
@@ -573,9 +584,9 @@ function dedupDescriptors(
     items: Array<UnloadedDescriptor>,
 ): Array<UnloadedDescriptor> {
     const map: Map<
-        Function,
-        Map<string | void, { value: UnloadedDescriptor }>,
-        > = new Map();
+    Function,
+    Map<string | void, { value: UnloadedDescriptor }>,
+  > = new Map();
 
     const descriptors = [];
 
@@ -595,7 +606,7 @@ function dedupDescriptors(
                 // Treat passPerPreset presets as unique, skipping them
                 // in the merge processing steps.
                 if (!item.ownPass) {
-                    nameMap.set(item.name, desc);
+                    nameMap.set(item.name, desc); 
                 }
             } else {
                 desc.value = item;
@@ -618,11 +629,11 @@ function configIsApplicable(
 ): boolean {
     return (
         (is.undefined(options.test) ||
-            configFieldIsApplicable(context, options.test, dirname)) &&
-        (is.undefined(options.include) ||
-            configFieldIsApplicable(context, options.include, dirname)) &&
-        (is.undefined(options.exclude) ||
-            !configFieldIsApplicable(context, options.exclude, dirname))
+      configFieldIsApplicable(context, options.test, dirname)) &&
+    (is.undefined(options.include) ||
+      configFieldIsApplicable(context, options.include, dirname)) &&
+    (is.undefined(options.exclude) ||
+      !configFieldIsApplicable(context, options.exclude, dirname))
     );
 }
 
@@ -646,10 +657,22 @@ function shouldIgnore(
     dirname: string,
 ): boolean {
     if (ignore && matchesPatterns(context, ignore, dirname)) {
+        debug(
+            "Ignored %o because it matched one of %O from %o",
+            context.filename,
+            ignore,
+            dirname,
+        );
         return true;
     }
 
     if (only && !matchesPatterns(context, only, dirname)) {
+        debug(
+            "Ignored %o because it failed to match one of %O from %o",
+            context.filename,
+            only,
+            dirname,
+        );
         return true;
     }
 

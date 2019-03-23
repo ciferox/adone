@@ -1,3 +1,6 @@
+// @flow
+
+import type { ConfigItem } from "../item";
 import Plugin from "../plugin";
 
 import removed from "./removed";
@@ -16,6 +19,7 @@ import {
     assertConfigFileSearch,
     assertBabelrcSearch,
     assertFunction,
+    assertRootMode,
     assertSourceMaps,
     assertCompact,
     assertSourceType,
@@ -24,50 +28,49 @@ import {
     type OptionPath
 } from "./option-assertions";
 
-const {
-    is
-} = adone;
-
 const ROOT_VALIDATORS: ValidatorSet = {
     cwd: (assertString: Validator<$PropertyType<ValidatedOptions, "cwd">>),
     root: (assertString: Validator<$PropertyType<ValidatedOptions, "root">>),
+    rootMode: (assertRootMode: Validator<
+    $PropertyType<ValidatedOptions, "rootMode">,
+  >),
     configFile: (assertConfigFileSearch: Validator<
-        $PropertyType<ValidatedOptions, "configFile">,
-        >),
+    $PropertyType<ValidatedOptions, "configFile">,
+  >),
 
     caller: (assertCallerMetadata: Validator<
-        $PropertyType<ValidatedOptions, "caller">,
-        >),
+    $PropertyType<ValidatedOptions, "caller">,
+  >),
     filename: (assertString: Validator<
-        $PropertyType<ValidatedOptions, "filename">,
-        >),
+    $PropertyType<ValidatedOptions, "filename">,
+  >),
     filenameRelative: (assertString: Validator<
-        $PropertyType<ValidatedOptions, "filenameRelative">,
-        >),
+    $PropertyType<ValidatedOptions, "filenameRelative">,
+  >),
     code: (assertBoolean: Validator<$PropertyType<ValidatedOptions, "code">>),
     ast: (assertBoolean: Validator<$PropertyType<ValidatedOptions, "ast">>),
 
     envName: (assertString: Validator<
-        $PropertyType<ValidatedOptions, "envName">,
-        >)
+    $PropertyType<ValidatedOptions, "envName">,
+  >)
 };
 
 const BABELRC_VALIDATORS: ValidatorSet = {
     babelrc: (assertBoolean: Validator<
-        $PropertyType<ValidatedOptions, "babelrc">,
-        >),
+    $PropertyType<ValidatedOptions, "babelrc">,
+  >),
     babelrcRoots: (assertBabelrcSearch: Validator<
-        $PropertyType<ValidatedOptions, "babelrcRoots">,
-        >)
+    $PropertyType<ValidatedOptions, "babelrcRoots">,
+  >)
 };
 
 const NONPRESET_VALIDATORS: ValidatorSet = {
     extends: (assertString: Validator<
-        $PropertyType<ValidatedOptions, "extends">,
-        >),
+    $PropertyType<ValidatedOptions, "extends">,
+  >),
     ignore: (assertIgnoreList: Validator<
-        $PropertyType<ValidatedOptions, "ignore">,
-        >),
+    $PropertyType<ValidatedOptions, "ignore">,
+  >),
     only: (assertIgnoreList: Validator<$PropertyType<ValidatedOptions, "only">>)
 };
 
@@ -76,168 +79,169 @@ const COMMON_VALIDATORS: ValidatorSet = {
     // We may want a boolean-only version to be a common option, with the
     // object only allowed as a root config argument.
     inputSourceMap: (assertInputSourceMap: Validator<
-        $PropertyType<ValidatedOptions, "inputSourceMap">,
-        >),
+    $PropertyType<ValidatedOptions, "inputSourceMap">,
+  >),
     presets: (assertPluginList: Validator<
-        $PropertyType<ValidatedOptions, "presets">,
-        >),
+    $PropertyType<ValidatedOptions, "presets">,
+  >),
     plugins: (assertPluginList: Validator<
-        $PropertyType<ValidatedOptions, "plugins">,
-        >),
+    $PropertyType<ValidatedOptions, "plugins">,
+  >),
     passPerPreset: (assertBoolean: Validator<
-        $PropertyType<ValidatedOptions, "passPerPreset">,
-        >),
+    $PropertyType<ValidatedOptions, "passPerPreset">,
+  >),
 
     env: (assertEnvSet: Validator<$PropertyType<ValidatedOptions, "env">>),
     overrides: (assertOverridesList: Validator<
-        $PropertyType<ValidatedOptions, "overrides">,
-        >),
+    $PropertyType<ValidatedOptions, "overrides">,
+  >),
 
     // We could limit these to 'overrides' blocks, but it's not clear why we'd
     // bother, when the ability to limit a config to a specific set of files
     // is a fairly general useful feature.
     test: (assertConfigApplicableTest: Validator<
-        $PropertyType<ValidatedOptions, "test">,
-        >),
+    $PropertyType<ValidatedOptions, "test">,
+  >),
     include: (assertConfigApplicableTest: Validator<
-        $PropertyType<ValidatedOptions, "include">,
-        >),
+    $PropertyType<ValidatedOptions, "include">,
+  >),
     exclude: (assertConfigApplicableTest: Validator<
-        $PropertyType<ValidatedOptions, "exclude">,
-        >),
+    $PropertyType<ValidatedOptions, "exclude">,
+  >),
 
     retainLines: (assertBoolean: Validator<
-        $PropertyType<ValidatedOptions, "retainLines">,
-        >),
+    $PropertyType<ValidatedOptions, "retainLines">,
+  >),
     comments: (assertBoolean: Validator<
-        $PropertyType<ValidatedOptions, "comments">,
-        >),
+    $PropertyType<ValidatedOptions, "comments">,
+  >),
     shouldPrintComment: (assertFunction: Validator<
-        $PropertyType<ValidatedOptions, "shouldPrintComment">,
-        >),
+    $PropertyType<ValidatedOptions, "shouldPrintComment">,
+  >),
     compact: (assertCompact: Validator<
-        $PropertyType<ValidatedOptions, "compact">,
-        >),
+    $PropertyType<ValidatedOptions, "compact">,
+  >),
     minified: (assertBoolean: Validator<
-        $PropertyType<ValidatedOptions, "minified">,
-        >),
+    $PropertyType<ValidatedOptions, "minified">,
+  >),
     auxiliaryCommentBefore: (assertString: Validator<
-        $PropertyType<ValidatedOptions, "auxiliaryCommentBefore">,
-        >),
+    $PropertyType<ValidatedOptions, "auxiliaryCommentBefore">,
+  >),
     auxiliaryCommentAfter: (assertString: Validator<
-        $PropertyType<ValidatedOptions, "auxiliaryCommentAfter">,
-        >),
+    $PropertyType<ValidatedOptions, "auxiliaryCommentAfter">,
+  >),
     sourceType: (assertSourceType: Validator<
-        $PropertyType<ValidatedOptions, "sourceType">,
-        >),
+    $PropertyType<ValidatedOptions, "sourceType">,
+  >),
     wrapPluginVisitorMethod: (assertFunction: Validator<
-        $PropertyType<ValidatedOptions, "wrapPluginVisitorMethod">,
-        >),
+    $PropertyType<ValidatedOptions, "wrapPluginVisitorMethod">,
+  >),
     highlightCode: (assertBoolean: Validator<
-        $PropertyType<ValidatedOptions, "highlightCode">,
-        >),
+    $PropertyType<ValidatedOptions, "highlightCode">,
+  >),
     sourceMaps: (assertSourceMaps: Validator<
-        $PropertyType<ValidatedOptions, "sourceMaps">,
-        >),
+    $PropertyType<ValidatedOptions, "sourceMaps">,
+  >),
     sourceMap: (assertSourceMaps: Validator<
-        $PropertyType<ValidatedOptions, "sourceMap">,
-        >),
+    $PropertyType<ValidatedOptions, "sourceMap">,
+  >),
     sourceFileName: (assertString: Validator<
-        $PropertyType<ValidatedOptions, "sourceFileName">,
-        >),
+    $PropertyType<ValidatedOptions, "sourceFileName">,
+  >),
     sourceRoot: (assertString: Validator<
-        $PropertyType<ValidatedOptions, "sourceRoot">,
-        >),
+    $PropertyType<ValidatedOptions, "sourceRoot">,
+  >),
     getModuleId: (assertFunction: Validator<
-        $PropertyType<ValidatedOptions, "getModuleId">,
-        >),
+    $PropertyType<ValidatedOptions, "getModuleId">,
+  >),
     moduleRoot: (assertString: Validator<
-        $PropertyType<ValidatedOptions, "moduleRoot">,
-        >),
+    $PropertyType<ValidatedOptions, "moduleRoot">,
+  >),
     moduleIds: (assertBoolean: Validator<
-        $PropertyType<ValidatedOptions, "moduleIds">,
-        >),
+    $PropertyType<ValidatedOptions, "moduleIds">,
+  >),
     moduleId: (assertString: Validator<
-        $PropertyType<ValidatedOptions, "moduleId">,
-        >),
+    $PropertyType<ValidatedOptions, "moduleId">,
+  >),
     parserOpts: (assertObject: Validator<
-        $PropertyType<ValidatedOptions, "parserOpts">,
-        >),
+    $PropertyType<ValidatedOptions, "parserOpts">,
+  >),
     generatorOpts: (assertObject: Validator<
-        $PropertyType<ValidatedOptions, "generatorOpts">,
-        >)
+    $PropertyType<ValidatedOptions, "generatorOpts">,
+  >)
 };
 export type InputOptions = ValidatedOptions;
 
 export type ValidatedOptions = {
-    cwd?: string,
-    filename?: string,
-    filenameRelative?: string,
-    babelrc?: boolean,
-    babelrcRoots?: BabelrcSearch,
-    configFile?: ConfigFileSearch,
-    root?: string,
-    code?: boolean,
-    ast?: boolean,
-    inputSourceMap?: RootInputSourceMapOption,
-    envName?: string,
-    caller?: CallerMetadata,
+  cwd?: string,
+  filename?: string,
+  filenameRelative?: string,
+  babelrc?: boolean,
+  babelrcRoots?: BabelrcSearch,
+  configFile?: ConfigFileSearch,
+  root?: string,
+  rootMode?: RootMode,
+  code?: boolean,
+  ast?: boolean,
+  inputSourceMap?: RootInputSourceMapOption,
+  envName?: string,
+  caller?: CallerMetadata,
 
-    extends?: string,
-    env?: EnvSet<ValidatedOptions>,
-    ignore?: IgnoreList,
-    only?: IgnoreList,
-    overrides?: OverridesList,
+  extends?: string,
+  env?: EnvSet<ValidatedOptions>,
+  ignore?: IgnoreList,
+  only?: IgnoreList,
+  overrides?: OverridesList,
 
-    // Generally verify if a given config object should be applied to the given file.
-    test?: ConfigApplicableTest,
-    include?: ConfigApplicableTest,
-    exclude?: ConfigApplicableTest,
+  // Generally verify if a given config object should be applied to the given file.
+  test?: ConfigApplicableTest,
+  include?: ConfigApplicableTest,
+  exclude?: ConfigApplicableTest,
 
-    presets?: PluginList,
-    plugins?: PluginList,
-    passPerPreset?: boolean,
+  presets?: PluginList,
+  plugins?: PluginList,
+  passPerPreset?: boolean,
 
-    // Options for @babel/generator
-    retainLines?: boolean,
-    comments?: boolean,
-    shouldPrintComment?: Function,
-    compact?: CompactOption,
-    minified?: boolean,
-    auxiliaryCommentBefore?: string,
-    auxiliaryCommentAfter?: string,
+  // Options for @babel/generator
+  retainLines?: boolean,
+  comments?: boolean,
+  shouldPrintComment?: Function,
+  compact?: CompactOption,
+  minified?: boolean,
+  auxiliaryCommentBefore?: string,
+  auxiliaryCommentAfter?: string,
 
-    // Parser
-    sourceType?: SourceTypeOption,
+  // Parser
+  sourceType?: SourceTypeOption,
 
-    wrapPluginVisitorMethod?: Function,
-    highlightCode?: boolean,
+  wrapPluginVisitorMethod?: Function,
+  highlightCode?: boolean,
 
-    // Sourcemap generation options.
-    sourceMaps?: SourceMapsOption,
-    sourceMap?: SourceMapsOption,
-    sourceFileName?: string,
-    sourceRoot?: string,
+  // Sourcemap generation options.
+  sourceMaps?: SourceMapsOption,
+  sourceMap?: SourceMapsOption,
+  sourceFileName?: string,
+  sourceRoot?: string,
 
-    // AMD/UMD/SystemJS module naming options.
-    getModuleId?: Function,
-    moduleRoot?: string,
-    moduleIds?: boolean,
-    moduleId?: string,
+  // AMD/UMD/SystemJS module naming options.
+  getModuleId?: Function,
+  moduleRoot?: string,
+  moduleIds?: boolean,
+  moduleId?: string,
 
-    // Deprecate top level parserOpts
-    parserOpts?: {},
-    // Deprecate top level generatorOpts
-    generatorOpts?: {},
+  // Deprecate top level parserOpts
+  parserOpts?: {},
+  // Deprecate top level generatorOpts
+  generatorOpts?: {},
 };
 
 export type CallerMetadata = {
-    // If 'caller' is specified, require that the name is given for debugging
-    // messages.
-    name: string,
+  // If 'caller' is specified, require that the name is given for debugging
+  // messages.
+  name: string,
 };
 export type EnvSet<T> = {
-    [string]: ?T,
+  [string]: ?T,
 };
 export type IgnoreItem = string | Function | RegExp;
 export type IgnoreList = $ReadOnlyArray<IgnoreItem>;
@@ -245,11 +249,11 @@ export type IgnoreList = $ReadOnlyArray<IgnoreItem>;
 export type PluginOptions = {} | void | false;
 export type PluginTarget = string | {} | Function;
 export type PluginItem =
-    | ConfigItem
-    | Plugin
-    | PluginTarget
-    | [PluginTarget, PluginOptions]
-    | [PluginTarget, PluginOptions, string | void];
+  | ConfigItem
+  | Plugin
+  | PluginTarget
+  | [PluginTarget, PluginOptions]
+  | [PluginTarget, PluginOptions, string | void];
 export type PluginList = $ReadOnlyArray<PluginItem>;
 
 export type OverridesList = Array<ValidatedOptions>;
@@ -261,27 +265,28 @@ export type SourceMapsOption = boolean | "inline" | "both";
 export type SourceTypeOption = "module" | "script" | "unambiguous";
 export type CompactOption = boolean | "auto";
 export type RootInputSourceMapOption = {} | boolean;
+export type RootMode = "root" | "upward" | "upward-optional";
 
 export type OptionsSource =
-    | "arguments"
-    | "configfile"
-    | "babelrcfile"
-    | "extendsfile"
-    | "preset";
+  | "arguments"
+  | "configfile"
+  | "babelrcfile"
+  | "extendsfile"
+  | "preset";
 
 type RootPath = $ReadOnly<{
-    type: "root",
-    source: OptionsSource,
+  type: "root",
+  source: OptionsSource,
 }>;
 type OverridesPath = $ReadOnly<{
-    type: "overrides",
-    index: number,
-    parent: RootPath,
+  type: "overrides",
+  index: number,
+  parent: RootPath,
 }>;
 type EnvPath = $ReadOnly<{
-    type: "env",
-    name: string,
-    parent: RootPath | OverridesPath,
+  type: "env",
+  name: string,
+  parent: RootPath | OverridesPath,
 }>;
 export type NestingPath = RootPath | OverridesPath | EnvPath;
 
@@ -321,15 +326,15 @@ function validateNested(loc: NestingPath, opts: {}) {
         }
         if (
             type !== "arguments" &&
-            type !== "configfile" &&
-            BABELRC_VALIDATORS[key]
+      type !== "configfile" &&
+      BABELRC_VALIDATORS[key]
         ) {
             if (type === "babelrcfile" || type === "extendsfile") {
                 throw new Error(
                     `${msg(
                         optLoc,
                     )} is not allowed in .babelrc or "extends"ed files, only in root programmatic options, ` +
-                    "or babel.config.js/config file options",
+            "or babel.config.js/config file options",
                 );
             }
 
@@ -341,11 +346,11 @@ function validateNested(loc: NestingPath, opts: {}) {
         }
 
         const validator =
-            COMMON_VALIDATORS[key] ||
-            NONPRESET_VALIDATORS[key] ||
-            BABELRC_VALIDATORS[key] ||
-            ROOT_VALIDATORS[key] ||
-            throwUnknownError;
+      COMMON_VALIDATORS[key] ||
+      NONPRESET_VALIDATORS[key] ||
+      BABELRC_VALIDATORS[key] ||
+      ROOT_VALIDATORS[key] ||
+      (throwUnknownError: Validator<void>);
 
         validator(optLoc, opts[key]);
     });
@@ -363,7 +368,7 @@ function throwUnknownError(loc: OptionPath) {
             `Using removed Babel ${version} option: ${msg(loc)} - ${message}`,
         );
     } else {
-        // eslint-disable-next-line max-len
+    // eslint-disable-next-line max-len
         const unknownOptErr = `Unknown option: ${msg(
             loc,
         )}. Check out https://babeljs.io/docs/en/babel-core/#options for more information about options.`;
@@ -390,12 +395,12 @@ function assertEnvSet(loc: OptionPath, value: mixed): EnvSet<ValidatedOptions> {
 
     const obj = assertObject(loc, value);
     if (obj) {
-        // Validate but don't copy the .env object in order to preserve
-        // object identity for use during config chain processing.
+    // Validate but don't copy the .env object in order to preserve
+    // object identity for use during config chain processing.
         for (const envName of Object.keys(obj)) {
             const env = assertObject(access(loc, envName), obj[envName]);
             if (!env) {
-                continue;
+                continue; 
             }
 
             const envLoc = {
@@ -424,7 +429,7 @@ function assertOverridesList(loc: OptionPath, value: mixed): OverridesList {
             const objLoc = access(loc, index);
             const env = assertObject(objLoc, item);
             if (!env) {
-                throw new Error(`${msg(objLoc)} must be an object`);
+                throw new Error(`${msg(objLoc)} must be an object`); 
             }
 
             const overridesLoc = {

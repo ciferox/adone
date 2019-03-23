@@ -1,26 +1,15 @@
-const {
-    js: { compiler: { types: t } }
-} = adone;
+import * as t from "@babel/types";
 
-// Recursively get the last statement.
-const getLastStatement = function (statement) {
-    if (!t.isStatement(statement.body)) {
-        return statement;
-    }
-    return getLastStatement(statement.body);
-};
-
-
-export const WithStatement = function (node) {
+export function WithStatement(node: Object) {
     this.word("with");
     this.space();
     this.token("(");
     this.print(node.object, node);
     this.token(")");
     this.printBlock(node);
-};
+}
 
-export const IfStatement = function (node) {
+export function IfStatement(node: Object) {
     this.word("if");
     this.space();
     this.token("(");
@@ -29,7 +18,7 @@ export const IfStatement = function (node) {
     this.space();
 
     const needsBlock =
-        node.alternate && t.isIfStatement(getLastStatement(node.consequent));
+    node.alternate && t.isIfStatement(getLastStatement(node.consequent));
     if (needsBlock) {
         this.token("{");
         this.newline();
@@ -46,15 +35,23 @@ export const IfStatement = function (node) {
 
     if (node.alternate) {
         if (this.endsWith("}")) {
-            this.space();
+            this.space(); 
         }
         this.word("else");
         this.space();
         this.printAndIndentOnComments(node.alternate, node);
     }
-};
+}
 
-export const ForStatement = function (node) {
+// Recursively get the last statement.
+function getLastStatement(statement) {
+    if (!t.isStatement(statement.body)) {
+        return statement; 
+    }
+    return getLastStatement(statement.body);
+}
+
+export function ForStatement(node: Object) {
     this.word("for");
     this.space();
     this.token("(");
@@ -77,19 +74,19 @@ export const ForStatement = function (node) {
 
     this.token(")");
     this.printBlock(node);
-};
+}
 
-export const WhileStatement = function (node) {
+export function WhileStatement(node: Object) {
     this.word("while");
     this.space();
     this.token("(");
     this.print(node.test, node);
     this.token(")");
     this.printBlock(node);
-};
+}
 
 const buildForXStatement = function (op) {
-    return function (node) {
+    return function (node: Object) {
         this.word("for");
         this.space();
         if (op === "of" && node.await) {
@@ -110,7 +107,7 @@ const buildForXStatement = function (op) {
 export const ForInStatement = buildForXStatement("in");
 export const ForOfStatement = buildForXStatement("of");
 
-export const DoWhileStatement = function (node) {
+export function DoWhileStatement(node: Object) {
     this.word("do");
     this.space();
     this.print(node.body, node);
@@ -121,16 +118,16 @@ export const DoWhileStatement = function (node) {
     this.print(node.test, node);
     this.token(")");
     this.semicolon();
-};
+}
 
-const buildLabelStatement = function (prefix, key = "label") {
-    return function (node) {
+function buildLabelStatement(prefix, key = "label") {
+    return function (node: Object) {
         this.word(prefix);
 
         const label = node[key];
         if (label) {
             this.space();
-            const isLabel = key === "label";
+            const isLabel = key == "label";
             const terminatorState = this.startTerminatorless(isLabel);
             this.print(label, node);
             this.endTerminatorless(terminatorState);
@@ -138,21 +135,21 @@ const buildLabelStatement = function (prefix, key = "label") {
 
         this.semicolon();
     };
-};
+}
 
 export const ContinueStatement = buildLabelStatement("continue");
 export const ReturnStatement = buildLabelStatement("return", "argument");
 export const BreakStatement = buildLabelStatement("break");
 export const ThrowStatement = buildLabelStatement("throw", "argument");
 
-export const LabeledStatement = function (node) {
+export function LabeledStatement(node: Object) {
     this.print(node.label, node);
     this.token(":");
     this.space();
     this.print(node.body, node);
-};
+}
 
-export const TryStatement = function (node) {
+export function TryStatement(node: Object) {
     this.word("try");
     this.space();
     this.print(node.block, node);
@@ -173,9 +170,9 @@ export const TryStatement = function (node) {
         this.space();
         this.print(node.finalizer, node);
     }
-};
+}
 
-export const CatchClause = function (node) {
+export function CatchClause(node: Object) {
     this.word("catch");
     this.space();
     if (node.param) {
@@ -185,9 +182,9 @@ export const CatchClause = function (node) {
         this.space();
     }
     this.print(node.body, node);
-};
+}
 
-export const SwitchStatement = function (node) {
+export function SwitchStatement(node: Object) {
     this.word("switch");
     this.space();
     this.token("(");
@@ -200,15 +197,15 @@ export const SwitchStatement = function (node) {
         indent: true,
         addNewlines(leading, cas) {
             if (!leading && node.cases[node.cases.length - 1] === cas) {
-                return -1;
+                return -1; 
             }
         }
     });
 
     this.token("}");
-};
+}
 
-export const SwitchCase = function (node) {
+export function SwitchCase(node: Object) {
     if (node.test) {
         this.word("case");
         this.space();
@@ -223,38 +220,38 @@ export const SwitchCase = function (node) {
         this.newline();
         this.printSequence(node.consequent, node, { indent: true });
     }
-};
+}
 
-export const DebuggerStatement = function () {
+export function DebuggerStatement() {
     this.word("debugger");
     this.semicolon();
-};
+}
 
-const variableDeclarationIndent = function () {
+function variableDeclarationIndent() {
     // "let " or "var " indentation.
     this.token(",");
     this.newline();
     if (this.endsWith("\n")) {
         for (let i = 0; i < 4; i++) {
-            this.space(true);
-        }
+            this.space(true); 
+        } 
     }
-};
+}
 
-const constDeclarationIndent = function () {
+function constDeclarationIndent() {
     // "const " indentation.
     this.token(",");
     this.newline();
     if (this.endsWith("\n")) {
         for (let i = 0; i < 6; i++) {
-            this.space(true);
-        }
+            this.space(true); 
+        } 
     }
-};
+}
 
-export const VariableDeclaration = function (node, parent) {
+export function VariableDeclaration(node: Object, parent: Object) {
     if (node.declare) {
-        // TS
+    // TS
         this.word("declare");
         this.space();
     }
@@ -265,7 +262,7 @@ export const VariableDeclaration = function (node, parent) {
     let hasInits = false;
     // don't add whitespace to loop heads
     if (!t.isFor(parent)) {
-        for (const declar of (node.declarations)) {
+        for (const declar of (node.declarations: Array<Object>)) {
             if (declar.init) {
                 // has an init so let's split it up over multiple lines
                 hasInits = true;
@@ -288,9 +285,9 @@ export const VariableDeclaration = function (node, parent) {
     let separator;
     if (hasInits) {
         separator =
-            node.kind === "const"
-                ? constDeclarationIndent
-                : variableDeclarationIndent;
+      node.kind === "const"
+          ? constDeclarationIndent
+          : variableDeclarationIndent;
     }
 
     //
@@ -298,19 +295,19 @@ export const VariableDeclaration = function (node, parent) {
     this.printList(node.declarations, node, { separator });
 
     if (t.isFor(parent)) {
-        // don't give semicolons to these nodes since they'll be inserted in the parent generator
+    // don't give semicolons to these nodes since they'll be inserted in the parent generator
         if (parent.left === node || parent.init === node) {
-            return;
+            return; 
         }
     }
 
     this.semicolon();
-};
+}
 
-export const VariableDeclarator = function (node) {
+export function VariableDeclarator(node: Object) {
     this.print(node.id, node);
     if (node.definite) {
-        this.token("!");
+        this.token("!"); 
     } // TS
     this.print(node.id.typeAnnotation, node);
     if (node.init) {
@@ -319,4 +316,4 @@ export const VariableDeclarator = function (node) {
         this.space();
         this.print(node.init, node);
     }
-};
+}

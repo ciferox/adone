@@ -1,8 +1,10 @@
-import type { ValidatedOptions } from "./validation/options";
+// @flow
 
 const {
     is
 } = adone;
+
+import type { ValidatedOptions } from "./validation/options";
 
 export function mergeOptions(
     target: ValidatedOptions,
@@ -30,7 +32,7 @@ function mergeDefaultFields<T: {}>(target: T, source: T) {
     for (const k of Object.keys(source)) {
         const val = source[k];
         if (!is.undefined(val)) {
-            target[k] = (val: any);
+            target[k] = (val: any); 
         }
     }
 }

@@ -6,43 +6,53 @@ const {
 
 const has = Function.call.bind(Object.prototype.hasOwnProperty);
 
-const cloneIfNode = function (obj, deep) {
+function cloneIfNode(obj, deep) {
     if (
         obj &&
-        is.string(obj.type) &&
-        // CommentLine and CommentBlock are used in File#comments, but they are
-        // not defined in babel-types
-        obj.type !== "CommentLine" &&
-        obj.type !== "CommentBlock"
+    is.string(obj.type) &&
+    // CommentLine and CommentBlock are used in File#comments, but they are
+    // not defined in babel-types
+    obj.type !== "CommentLine" &&
+    obj.type !== "CommentBlock"
     ) {
         return cloneNode(obj, deep);
     }
 
     return obj;
-};
+}
 
-const cloneIfNodeOrArray = function (obj, deep) {
+function cloneIfNodeOrArray(obj, deep) {
     if (is.array(obj)) {
         return obj.map((node) => cloneIfNode(node, deep));
     }
     return cloneIfNode(obj, deep);
-};
+}
 
 /**
  * Create a clone of a `node` including only properties belonging to the node.
  * If the second parameter is `false`, cloneNode performs a shallow clone.
  */
-export default function cloneNode(node, deep = true) {
+export default function cloneNode<T: Object>(node: T, deep: boolean = true): T {
     if (!node) {
-        return node;
+        return node; 
     }
 
     const { type } = node;
-    const newNode = { type };
+    const newNode = (({ type }: any): T);
 
     // Special-case identifiers since they are the most cloned nodes.
     if (type === "Identifier") {
         newNode.name = node.name;
+
+        if (has(node, "optional") && is.boolean(node.optional)) {
+            newNode.optional = node.optional;
+        }
+
+        if (has(node, "typeAnnotation")) {
+            newNode.typeAnnotation = deep
+                ? cloneIfNodeOrArray(node.typeAnnotation, true)
+                : node.typeAnnotation;
+        }
     } else if (!has(NODE_FIELDS, type)) {
         throw new Error(`Unknown node type: "${type}"`);
     } else {

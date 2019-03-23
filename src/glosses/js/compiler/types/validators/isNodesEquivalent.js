@@ -1,3 +1,4 @@
+// @flow
 import { NODE_FIELDS, VISITOR_KEYS } from "../definitions";
 
 const {
@@ -7,12 +8,12 @@ const {
 /**
  * Check if two nodes are equivalent
  */
-export default function isNodesEquivalent(a, b) {
+export default function isNodesEquivalent(a: any, b: any): boolean {
     if (
         typeof a !== "object" ||
-        typeof b !== "object" ||
-        is.nil(a) ||
-        is.nil(b)
+    typeof b !== "object" ||
+    is.nil(a) ||
+    is.nil(b)
     ) {
         return a === b;
     }
@@ -26,6 +27,11 @@ export default function isNodesEquivalent(a, b) {
 
     for (const field of fields) {
         if (typeof a[field] !== typeof b[field]) {
+            return false;
+        }
+        if (is.nil(a[field]) && is.nil(b[field])) {
+            continue;
+        } else if (is.nil(a[field]) || is.nil(b[field])) {
             return false;
         }
 
@@ -47,9 +53,9 @@ export default function isNodesEquivalent(a, b) {
 
         if (
             typeof a[field] === "object" &&
-            (!visitorKeys || !visitorKeys.includes(field))
+      (!visitorKeys || !visitorKeys.includes(field))
         ) {
-            for (const key in a[field]) {
+            for (const key of Object.keys(a[field])) {
                 if (a[field][key] !== b[field][key]) {
                     return false;
                 }

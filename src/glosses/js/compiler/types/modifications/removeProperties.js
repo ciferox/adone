@@ -1,3 +1,4 @@
+// @flow
 import { COMMENT_KEYS } from "../constants";
 
 const {
@@ -15,23 +16,23 @@ const CLEAR_KEYS_PLUS_COMMENTS = COMMENT_KEYS.concat(["comments"]).concat(
  * properties like location data and raw token data.
  */
 export default function removeProperties(
-    node,
-    opts = {},
-) {
+    node: Object,
+    opts?: Object = {},
+): void {
     const map = opts.preserveComments ? CLEAR_KEYS : CLEAR_KEYS_PLUS_COMMENTS;
     for (const key of map) {
         if (!is.nil(node[key])) {
-            node[key] = undefined;
+            node[key] = undefined; 
         }
     }
 
-    for (const key in node) {
+    for (const key of Object.keys(node)) {
         if (key[0] === "_" && !is.nil(node[key])) {
-            node[key] = undefined;
+            node[key] = undefined; 
         }
     }
 
-    const symbols = Object.getOwnPropertySymbols(node);
+    const symbols: Array<Symbol> = Object.getOwnPropertySymbols(node);
     for (const sym of symbols) {
         node[sym] = null;
     }

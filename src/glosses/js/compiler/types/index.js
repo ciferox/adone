@@ -18,7 +18,7 @@ export * from "./builders/generated";
 
 // clone
 export { default as cloneNode } from "./clone/cloneNode";
-
+export { default as clone } from "./clone/clone";
 export { default as cloneDeep } from "./clone/cloneDeep";
 export { default as cloneWithoutLoc } from "./clone/cloneWithoutLoc";
 
@@ -86,6 +86,7 @@ export {
 
 // traverse
 export { default as traverse } from "./traverse/traverse";
+export type * from "./traverse/traverse";
 export { default as traverseFast } from "./traverse/traverseFast";
 
 // utils
@@ -99,6 +100,7 @@ export { default as isImmutable } from "./validators/isImmutable";
 export { default as isLet } from "./validators/isLet";
 export { default as isNode } from "./validators/isNode";
 export { default as isNodesEquivalent } from "./validators/isNodesEquivalent";
+export { default as isPlaceholderType } from "./validators/isPlaceholderType";
 export { default as isReferenced } from "./validators/isReferenced";
 export { default as isScope } from "./validators/isScope";
 export { default as isSpecifierDefault } from "./validators/isSpecifierDefault";

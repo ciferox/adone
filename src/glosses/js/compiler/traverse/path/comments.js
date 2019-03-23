@@ -8,7 +8,7 @@ const {
  * Share comments amongst siblings.
  */
 
-export const shareCommentsWithSiblings = function () {
+export function shareCommentsWithSiblings() {
     // NOTE: this assumes numbered keys
     if (is.string(this.key)) {
         return;
@@ -35,16 +35,16 @@ export const shareCommentsWithSiblings = function () {
     } else if (hasNext) {
         next.addComments("leading", leading);
     }
-};
+}
 
-export const addComment = function (type, content, line) {
+export function addComment(type: string, content: string, line?: boolean) {
     t.addComment(this.node, type, content, line);
-};
+}
 
 /**
  * Give node `comments` of the specified `type`.
  */
 
-export const addComments = function (type, comments) {
+export function addComments(type: string, comments: Array) {
     t.addComments(this.node, type, comments);
-};
+}

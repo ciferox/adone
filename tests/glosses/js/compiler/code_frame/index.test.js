@@ -7,21 +7,19 @@ const {
 describe("js", "compiler", "codeFrame/codeFrameColumns", () => {
     it("basic usage", () => {
         const rawLines = ["class Foo {", "  constructor()", "};"].join("\n");
-        assert.equal(
-            codeFrame(rawLines, 2, 16),
+        expect(codeFrame(rawLines, 2, 16)).to.be.equal(
             [
                 "  1 | class Foo {",
                 "> 2 |   constructor()",
                 "    |                ^",
-                "  3 | };"
+                "  3 | };",
             ].join("\n"),
         );
     });
 
     it("optional column number", () => {
         const rawLines = ["class Foo {", "  constructor()", "};"].join("\n");
-        assert.equal(
-            codeFrame(rawLines, 2, null),
+        expect(codeFrame(rawLines, 2, null)).to.be.equal(
             ["  1 | class Foo {", "> 2 |   constructor()", "  3 | };"].join("\n"),
         );
     });
@@ -38,10 +36,9 @@ describe("js", "compiler", "codeFrame/codeFrameColumns", () => {
             "",
             "function sum(a, b) {",
             "  return a + b",
-            "}"
+            "}",
         ].join("\n");
-        assert.equal(
-            codeFrame(rawLines, 7, 2),
+        expect(codeFrame(rawLines, 7, 2)).to.be.equal(
             [
                 "   5 |  * @param b Number",
                 "   6 |  * @returns Number",
@@ -49,7 +46,7 @@ describe("js", "compiler", "codeFrame/codeFrameColumns", () => {
                 "     |  ^",
                 "   8 | ",
                 "   9 | function sum(a, b) {",
-                "  10 |   return a + b"
+                "  10 |   return a + b",
             ].join("\n"),
         );
     });
@@ -66,10 +63,9 @@ describe("js", "compiler", "codeFrame/codeFrameColumns", () => {
             "",
             "function sum(a, b) {",
             "  return a + b",
-            "}"
+            "}",
         ].join("\n");
-        assert.equal(
-            codeFrame(rawLines, 6, 2),
+        expect(codeFrame(rawLines, 6, 2)).to.be.equal(
             [
                 "  4 |  * @param a Number",
                 "  5 |  * @param b Number",
@@ -77,7 +73,7 @@ describe("js", "compiler", "codeFrame/codeFrameColumns", () => {
                 "    |  ^",
                 "  7 |  */",
                 "  8 | ",
-                "  9 | function sum(a, b) {"
+                "  9 | function sum(a, b) {",
             ].join("\n"),
         );
     });
@@ -86,15 +82,14 @@ describe("js", "compiler", "codeFrame/codeFrameColumns", () => {
         const rawLines = [
             "\tclass Foo {",
             "\t  \t\t    constructor\t(\t)",
-            "\t};"
+            "\t};",
         ].join("\n");
-        assert.equal(
-            codeFrame(rawLines, 2, 25),
+        expect(codeFrame(rawLines, 2, 25)).to.be.equal(
             [
                 "  1 | \tclass Foo {",
                 "> 2 | \t  \t\t    constructor\t(\t)",
                 "    | \t  \t\t               \t \t ^",
-                "  3 | \t};"
+                "  3 | \t};",
             ].join("\n"),
         );
     });
@@ -103,9 +98,8 @@ describe("js", "compiler", "codeFrame/codeFrameColumns", () => {
         const rawLines = "console.log('babel')";
         const result = codeFrame(rawLines, 1, 9, { highlightCode: true });
         const stripped = stripAnsi(result);
-        assert.ok(result.length > stripped.length);
-        assert.equal(
-            stripped,
+        expect(result.length).to.be.greaterThan(stripped.length);
+        expect(stripped).to.be.equal(
             ["> 1 | console.log('babel')", "    |         ^"].join("\n"),
         );
     });
@@ -122,17 +116,16 @@ describe("js", "compiler", "codeFrame/codeFrameColumns", () => {
             "",
             "function sum(a, b) {",
             "  return a + b",
-            "}"
+            "}",
         ].join("\n");
-        assert.equal(
-            codeFrame(rawLines, 7, 2, { linesAbove: 1 }),
+        expect(codeFrame(rawLines, 7, 2, { linesAbove: 1 })).to.be.equal(
             [
                 "   6 |  * @returns Number",
                 ">  7 |  */",
                 "     |  ^",
                 "   8 | ",
                 "   9 | function sum(a, b) {",
-                "  10 |   return a + b"
+                "  10 |   return a + b",
             ].join("\n"),
         );
     });
@@ -149,16 +142,15 @@ describe("js", "compiler", "codeFrame/codeFrameColumns", () => {
             "",
             "function sum(a, b) {",
             "  return a + b",
-            "}"
+            "}",
         ].join("\n");
-        assert.equal(
-            codeFrame(rawLines, 7, 2, { linesBelow: 1 }),
+        expect(codeFrame(rawLines, 7, 2, { linesBelow: 1 })).to.be.equal(
             [
                 "  5 |  * @param b Number",
                 "  6 |  * @returns Number",
                 "> 7 |  */",
                 "    |  ^",
-                "  8 | "
+                "  8 | ",
             ].join("\n"),
         );
     });
@@ -175,10 +167,9 @@ describe("js", "compiler", "codeFrame/codeFrameColumns", () => {
             "",
             "function sum(a, b) {",
             "  return a + b",
-            "}"
+            "}",
         ].join("\n");
-        assert.equal(
-            codeFrame(rawLines, 7, 2, { linesAbove: 1, linesBelow: 1 }),
+        expect(codeFrame(rawLines, 7, 2, { linesAbove: 1, linesBelow: 1 })).to.be.equal(
             ["  6 |  * @returns Number", "> 7 |  */", "    |  ^", "  8 | "].join(
                 "\n",
             ),
@@ -191,15 +182,16 @@ describe("js", "compiler", "codeFrame/codeFrameColumns", () => {
             "  constructor() {",
             "    console.log(arguments);",
             "  }",
-            "};"
+            "};",
         ].join("\n");
-        assert.equal(
+        expect(
             codeFrameColumns(rawLines, { start: { line: 2 } }, { linesAbove: 0 }),
+        ).to.be.equal(
             [
                 "> 2 |   constructor() {",
                 "  3 |     console.log(arguments);",
                 "  4 |   }",
-                "  5 | };"
+                "  5 | };",
             ].join("\n"),
         );
     });
@@ -210,12 +202,11 @@ describe("js", "compiler", "codeFrame/codeFrameColumns", () => {
             "  constructor() {",
             "    console.log(arguments);",
             "  }",
-            "};"
+            "};",
         ].join("\n");
-        assert.equal(
+        expect(
             codeFrameColumns(rawLines, { start: { line: 2 } }, { linesBelow: 0 }),
-            ["  1 | class Foo {", "> 2 |   constructor() {"].join("\n"),
-        );
+        ).to.be.equal(["  1 | class Foo {", "> 2 |   constructor() {"].join("\n"));
     });
 
     it("opts.linesBelow single line", () => {
@@ -224,16 +215,15 @@ describe("js", "compiler", "codeFrame/codeFrameColumns", () => {
             "  constructor() {",
             "    console.log(arguments);",
             "  }",
-            "};"
+            "};",
         ].join("\n");
-        assert.equal(
+        expect(
             codeFrameColumns(
                 rawLines,
                 { start: { line: 2 } },
                 { linesAbove: 0, linesBelow: 0 },
             ),
-            ["> 2 |   constructor() {"].join("\n"),
-        );
+        ).to.be.equal(["> 2 |   constructor() {"].join("\n"));
     });
 
     it("opts.forceColor", () => {
@@ -241,17 +231,18 @@ describe("js", "compiler", "codeFrame/codeFrameColumns", () => {
         const gutter = chalk.grey;
 
         const rawLines = ["", "", "", ""].join("\n");
-        assert.equal(
+        expect(
             codeFrame(rawLines, 3, null, {
                 linesAbove: 1,
                 linesBelow: 1,
-                forceColor: true
+                forceColor: true,
             }),
+        ).to.be.equal(
             chalk.reset(
                 [
-                    ` ${gutter(" 2 | ")}`,
+                    " " + gutter(" 2 | "),
                     marker(">") + gutter(" 3 | "),
-                    ` ${gutter(" 4 | ")}`
+                    " " + gutter(" 4 | "),
                 ].join("\n"),
             ),
         );
@@ -259,29 +250,31 @@ describe("js", "compiler", "codeFrame/codeFrameColumns", () => {
 
     it("basic usage, new API", () => {
         const rawLines = ["class Foo {", "  constructor()", "};"].join("\n");
-        assert.equal(
+        expect(
             codeFrameColumns(rawLines, { start: { line: 2, column: 16 } }),
+        ).to.be.equal(
             [
                 "  1 | class Foo {",
                 "> 2 |   constructor()",
                 "    |                ^",
-                "  3 | };"
+                "  3 | };",
             ].join("\n"),
         );
     });
 
     it("mark multiple columns", () => {
         const rawLines = ["class Foo {", "  constructor()", "};"].join("\n");
-        assert.equal(
+        expect(
             codeFrameColumns(rawLines, {
                 start: { line: 2, column: 3 },
-                end: { line: 2, column: 16 }
+                end: { line: 2, column: 16 },
             }),
+        ).to.be.equal(
             [
                 "  1 | class Foo {",
                 "> 2 |   constructor()",
                 "    |   ^^^^^^^^^^^^^",
-                "  3 | };"
+                "  3 | };",
             ].join("\n"),
         );
     });
@@ -290,18 +283,19 @@ describe("js", "compiler", "codeFrame/codeFrameColumns", () => {
         const rawLines = ["class Foo {", "  constructor() {", "  }", "};"].join(
             "\n",
         );
-        assert.equal(
+        expect(
             codeFrameColumns(rawLines, {
                 start: { line: 2, column: 17 },
-                end: { line: 3, column: 3 }
+                end: { line: 3, column: 3 },
             }),
+        ).to.be.equal(
             [
                 "  1 | class Foo {",
                 "> 2 |   constructor() {",
                 "    |                 ^",
                 "> 3 |   }",
                 "    | ^^^",
-                "  4 | };"
+                "  4 | };",
             ].join("\n"),
         );
     });
@@ -312,13 +306,14 @@ describe("js", "compiler", "codeFrame/codeFrameColumns", () => {
             "  constructor() {",
             "    console.log(arguments);",
             "  }",
-            "};"
+            "};",
         ].join("\n");
-        assert.equal(
+        expect(
             codeFrameColumns(rawLines, {
                 start: { line: 2, column: 17 },
-                end: { line: 4, column: 3 }
+                end: { line: 4, column: 3 },
             }),
+        ).to.be.equal(
             [
                 "  1 | class Foo {",
                 "> 2 |   constructor() {",
@@ -327,7 +322,7 @@ describe("js", "compiler", "codeFrame/codeFrameColumns", () => {
                 "    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^",
                 "> 4 |   }",
                 "    | ^^^",
-                "  5 | };"
+                "  5 | };",
             ].join("\n"),
         );
     });
@@ -338,54 +333,57 @@ describe("js", "compiler", "codeFrame/codeFrameColumns", () => {
             "  constructor() {",
             "    console.log(arguments);",
             "  }",
-            "};"
+            "};",
         ].join("\n");
-        assert.equal(
+        expect(
             codeFrameColumns(rawLines, { start: { line: 2 }, end: { line: 4 } }),
+        ).to.be.equal(
             [
                 "  1 | class Foo {",
                 "> 2 |   constructor() {",
                 "> 3 |     console.log(arguments);",
                 "> 4 |   }",
-                "  5 | };"
+                "  5 | };",
             ].join("\n"),
         );
     });
 
     it("opts.message", () => {
         const rawLines = ["class Foo {", "  constructor()", "};"].join("\n");
-        assert.equal(
+        expect(
             codeFrameColumns(
                 rawLines,
                 { start: { line: 2, column: 16 } },
                 {
-                    message: "Missing {"
+                    message: "Missing {",
                 },
             ),
+        ).to.be.equal(
             [
                 "  1 | class Foo {",
                 "> 2 |   constructor()",
                 "    |                ^ Missing {",
-                "  3 | };"
+                "  3 | };",
             ].join("\n"),
         );
     });
 
     it("opts.message without column", () => {
         const rawLines = ["class Foo {", "  constructor()", "};"].join("\n");
-        assert.equal(
+        expect(
             codeFrameColumns(
                 rawLines,
                 { start: { line: 2 } },
                 {
-                    message: "Missing {"
+                    message: "Missing {",
                 },
             ),
+        ).to.be.equal(
             [
                 "  Missing {",
                 "  1 | class Foo {",
                 "> 2 |   constructor()",
-                "  3 | };"
+                "  3 | };",
             ].join("\n"),
         );
     });
@@ -396,19 +394,20 @@ describe("js", "compiler", "codeFrame/codeFrameColumns", () => {
             "  constructor() {",
             "    console.log(arguments);",
             "  }",
-            "};"
+            "};",
         ].join("\n");
-        assert.equal(
+        expect(
             codeFrameColumns(
                 rawLines,
                 {
                     start: { line: 2, column: 17 },
-                    end: { line: 4, column: 3 }
+                    end: { line: 4, column: 3 },
                 },
                 {
-                    message: "something about the constructor body"
+                    message: "something about the constructor body",
                 },
             ),
+        ).to.be.equal(
             [
                 "  1 | class Foo {",
                 "> 2 |   constructor() {",
@@ -417,7 +416,7 @@ describe("js", "compiler", "codeFrame/codeFrameColumns", () => {
                 "    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^",
                 "> 4 |   }",
                 "    | ^^^ something about the constructor body",
-                "  5 | };"
+                "  5 | };",
             ].join("\n"),
         );
     });
@@ -428,23 +427,24 @@ describe("js", "compiler", "codeFrame/codeFrameColumns", () => {
             "  constructor() {",
             "    console.log(arguments);",
             "  }",
-            "};"
+            "};",
         ].join("\n");
-        assert.equal(
+        expect(
             codeFrameColumns(
                 rawLines,
                 { start: { line: 2 }, end: { line: 4 } },
                 {
-                    message: "something about the constructor body"
+                    message: "something about the constructor body",
                 },
             ),
+        ).to.be.equal(
             [
                 "  something about the constructor body",
                 "  1 | class Foo {",
                 "> 2 |   constructor() {",
                 "> 3 |     console.log(arguments);",
                 "> 4 |   }",
-                "  5 | };"
+                "  5 | };",
             ].join("\n"),
         );
     });

@@ -1,9 +1,11 @@
 // This file contains methods responsible for introspecting the current path for certain values.
 
 const {
-    js: { compiler: { types: t } },
-    lodash: { includes }
+    lodash: { includes },
+    js: { compiler: { types: t } }
 } = adone;
+
+import type NodePath from "./index";
 
 /**
  * Match the current node if it matches the provided `pattern`.
@@ -12,30 +14,34 @@ const {
  * parsed nodes of `React.createClass` and `React["createClass"]`.
  */
 
-export const matchesPattern = function (pattern, allowPartial) {
+export function matchesPattern(
+    pattern: string,
+    allowPartial?: boolean,
+): boolean {
     return t.matchesPattern(this.node, pattern, allowPartial);
-};
+}
 
 /**
  * Check whether we have the input `key`. If the `key` references an array then we check
  * if the array has any items, otherwise we just check if it's falsy.
  */
 
-export const has = function (key) {
+export function has(key): boolean {
     const val = this.node && this.node[key];
     if (val && adone.is.array(val)) {
         return Boolean(val.length);
     }
     return Boolean(val);
-};
+
+}
 
 /**
  * Description
  */
 
-export const isStatic = function () {
+export function isStatic() {
     return this.scope.isStatic(this.node);
-};
+}
 
 /**
  * Alias of `has`.
@@ -47,26 +53,26 @@ export const is = has;
  * Opposite of `has`.
  */
 
-export const isnt = function (key) {
+export function isnt(key): boolean {
     return !this.has(key);
-};
+}
 
 /**
  * Check whether the path node `key` strict equals `value`.
  */
 
-export const equals = function (key, value) {
+export function equals(key, value): boolean {
     return this.node[key] === value;
-};
+}
 
 /**
  * Check the type against our stored internal type of the node. This is handy when a node has
  * been removed yet we still internally know the type and need it to calculate node replacement.
  */
 
-export const isNodeType = function (type) {
+export function isNodeType(type: string): boolean {
     return t.isType(this.type, type);
-};
+}
 
 /**
  * This checks whether or not we're in one of the following positions:
@@ -78,11 +84,11 @@ export const isNodeType = function (type) {
  * to tell the path replacement that it's ok to replace this with an expression.
  */
 
-export const canHaveVariableDeclarationOrExpression = function () {
+export function canHaveVariableDeclarationOrExpression() {
     return (
         (this.key === "init" || this.key === "left") && this.parentPath.isFor()
     );
-};
+}
 
 /**
  * This checks whether we are swapping an arrow function's body between an
@@ -92,7 +98,7 @@ export const canHaveVariableDeclarationOrExpression = function () {
  * is the same as containing a block statement.
  */
 
-export const canSwapBetweenExpressionAndStatement = function (replacement) {
+export function canSwapBetweenExpressionAndStatement(replacement) {
     if (this.key !== "body" || !this.parentPath.isArrowFunctionExpression()) {
         return false;
     }
@@ -104,13 +110,13 @@ export const canSwapBetweenExpressionAndStatement = function (replacement) {
     }
 
     return false;
-};
+}
 
 /**
  * Check whether the current path references a completion record
  */
 
-export const isCompletionRecord = function (allowInsideFunction) {
+export function isCompletionRecord(allowInsideFunction?) {
     let path = this;
     let first = true;
 
@@ -132,14 +138,14 @@ export const isCompletionRecord = function (allowInsideFunction) {
     } while ((path = path.parentPath) && !path.isProgram());
 
     return true;
-};
+}
 
 /**
  * Check whether or not the current `key` allows either a single statement or block statement
  * so we can explode it if necessary.
  */
 
-export const isStatementOrBlock = function () {
+export function isStatementOrBlock() {
     if (
         this.parentPath.isLabeledStatement() ||
         t.isBlockStatement(this.container)
@@ -148,12 +154,13 @@ export const isStatementOrBlock = function () {
     }
     return includes(t.STATEMENT_OR_BLOCK_KEYS, this.key);
 
-};
+}
 
 /**
  * Check if the currently assigned path references the `importName` of `moduleSource`.
  */
-export const referencesImport = function (moduleSource, importName) {
+
+export function referencesImport(moduleSource, importName) {
     if (!this.isReferencedIdentifier()) {
         return false;
     }
@@ -191,12 +198,13 @@ export const referencesImport = function (moduleSource, importName) {
     }
 
     return false;
-};
+}
 
 /**
  * Get the source code associated with this node.
  */
-export const getSource = function () {
+
+export function getSource() {
     const node = this.node;
     if (node.end) {
         const code = this.hub.getCode();
@@ -205,11 +213,11 @@ export const getSource = function () {
         }
     }
     return "";
-};
+}
 
-export const willIMaybeExecuteBefore = function (target) {
+export function willIMaybeExecuteBefore(target) {
     return this._guessExecutionStatusRelativeTo(target) !== "after";
-};
+}
 
 /**
  * Given a `target` check the execution status of it relative to the current path.
@@ -218,7 +226,7 @@ export const willIMaybeExecuteBefore = function (target) {
  * before or after the input `target` element.
  */
 
-export const _guessExecutionStatusRelativeTo = function (target) {
+export function _guessExecutionStatusRelativeTo(target) {
     // check if the two paths are in different functions, we can't track execution of these
     const targetFuncParent =
         target.scope.getFunctionParent() || target.scope.getProgramParent();
@@ -239,7 +247,7 @@ export const _guessExecutionStatusRelativeTo = function (target) {
     }
 
     const targetPaths = target.getAncestry();
-    if (targetPaths.includes(this)) {
+    if (targetPaths.indexOf(this) >= 0) {
         return "after";
     }
 
@@ -281,9 +289,11 @@ export const _guessExecutionStatusRelativeTo = function (target) {
     const targetKeyPosition = keys.indexOf(targetRelationship.key);
     const selfKeyPosition = keys.indexOf(selfRelationship.key);
     return targetKeyPosition > selfKeyPosition ? "before" : "after";
-};
+}
 
-export const _guessExecutionStatusRelativeToDifferentFunctions = function (targetFuncParent) {
+export function _guessExecutionStatusRelativeToDifferentFunctions(
+    targetFuncParent,
+) {
     const targetFuncPath = targetFuncParent.path;
     if (!targetFuncPath.isFunctionDeclaration()) {
         return;
@@ -300,7 +310,7 @@ export const _guessExecutionStatusRelativeToDifferentFunctions = function (targe
         return "before";
     }
 
-    const referencePaths = binding.referencePaths;
+    const referencePaths: Array<NodePath> = binding.referencePaths;
 
     // verify that all of the references are calls
     for (const path of referencePaths) {
@@ -334,19 +344,20 @@ export const _guessExecutionStatusRelativeToDifferentFunctions = function (targe
     }
 
     return allStatus;
-};
+}
 
 /**
  * Resolve a "pointer" `NodePath` to it's absolute path.
  */
-export const resolve = function (dangerous, resolved) {
-    return this._resolve(dangerous, resolved) || this;
-};
 
-export const _resolve = function (dangerous, resolved) {
+export function resolve(dangerous, resolved) {
+    return this._resolve(dangerous, resolved) || this;
+}
+
+export function _resolve(dangerous?, resolved?): ?NodePath {
     // detect infinite recursion
     // todo: possibly have a max length on this just to be safe
-    if (resolved && resolved.includes(this)) {
+    if (resolved && resolved.indexOf(this) >= 0) {
         return;
     }
 
@@ -401,7 +412,7 @@ export const _resolve = function (dangerous, resolved) {
 
         if (target.isObjectExpression()) {
             const props = target.get("properties");
-            for (const prop of props) {
+            for (const prop of (props: Array)) {
                 if (!prop.isProperty()) {
                     continue;
                 }
@@ -427,9 +438,9 @@ export const _resolve = function (dangerous, resolved) {
             }
         }
     }
-};
+}
 
-export const isConstantExpression = function () {
+export function isConstantExpression() {
     if (this.isIdentifier()) {
         const binding = this.scope.getBinding(this.node.name);
         if (!binding) {
@@ -468,9 +479,9 @@ export const isConstantExpression = function () {
     }
 
     return false;
-};
+}
 
-export const isInStrictMode = function () {
+export function isInStrictMode() {
     const start = this.isProgram() ? this : this.parentPath;
 
     const strictParent = start.find((path) => {
@@ -506,4 +517,4 @@ export const isInStrictMode = function () {
     });
 
     return Boolean(strictParent);
-};
+}

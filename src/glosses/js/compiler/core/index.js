@@ -6,11 +6,16 @@ export {
 } from "./tools/build-external-helpers";
 export { resolvePlugin, resolvePreset } from "./config/files";
 
+// export { version } from "./package.json";
+export const version = "7.4.0";
+
 export { getEnv } from "./config/helpers/environment";
 
 const {
-    js: { compiler: { traverse, template } }
+    js: { compiler: { types, traverse, template }, tokTypes }
 } = adone;
+export { types, tokTypes, traverse, template };
+
 export { createConfigItem } from "./config/item";
 
 export { loadPartialConfig, loadOptions } from "./config";

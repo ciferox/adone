@@ -1,32 +1,32 @@
 const plugins = [
-    "syntax.asyncGenerators",
-    "transform.flowStripTypes",
-    ["transform.decorators", {
-        legacy: true
-    }],
-    ["transform.classProperties", { loose: true }],
-    "transform.asyncGeneratorFunctions",
+    // "syntax.asyncGenerators",
+    // "transform.flowStripTypes",
+    // ["transform.decorators", {
+    //     legacy: true
+    // }],
+    // ["transform.classProperties", { loose: true }],
+    // "transform.asyncGeneratorFunctions",
     "transform.modulesCommonjs",
-    "transform.functionBind",
-    "transform.objectRestSpread",
-    "transform.numericSeparator",
-    "transform.exponentiationOperator",
-    "transform.exportNamespaceFrom"
+    // "transform.functionBind",
+    // "transform.objectRestSpread",
+    // "transform.numericSeparator",
+    // "transform.exponentiationOperator",
+    // "transform.exportNamespaceFrom"
 ];
-if (process.env.ADONE_COVERAGE) {
-    plugins.unshift(
-        "syntax.flow",
-        "syntax.decorators",
-        "syntax.classProperties",
-        "syntax.objectRestSpread",
-        "syntax.functionBind",
-        "syntax.numericSeparator",
-        "syntax.exponentiationOperator",
-        "syntax.exportNamespaceFrom",
-        "syntax.optionalCatchBinding",
-        adone.js.coverage.plugin
-    );
-}
+// if (process.env.ADONE_COVERAGE) {
+//     plugins.unshift(
+//         "syntax.flow",
+//         "syntax.decorators",
+//         "syntax.classProperties",
+//         "syntax.objectRestSpread",
+//         "syntax.functionBind",
+//         "syntax.numericSeparator",
+//         "syntax.exponentiationOperator",
+//         "syntax.exportNamespaceFrom",
+//         "syntax.optionalCatchBinding",
+//         adone.js.coverage.plugin
+//     );
+// }
 const options = {
     compact: false,
     only: [/\.js$/],

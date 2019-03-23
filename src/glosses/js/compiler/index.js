@@ -1,10 +1,8 @@
 adone.lazify({
-    parse: ["./parser", (mod) => mod.parse],
-    parseExpression: ["./parser", (mod) => mod.parseExpression],
     core: "./core",
     // jsTokens: "./js_tokens",
     // matchToToken: ["./js_tokens", (mod) => mod.matchToToken],
-    codeFrame: ["./code_frame", (x) => x.codeFrame],
+    codeFrame: "./code_frame",
     codeFrameColumns: ["./code_frame", (x) => x.codeFrameColumns],
     types: "./types",
     helper: "./helpers",

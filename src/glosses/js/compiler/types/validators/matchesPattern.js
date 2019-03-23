@@ -1,9 +1,5 @@
 import { isIdentifier, isMemberExpression, isStringLiteral } from "./generated";
 
-const {
-    is
-} = adone;
-
 /**
  * Determines whether or not the input node `member` matches the
  * input `match`.
@@ -12,16 +8,16 @@ const {
  * parsed nodes of `React.createClass` and `React["createClass"]`.
  */
 export default function matchesPattern(
-    member,
-    match,
-    allowPartial,
-) {
+    member: Object,
+    match: string | Array<string>,
+    allowPartial?: boolean,
+): boolean {
     // not a member expression
     if (!isMemberExpression(member)) {
-        return false;
+        return false; 
     }
 
-    const parts = is.array(match) ? match : match.split(".");
+    const parts = adone.is.array(match) ? match : match.split(".");
     const nodes = [];
 
     let node;
@@ -31,10 +27,10 @@ export default function matchesPattern(
     nodes.push(node);
 
     if (nodes.length < parts.length) {
-        return false;
+        return false; 
     }
     if (!allowPartial && nodes.length > parts.length) {
-        return false;
+        return false; 
     }
 
     for (let i = 0, j = nodes.length - 1; i < parts.length; i++, j--) {
@@ -49,7 +45,7 @@ export default function matchesPattern(
         }
 
         if (parts[i] !== value) {
-            return false;
+            return false; 
         }
     }
 

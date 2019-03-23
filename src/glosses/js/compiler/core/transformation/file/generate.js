@@ -1,21 +1,23 @@
-import type { PluginPasses } from "../../config";
-
-import type File from "./file";
-import mergeSourceMap from "./merge-map";
+// @flow
 
 const {
     is,
-    js: { compiler: { generate } },
-    sourcemap: { convert }
+    js: { compiler: { generate } }
 } = adone;
+
+import type { PluginPasses } from "../../config";
+import convertSourceMap, { type SourceMap } from "convert-source-map";
+
+import type File from "./file";
+import mergeSourceMap from "./merge-map";
 
 export default function generateCode(
     pluginPasses: PluginPasses,
     file: File,
 ): {
-        outputCode: string,
-        outputMap: SourceMap | null,
-    } {
+    outputCode: string,
+    outputMap: SourceMap | null,
+} {
     const { opts, ast, code, inputMap } = file;
 
     const results = [];
@@ -31,7 +33,7 @@ export default function generateCode(
                 );
 
                 if (!is.undefined(result)) {
-                    results.push(result); 
+                    results.push(result);
                 }
             }
         }
@@ -62,7 +64,7 @@ export default function generateCode(
     }
 
     if (opts.sourceMaps === "inline" || opts.sourceMaps === "both") {
-        outputCode += `\n${convert.fromObject(outputMap).toComment()}`;
+        outputCode += `\n${convertSourceMap.fromObject(outputMap).toComment()}`;
     }
 
     if (opts.sourceMaps === "inline") {

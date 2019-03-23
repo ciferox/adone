@@ -1,3 +1,5 @@
+// @flow
+
 /**
  * This file handles all logic for converting string-based configuration references into loaded objects.
  */
@@ -23,10 +25,22 @@ export function resolvePreset(name: string, dirname: string): string | null {
     return resolveStandardizedName("preset", name, dirname);
 }
 
-export function loadPlugin(name, dirname) {
+export function loadPlugin(
+    name: string,
+    dirname: string,
+): { filepath: string, value: mixed } {
     return {
         value: adone.lodash.get(adone.js.compiler.plugin, name)
     };
+    // const filepath = resolvePlugin(name, dirname);
+    // if (!filepath) {
+    //     throw new Error(`Plugin ${name} not found relative to ${dirname}`);
+    // }
+
+    // const value = requireModule("plugin", filepath);
+    // // debug("Loaded plugin %o from %o.", name, dirname);
+
+    // return { filepath, value };
 }
 
 export function loadPreset(
@@ -40,49 +54,55 @@ export function loadPreset(
 
     const value = requireModule("preset", filepath);
 
+    // debug("Loaded preset %o from %o.", name, dirname);
+
     return { filepath, value };
 }
 
 function standardizeName(type: "plugin" | "preset", name: string) {
     // Let absolute and relative paths through.
     if (path.isAbsolute(name)) {
-        return name;
+        return name; 
     }
 
     const isPreset = type === "preset";
 
     return (
         name
-            // foo -> babel-preset-foo
+        // foo -> babel-preset-foo
             .replace(
                 isPreset ? BABEL_PRESET_PREFIX_RE : BABEL_PLUGIN_PREFIX_RE,
                 `babel-${type}-`,
             )
-            // @babel/es2015 -> @babel/preset-es2015
+        // @babel/es2015 -> @babel/preset-es2015
             .replace(
                 isPreset ? BABEL_PRESET_ORG_RE : BABEL_PLUGIN_ORG_RE,
                 `$1${type}-`,
             )
-            // @foo/mypreset -> @foo/babel-preset-mypreset
+        // @foo/mypreset -> @foo/babel-preset-mypreset
             .replace(
                 isPreset ? OTHER_PRESET_ORG_RE : OTHER_PLUGIN_ORG_RE,
                 `$1babel-${type}-`,
             )
-            // @foo -> @foo/babel-preset
+        // @foo -> @foo/babel-preset
             .replace(OTHER_ORG_DEFAULT_RE, `$1/babel-${type}`)
-            // module:mypreset -> mypreset
+        // module:mypreset -> mypreset
             .replace(EXACT_RE, "")
     );
 }
 
-const resolveStandardizedName = function (type, name, dirname = process.cwd()) {
+function resolveStandardizedName(
+    type: "plugin" | "preset",
+    name: string,
+    dirname: string = process.cwd(),
+) {
     const standardizedName = standardizeName(type, name);
 
     try {
         return adone.js.Module.resolve(standardizedName, { basedir: dirname });
     } catch (e) {
         if (e.code !== "MODULE_NOT_FOUND") {
-            throw e;
+            throw e; 
         }
 
         if (standardizedName !== name) {
@@ -117,20 +137,20 @@ const resolveStandardizedName = function (type, name, dirname = process.cwd()) {
         } catch (e2) { }
 
         if (resolvedOppositeType) {
-            e.message += `\n- Did you accidentally pass a ${type} as a ${oppositeType}?`;
+            e.message += `\n- Did you accidentally pass a ${oppositeType} as a ${type}?`;
         }
 
         throw e;
     }
-};
+}
 
 const LOADING_MODULES = new Set();
 function requireModule(type: string, name: string): mixed {
     if (LOADING_MODULES.has(name)) {
         throw new Error(
             `Reentrant ${type} detected trying to load "${name}". This module is not ignored ` +
-            "and is trying to load itself while compiling itself, leading to a dependency cycle. " +
-            'We recommend adding it to your "ignore" list in your babelrc, or to a .babelignore.',
+        "and is trying to load itself while compiling itself, leading to a dependency cycle. " +
+        'We recommend adding it to your "ignore" list in your babelrc, or to a .babelignore.',
         );
     }
 

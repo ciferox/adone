@@ -1,3 +1,5 @@
+import type NodePath from "../path";
+
 /**
  * This class is responsible for a binding inside of a scope.
  *
@@ -26,72 +28,72 @@ export default class Binding {
         this.clearValue();
     }
 
-    //   constantViolations: Array<NodePath>;
+  constantViolations: Array<NodePath>;
 
-    //   constant: boolean;
+  constant: boolean;
 
-    //   referencePaths: Array<NodePath>;
+  referencePaths: Array<NodePath>;
 
-    //   referenced: boolean;
+  referenced: boolean;
 
-    //   references: number;
+  references: number;
 
-    //   hasDeoptedValue: boolean;
+  hasDeoptedValue: boolean;
 
-    //   hasValue: boolean;
+  hasValue: boolean;
 
-    //   value;
+  value: any;
 
-    deoptValue() {
-        this.clearValue();
-        this.hasDeoptedValue = true;
-    }
+  deoptValue() {
+      this.clearValue();
+      this.hasDeoptedValue = true;
+  }
 
-    setValue(value) {
-        if (this.hasDeoptedValue) {
-            return;
-        }
-        this.hasValue = true;
-        this.value = value;
-    }
+  setValue(value: any) {
+      if (this.hasDeoptedValue) {
+          return; 
+      }
+      this.hasValue = true;
+      this.value = value;
+  }
 
-    clearValue() {
-        this.hasDeoptedValue = false;
-        this.hasValue = false;
-        this.value = null;
-    }
+  clearValue() {
+      this.hasDeoptedValue = false;
+      this.hasValue = false;
+      this.value = null;
+  }
 
-    /**
-     * Register a constant violation with the provided `path`.
-     */
+  /**
+   * Register a constant violation with the provided `path`.
+   */
 
-    reassign(path) {
-        this.constant = false;
-        if (this.constantViolations.includes(path)) {
-            return;
-        }
-        this.constantViolations.push(path);
-    }
+  reassign(path: Object) {
+      this.constant = false;
+      if (this.constantViolations.indexOf(path) !== -1) {
+          return;
+      }
+      this.constantViolations.push(path);
+  }
 
-    /**
-     * Increment the amount of references to this binding.
-     */
+  /**
+   * Increment the amount of references to this binding.
+   */
 
-    reference(path) {
-        if (this.referencePaths.includes(path)) {
-            return;
-        }
-        this.referenced = true;
-        this.references++;
-        this.referencePaths.push(path);
-    }
+  reference(path: NodePath) {
+      if (this.referencePaths.indexOf(path) !== -1) {
+          return;
+      }
+      this.referenced = true;
+      this.references++;
+      this.referencePaths.push(path);
+  }
 
-    /**
-     * Decrement the amount of references to this binding.
-     */
+  /**
+   * Decrement the amount of references to this binding.
+   */
 
-    dereference() {
-        this.references--;
-        this.referenced = Boolean(this.references);
-    }
+  dereference() {
+      this.references--;
+      this.referenced = Boolean(this.references);
+  }
 }

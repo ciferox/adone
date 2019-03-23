@@ -1,23 +1,24 @@
-const {
-    is,
-    js: { compiler: { types: t } },
-    util: { jsesc }
-} = adone;
+import * as t from "@babel/types";
+import jsesc from "jsesc";
 
-export const Identifier = function (node) {
+export function Identifier(node: Object) {
     this.exactSource(node.loc, () => {
         this.word(node.name);
     });
-};
+}
 
-export const RestElement = function (node) {
+export function ArgumentPlaceholder() {
+    this.token("?");
+}
+
+export function RestElement(node: Object) {
     this.token("...");
     this.print(node.argument, node);
-};
+}
 
 export { RestElement as SpreadElement };
 
-export const ObjectExpression = function (node) {
+export function ObjectExpression(node: Object) {
     const props = node.properties;
 
     this.token("{");
@@ -30,18 +31,18 @@ export const ObjectExpression = function (node) {
     }
 
     this.token("}");
-};
+}
 
 export { ObjectExpression as ObjectPattern };
 
-export const ObjectMethod = function (node) {
+export function ObjectMethod(node: Object) {
     this.printJoin(node.decorators, node);
     this._methodHead(node);
     this.space();
     this.print(node.body, node);
-};
+}
 
-export const ObjectProperty = function (node) {
+export function ObjectProperty(node: Object) {
     this.printJoin(node.decorators, node);
 
     if (node.computed) {
@@ -49,11 +50,11 @@ export const ObjectProperty = function (node) {
         this.print(node.key, node);
         this.token("]");
     } else {
-        // print `({ foo: foo = 5 } = {})` as `({ foo = 5 } = {});`
+    // print `({ foo: foo = 5 } = {})` as `({ foo = 5 } = {});`
         if (
             t.isAssignmentPattern(node.value) &&
-            t.isIdentifier(node.key) &&
-            node.key.name === node.value.left.name
+      t.isIdentifier(node.key) &&
+      node.key.name === node.value.left.name
         ) {
             this.print(node.value, node);
             return;
@@ -64,9 +65,9 @@ export const ObjectProperty = function (node) {
         // shorthand!
         if (
             node.shorthand &&
-            (t.isIdentifier(node.key) &&
-                t.isIdentifier(node.value) &&
-                node.key.name === node.value.name)
+      (t.isIdentifier(node.key) &&
+        t.isIdentifier(node.value) &&
+        node.key.name === node.value.name)
         ) {
             return;
         }
@@ -75,9 +76,9 @@ export const ObjectProperty = function (node) {
     this.token(":");
     this.space();
     this.print(node.value, node);
-};
+}
 
-export const ArrayExpression = function (node) {
+export function ArrayExpression(node: Object) {
     const elems = node.elements;
     const len = elems.length;
 
@@ -87,25 +88,17 @@ export const ArrayExpression = function (node) {
     for (let i = 0; i < elems.length; i++) {
         const elem = elems[i];
         if (elem) {
-
-
             if (i > 0) {
-                this
-
-                    .space();
+                this.space(); 
             }
-            this.print(elem,
-
-                node);
+            this.print(elem, node);
             if (i < len - 1) {
-                this.token(",");
+                this.token(","); 
             }
         } else {
-
-
             // If the array expression ends with a hole, that hole
             // will be ignored by the interpreter, but if it ends with
-            // two (or more) holes, we need to write out two(or more)
+            // two (or more) holes, we need to write out two (or more)
             // commas so that the resulting code is interpreted with
             // both (all) of the holes.
             this.token(",");
@@ -113,23 +106,23 @@ export const ArrayExpression = function (node) {
     }
 
     this.token("]");
-};
+}
 
 export { ArrayExpression as ArrayPattern };
 
-export const RegExpLiteral = function (node) {
+export function RegExpLiteral(node: Object) {
     this.word(`/${node.pattern}/${node.flags}`);
-};
+}
 
-export const BooleanLiteral = function (node) {
+export function BooleanLiteral(node: Object) {
     this.word(node.value ? "true" : "false");
-};
+}
 
-export const NullLiteral = function () {
+export function NullLiteral() {
     this.word("null");
-};
+}
 
-export const NumericLiteral = function (node) {
+export function NumericLiteral(node: Object) {
     const raw = this.getPossibleRaw(node);
     const value = `${node.value}`;
     if (is.nil(raw)) {
@@ -139,9 +132,9 @@ export const NumericLiteral = function (node) {
     } else {
         this.number(raw);
     }
-};
+}
 
-export const StringLiteral = function (node) {
+export function StringLiteral(node: Object) {
     const raw = this.getPossibleRaw(node);
     if (!this.format.minified && !is.nil(raw)) {
         this.token(raw);
@@ -156,13 +149,25 @@ export const StringLiteral = function (node) {
     const val = jsesc(node.value, opts);
 
     return this.token(val);
-};
+}
 
-export const BigIntLiteral = function (node) {
+export function BigIntLiteral(node: Object) {
     const raw = this.getPossibleRaw(node);
     if (!this.format.minified && !is.nil(raw)) {
         this.token(raw);
         return;
     }
     this.token(node.value);
-};
+}
+
+export function PipelineTopicExpression(node: Object) {
+    this.print(node.expression, node);
+}
+
+export function PipelineBareFunction(node: Object) {
+    this.print(node.callee, node);
+}
+
+export function PipelinePrimaryTopicReference() {
+    this.token("#");
+}

@@ -1,3 +1,0 @@
-{
-  "plugins": ["externalHelpers", "transform.es2015Classes", "transform.es2015BlockScoping"]
-}

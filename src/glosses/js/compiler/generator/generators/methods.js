@@ -1,17 +1,15 @@
-const {
-    js: { compiler: { types: t } }
-} = adone;
+import * as t from "@babel/types";
 
-export const _params = function (node) {
+export function _params(node: Object) {
     this.print(node.typeParameters, node);
     this.token("(");
     this._parameters(node.params, node);
     this.token(")");
 
     this.print(node.returnType, node);
-};
+}
 
-export const _parameters = function (parameters, parent) {
+export function _parameters(parameters, parent) {
     for (let i = 0; i < parameters.length; i++) {
         this._param(parameters[i], parent);
 
@@ -20,18 +18,18 @@ export const _parameters = function (parameters, parent) {
             this.space();
         }
     }
-};
+}
 
-export const _param = function (parameter, parent) {
+export function _param(parameter, parent) {
     this.printJoin(parameter.decorators, parameter);
     this.print(parameter, parent);
     if (parameter.optional) {
-        this.token("?");
+        this.token("?"); 
     } // TS / flow
     this.print(parameter.typeAnnotation, parameter); // TS / flow
-};
+}
 
-export const _methodHead = function (node) {
+export function _methodHead(node: Object) {
     const kind = node.kind;
     const key = node.key;
 
@@ -60,14 +58,14 @@ export const _methodHead = function (node) {
     }
 
     if (node.optional) {
-        // TS
+    // TS
         this.token("?");
     }
 
     this._params(node);
-};
+}
 
-export const _predicate = function (node) {
+export function _predicate(node: Object) {
     if (node.predicate) {
         if (!node.returnType) {
             this.token(":");
@@ -75,16 +73,16 @@ export const _predicate = function (node) {
         this.space();
         this.print(node.predicate, node);
     }
-};
+}
 
-export const _functionHead = function (node) {
+export function _functionHead(node: Object) {
     if (node.async) {
         this.word("async");
         this.space();
     }
     this.word("function");
     if (node.generator) {
-        this.token("*");
+        this.token("*"); 
     }
 
     this.space();
@@ -94,27 +92,17 @@ export const _functionHead = function (node) {
 
     this._params(node);
     this._predicate(node);
-};
+}
 
-export const FunctionExpression = function (node) {
+export function FunctionExpression(node: Object) {
     this._functionHead(node);
     this.space();
     this.print(node.body, node);
-};
+}
 
 export { FunctionExpression as FunctionDeclaration };
 
-const hasTypes = function (node, param) {
-    return (
-        node.typeParameters ||
-        node.returnType ||
-        param.typeAnnotation ||
-        param.optional ||
-        param.trailingComments
-    );
-};
-
-export const ArrowFunctionExpression = function (node) {
+export function ArrowFunctionExpression(node: Object) {
     if (node.async) {
         this.word("async");
         this.space();
@@ -124,10 +112,28 @@ export const ArrowFunctionExpression = function (node) {
 
     if (
         node.params.length === 1 &&
-        t.isIdentifier(firstParam) &&
-        !hasTypes(node, firstParam)
+    t.isIdentifier(firstParam) &&
+    !hasTypes(node, firstParam)
     ) {
-        this.print(firstParam, node);
+        if (
+            this.format.retainLines &&
+      node.loc &&
+      node.body.loc &&
+      node.loc.start.line < node.body.loc.start.line
+        ) {
+            this.token("(");
+            if (firstParam.loc && firstParam.loc.start.line > node.loc.start.line) {
+                this.indent();
+                this.print(firstParam, node);
+                this.dedent();
+                this._catchUp("start", node.body.loc);
+            } else {
+                this.print(firstParam, node);
+            }
+            this.token(")");
+        } else {
+            this.print(firstParam, node);
+        }
     } else {
         this._params(node);
     }
@@ -139,4 +145,14 @@ export const ArrowFunctionExpression = function (node) {
     this.space();
 
     this.print(node.body, node);
-};
+}
+
+function hasTypes(node, param) {
+    return (
+        node.typeParameters ||
+    node.returnType ||
+    param.typeAnnotation ||
+    param.optional ||
+    param.trailingComments
+    );
+}

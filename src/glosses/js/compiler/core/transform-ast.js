@@ -1,5 +1,9 @@
 // @flow
 
+const {
+    is
+} = adone;
+
 import loadConfig, { type InputOptions } from "./config";
 import {
     runSync,
@@ -7,10 +11,6 @@ import {
     type FileResult,
     type FileResultCallback
 } from "./transformation";
-
-const {
-    is
-} = adone;
 
 type AstRoot = BabelNodeFile | BabelNodeProgram;
 
@@ -62,7 +62,7 @@ export const transformFromAst: TransformFromAst = (function transformFromAst(
         }
 
         if (!ast) {
-            return cb(new Error("No AST given"));
+            return cb(new Error("No AST given")); 
         }
 
         runAsync(cfg, code, ast, cb);
@@ -76,7 +76,7 @@ export function transformFromAstSync(
 ): FileResult | null {
     const config = loadConfig(opts);
     if (is.null(config)) {
-        return null;
+        return null; 
     }
 
     if (!ast) {
@@ -94,9 +94,9 @@ export function transformFromAstAsync(
     return new Promise((res, rej) => {
         transformFromAst(ast, code, opts, (err, result) => {
             if (is.nil(err)) {
-                res(result);
+                res(result); 
             } else {
-                rej(err);
+                rej(err); 
             }
         });
     });

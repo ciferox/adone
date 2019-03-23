@@ -5,12 +5,14 @@ const {
     js: { compiler: { types: t } }
 } = adone;
 
+import NodePath from "./index";
+
 /**
  * Call the provided `callback` with the `NodePath`s of all the parents.
  * When the `callback` returns a truthy value, we return that node path.
  */
 
-export const findParent = function (callback) {
+export function findParent(callback): ?NodePath {
     let path = this;
     while ((path = path.parentPath)) {
         if (callback(path)) {
@@ -18,14 +20,14 @@ export const findParent = function (callback) {
         }
     }
     return null;
-};
+}
 
 /**
  * Starting at current `NodePath` and going up the tree, return the first
  * `NodePath` that causes the provided `callback` to return a truthy value.
  */
 
-export const find = function (callback) {
+export function find(callback): ?NodePath {
     let path = this;
     do {
         if (callback(path)) {
@@ -33,21 +35,21 @@ export const find = function (callback) {
         }
     } while ((path = path.parentPath));
     return null;
-};
+}
 
 /**
  * Get the parent function of the current path.
  */
 
-export const getFunctionParent = function () {
+export function getFunctionParent(): ?NodePath {
     return this.findParent((p) => p.isFunction());
-};
+}
 
 /**
  * Walk up the tree until we hit a parent node path in a list.
  */
 
-export const getStatementParent = function () {
+export function getStatementParent(): NodePath {
     let path = this;
 
     do {
@@ -68,7 +70,7 @@ export const getStatementParent = function () {
     }
 
     return path;
-};
+}
 
 /**
  * Get the deepest common ancestor and then from it, get the earliest relationship path
@@ -78,7 +80,9 @@ export const getStatementParent = function () {
  * position and visiting key.
  */
 
-export const getEarliestCommonAncestorFrom = function (paths) {
+export function getEarliestCommonAncestorFrom(
+    paths: Array<NodePath>,
+): NodePath {
     return this.getDeepestCommonAncestorFrom(paths, (
         deepest,
         i,
@@ -87,7 +91,7 @@ export const getEarliestCommonAncestorFrom = function (paths) {
         let earliest;
         const keys = t.VISITOR_KEYS[deepest.type];
 
-        for (const ancestry of (ancestries)) {
+        for (const ancestry of (ancestries: Array)) {
             const path = ancestry[i + 1];
 
             // first path
@@ -116,7 +120,7 @@ export const getEarliestCommonAncestorFrom = function (paths) {
 
         return earliest;
     });
-};
+}
 
 /**
  * Get the earliest path in the tree where the provided `paths` intersect.
@@ -124,10 +128,10 @@ export const getEarliestCommonAncestorFrom = function (paths) {
  * TODO: Possible optimisation target.
  */
 
-export const getDeepestCommonAncestorFrom = function (
-    paths,
-    filter,
-) {
+export function getDeepestCommonAncestorFrom(
+    paths: Array<NodePath>,
+    filter?: Function,
+): NodePath {
     if (!paths.length) {
         return this;
     }
@@ -165,7 +169,7 @@ export const getDeepestCommonAncestorFrom = function (
     depthLoop: for (let i = 0; i < minDepth; i++) {
         const shouldMatch = first[i];
 
-        for (const ancestry of (ancestries)) {
+        for (const ancestry of (ancestries: Array)) {
             if (ancestry[i] !== shouldMatch) {
                 // we've hit a snag
                 break depthLoop;
@@ -186,7 +190,7 @@ export const getDeepestCommonAncestorFrom = function (
     }
     throw new Error("Couldn't find intersection");
 
-};
+}
 
 /**
  * Build an array of node paths containing the entire ancestry of the current node path.
@@ -194,33 +198,33 @@ export const getDeepestCommonAncestorFrom = function (
  * NOTE: The current node path is included in this.
  */
 
-export const getAncestry = function () {
+export function getAncestry(): Array<NodePath> {
     let path = this;
     const paths = [];
     do {
         paths.push(path);
     } while ((path = path.parentPath));
     return paths;
-};
+}
 
 /**
  * A helper to find if `this` path is an ancestor of @param maybeDescendant
  */
-export const isAncestor = function (maybeDescendant) {
+export function isAncestor(maybeDescendant: NodePath): boolean {
     return maybeDescendant.isDescendant(this);
-};
+}
 
 /**
  * A helper to find if `this` path is a descendant of @param maybeAncestor
  */
-export const isDescendant = function (maybeAncestor) {
+export function isDescendant(maybeAncestor: NodePath): boolean {
     return Boolean(this.findParent((parent) => parent === maybeAncestor));
-};
+}
 
-export const inType = function () {
+export function inType(): boolean {
     let path = this;
     while (path) {
-        for (const type of (arguments)) {
+        for (const type of (arguments: Array)) {
             if (path.node.type === type) {
                 return true;
             }
@@ -229,4 +233,4 @@ export const inType = function () {
     }
 
     return false;
-};
+}

@@ -1,4 +1,10 @@
-import * as virtualTypes from "./lib/virtual_types";
+const {
+    js: { compiler: { types: t, generate: generator } }
+} = adone;
+
+import type { HubInterface } from "../hub";
+import type TraversalContext from "../context";
+import * as virtualTypes from "./lib/virtual-types";
 import traverse from "../index";
 import Scope from "../scope";
 import { path as pathCache } from "../cache";
@@ -16,12 +22,8 @@ import * as NodePath_modification from "./modification";
 import * as NodePath_family from "./family";
 import * as NodePath_comments from "./comments";
 
-const {
-    js: { compiler: { types: t, generate: generator } }
-} = adone;
-
 export default class NodePath {
-    constructor(hub, parent) {
+    constructor(hub: HubInterface, parent: Object) {
         this.parent = parent;
         this.hub = hub;
         this.contexts = [];
@@ -45,49 +47,49 @@ export default class NodePath {
         this.typeAnnotation = null;
     }
 
-    // parent;
+    parent: Object;
 
-    // hub;
+    hub: HubInterface;
 
-    // contexts: Array<TraversalContext>;
+    contexts: Array<TraversalContext>;
 
-    // data;
+    data: Object;
 
-    // shouldSkip: boolean;
+    shouldSkip: boolean;
 
-    // shouldStop: boolean;
+    shouldStop: boolean;
 
-    // removed: boolean;
+    removed: boolean;
 
-    // state;
+    state: any;
 
-    // opts: ?Object;
+    opts: ?Object;
 
-    // skipKeys: ?Object;
+    skipKeys: ?Object;
 
-    // parentPath: ?NodePath;
+    parentPath: ?NodePath;
 
-    // context: TraversalContext;
+    context: TraversalContext;
 
-    // container: ?Object | Array<Object>;
+    container: ?Object | Array<Object>;
 
-    // listKey: ?string;
+    listKey: ?string;
 
-    // inList: boolean;
+    inList: boolean;
 
-    // parentKey: ?string;
+    parentKey: ?string;
 
-    // key: ?string;
+    key: ?string;
 
-    // node: ?Object;
+    node: ?Object;
 
-    // scope;
+    scope: Scope;
 
-    // type: ?string;
+    type: ?string;
 
-    // typeAnnotation: ?Object;
+    typeAnnotation: ?Object;
 
-    static get({ hub, parentPath, parent, container, listKey, key }) {
+    static get({ hub, parentPath, parent, container, listKey, key }): NodePath {
         if (!hub && parentPath) {
             hub = parentPath.hub;
         }
@@ -123,15 +125,15 @@ export default class NodePath {
         return path;
     }
 
-    getScope(scope) {
+    getScope(scope: Scope) {
         return this.isScope() ? new Scope(this) : scope;
     }
 
-    setData(key, val) {
+    setData(key: string, val: any): any {
         return (this.data[key] = val);
     }
 
-    getData(key, def) {
+    getData(key: string, def?: any): any {
         let val = this.data[key];
         if (!val && def) {
             val = this.data[key] = def;
@@ -139,20 +141,20 @@ export default class NodePath {
         return val;
     }
 
-    buildCodeFrameError(msg, Error = SyntaxError) {
+    buildCodeFrameError(msg: string, Error: typeof Error = SyntaxError): Error {
         return this.hub.buildError(this.node, msg, Error);
     }
 
-    traverse(visitor, state) {
+    traverse(visitor: Object, state?: any) {
         traverse(this.node, visitor, this.scope, state, this);
     }
 
-    set(key, node) {
+    set(key: string, node: Object) {
         t.validate(this.node, key, node);
         this.node[key] = node;
     }
 
-    getPathLocation() {
+    getPathLocation(): string {
         const parts = [];
         let path = this;
         do {
@@ -163,6 +165,13 @@ export default class NodePath {
             parts.unshift(key);
         } while ((path = path.parentPath));
         return parts.join(".");
+    }
+
+    debug(message) {
+        //   if (!debug.enabled) {
+        //       return; 
+        //   }
+        //   debug(`${this.getPathLocation()} ${this.type}: ${message}`);
     }
 
     toString() {
@@ -185,7 +194,7 @@ Object.assign(
     NodePath_comments,
 );
 
-for (const type of t.TYPES) {
+for (const type of (t.TYPES: Array<string>)) {
     const typeKey = `is${type}`;
     const fn = t[typeKey];
     NodePath.prototype[typeKey] = function (opts) {
@@ -199,11 +208,11 @@ for (const type of t.TYPES) {
     };
 }
 
-for (const type in virtualTypes) {
+for (const type of Object.keys(virtualTypes)) {
     if (type[0] === "_") {
         continue;
     }
-    if (!t.TYPES.includes(type)) {
+    if (t.TYPES.indexOf(type) < 0) {
         t.TYPES.push(type);
     }
 

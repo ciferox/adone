@@ -1,14 +1,20 @@
+// @flow
+const {
+    is,
+    js: { compiler: { traverse } }
+} = adone;
+
+import type { SourceMap } from "convert-source-map";
+
+import type { ResolvedConfig, PluginPasses } from "../config";
+
 import PluginPass from "./plugin-pass";
 import loadBlockHoistPlugin from "./block-hoist-plugin";
 import normalizeOptions from "./normalize-opts";
 import normalizeFile from "./normalize-file";
 
 import generateCode from "./file/generate";
-
-const {
-    is,
-    js: { compiler: { traverse } }
-} = adone;
+import type File from "./file/file";
 
 export type FileResultCallback = {
     (Error, null): any,
@@ -129,6 +135,7 @@ function isThenable(val: mixed): boolean {
     return (
         Boolean(val) &&
         (typeof val === "object" || is.function(val)) &&
+        Boolean(val.then) &&
         is.function(val.then)
     );
 }

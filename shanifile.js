@@ -23,33 +23,33 @@ export default {
     },
     transpiler: {
         plugins: [
-            "transform.flowStripTypes",
-            ["transform.decorators", {
-                legacy: true
-            }],
-            ["transform.classProperties", { loose: true }],
-            "transform.asyncGeneratorFunctions",
-            "transform.modulesCommonjs",
-            "transform.functionBind",
-            "transform.objectRestSpread",
-            "transform.numericSeparator",
-            "transform.exponentiationOperator",
-            ["transform.importReplace", {
-                old: "adone",
-                new: path.resolve(__dirname, "lib")
-            }, "adone"],
-            ["transform.importReplace", {
-                old: "shani",
-                new: path.resolve(__dirname, "lib", "glosses", "shani")
-            }, "shani"],
-            ["transform.importReplace", {
-                old: "fast",
-                new: path.resolve(__dirname, "lib", "glosses", "fast")
-            }, "fast"],
-            ["transform.importReplace", {
-                old: "omnitron",
-                new: path.resolve(__dirname, "lib", "omnitron")
-            }, "omnitron"]
+            // "transform.flowStripTypes",
+            // ["transform.decorators", {
+            //     legacy: true
+            // }],
+            // ["transform.classProperties", { loose: true }],
+            // "transform.asyncGeneratorFunctions",
+            // "transform.modulesCommonjs",
+            // "transform.functionBind",
+            // "transform.objectRestSpread",
+            // "transform.numericSeparator",
+            // "transform.exponentiationOperator",
+            // ["transform.importReplace", {
+            //     old: "adone",
+            //     new: path.resolve(__dirname, "lib")
+            // }, "adone"],
+            // ["transform.importReplace", {
+            //     old: "shani",
+            //     new: path.resolve(__dirname, "lib", "glosses", "shani")
+            // }, "shani"],
+            // ["transform.importReplace", {
+            //     old: "fast",
+            //     new: path.resolve(__dirname, "lib", "glosses", "fast")
+            // }, "fast"],
+            // ["transform.importReplace", {
+            //     old: "omnitron",
+            //     new: path.resolve(__dirname, "lib", "omnitron")
+            // }, "omnitron"]
         ],
         compact: false,
         ignore: [/vendor/]

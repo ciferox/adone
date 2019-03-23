@@ -1,3 +1,8 @@
+/* eslint-disable camelcase */
+/* eslint-disable adone/no-array-isarray */
+/* eslint-disable adone/no-null-comp */
+/* eslint-disable adone/no-typeof */
+
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
@@ -41,9 +46,9 @@ const adone = Object.create({
                     const value = modules[key];
 
                     let mod;
-                    if (typeof value === "function") { // eslint-disable-line
+                    if (typeof value === "function") {
                         mod = value(key);
-                    } else if (typeof value === "string") { // eslint-disable-line
+                    } else if (typeof value === "string") {
                         try {
                             mod = _require(value);
                         } catch (err) {
@@ -53,11 +58,11 @@ const adone = Object.create({
                             }
                             adone.app.runtime.app.fireException(err);
                         }
-                    } else if (Array.isArray(value) && value.length >= 1 && typeof value[0] === "string") { // eslint-disable-line
+                    } else if (Array.isArray(value) && value.length >= 1 && typeof value[0] === "string") {
                         mod = value.reduce((mod, entry, i) => {
-                            if (typeof entry === "function") { // eslint-disable-line
+                            if (typeof entry === "function") {
                                 return entry(mod);
-                            } else if (typeof entry === "string") { // eslint-disable-line
+                            } else if (typeof entry === "string") {
                                 if (!(entry in mod)) {
                                     throw new Error(`Invalid parameter name in ${key}[${i + 1}]`);
                                 }
@@ -178,9 +183,9 @@ adone.lazify({
     // NodeJS
     std: () => asNamespace(adone.lazify({
         assert: "assert",
-        async_hooks: "async_hooks", // eslint-disable-line
+        async_hooks: "async_hooks",
         buffer: "buffer",
-        child_process: "child_process", // eslint-disable-line
+        child_process: "child_process",
         cluster: "cluster",
         console: "console",
         crypto: "crypto",
@@ -197,14 +202,14 @@ adone.lazify({
         net: "net",
         os: "os",
         path: "path",
-        perf_hooks: "perf_hooks", // eslint-disable-line
+        perf_hooks: "perf_hooks",
         process: "process",
         punycode: "punycode",
         querystring: "querystring",
         readline: "readline",
         repl: "repl",
         stream: "stream",
-        string_decoder: "string_decoder",  // eslint-disable-line
+        string_decoder: "string_decoder", 
         timers: "timers",
         tls: "tls",
         tty: "tty",
@@ -212,7 +217,7 @@ adone.lazify({
         util: "util",
         v8: "v8",
         vm: "vm",
-        worker_threads: "worker_threads", // eslint-disable-line
+        worker_threads: "worker_threads",
         zlib: "zlib"
     }, null, require, { asNamespace: true })),
 

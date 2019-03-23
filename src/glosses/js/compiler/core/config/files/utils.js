@@ -1,11 +1,26 @@
-import { makeStrongCache } from "../caching";
+// @flow
 
 const {
-    is,
-    std: { fs }
+    is
 } = adone;
 
-const fileMtime = function (filepath) {
+import fs from "fs";
+import { makeStrongCache } from "../caching";
+
+export function makeStaticFileCache<T>(
+    fn: (string, string) => T,
+): string => T | null {
+    return makeStrongCache((filepath, cache) => {
+        if (is.null(cache.invalidate(() => fileMtime(filepath)))) {
+            cache.forever();
+            return null;
+        }
+
+        return fn(filepath, fs.readFileSync(filepath, "utf8"));
+    });
+}
+
+function fileMtime(filepath: string): number | null {
     try {
         return Number(fs.statSync(filepath).mtime);
     } catch (e) {
@@ -15,15 +30,4 @@ const fileMtime = function (filepath) {
     }
 
     return null;
-};
-
-export const makeStaticFileCache = function (fn) {
-    return makeStrongCache((filepath, cache) => {
-        if (is.null(cache.invalidate(() => fileMtime(filepath)))) {
-            cache.forever();
-            return null;
-        }
-
-        return fn(filepath, fs.readFileSync(filepath, "utf8"));
-    });
-};
+}

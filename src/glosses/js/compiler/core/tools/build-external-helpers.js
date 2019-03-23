@@ -1,5 +1,5 @@
 const {
-    js: { compiler: { generate: generator, template, types: t, helper: helpers } }
+    js: { compiler: { helper: helpers, generate: generator, template, types: t } }
 } = adone;
 
 // Wrapped to avoid wasting time parsing this when almost no-one uses
@@ -132,7 +132,7 @@ function buildHelpers(body, namespace, whitelist) {
     const refs = {};
     helpers.list.forEach((name) => {
         if (whitelist && whitelist.indexOf(name) < 0) {
-            return; 
+            return;
         }
 
         const ref = (refs[name] = getHelperReference(name));

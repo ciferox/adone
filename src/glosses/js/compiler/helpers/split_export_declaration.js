@@ -40,21 +40,18 @@ export default function splitExportDeclaration(exportDeclaration) {
         const updatedDeclaration = standaloneDeclaration
             ? declaration
             : t.variableDeclaration("var", [
-                t.variableDeclarator(t.cloneNode(id), declaration.node)
+                t.variableDeclarator(t.cloneNode(id), declaration.node),
             ]);
 
         const updatedExportDeclaration = t.exportNamedDeclaration(null, [
-            t.exportSpecifier(t.cloneNode(id), t.identifier("default"))
+            t.exportSpecifier(t.cloneNode(id), t.identifier("default")),
         ]);
 
         exportDeclaration.insertAfter(updatedExportDeclaration);
         exportDeclaration.replaceWith(updatedDeclaration);
 
         if (needBindingRegistration) {
-            scope.registerBinding(
-                isClassDeclaration ? "let" : "var",
-                exportDeclaration,
-            );
+            scope.registerDeclaration(exportDeclaration);
         }
 
         return exportDeclaration;

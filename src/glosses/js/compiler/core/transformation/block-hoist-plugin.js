@@ -1,24 +1,44 @@
-import loadConfig from "../config";
-
+// @flow
 const {
     is,
     lodash: { sortBy }
 } = adone;
 
-let LOADED_PLUGIN;
+import loadConfig, { type Plugin } from "../config";
+
+let LOADED_PLUGIN: Plugin | void;
+
+export default function loadBlockHoistPlugin(): Plugin {
+    if (!LOADED_PLUGIN) {
+        // Lazy-init the internal plugin to remove the init-time circular
+        // dependency between plugins being passed @babel/core's export object,
+        // which loads this file, and this 'loadConfig' loading plugins.
+        const config = loadConfig({
+            babelrc: false,
+            configFile: false,
+            plugins: [blockHoistPlugin]
+        });
+        LOADED_PLUGIN = config ? config.passes[0][0] : undefined;
+        if (!LOADED_PLUGIN) {
+            throw new Error("Assertion failure");
+        }
+    }
+
+    return LOADED_PLUGIN;
+}
 
 const blockHoistPlugin = {
     /**
-     * [Please add a description.]
-     *
-     * Priority:
-     *
-     *  - 0 We want this to be at the **very** bottom
-     *  - 1 Default node position
-     *  - 2 Priority over normal nodes
-     *  - 3 We want this to be at the **very** top
-     *  - 4 Reserved for the helpers used to implement module imports.
-     */
+   * [Please add a description.]
+   *
+   * Priority:
+   *
+   *  - 0 We want this to be at the **very** bottom
+   *  - 1 Default node position
+   *  - 2 Priority over normal nodes
+   *  - 3 We want this to be at the **very** top
+   *  - 4 Reserved for the helpers used to implement module imports.
+   */
 
     name: "internal.blockHoist",
 
@@ -53,22 +73,3 @@ const blockHoistPlugin = {
         }
     }
 };
-
-export default function loadBlockHoistPlugin() {
-    if (!LOADED_PLUGIN) {
-        // Lazy-init the internal plugin to remove the init-time circular
-        // dependency between plugins being passed @babel/core's export object,
-        // which loads this file, and this 'loadConfig' loading plugins.
-        const config = loadConfig({
-            babelrc: false,
-            configFile: false,
-            plugins: [blockHoistPlugin]
-        });
-        LOADED_PLUGIN = config ? config.passes[0][0] : undefined;
-        if (!LOADED_PLUGIN) {
-            throw new Error("Assertion failure");
-        }
-    }
-
-    return LOADED_PLUGIN;
-}

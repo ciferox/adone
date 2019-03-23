@@ -1,197 +1,20 @@
+// @flow
+
 const {
-    is,
-    sourcemap
+    is
 } = adone;
 
-const makeMappingKey = (item) => JSON.stringify([item.line, item.columnStart]);
+import type { SourceMap } from "convert-source-map";
+import sourceMap from "source-map";
 
-const findInsertionLocation = function (array, callback) {
-    let left = 0;
-    let right = array.length;
-    while (left < right) {
-        const mid = Math.floor((left + right) / 2);
-        const item = array[mid];
-
-        const result = callback(item);
-        if (result === 0) {
-            left = mid;
-            break;
-        }
-        if (result >= 0) {
-            right = mid;
-        } else {
-            left = mid + 1;
-        }
-    }
-
-    // Ensure the value is the start of any set of matches.
-    let i = left;
-    if (i < array.length) {
-        while (i >= 0 && callback(array[i]) >= 0) {
-            i--;
-        }
-        return i + 1;
-    }
-
-    return i;
-};
-
-const filterSortedArray = function (array, callback) {
-    const start = findInsertionLocation(array, callback);
-
-    const results = [];
-    for (let i = start; i < array.length && callback(array[i]) === 0; i++) {
-        results.push(array[i]);
-    }
-
-    return results;
-};
-
-
-const filterApplicableOriginalRanges = function ({ mappings }, { line, columnStart, columnEnd }, ) {
-    // The mapping array is sorted by original location, so we can
-    // binary-search it for the overlapping ranges.
-    return filterSortedArray(mappings, ({ original: outOriginal }) => {
-        if (line > outOriginal.line) {
-            return -1;
-        }
-        if (line < outOriginal.line) {
-            return 1;
-        }
-
-        if (columnStart >= outOriginal.columnEnd) {
-            return -1;
-        }
-        if (columnEnd <= outOriginal.columnStart) {
-            return 1;
-        }
-
-        return 0;
-    });
-};
-
-const eachOverlappingGeneratedOutputRange = function (outputFile, inputGeneratedRange, callback) {
-    // Find the Babel-generated mappings that overlap with this range in the
-    // input sourcemap. Generated locations within the input sourcemap
-    // correspond with the original locations in the map Babel generates.
-    const overlappingOriginal = filterApplicableOriginalRanges(
-        outputFile,
-        inputGeneratedRange,
-    );
-
-    for (const { generated } of overlappingOriginal) {
-        for (const item of generated) {
-            callback(item);
-        }
-    }
-};
-
-
-const eachInputGeneratedRange = function (map, callback) {
-    for (const { source, mappings } of map.sources) {
-        for (const { original, generated } of mappings) {
-            for (const item of generated) {
-                callback(item, original, source);
-            }
-        }
-    }
-};
-
-const buildMappingData = function (map) {
-    const consumer = sourcemap.createConsumer({
-        ...map,
-
-        // This is a bit hack. .addMapping expects source values to be relative,
-        // but eachMapping returns mappings with absolute paths. To avoid that
-        // incompatibility, we leave the sourceRoot out here and add it to the
-        // final map at the end instead.
-        sourceRoot: null
-    });
-
-    const sources = new Map();
-    const mappings = new Map();
-
-    let last = null;
-
-    consumer.computeColumnSpans();
-
-    consumer.eachMapping(
-        (m) => {
-            if (is.null(m.originalLine)) {
-                return;
-            }
-
-            let source = sources.get(m.source);
-            if (!source) {
-                source = {
-                    path: m.source,
-                    content: consumer.sourceContentFor(m.source, true)
-                };
-                sources.set(m.source, source);
-            }
-
-            let sourceData = mappings.get(source);
-            if (!sourceData) {
-                sourceData = {
-                    source,
-                    mappings: []
-                };
-                mappings.set(source, sourceData);
-            }
-
-            const obj = {
-                line: m.originalLine,
-                columnStart: m.originalColumn,
-                columnEnd: Infinity,
-                name: m.name
-            };
-
-            if (
-                last &&
-                last.source === source &&
-                last.mapping.line === m.originalLine
-            ) {
-                last.mapping.columnEnd = m.originalColumn;
-            }
-
-            last = {
-                source,
-                mapping: obj
-            };
-
-            sourceData.mappings.push({
-                original: obj,
-                generated: consumer
-                    .allGeneratedPositionsFor({
-                        source: m.source,
-                        line: m.originalLine,
-                        column: m.originalColumn
-                    })
-                    .map((item) => ({
-                        line: item.line,
-                        columnStart: item.column,
-                        // source-map's lastColumn is inclusive, not exclusive, so we need
-                        // to add 1 to it.
-                        columnEnd: item.lastColumn + 1
-                    }))
-            });
-        },
-        null,
-        sourcemap.Consumer.ORIGINAL_ORDER,
-    );
-
-    return {
-        file: map.file,
-        sourceRoot: map.sourceRoot,
-        sources: Array.from(mappings.values())
-    };
-};
-
-export default function mergeSourceMap(inputMap, map) {
+export default function mergeSourceMap(
+    inputMap: SourceMap,
+    map: SourceMap,
+): SourceMap {
     const input = buildMappingData(inputMap);
     const output = buildMappingData(map);
 
-    const mergedGenerator = sourcemap.createGenerator();
+    const mergedGenerator = new sourceMap.SourceMapGenerator();
     for (const { source } of input.sources) {
         if (is.string(source.content)) {
             mergedGenerator.setSourceContent(source.path, source.content);
@@ -215,7 +38,7 @@ export default function mergeSourceMap(inputMap, map) {
                 // skip generated locations once we've seen them the first time.
                 const key = makeMappingKey(item);
                 if (insertedMappings.has(key)) {
-                    return;
+                    return; 
                 }
                 insertedMappings.set(key, item);
 
@@ -274,4 +97,237 @@ export default function mergeSourceMap(inputMap, map) {
         result.sourceRoot = input.sourceRoot;
     }
     return result;
+}
+
+function makeMappingKey(item: { line: number, columnStart: number }) {
+    return `${item.line}/${item.columnStart}`;
+}
+
+function eachOverlappingGeneratedOutputRange(
+    outputFile: ResolvedFileMappings,
+    inputGeneratedRange: ResolvedGeneratedRange,
+    callback: ResolvedGeneratedRange => mixed,
+) {
+    // Find the Babel-generated mappings that overlap with this range in the
+    // input sourcemap. Generated locations within the input sourcemap
+    // correspond with the original locations in the map Babel generates.
+    const overlappingOriginal = filterApplicableOriginalRanges(
+        outputFile,
+        inputGeneratedRange,
+    );
+
+    for (const { generated } of overlappingOriginal) {
+        for (const item of generated) {
+            callback(item);
+        }
+    }
+}
+
+function filterApplicableOriginalRanges(
+    { mappings }: ResolvedFileMappings,
+    { line, columnStart, columnEnd }: ResolvedGeneratedRange,
+): OriginalMappings {
+    // The mapping array is sorted by original location, so we can
+    // binary-search it for the overlapping ranges.
+    return filterSortedArray(mappings, ({ original: outOriginal }) => {
+        if (line > outOriginal.line) {
+            return -1; 
+        }
+        if (line < outOriginal.line) {
+            return 1; 
+        }
+
+        if (columnStart >= outOriginal.columnEnd) {
+            return -1; 
+        }
+        if (columnEnd <= outOriginal.columnStart) {
+            return 1; 
+        }
+
+        return 0;
+    });
+}
+
+function eachInputGeneratedRange(
+    map: ResolvedMappings,
+    callback: (
+    ResolvedGeneratedRange,
+    ResolvedOriginalRange,
+    ResolvedSource,
+  ) => mixed,
+) {
+    for (const { source, mappings } of map.sources) {
+        for (const { original, generated } of mappings) {
+            for (const item of generated) {
+                callback(item, original, source);
+            }
+        }
+    }
+}
+
+type ResolvedMappings = {|
+  file: ?string,
+  sourceRoot: ?string,
+  sources: Array<ResolvedFileMappings>,
+|};
+type ResolvedFileMappings = {|
+  source: ResolvedSource,
+  mappings: OriginalMappings,
+|};
+type OriginalMappings = Array<{|
+  original: ResolvedOriginalRange,
+  generated: Array<ResolvedGeneratedRange>,
+|}>;
+type ResolvedSource = {|
+  path: string,
+  content: string | null,
+|};
+type ResolvedOriginalRange = {|
+  line: number,
+  columnStart: number,
+  columnEnd: number,
+  name: string | null,
+|};
+type ResolvedGeneratedRange = {|
+  line: number,
+  columnStart: number,
+  columnEnd: number,
+|};
+
+function buildMappingData(map: SourceMap): ResolvedMappings {
+    const consumer = new sourceMap.SourceMapConsumer({
+        ...map,
+
+        // This is a bit hack. .addMapping expects source values to be relative,
+        // but eachMapping returns mappings with absolute paths. To avoid that
+        // incompatibility, we leave the sourceRoot out here and add it to the
+        // final map at the end instead.
+        sourceRoot: null
+    });
+
+    const sources = new Map();
+    const mappings = new Map();
+
+    let last = null;
+
+    consumer.computeColumnSpans();
+
+    consumer.eachMapping(
+        (m) => {
+            if (is.null(m.originalLine)) {
+                return; 
+            }
+
+            let source = sources.get(m.source);
+            if (!source) {
+                source = {
+                    path: m.source,
+                    content: consumer.sourceContentFor(m.source, true)
+                };
+                sources.set(m.source, source);
+            }
+
+            let sourceData = mappings.get(source);
+            if (!sourceData) {
+                sourceData = {
+                    source,
+                    mappings: []
+                };
+                mappings.set(source, sourceData);
+            }
+
+            const obj = {
+                line: m.originalLine,
+                columnStart: m.originalColumn,
+                columnEnd: Infinity,
+                name: m.name
+            };
+
+            if (
+                last &&
+        last.source === source &&
+        last.mapping.line === m.originalLine
+            ) {
+                last.mapping.columnEnd = m.originalColumn;
+            }
+
+            last = {
+                source,
+                mapping: obj
+            };
+
+            sourceData.mappings.push({
+                original: obj,
+                generated: consumer
+                    .allGeneratedPositionsFor({
+                        source: m.source,
+                        line: m.originalLine,
+                        column: m.originalColumn
+                    })
+                    .map((item) => ({
+                        line: item.line,
+                        columnStart: item.column,
+                        // source-map's lastColumn is inclusive, not exclusive, so we need
+                        // to add 1 to it.
+                        columnEnd: item.lastColumn + 1
+                    }))
+            });
+        },
+        null,
+        sourceMap.SourceMapConsumer.ORIGINAL_ORDER,
+    );
+
+    return {
+        file: map.file,
+        sourceRoot: map.sourceRoot,
+        sources: Array.from(mappings.values())
+    };
+}
+
+function findInsertionLocation<T>(
+    array: Array<T>,
+    callback: T => number,
+): number {
+    let left = 0;
+    let right = array.length;
+    while (left < right) {
+        const mid = Math.floor((left + right) / 2);
+        const item = array[mid];
+
+        const result = callback(item);
+        if (result === 0) {
+            left = mid;
+            break;
+        }
+        if (result >= 0) {
+            right = mid;
+        } else {
+            left = mid + 1;
+        }
+    }
+
+    // Ensure the value is the start of any set of matches.
+    let i = left;
+    if (i < array.length) {
+        while (i >= 0 && callback(array[i]) >= 0) {
+            i--;
+        }
+        return i + 1;
+    }
+
+    return i;
+}
+
+function filterSortedArray<T>(
+    array: Array<T>,
+    callback: T => number,
+): Array<T> {
+    const start = findInsertionLocation(array, callback);
+
+    const results = [];
+    for (let i = start; i < array.length && callback(array[i]) === 0; i++) {
+        results.push(array[i]);
+    }
+
+    return results;
 }

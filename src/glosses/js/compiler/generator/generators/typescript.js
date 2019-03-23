@@ -1,21 +1,21 @@
-export const TSTypeAnnotation = function (node) {
+export function TSTypeAnnotation(node) {
     this.token(":");
     this.space();
     if (node.optional) {
-        this.token("?");
+        this.token("?"); 
     }
     this.print(node.typeAnnotation, node);
-};
+}
 
-export const TSTypeParameterInstantiation = function (node): void {
+export function TSTypeParameterInstantiation(node): void {
     this.token("<");
     this.printList(node.params, node, {});
     this.token(">");
-};
+}
 
 export { TSTypeParameterInstantiation as TSTypeParameterDeclaration };
 
-export const TSTypeParameter = function (node) {
+export function TSTypeParameter(node) {
     this.word(node.name);
 
     if (node.constraint) {
@@ -31,9 +31,9 @@ export const TSTypeParameter = function (node) {
         this.space();
         this.print(node.default, node);
     }
-};
+}
 
-export const TSParameterProperty = function (node) {
+export function TSParameterProperty(node) {
     if (node.accessibility) {
         this.word(node.accessibility);
         this.space();
@@ -45,39 +45,39 @@ export const TSParameterProperty = function (node) {
     }
 
     this._param(node.parameter);
-};
+}
 
-export const TSDeclareFunction = function (node) {
+export function TSDeclareFunction(node) {
     if (node.declare) {
         this.word("declare");
         this.space();
     }
     this._functionHead(node);
     this.token(";");
-};
+}
 
-export const TSDeclareMethod = function (node) {
+export function TSDeclareMethod(node) {
     this._classMethodHead(node);
     this.token(";");
-};
+}
 
-export const TSQualifiedName = function (node) {
+export function TSQualifiedName(node) {
     this.print(node.left, node);
     this.token(".");
     this.print(node.right, node);
-};
+}
 
-export const TSCallSignatureDeclaration = function (node) {
+export function TSCallSignatureDeclaration(node) {
     this.tsPrintSignatureDeclarationBase(node);
-};
+}
 
-export const TSConstructSignatureDeclaration = function (node) {
+export function TSConstructSignatureDeclaration(node) {
     this.word("new");
     this.space();
     this.tsPrintSignatureDeclarationBase(node);
-};
+}
 
-export const TSPropertySignature = function (node) {
+export function TSPropertySignature(node) {
     const { readonly, initializer } = node;
     if (readonly) {
         this.word("readonly");
@@ -92,9 +92,9 @@ export const TSPropertySignature = function (node) {
         this.print(initializer, node);
     }
     this.token(";");
-};
+}
 
-export const tsPrintPropertyOrMethodName = function (node) {
+export function tsPrintPropertyOrMethodName(node) {
     if (node.computed) {
         this.token("[");
     }
@@ -105,15 +105,15 @@ export const tsPrintPropertyOrMethodName = function (node) {
     if (node.optional) {
         this.token("?");
     }
-};
+}
 
-export const TSMethodSignature = function (node) {
+export function TSMethodSignature(node) {
     this.tsPrintPropertyOrMethodName(node);
     this.tsPrintSignatureDeclarationBase(node);
     this.token(";");
-};
+}
 
-export const TSIndexSignature = function (node) {
+export function TSIndexSignature(node) {
     const { readonly } = node;
     if (readonly) {
         this.word("readonly");
@@ -124,54 +124,59 @@ export const TSIndexSignature = function (node) {
     this.token("]");
     this.print(node.typeAnnotation, node);
     this.token(";");
-};
+}
 
-export const TSAnyKeyword = function () {
+export function TSAnyKeyword() {
     this.word("any");
-};
-export const TSNumberKeyword = function () {
+}
+export function TSUnknownKeyword() {
+    this.word("unknown");
+}
+export function TSNumberKeyword() {
     this.word("number");
-};
-export const TSObjectKeyword = function () {
+}
+export function TSObjectKeyword() {
     this.word("object");
-};
-export const TSBooleanKeyword = function () {
+}
+export function TSBooleanKeyword() {
     this.word("boolean");
-};
-export const TSStringKeyword = function () {
+}
+export function TSStringKeyword() {
     this.word("string");
-};
-export const TSSymbolKeyword = function () {
+}
+export function TSSymbolKeyword() {
     this.word("symbol");
-};
-export const TSVoidKeyword = function () {
+}
+export function TSVoidKeyword() {
     this.word("void");
-};
-export const TSUndefinedKeyword = function () {
+}
+export function TSUndefinedKeyword() {
     this.word("undefined");
-};
-export const TSNullKeyword = function () {
+}
+export function TSNullKeyword() {
     this.word("null");
-};
-export const TSNeverKeyword = function () {
+}
+export function TSNeverKeyword() {
     this.word("never");
-};
+}
 
-export const TSThisType = function () {
+export function TSThisType() {
     this.word("this");
-};
+}
 
-export const TSFunctionType = function (node) {
+export function TSFunctionType(node) {
     this.tsPrintFunctionOrConstructorType(node);
-};
+}
 
-export const TSConstructorType = function (node) {
+export function TSConstructorType(node) {
     this.word("new");
     this.space();
     this.tsPrintFunctionOrConstructorType(node);
-};
+}
 
-export const tsPrintFunctionOrConstructorType = function (node) {
+export function tsPrintFunctionOrConstructorType(
+    node: FunctionOrConstructorType,
+) {
     const { typeParameters, parameters } = node;
     this.print(typeParameters, node);
     this.token("(");
@@ -181,36 +186,36 @@ export const tsPrintFunctionOrConstructorType = function (node) {
     this.token("=>");
     this.space();
     this.print(node.typeAnnotation.typeAnnotation, node);
-};
+}
 
-export const TSTypeReference = function (node) {
+export function TSTypeReference(node) {
     this.print(node.typeName, node);
     this.print(node.typeParameters, node);
-};
+}
 
-export const TSTypePredicate = function (node) {
+export function TSTypePredicate(node) {
     this.print(node.parameterName);
     this.space();
     this.word("is");
     this.space();
     this.print(node.typeAnnotation.typeAnnotation);
-};
+}
 
-export const TSTypeQuery = function (node) {
+export function TSTypeQuery(node) {
     this.word("typeof");
     this.space();
     this.print(node.exprName);
-};
+}
 
-export const TSTypeLiteral = function (node) {
+export function TSTypeLiteral(node) {
     this.tsPrintTypeLiteralOrInterfaceBody(node.members, node);
-};
+}
 
-export const tsPrintTypeLiteralOrInterfaceBody = function (members, node) {
+export function tsPrintTypeLiteralOrInterfaceBody(members, node) {
     this.tsPrintBraced(members, node);
-};
+}
 
-export const tsPrintBraced = function (members, node) {
+export function tsPrintBraced(members, node) {
     this.token("{");
     if (members.length) {
         this.indent();
@@ -225,28 +230,38 @@ export const tsPrintBraced = function (members, node) {
     } else {
         this.token("}");
     }
-};
+}
 
-export const TSArrayType = function (node) {
-    this.print(node.elementType);
+export function TSArrayType(node) {
+    this.print(node.elementType, node);
     this.token("[]");
-};
+}
 
-export const TSTupleType = function (node) {
+export function TSTupleType(node) {
     this.token("[");
     this.printList(node.elementTypes, node);
     this.token("]");
-};
+}
 
-export const TSUnionType = function (node) {
+export function TSOptionalType(node) {
+    this.print(node.typeAnnotation, node);
+    this.token("?");
+}
+
+export function TSRestType(node) {
+    this.token("...");
+    this.print(node.typeAnnotation, node);
+}
+
+export function TSUnionType(node) {
     this.tsPrintUnionOrIntersectionType(node, "|");
-};
+}
 
-export const TSIntersectionType = function (node) {
+export function TSIntersectionType(node) {
     this.tsPrintUnionOrIntersectionType(node, "&");
-};
+}
 
-export const tsPrintUnionOrIntersectionType = function (node, sep) {
+export function tsPrintUnionOrIntersectionType(node, sep) {
     this.printJoin(node.types, node, {
         separator() {
             this.space();
@@ -254,9 +269,9 @@ export const tsPrintUnionOrIntersectionType = function (node, sep) {
             this.space();
         }
     });
-};
+}
 
-export const TSConditionalType = function (node) {
+export function TSConditionalType(node) {
     this.print(node.checkType);
     this.space();
     this.word("extends");
@@ -270,40 +285,34 @@ export const TSConditionalType = function (node) {
     this.token(":");
     this.space();
     this.print(node.falseType);
-};
+}
 
-export const TSInferType = function (node) {
+export function TSInferType(node) {
     this.token("infer");
     this.space();
     this.print(node.typeParameter);
-};
+}
 
-export const TSParenthesizedType = function (node) {
+export function TSParenthesizedType(node) {
     this.token("(");
     this.print(node.typeAnnotation, node);
     this.token(")");
-};
+}
 
-export const TSTypeOperator = function (node) {
+export function TSTypeOperator(node) {
     this.token(node.operator);
     this.space();
     this.print(node.typeAnnotation, node);
-};
+}
 
-export const TSIndexedAccessType = function (node) {
+export function TSIndexedAccessType(node) {
     this.print(node.objectType, node);
     this.token("[");
     this.print(node.indexType, node);
     this.token("]");
-};
+}
 
-const tokenIfPlusMinus = function (self, tok) {
-    if (tok !== true) {
-        self.token(tok);
-    }
-};
-
-export const TSMappedType = function (node) {
+export function TSMappedType(node) {
     const { readonly, typeParameter, optional } = node;
     this.token("{");
     this.space();
@@ -330,18 +339,24 @@ export const TSMappedType = function (node) {
     this.print(node.typeAnnotation, node);
     this.space();
     this.token("}");
-};
+}
 
-export const TSLiteralType = function (node) {
+function tokenIfPlusMinus(self, tok) {
+    if (tok !== true) {
+        self.token(tok);
+    }
+}
+
+export function TSLiteralType(node) {
     this.print(node.literal, node);
-};
+}
 
-export const TSExpressionWithTypeArguments = function (node) {
+export function TSExpressionWithTypeArguments(node) {
     this.print(node.expression, node);
     this.print(node.typeParameters, node);
-};
+}
 
-export const TSInterfaceDeclaration = function (node) {
+export function TSInterfaceDeclaration(node) {
     const { declare, id, typeParameters, extends: extendz, body } = node;
     if (declare) {
         this.word("declare");
@@ -359,13 +374,13 @@ export const TSInterfaceDeclaration = function (node) {
     }
     this.space();
     this.print(body, node);
-};
+}
 
-export const TSInterfaceBody = function (node) {
+export function TSInterfaceBody(node) {
     this.tsPrintTypeLiteralOrInterfaceBody(node.body, node);
-};
+}
 
-export const TSTypeAliasDeclaration = function (node) {
+export function TSTypeAliasDeclaration(node) {
     const { declare, id, typeParameters, typeAnnotation } = node;
     if (declare) {
         this.word("declare");
@@ -380,27 +395,27 @@ export const TSTypeAliasDeclaration = function (node) {
     this.space();
     this.print(typeAnnotation, node);
     this.token(";");
-};
+}
 
-export const TSAsExpression = function (node) {
+export function TSAsExpression(node) {
     const { expression, typeAnnotation } = node;
     this.print(expression, node);
     this.space();
     this.word("as");
     this.space();
     this.print(typeAnnotation, node);
-};
+}
 
-export const TSTypeAssertion = function (node) {
+export function TSTypeAssertion(node) {
     const { typeAnnotation, expression } = node;
     this.token("<");
     this.print(typeAnnotation, node);
     this.token(">");
     this.space();
     this.print(expression, node);
-};
+}
 
-export const TSEnumDeclaration = function (node) {
+export function TSEnumDeclaration(node) {
     const { declare, const: isConst, id, members } = node;
     if (declare) {
         this.word("declare");
@@ -415,9 +430,9 @@ export const TSEnumDeclaration = function (node) {
     this.print(id, node);
     this.space();
     this.tsPrintBraced(members, node);
-};
+}
 
-export const TSEnumMember = function (node) {
+export function TSEnumMember(node) {
     const { id, initializer } = node;
     this.print(id, node);
     if (initializer) {
@@ -427,9 +442,9 @@ export const TSEnumMember = function (node) {
         this.print(initializer, node);
     }
     this.token(",");
-};
+}
 
-export const TSModuleDeclaration = function (node) {
+export function TSModuleDeclaration(node) {
     const { declare, id } = node;
 
     if (declare) {
@@ -457,13 +472,28 @@ export const TSModuleDeclaration = function (node) {
 
     this.space();
     this.print(body, node);
-};
+}
 
-export const TSModuleBlock = function (node) {
+export function TSModuleBlock(node) {
     this.tsPrintBraced(node.body, node);
-};
+}
 
-export const TSImportEqualsDeclaration = function (node) {
+export function TSImportType(node) {
+    const { argument, qualifier, typeParameters } = node;
+    this.word("import");
+    this.token("(");
+    this.print(argument, node);
+    this.token(")");
+    if (qualifier) {
+        this.token(".");
+        this.print(qualifier, node);
+    }
+    if (typeParameters) {
+        this.print(typeParameters, node);
+    }
+}
+
+export function TSImportEqualsDeclaration(node) {
     const { isExport, id, moduleReference } = node;
     if (isExport) {
         this.word("export");
@@ -477,29 +507,29 @@ export const TSImportEqualsDeclaration = function (node) {
     this.space();
     this.print(moduleReference, node);
     this.token(";");
-};
+}
 
-export const TSExternalModuleReference = function (node) {
+export function TSExternalModuleReference(node) {
     this.token("require(");
     this.print(node.expression, node);
     this.token(")");
-};
+}
 
-export const TSNonNullExpression = function (node) {
+export function TSNonNullExpression(node) {
     this.print(node.expression, node);
     this.token("!");
-};
+}
 
-export const TSExportAssignment = function (node) {
+export function TSExportAssignment(node) {
     this.word("export");
     this.space();
     this.token("=");
     this.space();
     this.print(node.expression, node);
     this.token(";");
-};
+}
 
-export const TSNamespaceExportDeclaration = function (node) {
+export function TSNamespaceExportDeclaration(node) {
     this.word("export");
     this.space();
     this.word("as");
@@ -507,13 +537,13 @@ export const TSNamespaceExportDeclaration = function (node) {
     this.word("namespace");
     this.space();
     this.print(node.id, node);
-};
+}
 
-export const tsPrintSignatureDeclarationBase = function (node) {
+export function tsPrintSignatureDeclarationBase(node) {
     const { typeParameters, parameters } = node;
     this.print(typeParameters, node);
     this.token("(");
     this._parameters(parameters, node);
     this.token(")");
     this.print(node.typeAnnotation, node);
-};
+}

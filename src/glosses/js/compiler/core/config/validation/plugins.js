@@ -1,12 +1,14 @@
-import {
-    assertString,
-    assertFunction,
-    assertObject
-} from "./option-assertions";
-
 const {
     is
 } = adone;
+
+import {
+    assertString,
+    assertFunction,
+    assertObject,
+    type ValidatorSet,
+    type Validator
+} from "./option-assertions";
 
 // Note: The casts here are just meant to be static assertions to make sure
 // that the assertion functions actually assert that the value's type matches
@@ -14,23 +16,23 @@ const {
 const VALIDATORS: ValidatorSet = {
     name: (assertString: Validator<$PropertyType<PluginObject, "name">>),
     manipulateOptions: (assertFunction: Validator<
-        $PropertyType<PluginObject, "manipulateOptions">,
-        >),
+    $PropertyType<PluginObject, "manipulateOptions">,
+  >),
     pre: (assertFunction: Validator<$PropertyType<PluginObject, "pre">>),
     post: (assertFunction: Validator<$PropertyType<PluginObject, "post">>),
     inherits: (assertFunction: Validator<
-        $PropertyType<PluginObject, "inherits">,
-        >),
+    $PropertyType<PluginObject, "inherits">,
+  >),
     visitor: (assertVisitorMap: Validator<
-        $PropertyType<PluginObject, "visitor">,
-        >),
+    $PropertyType<PluginObject, "visitor">,
+  >),
 
     parserOverride: (assertFunction: Validator<
-        $PropertyType<PluginObject, "parserOverride">,
-        >),
+    $PropertyType<PluginObject, "parserOverride">,
+  >),
     generatorOverride: (assertFunction: Validator<
-        $PropertyType<PluginObject, "generatorOverride">,
-        >)
+    $PropertyType<PluginObject, "generatorOverride">,
+  >)
 };
 
 function assertVisitorMap(key: string, value: mixed): VisitorMap {
@@ -68,21 +70,21 @@ function assertVisitorHandler(
 
 type VisitorHandler = Function | { enter?: Function, exit?: Function };
 export type VisitorMap = {
-    [string]: VisitorHandler,
+  [string]: VisitorHandler,
 };
 
 export type PluginObject = {
-    name?: string,
-    manipulateOptions?: Function,
+  name?: string,
+  manipulateOptions?: Function,
 
-    pre?: Function,
-    post?: Function,
+  pre?: Function,
+  post?: Function,
 
-    inherits?: Function,
-    visitor?: VisitorMap,
+  inherits?: Function,
+  visitor?: VisitorMap,
 
-    parserOverride?: Function,
-    generatorOverride?: Function,
+  parserOverride?: Function,
+  generatorOverride?: Function,
 };
 
 export function validatePluginObject(obj: {}): PluginObject {
@@ -90,9 +92,9 @@ export function validatePluginObject(obj: {}): PluginObject {
         const validator = VALIDATORS[key];
 
         if (validator) {
-            validator(key, obj[key]);
+            validator(key, obj[key]); 
         } else {
-            throw new Error(`.${key} is not a valid Plugin property`);
+            throw new Error(`.${key} is not a valid Plugin property`); 
         }
     });
 

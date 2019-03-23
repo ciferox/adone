@@ -128,6 +128,7 @@ defineType("TSIndexSignature", {
 
 const tsKeywordTypes = [
     "TSAnyKeyword",
+    "TSUnknownKeyword",
     "TSNumberKeyword",
     "TSObjectKeyword",
     "TSBooleanKeyword",
@@ -155,7 +156,7 @@ defineType("TSThisType", {
 
 const fnOrCtr = {
     aliases: ["TSType"],
-    visitor: ["typeParameters", "typeAnnotation"],
+    visitor: ["typeParameters", "parameters", "typeAnnotation"],
     fields: signatureDeclarationCommon
 };
 
@@ -184,7 +185,7 @@ defineType("TSTypeQuery", {
     aliases: ["TSType"],
     visitor: ["exprName"],
     fields: {
-        exprName: validateType("TSEntityName")
+        exprName: validateType(["TSEntityName", "TSImportType"])
     }
 });
 
@@ -209,6 +210,22 @@ defineType("TSTupleType", {
     visitor: ["elementTypes"],
     fields: {
         elementTypes: validateArrayOfType("TSType")
+    }
+});
+
+defineType("TSOptionalType", {
+    aliases: ["TSType"],
+    visitor: ["typeAnnotation"],
+    fields: {
+        typeAnnotation: validateType("TSType")
+    }
+});
+
+defineType("TSRestType", {
+    aliases: ["TSType"],
+    visitor: ["typeAnnotation"],
+    fields: {
+        typeAnnotation: validateType("TSType")
     }
 });
 
@@ -385,6 +402,16 @@ defineType("TSModuleBlock", {
     visitor: ["body"],
     fields: {
         body: validateArrayOfType("Statement")
+    }
+});
+
+defineType("TSImportType", {
+    aliases: ["TSType"],
+    visitor: ["argument", "qualifier", "typeParameters"],
+    fields: {
+        argument: validateType("StringLiteral"),
+        qualifier: validateOptionalType("TSEntityName"),
+        typeParameters: validateOptionalType("TSTypeParameterInstantiation")
     }
 });
 

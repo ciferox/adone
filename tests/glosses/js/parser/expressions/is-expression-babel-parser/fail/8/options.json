@@ -1,0 +1,4 @@
+{
+  "strictMode": true,
+  "throws": "Unexpected reserved word 'public' (2:0)"
+}

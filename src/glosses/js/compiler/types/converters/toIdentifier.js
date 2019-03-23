@@ -2,7 +2,7 @@
 import isValidIdentifier from "../validators/isValidIdentifier";
 
 export default function toIdentifier(name: string): string {
-    name = String(name);
+    name = `${name}`;
 
     // replace all non-valid identifiers with dashes
     name = name.replace(/[^a-zA-Z0-9$_]/g, "-");

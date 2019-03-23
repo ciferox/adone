@@ -1,7 +1,11 @@
+// @flow
+
 const {
-    is,
-    std: { path }
+    is
 } = adone;
+
+import path from "path";
+import type { ResolvedConfig } from "../config";
 
 export default function normalizeOptions(config: ResolvedConfig): {} {
     const {
@@ -30,7 +34,7 @@ export default function normalizeOptions(config: ResolvedConfig): {} {
 
         parserOpts: {
             sourceType:
-                path.extname(filenameRelative) === ".mjs" ? "module" : sourceType,
+        path.extname(filenameRelative) === ".mjs" ? "module" : sourceType,
 
             sourceFileName: filename,
             plugins: [],

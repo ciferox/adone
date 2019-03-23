@@ -118,4 +118,5 @@ export default function highlight(code: string, options: Options = {}): string {
     return code;
 }
 
+highlight.getChalk = getChalk;
 highlight.shouldHighlight = shouldHighlight;

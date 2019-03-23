@@ -1,17 +1,16 @@
+// @flow
+import loClone from "lodash/clone";
 import { NODE_FIELDS, BUILDER_KEYS } from "../definitions";
 import validate from "../validators/validate";
 
-const {
-    is,
-    lodash: { clone: loClone }
-} = adone;
-
-export default function builder(type, ...args) {
+export default function builder(type: string, ...args: Array<any>): Object {
     const keys = BUILDER_KEYS[type];
     const countArgs = args.length;
     if (countArgs > keys.length) {
         throw new Error(
-            `${type}: Too many arguments passed. Received ${countArgs} but can receive no more than ${keys.length}`,
+            `${type}: Too many arguments passed. Received ${countArgs} but can receive no more than ${
+                keys.length
+            }`,
         );
     }
 
@@ -25,7 +24,7 @@ export default function builder(type, ...args) {
         if (i < countArgs) {
             arg = args[i]; 
         }
-        if (is.undefined(arg)) {
+        if (adone.is.undefined(arg)) {
             arg = loClone(field.default); 
         }
 
@@ -33,7 +32,7 @@ export default function builder(type, ...args) {
         i++;
     });
 
-    for (const key in node) {
+    for (const key of Object.keys(node)) {
         validate(node, key, node[key]);
     }
 

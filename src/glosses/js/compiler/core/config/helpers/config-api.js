@@ -1,16 +1,38 @@
-import {
-    assertSimpleType
-} from "../caching";
+// @flow
 
 const {
     is,
+    js: { compiler: { core } },
     semver
 } = adone;
 
-const coreVersion = "7.0.0-0";
+import {
+    assertSimpleType,
+    type CacheConfigurator,
+    type SimpleCacheConfigurator
+} from "../caching";
 
-export default function makeAPI(cache) {
-    const env = (value) =>
+import type { CallerMetadata } from "../validation/options";
+
+type EnvFunction = {
+    (): string,
+    <T>((string) => T): T,
+    (string): boolean,
+    (Array<string>): boolean,
+};
+
+export type PluginAPI = {
+    version: string,
+    cache: SimpleCacheConfigurator,
+    env: EnvFunction,
+    async: () => boolean,
+    assertVersion: typeof assertVersion,
+};
+
+export default function makeAPI(
+    cache: CacheConfigurator<{ envName: string, caller: CallerMetadata | void }>,
+): PluginAPI {
+    const env: any = (value) =>
         cache.using((data) => {
             if (is.undefined(value)) {
                 return data.envName;
@@ -30,21 +52,22 @@ export default function makeAPI(cache) {
             });
         });
 
-    const caller = (cb) =>
+    const caller: any = (cb) =>
         cache.using((data) => assertSimpleType(cb(data.caller)));
 
     return {
-        version: coreVersion,
+        version: core.version,
         cache: cache.simple(),
         // Expose ".env()" so people can easily get the same env that we expose using the "env" key.
         env,
         async: () => false,
         caller,
-        assertVersion
+        assertVersion,
+        tokTypes: undefined
     };
 }
 
-const assertVersion = function (range) {
+function assertVersion(range: string | number): void {
     if (is.number(range)) {
         if (!is.integer(range)) {
             throw new Error("Expected string or integer value.");
@@ -55,7 +78,7 @@ const assertVersion = function (range) {
         throw new Error("Expected string or integer value.");
     }
 
-    if (semver.satisfies(coreVersion, range)) {
+    if (semver.satisfies(core.version, range)) {
         return;
     }
 
@@ -68,7 +91,7 @@ const assertVersion = function (range) {
     }
 
     const err = new Error(
-        `Requires Babel "${range}", but was loaded with "${coreVersion}". ` +
+        `Requires Babel "${range}", but was loaded with "${core.version}". ` +
         "If you are sure you have a compatible version of @babel/core, " +
         "it is likely that something in your build process is loading the " +
         "wrong version. Inspect the stack trace of this error to look for " +
@@ -84,8 +107,8 @@ const assertVersion = function (range) {
         err,
         ({
             code: "BABEL_VERSION_UNSUPPORTED",
-            version: coreVersion,
+            version: core.version,
             range
-        }),
+        }: any),
     );
-};
+}

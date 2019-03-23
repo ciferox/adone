@@ -1,42 +1,90 @@
-import path from "path";
+// @flow
+const {
+    is,
+    std: { path }
+} = adone;
+
 import Plugin from "./plugin";
 import { mergeOptions } from "./util";
 import { createItemFromDescriptor } from "./item";
-import { buildRootChain } from "./config-chain";
+import { buildRootChain, type ConfigContext } from "./config-chain";
 import { getEnv } from "./helpers/environment";
-import { validate } from "./validation/options";
+import {
+    validate,
+    type ValidatedOptions,
+    type RootMode
+} from "./validation/options";
 
-const {
-    is
-} = adone;
+import { findConfigUpwards, type ConfigFile, type IgnoreFile } from "./files";
+
+function resolveRootMode(rootDir: string, rootMode: RootMode): string {
+    switch (rootMode) {
+        case "root":
+            return rootDir;
+
+        case "upward-optional": {
+            const upwardRootDir = findConfigUpwards(rootDir);
+            return is.null(upwardRootDir) ? rootDir : upwardRootDir;
+        }
+
+        case "upward": {
+            const upwardRootDir = findConfigUpwards(rootDir);
+            if (!is.null(upwardRootDir)) {
+                return upwardRootDir; 
+            }
+
+            throw Object.assign(
+                (new Error(
+                    "Babel was run with rootMode:\"upward\" but a root could not " +
+            `be found when searching upward from "${rootDir}"`,
+                ): any),
+                {
+                    code: "BABEL_ROOT_NOT_FOUND",
+                    dirname: rootDir
+                },
+            );
+        }
+        default:
+            throw new Error("Assertion failure - unknown rootMode value");
+    }
+}
 
 export default function loadPrivatePartialConfig(
     inputOpts: mixed,
 ): {
-    options: ValidatedOptions,
-    context: ConfigContext,
-    ignore: IgnoreFile | void,
-    babelrc: ConfigFile | void,
-    config: ConfigFile | void,
+  options: ValidatedOptions,
+  context: ConfigContext,
+  ignore: IgnoreFile | void,
+  babelrc: ConfigFile | void,
+  config: ConfigFile | void,
 } | null {
     if (
         !is.nil(inputOpts) &&
-        (typeof inputOpts !== "object" || is.array(inputOpts))
+    (typeof inputOpts !== "object" || is.array(inputOpts))
     ) {
         throw new Error("Babel options must be an object, null, or undefined");
     }
 
     const args = inputOpts ? validate("arguments", inputOpts) : {};
 
-    const { envName = getEnv(), cwd = ".", root: rootDir = ".", caller } = args;
+    const {
+        envName = getEnv(),
+        cwd = ".",
+        root: rootDir = ".",
+        rootMode = "root",
+        caller
+    } = args;
     const absoluteCwd = path.resolve(cwd);
-    const absoluteRootDir = path.resolve(absoluteCwd, rootDir);
+    const absoluteRootDir = resolveRootMode(
+        path.resolve(absoluteCwd, rootDir),
+        rootMode,
+    );
 
     const context: ConfigContext = {
         filename:
-            is.string(args.filename)
-                ? path.resolve(cwd, args.filename)
-                : undefined,
+      is.string(args.filename)
+          ? path.resolve(cwd, args.filename)
+          : undefined,
         cwd: absoluteCwd,
         root: absoluteRootDir,
         envName,
@@ -45,7 +93,7 @@ export default function loadPrivatePartialConfig(
 
     const configChain = buildRootChain(args, context);
     if (!configChain) {
-        return null;
+        return null; 
     }
 
     const options = {};
@@ -63,7 +111,7 @@ export default function loadPrivatePartialConfig(
     options.cwd = context.cwd;
     options.root = context.root;
     options.filename =
-        is.string(context.filename) ? context.filename : undefined;
+    is.string(context.filename) ? context.filename : undefined;
 
     options.plugins = configChain.plugins.map((descriptor) =>
         createItemFromDescriptor(descriptor),
@@ -84,7 +132,7 @@ export default function loadPrivatePartialConfig(
 export function loadPartialConfig(inputOpts: mixed): PartialConfig | null {
     const result = loadPrivatePartialConfig(inputOpts);
     if (!result) {
-        return null;
+        return null; 
     }
 
     const { options, babelrc, ignore, config } = result;
@@ -93,7 +141,7 @@ export function loadPartialConfig(inputOpts: mixed): PartialConfig | null {
         if (item.value instanceof Plugin) {
             throw new Error(
                 "Passing cached plugin instances is not supported in " +
-                "babel.loadPartialConfig()",
+          "babel.loadPartialConfig()",
             );
         }
     });
@@ -109,43 +157,43 @@ export function loadPartialConfig(inputOpts: mixed): PartialConfig | null {
 export type { PartialConfig };
 
 class PartialConfig {
-    /**
-     * These properties are public, so any changes to them should be considered
-     * a breaking change to Babel's API.
-     */
-    options: ValidatedOptions;
+  /**
+   * These properties are public, so any changes to them should be considered
+   * a breaking change to Babel's API.
+   */
+  options: ValidatedOptions;
 
-    babelrc: string | void;
+  babelrc: string | void;
 
-    babelignore: string | void;
+  babelignore: string | void;
 
-    config: string | void;
+  config: string | void;
 
-    constructor(
-        options: ValidatedOptions,
-        babelrc: string | void,
-        ignore: string | void,
-        config: string | void,
-    ) {
-        this.options = options;
-        this.babelignore = ignore;
-        this.babelrc = babelrc;
-        this.config = config;
+  constructor(
+      options: ValidatedOptions,
+      babelrc: string | void,
+      ignore: string | void,
+      config: string | void,
+  ) {
+      this.options = options;
+      this.babelignore = ignore;
+      this.babelrc = babelrc;
+      this.config = config;
 
-        // Freeze since this is a public API and it should be extremely obvious that
-        // reassigning properties on here does nothing.
-        Object.freeze(this);
-    }
+      // Freeze since this is a public API and it should be extremely obvious that
+      // reassigning properties on here does nothing.
+      Object.freeze(this);
+  }
 
-    /**
-     * Returns true if their is a config file in the filesystem for this config.
-     *
-     * While this only means .babelrc(.mjs)?/package.json#babel right now, it
-     * may well expand in the future, so using this is recommended vs checking
-     * this.babelrc directly.
-     */
-    hasFilesystemConfig(): boolean {
-        return !is.undefined(this.babelrc) || !is.undefined(this.config);
-    }
+  /**
+   * Returns true if their is a config file in the filesystem for this config.
+   *
+   * While this only means .babelrc(.mjs)?/package.json#babel right now, it
+   * may well expand in the future, so using this is recommended vs checking
+   * this.babelrc directly.
+   */
+  hasFilesystemConfig(): boolean {
+      return !is.undefined(this.babelrc) || !is.undefined(this.config);
+  }
 }
 Object.freeze(PartialConfig.prototype);

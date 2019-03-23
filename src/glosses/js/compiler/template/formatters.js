@@ -1,33 +1,46 @@
+// @flow
 
-const makeStatementFormatter = function (fn) {
+export type Formatter<T> = {
+  code: string => string,
+  validate: BabelNodeFile => void,
+  unwrap: BabelNodeFile => T,
+};
+
+function makeStatementFormatter<T>(
+    fn: (Array<BabelNodeStatement>) => T,
+): Formatter<T> {
     return {
-        // We need to prepend a ";" to force statement parsing so that
-        // ExpressionStatement strings won't be parsed as directives.
-        // Alongside that, we also prepend a comment so that when a syntax error
-        // is encountered, the user will be less likely to get confused about
-        // where the random semicolon came from.
+    // We need to prepend a ";" to force statement parsing so that
+    // ExpressionStatement strings won't be parsed as directives.
+    // Alongside that, we also prepend a comment so that when a syntax error
+    // is encountered, the user will be less likely to get confused about
+    // where the random semicolon came from.
         code: (str) => `/* @babel/template */;\n${str}`,
-        validate: () => { },
-        unwrap: (ast) => {
+        validate: () => {},
+        unwrap: (ast: BabelNodeFile): T => {
             return fn(ast.program.body.slice(1));
         }
     };
-};
+}
 
-export const smart = makeStatementFormatter((body) => {
+export const smart: Formatter<
+  Array<BabelNodeStatement> | BabelNodeStatement,
+> = makeStatementFormatter((body) => {
     if (body.length > 1) {
         return body;
-    }
+    } 
     return body[0];
-
+    
 });
 
-export const statements = makeStatementFormatter((body) => body);
+export const statements: Formatter<
+  Array<BabelNodeStatement>,
+> = makeStatementFormatter((body) => body);
 
-export const statement = makeStatementFormatter(
+export const statement: Formatter<BabelNodeStatement> = makeStatementFormatter(
     (body) => {
-        // We do this validation when unwrapping since the replacement process
-        // could have added or removed statements.
+    // We do this validation when unwrapping since the replacement process
+    // could have added or removed statements.
         if (body.length === 0) {
             throw new Error("Found nothing to return.");
         }
@@ -39,7 +52,7 @@ export const statement = makeStatementFormatter(
     },
 );
 
-export const expression = {
+export const expression: Formatter<BabelNodeExpression> = {
     code: (str) => `(\n${str}\n)`,
     validate: ({ program }) => {
         if (program.body.length > 1) {
@@ -55,8 +68,8 @@ export const expression = {
     unwrap: (ast) => ast.program.body[0].expression
 };
 
-export const program = {
+export const program: Formatter<BabelNodeProgram> = {
     code: (str) => str,
-    validate: () => { },
+    validate: () => {},
     unwrap: (ast) => ast.program
 };

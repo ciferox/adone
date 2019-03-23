@@ -1,39 +1,48 @@
+// @flow
+
+const {
+    is
+} = adone;
+
 import { loadPlugin, loadPreset } from "./files";
 
 import { getItemDescriptor } from "./item";
 
 import {
     makeWeakCache,
-    makeStrongCache
+    makeStrongCache,
+    type CacheConfigurator
 } from "./caching";
 
-const {
-    is
-} = adone;
+import type {
+    ValidatedOptions,
+    PluginList,
+    PluginItem
+} from "./validation/options";
 
 // Represents a config object and functions to lazily load the descriptors
 // for the plugins and presets so we don't load the plugins/presets unless
 // the options object actually ends up being applicable.
 export type OptionsAndDescriptors = {
-    options: ValidatedOptions,
-    plugins: () => Array<UnloadedDescriptor>,
-    presets: () => Array<UnloadedDescriptor>,
+  options: ValidatedOptions,
+  plugins: () => Array<UnloadedDescriptor>,
+  presets: () => Array<UnloadedDescriptor>,
 };
 
 // Represents a plugin or presets at a given location in a config object.
 // At this point these have been resolved to a specific object or function,
 // but have not yet been executed to call functions with options.
 export type UnloadedDescriptor = {
-    name: string | void,
-    value: {} | Function,
-    options: {} | void | false,
-    dirname: string,
-    alias: string,
-    ownPass?: boolean,
-    file?: {
-        request: string,
-        resolved: string,
-    } | void,
+  name: string | void,
+  value: {} | Function,
+  options: {} | void | false,
+  dirname: string,
+  alias: string,
+  ownPass?: boolean,
+  file?: {
+    request: string,
+    resolved: string,
+  } | void,
 };
 
 function isEqualDescriptor(
@@ -42,20 +51,20 @@ function isEqualDescriptor(
 ): boolean {
     return (
         a.name === b.name &&
-        a.value === b.value &&
-        a.options === b.options &&
-        a.dirname === b.dirname &&
-        a.alias === b.alias &&
-        a.ownPass === b.ownPass &&
-        (a.file && a.file.request) === (b.file && b.file.request) &&
-        (a.file && a.file.resolved) === (b.file && b.file.resolved)
+    a.value === b.value &&
+    a.options === b.options &&
+    a.dirname === b.dirname &&
+    a.alias === b.alias &&
+    a.ownPass === b.ownPass &&
+    (a.file && a.file.request) === (b.file && b.file.request) &&
+    (a.file && a.file.resolved) === (b.file && b.file.resolved)
     );
 }
 
 export type ValidatedFile = {
-    filepath: string,
-    dirname: string,
-    options: ValidatedOptions,
+  filepath: string,
+  dirname: string,
+  options: ValidatedOptions,
 };
 
 /**
@@ -250,10 +259,10 @@ export function createDescriptor(
         alias,
         ownPass
     }: {
-            type?: "plugin" | "preset",
-            alias: string,
-            ownPass?: boolean,
-        },
+    type?: "plugin" | "preset",
+    alias: string,
+    ownPass?: boolean,
+  },
 ): UnloadedDescriptor {
     const desc = getItemDescriptor(pair);
     if (desc) {
@@ -310,9 +319,9 @@ export function createDescriptor(
     }
 
     if (!is.null(filepath) && typeof value === "object" && value) {
-        // We allow object values for plugins/presets nested directly within a
-        // config object, because it can be useful to define them in nested
-        // configuration contexts.
+    // We allow object values for plugins/presets nested directly within a
+    // config object, because it can be useful to define them in nested
+    // configuration contexts.
         throw new Error(
             `Plugin/Preset files are not allowed to export objects, only functions. In ${filepath}`,
         );

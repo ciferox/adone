@@ -1,12 +1,15 @@
+// @flow
+
 const {
     is,
-    js: { compiler: { traverse, types: t, codeFrameColumns, helper: helpers } },
-    semver
+    semver,
+    js: { compiler: { types: t, traverse, codeFrameColumns, helper: helpers } }
 } = adone;
+const { NodePath } = traverse;
 
-const { NodePath, Scope } = traverse;
+// import { NodePath, Scope, type HubInterface } from "@babel/traverse";
 
-import type { NormalizedFile } from "../normalize-file";
+// import type { NormalizedFile } from "../normalize-file";
 
 const errorVisitor = {
     enter(path, state) {
@@ -37,7 +40,7 @@ export default class File {
 
     inputMap: Object | null = null;
 
-    hub = {
+    hub: HubInterface = {
         // keep it for the usage in babel-core, ex: path.hub.file.opts.filename
         file: this,
         getCode: () => this.code,
@@ -118,7 +121,7 @@ export default class File {
         } = this.opts;
 
         if (!moduleIds) {
-            return null; 
+            return null;
         }
 
         // moduleId is n/a if a `getModuleId()` is provided
@@ -166,7 +169,7 @@ export default class File {
      * helper exists, but was not available for the full given range, it will be
      * considered unavailable.
      */
-    availableHelper(name: string, versionRange: ?string) {
+    availableHelper(name: string, versionRange: ?string): boolean {
         let minVersion;
         try {
             minVersion = helpers.minVersion(name);
@@ -178,10 +181,34 @@ export default class File {
             return false;
         }
 
+        if (!is.string(versionRange)) {
+            return true;
+        }
+
+        // semver.intersects() has some surprising behavior with comparing ranges
+        // with preprelease versions. We add '^' to ensure that we are always
+        // comparing ranges with ranges, which sidesteps this logic.
+        // For example:
+        //
+        //   semver.intersects(`<7.0.1`, "7.0.0-beta.0") // false - surprising
+        //   semver.intersects(`<7.0.1`, "^7.0.0-beta.0") // true - expected
+        //
+        // This is because the first falls back to
+        //
+        //   semver.satisfies("7.0.0-beta.0", `<7.0.1`) // false - surprising
+        //
+        // and this fails because a prerelease version can only satisfy a range
+        // if it is a prerelease within the same major/minor/patch range.
+        //
+        // Note: If this is found to have issues, please also revist the logic in
+        // transform-runtime's definitions.js file.
+        if (semver.valid(versionRange)) {
+            versionRange = `^${versionRange}`;
+        }
+
         return (
-            !is.string(versionRange) ||
-            (!semver.intersects(`<${minVersion}`, versionRange) &&
-                !semver.intersects(">=8.0.0", versionRange))
+            !semver.intersects(`<${minVersion}`, versionRange) &&
+            !semver.intersects(">=8.0.0", versionRange)
         );
     }
 

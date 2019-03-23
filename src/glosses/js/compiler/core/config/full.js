@@ -1,13 +1,4 @@
-import { mergeOptions } from "./util";
-import * as context from "../index";
-import Plugin from "./plugin";
-import { getItemDescriptor } from "./item";
-import { buildPresetChain } from "./config-chain";
-import { makeWeakCache } from "./caching";
-import { validate } from "./validation/options";
-import { validatePluginObject } from "./validation/plugins";
-import makeAPI from "./helpers/config-api";
-import loadPrivatePartialConfig from "./partial";
+// @flow
 
 const {
     is,
@@ -15,29 +6,53 @@ const {
 } = adone;
 
 
-const chain = function (a, b) {
-    const fns = [a, b].filter(Boolean);
-    if (fns.length <= 1) {
-        return fns[0];
-    }
+import { mergeOptions } from "./util";
+import * as context from "../index";
+import Plugin from "./plugin";
+import { getItemDescriptor } from "./item";
+import {
+    buildPresetChain,
+    type ConfigContext,
+    type ConfigChain,
+    type PresetInstance
+} from "./config-chain";
+import type { UnloadedDescriptor } from "./config-descriptors";
+import { makeWeakCache, type CacheConfigurator } from "./caching";
+import { validate, type CallerMetadata } from "./validation/options";
+import { validatePluginObject } from "./validation/plugins";
+import makeAPI from "./helpers/config-api";
 
-    return function (...args) {
-        for (const fn of fns) {
-            fn.apply(this, args);
-        }
-    };
+import loadPrivatePartialConfig from "./partial";
+
+type LoadedDescriptor = {
+    value: {},
+    options: {},
+    dirname: string,
+    alias: string,
 };
+
+export type { InputOptions } from "./validation/options";
+
+export type ResolvedConfig = {
+    options: Object,
+    passes: PluginPasses,
+};
+
+export type { Plugin };
+export type PluginPassList = Array<Plugin>;
+export type PluginPasses = Array<PluginPassList>;
 
 // Context not including filename since it is used in places that cannot
 // process 'ignore'/'only' and other filename-based logic.
-// type SimpleContext = {
-//     envName: string,
-//     caller: CallerMetadata | void,
-// };
+type SimpleContext = {
+    envName: string,
+    caller: CallerMetadata | void,
+};
 
-export default function loadFullConfig(inputOpts) {
+export default function loadFullConfig(
+    inputOpts: mixed,
+): ResolvedConfig | null {
     const result = loadPrivatePartialConfig(inputOpts);
-
     if (!result) {
         return null;
     }
@@ -52,7 +67,13 @@ export default function loadFullConfig(inputOpts) {
             throw new Error("Assertion failure - plugins and presets exist");
         }
 
-        const ignored = (function recurseDescriptors(config, pass) {
+        const ignored = (function recurseDescriptors(
+            config: {
+                plugins: Array<UnloadedDescriptor>,
+                presets: Array<UnloadedDescriptor>,
+            },
+            pass: Array<Plugin>,
+        ) {
             const plugins = config.plugins.reduce((acc, descriptor) => {
                 if (descriptor.options !== false) {
                     acc.push(loadPluginDescriptor(descriptor, context));
@@ -159,50 +180,58 @@ export default function loadFullConfig(inputOpts) {
 /**
  * Load a generic plugin/preset from the given descriptor loaded from the config object.
  */
-const loadDescriptor = makeWeakCache(({ value, options, dirname, alias }, cache, ) => {
-    // Disabled presets should already have been filtered out
-    if (options === false) {
-        throw new Error("Assertion failure");
-    }
-
-    options = options || {};
-
-    let item = value;
-    if (is.function(value)) {
-        const api = {
-            ...context,
-            ...makeAPI(cache)
-        };
-        try {
-            item = value(api, options, dirname);
-        } catch (e) {
-            if (alias) {
-                e.message += ` (While processing: ${JSON.stringify(alias)})`;
-            }
-            throw e;
+const loadDescriptor = makeWeakCache(
+    (
+        { value, options, dirname, alias }: UnloadedDescriptor,
+        cache: CacheConfigurator<SimpleContext>,
+    ): LoadedDescriptor => {
+        // Disabled presets should already have been filtered out
+        if (options === false) {
+            throw new Error("Assertion failure");
         }
-    }
 
-    if (!item || typeof item !== "object") {
-        throw new Error("Plugin/Preset did not return an object.");
-    }
+        options = options || {};
 
-    if (is.function(item.then)) {
-        throw new Error(
-            "You appear to be using an async plugin, " +
-            "which your current version of Babel does not support." +
-            "If you're using a published plugin, " +
-            "you may need to upgrade your @babel/core version.",
-        );
-    }
+        let item = value;
+        if (is.function(value)) {
+            const api = {
+                ...context,
+                ...makeAPI(cache)
+            };
+            try {
+                item = value(api, options, dirname);
+            } catch (e) {
+                if (alias) {
+                    e.message += ` (While processing: ${JSON.stringify(alias)})`;
+                }
+                throw e;
+            }
+        }
 
-    return { value: item, options, dirname, alias };
-});
+        if (!item || typeof item !== "object") {
+            throw new Error("Plugin/Preset did not return an object.");
+        }
+
+        if (is.function(item.then)) {
+            throw new Error(
+                "You appear to be using an async plugin, " +
+                "which your current version of Babel does not support." +
+                "If you're using a published plugin, " +
+                "you may need to upgrade your @babel/core version.",
+            );
+        }
+
+        return { value: item, options, dirname, alias };
+    },
+);
 
 /**
  * Instantiate a plugin for the given descriptor, returning the plugin/options pair.
  */
-const loadPluginDescriptor = function (descriptor, context) {
+function loadPluginDescriptor(
+    descriptor: UnloadedDescriptor,
+    context: SimpleContext,
+): Plugin {
     if (descriptor.value instanceof Plugin) {
         if (descriptor.options) {
             throw new Error(
@@ -214,7 +243,7 @@ const loadPluginDescriptor = function (descriptor, context) {
     }
 
     return instantiatePlugin(loadDescriptor(descriptor, context), context);
-};
+}
 
 const instantiatePlugin = makeWeakCache(
     (
@@ -262,8 +291,21 @@ const instantiatePlugin = makeWeakCache(
     },
 );
 
+/**
+ * Generate a config object that will act as the root of a new nested config.
+ */
+const loadPresetDescriptor = (
+    descriptor: UnloadedDescriptor,
+    context: ConfigContext,
+): ConfigChain | null => {
+    return buildPresetChain(
+        instantiatePreset(loadDescriptor(descriptor, context)),
+        context,
+    );
+};
+
 const instantiatePreset = makeWeakCache(
-    ({ value, dirname, alias }) => {
+    ({ value, dirname, alias }: LoadedDescriptor): PresetInstance => {
         return {
             options: validate("preset", value),
             alias,
@@ -272,15 +314,15 @@ const instantiatePreset = makeWeakCache(
     },
 );
 
-/**
- * Generate a config object that will act as the root of a new nested config.
- */
-const loadPresetDescriptor = (
-    descriptor,
-    context,
-) => {
-    return buildPresetChain(
-        instantiatePreset(loadDescriptor(descriptor, context)),
-        context,
-    );
-};
+function chain(a, b) {
+    const fns = [a, b].filter(Boolean);
+    if (fns.length <= 1) {
+        return fns[0];
+    }
+
+    return function (...args) {
+        for (const fn of fns) {
+            fn.apply(this, args);
+        }
+    };
+}

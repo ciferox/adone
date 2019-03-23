@@ -1,3 +1,4 @@
+// @flow
 import {
     isAnyTypeAnnotation,
     isGenericTypeAnnotation,
@@ -8,7 +9,9 @@ import {
 /**
  * Dedupe type annotations.
  */
-export default function removeTypeDuplicates(nodes) {
+export default function removeTypeDuplicates(
+    nodes: Array<Object>,
+): Array<Object> {
     const generics = {};
     const bases = {};
 
@@ -20,11 +23,11 @@ export default function removeTypeDuplicates(nodes) {
     for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i];
         if (!node) {
-            continue;
+            continue; 
         }
 
         // detect duplicates
-        if (types.includes(node)) {
+        if (types.indexOf(node) >= 0) {
             continue;
         }
 
@@ -39,7 +42,7 @@ export default function removeTypeDuplicates(nodes) {
         }
 
         if (isUnionTypeAnnotation(node)) {
-            if (!typeGroups.includes(node.types)) {
+            if (typeGroups.indexOf(node.types) < 0) {
                 nodes = nodes.concat(node.types);
                 typeGroups.push(node.types);
             }
@@ -72,12 +75,12 @@ export default function removeTypeDuplicates(nodes) {
     }
 
     // add back in bases
-    for (const type in bases) {
+    for (const type of Object.keys(bases)) {
         types.push(bases[type]);
     }
 
     // add back in generics
-    for (const name in generics) {
+    for (const name of Object.keys(generics)) {
         types.push(generics[name]);
     }
 

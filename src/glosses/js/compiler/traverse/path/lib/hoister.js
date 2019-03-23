@@ -2,7 +2,6 @@ const {
     is,
     js: { compiler: { types: t } }
 } = adone;
-
 const { react } = t;
 
 const referenceVisitor = {
@@ -68,7 +67,7 @@ export default class PathHoister {
 
     // A scope is compatible if all required bindings are reachable.
     isCompatibleScope(scope) {
-        for (const key in this.bindings) {
+        for (const key of Object.keys(this.bindings)) {
             const binding = this.bindings[key];
             if (!scope.bindingIdentifierEquals(key, binding.identifier)) {
                 return false;
@@ -110,7 +109,7 @@ export default class PathHoister {
 
         // avoid hoisting to a scope that contains bindings that are executed after our attachment path
         if (targetScope.path.isProgram() || targetScope.path.isFunction()) {
-            for (const name in this.bindings) {
+            for (const name of Object.keys(this.bindings)) {
                 // check binding is a direct child of this paths scope
                 if (!targetScope.hasOwnBinding(name)) {
                     continue;
@@ -133,7 +132,7 @@ export default class PathHoister {
                     path = binding.path;
 
                     // We also move past any constant violations.
-                    for (const violationPath of binding.constantViolations) {
+                    for (const violationPath of (binding.constantViolations: Array)) {
                         if (this.getAttachmentParentForPath(violationPath).key > path.key) {
                             path = violationPath;
                         }
@@ -204,7 +203,7 @@ export default class PathHoister {
 
     // Returns true if a scope has param bindings.
     hasOwnParamBindings(scope) {
-        for (const name in this.bindings) {
+        for (const name of Object.keys(this.bindings)) {
             if (!scope.hasOwnBinding(name)) {
                 continue;
             }

@@ -1,17 +1,19 @@
 // This file contains methods responsible for maintaining a TraversalContext.
 
-import traverse from "../index";
-
 const {
     is
 } = adone;
 
-export const call = function (key) {
+import traverse from "../index";
+
+export function call(key): boolean {
     const opts = this.opts;
+
+    this.debug(key);
 
     if (this.node) {
         if (this._call(opts[key])) {
-            return true;
+            return true; 
         }
     }
 
@@ -20,30 +22,30 @@ export const call = function (key) {
     }
 
     return false;
-};
+}
 
-export const _call = function (fns) {
+export function _call(fns?: Array<Function>): boolean {
     if (!fns) {
-        return false;
+        return false; 
     }
 
     for (const fn of fns) {
         if (!fn) {
-            continue;
+            continue; 
         }
 
         const node = this.node;
         if (!node) {
-            return true;
+            return true; 
         }
 
         const ret = fn.call(this.state, this, this.state);
         if (ret && typeof ret === "object" && is.function(ret.then)) {
             throw new Error(
                 "You appear to be using a plugin with an async traversal visitor, " +
-                "which your current version of Babel does not support." +
-                "If you're using a published plugin, you may need to upgrade " +
-                "your @babel/core version.",
+          "which your current version of Babel does not support." +
+          "If you're using a published plugin, you may need to upgrade " +
+          "your @babel/core version.",
             );
         }
         if (ret) {
@@ -52,23 +54,23 @@ export const _call = function (fns) {
 
         // node has been replaced, it will have been requeued
         if (this.node !== node) {
-            return true;
+            return true; 
         }
 
         if (this.shouldStop || this.shouldSkip || this.removed) {
-            return true;
+            return true; 
         }
     }
 
     return false;
-};
+}
 
-export const isBlacklisted = function () {
+export function isBlacklisted(): boolean {
     const blacklist = this.opts.blacklist;
     return blacklist && blacklist.indexOf(this.node.type) > -1;
-};
+}
 
-export const visit = function () {
+export function visit(): boolean {
     if (!this.node) {
         return false;
     }
@@ -82,9 +84,11 @@ export const visit = function () {
     }
 
     if (this.call("enter") || this.shouldSkip) {
+        this.debug("Skip...");
         return this.shouldStop;
     }
 
+    this.debug("Recursing into...");
     traverse.node(
         this.node,
         this.opts,
@@ -97,31 +101,31 @@ export const visit = function () {
     this.call("exit");
 
     return this.shouldStop;
-};
+}
 
-export const skip = function () {
+export function skip() {
     this.shouldSkip = true;
-};
+}
 
-export const skipKey = function (key) {
+export function skipKey(key) {
     this.skipKeys[key] = true;
-};
+}
 
-export const stop = function () {
+export function stop() {
     this.shouldStop = true;
     this.shouldSkip = true;
-};
+}
 
-export const setScope = function () {
+export function setScope() {
     if (this.opts && this.opts.noScope) {
-        return;
+        return; 
     }
 
     let path = this.parentPath;
     let target;
     while (path && !target) {
         if (path.opts && path.opts.noScope) {
-            return;
+            return; 
         }
 
         target = path.scope;
@@ -130,11 +134,11 @@ export const setScope = function () {
 
     this.scope = this.getScope(target);
     if (this.scope) {
-        this.scope.init();
+        this.scope.init(); 
     }
-};
+}
 
-export const setContext = function (context) {
+export function setContext(context) {
     this.shouldSkip = false;
     this.shouldStop = false;
     this.removed = false;
@@ -149,7 +153,7 @@ export const setContext = function (context) {
     this.setScope();
 
     return this;
-};
+}
 
 /**
  * Here we resync the node paths `key` and `container`. If they've changed according
@@ -157,30 +161,30 @@ export const setContext = function (context) {
  * for the new values.
  */
 
-export const resync = function () {
+export function resync() {
     if (this.removed) {
-        return;
+        return; 
     }
 
     this._resyncParent();
     this._resyncList();
     this._resyncKey();
     //this._resyncRemoved();
-};
+}
 
-export const _resyncParent = function () {
+export function _resyncParent() {
     if (this.parentPath) {
         this.parent = this.parentPath.node;
     }
-};
+}
 
-export const _resyncKey = function () {
+export function _resyncKey() {
     if (!this.container) {
-        return;
+        return; 
     }
 
     if (this.node === this.container[this.key]) {
-        return;
+        return; 
     }
 
     // grrr, path key is out of sync. this is likely due to a modification to the AST
@@ -193,7 +197,7 @@ export const _resyncKey = function () {
             }
         }
     } else {
-        for (const key in this.container) {
+        for (const key of Object.keys(this.container)) {
             if (this.container[key] === this.node) {
                 return this.setKey(key);
             }
@@ -202,47 +206,47 @@ export const _resyncKey = function () {
 
     // ¯\_(ツ)_/¯ who knows where it's gone lol
     this.key = null;
-};
+}
 
-export const _resyncList = function () {
+export function _resyncList() {
     if (!this.parent || !this.inList) {
-        return;
+        return; 
     }
 
     const newContainer = this.parent[this.listKey];
     if (this.container === newContainer) {
-        return;
+        return; 
     }
 
     // container is out of sync. this is likely the result of it being reassigned
     this.container = newContainer || null;
-};
+}
 
-export const _resyncRemoved = function () {
+export function _resyncRemoved() {
     if (
         is.nil(this.key) ||
-        !this.container ||
-        this.container[this.key] !== this.node
+    !this.container ||
+    this.container[this.key] !== this.node
     ) {
         this._markRemoved();
     }
-};
+}
 
-export const popContext = function () {
+export function popContext() {
     this.contexts.pop();
     if (this.contexts.length > 0) {
         this.setContext(this.contexts[this.contexts.length - 1]);
     } else {
         this.setContext(undefined);
     }
-};
+}
 
-export const pushContext = function (context) {
+export function pushContext(context) {
     this.contexts.push(context);
     this.setContext(context);
-};
+}
 
-export const setup = function (parentPath, container, listKey, key) {
+export function setup(parentPath, container, listKey, key) {
     this.inList = Boolean(listKey);
     this.listKey = listKey;
     this.parentKey = listKey || key;
@@ -250,17 +254,17 @@ export const setup = function (parentPath, container, listKey, key) {
 
     this.parentPath = parentPath || this.parentPath;
     this.setKey(key);
-};
+}
 
-export const setKey = function (key) {
+export function setKey(key) {
     this.key = key;
     this.node = this.container[this.key];
     this.type = this.node && this.node.type;
-};
+}
 
-export const requeue = function (pathToQueue = this) {
+export function requeue(pathToQueue = this) {
     if (pathToQueue.removed) {
-        return;
+        return; 
     }
 
     // TODO(loganfsmyth): This should be switched back to queue in parent contexts
@@ -271,17 +275,17 @@ export const requeue = function (pathToQueue = this) {
     for (const context of contexts) {
         context.maybeQueue(pathToQueue);
     }
-};
+}
 
-export const _getQueueContexts = function () {
+export function _getQueueContexts() {
     let path = this;
     let contexts = this.contexts;
     while (!contexts.length) {
         path = path.parentPath;
         if (!path) {
-            break;
+            break; 
         }
         contexts = path.contexts;
     }
     return contexts;
-};
+}

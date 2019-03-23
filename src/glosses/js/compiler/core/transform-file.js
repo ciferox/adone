@@ -1,4 +1,9 @@
 // @flow
+
+const {
+    is
+} = adone;
+
 import fs from "fs";
 
 import loadConfig, { type InputOptions } from "./config";
@@ -9,9 +14,13 @@ import {
     type FileResultCallback
 } from "./transformation";
 
-const {
-    is
-} = adone;
+import typeof * as transformFileBrowserType from "./transform-file-browser";
+import typeof * as transformFileType from "./transform-file";
+
+// Kind of gross, but essentially asserting that the exports of this module are the same as the
+// exports of transform-file-browser, since this file may be replaced at bundle time with
+// transform-file-browser.
+((({}: any): $Exact<transformFileBrowserType>): $Exact<transformFileType>);
 
 type TransformFile = {
   (filename: string, callback: FileResultCallback): void,
@@ -43,7 +52,7 @@ export const transformFile: TransformFile = (function transformFile(
         try {
             cfg = loadConfig(options);
             if (is.null(cfg)) {
-                return callback(null, null);
+                return callback(null, null); 
             }
         } catch (err) {
             return callback(err);
@@ -54,7 +63,7 @@ export const transformFile: TransformFile = (function transformFile(
 
         fs.readFile(filename, "utf8", (err, code: string) => {
             if (err) {
-                return callback(err, null);
+                return callback(err, null); 
             }
 
             runAsync(config, code, null, callback);
@@ -91,9 +100,9 @@ export function transformFileAsync(
     return new Promise((res, rej) => {
         transformFile(filename, opts, (err, result) => {
             if (is.nil(err)) {
-                res(result);
+                res(result); 
             } else {
-                rej(err);
+                rej(err); 
             }
         });
     });

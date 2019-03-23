@@ -1,21 +1,22 @@
+// @flow
 import { VISITOR_KEYS } from "../definitions";
-
-const {
-    is
-} = adone;
 
 /**
  * A prefix AST traversal implementation meant for simple searching
  * and processing.
  */
-export default function traverseFast(node, enter, opts) {
+export default function traverseFast(
+    node: Object,
+    enter: (node: Node, opts?: Object) => void,
+    opts?: Object,
+): void {
     if (!node) {
-        return;
+        return; 
     }
 
     const keys = VISITOR_KEYS[node.type];
     if (!keys) {
-        return;
+        return; 
     }
 
     opts = opts || {};
@@ -24,7 +25,7 @@ export default function traverseFast(node, enter, opts) {
     for (const key of keys) {
         const subNode = node[key];
 
-        if (is.array(subNode)) {
+        if (adone.is.array(subNode)) {
             for (const node of subNode) {
                 traverseFast(node, enter, opts);
             }

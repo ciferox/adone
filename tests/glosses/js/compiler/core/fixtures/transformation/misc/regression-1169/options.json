@@ -1,3 +1,0 @@
-{
-  "plugins": ["transform.es2015BlockScoping", "transform.es2015ForOf"]
-}

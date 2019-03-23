@@ -1,25 +1,25 @@
-export const File = function (node) {
+export function File(node: Object) {
     if (node.program) {
-        // Print this here to ensure that Program node 'leadingComments' still
-        // get printed after the hashbang.
+    // Print this here to ensure that Program node 'leadingComments' still
+    // get printed after the hashbang.
         this.print(node.program.interpreter, node);
     }
 
     this.print(node.program, node);
-};
+}
 
-export const Program = function (node) {
+export function Program(node: Object) {
     this.printInnerComments(node, false);
 
     this.printSequence(node.directives, node);
     if (node.directives && node.directives.length) {
-        this.newline();
+        this.newline(); 
     }
 
     this.printSequence(node.body, node);
-};
+}
 
-export const BlockStatement = function (node) {
+export function BlockStatement(node: Object) {
     this.token("{");
     this.printInnerComments(node);
 
@@ -30,7 +30,7 @@ export const BlockStatement = function (node) {
 
         this.printSequence(node.directives, node, { indent: true });
         if (hasDirectives) {
-            this.newline();
+            this.newline(); 
         }
 
         this.printSequence(node.body, node, { indent: true });
@@ -39,7 +39,7 @@ export const BlockStatement = function (node) {
         this.source("end", node.loc);
 
         if (!this.endsWith("\n")) {
-            this.newline();
+            this.newline(); 
         }
 
         this.rightBrace();
@@ -47,17 +47,54 @@ export const BlockStatement = function (node) {
         this.source("end", node.loc);
         this.token("}");
     }
-};
+}
 
-export const Noop = function () { };
+export function Noop() {}
 
-export const Directive = function (node) {
+export function Directive(node: Object) {
     this.print(node.value, node);
     this.semicolon();
-};
+}
 
-export const InterpreterDirective = function (node) {
+// These regexes match an even number of \ followed by a quote
+const unescapedSingleQuoteRE = /(?:^|[^\\])(?:\\\\)*'/;
+const unescapedDoubleQuoteRE = /(?:^|[^\\])(?:\\\\)*"/;
+
+export function DirectiveLiteral(node: Object) {
+    const raw = this.getPossibleRaw(node);
+    if (!is.nil(raw)) {
+        this.token(raw);
+        return;
+    }
+
+    const { value } = node;
+
+    // NOTE: In directives we can't change escapings,
+    // because they change the behavior.
+    // e.g. "us\x65 string" (\x65 is e) is not a "use strict" directive.
+
+    if (!unescapedDoubleQuoteRE.test(value)) {
+        this.token(`"${value}"`);
+    } else if (!unescapedSingleQuoteRE.test(value)) {
+        this.token(`'${value}'`);
+    } else {
+        throw new Error(
+            "Malformed AST: it is not possible to print a directive containing" +
+        " both unescaped single and double quotes.",
+        );
+    }
+}
+
+export function InterpreterDirective(node: Object) {
     this.token(`#!${node.value}\n`);
-};
+}
 
-export { StringLiteral as DirectiveLiteral } from "./types";
+export function Placeholder(node: Object) {
+    this.token("%%");
+    this.print(node.name);
+    this.token("%%");
+
+    if (node.expectedNode === "Statement") {
+        this.semicolon();
+    }
+}

@@ -1,22 +1,50 @@
-import {
-    makeStrongCache,
-    makeWeakCache
-} from "../caching";
-import makeAPI from "../helpers/config-api";
-import { makeStaticFileCache } from "./utils";
-import pathPatternToRegex from "../pattern-to-regex";
+// @flow
 
 const {
     is,
     std: { path, fs }
 } = adone;
+
+import buildDebug from "debug";
+import json5 from "json5";
+import resolve from "resolve";
+import {
+    makeStrongCache,
+    makeWeakCache,
+    type CacheConfigurator
+} from "../caching";
+import makeAPI, { type PluginAPI } from "../helpers/config-api";
+import { makeStaticFileCache } from "./utils";
+import pathPatternToRegex from "../pattern-to-regex";
+import type { FilePackageData, RelativeConfig, ConfigFile } from "./types";
+import type { CallerMetadata } from "../validation/options";
+
+const debug = buildDebug("babel:config:loading:files:configuration");
+
 const BABEL_CONFIG_JS_FILENAME = "babel.config.js";
 
 const BABELRC_FILENAME = ".babelrc";
 const BABELRC_JS_FILENAME = ".babelrc.js";
 const BABELIGNORE_FILENAME = ".babelignore";
 
-export const findRelativeConfig = function (
+export function findConfigUpwards(rootDir: string): string | null {
+    let dirname = rootDir;
+    while (true) {
+        if (fs.existsSync(path.join(dirname, BABEL_CONFIG_JS_FILENAME))) {
+            return dirname;
+        }
+
+        const nextDir = path.dirname(dirname);
+        if (dirname === nextDir) {
+            break;
+        }
+        dirname = nextDir;
+    }
+
+    return null;
+}
+
+export function findRelativeConfig(
     packageData: FilePackageData,
     envName: string,
     caller: CallerMetadata | void,
@@ -63,16 +91,24 @@ export const findRelativeConfig = function (
                 }
                 config = pkgConfig;
             }
+
+            if (config) {
+                debug("Found configuration %o from %o.", config.filepath, dirname);
+            }
         }
 
         if (!ignore) {
             const ignoreLoc = path.join(loc, BABELIGNORE_FILENAME);
             ignore = readIgnoreConfig(ignoreLoc);
+
+            if (ignore) {
+                debug("Found ignore %o from %o.", ignore.filepath, dirname);
+            }
         }
     }
 
     return { config, ignore };
-};
+}
 
 export function findRootConfig(
     dirname: string,
@@ -82,6 +118,9 @@ export function findRootConfig(
     const filepath = path.resolve(dirname, BABEL_CONFIG_JS_FILENAME);
 
     const conf = readConfig(filepath, envName, caller);
+    if (conf) {
+        debug("Found root config %o in $o.", BABEL_CONFIG_JS_FILENAME, dirname);
+    }
     return conf;
 }
 
@@ -91,13 +130,14 @@ export function loadConfig(
     envName: string,
     caller: CallerMetadata | void,
 ): ConfigFile {
-    const filepath = adone.js.Module.resolve(name, { basedir: dirname });
+    const filepath = resolve.sync(name, { basedir: dirname });
 
     const conf = readConfig(filepath, envName, caller);
     if (!conf) {
         throw new Error(`Config file ${filepath} contains no configuration data`);
     }
 
+    debug("Loaded config %o from $o.", name, dirname);
     return conf;
 }
 
@@ -115,7 +155,7 @@ const LOADING_CONFIGS = new Set();
 
 const readConfigJS = makeStrongCache(
     (
-        filepath,
+        filepath: string,
         cache: CacheConfigurator<{
             envName: string,
             caller: CallerMetadata | void,
@@ -132,6 +172,7 @@ const readConfigJS = makeStrongCache(
         if (LOADING_CONFIGS.has(filepath)) {
             cache.never();
 
+            debug("Auto-ignoring usage of config %o.", filepath);
             return {
                 filepath,
                 dirname: path.dirname(filepath),
@@ -157,10 +198,10 @@ const readConfigJS = makeStrongCache(
         }
 
         if (is.function(options)) {
-            options = options(makeAPI(cache));
+            options = ((options: any): (api: PluginAPI) => {})(makeAPI(cache));
 
             if (!cache.configured()) {
-                throwConfigError(); 
+                throwConfigError();
             }
         }
 
@@ -193,7 +234,7 @@ const packageToBabelConfig = makeWeakCache(
         const babel = file.options[("babel": string)];
 
         if (is.undefined(babel)) {
-            return null; 
+            return null;
         }
 
         if (typeof babel !== "object" || is.array(babel) || is.null(babel)) {
@@ -211,14 +252,14 @@ const packageToBabelConfig = makeWeakCache(
 const readConfigJSON5 = makeStaticFileCache((filepath, content) => {
     let options;
     try {
-        options = adone.data.json5.decode(content);
+        options = json5.parse(content);
     } catch (err) {
         err.message = `${filepath}: Error while parsing config - ${err.message}`;
         throw err;
     }
 
     if (!options) {
-        throw new Error(`${filepath}: No config detected`); 
+        throw new Error(`${filepath}: No config detected`);
     }
 
     if (typeof options !== "object") {

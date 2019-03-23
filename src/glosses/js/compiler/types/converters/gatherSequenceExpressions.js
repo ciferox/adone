@@ -1,3 +1,5 @@
+// @flow
+import type { Scope } from "@babel/traverse";
 import getBindingIdentifiers from "../retrievers/getBindingIdentifiers";
 import {
     isExpression,
@@ -31,12 +33,12 @@ export default function gatherSequenceExpressions(
             exprs.push(node.expression);
         } else if (isVariableDeclaration(node)) {
             if (node.kind !== "var") {
-                return;
+                return; 
             } // bailed
 
             for (const declar of (node.declarations: Array<any>)) {
                 const bindings = getBindingIdentifiers(declar);
-                for (const key in bindings) {
+                for (const key of Object.keys(bindings)) {
                     declars.push({
                         kind: node.kind,
                         id: cloneNode(bindings[key])
@@ -83,7 +85,7 @@ export default function gatherSequenceExpressions(
 
     if (exprs.length === 1) {
         return exprs[0];
-    }
+    } 
     return sequenceExpression(exprs);
-
+  
 }

@@ -1,9 +1,13 @@
-import { makeStaticFileCache } from "./utils";
+// @flow
 
 const {
-    is,
-    std: { path }
+    is
 } = adone;
+
+import path from "path";
+import { makeStaticFileCache } from "./utils";
+
+import type { ConfigFile, FilePackageData } from "./types";
 
 const PACKAGE_FILENAME = "package.json";
 

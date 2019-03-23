@@ -1,4 +1,5 @@
 // @flow
+import toFastProperties from "to-fast-properties";
 import "./core";
 import "./es2015";
 import "./flow";
@@ -14,10 +15,11 @@ import {
     BUILDER_KEYS,
     DEPRECATED_KEYS
 } from "./utils";
-
-const {
-    util: { toFastProperties }
-} = adone;
+import {
+    PLACEHOLDERS,
+    PLACEHOLDERS_ALIAS,
+    PLACEHOLDERS_FLIPPED_ALIAS
+} from "./placeholders";
 
 // We do this here, because at this point the visitor keys should be ready and setup
 toFastProperties(VISITOR_KEYS);
@@ -27,7 +29,10 @@ toFastProperties(NODE_FIELDS);
 toFastProperties(BUILDER_KEYS);
 toFastProperties(DEPRECATED_KEYS);
 
-const TYPES = Object.keys(VISITOR_KEYS)
+toFastProperties(PLACEHOLDERS_ALIAS);
+toFastProperties(PLACEHOLDERS_FLIPPED_ALIAS);
+
+const TYPES: Array<string> = Object.keys(VISITOR_KEYS)
     .concat(Object.keys(FLIPPED_ALIAS_KEYS))
     .concat(Object.keys(DEPRECATED_KEYS));
 
@@ -38,5 +43,8 @@ export {
     NODE_FIELDS,
     BUILDER_KEYS,
     DEPRECATED_KEYS,
+    PLACEHOLDERS,
+    PLACEHOLDERS_ALIAS,
+    PLACEHOLDERS_FLIPPED_ALIAS,
     TYPES
 };

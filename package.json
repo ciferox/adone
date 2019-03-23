@@ -248,6 +248,7 @@
     "timestamp-nano": "^1.0.0",
     "tiny-lru": "^5.1.4",
     "trickle": "^0.0.2",
+    "try-resolve": "^1.0.1",
     "unique-by": "^1.0.0",
     "unzip-stream": "^0.3.0",
     "unzipper": "^0.9.7",

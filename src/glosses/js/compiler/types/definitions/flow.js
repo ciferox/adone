@@ -72,7 +72,7 @@ defineType("ClassImplements", {
     }
 });
 
-defineInterfaceishType("DeclareClass", "TypeParameterInstantiation");
+defineInterfaceishType("DeclareClass");
 
 defineType("DeclareFunction", {
     visitor: ["id"],
@@ -191,7 +191,7 @@ defineType("GenericTypeAnnotation", {
     visitor: ["id", "typeParameters"],
     aliases: ["Flow", "FlowType"],
     fields: {
-        id: validateType("Identifier"),
+        id: validateType(["Identifier", "QualifiedTypeIdentifier"]),
         typeParameters: validateOptionalType("TypeParameterInstantiation")
     }
 });
@@ -204,7 +204,7 @@ defineType("InterfaceExtends", {
     visitor: ["id", "typeParameters"],
     aliases: ["Flow"],
     fields: {
-        id: validateType("Identifier"),
+        id: validateType(["Identifier", "QualifiedTypeIdentifier"]),
         typeParameters: validateOptionalType("TypeParameterInstantiation")
     }
 });
@@ -276,7 +276,11 @@ defineType("ObjectTypeAnnotation", {
         exact: {
             validate: assertValueType("boolean"),
             default: false
-        }
+        },
+        // If the inexact flag is present then this is an object type, and not a
+        // declare class, declare interface, or interface. If it is true, the
+        // object uses ... to express that it is inexact.
+        inexact: validateOptional(assertValueType("boolean"))
     }
 });
 

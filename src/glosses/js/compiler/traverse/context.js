@@ -1,9 +1,9 @@
-import NodePath from "./path";
-
 const {
     is,
     js: { compiler: { types: t } }
 } = adone;
+
+import NodePath from "./path";
 
 const testing = process.env.NODE_ENV === "test";
 
@@ -15,22 +15,22 @@ export default class TraversalContext {
         this.opts = opts;
     }
 
-    // parentPath;
+    parentPath: NodePath;
 
-    // scope;
+    scope;
 
-    // state;
+    state;
 
-    // opts;
+    opts;
 
-    // queue: ?Array<NodePath> = null;
+    queue: ?Array<NodePath> = null;
 
     /**
      * This method does a simple check to determine whether or not we really need to attempt
      * visit a node. This will prevent us from constructing a NodePath.
      */
 
-    shouldVisit(node) {
+    shouldVisit(node): boolean {
         const opts = this.opts;
         if (opts.enter || opts.exit) {
             return true;
@@ -42,7 +42,7 @@ export default class TraversalContext {
         }
 
         // check if we're going to traverse into this node
-        const keys = t.VISITOR_KEYS[node.type];
+        const keys: ?Array<string> = t.VISITOR_KEYS[node.type];
         if (!keys || !keys.length) {
             return false;
         }
@@ -57,7 +57,7 @@ export default class TraversalContext {
         return false;
     }
 
-    create(node, obj, key, listKey) {
+    create(node, obj, key, listKey): NodePath {
         return NodePath.get({
             parentPath: this.parentPath,
             parent: node,
@@ -67,7 +67,7 @@ export default class TraversalContext {
         });
     }
 
-    maybeQueue(path, notPriority) {
+    maybeQueue(path, notPriority?: boolean) {
         if (this.trap) {
             throw new Error("Infinite cycle detected");
         }
@@ -100,7 +100,7 @@ export default class TraversalContext {
         return this.visitQueue(queue);
     }
 
-    visitSingle(node, key) {
+    visitSingle(node, key): boolean {
         if (this.shouldVisit(node[key])) {
             return this.visitQueue([this.create(node, node, key)]);
         }
@@ -108,7 +108,7 @@ export default class TraversalContext {
 
     }
 
-    visitQueue(queue) {
+    visitQueue(queue: Array<NodePath>) {
         // set queue
         this.queue = queue;
         this.priorityQueue = [];
@@ -140,7 +140,7 @@ export default class TraversalContext {
             }
 
             // ensure we don't visit the same node twice
-            if (visited.includes(path.node)) {
+            if (visited.indexOf(path.node) >= 0) {
                 continue;
             }
             visited.push(path.node);

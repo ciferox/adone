@@ -1,6 +1,7 @@
+/* eslint-disable func-style */
 const {
     is,
-    cli: { chalk }
+    js: { highlight }
 } = adone;
 
 let deprecationWarningShown = false;
@@ -18,12 +19,13 @@ type NodeLocation = {
 /**
  * Chalk styles for code frame token types.
  */
-const DEFS = {
-    gutter: chalk.grey,
-    marker: chalk.red.bold,
-    message: chalk.red.bold
-};
-
+function getDefs(chalk) {
+    return {
+        gutter: chalk.grey,
+        marker: chalk.red.bold,
+        message: chalk.red.bold
+    };
+}
 
 /**
  * RegExp to test for newlines in terminal.
@@ -35,7 +37,7 @@ const NEWLINE = /\r\n|[\n\r\u2028\u2029]/;
  * Extract what lines should be marked and highlighted.
  */
 
-const getMarkerLines = function (
+function getMarkerLines(
     loc: NodeLocation,
     source: Array<string>,
     opts: Object,
@@ -100,19 +102,22 @@ const getMarkerLines = function (
     }
 
     return { start, end, markerLines };
-};
+}
 
-export const codeFrameColumns = function (
+export function codeFrameColumns(
     rawLines: string,
     loc: NodeLocation,
     opts: Object = {},
 ): string {
-    const highlighted = opts.highlightCode || opts.forceColor;
+    const highlighted =
+        (opts.highlightCode || opts.forceColor) && highlight.shouldHighlight(opts);
+    const chalk = highlight.getChalk(opts);
+    const defs = getDefs(chalk);
     const maybeHighlight = (chalkFn, string) => {
         return highlighted ? chalkFn(string) : string;
     };
     if (highlighted) {
-        rawLines = adone.js.highlight(rawLines);
+        rawLines = highlight(rawLines, opts);
     }
 
     const lines = rawLines.split(NEWLINE);
@@ -139,23 +144,23 @@ export const codeFrameColumns = function (
 
                     markerLine = [
                         "\n ",
-                        maybeHighlight(DEFS.gutter, gutter.replace(/\d/g, " ")),
+                        maybeHighlight(defs.gutter, gutter.replace(/\d/g, " ")),
                         markerSpacing,
-                        maybeHighlight(DEFS.marker, "^").repeat(numberOfMarkers)
+                        maybeHighlight(defs.marker, "^").repeat(numberOfMarkers)
                     ].join("");
 
                     if (lastMarkerLine && opts.message) {
-                        markerLine += ` ${maybeHighlight(DEFS.message, opts.message)}`;
+                        markerLine += ` ${maybeHighlight(defs.message, opts.message)}`;
                     }
                 }
                 return [
-                    maybeHighlight(DEFS.marker, ">"),
-                    maybeHighlight(DEFS.gutter, gutter),
+                    maybeHighlight(defs.marker, ">"),
+                    maybeHighlight(defs.gutter, gutter),
                     line,
                     markerLine
                 ].join("");
             }
-            return ` ${maybeHighlight(DEFS.gutter, gutter)}${line}`;
+            return ` ${maybeHighlight(defs.gutter, gutter)}${line}`;
 
         })
         .join("\n");
@@ -168,7 +173,7 @@ export const codeFrameColumns = function (
         return chalk.reset(frame);
     }
     return frame;
-};
+}
 
 /**
  * Create a code frame, adding line numbers, code highlighting, and pointing to a given position.

@@ -1,0 +1,4 @@
+{
+  "sourceType": "module",
+  "throws": "Unexpected reserved word 'public' (1:8)"
+}

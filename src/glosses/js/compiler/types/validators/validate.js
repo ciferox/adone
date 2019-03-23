@@ -1,25 +1,22 @@
+// @flow
 import { NODE_FIELDS } from "../definitions";
 
-const {
-    is
-} = adone;
-
-export default function validate(node, key, val) {
+export default function validate(node?: Object, key: string, val: any): void {
     if (!node) {
-        return;
+        return; 
     }
 
     const fields = NODE_FIELDS[node.type];
     if (!fields) {
-        return;
+        return; 
     }
 
     const field = fields[key];
     if (!field || !field.validate) {
-        return;
+        return; 
     }
-    if (field.optional && is.nil(val)) {
-        return;
+    if (field.optional && adone.is.nil(val)) {
+        return; 
     }
 
     field.validate(node, key, val);

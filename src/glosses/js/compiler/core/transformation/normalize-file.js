@@ -1,15 +1,100 @@
-import File from "./file/file";
-import generateMissingPluginMessage from "./util/missing-plugin-helper";
-
+// @flow
 const {
     is,
-    js: { compiler: { types: t, parse, codeFrameColumns } },
-    std: { path },
-    sourcemap: { convert },
+    js: { compiler: { codeFrameColumns, types: t }, parse },
     lodash: { cloneDeep }
 } = adone;
 
-const parser = function (pluginPasses, { parserOpts, highlightCode = true, filename = "unknown" }, code) {
+import path from "path";
+import type { PluginPasses } from "../config";
+import convertSourceMap, { typeof Converter } from "convert-source-map";
+import File from "./file/file";
+import generateMissingPluginMessage from "./util/missing-plugin-helper";
+
+
+export type NormalizedFile = {
+    code: string,
+    ast: {},
+    inputMap: Converter | null,
+};
+
+export default function normalizeFile(
+    pluginPasses: PluginPasses,
+    options: Object,
+    code: string,
+    ast: ?(BabelNodeFile | BabelNodeProgram),
+): File {
+    code = `${code || ""}`;
+
+    let inputMap = null;
+    if (options.inputSourceMap !== false) {
+        // If an explicit object is passed in, it overrides the processing of
+        // source maps that may be in the file itself.
+        if (typeof options.inputSourceMap === "object") {
+            inputMap = convertSourceMap.fromObject(options.inputSourceMap);
+        }
+
+        if (!inputMap) {
+            try {
+                inputMap = convertSourceMap.fromSource(code);
+
+                if (inputMap) {
+                    code = convertSourceMap.removeComments(code);
+                }
+            } catch (err) {
+                // debug("discarding unknown inline input sourcemap", err);
+                code = convertSourceMap.removeComments(code);
+            }
+        }
+
+        if (!inputMap) {
+            if (is.string(options.filename)) {
+                try {
+                    inputMap = convertSourceMap.fromMapFileSource(
+                        code,
+                        path.dirname(options.filename),
+                    );
+
+                    if (inputMap) {
+                        code = convertSourceMap.removeMapFileComments(code);
+                    }
+                } catch (err) {
+                    // debug("discarding unknown file input sourcemap", err);
+                    code = convertSourceMap.removeMapFileComments(code);
+                }
+            } else {
+                // debug("discarding un-loadable file input sourcemap");
+                code = convertSourceMap.removeMapFileComments(code);
+            }
+        }
+    }
+
+    if (ast) {
+        if (ast.type === "Program") {
+            ast = t.file(ast, [], []);
+        } else if (ast.type !== "File") {
+            throw new Error("AST root must be a Program or File node");
+        }
+        ast = cloneDeep(ast);
+    } else {
+        // The parser's AST types aren't fully compatible with the types generated
+        // by the logic in babel-types.
+        // $FlowFixMe
+        ast = parser(pluginPasses, options, code);
+    }
+
+    return new File(options, {
+        code,
+        ast,
+        inputMap
+    });
+}
+
+function parser(
+    pluginPasses: PluginPasses,
+    { parserOpts, highlightCode = true, filename = "unknown" }: Object,
+    code: string,
+) {
     try {
         const results = [];
         for (const plugins of pluginPasses) {
@@ -61,7 +146,9 @@ const parser = function (pluginPasses, { parserOpts, highlightCode = true, filen
                 },
             );
             if (missingPlugin) {
-                err.message = `${filename}: ${generateMissingPluginMessage(missingPlugin[0], loc, codeFrame)}`;
+                err.message =
+                    `${filename}: ${
+                        generateMissingPluginMessage(missingPlugin[0], loc, codeFrame)}`;
             } else {
                 err.message = `${filename}: ${err.message}\n\n${codeFrame}`;
             }
@@ -69,68 +156,4 @@ const parser = function (pluginPasses, { parserOpts, highlightCode = true, filen
         }
         throw err;
     }
-};
-
-export default function normalizeFile(pluginPasses, options, code, ast) {
-    code = `${code || ""}`;
-
-    let inputMap = null;
-    if (options.inputSourceMap !== false) {
-        // If an explicit object is passed in, it overrides the processing of
-        // source maps that may be in the file itself.
-        if (typeof options.inputSourceMap === "object") {
-            inputMap = convert.fromObject(options.inputSourceMap);
-        }
-
-        if (!inputMap) {
-            try {
-                inputMap = convert.fromSource(code);
-
-                if (inputMap) {
-                    code = convert.removeComments(code);
-                }
-            } catch (err) {
-                code = convert.removeComments(code);
-            }
-        }
-
-        if (!inputMap) {
-            if (is.string(options.filename)) {
-                try {
-                    inputMap = convert.fromMapFileSource(
-                        code,
-                        path.dirname(options.filename),
-                    );
-
-                    if (inputMap) {
-                        code = convert.removeMapFileComments(code);
-                    }
-                } catch (err) {
-                    code = convert.removeMapFileComments(code);
-                }
-            } else {
-                code = convert.removeMapFileComments(code);
-            }
-        }
-    }
-
-    if (ast) {
-        if (ast.type === "Program") {
-            ast = t.file(ast, [], []);
-        } else if (ast.type !== "File") {
-            throw new Error("AST root must be a Program or File node");
-        }
-        ast = cloneDeep(ast);
-    } else {
-        // The parser's AST types aren't fully compatible with the types generated
-        // by the logic in babel-types.
-        // $FlowFixMe
-        ast = parser(pluginPasses, options, code);
-    }
-
-    return new File(options, {
-        code,
-        ast,
-        inputMap
-    });
 }

@@ -1,4 +1,0 @@
-{
-  "plugins": ["flow"],
-  "throws": "typeof is a reserved word (1:9)"
-}

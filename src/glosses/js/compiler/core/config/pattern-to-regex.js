@@ -1,7 +1,9 @@
+// @flow
 const {
-    lodash: { escapeRegExp },
-    std: { path }
+    lodash: { escapeRegExp }
 } = adone;
+
+import path from "path";
 
 const sep = `\\${path.sep}`;
 const endSep = `(?:${sep}|$)`;
@@ -19,7 +21,10 @@ const starStarPatLast = `${starPat}*?${starPatLast}?`;
  * tests with * and **. If users want full complex pattern matching, then can
  * always use regex matching, or function validation.
  */
-export default function pathToPattern(pattern, dirname) {
+export default function pathToPattern(
+    pattern: string,
+    dirname: string,
+): RegExp {
     const parts = path.resolve(dirname, pattern).split(path.sep);
 
     return new RegExp(

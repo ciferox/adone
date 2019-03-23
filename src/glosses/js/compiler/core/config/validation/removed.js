@@ -1,3 +1,5 @@
+// @flow
+
 export default {
     auxiliaryComment: {
         message: "Use `auxiliaryCommentBefore` or `auxiliaryCommentAfter`"

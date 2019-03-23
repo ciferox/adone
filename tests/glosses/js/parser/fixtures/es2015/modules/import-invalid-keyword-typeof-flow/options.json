@@ -1,0 +1,4 @@
+{
+  "plugins": ["flow"],
+  "throws": "Unexpected keyword 'typeof' (1:9)"
+}

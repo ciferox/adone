@@ -1,0 +1,4 @@
+{
+  "sourceType": "script",
+  "throws": "Unexpected reserved word 'enum' (1:15)"
+}

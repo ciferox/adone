@@ -1,10 +1,12 @@
 const {
-    js: { compiler: { types: t, parse } }
+    js: { parse, compiler: { types: t } }
 } = adone;
 
-const getBody = (program) => parse(program, { sourceType: "module" }).program.body;
+function getBody(program) {
+    return parse(program, { sourceType: "module" }).program.body;
+}
 
-describe("js", "compiler", "types", "retrievers", () => {
+describe("retrievers", () => {
     describe("getBindingIdentifiers", () => {
         it("variable declarations", () => {
             const program = "var a = 1; let b = 2; const c = 3;";

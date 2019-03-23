@@ -1,4 +1,0 @@
-{
-  "sourceType": "module",
-  "throws": "await is a reserved word (1:15)"
-}

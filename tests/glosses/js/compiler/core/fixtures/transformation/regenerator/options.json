@@ -1,3 +1,0 @@
-{
-  "plugins": ["transform.es2015Destructuring", "transform.es2015Parameters", "transform.es2015BlockScoping", "transform.regenerator"]
-}

@@ -1,4 +1,0 @@
-{
-  "throws": "Identifier directly after number (2:4)",
-  "plugins": ["classPrivateProperties"]
-}

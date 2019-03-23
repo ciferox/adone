@@ -1,19 +1,21 @@
-import TraversalContext from "./context";
-import * as visitors from "./visitors";
-import * as cache from "./cache";
-
 const {
     js: { compiler: { types: t } },
     lodash: { includes }
 } = adone;
+import TraversalContext from "./context";
+import * as visitors from "./visitors";
+import * as cache from "./cache";
 
+export type { HubInterface } from "./hub";
+
+export { visitors };
 
 export default function traverse(
-    parent,
-    opts,
-    scope,
-    state,
-    parentPath,
+    parent: Object | Array<Object>,
+    opts?: Object,
+    scope?: Object,
+    state: Object,
+    parentPath: Object,
 ) {
     if (!parent) {
         return;
@@ -55,14 +57,14 @@ traverse.cheap = function (node, enter) {
 };
 
 traverse.node = function (
-    node,
-    opts,
-    scope,
-    state,
-    parentPath,
-    skipKeys,
+    node: Object,
+    opts: Object,
+    scope: Object,
+    state: Object,
+    parentPath: Object,
+    skipKeys?,
 ) {
-    const keys = t.VISITOR_KEYS[node.type];
+    const keys: Array = t.VISITOR_KEYS[node.type];
     if (!keys) {
         return;
     }
@@ -89,18 +91,18 @@ traverse.removeProperties = function (tree, opts) {
     return tree;
 };
 
-const hasBlacklistedType = function (path, state) {
+function hasBlacklistedType(path, state) {
     if (path.node.type === state.type) {
         state.has = true;
         path.stop();
     }
-};
+}
 
 traverse.hasType = function (
-    tree,
-    type,
-    blacklistTypes,
-) {
+    tree: Object,
+    type: Object,
+    blacklistTypes: Array<string>,
+): boolean {
     // the node we're searching in is blacklisted
     if (includes(blacklistTypes, tree.type)) {
         return false;
