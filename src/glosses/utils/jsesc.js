@@ -1,7 +1,48 @@
-const { is, data } = adone;
+const {
+    is
+} = adone;
 
+const object = {};
+const hasOwnProperty = object.hasOwnProperty;
+const forOwn = (object, callback) => {
+    for (const key in object) {
+        if (hasOwnProperty.call(object, key)) {
+            callback(key, object[key]);
+        }
+    }
+};
+
+const extend = (destination, source) => {
+    if (!source) {
+        return destination;
+    }
+    forOwn(source, (key, value) => {
+        destination[key] = value;
+    });
+    return destination;
+};
+
+const forEach = (array, callback) => {
+    const length = array.length;
+    let index = -1;
+    while (++index < length) {
+        callback(array[index]);
+    }
+};
+
+const toString = object.toString;
+const isObject = (value) => {
+    // This is a very simple check, but it’s good enough for what we need.
+    return toString.call(value) === "[object Object]";
+};
+
+/**
+ * --------------------------------------------------------------------------
+ */
+
+// https://mathiasbynens.be/notes/javascript-escapes#single
 const singleEscapes = {
-    "\"": "\\\"",
+    '"': '\\"',
     "'": "\\'",
     "\\": "\\\\",
     "\b": "\\b",
@@ -9,16 +50,16 @@ const singleEscapes = {
     "\n": "\\n",
     "\r": "\\r",
     "\t": "\\t"
+    // `\v` is omitted intentionally, because in IE < 9, '\v' == 'v'.
+    // '\v': '\\x0B'
 };
 const regexSingleEscape = /["'\\\b\f\n\r\t]/;
 
 const regexDigit = /[0-9]/;
-const regexWhitelist = /[ !#-&(-[\]-~]/;
+const regexWhitelist = /[ !#-&\(-\[\]-_a-~]/;
 
 export default function jsesc(argument, options) {
-    let oldIndent = "";
-    let indent;
-    const increaseIndentation = function () {
+    const increaseIndentation = () => {
         oldIndent = indent;
         ++options.indentLevel;
         indent = options.indent.repeat(options.indentLevel);
@@ -45,17 +86,28 @@ export default function jsesc(argument, options) {
         defaults.quotes = "double";
         defaults.wrap = true;
     }
-    options = adone.o(defaults, options);
-    if (options.quotes !== "single" && options.quotes !== "double") {
+    options = extend(defaults, options);
+    if (
+        options.quotes !== "single" &&
+        options.quotes !== "double" &&
+        options.quotes !== "backtick"
+    ) {
         options.quotes = "single";
     }
-    const quote = options.quotes === "double" ? '"' : "'";
+    const quote = options.quotes == "double" ?
+        '"' :
+        (options.quotes === "backtick" ?
+            "`" :
+            "'"
+        );
     const compact = options.compact;
     const lowercaseHex = options.lowercaseHex;
-    indent = options.indent.repeat(options.indentLevel);
+    let indent = options.indent.repeat(options.indentLevel);
+    let oldIndent = "";
     const inline1 = options.__inline1__;
     const inline2 = options.__inline2__;
     const newLine = compact ? "" : "\n";
+    let result;
     let isEmpty = true;
     const useBinNumbers = options.numbers === "binary";
     const useOctNumbers = options.numbers === "octal";
@@ -85,12 +137,12 @@ export default function jsesc(argument, options) {
         }
         if (is.buffer(argument)) {
             if (argument.length === 0) {
-                return "Buffer.alloc(0)";
+                return "Buffer.from([])";
             }
             return `Buffer.from(${jsesc(Array.from(argument), options)})`;
         }
         if (is.array(argument)) {
-            const result = [];
+            result = [];
             options.wrap = true;
             if (inline1) {
                 options.__inline1__ = false;
@@ -99,13 +151,13 @@ export default function jsesc(argument, options) {
             if (!inline2) {
                 increaseIndentation();
             }
-            for (let i = 0, n = argument.length; i < n; ++i) {
+            forEach(argument, (value) => {
                 isEmpty = false;
                 if (inline2) {
                     options.__inline2__ = false;
                 }
-                result.push((compact || inline2 ? "" : indent) + jsesc(argument[i], options));
-            }
+                result.push((compact || inline2 ? "" : indent) + jsesc(value, options));
+            });
             if (isEmpty) {
                 return "[]";
             }
@@ -116,7 +168,7 @@ export default function jsesc(argument, options) {
         } else if (is.number(argument)) {
             if (json) {
                 // Some number values (e.g. `Infinity`) cannot be represented in JSON.
-                return data.json.encode(argument);
+                return JSON.stringify(argument);
             }
             if (useDecNumbers) {
                 return String(argument);
@@ -132,10 +184,9 @@ export default function jsesc(argument, options) {
                 return `0b${argument.toString(2)}`;
             }
             if (useOctNumbers) {
-                // return `0o${argument.toString(8)}`;
                 return `0o${argument.toString(8)}`;
             }
-        } else if (Object.prototype.toString.call(argument) !== "[object Object]") {
+        } else if (!isObject(argument)) {
             if (json) {
                 // For some values (e.g. `undefined`, `function` objects),
                 // `JSON.stringify(value)` returns `undefined` (which isn’t valid
@@ -144,21 +195,16 @@ export default function jsesc(argument, options) {
             }
             return String(argument);
         } else { // it’s an object
-            const result = [];
+            result = [];
             options.wrap = true;
             increaseIndentation();
-            for (const key in argument) {
-                if (Object.hasOwnProperty.call(argument, key)) {
-                    isEmpty = false;
-                    const ekey = jsesc(key, options);
-                    const evalue = jsesc(argument[key], options);
-                    if (compact) {
-                        result.push(`${ekey}:${evalue}`);
-                    } else {
-                        result.push(`${indent}${ekey}: ${evalue}`);
-                    }
-                }
-            }
+            forOwn(argument, (key, value) => {
+                isEmpty = false;
+                result.push(
+                    `${(compact ? "" : indent) +
+                    jsesc(key, options)}:${compact ? "" : " "}${jsesc(value, options)}`
+                );
+            });
             if (isEmpty) {
                 return "{}";
             }
@@ -170,7 +216,7 @@ export default function jsesc(argument, options) {
     // Loop over each code unit in the string and escape it
     let index = -1;
     const length = string.length;
-    let result = "";
+    result = "";
     while (++index < length) {
         const character = string.charAt(index);
         if (options.es6) {
@@ -197,11 +243,15 @@ export default function jsesc(argument, options) {
             if (regexWhitelist.test(character)) {
                 // It’s a printable ASCII character that is not `"`, `'` or `\`,
                 // so don’t escape it.
-                result = `${result}${character}`;
+                result += character;
                 continue;
             }
             if (character === '"') {
                 result += quote === character ? '\\"' : character;
+                continue;
+            }
+            if (character === "`") {
+                result += quote === character ? "\\`" : character;
                 continue;
             }
             if (character === "'") {
@@ -209,7 +259,11 @@ export default function jsesc(argument, options) {
                 continue;
             }
         }
-        if (character === "\0" && !json && !regexDigit.test(string.charAt(index + 1))) {
+        if (
+            character === "\0" &&
+            !json &&
+            !regexDigit.test(string.charAt(index + 1))
+        ) {
             result += "\\0";
             continue;
         }
@@ -235,9 +289,14 @@ export default function jsesc(argument, options) {
     if (options.wrap) {
         result = quote + result + quote;
     }
+    if (quote === "`") {
+        result = result.replace(/\$\{/g, "\\\$\{");
+    }
     if (options.isScriptContext) {
         // https://mathiasbynens.be/notes/etago
-        return result.replace(/<\/(script|style)/gi, "<\\/$1").replace(/<!--/g, json ? "\\u003C!--" : "\\x3C!--");
+        return result
+            .replace(/<\/(script|style)/gi, "<\\/$1")
+            .replace(/<!--/g, json ? "\\u003C!--" : "\\x3C!--");
     }
     return result;
-}
+};

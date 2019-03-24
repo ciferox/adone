@@ -26,6 +26,7 @@ export default {
             "transform.flowStripTypes",
             ["transform.decorators", { legacy: true }],
             ["transform.classProperties", { loose: true }],
+            ["transform.privateMethods", { loose: true }],
             // "transform.asyncGeneratorFunctions",
             "transform.modulesCommonjs",
             // "transform.functionBind",

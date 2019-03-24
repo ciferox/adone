@@ -241,6 +241,7 @@ adone.lazify({
     fake: "./glosses/fake",
     fast: "./glosses/fast",
     fs: "./glosses/fs",
+    fsm: "./glosses/fsm",
     geoip: "./glosses/geoip",
     git: "./glosses/git",
     globals: "./glosses/globals",

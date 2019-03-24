@@ -43,6 +43,7 @@ const plugins = {
         // regenerator: "./transform/regenerator",
         // runtime: "./transform/runtime",
         numericSeparator: "./transform/numeric_separator",
+        privateMethods: "./transform/private_methods"
         // exponentiationOperator: "./transform/exponentiation_operator",
         // exportNamespaceFrom: "./transform/export_namespace_from"
         // templateLiterals: "./transform/template_literals",

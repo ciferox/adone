@@ -367,6 +367,12 @@
                     "src": "src/glosses/diff/**/*.js",
                     "dst": "lib/glosses/diff"
                 },
+                "error": {
+                    "description": "Exceptions and error helpers",
+                    "task": "transpile",
+                    "src": "src/glosses/errors/**/*.js",
+                    "dst": "lib/glosses/errors"
+                },
                 "event": {
                     "description": "Event emitters and other event utilites",
                     "task": "transpile",
@@ -384,12 +390,6 @@
                     "task": "transpile",
                     "src": "src/glosses/fast/**/*.js",
                     "dst": "lib/glosses/fast"
-                },
-                "error": {
-                    "description": "Exceptions and error helpers",
-                    "task": "transpile",
-                    "src": "src/glosses/errors/**/*.js",
-                    "dst": "lib/glosses/errors"
                 },
                 "fs": {
                     "description": "Filesystem utilites",
@@ -409,6 +409,12 @@
                             }
                         }
                     }
+                },
+                "fsm": {
+                    "description": "Finite State Machine implementation",
+                    "task": "transpile",
+                    "src": "src/glosses/fsm/**/*.js",
+                    "dst": "lib/glosses/fsm"
                 },
                 "geoip": {
                     "description": "Geolocation utilites",
