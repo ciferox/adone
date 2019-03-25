@@ -3,35 +3,35 @@ const {
 } = adone;
 
 class AppSubsystem1 extends app.Subsystem {
-    configure() {
+    onConfigure() {
         console.log("configure1");
     }
 
-    initialize() {
+    onInitialize() {
         console.log("initialize1");
     }
 
-    uninitialize() {
+    onUninitialize() {
         console.log("uninitialize1");
     }
 }
 
 class AppSubsystem2 extends app.Subsystem {
-    configure() {
+    onConfigure() {
         console.log("configure2");
     }
 
-    initialize() {
+    onInitialize() {
         console.log("initialize2");
     }
 
-    uninitialize() {
+    onUninitialize() {
         console.log("uninitialize2");
     }
 }
 
 class TestApp extends adone.app.Application {
-    async configure() {
+    async onConfigure() {
         this.addSubsystem({
             subsystem: new AppSubsystem1()
         });
@@ -43,15 +43,15 @@ class TestApp extends adone.app.Application {
         console.log("app_configure");
     }
 
-    initialize() {
+    onInitialize() {
         console.log("app_initialize");
     }
 
-    uninitialize() {
+    onUninitialize() {
         console.log("app_uninitialize");
     }
 
-    main() {
+    run() {
         return 0;
     }
 }

@@ -1,5 +1,5 @@
 class TestApp extends adone.app.Application {
-    main() {
+    run() {
         try {
             this.isMain = false;
             console.log("bad");

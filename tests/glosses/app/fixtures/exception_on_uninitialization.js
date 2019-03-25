@@ -3,11 +3,11 @@ const {
 } = adone;
 
 class TestApp extends adone.app.Application {
-    main() {
+    run() {
         return 0;
     }
 
-    async uninitialize() {
+    async onUninitialize() {
         throw new adone.error.RuntimeException("Something bad happend during uninitialization");
     }
 }

@@ -4,22 +4,22 @@ const {
 } = adone;
 
 class Hello extends app.Subsystem {
-    configure() {
+    onConfigure() {
         console.log("hello configure");
     }
 
-    async initialize() {
+    async onInitialize() {
         await promise.delay(500);
         console.log("hello init");
     }
 
-    uninitialize() {
+    onUninitialize() {
         console.log("hello uninit");
     }
 }
 
 class TestApp extends app.Application {
-    async main() {
+    async run() {
         console.log("main");
         await Promise.all([
             this.loadSubsystem(new Hello(), { name: "hello" }),

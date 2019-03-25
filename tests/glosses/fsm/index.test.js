@@ -8,21 +8,30 @@ const {
 assertion.use(assertion.extension.checkmark);
 
 describe("fsm", () => {
+    const scheme0 = {
+        initial: "new",
+        transitions: [
+            { name: "create", from: "new", to: "_creating" },
+            { name: "_createDone", from: "_creating", to: "created" }
+        ]
+    };
+
     const scheme1 = {
         initial: "new",
         transitions: [
-            { event: "create", from: "new", to: "created" },
-            { event: "delete", from: "created", to: "deleted" },
-            { event: "reset", from: "*", to: "new" }
+            { name: "create", from: "new", to: "created" },
+            { name: "delete", from: "created", to: "deleted" },
+            { name: "reset", from: "*", to: "new" }
         ]
     };
 
     const scheme2 = {
         initial: "initial",
         transitions: [
-            { event: "configure", from: "initial", to: ["configuring", "configured"] },
-            { event: "initialize", from: "configured", to: ["initializing", "initialized"] },
-            { event: "bad", from: "configured", to: "unknown" }
+            { name: "configure", from: ["initial", "uninitialized"], to: ["configuring", "configured"] },
+            { name: "initialize", from: "configured", to: ["initializing", "initialized"] },
+            { name: "uninitialize", from: "initialized", to: ["uninitializing", "uninitialized"] },
+            { name: "bad", from: "configured", to: "unknown" }
         ]
     };
 
@@ -34,10 +43,9 @@ describe("fsm", () => {
         assert.throws(() => new StateMachine({ initial: "new" }), error.NotValidException, /Transitions/);
     });
 
-    describe("publick methods", () => {
+    describe("public methods", () => {
         const methods = [
             "getState",
-            "onInvalidTransition",
             "waitUntilStateEnters",
             "waitUntilStateLeaves"
         ];
@@ -146,7 +154,32 @@ describe("fsm", () => {
         expect(true).to.be.ok.mark();
     });
 
-    it("waitUntilStateEnters() without timeout", async (done) => {
+    it("allow multiple from states in transition", async () => {
+        const sm = new StateMachine(scheme2);
+
+        await sm.configure();
+        await sm.initialize();
+        await sm.uninitialize();
+        await sm.configure();
+    });
+
+    it("correct processing of events with underline prefixes", async () => {
+        class My extends StateMachine {
+            _onCreateDone(...args) {
+                return args;
+            }
+
+            async onCreate(...args) {
+                await promise.delay(1);
+                return this._createDone(...args);
+            }
+        }
+        const sm = new My(scheme0);
+
+        assert.sameMembers(await sm.create("a", "b"), ["a", "b"]);
+    });
+
+    it("waitUntilStateEnters()", async (done) => {
         const st = new StateMachine(scheme2);
 
         st.waitUntilStateEnters("initialized").then(done);
@@ -155,7 +188,7 @@ describe("fsm", () => {
         await st.initialize();
     });
 
-    it("waitUntilStateEnters() with timeout", async (done) => {
+    it("waitUntilStateEnters() with expired timeout", async (done) => {
         const st = new StateMachine(scheme2);
 
         st.waitUntilStateEnters("configured", 500).then(done);
@@ -167,7 +200,7 @@ describe("fsm", () => {
         await st.initialize();
     });
 
-    it("waitUntilStateLeaves() without timeout", async (done) => {
+    it("waitUntilStateLeaves()", async (done) => {
         const st = new StateMachine(scheme2);
 
         await st.configure();
@@ -176,7 +209,7 @@ describe("fsm", () => {
         await st.initialize();
     });
 
-    it("waitUntilStateLeaves() with timeout", async (done) => {
+    it("waitUntilStateLeaves() with expired timeout", async (done) => {
         const st = new StateMachine(scheme2);
 
         st.waitUntilStateLeaves("initial", 500).then(done);
@@ -184,5 +217,34 @@ describe("fsm", () => {
         st.waitUntilStateLeaves("configured", 100).then(() => assert.fail("bad")).catch(done);
         await promise.delay(300);
         await st.initialize();
+    });
+
+    it("correct exception handling with setting default failed state", async () => {
+        class My extends StateMachine {
+            onConfigure() {
+                throw new error.RuntimeException("something bad happend");
+            }
+        }
+
+        const st = new My(scheme2);
+        assert.equal(st.getState(), "initial");
+        await assert.throws(async () => st.configure(), error.RuntimeException);
+        assert.equal(st.getState(), "fail");
+    });
+
+    it("correct exception handling with setting custom failed state", async () => {
+        class My extends StateMachine {
+            onConfigure() {
+                throw new error.RuntimeException("something bad happend");
+            }
+        }
+
+        const st = new My({
+            ...scheme2,
+            fail: "failed"
+        });
+        assert.equal(st.getState(), "initial");
+        await assert.throws(async () => st.configure(), error.RuntimeException);
+        assert.equal(st.getState(), "failed");
     });
 });

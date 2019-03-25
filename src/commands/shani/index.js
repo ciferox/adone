@@ -40,7 +40,8 @@ export default class ShaniCLI extends Subsystem {
             {
                 name: "--first",
                 help: "exit if some test fails",
-                group: "flow" },
+                group: "flow"
+            },
             {
                 name: "--timeout",
                 help: "default timeout for all tests",
@@ -82,7 +83,8 @@ export default class ShaniCLI extends Subsystem {
             {
                 name: "--skip-slow",
                 help: "skip slow tests",
-                group: "flow" },
+                group: "flow"
+            },
             {
                 name: "--per-process",
                 help: "run each test in a separate process",
@@ -110,8 +112,10 @@ export default class ShaniCLI extends Subsystem {
             {
                 name: "--dont-use-config",
                 help: "dont use the config file",
-                group: "config" },
-            { name: "--dont-use-map", help: "dont use a custom test name mapping",
+                group: "config"
+            },
+            {
+                name: "--dont-use-map", help: "dont use a custom test name mapping",
                 group: "config"
             },
 
@@ -161,7 +165,8 @@ export default class ShaniCLI extends Subsystem {
                 group: "output"
             },
 
-            { name: "--print-cover-stats", nargs: "?", holder: "FILTER", help: "Print cover stats if exists",
+            {
+                name: "--print-cover-stats", nargs: "?", holder: "FILTER", help: "Print cover stats if exists",
                 group: "coverage"
             },
             {

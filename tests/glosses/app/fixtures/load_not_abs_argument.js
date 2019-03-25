@@ -3,21 +3,21 @@ const {
 } = adone;
 
 class Hello extends app.Subsystem {
-    configure() {
+    onConfigure() {
         console.log("hello configure");
     }
 
-    initialize() {
+    onInitialize() {
         console.log("hello init");
     }
 
-    uninitialize() {
+    onUninitialize() {
         console.log("hello uninit");
     }
 }
 
 class TestApp extends app.Application {
-    async main() {
+    async run() {
         console.log("main");
         await this.loadSubsystem(new Hello(), { name: "hello" });
         await this.loadSubsystem("hello");

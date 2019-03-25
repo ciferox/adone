@@ -9,14 +9,14 @@ class AppSubsystem extends app.Subsystem {
 }
 
 class TestApp extends adone.app.Application {
-    async configure() {
+    async onConfigure() {
         this.addSubsystem({
             subsystem: new AppSubsystem(),
             bind: "removeListener"
         });
     }
 
-    main() {
+    run() {
         console.log(this.sys1.getData());
         return 0;
     }

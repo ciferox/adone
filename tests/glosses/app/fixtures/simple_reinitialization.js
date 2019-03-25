@@ -4,22 +4,22 @@ class TestApp extends adone.app.Application {
         console.log("non configured");
     }
 
-    configure() {
+    onConfigure() {
         console.log("configured");
     }
 
-    initialize() {
+    onInitialize() {
         console.log("initialized");
     }
 
-    main() {
+    async run() {
         console.log("main");
         setTimeout(() => {
-            this._reinitialize();
+            this.reinitialize();
         }, 300);
     }
 
-    uninitialize() {
+    onUninitialize() {
         console.log("uninitialized");
     }
 }

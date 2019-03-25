@@ -3,7 +3,7 @@ const {
 } = adone;
 
 class TestApp extends app.Application {
-    async main() {
+    async run() {
         console.log("main");
         await this.unloadSubsystem("hello");
         return 0;

@@ -1,5 +1,5 @@
 class TestApp extends adone.app.Application {
-    main() {
+    run() {
         console.log(this.name);
         return 0;
     }

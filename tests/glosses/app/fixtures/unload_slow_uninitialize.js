@@ -4,29 +4,29 @@ const {
 } = adone;
 
 class Hello extends app.Subsystem {
-    configure() {
+    onConfigure() {
         console.log("hello configure");
     }
 
-    initialize() {
+    onInitialize() {
         console.log("hello init");
     }
 
-    async uninitialize() {
+    async onUninitialize() {
         await promise.delay(500);
         console.log("hello uninit");
     }
 }
 
 class TestApp extends app.Application {
-    async configure() {
+    async onConfigure() {
         this.addSubsystem({
             name: "hello",
             subsystem: new Hello()
         });
     }
 
-    async main() {
+    async run() {
         console.log("main");
         await Promise.all([
             this.uninitializeSubsystem("hello"),

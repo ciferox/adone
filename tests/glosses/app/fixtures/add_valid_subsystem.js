@@ -3,27 +3,27 @@ const {
 } = adone;
 
 class AppSubsystem extends app.Subsystem {
-    configure() {
+    onConfigure() {
         console.log("configure");
     }
 
-    initialize() {
+    onInitialize() {
         console.log("initialize");
     }
 
-    uninitialize() {
+    onUninitialize() {
         console.log("uninitialize");
     }
 }
 
 class TestApp extends adone.app.Application {
-    async configure() {
+    async onConfigure() {
         this.addSubsystem({
             subsystem: new AppSubsystem()
         });
     }
 
-    main() {
+    run() {
         return 0;
     }
 }

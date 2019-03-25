@@ -3,28 +3,28 @@ const {
 } = adone;
 
 class AppSubsystem extends app.Subsystem {
-    configure() {
+    onConfigure() {
         console.log("configure");
     }
 
-    initialize() {
+    onInitialize() {
         console.log("initialize");
     }
 
-    uninitialize() {
+    onUninitialize() {
         console.log("uninitialize");
     }
 }
 
 class TestApp extends adone.app.Application {
-    async configure() {
+    async onConfigure() {
         this.addSubsystem({
             name: "hello",
             subsystem: new AppSubsystem()
         });
     }
 
-    async main() {
+    async run() {
         console.log("main");
         await this.uninitializeSubsystem("hello");
         await this.deleteSubsystem("hello");

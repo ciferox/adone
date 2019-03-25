@@ -1511,7 +1511,7 @@ export default class AppHelper {
     defineMainCommand(options) {
         options = adone.o({
             name: this.app.name,
-            handler: (args, opts, meta) => this.app.main(args, opts, meta),
+            handler: (args, opts, meta) => this.app.run(args, opts, meta),
             options: [],
             arguments: [],
             commands: [],
@@ -1520,7 +1520,7 @@ export default class AppHelper {
             colors: "default"
         }, options);
 
-        options.handler[INTERNAL] = this.app.main[INTERNAL];
+        options.handler[INTERNAL] = this.app.run[INTERNAL];
 
         if (!hasColorsSupport) {
             options.colors = false;
@@ -1879,7 +1879,7 @@ export default class AppHelper {
                                     // We have lazy loaded subsystem, try load it and reinit command
                                     const sysInfo = await command.loader.call(command.subsystem); // eslint-disable-line
                                     sysInfo.instance[COMMAND] = command;
-                                    await this.app._configureSubsystem(sysInfo); // eslint-disable-line
+                                    await this.app.configureSubsystem(sysInfo.name); // eslint-disable-line
 
                                     // Check for meta data and if exists define sub commands, ...
                                     const sysMeta = Reflect.getMetadata(SUBSYSTEM_ANNOTATION, sysInfo.instance.constructor);

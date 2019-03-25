@@ -62,7 +62,7 @@ const command = (name) => std.path.join(__dirname, "..", "lib", "commands", name
     ]
 })
 class AdoneCLI extends app.Application {
-    async configure() {
+    async onConfigure() {
         !is.windows && this.exitOnSignal("SIGINT");
 
         this.config = await Configuration.load();
@@ -88,7 +88,7 @@ class AdoneCLI extends app.Application {
         await this._addInstalledSubsystems();
     }
 
-    main() {
+    run() {
         // print usage message by default
         console.log(`${this.helper.getHelpMessage()}\n`);
         return app.EXIT_SUCCESS;

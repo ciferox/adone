@@ -1,15 +1,16 @@
 const {
+    is,
     app
 } = adone;
 
 class Sys111 extends app.Subsystem {
-    configure() {
+    onConfigure() {
         console.log(this.root === adone.app.runtime.app);
     }
 }
 
 class Sys11 extends app.Subsystem {
-    async configure() {
+    async onConfigure() {
         this.addSubsystem({
             subsystem: new Sys111()
         });
@@ -18,7 +19,7 @@ class Sys11 extends app.Subsystem {
 }
 
 class Sys1 extends app.Subsystem {
-    async configure() {
+    async onConfigure() {
         this.addSubsystem({
             subsystem: new Sys11()
         });
@@ -27,14 +28,14 @@ class Sys1 extends app.Subsystem {
 }
 
 class TestApp extends app.Application {
-    async configure() {
+    async onConfigure() {
         this.addSubsystem({
             subsystem: new Sys1()
         });
     }
 
-    main() {
-        console.log(this.root === this);
+    run() {
+        console.log(is.undefined(this.root));
         return 0;
     }
 }

@@ -11,6 +11,14 @@ const {
     STATE
 } = app;
 
+const APPLICATION_FSM_TRANSITIONS = [
+    {
+        name: "run",
+        from: STATE.INITIALIZED,
+        to: STATE.RUNNING
+    }
+];
+
 const ERROR_SCOPE = Symbol.for("adone.app.Application#errorScope");
 const HANDLERS = Symbol();
 const EXITING = Symbol();
@@ -18,18 +26,20 @@ const EXIT_SIGNALS = Symbol();
 
 export default class Application extends app.Subsystem {
     constructor({ name = std.path.basename(process.argv[1], std.path.extname(process.argv[1])) } = {}) {
-        super({ name });
+        super({
+            name,
+            transitions: APPLICATION_FSM_TRANSITIONS,
+            allowedStates: {
+                uninitialize: STATE.RUNNING
+            }
+        });
 
         this[EXITING] = false;
         this[HANDLERS] = null;
         this[ERROR_SCOPE] = false;
         this[EXIT_SIGNALS] = null;
 
-        this.setRoot(this);
         this.setMaxListeners(Infinity);
-    }
-
-    main() {
     }
 
     exitOnSignal(...names) {
@@ -49,27 +59,26 @@ export default class Application extends app.Subsystem {
         return this;
     }
 
-    async exit(code = EXIT_SUCCESS) {
+    async stop(code = EXIT_SUCCESS) {
         if (this[EXITING]) {
             return;
         }
         this[EXITING] = true;
 
         try {
-            switch (this.state) {
+            switch (this.getState()) {
                 // initializing?
                 case STATE.INITIALIZED:
                 case STATE.RUNNING:
-                    await this._uninitialize();
+                    await this.uninitialize();
             }
             this.removeProcessHandlers();
-            await this.emitParallel("exit", code);
         } catch (err) {
             console.error(adone.pretty.error(err));
             code = EXIT_ERROR;
         }
 
-        await this.emitParallel("exit");
+        await this.emitParallel("exit", code);
 
         // Only main application instance can exit process.
         if (this === adone.app.runtime.app) {
@@ -101,7 +110,7 @@ export default class Application extends app.Subsystem {
         if (!is.integer(errCode)) {
             errCode = adone.app.EXIT_ERROR;
         }
-        return this.exit(errCode);
+        return this.stop(errCode);
     }
 
     _uncaughtException(...args) {
@@ -117,7 +126,7 @@ export default class Application extends app.Subsystem {
     }
 
     _signalExit(sigName) {
-        return this.exit(128 + util.signalNameToCode(sigName));
+        return this.stop(128 + util.signalNameToCode(sigName));
     }
 
     // Helper methods used in bootstraping code.

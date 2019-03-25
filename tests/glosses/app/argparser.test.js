@@ -3,7 +3,7 @@ const {
     app: { CliApplication }
 } = adone;
 
-describe("argv handling", () => {
+describe.todo("argv handling", () => {
     let app = null;
 
     const parse = async (...args) => {

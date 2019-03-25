@@ -4,47 +4,15 @@ const {
 } = adone;
 
 export const STATE = {
-    INITIAL: 0,
-    CONFIGURING: 1,
-    CONFIGURED: 2,
-    INITIALIZING: 3,
-    INITIALIZED: 4,
-    RUNNING: 5,
-    UNINITIALIZING: 6,
-    UNINITIALIZED: 7,
-    FAILED: 8
-};
-
-export const humanizeState = (state) => {
-    switch (state) {
-        case STATE.INITIAL: {
-            return "initial";
-        }
-        case STATE.CONFIGURING: {
-            return "configuring";
-        }
-        case STATE.CONFIGURED: {
-            return "configured";
-        }
-        case STATE.INITIALIZING: {
-            return "initializing";
-        }
-        case STATE.INITIALIZED: {
-            return "initialized";
-        }
-        case STATE.RUNNING: {
-            return "running";
-        }
-        case STATE.UNINITIALIZING: {
-            return "uninitializing";
-        }
-        case STATE.UNINITIALIZED: {
-            return "uninitialized";
-        }
-        case STATE.FAILED: {
-            return "failed";
-        }
-    }
+    INITIAL: "initial",
+    CONFIGURING: "configuring",
+    CONFIGURED: "configured",
+    INITIALIZING: "initializing",
+    INITIALIZED: "initialized",
+    RUNNING: "running",
+    UNINITIALIZING: "uninitializing",
+    UNINITIALIZED: "uninitialized",
+    FAIL: "fail"
 };
 
 export const EXIT_SUCCESS = 0;
@@ -169,7 +137,7 @@ const _bootstrapApp = async (app, {
         const uncaughtException = (...args) => app._uncaughtException(...args);
         const unhandledRejection = (...args) => app._unhandledRejection(...args);
         const rejectionHandled = (...args) => app._rejectionHandled(...args);
-        const beforeExit = () => app.exit();
+        const beforeExit = () => app.stop();
         const signalExit = (sigName) => app._signalExit(sigName);
         app._setHandlers({
             uncaughtException,
@@ -238,7 +206,7 @@ const _bootstrapApp = async (app, {
                 }
             }
 
-            await app._configure();
+            await app.configure();
 
             if (sysMeta) {
                 if (is.array(sysMeta.commands)) {
@@ -277,34 +245,33 @@ const _bootstrapApp = async (app, {
                 for (const error of errors) {
                     console.log(error.message);
                 }
-                await app.exit(app.EXIT_ERROR);
+                await app.stop(app.EXIT_ERROR);
             }
 
             app._setErrorScope(true);
-            await app._initialize();
+            await app.initialize();
 
             await app.emitParallel("before run", command);
             code = await command.execute(rest, match);
         } else {
             app._setErrorScope(true);
-            await app._configure();
-            await app._initialize();
-            code = await app.main();
+            await app.configure();
+            await app.initialize();
+            code = await app.run();
         }
 
         app._setErrorScope(false);
 
         if (is.integer(code)) {
-            await app.exit(code);
+            await app.stop(code);
             return;
         }
-        await app.setState(STATE.RUNNING);
     } catch (err) {
         if (app._isAppErrorScope()) {
             return app.fireException(err);
         }
         console.error(adone.pretty.error(err));
-        return app.exit(app.EXIT_ERROR);
+        return app.stop(app.EXIT_ERROR);
     }
 };
 
@@ -312,11 +279,11 @@ export const run = async (App, {
     useArgs = false
 } = {}) => {
     if (is.null(runtime.app) && is.class(App)) {
+        const app = new App();
         if (useArgs) {
             // mark the default main as internal to be able to distinguish internal from user-defined handlers
-            App.prototype.main[INTERNAL] = true;
+            app.run[INTERNAL] = true;
         }
-        const app = new App();
         if (!is.application(app)) {
             console.error(adone.cli.chalk.red("Invalid application class"));
             process.exit(1);
@@ -333,7 +300,7 @@ export const run = async (App, {
     const allProps = util.entries(_App, { enumOnly: false });
 
     if (!is.null(runtime.app)) {
-        await runtime.app._uninitialize();
+        await runtime.app.uninitialize();
         runtime.app = null;
     }
 
@@ -361,15 +328,14 @@ export const run = async (App, {
         XApplication.prototype[s] = App.prototype[s];
     }
 
-    if (useArgs) {
-        // mark the default main as internal to be able to distinguish internal from user-defined handlers
-        App.prototype.main[INTERNAL] = true;
-    }
-
     const app = new XApplication();
     for (const name of props) {
         const descriptor = Object.getOwnPropertyDescriptor(_App, name);
         Object.defineProperty(app, name, descriptor);
+    }
+    if (useArgs) {
+        // mark the default main as internal to be able to distinguish internal from user-defined handlers
+        app.run[INTERNAL] = true;
     }
 
     return _bootstrapApp(app, {

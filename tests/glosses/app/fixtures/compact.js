@@ -1,24 +1,24 @@
 adone.app.run({
     status: "non configured",
-    configure() {
+    onConfigure() {
         console.log(this.status);
         this.status = "configured";
         console.log(this.status);
     },
 
-    initialize() {
+    onInitialize() {
         this.status = "initialized";
         console.log(this.status);
     },
 
-    main() {
+    run() {
         this.status = "run";
         console.log(this.status);
         console.log("adone compact application");
         return 0;
     },
 
-    uninitialize() {
+    onUninitialize() {
         this.status = "uninitialized";
         console.log(this.status);
     }

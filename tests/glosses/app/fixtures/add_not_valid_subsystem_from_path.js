@@ -4,7 +4,7 @@ const {
 } = adone;
 
 class TestApp extends adone.app.Application {
-    async configure() {
+    async onConfigure() {
         try {
             this.addSubsystem({
                 subsystem: std.path.join(__dirname, "not_valid_subsystem.js")
@@ -14,7 +14,7 @@ class TestApp extends adone.app.Application {
         }
     }
 
-    main() {
+    run() {
         return 0;
     }
 }

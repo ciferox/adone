@@ -87,7 +87,7 @@ describe("Application", () => {
                     }
 
                     const err = assert.throws(() => new SubSys());
-                    assert.instanceOf(err, adone.error.NotAllowedException);
+                    assert.instanceOf(err, adone.error.ImmutableException);
                 });
 
                 it("should throw if a subsystem with the same name already exists", async () => {
@@ -171,7 +171,7 @@ describe("Application", () => {
 
             it("should throw on delete of initialized subsystem", async () => {
                 const result = await forkProcess(fixture("delete_initialized_subsystem.js"));
-                assert.equal(result.stdout, "configure\ninitialize\nmain\nThe subsystem is used and can not be deleted\ntrue\nuninitialize");
+                assert.equal(result.stdout, "configure\ninitialize\nmain\nThe subsystem is used (state: initialized) and can not be deleted\ntrue\nuninitialize");
             });
         });
 
@@ -359,27 +359,27 @@ describe("Application", () => {
 
             it("by default subsystem should not be owned", () => {
                 const sys = new Sys();
-                assert.isFalse(sys.isOwned);
+                assert.isFalse(sys.owned);
             });
 
             it("subsystem should be owned after addSubsystem() and should be freed after deleteSubsystem() ", () => {
                 const sys = new Sys();
 
                 const subSys = new SubSys();
-                assert.isFalse(sys.isOwned);
+                assert.isFalse(sys.owned);
 
                 sys.addSubsystem({
                     name: "s",
                     subsystem: subSys
                 });
 
-                assert.isFalse(sys.isOwned);
-                assert.isTrue(subSys.isOwned);
+                assert.isFalse(sys.owned);
+                assert.isTrue(subSys.owned);
 
                 sys.deleteSubsystem("s");
 
-                assert.isFalse(sys.isOwned);
-                assert.isFalse(subSys.isOwned);
+                assert.isFalse(sys.owned);
+                assert.isFalse(subSys.owned);
             });
 
             it("subsystem can be owned once", () => {
@@ -436,5 +436,4 @@ describe("Application", () => {
             });
         });
     });
-    
 });

@@ -1,5 +1,5 @@
 class TestApp {
-    main() {
+    run() {
         console.log(this.name);
         return 0;
     }

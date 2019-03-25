@@ -16,7 +16,7 @@ const {
 } = adone;
 
 adone.app.run({
-    async main() {
+    async run() {
         this._uncaughtException = (err) => {
             // console.log("Uncaught exception", err.stack);
         };

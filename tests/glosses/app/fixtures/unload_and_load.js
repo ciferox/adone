@@ -5,21 +5,21 @@ const {
 
 const subsystemCode = (index) => `
 module.exports = class Hello extends adone.app.Subsystem {
-    configure() {
+    onConfigure() {
         console.log("hello${index} configure");
     }
 
-    initialize() {
+    onInitialize() {
         console.log("hello${index} init");
     }
 
-    uninitialize() {
+    onUninitialize() {
         console.log("hello${index} uninit");
     }
 }`;
 
 class TestApp extends app.Application {
-    async configure() {
+    async onConfigure() {
         this.tmpdir = await fs.Directory.createTmp();
         this.tmpfile = await this.tmpdir.addFile("test.js", {
             contents: subsystemCode(1)
@@ -31,11 +31,11 @@ class TestApp extends app.Application {
         });
     }
 
-    async uninitialize() {
+    async onUninitialize() {
         await this.tmpdir.unlink();
     }
 
-    async main() {
+    async run() {
         console.log("main");
         await this.unloadSubsystem("hello");
         console.log("has", this.hasSubsystem("hello"));

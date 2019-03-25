@@ -10,7 +10,7 @@ class AppSubsystem extends app.Subsystem {
 }
 
 class TestApp extends adone.app.Application {
-    async configure() {
+    async onConfigure() {
         this.addSubsystem({
             name: "sys1",
             subsystem: new AppSubsystem(),
@@ -18,7 +18,7 @@ class TestApp extends adone.app.Application {
         });
     }
 
-    async main() {
+    async run() {
         console.log(is.subsystem(this.sys1));
         console.log(this.sys1.getData());
 

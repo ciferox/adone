@@ -7,7 +7,7 @@ const {
 } = app;
 
 class TestApp extends app.Application {
-    configure() {
+    onConfigure() {
         this.on("before run", async (command) => {
             if (command.names[0] === "failed") {
                 throw new adone.error.RuntimeException("something bad happened");
@@ -32,7 +32,7 @@ class TestApp extends app.Application {
         return 0;
     }
 
-    main() {
+    run() {
         console.log("main");
         return 0;
     }

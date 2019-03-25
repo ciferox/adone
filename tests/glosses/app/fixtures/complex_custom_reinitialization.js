@@ -3,36 +3,36 @@ const {
 } = adone;
 
 class Sys111 extends app.Subsystem {
-    configure() {
+    onConfigure() {
         console.log("c111");
     }
 
-    initialize() {
+    onInitialize() {
         console.log("i111");
     }
 
-    uninitialize() {
+    onUninitialize() {
         console.log("u111");
     }
 }
 
 class Sys112 extends app.Subsystem {
-    configure() {
+    onConfigure() {
         console.log("c112");
     }
 
-    initialize() {
+    onInitialize() {
         console.log("i112");
     }
 
-    uninitialize() {
+    onUninitialize() {
         console.log("u112");
     }
 }
 
 
 class Sys11 extends app.Subsystem {
-    async configure() {
+    async onConfigure() {
         this.addSubsystem({
             subsystem: new Sys111()
         });
@@ -44,11 +44,11 @@ class Sys11 extends app.Subsystem {
         console.log("c11");
     }
 
-    initialize() {
+    onInitialize() {
         console.log("i11");
     }
 
-    async uninitialize() {
+    async onUninitialize() {
         await this.uninitializeSubsystem("Sys111");
 
         console.log("u11");
@@ -56,32 +56,32 @@ class Sys11 extends app.Subsystem {
 }
 
 class Sys1 extends app.Subsystem {
-    async configure() {
+    async onConfigure() {
         this.addSubsystem({
             subsystem: new Sys11()
         });
         console.log("c1");
     }
 
-    initialize() {
+    onInitialize() {
         console.log("i1");
     }
 
-    uninitialize() {
+    onUninitialize() {
         console.log("u1");
     }
 }
 
 class Sys2 extends app.Subsystem {
-    async configure() {
+    async onConfigure() {
         console.log("c2");
     }
 
-    initialize() {
+    onInitialize() {
         console.log("i2");
     }
 
-    uninitialize() {
+    onUninitialize() {
         console.log("u2");
     }
 }
@@ -92,7 +92,7 @@ class TestApp extends app.Application {
         console.log("nc");
     }
 
-    async configure() {
+    async onConfigure() {
         this.addSubsystem({
             subsystem: new Sys1()
         });
@@ -102,20 +102,20 @@ class TestApp extends app.Application {
         console.log("c");
     }
 
-    async initialize() {
+    async onInitialize() {
         await this.initializeSubsystem("Sys2");
         console.log("i");
     }
 
-    main() {
+    run() {
         console.log("m");
         setTimeout(() => {
             console.log("r");
-            this._reinitialize();
+            this.reinitialize();
         }, 300);
     }
 
-    uninitialize() {
+    onUninitialize() {
         console.log("u");
     }
 }

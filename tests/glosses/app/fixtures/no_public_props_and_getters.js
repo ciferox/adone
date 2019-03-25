@@ -4,14 +4,14 @@ const {
 } = adone;
 
 class TestApp extends adone.app.Application {
-    main() {
-        const getters = ["name", "parent", "root", "state"];
+    run() {
+        const getters = ["name", "parent", "root", "owned"];
         let counter = 0;
         for (const getter of getters) {
             try {
                 this[getter] = null;
             } catch (err) {
-                if (err instanceof error.NotAllowedException) {
+                if (err instanceof error.ImmutableException) {
                     counter++;
                 } else {
                     console.log(err);
@@ -27,7 +27,7 @@ class TestApp extends adone.app.Application {
             props.push(name);
         }
 
-        console.log(counter === getters.length && props.length === 0);
+        console.log(counter === getters.length && props.length === 3); // _events, _eventsCount, _maxListeners
 
         return 0;
     }
