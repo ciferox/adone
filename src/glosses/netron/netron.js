@@ -44,12 +44,11 @@ export default class Netron extends adone.event.AsyncEmitter {
         this.setMaxListeners(Infinity);
     }
 
-    refContext(peerInfo, obj) {
-        const base58Id = peerInfo.id.asBase58();
-        let stubs = this.stubManager.peerStubs.get(base58Id);
+    refContext(peerId, obj) {
+        let stubs = this.stubManager.peerStubs.get(peerId);
         if (is.undefined(stubs)) {
             stubs = [];
-            this.stubManager.peerStubs.set(base58Id, stubs);
+            this.stubManager.peerStubs.set(peerId, stubs);
         }
         let stub = stubs.find((s) => s.instance === obj);
         if (is.undefined(stub)) {
@@ -187,7 +186,7 @@ export default class Netron extends adone.event.AsyncEmitter {
     // }
 
     addPeer(peer) {
-        const id = peer.info.id.toB58String();
+        const id = peer.id;
         if (this.peers.has(id)) {
             throw new error.ExistsException(`Peer with id '${id}' already exists`);
         }
@@ -196,7 +195,7 @@ export default class Netron extends adone.event.AsyncEmitter {
 
     deletePeer(p) {
         const peer = this.getPeer(p);
-        return this.peers.delete(peer.info.id.toB58String());
+        return this.peers.delete(peer.id);
     }
 
     getPeer(something) {
@@ -208,7 +207,7 @@ export default class Netron extends adone.event.AsyncEmitter {
 
         let id;
         if (is.netronPeer(something)) {
-            id = something.info.id.toB58String();
+            id = something.id;
             if (this.peers.has(id)) {
                 return something;
             }
@@ -355,6 +354,7 @@ export default class Netron extends adone.event.AsyncEmitter {
         for (; ;) {
             const eventName = events[0];
             try {
+                // TODO: deadlock issue
                 await this.emitParallel(eventName, data); // eslint-disable-line
             } catch (err) {
                 console.error(adone.pretty.error(err));

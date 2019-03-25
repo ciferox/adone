@@ -47,7 +47,9 @@ describe("fsm", () => {
         const methods = [
             "getState",
             "waitUntilStateEnters",
-            "waitUntilStateLeaves"
+            "waitUntilStateLeaves",
+            "isTransitionAllow",
+            "addAllowedState"
         ];
 
         for (const method of methods) {

@@ -1,12 +1,14 @@
 import { A, B } from "./contexts";
 
 const {
-    async: { series },
+    assertion,
     error,
     is,
-    p2p: { PeerId, PeerInfo },
-    netron: { Netron, OwnPeer }
+    netron: { Netron, OwnPeer },
+    promise
 } = adone;
+
+assertion.use(assertion.extension.checkmark);
 
 describe("Netron", () => {
     const createNetron = (options) => new Netron(options);
@@ -268,7 +270,7 @@ describe("Netron", () => {
                     });
 
                     netron.attachContext(new A(), "a");
-                    await adone.promise.delay(100);
+                    await promise.delay(100);
                     netron.detachContext("a");
                 });
             });
@@ -318,7 +320,7 @@ describe("Netron", () => {
         });
     });
 
-    describe.only("networking", () => {
+    describe("networking", () => {
         const {
             netron: { P2PNetCore }
         } = adone;
@@ -333,20 +335,32 @@ describe("Netron", () => {
         let p2pNetCoreC;
 
         before(async () => {
-            peerInfoS = await P2PNetCore.createPeerInfo({
-                addrs: "/ip4/0.0.0.0/tcp/0",
-                bits: 512
-            });
-            idServer = peerInfoS.id;
+            idServer = await P2PNetCore.createPeerId({ bits: 512 });
+            idClient = await P2PNetCore.createPeerId({ bits: 512 });
+            // peerInfoS = await P2PNetCore.createPeerInfo({
+            //     addrs: "/ip4/0.0.0.0/tcp/0",
+            //     bits: 512
+            // });
+            // idServer = peerInfoS.id;
 
-            peerInfoC = await P2PNetCore.createPeerInfo({
-                addrs: "/ip4/0.0.0.0/tcp/0",
-                bits: 512
-            });
-            idClient = peerInfoC.id;
+            // peerInfoC = await P2PNetCore.createPeerInfo({
+            //     addrs: "/ip4/0.0.0.0/tcp/0",
+            //     bits: 512
+            // });
+            // idClient = peerInfoC.id;
         });
 
         beforeEach(async () => {
+            peerInfoS = await P2PNetCore.createPeerInfo({
+                addrs: "/ip4/0.0.0.0/tcp/0",
+                peerId: idServer
+            });
+
+            peerInfoC = await P2PNetCore.createPeerInfo({
+                addrs: "/ip4/0.0.0.0/tcp/0",
+                peerId: idClient
+            });
+
             p2pNetCoreS = new P2PNetCore({ peerInfo: peerInfoS });
             p2pNetCoreC = new P2PNetCore({ peerInfo: peerInfoC });
 
@@ -380,14 +394,14 @@ describe("Netron", () => {
             await p2pNetCoreC.start(netronC);
             await p2pNetCoreS.start(netronS);
             const remotePeerS = await p2pNetCoreC.connect(peerInfoS, netronC);
-            await adone.promise.delay(500);
+            await promise.delay(500);
 
             const remotePeerC = netronS.getPeer(p2pNetCoreC.peerInfo.id.toB58String());
             assert.isTrue(remotePeerS.connected);
             assert.isTrue(remotePeerC.connected);
 
             await remotePeerS.disconnect();
-            await adone.promise.delay(500);
+            await promise.delay(500);
             assert.isFalse(remotePeerS.connected);
             assert.isFalse(remotePeerC.connected);
         });
@@ -396,14 +410,14 @@ describe("Netron", () => {
             await p2pNetCoreC.start(netronC);
             await p2pNetCoreS.start(netronS);
             const remotePeerS = await p2pNetCoreC.connect(peerInfoS, netronC);
-            await adone.promise.delay(500);
+            await promise.delay(500);
 
             const remotePeerC = netronS.getPeer(p2pNetCoreC.peerInfo.id.toB58String());
 
             assert.isTrue(remotePeerS.connected);
             assert.isTrue(remotePeerC.connected);
             await remotePeerC.disconnect();
-            await adone.promise.delay(500);
+            await promise.delay(500);
             assert.isFalse(remotePeerS.connected);
             assert.isFalse(remotePeerC.connected);
         });
@@ -412,7 +426,7 @@ describe("Netron", () => {
             await p2pNetCoreC.start(netronC);
             await p2pNetCoreS.start(netronS);
             const remotePeerS = await p2pNetCoreC.connect(peerInfoS, netronC);
-            await adone.promise.delay(500);
+            await promise.delay(500);
 
             const remotePeerC = netronS.getPeer(p2pNetCoreC.peerInfo.id.toB58String());
             assert.isTrue(remotePeerS.connected);
@@ -468,6 +482,7 @@ describe("Netron", () => {
         it("connects using different addresses of the remote netron should return same peer", async () => {
             await p2pNetCoreC.start(netronC);
             await p2pNetCoreS.start(netronS);
+            await promise.delay(1000);
 
             const addrs = peerInfoS.multiaddrs.toArray();
 
@@ -546,14 +561,14 @@ describe("Netron", () => {
                 });
 
                 const remotePeer = await p2pNetCoreC.connect(peerInfoS, netronC);
-                await adone.promise.delay(100);
+                await promise.delay(100);
                 await remotePeer.disconnect();
             });
 
-            it.todo("many peer connections", async (done) => {
+            it("many peer connections", async (done) => {
                 const N = 10;
-                let i = 0;
-                const check = () => ++i === 2 * N ? done() : null;
+
+                expect(N * 2).checks(done);
 
                 await p2pNetCoreC.start(netronC);
                 await p2pNetCoreS.start(netronS);
@@ -562,24 +577,31 @@ describe("Netron", () => {
                 const peers = [];
 
                 netronS.on("peer:connect", (peer) => {
-                    assert.isTrue(peerIds.includes(peer.id));
-                    check();
+                    expect(peerIds.includes(peer.id)).to.be.true.mark();
                 });
 
                 netronS.on("peer:disconnect", (peer) => {
-                    assert.isTrue(peerIds.includes(peer.id));
-                    check();
+                    expect(peerIds.includes(peer.id)).to.be.true.mark();
                 });
 
                 for (let c = 0; c < N; c++) {
+                    const p2pNC = new P2PNetCore({
+                        // eslint-disable-next-line no-await-in-loop
+                        peerInfo: await P2PNetCore.createPeerInfo({
+                            addrs: "/ip4/0.0.0.0/tcp/0",
+                            bits: 512
+                        })
+                    });
                     const n = createNetron();
-                    peerIds.push(n.peer.info.id.toB58String());
+                    // eslint-disable-next-line no-await-in-loop
+                    await p2pNC.start(n);
+                    peerIds.push(p2pNC.peerInfo.id.toB58String());
 
-                    const p = await n.connect("default", peerInfoS); // eslint-disable-line
+                    const p = await p2pNC.connect(peerInfoS, n); // eslint-disable-line
                     peers.push(p);
                 }
 
-                await adone.promise.delay(500);
+                await promise.delay(500);
 
                 for (let n = 0; n < N; n++) {
                     peers[n].disconnect();
@@ -587,7 +609,7 @@ describe("Netron", () => {
             });
         });
 
-        describe.todo("remote events", () => {
+        describe("remote events", () => {
             it("peer:connect", async (done) => {
                 await p2pNetCoreC.start(netronC);
                 await p2pNetCoreS.start(netronS);
@@ -598,93 +620,112 @@ describe("Netron", () => {
                 await remotePeerS.subscribe("peer:connect", async (peer, { id }) => {
                     assert.equal(peer.info.id.toB58String(), p2pNetCoreS.peerInfo.id.toB58String());
                     assert.equal(peerDBase68Id, id);
-                    await adone.promise.delay(100);
-                    setTimeout(() => {
-                        pp.disconnect(); // we need it here to prevent unhandled error
-                        done();
-                    }, 500);
-                });
-
-                const netronD = createNetron();
-                peerDBase68Id = netronD.peer.info.id.toB58String();
-                pp = await netronD.connect("default", peerInfoS);
-            });
-
-            it("peer:diconnect", async (done) => {
-                await netronS.start();
-
-                let peerDBase68Id = null;
-                const remotePeerS = await netronC.connect("default", peerInfoS);
-                await remotePeerS.subscribe("peer:disconnect", async (peer, { id }) => {
-                    assert.equal(peer.info.id.toB58String(), netronS.peer.info.id.toB58String());
-                    assert.equal(peerDBase68Id, id);
-                    await adone.promise.delay(100);
+                    await pp.disconnect(); // we need it here to prevent unhandled error
                     done();
                 });
 
+                const p2pNC = new P2PNetCore({
+                    // eslint-disable-next-line no-await-in-loop
+                    peerInfo: await P2PNetCore.createPeerInfo({
+                        addrs: "/ip4/0.0.0.0/tcp/0",
+                        bits: 512
+                    })
+                });
                 const netronD = createNetron();
-                peerDBase68Id = netronD.peer.info.id.toB58String();
-                const remotePeerSD = await netronD.connect("default", peerInfoS);
+                await p2pNC.start(netronD);
+                peerDBase68Id = p2pNC.peerInfo.id.toB58String();
+                pp = await p2pNC.connect(peerInfoS, netronD);
+            });
 
-                await adone.promise.delay(300);
+            it("peer:diconnect", async (done) => {
+                await p2pNetCoreC.start(netronC);
+                await p2pNetCoreS.start(netronS);
+
+                let peerDBase68Id = null;
+                const remotePeerS = await p2pNetCoreC.connect(peerInfoS, netronC);
+                await remotePeerS.subscribe("peer:disconnect", async (peer, { id }) => {
+                    assert.equal(peer.info.id.toB58String(), p2pNetCoreS.peerInfo.id.toB58String());
+                    assert.equal(peerDBase68Id, id);
+                    await promise.delay(100);
+                    done();
+                });
+
+                const p2pNC = new P2PNetCore({
+                    // eslint-disable-next-line no-await-in-loop
+                    peerInfo: await P2PNetCore.createPeerInfo({
+                        addrs: "/ip4/0.0.0.0/tcp/0",
+                        bits: 512
+                    })
+                });
+                const netronD = createNetron();
+                await p2pNC.start(netronD);
+                peerDBase68Id = p2pNC.peerInfo.id.toB58String();
+                const remotePeerSD = await p2pNC.connect(peerInfoS, netronD);
+
+                await promise.delay(300);
 
                 await remotePeerSD.disconnect();
             });
 
             it("context:attach", async (done) => {
-                await netronS.start();
+                await p2pNetCoreC.start(netronC);
+                await p2pNetCoreS.start(netronS);
                 let defId = null;
 
-                const remotePeerS = await netronC.connect("default", peerInfoS);
+                const remotePeerS = await p2pNetCoreC.connect(peerInfoS, netronC);
                 await remotePeerS.subscribe("context:attach", async (peer, { id, def }) => {
                     assert.equal(id, "B");
                     assert.equal(def.id, defId);
                     done();
                 });
 
-                await adone.promise.delay(100);
+                await promise.delay(100);
 
                 defId = netronS.attachContext(new B());
             });
 
             it("context:detach", async (done) => {
-                await netronS.start();
+                await p2pNetCoreC.start(netronC);
+                await p2pNetCoreS.start(netronS);
                 let defId = null;
 
-                const remotePeerS = await netronC.connect("default", peerInfoS);
+                const remotePeerS = await p2pNetCoreC.connect(peerInfoS, netronC);
                 await remotePeerS.subscribe("context:detach", async (peer, { id, defId: remoteDefId }) => {
                     assert.equal(id, "B");
                     assert.equal(defId, remoteDefId);
                     done();
                 });
 
-                await adone.promise.delay(100);
+                await promise.delay(100);
 
                 defId = netronS.attachContext(new B());
 
-                await adone.promise.delay(100);
+                await promise.delay(100);
 
                 netronS.detachContext("B");
             });
 
             it("automatically subscribe on contexts events", async () => {
-                await netronS.start();
+                await p2pNetCoreC.start(netronC);
+                await p2pNetCoreS.start(netronS);
 
-                const remotePeerS = await netronC.connect("default", peerInfoS);
-                await adone.promise.delay(100);
+                const remotePeerS = await p2pNetCoreC.connect(peerInfoS, netronC);
+                await promise.delay(100);
 
                 assert.isFalse(remotePeerS.hasContext("A"));
 
                 netronS.attachContext(new A());
-                await adone.promise.delay(100);
+                await promise.delay(100);
 
                 assert.isTrue(remotePeerS.hasContext("A"));
 
                 netronS.detachContext("A");
-                await adone.promise.delay(100);
+                await promise.delay(100);
 
                 assert.isFalse(remotePeerS.hasContext("A"));
             });
+
+            // TODO: tests for unsubscribe task
         });
 
         it("after connected peer should have all existing context definitions from remote netron", async () => {
@@ -694,7 +735,7 @@ describe("Netron", () => {
             await p2pNetCoreS.start(netronS);
 
             const remotePeerS = await p2pNetCoreC.connect(peerInfoS, netronC);
-            // await adone.promise.delay(100);
+            // await promise.delay(100);
 
             assert.isTrue(remotePeerS.hasContext("A"));
         });

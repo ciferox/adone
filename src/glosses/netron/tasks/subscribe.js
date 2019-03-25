@@ -1,5 +1,5 @@
 export default class SubscribeTask extends adone.task.Task {
-    run({ netron, peer, args }) {
+    main({ netron, peer, args }) {
         const [eventName] = args;
 
         const fn = (...args) => {

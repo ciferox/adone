@@ -245,8 +245,6 @@ export default class Subsystem extends adone.fsm.StateMachine {
     /**
      * Uninitializes subsystem and performs full unload of subsystem including require cache.
      * 
-     * 
-     * 
      * @param {string} name 
      */
     async unloadSubsystem(name, timeout) {
@@ -255,6 +253,7 @@ export default class Subsystem extends adone.fsm.StateMachine {
         switch (instance.getState()) {
             case STATE.CONFIGURING:
                 await instance.waitUntilStateEnters(STATE.CONFIGURED, timeout);
+                // May be break here?
             case STATE.INITIALIZING:
                 await instance.waitUntilStateEnters(STATE.INITIALIZED, timeout);
             case STATE.INITIALIZED:

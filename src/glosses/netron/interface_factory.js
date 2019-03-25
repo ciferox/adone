@@ -13,13 +13,13 @@ export default class InterfaceFactory {
 
     create(def, peer) {
         const defId = def.id;
-        const base58Str = peer.info.id.asBase58();
         let iInstance = peer._getInterface(defId);
         if (!is.undefined(iInstance)) {
             return iInstance;
         }
 
-        // Заготовка под создаваемый интерфейс.
+        const peerId = peer.id;
+
         class XInterface extends Interface { }
 
         const proto = XInterface.prototype;
@@ -27,23 +27,23 @@ export default class InterfaceFactory {
         for (const [key, meta] of util.entries(def.$, { all: true })) {
             if (meta.method) {
                 const method = (...args) => {
-                    this._processArgs(peer.info, args, true);
+                    this._processArgs(peerId, args, true);
                     return peer.get(defId, key, args);
                 };
                 method.void = (...args) => {
-                    this._processArgs(peer.info, args, true);
+                    this._processArgs(peerId, args, true);
                     return peer.set(defId, key, args);
                 };
                 proto[key] = method;
             } else {
                 const propMethods = {};
                 propMethods.get = (defaultValue) => {
-                    defaultValue = this._processArgs(peer.info, defaultValue, false);
+                    defaultValue = this._processArgs(peerId, defaultValue, false);
                     return peer.get(defId, key, defaultValue);
                 };
                 if (!meta.readonly) {
                     propMethods.set = (value) => {
-                        value = this._processArgs(peer.info, value, false);
+                        value = this._processArgs(peerId, value, false);
                         return peer.set(defId, key, value);
                     };
                 }
@@ -51,7 +51,7 @@ export default class InterfaceFactory {
             }
         }
 
-        iInstance = new XInterface(def, base58Str);
+        iInstance = new XInterface(def, peerId);
 
         // if (!is.undefined(def.twin)) {
         //     let twinCode;
@@ -113,30 +113,30 @@ export default class InterfaceFactory {
         return iInstance;
     }
 
-    _processObject(peerInfo, obj) {
+    _processObject(peerId, obj) {
         if (is.netronInterface(obj)) {
             return new Reference(obj[__.I_DEFINITION_SYMBOL].id);
         } else if (is.netronContext(obj)) {
-            const def = this.netron.refContext(peerInfo, obj);
-            def.peerId = peerInfo.id.asBase58(); // definition owner
+            const def = this.netron.refContext(peerId, obj);
+            def.peerId = peerId; // definition owner
             return def;
         } else if (is.netronDefinitions(obj)) {
             const newDefs = new Definitions();
             for (let i = 0; i < obj.length; i++) {
-                newDefs.push(this._processObject(peerInfo, obj.get(i)));
+                newDefs.push(this._processObject(peerId, obj.get(i)));
             }
             return newDefs;
         }
         return obj;
     }
 
-    _processArgs(peerInfo, args, isMethod) {
+    _processArgs(peerId, args, isMethod) {
         if (isMethod && is.array(args)) {
             for (let i = 0; i < args.length; ++i) {
-                args[i] = this._processObject(peerInfo, args[i]);
+                args[i] = this._processObject(peerId, args[i]);
             }
         } else {
-            return this._processObject(peerInfo, args);
+            return this._processObject(peerId, args);
         }
     }
 }

@@ -5,8 +5,13 @@ const {
 } = adone;
 
 export default class OwnPeer extends AbstractPeer {
+    constructor(netron) {
+        super(netron);
+        this.id = null;
+    }
+
     set(defId, name, data) {
-        const stub = this.netron._stubs.get(defId);
+        const stub = this.netron.stubManager.getStub(defId);
         if (is.undefined(stub)) {
             throw new error.NotExistsException(`Context with definition id '${defId}' not exists`);
         }
@@ -14,7 +19,7 @@ export default class OwnPeer extends AbstractPeer {
     }
 
     async get(defId, name, defaultData) {
-        const stub = this.netron._stubs.get(defId);
+        const stub = this.netron.stubManager.getStub(defId);
         if (is.undefined(stub)) {
             throw new error.NotExistsException(`Context with definition id '${defId}' not exists`);
         }
@@ -72,7 +77,7 @@ export default class OwnPeer extends AbstractPeer {
     }
 
     _queryInterfaceByDefinition(defId) {
-        const stub = this.netron._getStub(defId);
+        const stub = this.netron.stubManager.getStub(defId);
         return this.netron.interfaceFactory.create(stub.definition, this);
     }
 }

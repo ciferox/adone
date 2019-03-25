@@ -183,8 +183,8 @@ describe("dialFSM", () => {
 
     it("parallel dials to the same peer should not create new connections", (done) => {
         switchB.handle("/parallel/2.0.0", (_, conn) => {
- pull(conn, conn); 
-});
+            pull(conn, conn);
+        });
 
         parallel([
             (cb) => switchA.dialFSM(switchB._peerInfo, "/parallel/2.0.0", cb),
@@ -206,19 +206,35 @@ describe("dialFSM", () => {
         protocol = "/parallel/1.0.0";
 
         switchA.handle(protocol, (_, conn) => {
- pull(conn, conn); 
-});
+            pull(conn, conn);
+        });
         switchB.handle(protocol, (_, conn) => {
- pull(conn, conn); 
-});
+            pull(conn, conn);
+        });
 
         expect(switchA.connection.getAllById(peerBId)).to.have.length(0);
 
-        // 4 close checks (1 inc and 1 out for each node) and 1 hangup check
-        expect(5).checks(() => {
-            switchA.removeAllListeners("peer-mux-closed");
-            switchB.removeAllListeners("peer-mux-closed");
-            done();
+        // Expect 4 `peer-mux-established` events
+        expect(4).checks(() => {
+            // Expect 4 `peer-mux-closed`, plus 1 hangup
+            expect(5).checks(() => {
+                switchA.removeAllListeners("peer-mux-closed");
+                switchB.removeAllListeners("peer-mux-closed");
+                switchA.removeAllListeners("peer-mux-established");
+                switchB.removeAllListeners("peer-mux-established");
+                done();
+            });
+
+            switchA.hangUp(switchB._peerInfo, (err) => {
+                expect(err).to.not.exist().mark();
+            });
+        });
+
+        switchA.on("peer-mux-established", (peerInfo) => {
+            expect(peerInfo.id.toB58String()).to.eql(peerBId).mark();
+        });
+        switchB.on("peer-mux-established", (peerInfo) => {
+            expect(peerInfo.id.toB58String()).to.eql(peerAId).mark();
         });
 
         switchA.on("peer-mux-closed", (peerInfo) => {
@@ -238,24 +254,17 @@ describe("dialFSM", () => {
                     connB.on("muxed", cb);
                 });
             });
-
-            connFSM.on("connection", () => {
-                // Hangup and verify the connections are closed
-                switchA.hangUp(switchB._peerInfo, (err) => {
-                    expect(err).to.not.exist().mark();
-                });
-            });
         });
     });
 
     it("parallel dials to one another should disconnect on stop", (done) => {
         protocol = "/parallel/1.0.0";
         switchA.handle(protocol, (_, conn) => {
- pull(conn, conn); 
-});
+            pull(conn, conn);
+        });
         switchB.handle(protocol, (_, conn) => {
- pull(conn, conn); 
-});
+            pull(conn, conn);
+        });
 
         // 4 close checks and 1 hangup check
         expect(5).checks(() => {
@@ -294,8 +303,8 @@ describe("dialFSM", () => {
 
     it("queued dials should be aborted on node stop", (done) => {
         switchB.handle("/abort-queue/1.0.0", (_, conn) => {
- pull(conn, conn); 
-});
+            pull(conn, conn);
+        });
 
         switchA.dialFSM(switchB._peerInfo, "/abort-queue/1.0.0", (err, connFSM) => {
             expect(err).to.not.exist();

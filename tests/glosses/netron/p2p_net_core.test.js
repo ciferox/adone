@@ -21,7 +21,7 @@ describe("netron", "P2PNetCore", () => {
         assert.isFalse(core.started);
         await core.start();
         assert.isTrue(core.started);
-        const peerInfo = core.getPeerInfo();
+        const peerInfo = core.peerInfo;
 
         assert.lengthOf(peerInfo.multiaddrs.toArray(), 2);
 

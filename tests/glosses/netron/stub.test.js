@@ -5,8 +5,10 @@ const {
     netron: { Netron, meta: { Reflection }, Stub, Definition }
 } = adone;
 
-describe.todo("Stub", () => {
+describe("Stub", () => {
     let netron;
+
+    const createStubFor = (netron, obj) => new Stub(netron.stubManager, obj);
 
     before(() => {
         netron = new Netron();
@@ -14,7 +16,7 @@ describe.todo("Stub", () => {
 
     it("create stub from context instance", () => {
         const b = new B();
-        const stub = new Stub(netron, b);
+        const stub = createStubFor(netron, b);
 
         assert.strictEqual(stub.instance, b);
         assert.instanceOf(stub.reflection, Reflection);
@@ -23,14 +25,14 @@ describe.todo("Stub", () => {
     it("create stub from reflection instance", () => {
         const b = new B();
         const r = Reflection.from(b);
-        const stub = new Stub(netron, r);
+        const stub = createStubFor(netron, r);
         assert.strictEqual(stub.instance, b);
         assert.instanceOf(stub.reflection, Reflection);
     });
 
     it("definition of context", () => {
         const b = new B();
-        const stub = new Stub(netron, b);
+        const stub = createStubFor(netron, b);
         const def = stub.definition;
 
         assert.instanceOf(def, Definition);
@@ -46,7 +48,7 @@ describe.todo("Stub", () => {
 
         beforeEach(() => {
             context = new B();
-            stub = new Stub(netron, context);
+            stub = createStubFor(netron, context);
         });
 
         it("should throw if get value of undefined property or call undefined method", () => {
@@ -104,7 +106,7 @@ describe.todo("Stub", () => {
 
         beforeEach(() => {
             context = new B();
-            stub = new Stub(netron, context);
+            stub = createStubFor(netron, context);
         });
 
         it("should throw if set value of undefined property or call undefined method", () => {

@@ -20,11 +20,12 @@ const APPLICATION_FSM_TRANSITIONS = [
 ];
 
 const ERROR_SCOPE = Symbol.for("adone.app.Application#errorScope");
-const HANDLERS = Symbol();
-const EXITING = Symbol();
-const EXIT_SIGNALS = Symbol();
 
 export default class Application extends app.Subsystem {
+    #exiting = false;
+    #handlers = null;
+    #exitSignals = null;
+
     constructor({ name = std.path.basename(process.argv[1], std.path.extname(process.argv[1])) } = {}) {
         super({
             name,
@@ -34,24 +35,21 @@ export default class Application extends app.Subsystem {
             }
         });
 
-        this[EXITING] = false;
-        this[HANDLERS] = null;
         this[ERROR_SCOPE] = false;
-        this[EXIT_SIGNALS] = null;
 
         this.setMaxListeners(Infinity);
     }
 
     exitOnSignal(...names) {
         for (const sigName of names) {
-            if (is.null(this[EXIT_SIGNALS])) {
-                this[EXIT_SIGNALS] = [];
+            if (is.null(this.#exitSignals)) {
+                this.#exitSignals = [];
             }
-            if (this[EXIT_SIGNALS].includes(sigName)) {
+            if (this.#exitSignals.includes(sigName)) {
                 continue;
             }
-            this[EXIT_SIGNALS].push(sigName);
-            process.on(sigName, () => this[HANDLERS].signalExit(sigName));
+            this.#exitSignals.push(sigName);
+            process.on(sigName, () => this.#handlers.signalExit(sigName));
             if (sigName === "SIGINT" || sigName === "SIGTERM") {
                 process.removeListener(sigName, adone.noop);
             }
@@ -60,10 +58,10 @@ export default class Application extends app.Subsystem {
     }
 
     async stop(code = EXIT_SUCCESS) {
-        if (this[EXITING]) {
+        if (this.#exiting) {
             return;
         }
-        this[EXITING] = true;
+        this.#exiting = true;
 
         try {
             switch (this.getState()) {
@@ -88,13 +86,13 @@ export default class Application extends app.Subsystem {
     }
 
     removeProcessHandlers() {
-        process.removeListener("uncaughtExectption", this[HANDLERS].uncaughtException);
-        process.removeListener("unhandledRejection", this[HANDLERS].unhandledRejection);
-        process.removeListener("rejectionHandled", this[HANDLERS].rejectionHandled);
-        process.removeListener("beforeExit", this[HANDLERS].beforeExit);
-        if (is.array(this[EXIT_SIGNALS])) {
-            for (const sigName of this[EXIT_SIGNALS]) {
-                process.removeListener(sigName, this[HANDLERS].signalExit);
+        process.removeListener("uncaughtExectption", this.#handlers.uncaughtException);
+        process.removeListener("unhandledRejection", this.#handlers.unhandledRejection);
+        process.removeListener("rejectionHandled", this.#handlers.rejectionHandled);
+        process.removeListener("beforeExit", this.#handlers.beforeExit);
+        if (is.array(this.#exitSignals)) {
+            for (const sigName of this.#exitSignals) {
+                process.removeListener(sigName, this.#handlers.signalExit);
             }
         }
     }
@@ -132,7 +130,7 @@ export default class Application extends app.Subsystem {
     // Helper methods used in bootstraping code.
 
     _setHandlers(handlers) {
-        this[HANDLERS] = handlers;
+        this.#handlers = handlers;
     }
 
     _setErrorScope(appScope) {

@@ -6,15 +6,15 @@ const {
 
 const __ = adone.private(adone.netron);
 
-const INTERFACES = Symbol();
-
 export default class AbstractPeer extends AsyncEmitter {
+    #interfaces = new Map();
+
     constructor(netron) {
         super();
 
         // this.info = peerInfo;
         this.netron = netron;
-        this[INTERFACES] = new Map();
+        this.#interfaces = new Map();
         // this.connectedTime = null;
         this.task = {}; // task's results
 
@@ -86,15 +86,15 @@ export default class AbstractPeer extends AsyncEmitter {
         return result;
     }
 
-    // /**
-    //  * Returns task result or adone.null if it not exists.
-    //  * 
-    //  * @param {string} name - task name
-    //  */
-    // getTaskResult(name) {
-    //     const taskObj = this.task[name];
-    //     return taskObj ? taskObj.result : adone.null;
-    // }
+    /**
+     * Returns task result or adone.null if it not exists.
+     * 
+     * @param {string} name - task name
+     */
+    getTaskResult(name) {
+        const taskObj = this.task[name];
+        return taskObj ? taskObj.result : adone.null;
+    }
 
     subscribe(/*eventName, handler*/) {
         throw new adone.error.NotImplementedException("Method subscribe() is not implemented");
@@ -170,7 +170,7 @@ export default class AbstractPeer extends AsyncEmitter {
         if (!is.netronInterface(iInstance)) {
             throw new error.NotValidException("Object is not a netron interface");
         }
-        this[INTERFACES].delete(iInstance[__.I_DEFINITION_SYMBOL].id);
+        this.#interfaces.delete(iInstance[__.I_DEFINITION_SYMBOL].id);
     }
 
     /**
@@ -201,19 +201,23 @@ export default class AbstractPeer extends AsyncEmitter {
     }
 
     _addInterface(defId, iInstance) {
-        this[INTERFACES].set(defId, iInstance);
+        this.#interfaces.set(defId, iInstance);
     }
 
     _getInterface(defId) {
-        this[INTERFACES].get(defId);
+        this.#interfaces.get(defId);
+    }
+
+    _hasInterface(defId) {
+        this.#interfaces.has(defId);
     }
 
     _deleteInterface(defId) {
-        this[INTERFACES].delete(defId);
+        this.#interfaces.delete(defId);
     }
 
     _deleteAllInterfaces() {
-        this[INTERFACES].clear();
+        this.#interfaces.clear();
     }
 
     // // _removeRelatedDefinitions(proxyDef) {

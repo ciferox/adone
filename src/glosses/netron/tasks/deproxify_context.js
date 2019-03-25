@@ -1,5 +1,5 @@
 export default class DeproxifyContextTask extends adone.task.Task {
-    run({ netron, peer, args }) {
+    main({ netron, peer, args }) {
         const [ctxId, releaseOriginated] = args;
         const defId = netron.detachContext(ctxId, releaseOriginated);
         peer._defs.delete(defId);

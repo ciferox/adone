@@ -8,17 +8,18 @@ const {
 const __ = adone.private(adone.netron);
 
 export default class RemoteStub {
-    constructor(netron, iInstance) {
-        this.netron = netron;
+    constructor(manager, iInstance) {
+        this.manager = manager;
         this.iInstance = iInstance;
+        this._def = null;
     }
 
     get definition() {
-        if (is.undefined(this._def)) {
+        if (is.null(this._def)) {
             const origDef = this.iInstance[__.I_DEFINITION_SYMBOL];
             const def = this._def = new Definition();
 
-            def.id = this.netron._defUniqueId.get();
+            def.id = this.manager.uid.create();
             def.parentId = 0;
             def.name = origDef.name;
             def.description = origDef.description;

@@ -5,7 +5,7 @@ const utils = require("../utils");
 const { createInfos } = utils;
 
 const {
-    p2p: { identify, secio, Switch, PeerBook, transport: { TCP }, muxer: { mplex } },
+    p2p: { identify, secio, Switch, PeerInfo, PeerBook, transport: { TCP }, muxer: { mplex } },
     stream: { pull }
 } = adone;
 const { lengthPrefixed: lp } = pull;
@@ -92,23 +92,36 @@ describe("Identify", () => {
     });
 
     it("should get protocols for one another", (done) => {
+        // We need to reset the PeerInfo objects we use,
+        // since we share memory we can receive a false positive if not
+        const peerA = new PeerInfo(switchA._peerInfo.id);
+        switchA._peerInfo.multiaddrs.toArray().forEach((m) => {
+            peerA.multiaddrs.add(m);
+        });
+        switchB._peerBook.remove(switchA._peerInfo.id.toB58String());
+        switchA._peerBook.remove(switchB._peerInfo.id.toB58String());
+
+
         switchA.handle("/id-test/1.0.0", (protocol, conn) => pull(conn, conn));
-        switchB.dial(switchA._peerInfo, "/id-test/1.0.0", (err, conn) => {
+        switchB.dial(peerA, "/id-test/1.0.0", (err) => {
             expect(err).to.not.exist();
 
-            const peerB = switchA._peerBook.get(switchB._peerInfo.id.toB58String());
-            const peerA = switchB._peerBook.get(switchA._peerInfo.id.toB58String());
-            expect(Array.from(peerB.protocols)).to.eql([
-                mplex.multicodec,
-                identify.multicodec
-            ]);
-            expect(Array.from(peerA.protocols)).to.eql([
-                mplex.multicodec,
-                identify.multicodec,
-                "/id-test/1.0.0"
-            ]);
+            // Give identify a moment to run
+            setTimeout(() => {
+                const peerB = switchA._peerBook.get(switchB._peerInfo.id.toB58String());
+                const peerA = switchB._peerBook.get(switchA._peerInfo.id.toB58String());
+                expect(Array.from(peerB.protocols)).to.eql([
+                    mplex.multicodec,
+                    identify.multicodec
+                ]);
+                expect(Array.from(peerA.protocols)).to.eql([
+                    mplex.multicodec,
+                    identify.multicodec,
+                    "/id-test/1.0.0"
+                ]);
 
-            done();
+                done();
+            }, 500);
         });
     });
 

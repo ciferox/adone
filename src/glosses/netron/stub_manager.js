@@ -1,7 +1,7 @@
 const {
     is,
     error,
-    netron: { Stub }
+    netron: { Stub, RemoteStub }
 } = adone;
 
 export default class StubManager {
@@ -25,8 +25,8 @@ export default class StubManager {
     /**
      * Creates new remote stub.
      */
-    createRremoteStub() {
-
+    createRemoteStub(obj) {
+        return new RemoteStub(this, obj);
     }
 
     addStub(stub) {

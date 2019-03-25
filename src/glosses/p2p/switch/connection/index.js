@@ -4,6 +4,9 @@ const FSM = require("fsm-event");
 const withIs = require("class-is");
 const BaseConnection = require("./base");
 const parallel = require("async/parallel");
+const nextTick = require("async/nextTick");
+const errCode = require("err-code");
+const { msHandle, msSelect, identifyDialer } = require("../utils");
 
 const observeConnection = require("../observe-connection");
 const {
@@ -16,7 +19,7 @@ const {
 
 const {
     multiformat: { multistream },
-    p2p: { Circuit }
+    p2p: { Circuit, identify }
 } = adone;
 
 /**
@@ -106,7 +109,7 @@ class ConnectionFSM extends BaseConnection {
                 done: "DISCONNECTED",
                 disconnect: "DISCONNECTING"
             },
-            ABORTED: { }, // A severe event occurred
+            ABORTED: {}, // A severe event occurred
             ERRORED: { // An error occurred, but future dials may be allowed
                 disconnect: "DISCONNECTING" // There could be multiple options here, but this is a likely action
             }
@@ -162,7 +165,7 @@ class ConnectionFSM extends BaseConnection {
      * @returns {void}
      */
     shake(protocol, callback) {
-    // If there is no protocol set yet, don't perform the handshake
+        // If there is no protocol set yet, don't perform the handshake
         if (!protocol) {
             return callback(null, null);
         }
@@ -393,10 +396,47 @@ class ConnectionFSM extends BaseConnection {
 
                     this.switch.emit("peer-mux-established", this.theirPeerInfo);
                     this._didUpgrade(null);
+
+                    // Run identify on the connection
+                    if (this.switch.identify) {
+                        this._identify((err, results) => {
+                            if (err) {
+                                return this.close(err);
+                            }
+                            this.theirPeerInfo = this.switch._peerBook.put(results.peerInfo);
+                        });
+                    }
                 });
             };
 
             nextMuxer(muxers.shift());
+        });
+    }
+
+    /**
+     * Runs the identify protocol on the connection
+     * @private
+     * @param {function(error, { PeerInfo })} callback
+     * @returns {void}
+     */
+    _identify(callback) {
+        if (!this.muxer) {
+            return nextTick(callback, errCode("The connection was already closed", "ERR_CONNECTION_CLOSED"));
+        }
+        this.muxer.newStream(async (err, conn) => {
+            if (err) {
+                return callback(err);
+            }
+            const ms = new multistream.Dialer();
+            let results;
+            try {
+                await msHandle(ms, conn);
+                const msConn = await msSelect(ms, identify.multicodec);
+                results = await identifyDialer(msConn, this.theirPeerInfo);
+            } catch (err) {
+                return callback(err);
+            }
+            callback(null, results);
         });
     }
 

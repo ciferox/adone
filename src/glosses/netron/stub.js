@@ -103,9 +103,9 @@ export default class Stub {
 
     _processResult(peer, result) {
         if (is.netronContext(result)) {
-            result = this.manager.netron.refContext(peer.info, result);
+            result = this.manager.netron.refContext(peer.id, result);
             result.parentId = result.parentId || this._def.id;
-            result.uid = peer.info.id.asBase58(); // definition owner
+            result.uid = peer.id; // definition owner
         } else if (is.netronDefinitions(result)) {
             const newDefs = new Definitions();
             for (let i = 0; i < result.length; i++) {
