@@ -1,17 +1,16 @@
 const {
     assert,
-    js: { compiler: { codeFrameColumns } },
+    js: { compiler: { core, codeFrameColumns } },
     lodash: { defaults, includes, extend, merge, escapeRegExp },
     std: { fs, path, vm }
 } = adone;
+const { buildExternalHelpers } = core;
 
-import * as babel from "@babel/core";
-import { buildExternalHelpers } from "@babel/core";
 import getFixtures from "../helper_fixtures";
 import sourceMap from "source-map";
 import * as helpers from "./helpers";
 import resolve from "resolve";
-import checkDuplicatedNodes from "babel-check-duplicated-nodes";
+import checkDuplicatedNodes from "../check_duplicated_nodes";
 
 import diff from "jest-diff";
 
@@ -19,7 +18,7 @@ const moduleCache = {};
 const testContext = vm.createContext({
     ...helpers,
     process,
-    transform: babel.transform,
+    transform: core.transform,
     setTimeout,
     setImmediate,
     expect
@@ -179,8 +178,8 @@ function run(task) {
 
     if (execCode) {
         const execOpts = getOpts(exec);
-        result = babel.transform(execCode, execOpts);
-        checkDuplicatedNodes(babel, result.ast);
+        result = core.transform(execCode, execOpts);
+        checkDuplicatedNodes(core, result.ast);
         execCode = result.code;
 
         try {
@@ -196,13 +195,13 @@ function run(task) {
     let actualCode = actual.code;
     const expectCode = expected.code;
     if (!execCode || actualCode) {
-        result = babel.transform(actualCode, getOpts(actual));
+        result = core.transform(actualCode, getOpts(actual));
         const expectedCode = result.code.replace(
             escapeRegExp(path.resolve(__dirname, "../../../")),
             "<CWD>",
         );
 
-        checkDuplicatedNodes(babel, result.ast);
+        checkDuplicatedNodes(core, result.ast);
         if (
             !expected.code &&
             expectedCode &&

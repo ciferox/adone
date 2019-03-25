@@ -27,6 +27,7 @@ export default {
             ["transform.decorators", { legacy: true }],
             ["transform.classProperties", { loose: true }],
             ["transform.privateMethods", { loose: true }],
+            "transform.doExpressions",
             // "transform.asyncGeneratorFunctions",
             "transform.modulesCommonjs",
             // "transform.functionBind",

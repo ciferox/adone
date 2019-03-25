@@ -56,7 +56,7 @@ function extractElementDescriptor(/* this: File, */ classRef, superRef, path) {
     if (path.isPrivate()) {
         throw path.buildCodeFrameError(
             `Private ${
-            isMethod ? "methods" : "fields"
+                isMethod ? "methods" : "fields"
             } in decorated classes are not supported yet.`,
         );
     }

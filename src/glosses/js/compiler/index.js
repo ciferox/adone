@@ -1,22 +1,16 @@
 adone.lazify({
     core: "./core",
-    // jsTokens: "./js_tokens",
-    // matchToToken: ["./js_tokens", (mod) => mod.matchToToken],
     codeFrame: "./code_frame",
     codeFrameColumns: ["./code_frame", (x) => x.codeFrameColumns],
     types: "./types",
     helper: "./helpers",
     traverse: "./traverse",
     Printer: "./generator/printer",
-    // Whitespace: "./generator/whitespace",
     generate: "./generator",
     CodeGenerator: ["./generator", (x) => x.CodeGenerator],
     template: "./template",
     
     plugin: "./plugins",
-    // tools: () => adone.lazify({
-    //     buildExternalHelpers: "./core/tools/build_external_helpers"
-    // }, null, require),
     transformation: () => adone.lazify({
         file: () => adone.lazify({
             buildConfigChain: "./core/transformation/file/options/build_config_chain",
