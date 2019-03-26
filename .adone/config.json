@@ -126,6 +126,12 @@
                     "dst": "lib/glosses/cli",
                     "task": "transpile"
                 },
+                "cmake": {
+                    "description": "Node.js native addon build tool based on cmake",
+                    "src": "src/glosses/cmake/**/*.js",
+                    "dst": "lib/glosses/cmake",
+                    "task": "transpile"
+                },
                 "collection": {
                     "description": "Implementations of common collections",
                     "src": "src/glosses/collections/**/*.js",
@@ -424,6 +430,25 @@
                     "src": "src/glosses/globals/index.js",
                     "dst": "lib/glosses/globals"
                 },
+                "gyp": {
+                    "description": "Node.js native addon build tool baed",
+                    "index": "js:index.js",
+                    "scheme": {
+                        "js": {
+                            "task": "transpile",
+                            "src": [
+                                "src/glosses/gyp/**/*.js",
+                                "!src/glosses/gyp/gyp/**/*"
+                            ],
+                            "dst": "lib/glosses/gyp"
+                        },
+                        "native-gyp": {
+                            "src": "src/glosses/gyp/gyp/**/*",
+                            "dst": "lib/glosses/gyp/gyp"
+                        }
+                    }
+                },
+        
                 "hardware": {
                     "description": "Hardware stuff",
                     "task": "transpile",
@@ -878,41 +903,11 @@
                 }
             }
         },
-        "cmake": {
-            "description": "Node.js native addon build tool",
-            "src": "src/cmake/**/*.js",
-            "dst": "lib/cmake",
-            "task": "transpile"
-        },
-        "gyp": {
-            "description": "Node.js native addon build tool",
-            "index": "js:index.js",
-            "scheme": {
-                "js": {
-                    "task": "transpile",
-                    "src": [
-                        "src/gyp/**/*.js",
-                        "!src/gyp/gyp/**/*"
-                    ],
-                    "dst": "lib/gyp"
-                },
-                "native-gyp": {
-                    "src": "src/gyp/gyp/**/*",
-                    "dst": "lib/gyp/gyp"
-                }
-            }
-        },
         "shani": {
             "description": "Testing framework",
             "task": "transpile",
             "src": "src/shani/**/*.js",
             "dst": "lib/shani"
-        },
-        "specter": {
-            "description": "",
-            "task": "transpile",
-            "src": "src/specter/**/*.js",
-            "dst": "lib/specter"
         }
     }
 }

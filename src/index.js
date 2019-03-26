@@ -226,6 +226,7 @@ adone.lazify({
     archive: "./glosses/archives",
     assertion: "./glosses/assertion",
     cli: "./glosses/cli",
+    cmake: "./glosses/cmake",
     collection: "./glosses/collections",
     compressor: "./glosses/compressors",
     configuration: "./glosses/configurations",
@@ -245,6 +246,7 @@ adone.lazify({
     geoip: "./glosses/geoip",
     git: "./glosses/git",
     globals: "./glosses/globals",
+    gyp: "./glosses/gyp",
     hardware: "./glosses/hardware",
     inspect: "./glosses/inspect",
     ipfs: "./glosses/ipfs",
@@ -282,10 +284,7 @@ adone.lazify({
     web: "./glosses/web",
 
     // components
-    cmake: "./cmake",
-    gyp: "./gyp",
     shani: "./shani"
-    // specter: "./specter"
 }, adone);
 
 // lazify non-extendable objects in std
