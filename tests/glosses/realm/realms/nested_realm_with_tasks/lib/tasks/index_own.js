@@ -4,13 +4,13 @@ const {
 } = adone;
 
 class OwnTaskA extends BaseTask {
-    run() {
+    main() {
         return "own aaa";
     }
 }
 
 class OwnTaskB extends BaseTask {
-    run() {
+    main() {
         return "own bbb";
     }
 }

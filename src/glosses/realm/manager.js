@@ -9,10 +9,6 @@ const {
     util
 } = adone;
 
-const CONNECTED = Symbol();
-const CONNECTING = Symbol();
-const SUPER_REALM = Symbol();
-
 const checkEntry = (entry) => {
     if (is.nil(entry.dst)) {
         return false;
@@ -61,6 +57,12 @@ const trySuperRealmAt = (cwd) => {
 };
 
 export default class RealmManager extends task.Manager {
+    #connected = false;
+    
+    #connectiong = false;
+    
+    #superRealm = null;
+
     constructor({ cwd = process.cwd() } = {}) {
         super();
 
@@ -87,26 +89,43 @@ export default class RealmManager extends task.Manager {
         this.config = realm.Configuration.loadSync({
             cwd
         });
+
+        adone.lazify({
+            devConfig: () => {
+                let cfg;
+                try {
+                    cfg = realm.DevConfiguration.loadSync({
+                        cwd
+                    });
+                } catch (err) {
+                    cfg = null;
+                }
+                return cfg;
+            }
+        }, this)
+        
         this.package = require(std.path.join(cwd, "package.json"));
-
-        // this.typeHandler = null;
-
-        // Super realm instance
-        this[SUPER_REALM] = null;
 
         // Scan for super realm
         const parentPath = std.path.dirname(this.cwd);
         const baseName = std.path.basename(parentPath);
         if (baseName === "opt") {
-            this[SUPER_REALM] = trySuperRealmAt(std.path.dirname(parentPath));
+            this.#superRealm = trySuperRealmAt(std.path.dirname(parentPath));
         }
         // check 'dev' section for merge information
-        if (is.null(this[SUPER_REALM]) && is.object(this.config.raw.dev) && is.string(this.config.raw.dev.merged)) {
-            this[SUPER_REALM] = trySuperRealmAt(this.config.raw.dev.merged);
-        }
+        if (is.null(this.#superRealm)) {
+            try {
+                const devConfig = adone.realm.DevConfiguration.loadSync({
+                    cwd
+                });
 
-        this[CONNECTED] = false;
-        this[CONNECTING] = false;
+                if (is.string(devConfig.raw.merged)) {
+                    this.#superRealm = trySuperRealmAt(devConfig.raw.merged);
+                }
+            } catch (err) {
+                //
+            }
+        }
     }
 
     get name() {
@@ -114,18 +133,18 @@ export default class RealmManager extends task.Manager {
     }
 
     get connected() {
-        return this[CONNECTED];
+        return this.#connected;
     }
 
     get superRealm() {
-        return this[SUPER_REALM];
+        return this.#superRealm;
     }
 
     async connect() {
-        if (this[CONNECTED] || this[CONNECTING]) {
+        if (this.#connected || this.#connectiong) {
             return;
         }
-        this[CONNECTING] = true;
+        this.#connectiong = true;
 
         try {
             if (!is.null(this.superRealm)) {
@@ -143,7 +162,7 @@ export default class RealmManager extends task.Manager {
                         }
                     } else {
                         // Load only default index
-                        tags[realm.TAG_PUB] = loadTasks(basePath, "index.js");
+                        tags[realm.TAG.PUB] = loadTasks(basePath, "index.js");
                     }
                 }
             }
@@ -160,7 +179,7 @@ export default class RealmManager extends task.Manager {
             
             // Add all public tasks from all super realms.
             if (!is.null(this.superRealm)) {
-                await this._addTasksFromSuperRealm(this.superRealm);
+                await this.#addTasksFromSuperRealm(this.superRealm);
             }
 
             // Add default type handlers
@@ -172,12 +191,12 @@ export default class RealmManager extends task.Manager {
             // }
 
             // this.typeHandler = adone.lazify(handlers, null, require);
-            this[CONNECTED] = true;
+            this.#connected = true;
         } catch (err) {
-            this[CONNECTED] = false;
+            this.#connected = false;
             throw err;
         } finally {
-            this[CONNECTING] = false;
+            this.#connectiong = false;
         }
     }
 
@@ -262,11 +281,11 @@ export default class RealmManager extends task.Manager {
         }
     }
 
-    async _addTasksFromSuperRealm(superRealm) {
+    async #addTasksFromSuperRealm(superRealm) {
         if (is.null(superRealm)) {
             return;
         }
-        const tasks = superRealm.getTasksByTag(realm.TAG_PUB);
+        const tasks = superRealm.getTasksByTag(realm.TAG.PUB);
         for (const taskInfo of tasks) {
             if (!this.hasTask(taskInfo.name)) {
                 // eslint-disable-next-line no-await-in-loop
@@ -274,6 +293,6 @@ export default class RealmManager extends task.Manager {
             }
         }
 
-        return this._addTasksFromSuperRealm(superRealm.superRealm);
+        return this.#addTasksFromSuperRealm(superRealm.superRealm);
     }
 }

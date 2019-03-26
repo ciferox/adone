@@ -12,13 +12,8 @@ export default class AbstractPeer extends AsyncEmitter {
     constructor(netron) {
         super();
 
-        // this.info = peerInfo;
         this.netron = netron;
-        this.#interfaces = new Map();
-        // this.connectedTime = null;
         this.task = {}; // task's results
-
-        // this.options = Object.assign({}, options);
     }
 
     /**

@@ -9,62 +9,55 @@ const {
 } = adone;
 
 export default class extends realm.BaseTask {
-    async main({ srcRealm, symlink = false } = {}) {
-        this.srcRealm = srcRealm;
-        if (is.string(srcRealm)) {
-            this.srcRealm = new realm.Manager({
-                cwd: srcRealm
-            });
-        }
-
-        if (!is.realm(this.srcRealm)) {
-            throw new adone.error.NotValidException(`Invalid type of realm: ${adone.typeOf}`);
-        }
+    async main({ superRealm, subRealm, symlink = false } = {}) {
+        this.superRealm = await this._checkRealm(superRealm, "super");
+        this.subRealm = await this._checkRealm(subRealm, "sub");
 
         this.manager.notify(this, "progress", {
-            message: `connecting to realm: ${style.accent(srcRealm.cwd)}`
+            message: "merging"
         });
 
-        await this.srcRealm.connect();
+        await adone.fs.mkdirp(this.superRealm.OPT_PATH);
 
-        this.manager.notify(this, "progress", {
-            message: "merging realm"
-        });
-
-        await adone.fs.mkdirp(realm.rootRealm.OPT_PATH);
-
-        this.optRealmPath = std.path.join(realm.rootRealm.OPT_PATH, this.srcRealm.name);
+        this.optRealmPath = std.path.join(this.superRealm.OPT_PATH, this.subRealm.name);
 
         if (symlink) {
             await this._createSymlink();
-            if (!this.srcRealm.config.has("dev")) {
-                this.srcRealm.config.set("dev", {
-                    merged: this.optRealmPath
+
+            const devConfig = this.subRealm.devConfig;
+            if (is.null(devConfig)) {
+                const helper = require("./realm_create/helpers");
+                await helper.realmConfig.createDev({
+                    cwd: this.subRealm.cwd,
+                    superRealm: this.superRealm,
+                    mergedAs: this.subRealm.name
                 });
             } else {
-                this.srcRealm.config.raw.dev.merged = this.optRealmPath;
+                devConfig.set("mergedAs", this.optRealmPath);
+                await devConfig.save();
             }
-            await this.srcRealm.config.save();
         } else {
             await this._copyFiles();
         }
 
         this.manager.notify(this, "progress", {
             status: true,
-            message: `realm ${style.primary.bold(this.srcRealm.name)} successfully merged`
+            message: `realm ${style.primary.bold(this.subRealm.name)} successfully merged`
         });
+
+        return this.optRealmPath;
     }
 
     async _createSymlink() {
         if (await fs.exists(this.optRealmPath)) {
             const stat = fs.lstatSync(this.optRealmPath);
             if (!stat.isSymbolicLink()) {
-                throw new error.ExistsException(`Realm ${style.primary(this.srcRealm.name)} already merged`);
+                throw new error.ExistsException(`Realm ${style.primary(this.subRealm.name)} already merged`);
             }
             await fs.rm(this.optRealmPath);
         }
 
-        await fs.symlink(this.srcRealm.cwd, this.optRealmPath, is.windows ? "junction" : undefined);
+        await fs.symlink(this.subRealm.cwd, this.optRealmPath, is.windows ? "junction" : undefined);
     }
 
     async _copyFiles() {
@@ -73,12 +66,33 @@ export default class extends realm.BaseTask {
 
         // Copy all files
         return fast.src("**/*", {
-            cwd: this.srcRealm.cwd
+            cwd: this.subRealm.cwd
         }).dest(this.optRealmPath, {
             produceFiles: true,
             originTimes: true,
             originMode: true,
             originOwner: true
         });
+    }
+
+    async _checkRealm(r, type) {
+        this.manager.notify(this, "progress", {
+            message: `checking ${type}-realm`
+        });
+
+        let result = r;
+        if (is.string(result)) {
+            result = new realm.Manager({
+                cwd: r
+            });
+        }
+
+        if (!is.realm(result)) {
+            throw new adone.error.NotValidException(`Invalid ${type}-realm instance`);
+        }
+
+        await result.connect();
+
+        return result;
     }
 }

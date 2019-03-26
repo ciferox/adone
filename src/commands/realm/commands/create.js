@@ -75,6 +75,10 @@ export default class extends Subsystem {
                 help: "Author name"
             },
             {
+                name: "--dev-config",
+                help: "Create development configuration"
+            },
+            {
                 name: "--init-git",
                 help: "Initialize git repository"
             },
@@ -122,6 +126,10 @@ export default class extends Subsystem {
                     search: true,
                     asObject: true,
                     choices: [
+                        {
+                            name: "Create development configuration",
+                            value: "devConfig"
+                        },
                         {
                             name: "Initialize git repository",
                             value: "initGit"
@@ -175,7 +183,7 @@ export default class extends Subsystem {
 
         try {
             const rootRealm = await this.parent.connectRealm();
-            const srcRealm = await rootRealm.runAndWait("realmCreate", info);
+            const newRealm = await rootRealm.runAndWait("realmCreate", info);
 
             const { merge } = await cli.prompt({
                 type: "confirm",
@@ -185,7 +193,8 @@ export default class extends Subsystem {
 
             if (merge) {
                 await adone.realm.rootRealm.runAndWait("realmMerge", {
-                    srcRealm,
+                    superRealm: adone.realm.rootRealm,
+                    subRealm: newRealm,
                     symlink: true
                 });
             }

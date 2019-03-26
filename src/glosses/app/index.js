@@ -15,9 +15,6 @@ export const STATE = {
     FAIL: "fail"
 };
 
-export const EXIT_SUCCESS = 0;
-export const EXIT_ERROR = 1;
-
 // Decorators
 export const SUBSYSTEM_ANNOTATION = "subsystem";
 
@@ -79,7 +76,6 @@ const __ = adone.lazify({
     AppHelper: "./app_helper",
     logger: "./logger",
     fastLogger: "./fast_logger",
-    report: "./report",
     lockfile: "./lockfile"
 }, adone.asNamespace(exports), require);
 
@@ -92,29 +88,6 @@ export const runtime = {
     })
 };
 
-export const configureReport = ({
-    events = process.env.ADONE_REPORT_EVENTS || "exception+fatalerror+signal+apicall",
-    signal = process.env.ADONE_REPORT_SIGNAL,
-    filename = process.env.ADONE_REPORT_FILENAME,
-    directory = process.env.ADONE_REPORT_DIRECTORY
-} = {}) => {
-    const {
-        app: { report }
-    } = adone;
-    if (events) {
-        report.setEvents(events);
-    }
-    if (signal) {
-        report.setSignal(signal);
-    }
-    if (filename) {
-        report.setFileName(filename);
-    }
-    if (directory) {
-        report.setDirectory(directory);
-    }
-};
-
 const INTERNAL = Symbol.for("adone.app.Application#internal");
 
 const _bootstrapApp = async (app, {
@@ -122,10 +95,6 @@ const _bootstrapApp = async (app, {
 }) => {
     if (is.null(runtime.app)) {
         runtime.app = app;
-
-        if (process.env.ADONE_ENABLE_REPORT) {
-            adone.app.configureReport();
-        }
 
         // From Node.js docs: SIGTERM and SIGINT have default handlers on non-Windows platforms that resets
         // the terminal mode before exiting with code 128 + signal number. If one of these signals has a
@@ -245,7 +214,7 @@ const _bootstrapApp = async (app, {
                 for (const error of errors) {
                     console.log(error.message);
                 }
-                await app.stop(app.EXIT_ERROR);
+                await app.stop(1);
             }
 
             app._setErrorScope(true);
@@ -271,7 +240,7 @@ const _bootstrapApp = async (app, {
             return app.fireException(err);
         }
         console.error(adone.pretty.error(err));
-        return app.stop(app.EXIT_ERROR);
+        return app.stop(1);
     }
 };
 
@@ -341,27 +310,4 @@ export const run = async (App, {
     return _bootstrapApp(app, {
         useArgs
     });
-};
-
-export const restAsOptions = (args) => {
-    const map = {};
-    let lastArg = null;
-    for (let arg of args) {
-        if (arg.match(/^--[\w-]+=.+$/)) {
-            const i = arg.indexOf("=");
-            map[adone.text.toCamelCase(arg.slice(2, i))] = arg.slice(i + 1);
-            continue;
-        }
-        if (arg.startsWith("-")) {
-            arg = arg.slice(arg[1] === "-" ? 2 : 1);
-            if (lastArg) {
-                map[lastArg] = true;
-            }
-            lastArg = adone.text.toCamelCase(arg);
-        } else {
-            map[lastArg] = arg;
-            lastArg = null;
-        }
-    }
-    return map;
 };

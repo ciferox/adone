@@ -1,6 +1,5 @@
 const {
-    task,
-    error
+    task
 } = adone;
 
 export default class BaseTask extends task.IsomorphicTask {
@@ -44,7 +43,7 @@ export default class BaseTask extends task.IsomorphicTask {
      * @param {Error} err
      */
     error(err) {
-        // throw err;
-        console.error(adone.pretty.error(err));
+        throw err;
+        // console.error(adone.pretty.error(err));
     }
 }

@@ -4,19 +4,19 @@ const {
 } = adone;
 
 class NestedTaskA extends BaseTask {
-    run() {
+    main() {
         return "aaa";
     }
 }
 
 class NestedTaskB extends BaseTask {
-    run() {
+    main() {
         return "bbb";
     }
 }
 
 class DummyTask extends BaseTask {
-    run() {
+    main() {
         return "nested dummy";
     }
 }

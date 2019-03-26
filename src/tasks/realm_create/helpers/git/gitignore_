@@ -39,3 +39,9 @@ Thumbs.db
 # compiled output
 /bin
 /lib
+/opt
+/tmp
+/var
+
+# realm specific
+/.adone/dev.json

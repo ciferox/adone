@@ -57,12 +57,12 @@ export default class extends realm.BaseTask {
             message: "preparing to copy common realm files"
         });
 
-        this.destCwd = std.path.resolve(basePath, name);
-
-        if (await fs.exists(this.destCwd)) {
-            throw new error.ExistsException(`Path '${this.destCwd}' already exists`);
+        const destCwd = std.path.resolve(basePath, name);
+        if (await fs.exists(destCwd)) {
+            throw new error.ExistsException(`Path '${destCwd}' already exists`);
         }
 
+        this.destCwd = destCwd;
         await fs.mkdirp(this.destCwd);
 
         // const srcGlob = util.arrify(exclude).map((glob) => glob.startsWith("!")

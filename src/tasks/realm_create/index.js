@@ -50,6 +50,10 @@ export default class extends realm.BaseTask {
         });
 
         await __.helper.realmConfig.create(info);
+        await __.helper.realmConfig.createDev({
+            cwd,
+            superRealm: adone.realm.rootRealm
+        });
 
         info = adone.lodash.defaults(info, {
             initGit: false,

@@ -88,16 +88,6 @@
                             "src": "src/glosses/app/lockfile.js",
                             "dst": "lib/glosses/app",
                             "task": "transpile"
-                        },
-                        "report": {
-                            "description": "Delivers a human-readable diagnostic summary, written to file",
-                            "src": "src/glosses/app/report/**/*.js",
-                            "dst": "lib/glosses/app/report",
-                            "task": "transpile",
-                            "native": {
-                                "src": "src/glosses/app/report/native",
-                                "dst": "lib/glosses/app/report/native"
-                            }
                         }
                     }
                 },

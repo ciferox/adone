@@ -6,8 +6,6 @@ const {
 } = adone;
 
 const {
-    EXIT_SUCCESS,
-    EXIT_ERROR,
     STATE
 } = app;
 
@@ -73,7 +71,7 @@ export default class Application extends app.Subsystem {
             this.removeProcessHandlers();
         } catch (err) {
             console.error(adone.pretty.error(err));
-            code = EXIT_ERROR;
+            code = 1;
         }
 
         await this.emitParallel("exit", code);
@@ -103,10 +101,10 @@ export default class Application extends app.Subsystem {
             errCode = await this.error(err);
         } else {
             console.error(adone.pretty.error(err));
-            errCode = adone.app.EXIT_ERROR;
+            errCode = 1;
         }
         if (!is.integer(errCode)) {
-            errCode = adone.app.EXIT_ERROR;
+            errCode = 1;
         }
         return this.stop(errCode);
     }

@@ -4,19 +4,19 @@ const {
 } = adone;
 
 class PubTaskA extends BaseTask {
-    run() {
+    main() {
         return "pub aaa";
     }
 }
 
 class PubTaskB extends BaseTask {
-    run() {
+    main() {
         return "pub bbb";
     }
 }
 
 class DummyTask extends BaseTask {
-    run() {
+    main() {
         return "root dummy";
     }
 }

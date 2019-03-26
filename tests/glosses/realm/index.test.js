@@ -1,25 +1,15 @@
-import { realmPathFor, createManagerFor, fixturePath, getRealmName } from "./utils";
+import { createManagerFor } from "./utils";
 
 const {
-    configuration,
     is,
-    fs,
     error,
     realm,
     std
 } = adone;
 
-// const PACKAGES_PATH = std.path.join(__dirname, "packages");
-const FIXTURES_PATH = std.path.join(__dirname, "fixtures");
-
-// // NOTE: tests order matters
-
 describe("realm", () => {
     const { rootRealm } = realm;
     let realmManager;
-    let realmPath;
-    // let adoneCliPath;
-    // let cliConfig;
 
     const CORE_TASKS = [
         "realmCreate",
@@ -69,6 +59,7 @@ describe("realm", () => {
         assert.isTrue(is.class(adone.realm.BaseTask));
         assert.isTrue(is.class(adone.realm.TransformTask));
         assert.isTrue(is.class(adone.realm.Configuration));
+        assert.isTrue(is.class(adone.realm.DevConfiguration));
         assert.isTrue(is.realm(adone.realm.rootRealm));
     });
 

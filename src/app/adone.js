@@ -91,7 +91,7 @@ class AdoneCLI extends app.Application {
     run() {
         // print usage message by default
         console.log(`${this.helper.getHelpMessage()}\n`);
-        return app.EXIT_SUCCESS;
+        return 0;
     }
 
     _configureLogger() {

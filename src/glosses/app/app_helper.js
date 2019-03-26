@@ -1334,16 +1334,16 @@ class Command {
                         message: arg.getShortHelpMessage()
                     };
                 }), {
-                    model: [
-                        { id: "left-spacing", width: 4 },
-                        { id: "names", maxWidth: 40, wordwrap: true },
-                        { id: "between-cells", width: 2 },
-                        { id: "message", wordwrap: false }
-                    ],
-                    width: "100%",
-                    borderless: true,
-                    noHeader: true
-                }));
+                        model: [
+                            { id: "left-spacing", width: 4 },
+                            { id: "names", maxWidth: 40, wordwrap: true },
+                            { id: "between-cells", width: 2 },
+                            { id: "message", wordwrap: false }
+                        ],
+                        width: "100%",
+                        borderless: true,
+                        noHeader: true
+                    }));
             }
             if (options.length) {
                 if (this.arguments.length) {
@@ -1372,16 +1372,16 @@ class Command {
                             message: opt.getShortHelpMessage()
                         };
                     }), {
-                        model: [
-                            { id: "left-spacing", width: 4 },
-                            { id: "names", maxWidth: 40, wordwrap: true },
-                            { id: "between-cells", width: 2 },
-                            { id: "message", wordwrap: true }
-                        ],
-                        width: "100%",
-                        borderless: true,
-                        noHeader: true
-                    }));
+                            model: [
+                                { id: "left-spacing", width: 4 },
+                                { id: "names", maxWidth: 40, wordwrap: true },
+                                { id: "between-cells", width: 2 },
+                                { id: "message", wordwrap: true }
+                            ],
+                            width: "100%",
+                            borderless: true,
+                            noHeader: true
+                        }));
                 }
             }
             if (commands.length) {
@@ -1411,16 +1411,16 @@ class Command {
                             message: cmd.getShortHelpMessage()
                         };
                     }), {
-                        model: [
-                            { id: "left-spacing", width: 4 },
-                            { id: "names", maxWidth: 40, wordwrap: true },
-                            { id: "between-cells", width: 2 },
-                            { id: "message", wordwrap: true }
-                        ],
-                        width: "100%",
-                        borderless: true,
-                        noHeader: true
-                    }));
+                            model: [
+                                { id: "left-spacing", width: 4 },
+                                { id: "names", maxWidth: 40, wordwrap: true },
+                                { id: "between-cells", width: 2 },
+                                { id: "message", wordwrap: true }
+                            ],
+                            width: "100%",
+                            borderless: true,
+                            noHeader: true
+                        }));
                 }
             }
         }
@@ -2234,5 +2234,28 @@ export default class AppHelper {
             errors.push(err);
         }
         return { command, errors, rest, match };
+    }
+
+    static restAsOptions(args) {
+        const map = {};
+        let lastArg = null;
+        for (let arg of args) {
+            if (arg.match(/^--[\w-]+=.+$/)) {
+                const i = arg.indexOf("=");
+                map[adone.text.toCamelCase(arg.slice(2, i))] = arg.slice(i + 1);
+                continue;
+            }
+            if (arg.startsWith("-")) {
+                arg = arg.slice(arg[1] === "-" ? 2 : 1);
+                if (lastArg) {
+                    map[lastArg] = true;
+                }
+                lastArg = adone.text.toCamelCase(arg);
+            } else {
+                map[lastArg] = arg;
+                lastArg = null;
+            }
+        }
+        return map;
     }
 }
