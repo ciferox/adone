@@ -13,8 +13,8 @@ const {
 } = adone;
 
 const {
-    CommandMeta,
-    MainCommandMeta
+    command,
+    mainCommand
 } = app;
 
 class {{ name }}Application extends app.CliApplication {
@@ -26,7 +26,7 @@ class {{ name }}Application extends app.CliApplication {
     
     }
 
-    @MainCommandMeta({
+    @mainCommand({
         blindMode: true,
         arguments: [
             {
@@ -42,7 +42,7 @@ class {{ name }}Application extends app.CliApplication {
         return 0;
     }
 
-    @CommandMeta({
+    @command({
         name: "test",
         help: "Test command",
     })

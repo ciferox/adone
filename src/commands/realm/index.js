@@ -7,12 +7,12 @@ const {
 } = adone;
 
 const {
-    SubsystemMeta
+    subsystem
 } = app;
 
 const subCommand = (name) => std.path.join(__dirname, "commands", name);
 
-@SubsystemMeta({
+@subsystem({
     commandsGroups: [
         {
             name: "local",

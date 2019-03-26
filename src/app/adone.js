@@ -10,12 +10,12 @@ const {
 } = adone;
 
 const {
-    ApplicationMeta
+    subsystem
 } = app;
 
 const command = (name) => std.path.join(__dirname, "..", "lib", "commands", name);
 
-@ApplicationMeta({
+@subsystem({
     subsystems: [
         {
             name: "run",
@@ -137,7 +137,7 @@ class AdoneCLI extends app.Application {
         }
     }
 
-    // @CommandMeta({
+    // @command({
     //     name: "config",
     //     help: "Configurations management",
     //     arguments: [

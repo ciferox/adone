@@ -1,11 +1,11 @@
 const {
-    app: { Subsystem, MainCommandMeta, runtime: { logger } },
+    app: { Subsystem, mainCommand, runtime: { logger } },
     cli
 } = adone;
 
 
 export default class extends Subsystem {
-    @MainCommandMeta({
+    @mainCommand({
         arguments: [
             {
                 name: "part",

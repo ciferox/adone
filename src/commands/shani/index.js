@@ -1,7 +1,7 @@
 const {
     app: {
         Subsystem,
-        MainCommandMeta
+        mainCommand
     },
     cli,
     std: { path, child_process: cp },
@@ -9,7 +9,7 @@ const {
 } = adone;
 
 export default class ShaniCLI extends Subsystem {
-    @MainCommandMeta({
+    @mainCommand({
         arguments: [
             {
                 name: "tests",

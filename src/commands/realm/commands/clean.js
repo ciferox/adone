@@ -1,9 +1,9 @@
 const {
-    app: { Subsystem, MainCommandMeta, runtime: { logger } }
+    app: { Subsystem, mainCommand, runtime: { logger } }
 } = adone;
 
 export default class extends Subsystem {
-    @MainCommandMeta({
+    @mainCommand({
         arguments: [
             {
                 name: "path",
@@ -18,7 +18,7 @@ export default class extends Subsystem {
             }
         ]
     })
-    async cleanCommand(args, opts) {
+    async clean(args, opts) {
         try {
             logger.start({
                 message: `Clean ${args.has("path") ? args.get("path") : "whole project"}`

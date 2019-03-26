@@ -119,8 +119,8 @@ export default class RealmManager extends task.Manager {
                     cwd
                 });
 
-                if (is.string(devConfig.raw.merged)) {
-                    this.#superRealm = trySuperRealmAt(devConfig.raw.merged);
+                if (is.string(devConfig.raw.superRealm)) {
+                    this.#superRealm = trySuperRealmAt(devConfig.raw.superRealm);
                 }
             } catch (err) {
                 //

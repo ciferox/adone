@@ -3,11 +3,11 @@ const {
 } = adone;
 
 const {
-    MainCommandMeta
+    mainCommand
 } = app;
 
 class TestApp extends adone.app.Application {
-    @MainCommandMeta({
+    @mainCommand({
         arguments: ["path"],
         options: [{
             name: "--transpile"

@@ -33,7 +33,7 @@ export default class extends realm.BaseTask {
                     mergedAs: this.subRealm.name
                 });
             } else {
-                devConfig.set("mergedAs", this.optRealmPath);
+                devConfig.set("mergedAs", this.subRealm.name);
                 await devConfig.save();
             }
         } else {

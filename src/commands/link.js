@@ -8,7 +8,7 @@ const {
 } = adone;
 
 const {
-    CommandMeta
+    command
 } = app;
 
 let SCRIPT_TEMPLATE;
@@ -35,7 +35,7 @@ export default class LinkManager extends app.Subsystem {
         this.nodeModulesPath = is.windows ? std.path.join(fs.homeDir(), ".node_modules") : "/usr/local/lib/node";
     }
 
-    @CommandMeta({
+    @command({
         name: ["list", "l"],
         help: "Show all links"
     })
@@ -75,7 +75,7 @@ export default class LinkManager extends app.Subsystem {
         }
     }
 
-    @CommandMeta({
+    @command({
         name: ["create", "c"],
         help: "Create link",
         arguments: [
@@ -152,7 +152,7 @@ export default class LinkManager extends app.Subsystem {
         }
     }
 
-    @CommandMeta({
+    @command({
         name: ["delete", "d"],
         help: "Delete link",
         arguments: [

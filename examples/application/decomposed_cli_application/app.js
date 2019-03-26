@@ -4,11 +4,11 @@ const {
 } = adone;
 
 const {
-    MainCommandMeta,
-    ApplicationMeta
+    mainCommand,
+    subsystem
 } = app;
 
-@ApplicationMeta({
+@subsystem({
     subsystems: [
         {
             name: "math",
@@ -25,7 +25,7 @@ const {
     ]
 })
 class MyCLI extends app.Application {
-    @MainCommandMeta()
+    @mainCommand()
     main() {
         console.log("hello");
     }

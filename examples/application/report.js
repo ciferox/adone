@@ -3,7 +3,7 @@ const {
 } = adone;
 
 const {
-    CommandMeta
+    command
 } = app;
 
 class App extends app.Application {
@@ -13,14 +13,14 @@ class App extends app.Application {
         });
     }
 
-    @CommandMeta()
+    @command()
     error() {
         setTimeout(() => {
             throw new Error("hello");
         }, 500);
     }
 
-    @CommandMeta()
+    @command()
     loop() {
         console.log(`kill -12 ${process.pid}`);
         for ( ; ; ) {

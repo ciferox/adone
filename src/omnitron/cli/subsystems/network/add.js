@@ -1,12 +1,12 @@
 const {
     is,
-    app: { MainCommandMeta, Subsystem },
+    app: { mainCommand, Subsystem },
     cli: { kit },
     omnitron
 } = adone;
 
 export default class extends Subsystem {
-    @MainCommandMeta({
+    @mainCommand({
         options: [
             {
                 name: "--name",

@@ -3,7 +3,7 @@ const {
 } = adone;
 
 const {
-    CommandMeta
+    command
 } = app;
 
 class TestApp extends app.Application {
@@ -16,7 +16,7 @@ class TestApp extends app.Application {
         });
     }
 
-    @CommandMeta({
+    @command({
         name: ["regular", "r"]
     })
     regular() {
@@ -24,7 +24,7 @@ class TestApp extends app.Application {
         return 0;
     }
 
-    @CommandMeta({
+    @command({
         name: "failed"
     })
     failed() {

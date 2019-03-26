@@ -1,7 +1,7 @@
 const {
     app: {
         Application,
-        MainCommandMeta
+        mainCommand
     }
 } = adone;
 
@@ -10,7 +10,7 @@ const { download } = require("./");
 const goenv = require("go-platform");
 
 class App extends Application {
-    @MainCommandMeta({
+    @mainCommand({
         arguments: [
             {
                 name: "version",

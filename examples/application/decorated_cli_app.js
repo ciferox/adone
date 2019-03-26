@@ -3,12 +3,12 @@ const {
 } = adone;
 
 const {
-    CommandMeta,
-    MainCommandMeta,
-    ApplicationMeta
+    command,
+    mainCommand,
+    subsystem
 } = app;
 
-@ApplicationMeta({
+@subsystem({
     commandsGroups: [
         {
             name: "math",
@@ -20,13 +20,13 @@ const {
     ]
 })
 class MyApp extends app.Application {
-    @MainCommandMeta()
+    @mainCommand()
     main() {
         console.log("hello");
         return 0;
     }
 
-    @CommandMeta({
+    @command({
         name: "mul",
         arguments: [{
             name: "a",
@@ -43,7 +43,7 @@ class MyApp extends app.Application {
         return 0;
     }
 
-    @CommandMeta({
+    @command({
         name: "log",
         arguments: ["a"],
         help: "print the argument",

@@ -55,7 +55,7 @@ export default class Application extends app.Subsystem {
         return this;
     }
 
-    async stop(code = EXIT_SUCCESS) {
+    async stop(code = 0) {
         if (this.#exiting) {
             return;
         }

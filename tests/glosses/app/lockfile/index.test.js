@@ -58,7 +58,9 @@ describe("lock file", () => {
     describe("create()", () => {
         beforeEach(async () => {
             await fs.writeFile(tmpFile, "");
-            await fs.rm(tmpFileSymlink);
+            try {
+                await fs.rm(tmpFileSymlink);
+            } catch (err) { }
         });
 
         afterEach(clearLocks);
@@ -86,7 +88,7 @@ describe("lock file", () => {
 
         it("should create the lockfile inside a folder", async () => {
             const lockPath = path.join(__dirname, "tmp1");
-            
+
             try {
                 await fs.mkdir(lockPath);
             } catch (err) {

@@ -1,11 +1,11 @@
 const {
-    app: { Subsystem, MainCommandMeta },
+    app: { Subsystem, mainCommand },
     pretty
 } = adone;
 
 
 export default class extends Subsystem {
-    @MainCommandMeta({
+    @mainCommand({
         options: [
             {
                 name: "--common",

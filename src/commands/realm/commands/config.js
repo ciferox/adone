@@ -1,5 +1,5 @@
 const {
-    app: { Subsystem, MainCommandMeta },
+    app: { Subsystem, mainCommand },
     cli,
     fs,
     std
@@ -7,9 +7,9 @@ const {
 
 
 export default class extends Subsystem {
-    @MainCommandMeta({
+    @mainCommand({
     })
-    async configureCommand() {
+    async main() {
         const manager = await this.parent.getRealm();
 
         const result = await cli.ask([

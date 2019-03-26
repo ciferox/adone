@@ -3,7 +3,7 @@ const {
     error,
     app: {
         Subsystem,
-        MainCommandMeta
+        mainCommand
     },
     lodash: { get },
     pretty
@@ -48,7 +48,7 @@ const parseName = (name) => {
 };
 
 export default class Inspection extends Subsystem {
-    @MainCommandMeta({
+    @mainCommand({
         arguments: [
             {
                 name: "name",

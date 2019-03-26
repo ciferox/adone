@@ -1,5 +1,5 @@
 const {
-    app: { Subsystem, MainCommandMeta },
+    app: { Subsystem, mainCommand },
     cli,
     fs,
     std
@@ -34,7 +34,7 @@ const getGitUser = async () => {
 };
 
 export default class extends Subsystem {
-    @MainCommandMeta({
+    @mainCommand({
         arguments: [
             {
                 name: "name",

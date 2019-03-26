@@ -1,8 +1,8 @@
 const {
     app: {
         Subsystem,
-        SubsystemMeta,
-        CommandMeta
+        subsystem,
+        command
     },
     is,
     cli: { kit },
@@ -16,7 +16,7 @@ const { STATUSES } = omnitron;
 const subsystemPath = (name) => std.path.resolve(__dirname, "subsystems", name);
 
 export default
-@SubsystemMeta({
+@subsystem({
     commandsGroups: [
         {
             name: "common",
@@ -67,7 +67,7 @@ export default
     ]
 })
 class Omnitron extends Subsystem {
-    @CommandMeta({
+    @command({
         name: "up",
         group: "common",
         help: "Start omnitron"
@@ -97,7 +97,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @CommandMeta({
+    @command({
         name: "down",
         group: "common",
         help: "Shutdown omnitron"
@@ -136,7 +136,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @CommandMeta({
+    @command({
         name: "gc",
         group: "common",
         help: "Force garbage collector"
@@ -160,7 +160,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @CommandMeta({
+    @command({
         name: "info",
         group: "inspect",
         help: "The omnitron's information",
@@ -195,7 +195,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @CommandMeta({
+    @command({
         name: "report",
         group: "inspect",
         help: "Report omnitron process statistics"
@@ -221,7 +221,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @CommandMeta({
+    @command({
         name: "enable",
         group: "services",
         help: "Enable service",
@@ -253,7 +253,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @CommandMeta({
+    @command({
         name: "disable",
         group: "services",
         help: "Disable service",
@@ -285,7 +285,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @CommandMeta({
+    @command({
         name: "start",
         group: "services",
         help: "Start service",
@@ -317,7 +317,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @CommandMeta({
+    @command({
         name: "stop",
         group: "services",
         help: "Stop service",
@@ -349,7 +349,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @CommandMeta({
+    @command({
         name: "restart",
         group: "services",
         help: "Restart service",
@@ -382,7 +382,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @CommandMeta({
+    @command({
         name: "configure",
         group: "services",
         help: "Configure service",
@@ -435,7 +435,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @CommandMeta({
+    @command({
         name: "services",
         group: "inspect",
         help: "Show services",
@@ -523,7 +523,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    // @CommandMeta({
+    // @command({
     //     name: "peers",
     //     group: "inspect",
     //     help: "Show connected peers"
@@ -582,7 +582,7 @@ class Omnitron extends Subsystem {
     //     }
     // }
 
-    @CommandMeta({
+    @command({
         name: "contexts",
         group: "inspect",
         help: "Show attached contexts"
@@ -626,7 +626,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @CommandMeta({
+    @command({
         name: "subsystems",
         group: "inspect",
         help: "Show omnitron subsystems"
@@ -678,7 +678,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @CommandMeta({
+    @command({
         name: "load",
         group: "subsystems",
         help: "Load subsystem",
@@ -742,7 +742,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @CommandMeta({
+    @command({
         name: "unload",
         group: "subsystems",
         help: "Unload subsystem",

@@ -3,11 +3,11 @@ const {
 } = adone;
 
 const {
-    MainCommandMeta
+    mainCommand
 } = app;
 
 class MyApp extends app.Application {
-    @MainCommandMeta({
+    @mainCommand({
         arguments: [{
             name: "a",
             holder: "A_VAR" // this name will be used in usage/help messages

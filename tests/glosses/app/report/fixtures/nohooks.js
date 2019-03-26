@@ -1,1 +1,0 @@
-adone.app.report.triggerReport();

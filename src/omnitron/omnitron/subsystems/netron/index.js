@@ -9,7 +9,7 @@ const {
 
 const NAME = "Netron subsystem";
 
-@app.SubsystemMeta({
+@app.subsystem({
     dependencies: [
         "database"
     ]

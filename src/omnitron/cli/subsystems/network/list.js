@@ -1,12 +1,12 @@
 const {
     cli: { kit },
-    app: { Subsystem, MainCommandMeta },
+    app: { Subsystem, mainCommand },
     omnitron
 } = adone;
 
 
 export default class extends Subsystem {
-    @MainCommandMeta({
+    @mainCommand({
         options: [
             {
                 name: "--active",

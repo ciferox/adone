@@ -4,10 +4,10 @@ const {
 } = adone;
 
 const {
-    SubsystemMeta
+    subsystem
 } = app;
 
-@SubsystemMeta({
+@subsystem({
     subsystems: [
         {
             name: "complex",

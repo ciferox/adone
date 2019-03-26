@@ -1,7 +1,7 @@
 const {
     app: {
         Subsystem,
-        CommandMeta
+        command
     },
     is,
     cli: { kit },
@@ -9,7 +9,7 @@ const {
 } = adone;
 
 export default class Host extends Subsystem {
-    @CommandMeta({
+    @command({
         name: "list",
         help: "Show hosts"
     })

@@ -27,29 +27,28 @@ const SubsystemDecorator = (sysInfo = {}) => (target) => {
     }
 };
 
-export const SubsystemMeta = SubsystemDecorator;
-export const ApplicationMeta = SubsystemDecorator;
-export const MainCommandMeta = (mainCommand = {}) => (target, key, descriptor) => {
+export const subsystem = SubsystemDecorator;
+export const mainCommand = (info = {}) => (target, key, descriptor) => {
     let sysMeta = Reflect.getMetadata(SUBSYSTEM_ANNOTATION, target.constructor);
-    mainCommand.handler = descriptor.value;
+    info.handler = descriptor.value;
     if (is.undefined(sysMeta)) {
         if (target instanceof adone.app.Application) {
             sysMeta = {
-                mainCommand
+                mainCommand: info
             };
         } else {
-            sysMeta = mainCommand;
+            sysMeta = info;
         }
         Reflect.defineMetadata(SUBSYSTEM_ANNOTATION, sysMeta, target.constructor);
     } else {
         if (target instanceof adone.app.Application) {
-            sysMeta.mainCommand = mainCommand;
+            sysMeta.mainCommand = info;
         } else {
-            Object.assign(sysMeta, mainCommand);
+            Object.assign(sysMeta, info);
         }
     }
 };
-export const CommandMeta = (commandInfo = {}) => (target, key, descriptor) => {
+export const command = (commandInfo = {}) => (target, key, descriptor) => {
     let sysMeta = Reflect.getMetadata(SUBSYSTEM_ANNOTATION, target.constructor);
     commandInfo.handler = descriptor.value;
     if (is.undefined(sysMeta)) {

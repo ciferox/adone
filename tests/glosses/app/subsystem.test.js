@@ -2,7 +2,7 @@ const {
     is,
     assertion,
     error,
-    app: { Subsystem, SubsystemMeta },
+    app: { Subsystem, subsystem },
     promise,
     std
 } = adone;
@@ -427,7 +427,7 @@ describe("app", "Subsystem", () => {
         let uninitializeOrder;
 
 
-        @SubsystemMeta({
+        @subsystem({
             dependencies: ["sys2"]
         })
         class Sys1 extends Subsystem {
@@ -444,7 +444,7 @@ describe("app", "Subsystem", () => {
             }
         }
 
-        @SubsystemMeta({
+        @subsystem({
             dependencies: ["sys3"]
         })
         class Sys2 extends Subsystem {
@@ -461,7 +461,7 @@ describe("app", "Subsystem", () => {
             }
         }
 
-        @SubsystemMeta()
+        @subsystem()
         class Sys3 extends Subsystem {
             onConfigure() {
                 configureOrder.push(3);

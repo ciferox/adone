@@ -1,11 +1,11 @@
 const {
-    app: { Subsystem, MainCommandMeta },
+    app: { Subsystem, mainCommand },
     cli
 } = adone;
 
 
 export default class extends Subsystem {
-    @MainCommandMeta({
+    @mainCommand({
         arguments: [
             {
                 name: "path",
