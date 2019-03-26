@@ -1,6 +1,0 @@
-{
-    "name": "omnitron",
-    "description": "Omnitron cli",
-    "version": "0.6.74",
-    "type": "cli.command"
-}

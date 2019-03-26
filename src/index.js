@@ -287,7 +287,6 @@ adone.lazify({
     // bundle: "./bundle",
     cmake: "./cmake",
     gyp: "./gyp",
-    // omnitron: "./omnitron",
     shani: "./shani"
     // specter: "./specter"
 }, adone);

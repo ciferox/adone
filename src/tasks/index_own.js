@@ -4,16 +4,8 @@ adone.lazify({
     realmFork: "./realm_fork",
     realmMerge: "./realm_merge",
     realmInfo: "./realm_info",
-    validateRealm: "./validate_realm",
-    install: "./install",
-    uninstall: "./uninstall",
-    mount: "./mount",
-    unmount: "./unmount",
-    list: "./list",
-    listByType: "./list_by_type",
 
     adoneTranspile: "./adone_transpile",
     adoneTranspileExe: "./adone_transpile_exe",
-    adoneDotCompiler: "./dot_compiler",
-
+    adoneDotCompiler: "./dot_compiler"
 }, exports, require);

@@ -5,7 +5,7 @@ const {
 
 export default {
     options: {
-        tests: "tests/{cli,glosses,project,shani,fast,omnitron,realm,cmake,gyp}/**/*.test.js",
+        tests: "tests/{cli,glosses,project,shani,fast,realm,cmake,gyp}/**/*.test.js",
         first: false,
         timeout: 30000,
         showHandles: false,
