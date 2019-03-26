@@ -1,4 +1,5 @@
 const {
+    app: { SUBSYSTEM_ANNOTATION },
     is,
     cli,
     error,
@@ -44,9 +45,6 @@ const DEFAULT_COLORS = {
         }
     }
 };
-
-// Annotations.
-const SUBSYSTEM_ANNOTATION = "subsystem";
 
 // Symbols for private proerties.
 const INTERNAL = Symbol.for("adone.app.Application#internal");
@@ -1879,7 +1877,7 @@ export default class AppHelper {
                                     // We have lazy loaded subsystem, try load it and reinit command
                                     const sysInfo = await command.loader.call(command.subsystem); // eslint-disable-line
                                     sysInfo.instance[COMMAND] = command;
-                                    await this.app.configureSubsystem(sysInfo.name); // eslint-disable-line
+                                    await sysInfo.instance.parent.configureSubsystem(sysInfo.name); // eslint-disable-line
 
                                     // Check for meta data and if exists define sub commands, ...
                                     const sysMeta = Reflect.getMetadata(SUBSYSTEM_ANNOTATION, sysInfo.instance.constructor);
@@ -2166,7 +2164,7 @@ export default class AppHelper {
                                 command
                             );
                             if (is.integer(res)) {
-                                return this.app.exit(res);
+                                return this.app.stop(res);
                             }
                         }
                         state.push("next argument");

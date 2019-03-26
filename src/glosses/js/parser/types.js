@@ -5,7 +5,7 @@ import type { Token } from "./tokenizer";
 import type { SourceLocation } from "./util/location";
 import type { PlaceholderTypes } from "./plugins/placeholders";
 
-/*
+/**
  * If making any changes to the AST, update:
  * - This repository:
  *   - This file
@@ -1308,7 +1308,7 @@ export type TsMappedType = TsTypeBase & {
 
 export type TsLiteralType = TsTypeBase & {
   type: "TSLiteralType",
-  literal: NumericLiteral | StringLiteral | BooleanLiteral,
+  literal: NumericLiteral | StringLiteral | BooleanLiteral | TemplateLiteral,
 };
 
 export type TsImportType = TsTypeBase & {

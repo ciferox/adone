@@ -1,5 +1,9 @@
 // @flow
 
+const {
+    is
+} = adone;
+
 import type { Options } from "../options";
 import type { File, JSXOpeningElement } from "../types";
 import type { PluginList } from "../plugin-utils";
@@ -17,30 +21,32 @@ export default class Parser extends StatementParser {
   ) => JSXOpeningElement;
 
   constructor(options: ?Options, input: string) {
-    options = getOptions(options);
-    super(options, input);
+      options = getOptions(options);
+      super(options, input);
 
-    this.options = options;
-    this.inModule = this.options.sourceType === "module";
-    this.scope = new ScopeHandler(this.raise.bind(this), this.inModule);
-    this.plugins = pluginsMap(this.options.plugins);
-    this.filename = options.sourceFilename;
+      this.options = options;
+      this.inModule = this.options.sourceType === "module";
+      this.scope = new ScopeHandler(this.raise.bind(this), this.inModule);
+      this.plugins = pluginsMap(this.options.plugins);
+      this.filename = options.sourceFilename;
   }
 
   parse(): File {
-    this.scope.enter(SCOPE_PROGRAM);
-    const file = this.startNode();
-    const program = this.startNode();
-    this.nextToken();
-    return this.parseTopLevel(file, program);
+      this.scope.enter(SCOPE_PROGRAM);
+      const file = this.startNode();
+      const program = this.startNode();
+      this.nextToken();
+      return this.parseTopLevel(file, program);
   }
 }
 
 function pluginsMap(plugins: PluginList): PluginsMap {
-  const pluginMap: PluginsMap = new Map();
-  for (const plugin of plugins) {
-    const [name, options] = Array.isArray(plugin) ? plugin : [plugin, {}];
-    if (!pluginMap.has(name)) pluginMap.set(name, options || {});
-  }
-  return pluginMap;
+    const pluginMap: PluginsMap = new Map();
+    for (const plugin of plugins) {
+        const [name, options] = is.array(plugin) ? plugin : [plugin, {}];
+        if (!pluginMap.has(name)) {
+            pluginMap.set(name, options || {}); 
+        }
+    }
+    return pluginMap;
 }

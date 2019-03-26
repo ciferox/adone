@@ -1,5 +1,9 @@
 // @flow
 
+const {
+    is
+} = adone;
+
 import { getLineInfo, type Position } from "../util/location";
 import CommentsParser from "./comments";
 
@@ -10,31 +14,31 @@ import CommentsParser from "./comments";
 // message.
 
 export default class LocationParser extends CommentsParser {
-  raise(
-    pos: number,
-    message: string,
-    {
-      missingPluginNames,
-      code,
-    }: {
+    raise(
+        pos: number,
+        message: string,
+        {
+            missingPluginNames,
+            code
+        }: {
       missingPluginNames?: Array<string>,
       code?: string,
     } = {},
-  ): empty {
-    const loc = getLineInfo(this.input, pos);
-    message += ` (${loc.line}:${loc.column})`;
-    // $FlowIgnore
-    const err: SyntaxError & { pos: number, loc: Position } = new SyntaxError(
-      message,
-    );
-    err.pos = pos;
-    err.loc = loc;
-    if (missingPluginNames) {
-      err.missingPlugin = missingPluginNames;
+    ): empty {
+        const loc = getLineInfo(this.input, pos);
+        message += ` (${loc.line}:${loc.column})`;
+        // $FlowIgnore
+        const err: SyntaxError & { pos: number, loc: Position } = new SyntaxError(
+            message,
+        );
+        err.pos = pos;
+        err.loc = loc;
+        if (missingPluginNames) {
+            err.missingPlugin = missingPluginNames;
+        }
+        if (!is.undefined(code)) {
+            err.code = code;
+        }
+        throw err;
     }
-    if (code !== undefined) {
-      err.code = code;
-    }
-    throw err;
-  }
 }
