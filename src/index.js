@@ -281,10 +281,7 @@ adone.lazify({
     vault: "./glosses/vault",
     web: "./glosses/web",
 
-    benchmark: "./benchmark", // temporary here
-
     // components
-    // bundle: "./bundle",
     cmake: "./cmake",
     gyp: "./gyp",
     shani: "./shani"

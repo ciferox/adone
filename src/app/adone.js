@@ -24,12 +24,6 @@ const command = (name) => std.path.join(__dirname, "..", "lib", "commands", name
             subsystem: command("run")
         },
         {
-            name: "link",
-            group: "common",
-            description: "Adone cli link management",
-            subsystem: command("link")
-        },
-        {
             name: "realm",
             group: "common",
             description: "Realm management",
@@ -42,22 +36,10 @@ const command = (name) => std.path.join(__dirname, "..", "lib", "commands", name
             subsystem: command("inspect")
         },
         {
-            name: "bench",
-            group: "common",
-            description: "Benchmarking",
-            subsystem: command("bench")
-        },
-        {
             name: "shani",
             group: "common",
             description: "Test framework",
             subsystem: command("shani")
-        },
-        {
-            name: "cmake",
-            group: "common",
-            description: "CMake build system",
-            subsystem: command("cmake")
         }
     ]
 })

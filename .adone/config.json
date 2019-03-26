@@ -513,12 +513,6 @@
                             "task": "transpile",
                             "src": "src/glosses/js/compiler/**/*.js",
                             "dst": "lib/glosses/js/compiler"
-                        },
-                        "bundle": {
-                            "description": "Bundler implementation",
-                            "task": "transpile",
-                            "src": "src/glosses/js/bundle/**/*.js",
-                            "dst": "lib/glosses/js/bundle"
                         }
                     }
                 },
@@ -884,31 +878,6 @@
                 }
             }
         },
-        "virtual": {
-            "description": "Virtual namespaces",
-            "scheme": {
-                "global": {
-                    "description": "Node.js Global Object",
-                    "virtual": true
-                },
-                "std": {
-                    "description": "Node.js Built-in Modules",
-                    "virtual": true
-                }
-            },
-            "virtual": true
-        },
-        "benchmark": {
-            "description": "A benchmarking library",
-            "task": "copy",
-            "src": [
-                "src/benchmark/**/*.js",
-                "!src/benchmark/**/LICENSE",
-                "!src/benchmark/**/README.md"
-            ],
-            "dst": "lib/benchmark",
-            "original": "https://github.com/bestiejs/benchmark.js/"
-        },
         "cmake": {
             "description": "Node.js native addon build tool",
             "src": "src/cmake/**/*.js",
@@ -932,11 +901,6 @@
                     "dst": "lib/gyp/gyp"
                 }
             }
-        },
-        "bundle": {
-            "task": "transpile",
-            "src": "src/bundle/**/*.js",
-            "dst": "lib/bundle"
         },
         "shani": {
             "description": "Testing framework",
