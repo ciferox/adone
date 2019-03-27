@@ -1,22 +1,22 @@
-
-
 const sget = require("simple-get").concat;
 const stream = require("stream");
-const symbols = require("../lib/symbols");
 
 /**
  * @param method HTTP request method
  * @param t tap instance
  * @param isSetErrorHandler true: using setErrorHandler
  */
-module.exports.payloadMethod = function (method, t, isSetErrorHandler = false) {
-    const test = t.test;
-    const fastify = require("..")();
+module.exports.payloadMethod = function (method, isSetErrorHandler = false) {
+    const {
+        web: { server }
+    } = adone;
+    const symbols = server.symbol;
+    const fastify = server();
 
     if (isSetErrorHandler) {
         fastify.setErrorHandler((err, request, reply) => {
-            t.type(request, "object");
-            t.type(request, fastify[symbols.kRequest]);
+            assert.equal(typeof request, "object");
+            assert.instanceOf(request, fastify[symbols.kRequest]);
             reply
                 .code(err.statusCode)
                 .type("application/json; charset=utf-8")
@@ -42,65 +42,65 @@ module.exports.payloadMethod = function (method, t, isSetErrorHandler = false) {
         }
     };
 
-    test(`${upMethod} can be created`, (t) => {
-        t.plan(1);
+    it(`${upMethod} can be created`, (done) => {
         try {
             fastify[loMethod]("/", schema, (req, reply) => {
                 reply.code(200).send(req.body);
             });
-            t.pass();
+            done();
         } catch (e) {
-            t.fail();
+            assert.fail();
         }
     });
 
-    test(`${upMethod} without schema can be created`, (t) => {
-        t.plan(1);
+    it(`${upMethod} without schema can be created`, (done) => {
         try {
             fastify[loMethod]("/missing", (req, reply) => {
                 reply.code(200).send(req.body);
             });
-            t.pass();
+            done();
         } catch (e) {
-            t.fail();
+            assert.fail();
         }
     });
 
-    test(`${upMethod} with body and querystring`, (t) => {
-        t.plan(1);
+    it(`${upMethod} with body and querystring`, (done) => {
         try {
             fastify[loMethod]("/with-query", (req, reply) => {
                 req.body.hello = req.body.hello + req.query.foo;
                 reply.code(200).send(req.body);
             });
-            t.pass();
+            done();
         } catch (e) {
-            t.fail();
+            assert.fail();
         }
     });
 
-    test(`${upMethod} with bodyLimit option`, (t) => {
-        t.plan(1);
+    it(`${upMethod} with bodyLimit option`, (done) => {
         try {
             fastify[loMethod]("/with-limit", { bodyLimit: 1 }, (req, reply) => {
                 reply.send(req.body);
             });
-            t.pass();
+            done();
         } catch (e) {
-            t.fail();
+            assert.fail();
         }
     });
 
-    fastify.listen(0, (err) => {
-        if (err) {
-            t.error(err);
-            return;
-        }
+    describe(upMethod, () => {
+        before((done) => {
+            fastify.listen(0, (err) => {
+                if (err) {
+                    assert.notExists(err);
+                    return;
+                }
 
-        fastify.server.unref();
+                fastify.server.unref();
+                done();
+            });
+        });
 
-        test(`${upMethod} - correctly replies`, (t) => {
-            t.plan(3);
+        it(`${upMethod} - correctly replies`, (done) => {
             sget({
                 method: upMethod,
                 url: `http://localhost:${fastify.server.address().port}`,
@@ -109,15 +109,14 @@ module.exports.payloadMethod = function (method, t, isSetErrorHandler = false) {
                 },
                 json: true
             }, (err, response, body) => {
-                t.error(err);
-                t.strictEqual(response.statusCode, 200);
-                t.deepEqual(body, { hello: "world" });
+                assert.notExists(err);
+                assert.strictEqual(response.statusCode, 200);
+                assert.deepEqual(body, { hello: "world" });
+                done();
             });
         });
 
-        test(`${upMethod} - correctly replies with very large body`, (t) => {
-            t.plan(3);
-
+        it(`${upMethod} - correctly replies with very large body`, (done) => {
             const largeString = "world".repeat(13200);
             sget({
                 method: upMethod,
@@ -125,14 +124,14 @@ module.exports.payloadMethod = function (method, t, isSetErrorHandler = false) {
                 body: { hello: largeString },
                 json: true
             }, (err, response, body) => {
-                t.error(err);
-                t.strictEqual(response.statusCode, 200);
-                t.deepEqual(body, { hello: largeString });
+                assert.notExists(err);
+                assert.strictEqual(response.statusCode, 200);
+                assert.deepEqual(body, { hello: largeString });
+                done();
             });
         });
 
-        test(`${upMethod} - correctly replies if the content type has the charset`, (t) => {
-            t.plan(3);
+        it(`${upMethod} - correctly replies if the content type has the charset`, (done) => {
             sget({
                 method: upMethod,
                 url: `http://localhost:${fastify.server.address().port}`,
@@ -141,14 +140,14 @@ module.exports.payloadMethod = function (method, t, isSetErrorHandler = false) {
                     "content-type": "application/json; charset=utf-8"
                 }
             }, (err, response, body) => {
-                t.error(err);
-                t.strictEqual(response.statusCode, 200);
-                t.deepEqual(body.toString(), JSON.stringify({ hello: "world" }));
+                assert.notExists(err);
+                assert.strictEqual(response.statusCode, 200);
+                assert.deepEqual(body.toString(), JSON.stringify({ hello: "world" }));
+                done();
             });
         });
 
-        test(`${upMethod} without schema - correctly replies`, (t) => {
-            t.plan(3);
+        it(`${upMethod} without schema - correctly replies`, (done) => {
             sget({
                 method: upMethod,
                 url: `http://localhost:${fastify.server.address().port}/missing`,
@@ -157,14 +156,14 @@ module.exports.payloadMethod = function (method, t, isSetErrorHandler = false) {
                 },
                 json: true
             }, (err, response, body) => {
-                t.error(err);
-                t.strictEqual(response.statusCode, 200);
-                t.deepEqual(body, { hello: "world" });
+                assert.notExists(err);
+                assert.strictEqual(response.statusCode, 200);
+                assert.deepEqual(body, { hello: "world" });
+                done();
             });
         });
 
-        test(`${upMethod} with body and querystring - correctly replies`, (t) => {
-            t.plan(3);
+        it(`${upMethod} with body and querystring - correctly replies`, (done) => {
             sget({
                 method: upMethod,
                 url: `http://localhost:${fastify.server.address().port}/with-query?foo=hello`,
@@ -173,23 +172,24 @@ module.exports.payloadMethod = function (method, t, isSetErrorHandler = false) {
                 },
                 json: true
             }, (err, response, body) => {
-                t.error(err);
-                t.strictEqual(response.statusCode, 200);
-                t.deepEqual(body, { hello: "worldhello" });
+                assert.notExists(err);
+                assert.strictEqual(response.statusCode, 200);
+                assert.deepEqual(body, { hello: "worldhello" });
+                done();
             });
         });
 
-        test(`${upMethod} with no body - correctly replies`, (t) => {
-            t.plan(6);
-
+        it(`${upMethod} with no body - correctly replies`, (done) => {
+            expect(2).checks(done);
             sget({
                 method: upMethod,
                 url: `http://localhost:${fastify.server.address().port}/missing`,
                 headers: { "Content-Length": "0" }
             }, (err, response, body) => {
-                t.error(err);
-                t.strictEqual(response.statusCode, 200);
-                t.strictEqual(JSON.parse(body.toString()), null);
+                assert.notExists(err);
+                assert.strictEqual(response.statusCode, 200);
+                assert.strictEqual(JSON.parse(body.toString()), null);
+                expect(true).to.be.ok.mark();
             });
 
             // Must use inject to make a request without a Content-Length header
@@ -197,32 +197,32 @@ module.exports.payloadMethod = function (method, t, isSetErrorHandler = false) {
                 method: upMethod,
                 url: "/missing"
             }, (err, res) => {
-                t.error(err);
-                t.strictEqual(res.statusCode, 200);
-                t.strictEqual(JSON.parse(res.payload), null);
+                assert.notExists(err);
+                assert.strictEqual(res.statusCode, 200);
+                assert.strictEqual(JSON.parse(res.payload), null);
+                expect(true).to.be.ok.mark();
             });
         });
 
-        test(`${upMethod} returns 415 - incorrect media type if body is not json`, (t) => {
-            t.plan(2);
+        it(`${upMethod} returns 415 - incorrect media type if body is not json`, (done) => {
             sget({
                 method: upMethod,
                 url: `http://localhost:${fastify.server.address().port}/missing`,
                 body: "hello world"
 
             }, (err, response, body) => {
-                t.error(err);
+                assert.notExists(err);
                 if (upMethod === "OPTIONS") {
-                    t.strictEqual(response.statusCode, 200);
+                    assert.strictEqual(response.statusCode, 200);
                 } else {
-                    t.strictEqual(response.statusCode, 415);
+                    assert.strictEqual(response.statusCode, 415);
                 }
+                done();
             });
         });
 
         if (loMethod === "options") {
-            test("OPTIONS returns 415 - should return 415 if Content-Type is not json or plain text", (t) => {
-                t.plan(2);
+            it("OPTIONS returns 415 - should return 415 if Content-Type is not json or plain text", (done) => {
                 sget({
                     method: upMethod,
                     url: `http://localhost:${fastify.server.address().port}/missing`,
@@ -231,14 +231,15 @@ module.exports.payloadMethod = function (method, t, isSetErrorHandler = false) {
                         "Content-Type": "text/xml"
                     }
                 }, (err, response, body) => {
-                    t.error(err);
-                    t.strictEqual(response.statusCode, 415);
+                    assert.notExists(err);
+                    assert.strictEqual(response.statusCode, 415);
+                    done();
                 });
             });
         }
 
-        test(`${upMethod} returns 400 - Bad Request`, (t) => {
-            t.plan(4);
+        it(`${upMethod} returns 400 - Bad Request`, (done) => {
+            expect(2).checks(done);
 
             sget({
                 method: upMethod,
@@ -248,8 +249,9 @@ module.exports.payloadMethod = function (method, t, isSetErrorHandler = false) {
                     "Content-Type": "application/json"
                 }
             }, (err, response, body) => {
-                t.error(err);
-                t.strictEqual(response.statusCode, 400);
+                assert.notExists(err);
+                assert.strictEqual(response.statusCode, 400);
+                expect(true).to.be.ok.mark();
             });
 
             sget({
@@ -260,13 +262,14 @@ module.exports.payloadMethod = function (method, t, isSetErrorHandler = false) {
                     "Content-Length": "0"
                 }
             }, (err, response, body) => {
-                t.error(err);
-                t.strictEqual(response.statusCode, 400);
+                assert.notExists(err);
+                assert.strictEqual(response.statusCode, 400);
+                expect(true).to.be.ok.mark();
             });
         });
 
-        test(`${upMethod} returns 413 - Payload Too Large`, (t) => {
-            t.plan(upMethod === "OPTIONS" ? 4 : 6);
+        it(`${upMethod} returns 413 - Payload Too Large`, (done) => {
+            expect(upMethod === "OPTIONS" ? 2 : 3).checks(done);
 
             sget({
                 method: upMethod,
@@ -276,8 +279,9 @@ module.exports.payloadMethod = function (method, t, isSetErrorHandler = false) {
                     "Content-Length": 1024 * 1024 + 1
                 }
             }, (err, response, body) => {
-                t.error(err);
-                t.strictEqual(response.statusCode, 413);
+                assert.notExists(err);
+                assert.strictEqual(response.statusCode, 413);
+                expect(true).to.be.ok.mark();
             });
 
             // Node errors for OPTIONS requests with a stream body and no Content-Length header
@@ -295,8 +299,9 @@ module.exports.payloadMethod = function (method, t, isSetErrorHandler = false) {
                     headers: { "Content-Type": "application/json" },
                     body: largeStream
                 }, (err, response, body) => {
-                    t.error(err);
-                    t.strictEqual(response.statusCode, 413);
+                    assert.notExists(err);
+                    assert.strictEqual(response.statusCode, 413);
+                    expect(true).to.be.ok.mark();
                 });
             }
 
@@ -307,17 +312,18 @@ module.exports.payloadMethod = function (method, t, isSetErrorHandler = false) {
                 body: {},
                 json: true
             }, (err, response, body) => {
-                t.error(err);
-                t.strictEqual(response.statusCode, 413);
+                assert.notExists(err);
+                assert.strictEqual(response.statusCode, 413);
+                expect(true).to.be.ok.mark();
             });
         });
 
-        test(`${upMethod} should fail with empty body and application/json content-type`, (t) => {
+        it(`${upMethod} should fail with empty body and application/json content-type`, (done) => {
             if (upMethod === "OPTIONS") {
-                return t.end(); 
+                return done();
             }
 
-            t.plan(12);
+            expect(6).checks(done);
 
             fastify.inject({
                 method: `${upMethod}`,
@@ -326,13 +332,14 @@ module.exports.payloadMethod = function (method, t, isSetErrorHandler = false) {
                     "Content-Type": "application/json"
                 }
             }, (err, res) => {
-                t.error(err);
-                t.strictDeepEqual(JSON.parse(res.payload), {
+                assert.notExists(err);
+                assert.deepEqual(JSON.parse(res.payload), {
                     error: "Bad Request",
                     code: "FST_ERR_CTP_EMPTY_JSON_BODY",
                     message: "FST_ERR_CTP_EMPTY_JSON_BODY: Body cannot be empty when content-type is set to 'application/json'",
                     statusCode: 400
                 });
+                expect(true).to.be.ok.mark();
             });
 
             sget({
@@ -342,13 +349,14 @@ module.exports.payloadMethod = function (method, t, isSetErrorHandler = false) {
                     "Content-Type": "application/json"
                 }
             }, (err, res, body) => {
-                t.error(err);
-                t.strictDeepEqual(JSON.parse(body.toString()), {
+                assert.notExists(err);
+                assert.deepEqual(JSON.parse(body.toString()), {
                     error: "Bad Request",
                     code: "FST_ERR_CTP_EMPTY_JSON_BODY",
                     message: "FST_ERR_CTP_EMPTY_JSON_BODY: Body cannot be empty when content-type is set to 'application/json'",
                     statusCode: 400
                 });
+                expect(true).to.be.ok.mark();
             });
 
             fastify.inject({
@@ -359,13 +367,14 @@ module.exports.payloadMethod = function (method, t, isSetErrorHandler = false) {
                 },
                 payload: null
             }, (err, res) => {
-                t.error(err);
-                t.strictDeepEqual(JSON.parse(res.payload), {
+                assert.notExists(err);
+                assert.deepEqual(JSON.parse(res.payload), {
                     error: "Bad Request",
                     code: "FST_ERR_CTP_EMPTY_JSON_BODY",
                     message: "FST_ERR_CTP_EMPTY_JSON_BODY: Body cannot be empty when content-type is set to 'application/json'",
                     statusCode: 400
                 });
+                expect(true).to.be.ok.mark();
             });
 
             sget({
@@ -376,13 +385,14 @@ module.exports.payloadMethod = function (method, t, isSetErrorHandler = false) {
                 },
                 payload: null
             }, (err, res, body) => {
-                t.error(err);
-                t.strictDeepEqual(JSON.parse(body.toString()), {
+                assert.notExists(err);
+                assert.deepEqual(JSON.parse(body.toString()), {
                     error: "Bad Request",
                     code: "FST_ERR_CTP_EMPTY_JSON_BODY",
                     message: "FST_ERR_CTP_EMPTY_JSON_BODY: Body cannot be empty when content-type is set to 'application/json'",
                     statusCode: 400
                 });
+                expect(true).to.be.ok.mark();
             });
 
             fastify.inject({
@@ -393,13 +403,14 @@ module.exports.payloadMethod = function (method, t, isSetErrorHandler = false) {
                 },
                 payload: undefined
             }, (err, res) => {
-                t.error(err);
-                t.strictDeepEqual(JSON.parse(res.payload), {
+                assert.notExists(err);
+                assert.deepEqual(JSON.parse(res.payload), {
                     error: "Bad Request",
                     code: "FST_ERR_CTP_EMPTY_JSON_BODY",
                     message: "FST_ERR_CTP_EMPTY_JSON_BODY: Body cannot be empty when content-type is set to 'application/json'",
                     statusCode: 400
                 });
+                expect(true).to.be.ok.mark();
             });
 
             sget({
@@ -410,13 +421,14 @@ module.exports.payloadMethod = function (method, t, isSetErrorHandler = false) {
                 },
                 payload: undefined
             }, (err, res, body) => {
-                t.error(err);
-                t.strictDeepEqual(JSON.parse(body.toString()), {
+                assert.notExists(err);
+                assert.deepEqual(JSON.parse(body.toString()), {
                     error: "Bad Request",
                     code: "FST_ERR_CTP_EMPTY_JSON_BODY",
                     message: "FST_ERR_CTP_EMPTY_JSON_BODY: Body cannot be empty when content-type is set to 'application/json'",
                     statusCode: 400
                 });
+                expect(true).to.be.ok.mark();
             });
         });
     });
