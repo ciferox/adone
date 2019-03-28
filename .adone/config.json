@@ -77,12 +77,6 @@
                     "dst": "lib/glosses/app",
                     "task": "transpile",
                     "scheme": {
-                        "logger": {
-                            "description": "Application logger",
-                            "src": "src/glosses/app/logger/**/*.js",
-                            "dst": "lib/glosses/app/logger",
-                            "task": "transpile"
-                        },
                         "lockfile": {
                             "description": "Inter-process file locking implementation",
                             "src": "src/glosses/app/lockfile.js",
@@ -448,7 +442,6 @@
                         }
                     }
                 },
-        
                 "hardware": {
                     "description": "Hardware stuff",
                     "task": "transpile",
@@ -551,6 +544,25 @@
                     ],
                     "dst": "lib/glosses/lodash",
                     "original": "https://github.com/lodash/lodash"
+                },
+                "logging": {
+                    "src": "src/glosses/logging/index.js",
+                    "dst": "lib/glosses/logging",
+                    "task": "transpile",
+                    "scheme": {
+                        "logger": {
+                            "description": "Application logger",
+                            "src": "src/glosses/logging/logger/**/*.js",
+                            "dst": "lib/glosses/logging/logger",
+                            "task": "transpile"
+                        },
+                        "fastLogger": {
+                            "description": "Application logger",
+                            "src": "src/glosses/logging/fast_logger/**/*.js",
+                            "dst": "lib/glosses/logging/fast_logger",
+                            "task": "transpile"
+                        }
+                    }
                 },
                 "math": {
                     "description": "Implementation of common math classes and primitives",

@@ -73,8 +73,6 @@ const __ = adone.lazify({
     Subsystem: "./subsystem",
     Application: "./application",
     AppHelper: "./app_helper",
-    logger: "./logger",
-    fastLogger: "./fast_logger",
     lockfile: "./lockfile"
 }, adone.asNamespace(exports), require);
 
@@ -82,7 +80,7 @@ const __ = adone.lazify({
 export const runtime = {
     app: null,
     lockFiles: {},
-    logger: __.logger.create({
+    logger: adone.logging.logger.create({
         level: "info"
     })
 };

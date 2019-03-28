@@ -252,6 +252,7 @@ adone.lazify({
     ipfs: "./glosses/ipfs",
     is: "./glosses/is",
     js: "./glosses/js",
+    logging: "./glosses/logging",
     math: "./glosses/math",
     metrics: "./glosses/metrics",
     model: "./glosses/models",

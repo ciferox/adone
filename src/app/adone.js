@@ -78,7 +78,7 @@ class AdoneCLI extends app.Application {
 
     _configureLogger() {
         const {
-            app: { logger: { format } },
+            logging: { logger: { format } },
             cli: { chalk }
         } = adone;
 
@@ -86,7 +86,7 @@ class AdoneCLI extends app.Application {
             level: "verbose",
             format: format.combine(
                 format.colorize({
-                    config: adone.app.logger.config.adone
+                    config: adone.logging.logger.config.adone
                 }),
                 format.padLevels(),
                 format.printf((info) => {
@@ -102,7 +102,7 @@ class AdoneCLI extends app.Application {
                 })
             ),
             transports: [
-                new adone.app.logger.transport.Console()
+                new adone.logging.logger.transport.Console()
             ]
         });
     }
