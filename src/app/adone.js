@@ -34,12 +34,6 @@ const command = (name) => std.path.join(__dirname, "..", "lib", "commands", name
             group: "common",
             description: "Inspect adone namespace/object",
             subsystem: command("inspect")
-        },
-        {
-            name: "shani",
-            group: "common",
-            description: "Test framework",
-            subsystem: command("shani")
         }
     ]
 })

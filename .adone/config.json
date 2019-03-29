@@ -921,12 +921,6 @@
                     "dst": "lib/glosses/web"
                 }
             }
-        },
-        "shani": {
-            "description": "Testing framework",
-            "task": "transpile",
-            "src": "src/shani/**/*.js",
-            "dst": "lib/shani"
         }
     }
 }

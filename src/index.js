@@ -282,10 +282,7 @@ adone.lazify({
     uri: "./glosses/uri",
     util: "./glosses/utils",
     vault: "./glosses/vault",
-    web: "./glosses/web",
-
-    // components
-    shani: "./shani"
+    web: "./glosses/web"
 }, adone);
 
 // lazify non-extendable objects in std
