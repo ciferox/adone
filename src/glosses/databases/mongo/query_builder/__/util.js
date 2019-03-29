@@ -2,7 +2,7 @@ const {
     is
 } = adone;
 
-class Cloner extends adone.util.Cloner {
+class Cloner extends adone.util.clone.Cloner {
     clone(obj) {
         if (obj instanceof adone.data.bson.ObjectId) {
             return new adone.data.bson.ObjectId(obj.id);

@@ -1,3 +1,8 @@
+const {
+    is,
+    realm
+} = adone;
+
 export const importAdoneReplacer = (replacer) => () => ({
     visitor: {
         ImportDeclaration(p, state) {
@@ -7,3 +12,20 @@ export const importAdoneReplacer = (replacer) => () => ({
         }
     }
 });
+
+export const checkRealm = async (r) => {
+    let result = r;
+    if (is.string(result)) {
+        result = new realm.Manager({
+            cwd: r
+        });
+    }
+
+    if (!is.realm(result)) {
+        throw new adone.error.NotValidException("Invalid realm instance");
+    }
+
+    await result.connect();
+
+    return result;
+}

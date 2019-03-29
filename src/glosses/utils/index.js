@@ -1,7 +1,6 @@
 const {
     is,
     error,
-    std,
     noop,
     collection
 } = adone;
@@ -86,7 +85,8 @@ adone.lazify({
     fromMs: "./from_ms",
     toMs: "./to_ms",
     omit: "./omit",
-    globParent: "./glob_parent"
+    globParent: "./glob_parent",
+    clone: "./clone"
 }, adone.asNamespace(exports), require);
 
 const irregularPlurals = {
@@ -589,50 +589,6 @@ export const parseTime = (str) => {
     return adone.datetime.duration(value, unit).as("milliseconds");
 };
 
-export class Cloner {
-    clone(obj, {
-        deep = true,
-        nonPlainObjects = false,
-        enumOnly = true
-    } = {}) {
-        if (!is.object(obj)) {
-            return obj;
-        }
-        if (is.array(obj)) {
-            if (deep) {
-                return obj.map((x) => this.clone(x, { deep, nonPlainObjects, enumOnly }));
-            }
-            return obj.slice(0);
-        }
-        if (is.function(obj)) {
-            return obj;
-        }
-        if (is.regexp(obj)) {
-            return new RegExp(obj.source, obj.flags);
-        }
-        if (is.buffer(obj)) {
-            return Buffer.from(obj);
-        }
-        if (is.date(obj)) {
-            return new Date(obj.getTime());
-        }
-        if (!nonPlainObjects && !is.plainObject(obj)) {
-            return obj;
-        }
-        const res = {};
-        for (const key of keys(obj, { enumOnly })) {
-            res[key] = deep ? this.clone(obj[key], { deep, nonPlainObjects, enumOnly }) : obj[key];
-        }
-        return res;
-    }
-
-    binding() {
-        return this.clone.bind(this);
-    }
-}
-
-export const clone = new Cloner().binding();
-
 export const asyncIter = (arr, iter, cb) => {
     let i = -1;
 
@@ -753,7 +709,7 @@ export const assignDeep = (target, ...sources) => {
             if (is.plainObject(value) && is.plainObject(target[key])) {
                 assignDeep(target[key], value);
             } else {
-                target[key] = clone(value);
+                target[key] = adone.util.clone(value);
             }
         }
     }

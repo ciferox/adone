@@ -16,35 +16,41 @@ const subCommand = (name) => std.path.join(__dirname, "commands", name);
     commandsGroups: [
         {
             name: "local",
-            description: "Local commands"
+            description: "Adone realm commands"
         },
         {
-            name: "global",
-            description: "Global commands"
+            name: "generic",
+            description: "Generic realm commands"
         }
     ],
     subsystems: [
         {
             name: "create",
-            group: "global",
+            group: "generic",
             description: "Create new realm",
             subsystem: subCommand("create")
         },
         {
             name: "fork",
-            group: "global",
+            group: "generic",
             description: "Fork realm",
             subsystem: subCommand("fork")
         },
         {
+            name: "merge",
+            group: "local",
+            description: "Merge realm",
+            subsystem: subCommand("merge")
+        },
+        {
             name: "createFile",
-            group: "global",
+            group: "generic",
             description: "Create adone/project/web/... artifact",
             subsystem: subCommand("create_file")
         },
         {
             name: "dev",
-            group: "global",
+            group: "generic",
             description: "Start realm development cycle",
             subsystem: subCommand("dev")
         },
@@ -68,55 +74,55 @@ const subCommand = (name) => std.path.join(__dirname, "commands", name);
         },
         {
             name: "info",
-            group: "global",
+            group: "generic",
             description: "Show realm information",
             subsystem: subCommand("info")
         },
         {
             name: "clean",
-            group: "global",
+            group: "generic",
             description: "Clean realm build files",
             subsystem: subCommand("clean")
         },
         {
             name: "build",
-            group: "global",
+            group: "generic",
             description: "Build realm sources",
             subsystem: subCommand("build")
         },
         {
             name: "rebuild",
-            group: "global",
+            group: "generic",
             description: "Rebuild realm sources",
             subsystem: subCommand("rebuild")
         },
         {
             name: "config",
-            group: "global",
+            group: "generic",
             description: "Configure realm",
             subsystem: subCommand("config")
         },
         {
             name: "nbuild",
-            group: "global",
+            group: "generic",
             description: "Build C++ addons",
             subsystem: subCommand("nbuild")
         },
         {
             name: "nclean",
-            group: "global",
+            group: "generic",
             description: "Clean builded C++ addons",
             subsystem: subCommand("nclean")
         },
         {
             name: "incver",
-            group: "global",
+            group: "generic",
             description: "Increase realm version",
             subsystem: subCommand("incver")
         },
         {
             name: "deps",
-            group: "global",
+            group: "generic",
             description: "Show dependencies for a particular source file or adone namespace",
             subsystem: subCommand("deps")
         }

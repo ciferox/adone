@@ -1,17 +1,24 @@
 {
     "tasks": {
-        "basePath": "./lib/tasks",
+        "basePath": "lib/tasks",
         "tags": {
             "pub": "index.js",
             "own": "index_own.js",
             "dev": "index_dev.js"
         }
     },
+    "mountPoints": "lib/mount_points",
     "scheme": {
         "tasks": {
             "description": "Realm tasks",
             "src": "src/tasks/**/*.js",
             "dst": "lib/tasks",
+            "task": "transpile"
+        },
+        "mountPoints": {
+            "description": "Realm mount points",
+            "src": "src/mount_points/**/*.js",
+            "dst": "lib/mount_points",
             "task": "transpile"
         },
         "assets": {

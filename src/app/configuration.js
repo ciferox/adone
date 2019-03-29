@@ -1,6 +1,8 @@
 const {
+    error,
     is,
-    std
+    std,
+    util
 } = adone;
 
 const CONFIG_NAME = "cli.json";
@@ -17,31 +19,50 @@ export default class Configuration extends adone.configuration.Generic {
         return adone.util.arrify(this.raw.groups);
     }
 
+    hasGroup(name) {
+        return is.array(this.raw.groups) && this.raw.groups.findIndex((group) => group.name === name) !== -1;
+    }
+
+    addGroup(group, shouldThronOnExists = false) {
+        if (!is.object(group) || !is.string(group.name)) {
+            throw new error.NotValidException(`Invalid type of group: ${adone.typeOf(group)}`);
+        }
+
+        if (this.hasGroup(group.name)) {
+            if (shouldThronOnExists) {
+                throw new error.ExistsException(`Group '${group.name}' already exists`);
+            }
+            return;
+        }
+
+        this.raw.groups.push(group);
+    }
+
     hasCommand(name) {
         return is.array(this.raw.commands) && this.raw.commands.findIndex((x) => x.name === name) >= 0;
     }
 
     getCommand(name) {
         if (!this.hasCommand(name)) {
-            throw new adone.error.UnknownException(`Unknown command: ${name}`);
+            throw new error.UnknownException(`Unknown command: ${name}`);
         }
         return this.raw.commands.find((x) => x.name === name);
     }
 
-    updateCommand(name, props) {
-        if (!this.hasCommand(name)) {
-            throw new adone.error.UnknownException(`Unknown command: ${name}`);
-        }
-        const cmdInfo = this.raw.commands.find((x) => x.name === name);
-
-        for (const [key, val] of Object.entries(props)) {
-            if (is.undefined(val)) {
-                delete cmdInfo[key];
-            } else {
-                cmdInfo[key] = val;
+    setCommand(cmd) {
+        const commands = this.raw.commands = util.arrify(this.raw.commands);
+        let i;
+        for (i = 0; i < commands.length; i++) {
+            if (commands[i].name === cmd.name) {
+                break;
             }
         }
-        return this.save();
+
+        if (i < commands.length) {
+            commands[i] = cmd;
+        } else {
+            commands.push(cmd);
+        }
     }
 
     deleteCommand(name) {
@@ -49,7 +70,6 @@ export default class Configuration extends adone.configuration.Generic {
             const index = this.raw.commands.findIndex((x) => x.name === name);
             if (index >= 0) {
                 this.raw.commands.splice(index, 1);
-                return this.save();
             }
         }
     }
@@ -64,7 +84,7 @@ export default class Configuration extends adone.configuration.Generic {
 
     getLink(name) {
         if (!this.hasLink(name)) {
-            throw new adone.error.UnknownException(`Unknown link name: ${name}`);
+            throw new error.UnknownException(`Unknown link name: ${name}`);
         }
         return this.raw.links.find((x) => x.name === name);
     }
@@ -72,7 +92,7 @@ export default class Configuration extends adone.configuration.Generic {
     addLink(linkInfo, updateIfExists = false) {
         const isExists = this.hasLink(linkInfo.name);
         if (isExists && !updateIfExists) {
-            throw new adone.error.ExistsException(`Link '${linkInfo.name}' already exists`);
+            throw new error.ExistsException(`Link '${linkInfo.name}' already exists`);
         }
 
         if (!is.array(this.raw.links)) {
@@ -106,6 +126,9 @@ export default class Configuration extends adone.configuration.Generic {
     }
 
     save() {
+        this.raw.commands.sort((a, b) => a.name > b.name);
+        this.raw.groups.sort((a, b) => a.name > b.name);
+
         return super.save(CONFIG_NAME, null, {
             space: "    "
         });
