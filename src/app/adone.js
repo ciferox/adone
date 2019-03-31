@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/local/bin/node
 
 import "..";
 import Configuration from "../lib/app/configuration";
@@ -112,70 +112,6 @@ class AdoneCLI extends app.Application {
             });
         }
     }
-
-    // @command({
-    //     name: "config",
-    //     help: "Configurations management",
-    //     arguments: [
-    //         {
-    //             name: "path",
-    //             help: "path to config file"
-    //         }
-    //     ],
-    //     options: [
-    //         {
-    //             name: "--convert",
-    //             help: "convert config from one format to another"
-    //         },
-    //         {
-    //             name: "--out",
-    //             type: String,
-    //             help: "output path for config"
-    //         },
-    //         {
-    //             name: "--format",
-    //             help: "type of format",
-    //             choices: ["json", "bson", "mpak", "json5"],
-    //             default: "json"
-    //         },
-    //         {
-    //             name: "--style",
-    //             choices: ["none", "color", "html"],
-    //             default: "color",
-    //             help: "output style"
-    //         },
-    //         {
-    //             name: "--depth",
-    //             type: Number,
-    //             help: "depth of nested objects",
-    //             default: 8
-    //         },
-    //         {
-    //             name: "--types",
-    //             help: "do not display types and constructors"
-    //         }
-    //     ]
-    // })
-    // async configCommand(args, opts) {
-    //     const config = new adone.configuration.Generic();
-    //     await config.load(args.get("path"), "__");
-    //     console.log(adone.meta.inspect(config.__, { style: opts.get("style"), depth: opts.get("depth"), noType: !opts.get("types"), noDescriptor: true, enumOnly: true, proto: false, funcDetails: false }));
-
-    //     const outPath = opts.get("out");
-    //     if (is.string(outPath)) {
-    //         const ext = std.path.extname(outPath);
-    //         const options = {
-
-    //         };
-
-    //         if (ext === ".json") {
-    //             options.space = 4;
-    //         }
-    //         await config.save(outPath, "__", options);
-    //         console.log(`\nConfiguration saved to ${outPath}!`);
-    //     }
-    //     return 0;
-    // }
 }
 
 app.run(AdoneCLI, {

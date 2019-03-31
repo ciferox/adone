@@ -10,11 +10,6 @@ Object.defineProperty(exports, "__esModule", {
 const NAMESPACE_SYMBOL = Symbol.for("adone:namespace");
 const PRIVATE_SYMBOL = Symbol.for("adone:private");
 
-const asNamespace = (obj) => {
-    obj[NAMESPACE_SYMBOL] = true;
-    return obj;
-};
-
 const adone = Object.create({
     null: Symbol.for("adone:null"),
     noop: () => { },
@@ -22,8 +17,6 @@ const adone = Object.create({
     truly: () => true,
     falsely: () => false,
     o: (...props) => props.length > 0 ? Object.assign({}, ...props) : {},
-    Date: global.Date,
-    hrtime: process.hrtime,
     setTimeout: global.setTimeout,
     clearTimeout: global.clearTimeout,
     setInterval: global.setInterval,
@@ -114,48 +107,29 @@ const adone = Object.create({
         return obj;
     },
     private: (obj) => obj[PRIVATE_SYMBOL],
-    asNamespace,
+    asNamespace: (obj) => {
+        obj[NAMESPACE_SYMBOL] = true;
+        return obj;
+    },
     // TODO: allow only absolute path
     nativeAddon: (path) => {
         return require(adone.std.path.isAbsolute(path) ? path : adone.std.path.resolve(__dirname, "./native", path));
-    },
-    loadAsset: (path) => {
-        const extName = adone.std.path.extname(path);
-        const buf = adone.std.fs.readFileSync(adone.std.path.normalize(path));
-        switch (extName) {
-            case ".json": {
-                return JSON.parse(buf.toString("utf8"));
-            }
-            default:
-                return buf;
-        }
     }
 });
 
-// Mark adone as namespace
-asNamespace(adone);
-
-// Mark global as namespace
-asNamespace(global);
-
 // Mark some globals as namespaces
-asNamespace(global.process);
-asNamespace(global.console);
+[
+    adone,
+    global,
+    global.process,
+    global.console
+].forEach((mod) => {
+    adone.asNamespace(mod);
+});
 
 Object.defineProperty(global, "adone", {
     enumerable: true,
     value: adone
-});
-
-Object.defineProperties(adone, {
-    adone: {
-        enumerable: true,
-        value: adone
-    },
-    global: {
-        enumerable: true,
-        value: global
-    }
 });
 
 adone.lazify({
@@ -181,7 +155,7 @@ adone.lazify({
     // Namespaces
 
     // NodeJS
-    std: () => asNamespace(adone.lazify({
+    std: () => adone.asNamespace(adone.lazify({
         assert: "assert",
         async_hooks: "async_hooks",
         buffer: "buffer",
@@ -209,7 +183,7 @@ adone.lazify({
         readline: "readline",
         repl: "repl",
         stream: "stream",
-        string_decoder: "string_decoder", 
+        string_decoder: "string_decoder",
         timers: "timers",
         tls: "tls",
         tty: "tty",

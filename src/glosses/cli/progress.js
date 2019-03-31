@@ -196,7 +196,7 @@ export default class ProgressBar {
         // }
 
         if (is.null(this.start)) {
-            this.start = new adone.Date();
+            this.start = new Date();
         }
 
         this.current += delta;
@@ -224,7 +224,7 @@ export default class ProgressBar {
         const ratio = Math.min(Math.max(this.current / this.total, 0), 1);
         const chars = this.chars;
         const percent = ratio * 100;
-        const elapsed = new adone.Date() - this.start;
+        const elapsed = new Date() - this.start;
         let eta;
 
         if (this.current <= 0) {

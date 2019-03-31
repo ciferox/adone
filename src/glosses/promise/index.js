@@ -63,20 +63,20 @@ export const timeout = (promise, ms) => {
         throw new adone.error.InvalidArgumentException("The first argument must be a promise");
     }
     return new Promise((resolve, reject) => {
-        const timestamp = new adone.Date();
+        const timestamp = new Date();
         const timer = adone.setTimeout(() => {
             reject(new adone.error.TimeoutException(`Timeout of ${ms}ms exceeded`));
         }, ms);
         promise.then((x) => {
             adone.clearTimeout(timer);
-            if (new adone.Date() - timestamp >= ms) {
+            if (new Date() - timestamp >= ms) {
                 reject(new adone.error.TimeoutException(`Timeout of ${ms}ms exceeded`));
             } else {
                 resolve(x);
             }
         }, (y) => {
             adone.clearTimeout(timer);
-            if (new adone.Date() - timestamp >= ms) {
+            if (new Date() - timestamp >= ms) {
                 const err = new adone.error.TimeoutException(`Timeout of ${ms}ms exceeded`);
                 err.original = y;
                 reject(err);
