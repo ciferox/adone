@@ -69,7 +69,7 @@ export const command = (commandInfo = {}) => (target, key, descriptor) => {
     }
 };
 
-const __ = adone.lazify({
+adone.lazify({
     Subsystem: "./subsystem",
     Application: "./application",
     AppHelper: "./app_helper",
@@ -267,6 +267,7 @@ export const run = async (App, {
 
     if (!is.null(runtime.app)) {
         await runtime.app.uninitialize();
+        runtime.app.removeProcessHandlers();
         runtime.app = null;
     }
 
@@ -295,9 +296,9 @@ export const run = async (App, {
     }
 
     const app = new XApplication();
-    for (const name of props) {
-        const descriptor = Object.getOwnPropertyDescriptor(_App, name);
-        Object.defineProperty(app, name, descriptor);
+    for (const prop of props) {
+        const descriptor = Object.getOwnPropertyDescriptor(_App, prop);
+        Object.defineProperty(app, prop, descriptor);
     }
     if (useArgs) {
         // mark the default main as internal to be able to distinguish internal from user-defined handlers

@@ -1,4 +1,5 @@
 const {
+    is,
     js: { compiler: { types: t, generate: generator } }
 } = adone;
 
@@ -27,7 +28,7 @@ export default class NodePath {
         this.parent = parent;
         this.hub = hub;
         this.contexts = [];
-        this.data = {};
+        this.data = Object.create(null);
         this.shouldSkip = false;
         this.shouldStop = false;
         this.removed = false;
@@ -135,7 +136,7 @@ export default class NodePath {
 
     getData(key: string, def?: any): any {
         let val = this.data[key];
-        if (!val && def) {
+        if (is.undefined(val) && !is.undefined(def)) {
             val = this.data[key] = def;
         }
         return val;
@@ -168,10 +169,10 @@ export default class NodePath {
     }
 
     debug(message) {
-        //   if (!debug.enabled) {
-        //       return; 
-        //   }
-        //   debug(`${this.getPathLocation()} ${this.type}: ${message}`);
+        // if (!debug.enabled) {
+        //     return;
+        // }
+        // debug(`${this.getPathLocation()} ${this.type}: ${message}`);
     }
 
     toString() {

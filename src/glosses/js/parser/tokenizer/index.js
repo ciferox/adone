@@ -18,7 +18,7 @@ import State from "./state";
 const {
     is,
     text: { charcode: charCodes }
-  } = adone;
+} = adone;
 
 const VALID_REGEX_FLAGS = new Set(["g", "m", "s", "i", "y", "u"]);
 
