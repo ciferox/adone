@@ -1,0 +1,54 @@
+{
+    "adone": {
+        "namespace": true,
+        "base": "src",
+        "entry": "index.js",
+        "layout": {
+            "app": {
+                "namespace": true,
+                "base": "src/glosses/app",
+                "entry": "index.js",
+                "glob": "*.js"
+            },
+            "archive": {
+                "namespace": true,
+                "base": "src/glosses/archives",
+                "entry": "index.js",
+                "layout": {
+                    "tar": {
+                        "entry": "tar/index.js",
+                        "glob": "tar/**/*.js"
+                    },
+                    "zip": {
+                        "entry": "zip/index.js",
+                        "glob": "zip/**/*.js"
+                    }
+                }
+            },
+            "assertion": {
+                "namespace": true,
+                "base": "src/glosses/assertion",
+                "entry": "index.js",
+                "glob": "**/*.js",
+                "layout": {
+                    "extension": {
+                        "namespace": true,
+                        "entry": "extension/index.js",
+                        "glob": "extension/**/*.js"
+                    }
+                }
+            },
+            "async": {
+                "namespace": true,
+                "base": "src/async",
+                "entry": "index.js"
+            },
+            "cli": {
+                "namespace": true,
+                "base": "src/cli",
+                "entry": "index.js",
+                "glob": "**/*.js"
+            }
+        }
+    }
+}

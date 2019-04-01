@@ -14,7 +14,7 @@ export default class extends Subsystem {
     })
     async depsCommand(args) {
         // only paths are supported
-        const m = new adone.js.adone.Module({
+        const m = new adone.realm.code.Module({
             filePath: args.get("path")
         });
         await m.load();

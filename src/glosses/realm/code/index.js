@@ -1,6 +1,6 @@
 const {
     is,
-    std
+    realm
 } = adone;
 
 export class Inspector {
@@ -11,10 +11,10 @@ export class Inspector {
 
     async attachNamespace(nsName) {
         if (!this.namespaces.has(nsName)) {
-            const ns = await adone.js.adone.Namespace.inspect(nsName, this.path);
+            const ns = await realm.code.Namespace.inspect(nsName, this.path);
             // console.log(ns.name);
             // console.log(adone.meta.inspect(Object.keys(ns.exports), { style: "color" }));
-            this.namespaces.set(nsName, ns/*await adone.js.adone.Namespace.inspect(nsName, this.path)*/);
+            this.namespaces.set(nsName, ns/*await realm.code.Namespace.inspect(nsName, this.path)*/);
         }
     }
 
@@ -51,7 +51,7 @@ export class Inspector {
     }
 }
 
-adone.lazify({
+const __ = adone.lazify({
     Namespace: "./namespace",
     Base: "./base",
     Module: "./module",
@@ -78,19 +78,20 @@ adone.lazify({
             case "ClassDeclaration": return `ClassDeclaration:${node.id.name}`;
         }
         return node.type;
-    },
-    is: () => ({
-        functionLike: (x) => (adone.js.adone.is.function(x) || adone.js.adone.is.arrowFunction(x) || adone.js.adone.is.class(x)),
-        module: (x) => adone.tag.has(x, "CODEMOD_MODULE"),
-        class: (x) => adone.tag.has(x, "CODEMOD_CLASS"),
-        variable: (x) => adone.tag.has(x, "CODEMOD_VAR"),
-        function: (x) => adone.tag.has(x, "CODEMOD_FUNCTION"),
-        arrowFunction: (x) => adone.tag.has(x, "CODEMOD_ARROWFUNCTION"),
-        lazyFunction: (x) => adone.tag.has(x, "CODEMOD_LAZYFUNCTION"),
-        object: (x) => adone.tag.has(x, "CODEMOD_OBJECT"),
-        expression: (x) => adone.tag.has(x, "CODEMOD_EXPRESSION"),
-        constant: (x) => adone.tag.has(x, "CODEMOD_CONST"),
-        statement: (x) => adone.tag.has(x, "CODEMOD_STATEMENT"),
-        native: (x) => adone.tag.has(x, "CODEMOD_NATIVE")
-    })
+    }
 }, exports, require);
+
+
+// Predicates
+export const isModule = (x) => x instanceof __.Module;
+export const isClass = (x) => x instanceof __.Class;
+export const isVariable = (x) => x instanceof __.Variable;
+export const isFunction = (x) => x instanceof __.Function;
+export const isArrowFunction = (x) => x instanceof __.ArrowFunction;
+export const isLazyFunction = (x) => x instanceof __.LazyFunction;
+export const isObject = (x) => x instanceof __.Object;
+export const isExpression = (x) => x instanceof __.Expression;
+export const isConstant = (x) => x instanceof __.Constant;
+export const isStatement = (x) => x instanceof __.Statement;
+export const isNative = (x) => x instanceof __.Native;
+export const isFunctionLike = (x) => isFunction(x) || isArrowFunction(x) || isClass(x);

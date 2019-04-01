@@ -1,4 +1,4 @@
-export default class XNative extends adone.js.adone.Base {
+export default class XNative extends adone.realm.code.Base {
     constructor(options) {
         super(options);
         if (adone.is.string(options.name)) {

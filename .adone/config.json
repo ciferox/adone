@@ -96,7 +96,21 @@
                     "description": "Archivers",
                     "src": "src/glosses/archives/**/*.js",
                     "dst": "lib/glosses/archives",
-                    "task": "transpile"
+                    "task": "transpile",
+                    "scheme": {
+                        "zip": {
+                            "description": "ZIP",
+                            "src": "src/glosses/archives/zip/**/*.js",
+                            "dst": "lib/glosses/archives/zip",
+                            "task": "transpile"
+                        },
+                        "tar": {
+                            "description": "TAR",
+                            "src": "src/glosses/archives/tar/**/*.js",
+                            "dst": "lib/glosses/archives/tar",
+                            "task": "transpile"
+                        }
+                    }
                 },
                 "assertion": {
                     "description": "Assertion utilites",

@@ -3,6 +3,7 @@ const {
     is,
     fs,
     js: { compiler: { traverse } },
+    realm,
     std: {
         assert
     }
@@ -303,7 +304,7 @@ class AdoneDependencyCollector {
     }
 }
 
-export default class XModule extends adone.js.adone.Base {
+export default class XModule extends realm.code.Base {
     constructor({
         nsName = "global",
         code = null,
@@ -375,7 +376,7 @@ export default class XModule extends adone.js.adone.Base {
 
         for (const { names, path } of imports) {
             const filePath = await fs.lookup(path);
-            const importedModule = new adone.js.adone.Module({ nsName: this.nsName, filePath });
+            const importedModule = new realm.code.Module({ nsName: this.nsName, filePath });
             await importedModule.load();
 
             const exports = importedModule.exports();
@@ -417,7 +418,7 @@ export default class XModule extends adone.js.adone.Base {
                         ? path.node.expression
                         : path.node.declarations[0].init;
 
-                    let targetInfo = adone.js.adone.nodeInfo(callExpr.arguments[1]);
+                    let targetInfo = realm.code.nodeInfo(callExpr.arguments[1]);
 
                     if (targetInfo === "CallExpression") {
                         // adone.lazify({}, adone.asNamespace(exports), require);
@@ -440,9 +441,9 @@ export default class XModule extends adone.js.adone.Base {
                         }
                     }
                     if (
-                        adone.js.adone.nodeInfo(callExpr.arguments[0]) === "ObjectExpression"
+                        realm.code.nodeInfo(callExpr.arguments[0]) === "ObjectExpression"
                         && targetInfo.startsWith("Identifier:")
-                        && adone.js.adone.nodeInfo(callExpr.arguments[2]) === "Identifier:require"
+                        && realm.code.nodeInfo(callExpr.arguments[2]) === "Identifier:require"
                     ) {
 
                         const props = callExpr.arguments[0].properties;
@@ -457,7 +458,7 @@ export default class XModule extends adone.js.adone.Base {
                                         lazies.push({ name: objectName, path: adone.std.path.join(basePath, prop.value.value) });
                                     } else if (prop.value.type === "ArrowFunctionExpression") {
                                         const lazyPath = this.getPathFor(path, prop.value);
-                                        this.lazies.set(objectName, new adone.js.adone.LazyFunction({
+                                        this.lazies.set(objectName, new realm.code.LazyFunction({
                                             parent: this,
                                             ast: prop.value,
                                             path: lazyPath,
@@ -468,7 +469,7 @@ export default class XModule extends adone.js.adone.Base {
                             }
                         } else {
                             const xObj = this.lookupInGlobalScope(targetInfo.split(":")[1]);
-                            if (adone.js.adone.is.object(xObj)) {
+                            if (realm.code.isObject(xObj)) {
                                 for (const prop of props) {
                                     const name = prop.key.name;
                                     if (prop.value.type === "StringLiteral") {
@@ -476,7 +477,7 @@ export default class XModule extends adone.js.adone.Base {
                                         // lazies.push({ name: objectName, path: adone.std.path.join(basePath, prop.value.value) });
                                     } else if (prop.value.type === "ArrowFunctionExpression") {
                                         const lazyPath = this.getPathFor(path, prop.value);
-                                        xObj.value.set(name, new adone.js.adone.LazyFunction({ parent: this, ast: prop.value, path: lazyPath, xModule: this }));
+                                        xObj.value.set(name, new realm.code.LazyFunction({ parent: this, ast: prop.value, path: lazyPath, xModule: this }));
                                     }
                                 }
                             }
@@ -543,12 +544,12 @@ export default class XModule extends adone.js.adone.Base {
                                 shouldSkip = true;
                                 if (declrNode.id.type === "Identifier") {
                                     const name = declrNode.id.name;
-                                    this.addToScope(new adone.js.adone.Native({ name, parent: this, ast: null, path: null, xModule: this }));
+                                    this.addToScope(new realm.code.Native({ name, parent: this, ast: null, path: null, xModule: this }));
                                     this._addGlobal(name, null, node.kind, false);
                                 } else if (declrNode.id.type === "ObjectPattern") {
                                     const natives = this._traverseObjectPattern(declrNode.id, node.kind);
                                     for (const name of natives) {
-                                        this.addToScope(new adone.js.adone.Native({ name, parent: this, ast: null, path: null, xModule: this }));
+                                        this.addToScope(new realm.code.Native({ name, parent: this, ast: null, path: null, xModule: this }));
                                         this._addGlobal(name, null, node.kind, false);
                                     }
                                 }
@@ -612,7 +613,7 @@ export default class XModule extends adone.js.adone.Base {
         if (lazies.length > 0) {
             for (const { name, path } of lazies) {
                 const filePath = await fs.lookup(path);
-                const lazyModule = new adone.js.adone.Module({ nsName: this.nsName, filePath });
+                const lazyModule = new realm.code.Module({ nsName: this.nsName, filePath });
                 await lazyModule.load();
                 this.lazies.set(name, lazyModule);
             }
@@ -631,13 +632,13 @@ export default class XModule extends adone.js.adone.Base {
         Object.assign(result, this._exports);
         if (!is.null(this.lazies)) {
             for (const [name, lazy] of this.lazies.entries()) {
-                if (adone.js.adone.is.module(lazy)) {
+                if (realm.code.isModule(lazy)) {
                     if (is.undefined(lazy.exports().default)) { // special case
                         result[name] = lazy;
                     } else {
                         Object.assign(result, XModule.lazyExports(lazy));
                     }
-                } else if (adone.js.adone.is.lazyFunction(lazy)) {
+                } else if (realm.code.isLazyFunction(lazy)) {
                     result[name] = lazy;
                 }
             }
@@ -844,11 +845,11 @@ export default class XModule extends adone.js.adone.Base {
         const rawExports = xModule.exports();
         const result = {};
         // console.log(Object.values(rawExports).map(x => x.ast));
-        if (adone.js.adone.is.object(rawExports.default)) {
+        if (realm.code.isObject(rawExports.default)) {
             for (const [key, val] of rawExports.default.entries()) {
                 result[key] = val;
             }
-        } else if (adone.js.adone.is.functionLike(rawExports.default)) {
+        } else if (realm.code.isFunctionLike(rawExports.default)) {
             // console.log(rawExports.default.name);
             result[rawExports.default.name] = rawExports.default;
         } else if (is.undefined(rawExports.default)) {

@@ -4,8 +4,8 @@ const {
     std,
     error,
     app: {
-        STATE,
-        SUBSYSTEM_ANNOTATION
+        getSubsystemMeta,
+        STATE
     },
     util
 } = adone;
@@ -14,7 +14,7 @@ const getSortedList = (subsystem) => {
     const subsystems = subsystem.getSubsystems().slice();
     const edges = [];
     for (const sysInfo of subsystems) {
-        const sysMeta = Reflect.getMetadata(SUBSYSTEM_ANNOTATION, sysInfo.instance.constructor);
+        const sysMeta = getSubsystemMeta(sysInfo.instance.constructor);
         if (sysMeta) {
             const deps = adone.util.arrify(sysMeta.dependencies);
             for (const name of deps) {

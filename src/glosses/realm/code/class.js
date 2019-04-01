@@ -2,7 +2,7 @@ const {
     is
 } = adone;
 
-export default class XClass extends adone.js.adone.Base {
+export default class XClass extends adone.realm.code.Base {
     constructor(options) {
         super(options);
         this.superClassName = null;

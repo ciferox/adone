@@ -1,4 +1,4 @@
-export default class XVariable extends adone.js.adone.Base {
+export default class XVariable extends adone.realm.code.Base {
     constructor(options) {
         super(options);
 

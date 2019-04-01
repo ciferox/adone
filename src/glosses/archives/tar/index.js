@@ -362,3 +362,8 @@ export const unpackStream = (cwd = process.cwd(), opts = {}) => {
 
     return unpack;
 };
+
+adone.lazify({
+    RawPackStream: "./raw/pack",
+    RawUnpackStream: "./raw/unpack"
+}, exports, require);

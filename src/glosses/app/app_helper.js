@@ -1,5 +1,5 @@
 const {
-    app: { SUBSYSTEM_ANNOTATION },
+    app: { getSubsystemMeta },
     is,
     cli,
     error,
@@ -1702,7 +1702,7 @@ export default class AppHelper {
             });
         } else {
             subsystem = this.app.instantiateSubsystem(subsystem, { transpile });
-            let sysMeta = Reflect.getMetadata(SUBSYSTEM_ANNOTATION, subsystem.constructor);
+            let sysMeta = getSubsystemMeta(subsystem.constructor);
             if (sysMeta) {
                 sysMeta.name = sysMeta.name || name;
                 sysMeta.description = sysMeta.description || description;
@@ -1880,7 +1880,7 @@ export default class AppHelper {
                                     await sysInfo.instance.parent.configureSubsystem(sysInfo.name); // eslint-disable-line
 
                                     // Check for meta data and if exists define sub commands, ...
-                                    const sysMeta = Reflect.getMetadata(SUBSYSTEM_ANNOTATION, sysInfo.instance.constructor);
+                                    const sysMeta = getSubsystemMeta(sysInfo.instance.constructor);
                                     if (sysMeta) {
                                         this._defineCommandFromSubsystem(sysInfo.instance, sysMeta, [
                                             "description", // ??

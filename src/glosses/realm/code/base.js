@@ -1,6 +1,7 @@
 const {
     is,
-    js: { compiler: { parse, generate } }
+    js: { compiler: { parse, generate } },
+    realm
 } = adone;
 
 const jsNatives = ["Error", "EvalError", "RangeError", "ReferenceError", "SyntaxError", "TypeError", "URIError"];
@@ -14,7 +15,7 @@ export default class XBase {
         path = null,
         type = "script"
     } = {}) {
-        // if (is.nil(xModule) && !adone.js.adone.is.module(this)) {
+        // if (is.nil(xModule) && !realm.code.isModule(this)) {
         //     throw new adone.error.NotValidException("XModule cannot be null");
         // }
         this.xModule = xModule;
@@ -123,7 +124,7 @@ export default class XBase {
         switch (ast.type) {
             case "ExportDefaultDeclaration":
             case "ExportNamedDeclaration":
-                xObj = new adone.js.adone.Export({ parent, ast, path, xModule });
+                xObj = new realm.code.Export({ parent, ast, path, xModule });
                 break;
             case "VariableDeclaration": {
                 if (ast.declarations.length > 1) {
@@ -139,7 +140,7 @@ export default class XBase {
                 return xObj;
             }
             case "VariableDeclarator": {
-                xObj = new adone.js.adone.Variable({ parent, ast, path, xModule });
+                xObj = new realm.code.Variable({ parent, ast, path, xModule });
                 xObj.kind = kind;
                 break;
             }
@@ -151,13 +152,13 @@ export default class XBase {
             case "CallExpression":
             case "LogicalExpression":
             case "UnaryExpression":
-            case "UpdateExpression": xObj = new adone.js.adone.Expression({ parent, ast, path, xModule }); break;
+            case "UpdateExpression": xObj = new realm.code.Expression({ parent, ast, path, xModule }); break;
             case "StringLiteral":
             case "NumericLiteral":
             case "RegExpLiteral":
             case "TemplateLiteral":
             case "NullLiteral":
-            case "BooleanLiteral": xObj = new adone.js.adone.Constant({ parent, ast, path, xModule }); break;
+            case "BooleanLiteral": xObj = new realm.code.Constant({ parent, ast, path, xModule }); break;
             case "ExpressionStatement":
             case "BlockStatement":
             case "EmptyStatement":
@@ -178,17 +179,17 @@ export default class XBase {
             case "ForStatement":
             case "ForInStatement":
             case "ForOfStatement":
-            case "ForAwaitStatement": xObj = new adone.js.adone.Statement({ parent, ast, path, xModule }); break;
-            case "ClassDeclaration": xObj = new adone.js.adone.Class({ parent, ast, path, xModule }); break;
-            case "FunctionDeclaration": xObj = new adone.js.adone.Function({ parent, ast, path, xModule }); break;
-            case "FunctionExpression": xObj = new adone.js.adone.Function({ parent, ast, path, xModule }); break;
-            case "ArrowFunctionExpression": xObj = new adone.js.adone.ArrowFunction({ parent, ast, path, xModule }); break;
-            case "ObjectExpression": xObj = new adone.js.adone.Object({ parent, ast, path, xModule }); break;
-            case "ObjectProperty": xObj = new adone.js.adone.ObjectProperty({ parent, ast, path, xModule }); break;
-            case "ObjectMethod": xObj = new adone.js.adone.ObjectMethod({ parent, ast, path, xModule }); break;
+            case "ForAwaitStatement": xObj = new realm.code.Statement({ parent, ast, path, xModule }); break;
+            case "ClassDeclaration": xObj = new realm.code.Class({ parent, ast, path, xModule }); break;
+            case "FunctionDeclaration": xObj = new realm.code.Function({ parent, ast, path, xModule }); break;
+            case "FunctionExpression": xObj = new realm.code.Function({ parent, ast, path, xModule }); break;
+            case "ArrowFunctionExpression": xObj = new realm.code.ArrowFunction({ parent, ast, path, xModule }); break;
+            case "ObjectExpression": xObj = new realm.code.Object({ parent, ast, path, xModule }); break;
+            case "ObjectProperty": xObj = new realm.code.ObjectProperty({ parent, ast, path, xModule }); break;
+            case "ObjectMethod": xObj = new realm.code.ObjectMethod({ parent, ast, path, xModule }); break;
             case "Identifier": {
                 if (ast.name === "adone") {
-                    xObj = new adone.js.adone.Adone({ ast, path, xModule });
+                    xObj = new realm.code.Adone({ ast, path, xModule });
                 } else {
                     xObj = this.lookupInGlobalScope(ast.name);
                     if (is.null(xObj)) {
@@ -202,7 +203,7 @@ export default class XBase {
                 }
                 break;
             }
-            case "ImportDeclaration": xObj = new adone.js.adone.ImportDeclaration({ parent, ast, path, xModule }); break;
+            case "ImportDeclaration": xObj = new realm.code.ImportDeclaration({ parent, ast, path, xModule }); break;
             default:
                 throw new adone.error.UnknownException(`Unknown type: ${ast.type}`);
         }
@@ -235,7 +236,7 @@ export default class XBase {
                         break;
                     }
                 }
-            } else if (adone.js.adone.is.native(xObj)) {
+            } else if (realm.code.isNative(xObj)) {
                 if (xObj.name === name) {
                     return xObj;
                 }
@@ -281,7 +282,7 @@ export default class XBase {
 
     _tryJsNative({ ast, path, xModule }) {
         if (jsNatives.includes(ast.name)) {
-            return new adone.js.adone.JsNative({ ast, path, xModule });
+            return new realm.code.JsNative({ ast, path, xModule });
         }
         return null;
     }

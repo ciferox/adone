@@ -1,4 +1,4 @@
-export default class XObject extends adone.js.adone.Base {
+export default class XObject extends adone.realm.code.Base {
     constructor(options) {
         super(options);
 

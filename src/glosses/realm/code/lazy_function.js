@@ -2,7 +2,7 @@ const {
     is
 } = adone;
 
-export default class XLazyFunction extends adone.js.adone.Base {
+export default class XLazyFunction extends adone.realm.code.Base {
     constructor(options) {
         super(options);
         if (!is.null(this.ast) && this.ast.id) {

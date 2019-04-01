@@ -3,7 +3,8 @@ const { lazify } = adone;
 const assertion = lazify({
     AssertionError: "./assertion_error",
     config: "./config",
-    util: "./__/utils"
+    util: "./__/utils",
+    extension: "./extensions"
 }, adone.asNamespace(exports), require);
 
 const __ = lazify({
@@ -11,15 +12,6 @@ const __ = lazify({
     core: "./__/core/assertions",
     assert: "./__/interface/assert",
     expect: "./__/interface/expect"
-}, null, require);
-
-export const extension = lazify({
-    dirty: "./extensions/dirty",
-    mock: "./extensions/mock",
-    promise: "./extensions/promise",
-    checkmark: "./extensions/checkmark",
-    spy: "./extensions/spy",
-    string: "./extensions/string"
 }, null, require);
 
 const used = new Set();

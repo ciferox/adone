@@ -1,5 +1,5 @@
 import { run } from "./processHelpers";
-let npmConfigData = require("rc")("npm");
+const npmConfigData = require("rc")("npm");
 
 const {
     is,
@@ -275,6 +275,16 @@ export default class CMake {
         options = options || {};
         const gens = [];
         if (CMake.isAvailable(options)) {
+            // try parsing machine-readable capabilities (available since CMake 3.7)
+            try {
+                const stdout = await execStdout(`${options.cmakePath || "cmake"} -E capabilities`);
+                const capabilities = JSON.parse(stdout);
+                return capabilities.generators.map((x) => x.name);
+            } catch (error) {
+                this.log.verbose("TOOL", "Failed to query CMake capabilities (CMake is probably older than 3.7)");
+            }
+
+            // fall back to parsing help text
             const stdout = await execStdout(`${options.cmakePath || "cmake"}`, ["--help"]);
             const hasCr = stdout.includes("\r\n");
             const output = hasCr ? stdout.split("\r\n") : stdout.split("\n");
