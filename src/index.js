@@ -3,12 +3,8 @@
 /* eslint-disable adone/no-null-comp */
 /* eslint-disable adone/no-typeof */
 
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-const NAMESPACE_SYMBOL = Symbol.for("adone:namespace");
-const PRIVATE_SYMBOL = Symbol.for("adone:private");
+const NAMESPACE_SYMBOL = Symbol();
+const PRIVATE_SYMBOL = Symbol();
 
 const adone = Object.create({
     null: Symbol.for("adone:null"),
@@ -107,14 +103,13 @@ const adone = Object.create({
         return obj;
     },
     private: (obj) => obj[PRIVATE_SYMBOL],
+    NAMESPACE_SYMBOL,
     asNamespace: (obj) => {
         obj[NAMESPACE_SYMBOL] = true;
         return obj;
     },
     // TODO: allow only absolute path
-    nativeAddon: (path) => {
-        return require(adone.std.path.isAbsolute(path) ? path : adone.std.path.resolve(__dirname, "./native", path));
-    }
+    nativeAddon: (path) => require(adone.std.path.isAbsolute(path) ? path : adone.std.path.resolve(__dirname, "./native", path))
 });
 
 // Mark some globals as namespaces
@@ -279,4 +274,7 @@ if (process.env.ADONE_SOURCEMAPS) {
     adone.sourcemap.support(Error).install();
 }
 
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
 exports.adone = adone;

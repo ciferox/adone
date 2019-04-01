@@ -269,7 +269,7 @@ module.exports = (dht) => ({
     _get(key, options, callback) {
         dht._log("_get %b", key);
         waterfall([
-            (cb) => dht.getMany(key, 16, options, cb),
+            (cb) => dht.getMany(key, c.GET_MANY_RECORD_COUNT, options, cb),
             (vals, cb) => {
                 const recs = vals.map((v) => v.val);
                 let i = 0;
@@ -510,7 +510,7 @@ module.exports = (dht) => ({
 
                             // hooray we have all that we want
                             if (pathProviders.length >= pathSize) {
-                                return cb(null, { success: true });
+                                return cb(null, { pathComplete: true });
                             }
 
                             // it looks like we want some more
@@ -525,6 +525,8 @@ module.exports = (dht) => ({
             const peers = dht.routingTable.closestPeers(key.buffer, c.ALPHA);
 
             timeout((cb) => query.run(peers, cb), providerTimeout)((err) => {
+                query.stop();
+                
                 // combine peers from each path
                 paths.forEach((path) => {
                     path.toArray().forEach((peer) => {

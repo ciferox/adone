@@ -11,6 +11,10 @@ const {
     p2p: { Switch, PeerBook, transport: { TCP, WS }, muxer: { pullMplex, spdy } }
 } = adone;
 
+const switchOptions = {
+    blacklistTTL: 0 // nullifies blacklisting
+};
+
 
 describe("circuit", () => {
     let swarmA; // TCP and WS
@@ -28,7 +32,7 @@ describe("circuit", () => {
         peerA.multiaddrs.add("/ip4/0.0.0.0/tcp/9001");
         peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9002/ws");
 
-        swarmA = new Switch(peerA, new PeerBook());
+        swarmA = new Switch(peerA, new PeerBook(), switchOptions);
         swarmB = new Switch(peerB, new PeerBook());
         swarmC = new Switch(peerC, new PeerBook());
 

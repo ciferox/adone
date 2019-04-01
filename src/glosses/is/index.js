@@ -218,8 +218,7 @@ export const plainObject = (value) => {
     return function_(Ctor) && Ctor instanceof Ctor && funcToString.call(Ctor) === objectCtorString; // eslint-disable-line
 };
 
-const NAMESPACE_SYMBOL = Symbol.for("adone:namespace");
-export const namespace = (value) => object(value) && value[NAMESPACE_SYMBOL] === true;
+export const namespace = (value) => object(value) && value[adone.NAMESPACE_SYMBOL] === true;
 
 // Checks whether given value is an empty object, i.e, an object without any own, enumerable, string keyed properties.
 export const emptyObject = (obj) => object(obj) && Object.keys(obj).length === 0;

@@ -232,7 +232,7 @@ class KadDHT extends EventEmitter {
                         });
                     }, (err, results) => {
                         if (err) {
-                            return cb(err); 
+                            return cb(err);
                         }
 
                         // Did we put to enough peers?
@@ -315,7 +315,7 @@ class KadDHT extends EventEmitter {
                 });
             }
 
-            if (nvals <= 1) {
+            if (vals.length >= nvals) {
                 return callback(null, vals);
             }
 
@@ -361,7 +361,7 @@ class KadDHT extends EventEmitter {
 
                                 // enough is enough
                                 if (pathVals.length >= pathSize) {
-                                    res.success = true;
+                                    res.pathComplete = true;
                                 }
 
                                 cb(null, res);
@@ -370,7 +370,12 @@ class KadDHT extends EventEmitter {
                     });
 
                     // run our query
-                    timeout((cb) => query.run(rtp, cb), options.timeout)(cb);
+                    timeout((_cb) => {
+                        query.run(rtp, _cb);
+                    }, options.timeout)((err, res) => {
+                        query.stop();
+                        cb(err, res);
+                    });
                 }
             ], (err) => {
                 // combine vals from each path
@@ -421,7 +426,7 @@ class KadDHT extends EventEmitter {
                         (closer, cb) => {
                             cb(null, {
                                 closerPeers: closer,
-                                success: options.shallow ? true : undefined
+                                pathComplete: options.shallow ? true : undefined
                             });
                         }
                     ], callback);
@@ -638,7 +643,7 @@ class KadDHT extends EventEmitter {
                                     if (match) {
                                         return cb(null, {
                                             peer: match,
-                                            success: true
+                                            queryComplete: true
                                         });
                                     }
 
@@ -650,9 +655,12 @@ class KadDHT extends EventEmitter {
                         };
                     });
 
-                    timeout((cb) => {
-                        query.run(peers, cb);
-                    }, options.timeout)(cb);
+                    timeout((_cb) => {
+                        query.run(peers, _cb);
+                    }, options.timeout)((err, res) => {
+                        query.stop();
+                        cb(err, res);
+                    });
                 },
                 (result, cb) => {
                     let success = false;

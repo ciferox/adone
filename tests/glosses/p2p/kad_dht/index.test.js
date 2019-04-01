@@ -248,31 +248,6 @@ describe("common", () => {
         });
     });
 
-    it("should emit a peer event when a peer is connected", function (done) {
-        this.timeout(10 * 1000);
-        const tdht = new TestDHT();
-
-        tdht.spawn(2, (err, dhts) => {
-            expect(err).to.not.exist();
-            const dhtA = dhts[0];
-            const dhtB = dhts[1];
-
-            dhtA.on("peer", (peerInfo) => {
-                expect(peerInfo).to.exist().mark();
-            });
-
-            dhtB.on("peer", (peerInfo) => {
-                expect(peerInfo).to.exist().mark();
-            });
-
-            connect(dhtA, dhtB, (err) => {
-                expect(err).to.not.exist();
-            });
-        });
-
-        expect(2).checks(done);
-    });
-
     it("put - get", function (done) {
         this.timeout(10 * 1000);
         const tdht = new TestDHT();
@@ -902,6 +877,7 @@ describe("common", () => {
                 done();
             });
         });
+
         it("delete entries received from peers that have expired", (done) => {
             const sw = new Switch(peerInfos[0], new PeerBook());
             sw.transport.add("tcp", new TCP());
@@ -958,6 +934,40 @@ describe("common", () => {
                 (cb) => cb(null, record.serialize()),
                 (enc, cb) => dht._verifyRecordLocally(Record.deserialize(enc), cb)
             ], done);
+        });
+    });
+
+    describe("getMany", () => {
+        it("getMany with nvals=1 goes out to swarm if there is no local value", (done) => {
+            const sw = new Switch(peerInfos[0], new PeerBook());
+            sw.transport.add("tcp", new TCP());
+            sw.connection.addStreamMuxer(mplex);
+            sw.connection.reuse();
+            const dht = new KadDHT(sw);
+
+            const key = Buffer.from("/v/hello");
+            const value = Buffer.from("world");
+            const rec = new Record(key, value);
+
+            const stubs = [
+                // Simulate returning a peer id to query
+                sinon.stub(dht.routingTable, "closestPeers").returns([peerInfos[1].id]),
+                // Simulate going out to the network and returning the record
+                sinon.stub(dht, "_getValueOrPeers").callsFake((peer, k, cb) => {
+                    cb(null, rec);
+                })
+            ];
+
+            dht.getMany(key, 1, (err, res) => {
+                expect(err).to.not.exist();
+                expect(res.length).to.eql(1);
+                expect(res[0].val).to.eql(value);
+
+                for (const stub of stubs) {
+                    stub.restore();
+                }
+                done();
+            });
         });
     });
 
