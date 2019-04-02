@@ -135,6 +135,12 @@
                     "dst": "lib/glosses/async",
                     "original": "https://github.com/caolan/async"
                 },
+                "bundler": {
+                    "description": "Multi-asset bundler",
+                    "src": "src/glosses/bundler/**/*.js",
+                    "dst": "lib/glosses/bundler",
+                    "task": "transpile"
+                },
                 "cli": {
                     "description": "CLI components and utilities",
                     "src": "src/glosses/cli/**/*.js",
@@ -520,6 +526,26 @@
                                 "dst": "lib/glosses/hardware/serial/native",
                                 "type": "gyp"
                             }
+                        }
+                    }
+                },
+                "http": {
+                    "description": "All around of HTTP",
+                    "task": "transpile",
+                    "src": "src/glosses/http/**/*.js",
+                    "dst": "lib/glosses/http",
+                    "scheme": {
+                        "server": {
+                            "description": "HTTP server",
+                            "task": "transpile",
+                            "src": "src/glosses/http/server/**/*.js",
+                            "dst": "lib/glosses/http/server"
+                        },
+                        "client": {
+                            "description": "HTTP client",
+                            "task": "transpile",
+                            "src": "src/glosses/http/client/**/*.js",
+                            "dst": "lib/glosses/http/client"
                         }
                     }
                 },

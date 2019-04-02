@@ -161,15 +161,23 @@ export default class Toolset {
         let result = null;
         for (const gen of list) {
             const found = /^visual studio (\d+)/i.exec(gen);
-            if (found) {
-                const ver = parseInt(found[1]);
-                if (ver > maxVer) {
-                    // eslint-disable-next-line
-                    if (await vsDetect.isInstalled(`${ver}.0`)) {
-                        result = this.targetOptions.isX64 ? (`${gen} Win64`) : gen;
-                        maxVer = ver;
-                    }
-                }
+            if (!found) {
+                continue;
+            }
+
+            let ver = parseInt(found[1]);
+            if (ver <= maxVer) {
+                continue;
+            }
+
+            const is64Bit = gen.endsWith("Win64");
+            if ((this.targetOptions.isX86 && is64Bit) || (this.targetOptions.isX64 && !is64Bit)) {
+                continue;
+            }
+
+            if (await vsDetect.isInstalled(ver + ".0")) {
+                result = gen;
+                maxVer = ver;
             }
         }
         return result;
