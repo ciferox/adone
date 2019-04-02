@@ -4,9 +4,7 @@ const {
     fs,
     js: { compiler: { traverse } },
     realm,
-    std: {
-        assert
-    }
+    std: { assert, path }
 } = adone;
 
 /**
@@ -63,6 +61,9 @@ class AdoneDependencyCollector {
      */
     compactMemberExpression(node) {
         if (node.object.type === "Identifier") {
+            if (node.property.type === "PrivateName") {
+                return null;
+            }
             const name = this.decodeAdonePath(node.object.name) || node.object.name;
             if (node.computed) {
                 return {
@@ -306,14 +307,17 @@ class AdoneDependencyCollector {
 
 export default class XModule extends realm.code.Base {
     constructor({
+        realm: r = adone.realm.rootRealm,
         nsName = "global",
         code = null,
         filePath = "index.js"
     } = {}) {
         super({ code, type: "module" });
+        this.realm = r;
+        this.codeLayout = new realm.code.CodeLayout(r);
         this.nsName = nsName;
         this.xModule = this;
-        this.filePath = filePath;
+        this.filePath = path.resolve(r.cwd, filePath);
         this._exports = {};
         this.globals = [
             {
@@ -327,7 +331,7 @@ export default class XModule extends realm.code.Base {
                 isNamespace: true
             }
         ];
-        this._lazies = null;
+        this.lazies = new Map();
     }
 
     getType() {
@@ -344,14 +348,14 @@ export default class XModule extends realm.code.Base {
 
         const lazies = [];
         const imports = [];
-        const basePath = adone.std.path.dirname(this.filePath);
+        const basePath = path.dirname(this.filePath);
 
 
         traverse(this.ast, {
             ImportDeclaration(path) {
                 const { node } = path;
                 imports.push({
-                    path: adone.std.path.join(basePath, node.source.value),
+                    path: path.join(basePath, node.source.value),
                     names: node.specifiers.map((x) => {
                         if (x.type === "ImportDefaultSpecifier") {
                             return {
@@ -376,7 +380,7 @@ export default class XModule extends realm.code.Base {
 
         for (const { names, path } of imports) {
             const filePath = await fs.lookup(path);
-            const importedModule = new realm.code.Module({ nsName: this.nsName, filePath });
+            const importedModule = new realm.code.Module({ realm: this.realm, nsName: this.nsName, filePath });
             await importedModule.load();
 
             const exports = importedModule.exports();
@@ -452,7 +456,7 @@ export default class XModule extends realm.code.Base {
                             for (const prop of props) {
                                 const name = prop.key.name;
                                 const fullName = `${this.nsName}.${name}`;
-                                const { namespace, objectName } = adone.meta.parseName(fullName);
+                                const { namespace, objectName } = this.codeLayout.parseName(fullName);
                                 if (namespace === this.nsName) {
                                     if (prop.value.type === "StringLiteral") {
                                         lazies.push({ name: objectName, path: adone.std.path.join(basePath, prop.value.value) });
@@ -474,7 +478,7 @@ export default class XModule extends realm.code.Base {
                                     const name = prop.key.name;
                                     if (prop.value.type === "StringLiteral") {
                                         throw new adone.error.NotImplementedException("Not implemented yet");
-                                        // lazies.push({ name: objectName, path: adone.std.path.join(basePath, prop.value.value) });
+                                        // lazies.push({ name: objectName, path: path.join(basePath, prop.value.value) });
                                     } else if (prop.value.type === "ArrowFunctionExpression") {
                                         const lazyPath = this.getPathFor(path, prop.value);
                                         xObj.value.set(name, new realm.code.LazyFunction({ parent: this, ast: prop.value, path: lazyPath, xModule: this }));
@@ -590,13 +594,37 @@ export default class XModule extends realm.code.Base {
                         }
                         xObj = this.createXObject(xObjData);
                         // Add to scope only declarations.
-                        if (node.type !== "Identifier") {
-                            if (
-                                node.type.endsWith("Declarator")
-                                || ["VariableDeclaration", "ClassDeclaration", "FunctionDeclaration"].includes(node.type)
-                            ) {
-                                this.addToScope(xObj);
-                            }
+                        if (
+                            node.type.endsWith("Declarator")
+                            || ["VariableDeclaration", "ClassDeclaration", "FunctionDeclaration"].includes(node.type)
+                        ) {
+                            this.addToScope(xObj);
+                        }
+                    }
+                    if (!is.undefined(isDefault)) {
+                        // export default adone.asNamespace(identifier);
+                        // TODO
+                        this._addExport(xObj, isDefault, node);
+                    }
+                } else if (nodeType === "ExportNamedDeclaration") {
+                    const node = realPath.node;
+
+                    if (is.null(xObj)) {
+                        const xObjData = {
+                            ast: node,
+                            path: realPath,
+                            xModule: this
+                        };
+                        if (node.type === "VariableDeclaration") {
+                            xObjData.kind = node.kind;
+                        }
+                        xObj = this.createXObject(xObjData);
+                        // Add to scope only declarations.
+                        if (
+                            node.type.endsWith("Declarator")
+                            || ["VariableDeclaration", "ClassDeclaration", "FunctionDeclaration"].includes(node.type)
+                        ) {
+                            this.addToScope(xObj);
                         }
                     }
                     if (!is.undefined(isDefault)) {
@@ -613,34 +641,38 @@ export default class XModule extends realm.code.Base {
         if (lazies.length > 0) {
             for (const { name, path } of lazies) {
                 const filePath = await fs.lookup(path);
-                const lazyModule = new realm.code.Module({ nsName: this.nsName, filePath });
+                const lazyModule = new realm.code.Module({ realm: this.realm, nsName: this.nsName, filePath });
                 await lazyModule.load();
                 this.lazies.set(name, lazyModule);
             }
         }
     }
 
-    get lazies() {
-        if (is.null(this._lazies)) {
-            this._lazies = new Map();
-        }
-        return this._lazies;
-    }
-
     exports() {
         const result = {};
-        Object.assign(result, this._exports);
-        if (!is.null(this.lazies)) {
-            for (const [name, lazy] of this.lazies.entries()) {
-                if (realm.code.isModule(lazy)) {
-                    if (is.undefined(lazy.exports().default)) { // special case
-                        result[name] = lazy;
-                    } else {
-                        Object.assign(result, XModule.lazyExports(lazy));
-                    }
-                } else if (realm.code.isLazyFunction(lazy)) {
+
+        for (const [name, val] of Object.entries(this._exports)) {
+            if (realm.code.isVariable(val)) {
+                result[name] = val.value;
+            } else if (realm.code.isClass(val) || realm.code.isFunctionLike(val)) {
+                result[name] = val;
+            }
+        }
+        for (const [name, lazy] of this.lazies.entries()) {
+            if (realm.code.isModule(lazy)) {
+                if (is.undefined(lazy.exports().default)) { // special case
                     result[name] = lazy;
+                } else {
+                    const modExports = XModule.lazyExports(lazy);
+                    const keys = Object.keys(modExports);
+                    if (keys.length === 1 && keys[0] === "undefined") { // case when modules exports anonymous function
+                        result[name] = modExports.undefined;
+                    } else {
+                        Object.assign(result, modExports);
+                    }
                 }
+            } else if (realm.code.isLazyFunction(lazy)) {
+                result[name] = lazy;
             }
         }
         return result;
@@ -744,7 +776,7 @@ export default class XModule extends realm.code.Base {
             const exprs = this._traverseObjectPattern(node.id, kind);
             for (const expr of exprs) {
                 const name = `${prefix}${expr}`;
-                const { namespace, objectName } = adone.meta.parseName(name);
+                const { namespace, objectName } = this.codeLayout.parseName(name);
                 if (objectName === "") {
                     const parts = namespace.split(".");
                     this._addGlobal(parts[parts.length - 1], parts.slice(0, -1).join("."), kind, true);
@@ -819,6 +851,7 @@ export default class XModule extends realm.code.Base {
                     break;
                 }
                 case "FunctionDeclaration":
+                case "VariableDeclaration":
                 case "VariableDeclarator": {
                     name = xObj.name;
                     break;

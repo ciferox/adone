@@ -1,6 +1,6 @@
 const {
     is,
-    js: { compiler: { parse, generate } },
+    js: { parse, compiler: { generate } },
     realm
 } = adone;
 
@@ -59,10 +59,12 @@ export default class XBase {
         this.ast = parse(this.code, {
             sourceType: this.type,
             plugins: [
-                "decorators",
-                "functionBind",
+                ["decorators", { decoratorsBeforeExport: false }],
                 "classProperties",
-                "objectRestSpread"
+                "classPrivateProperties",
+                "classPrivateMethods",
+                "numericSeparator",
+                "partialApplication"
             ]
         });
     }
@@ -101,7 +103,7 @@ export default class XBase {
                     if (!is.undefined(globalObject)) {
                         if (parts.length > 1) {
                             const fullName = `${globalObject.full}.${parts.slice(1).join(".")}`;
-                            const { namespace, objectName } = adone.meta.parseName(fullName);
+                            const { namespace, objectName } = this.xModule.codeLayout.parseName(fullName);
                             if (namespace === "") {
                                 this._addReference(parts[0]);
                             } else {
@@ -288,7 +290,7 @@ export default class XBase {
     }
 
     _addReference(name) {
-        const { objectName } = adone.meta.parseName(name);
+        const { objectName } = this.xModule.codeLayout.parseName(name);
         if (objectName.length > 0 && !this._references.includes(name)) {
             this._references.push(name);
         }

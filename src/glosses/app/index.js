@@ -2,6 +2,14 @@ const {
     is
 } = adone;
 
+adone.lazify({
+    Subsystem: "./subsystem",
+    Application: "./application",
+    AppHelper: "./app_helper",
+    lockfile: "./lockfile",
+    run: "./run"
+}, adone.asNamespace(exports), require);
+
 export const STATE = {
     INITIAL: "initial",
     CONFIGURING: "configuring",
@@ -70,14 +78,6 @@ export const command = (commandInfo = {}) => (target, key, descriptor) => {
         }
     }
 };
-
-adone.lazify({
-    Subsystem: "./subsystem",
-    Application: "./application",
-    AppHelper: "./app_helper",
-    lockfile: "./lockfile",
-    run: "./run"
-}, adone.asNamespace(exports), require);
 
 // application runtime
 export const runtime = {

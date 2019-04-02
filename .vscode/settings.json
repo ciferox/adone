@@ -1,0 +1,10 @@
+{
+    "eslint.enable": true,
+    "javascript.validate.enable": true,
+    "vsicons.presets.angular": false,
+    "files.associations": {
+        "exception": "cpp",
+        "config.h": "c"
+    },
+    "git.ignoreLimitWarning": true
+}

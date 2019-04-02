@@ -14,14 +14,14 @@ export default class XNamespace {
         this.exports = {};
     }
 
-    static async inspect(name, pathPrefix) {
+    static async inspect(name, cwd) {
         const mapExportsToNamespace = (ns, nsModule) => Object.assign(ns.exports, realm.code.Module.lazyExports(nsModule));
 
         const info = adone.meta.getNamespaceInfo(name);
 
         const ns = new XNamespace(info);
 
-        const indexPath = std.path.join(pathPrefix, info.index.src);
+        const indexPath = std.path.join(cwd, info.index.src);
 
         // const relIndexPath = adone.std.path.normalize("/adone/src/index.js");
         // let sourceModule;

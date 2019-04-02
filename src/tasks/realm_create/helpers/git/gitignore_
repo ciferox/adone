@@ -21,9 +21,10 @@
 /connect.lock
 /coverage
 /libpeerconnection.log
-npm-debug.log
-testem.log
 /typings
+*.old
+*.orig
+*.db
 
 # e2e
 /e2e/*.js
@@ -36,12 +37,27 @@ Thumbs.db
 # dependencies
 /node_modules
 
-# compiled output
-/bin
-/lib
-/opt
-/tmp
-/var
+# logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# realm files/dirs
+/.adone/identity.json
+/etc/adone/*
+/bin/
+/lib/
+/run/
+/var/
+/opt/
+/tmp/
 
 # realm specific
 /.adone/dev.json
+
+test-fixtures/
+_fixtures/
+test-resources/
+**/native/build/**/*
