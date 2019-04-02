@@ -2859,12 +2859,12 @@ describe("hooks", () => {
         });
     });
 
-    describe.only("async", () => {
+    describe("async", () => {
         const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
         it("async hooks", (done) => {
             const fastify = server();
-            expect(9).checks(done);
+            expect(12).checks(done);
 
             fastify.addHook("onRequest", async (request, reply) => {
                 await sleep(1);

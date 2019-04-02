@@ -100,7 +100,6 @@ describe("custom querystring parser", () => {
         });
 
         expect(2).checks(() => {
-            expect(true).to.be.ok.mark();
             done();
         });
 

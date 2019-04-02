@@ -1,4 +1,5 @@
 const __ = adone.lazify({
+    Bundle: "./bundle",
     CodeLayout: "./code_layout",
     Inspector: "./inspector",
     Namespace: "./namespace",

@@ -1,35 +1,40 @@
+const {
+    web: { server }
+} = adone;
 
-
-const t = require("tap");
-const test = t.test;
-const Fastify = require("../..");
 const http2 = require("http2");
 const semver = require("semver");
 
-let fastify;
-try {
-    fastify = Fastify({
-        http2: true
-    });
-    t.pass("http2 successfully loaded");
-} catch (e) {
-    t.fail("http2 loading failed", e);
-}
+describe("closing", () => {
+    let fastify;
 
-fastify.listen(0, (err) => {
-    t.error(err);
-    fastify.server.unref();
+    before((done) => {
+        try {
+            fastify = server({
+                http2: true
+            });
+            // t.pass("http2 successfully loaded");
+        } catch (e) {
+            assert.fail("http2 loading failed", e);
+        }
+
+        fastify.listen(0, (err) => {
+            assert.notExists(err);
+            fastify.server.unref();
+            done();
+        });
+    });
 
     // Skipped because there is likely a bug on Node 8.
-    test("http/2 request while fastify closing", { skip: semver.lt(process.versions.node, "10.15.0") }, (t) => {
+    it("http/2 request while fastify closing", { skip: semver.lt(process.versions.node, "10.15.0") }, (done) => {
         const url = `http://127.0.0.1:${fastify.server.address().port}`;
         const session = http2.connect(url, function () {
             this.request({
                 ":method": "GET",
                 ":path": "/"
             }).on("response", (headers) => {
-                t.strictEqual(headers[":status"], 503);
-                t.end();
+                assert.strictEqual(headers[":status"], 503);
+                done();
                 this.destroy();
             }).on("error", () => {
                 // Nothing to do here,
@@ -42,7 +47,7 @@ fastify.listen(0, (err) => {
             // Nothing to do here,
             // we are not interested in this error that might
             // happen or not
-            t.end();
+            done();
         });
     });
-});
+});    

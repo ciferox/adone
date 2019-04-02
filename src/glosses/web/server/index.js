@@ -24,9 +24,7 @@ const {
     kReply,
     kRequest,
     kMiddlewares,
-    kCanSetNotFoundHandler,
-    kFourOhFourLevelInstance,
-    kFourOhFourContext,
+    kFourOhFour,
     kState,
     kOptions,
     kGlobalHooks
@@ -35,6 +33,7 @@ const {
 const { createServer } = require("./server");
 const Reply = require("./reply");
 const Request = require("./request");
+const Context = require("./context");
 const supportedMethods = ["DELETE", "GET", "HEAD", "PATCH", "POST", "PUT", "OPTIONS"];
 const buildSchema = require("./validation").build;
 const handleRequest = require("./handle_request");
@@ -47,6 +46,8 @@ const { Schemas, buildSchemas } = require("./schemas");
 const { createLogger } = require("./logger");
 const pluginUtils = require("./plugin_utils");
 const reqIdGenFactory = require("./req_id_gen_factory");
+const build404 = require("./four_oh_four");
+const { beforeHandlerWarning } = require("./warnings");
 const getSecuredInitialConfig = require("./initial_config_validation");
 const { defaultInitOptions } = getSecuredInitialConfig;
 
@@ -78,6 +79,12 @@ function build(options) {
 
     // Instance Fastify components
     const { logger, hasLogger } = createLogger(options);
+
+    // Update the options with the fixed values
+    options.logger = logger;
+    options.modifyCoreObjects = modifyCoreObjects;
+    options.genReqId = genReqId;
+
     // Default router
     const router = FindMyWay({
         defaultRoute,
@@ -87,7 +94,7 @@ function build(options) {
         versioning: options.versioning
     });
     // 404 router, used for handling encapsulated 404 handlers
-    const fourOhFour = FindMyWay({ defaultRoute: fourOhFourFallBack });
+    const fourOhFour = build404(options);
 
     // HTTP server and its handler
     const httpHandler = router.lookup.bind(router);
@@ -120,9 +127,7 @@ function build(options) {
         [kReply]: Reply.buildReply(Reply),
         [kRequest]: Request.buildRequest(Request),
         [kMiddlewares]: [],
-        [kCanSetNotFoundHandler]: true,
-        [kFourOhFourLevelInstance]: null,
-        [kFourOhFourContext]: null,
+        [kFourOhFour]: fourOhFour,
         [kGlobalHooks]: {
             onRoute: [],
             onRegister: []
@@ -196,11 +201,11 @@ function build(options) {
     };
 
     Object.defineProperty(fastify, "schemaCompiler", {
-        get () {
-            return this[kSchemaCompiler]
+        get() {
+            return this[kSchemaCompiler];
         },
-        set (schemaCompiler) {
-            this.setSchemaCompiler(schemaCompiler)
+        set(schemaCompiler) {
+            this.setSchemaCompiler(schemaCompiler);
         }
     });
 
@@ -248,7 +253,7 @@ function build(options) {
 
     // Set the default 404 handler
     fastify.setNotFoundHandler();
-    fastify[kFourOhFourLevelInstance] = fastify;
+    fourOhFour.arrange404(fastify);
 
     return fastify;
 
@@ -544,35 +549,11 @@ function build(options) {
 
                 // Must store the 404 Context in 'preReady' because it is only guaranteed to
                 // be available after all of the plugins and routes have been loaded.
-                const _404Context = Object.assign({}, this[kFourOhFourContext]);
-                _404Context.onSend = context.onSend;
-                context[kFourOhFourContext] = _404Context;
+                fourOhFour.setContext(this, context);
             });
 
             done(notHandledErr);
         }
-    }
-
-    // Objects that holds the context of every request
-    // Every route holds an instance of this object.
-    function Context(schema, handler, Reply, Request, contentTypeParser, config, errorHandler, bodyLimit, logLevel, attachValidation) {
-        this.schema = schema;
-        this.handler = handler;
-        this.Reply = Reply;
-        this.Request = Request;
-        this.contentTypeParser = contentTypeParser;
-        this.onRequest = null;
-        this.onSend = null;
-        this.onError = null;
-        this.preHandler = null;
-        this.onResponse = null;
-        this.config = config;
-        this.errorHandler = errorHandler || defaultErrorHandler;
-        this._middie = null;
-        this._parserOptions = { limit: bodyLimit || null };
-        this.logLevel = logLevel;
-        this[kFourOhFourContext] = null;
-        this.attachValidation = attachValidation;
     }
 
     // HTTP injection handling
@@ -666,132 +647,13 @@ function build(options) {
         if (!is.undefined(req.headers["accept-version"])) {
             req.headers["accept-version"] = undefined;
         }
-        fourOhFour.lookup(req, res);
-    }
-
-    function basic404(req, reply) {
-        reply.code(404).send(new Error("Not Found"));
-    }
-
-    function fourOhFourFallBack(req, res) {
-        // if this happen, we have a very bad bug
-        // we might want to do some hard debugging
-        // here, let's print out as much info as
-        // we can
-        req.id = genReqId(req);
-        req.originalUrl = req.url;
-        const childLogger = logger.child({ reqId: req.id });
-        if (modifyCoreObjects) {
-            req.log = res.log = childLogger;
-        }
-
-        childLogger.info({ req }, "incoming request");
-
-        const request = new Request(null, req, null, req.headers, childLogger);
-        const reply = new Reply(res, { onSend: [], onError: [] }, request, childLogger);
-
-        request.log.warn("the default handler for 404 did not catch this, this is likely a fastify bug, please report it");
-        request.log.warn(fourOhFour.prettyPrint());
-        reply.code(404).send(new Error("Not Found"));
+        fourOhFour.router.lookup(req, res);
     }
 
     function setNotFoundHandler(opts, handler) {
         throwIfAlreadyStarted('Cannot call "setNotFoundHandler" when fastify instance is already started!');
 
-        const _fastify = this;
-        const prefix = this[kRoutePrefix] || "/";
-
-        if (this[kCanSetNotFoundHandler] === false) {
-            throw new Error(`Not found handler already set for Fastify instance with prefix: '${prefix}'`);
-        }
-
-        if (typeof opts === "object") {
-            if (is.nil(opts.preHandler) && !is.nil(opts.beforeHandler)) {
-                beforeHandlerWarning();
-                opts.preHandler = opts.beforeHandler;
-            }
-            if (opts.preHandler) {
-                if (is.array(opts.preHandler)) {
-                    opts.preHandler = opts.preHandler.map((hook) => hook.bind(_fastify));
-                } else {
-                    opts.preHandler = opts.preHandler.bind(_fastify);
-                }
-            }
-
-            if (opts.preValidation) {
-                if (is.array(opts.preValidation)) {
-                    opts.preValidation = opts.preValidation.map((hook) => hook.bind(_fastify));
-                } else {
-                    opts.preValidation = opts.preValidation.bind(_fastify);
-                }
-            }
-        }
-
-        if (is.function(opts)) {
-            handler = opts;
-            opts = undefined;
-        }
-        opts = opts || {};
-
-        if (handler) {
-            this[kFourOhFourLevelInstance][kCanSetNotFoundHandler] = false;
-            handler = handler.bind(this);
-        } else {
-            handler = basic404;
-        }
-
-        this.after((notHandledErr, done) => {
-            _setNotFoundHandler.call(this, prefix, opts, handler);
-            done(notHandledErr);
-        });
-    }
-
-    function _setNotFoundHandler(prefix, opts, handler) {
-        const context = new Context(
-            opts.schema,
-            handler,
-            this[kReply],
-            this[kRequest],
-            this[kContentTypeParser],
-            opts.config || {},
-            this._errorHandler,
-            this[kBodyLimit],
-            this[kLogLevel]
-        );
-
-        avvio.once("preReady", () => {
-            const context = this[kFourOhFourContext];
-
-            const onRequest = this[kHooks].onRequest;
-            const preParsing = this[kHooks].preParsing.concat(opts.preParsing || []);
-            const preValidation = this[kHooks].preValidation.concat(opts.preValidation || []);
-            const preSerialization = this[kHooks].preSerialization.concat(opts.preSerialization || []);
-            const preHandler = this[kHooks].preHandler.concat(opts.beforeHandler || opts.preHandler || []);
-            const onSend = this[kHooks].onSend;
-            const onError = this[kHooks].onError;
-            const onResponse = this[kHooks].onResponse;
-
-            context.onRequest = onRequest.length ? onRequest : null;
-            context.preParsing = preParsing.length ? preParsing : null;
-            context.preValidation = preValidation.length ? preValidation : null;
-            context.preSerialization = preSerialization.length ? preSerialization : null;
-            context.preHandler = preHandler.length ? preHandler : null;
-            context.onSend = onSend.length ? onSend : null;
-            context.onError = onError.length ? onError : null;
-            context.onResponse = onResponse.length ? onResponse : null;
-
-            context._middie = buildMiddie(this[kMiddlewares]);
-        });
-
-        if (!is.null(this[kFourOhFourContext]) && prefix === "/") {
-            Object.assign(this[kFourOhFourContext], context); // Replace the default 404 handler
-            return;
-        }
-
-        this[kFourOhFourLevelInstance][kFourOhFourContext] = context;
-
-        fourOhFour.all(prefix + (prefix.endsWith("/") ? "*" : "/*"), routeHandler, context);
-        fourOhFour.all(prefix || "/", routeHandler, context);
+        fourOhFour.setNotFoundHandler.call(this, opts, handler, avvio, routeHandler, buildMiddie);
     }
 
     // wrapper that we expose to the user for schemas compiler handling
@@ -821,14 +683,6 @@ function build(options) {
         }
 
         return middie;
-    }
-
-    function beforeHandlerWarning() {
-        if (beforeHandlerWarning.called) {
-            return;
-        }
-        beforeHandlerWarning.called = true;
-        process.emitWarning("The route option `beforeHandler` has been deprecated, use `preHandler` instead");
     }
 }
 
@@ -889,8 +743,7 @@ function override(old, fn, opts) {
     instance[pluginUtils.registeredPlugins] = Object.create(instance[pluginUtils.registeredPlugins]);
 
     if (opts.prefix) {
-        instance[kCanSetNotFoundHandler] = true;
-        instance[kFourOhFourLevelInstance] = instance;
+        instance[kFourOhFour].arrange404(instance);
     }
 
     for (const hook of instance[kGlobalHooks].onRegister) {
@@ -918,18 +771,9 @@ function buildRoutePrefix(instancePrefix, pluginPrefix) {
     return instancePrefix + pluginPrefix;
 }
 
-function defaultErrorHandler(error, request, reply) {
-    const res = reply.res;
-    if (res.statusCode >= 500) {
-        res.log.error({ req: reply.request.raw, res, err: error }, error && error.message);
-    } else if (res.statusCode >= 400) {
-        res.log.info({ res, err: error }, error && error.message);
-    }
-    reply.send(error);
-}
-
 module.exports = build;
 adone.lazify({
     plugin: "./plugin",
-    symbol: "./symbols"
+    symbol: "./symbols",
+    wrapThenable: "./wrap_thenable"
 }, build, require);

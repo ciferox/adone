@@ -10,7 +10,7 @@
     "url": "https://github.com/ciferox/adone.git"
   },
   "engines": {
-    "node": ">=11.12.0"
+    "node": ">=11.13.0"
   },
   "bin": "./bin/adone.js",
   "main": "lib",
@@ -114,6 +114,7 @@
     "graceful": "^1.0.2",
     "graceful-process": "^1.2.0",
     "gunzip-maybe": "^1.4.1",
+    "h2url": "^0.1.2",
     "hamt-sharding": "^0.0.2",
     "hapi": "^18.0.0",
     "hapi-pino": "^5.2.0",

@@ -5,7 +5,7 @@ const {
 const h2url = require("h2url");
 const msg = { hello: "world" };
 
-describe("plain", () => {
+describe("unknown http method", () => {
     let fastify;
 
     before((done) => {
@@ -25,18 +25,19 @@ describe("plain", () => {
         fastify.listen(0, (err) => {
             assert.notExists(err);
             fastify.server.unref();
-
             done();
         });
     });
 
-    it("http get request", async () => {
+    it("http UNKNOWN_METHOD request", async () => {
         const url = `http://localhost:${fastify.server.address().port}`;
-        const res = await h2url.concat({ url });
+        const res = await h2url.concat({ url, method: "UNKNOWN_METHOD" });
 
-        assert.strictEqual(res.headers[":status"], 200);
-        assert.strictEqual(res.headers["content-length"], `${JSON.stringify(msg).length}`);
-
-        assert.deepEqual(JSON.parse(res.body), msg);
+        assert.strictEqual(res.headers[":status"], 404);
+        assert.deepEqual(JSON.parse(res.body), {
+            statusCode: 404,
+            error: "Not Found",
+            message: "Not Found"
+        });
     });
-});
+});    

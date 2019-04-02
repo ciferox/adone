@@ -8,6 +8,10 @@
         "base": "src",
         "entry": "index.js",
         "layout": {
+            "std": {
+                "namespace": true,
+                "virtual": true
+            },
             "app": {
                 "namespace": true,
                 "base": "src/glosses/app",

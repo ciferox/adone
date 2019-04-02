@@ -71,7 +71,6 @@ export class FastLocalStream extends adone.fast.Stream {
         }
         return this.through(async function writing(file) {    
             if (file.isNull() && !file.isDirectory() && !file.isSymbolic()) {
-                console.log(file.relative);
                 return; // ?
             }
             const destBase = isDirFunction ? dir(file) : dir;

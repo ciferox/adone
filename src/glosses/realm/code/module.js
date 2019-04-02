@@ -355,7 +355,7 @@ export default class XModule extends realm.code.Base {
             ImportDeclaration(path) {
                 const { node } = path;
                 imports.push({
-                    path: path.join(basePath, node.source.value),
+                    path: adone.std.path.join(basePath, node.source.value),
                     names: node.specifiers.map((x) => {
                         if (x.type === "ImportDefaultSpecifier") {
                             return {
