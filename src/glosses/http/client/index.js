@@ -1,8 +1,11 @@
+/* eslint-disable adone/no-typeof */
+
+import { buildURL, extend, forEach, deepMerge, merge, normalizeHeaderName } from "./helpers";
+
 const {
     is,
     error,
-    util,
-    lodash
+    util
 } = adone;
 
 adone.lazify({
@@ -14,7 +17,7 @@ adone.lazify({
 
 const __ = adone.lazifyPrivate({
     InterceptorManager: "./interceptor_manager",
-    nodeAdapter: "./node_adapter",
+    httpAdapter: "./adapters/http",
     createError: "./create_error",
     enhanceError: "./enhance_error",
     settle: "./settle"
@@ -103,17 +106,16 @@ export const transformData = (data, headers, config, fns) => {
     return data;
 };
 
+
 export const defaults = {
-    adapter: __.nodeAdapter,
+    adapter: (!is.undefined(process) && Object.prototype.toString.call(process) === "[object process]")
+        ? __.httpAdapter
+        : (!is.undefined(XMLHttpRequest))
+            ? __.xhrAdapter
+            : undefined,
     transformRequest: [(data, headers = {}) => {
-        // Normalize headers
-        const normalizedName = "Content-Type";
-        for (const name of Object.keys(headers)) {
-            if (name !== normalizedName && name.toUpperCase() === normalizedName.toUpperCase()) {
-                headers[normalizedName] = headers[name];
-                delete headers[name];
-            }
-        }
+        normalizeHeaderName(headers, "Accept");
+        normalizeHeaderName(headers, "Content-Type");
 
         if (/*isFormData(data) ||*/
             is.arrayBuffer(data) ||
@@ -155,6 +157,10 @@ export const defaults = {
         return data;
     }],
 
+    /**
+    * A timeout in milliseconds to abort a request. If set to 0 (default) a
+    * timeout is not created.
+    */
     timeout: 0,
 
     xsrfCookieName: "XSRF-TOKEN",
@@ -199,6 +205,46 @@ const combineURLs = (baseURL, relativeURL) => {
     return baseURL;
 };
 
+const mergeConfig = (config1, config2) => {
+    // eslint-disable-next-line no-param-reassign
+    config2 = config2 || {};
+    const config = {};
+
+    forEach(["url", "method", "params", "data"], (prop) => {
+        if (!is.undefined(config2[prop])) {
+            config[prop] = config2[prop];
+        }
+    });
+
+    forEach(["headers", "auth", "proxy"], (prop) => {
+        if (is.object(config2[prop])) {
+            config[prop] = deepMerge(config1[prop], config2[prop]);
+        } else if (!is.undefined(config2[prop])) {
+            config[prop] = config2[prop];
+        } else if (is.object(config1[prop])) {
+            config[prop] = deepMerge(config1[prop]);
+        } else if (!is.undefined(config1[prop])) {
+            config[prop] = config1[prop];
+        }
+    });
+
+    forEach([
+        "baseURL", "formData", "transformRequest", "transformResponse", "paramsSerializer",
+        "timeout", "withCredentials", "adapter", "responseType", "responseEncoding", "xsrfCookieName",
+        "xsrfHeaderName", "onUploadProgress", "onDownloadProgress", "maxContentLength",
+        "validateStatus", "maxRedirects", "httpAgent", "httpsAgent", "cancelToken",
+        "socketPath"
+    ], (prop) => {
+        if (!is.undefined(config2[prop])) {
+            config[prop] = config2[prop];
+        } else if (!is.undefined(config1[prop])) {
+            config[prop] = config1[prop];
+        }
+    });
+
+    return config;
+};
+
 export class Client {
     constructor(options) {
         this.config = options;
@@ -208,17 +254,22 @@ export class Client {
         };
     }
 
-    request(config, ...args) {
-        if (is.string(config)) {
-            config = lodash.merge({
-                url: config
-            }, args[0]);
+    getUri(config) {
+        config = mergeConfig(this.config, config);
+        return buildURL(config.url, config.params, config.paramsSerializer).replace(/^\?/, "");
+    }
+
+    request(...args) {
+        let config;
+        if (is.string(args[0])) {
+            config = args[1] || {};
+            config.url = args[0];
+        } else {
+            config = args[0] || {};
         }
 
-        config = lodash.merge({}, defaults, this.config, {
-            method: "get"
-        }, config);
-        config.method = config.method.toLowerCase();
+        config = mergeConfig(this.config, config);
+        config.method = config.method ? config.method.toLowerCase() : "get";
 
         // Hook up interceptors middleware
         const chain = [
@@ -244,7 +295,7 @@ export class Client {
                 }
 
                 // Flatten headers
-                options.headers = lodash.merge(
+                options.headers = merge(
                     {},
                     options.headers.common || {},
                     options.headers[options.method] || {},
@@ -293,43 +344,40 @@ export class Client {
     }
 
     get(url, options = {}) {
-        return this.request(lodash.merge({}, options, { method: "get", url }));
+        return this.request(merge({}, options, { method: "get", url }));
     }
 
     head(url, options = {}) {
-        return this.request(lodash.merge({}, options, { method: "heade", url }));
+        return this.request(merge({}, options, { method: "head", url }));
     }
 
     post(url, data, options = {}) {
-        return this.request(lodash.merge({}, options, { method: "post", url, data }));
+        return this.request(merge({}, options, { method: "post", url, data }));
     }
 
     put(url, data, options = {}) {
-        return this.request(lodash.merge({}, options, { method: "put", url, data }));
+        return this.request(merge({}, options, { method: "put", url, data }));
     }
 
     patch(url, data, options = {}) {
-        return this.request(lodash.merge({}, options, { method: "patch", url, data }));
+        return this.request(merge({}, options, { method: "patch", url, data }));
     }
 
     delete(url, options = {}) {
-        return this.request(lodash.merge({}, options, { method: "delete", url }));
+        return this.request(merge({}, options, { method: "delete", url }));
     }
 
     options(url, options = {}) {
-        return this.request(lodash.merge({}, options, { method: "options", url }));
+        return this.request(merge({}, options, { method: "options", url }));
     }
 }
 
 const createInstance = (options) => {
     const context = new Client(options);
-    const instance = context.request.bind(context);
+    const instance = Client.prototype.request.bind(context);
 
-    const ents = util.entries(Client.prototype, { enumOnly: false }).filter((x) => x[0] !== "constructor");
-    for (const [name, method] of ents) {
-        instance[name] = method.bind(context);
-    }
-    lodash.extend(instance, context);
+    extend(instance, Client.prototype, context);
+    extend(instance, context);
 
     return instance;
 };
@@ -338,4 +386,4 @@ const createInstance = (options) => {
 export const request = createInstance(defaults);
 
 // Factory for creating new instances
-export const create = (options) => createInstance(lodash.merge({}, defaults, options));
+export const create = (options) => createInstance(mergeConfig(defaults, options));

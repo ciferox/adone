@@ -1,3 +1,5 @@
+import { buildURL } from "../helpers";
+
 const {
     is,
     error: x,
@@ -7,37 +9,11 @@ const {
 
 const __ = adone.private(http.client);
 
-/**
- * Build a URL by appending params to the end
- *
- * @param {string} url The base of the url (e.g., http://www.google.com)
- * @param {object} [params] The params to be appended
- * @returns {string} The formatted url
- */
-const buildURL = (url, params, paramsSerializer) => {
-    if (!params) {
-        return url;
-    }
-
-    let serializedParams;
-    if (paramsSerializer) {
-        serializedParams = paramsSerializer(params);
-    } else {
-        serializedParams = adone.util.querystring.stringify(params);
-    }
-
-    if (serializedParams) {
-        url += (!url.includes("?") ? "?" : "&") + serializedParams;
-    }
-
-    return url;
-};
-
+const isHttps = /https:?/;
 
 export default async function adapter(config) {
     let data = config.data;
     const headers = config.headers;
-    let timer;
 
     if (!is.string(headers["User-Agent"]) && !is.string(headers["user-agent"])) {
         headers["User-Agent"] = `Adone/${adone.package.version}`;
@@ -108,6 +84,7 @@ export default async function adapter(config) {
     }
 
     // Parse url
+    // console.log(adone.inspect(config.url));
     const parsedUrl = adone.std.url.parse(config.url);
     const protocol = parsedUrl.protocol || "http:";
 
@@ -120,18 +97,23 @@ export default async function adapter(config) {
         delete headers.Authorization;
     }
 
-    const isHttps = protocol === "https:";
-    const agent = isHttps ? config.httpsAgent : config.httpAgent;
+    const isHttpsRequest = isHttps.test(protocol);
+    const agent = isHttpsRequest ? config.httpsAgent : config.httpAgent;
 
     const nodeOptions = {
-        hostname: parsedUrl.hostname,
-        port: parsedUrl.port,
         path: buildURL(parsedUrl.path, config.params, config.paramsSerializer).replace(/^\?/, ""),
         method: config.method.toUpperCase(),
         headers,
         agent,
         auth
     };
+
+    if (config.socketPath) {
+        nodeOptions.socketPath = config.socketPath;
+    } else {
+        nodeOptions.hostname = parsedUrl.hostname;
+        nodeOptions.port = parsedUrl.port;
+    }
 
     if (isHttps) {
         nodeOptions.rejectUnauthorized = is.boolean(config.rejectUnauthorized) ? config.rejectUnauthorized : true;
@@ -141,19 +123,47 @@ export default async function adapter(config) {
     if (!proxy && proxy !== false) {
         const proxyEnv = `${protocol.slice(0, -1)}_proxy`;
         const proxyUrl = process.env[proxyEnv] || process.env[proxyEnv.toUpperCase()];
-        if (is.string(proxyUrl)) {
+        if (proxyUrl) {
             const parsedProxyUrl = adone.std.url.parse(proxyUrl);
-            proxy = {
-                host: parsedProxyUrl.hostname,
-                port: parsedProxyUrl.port
-            };
+            const noProxyEnv = process.env.no_proxy || process.env.NO_PROXY;
+            let shouldProxy = true;
 
-            if (parsedProxyUrl.auth) {
-                const proxyUrlAuth = parsedProxyUrl.auth.split(":");
-                proxy.auth = {
-                    username: proxyUrlAuth[0],
-                    password: proxyUrlAuth[1]
+            if (noProxyEnv) {
+                const noProxy = noProxyEnv.split(",").map(function trim(s) {
+                    return s.trim();
+                });
+
+                shouldProxy = !noProxy.some(function proxyMatch(proxyElement) {
+                    if (!proxyElement) {
+                        return false;
+                    }
+                    if (proxyElement === "*") {
+                        return true;
+                    }
+                    if (proxyElement[0] === "." &&
+                        parsedUrl.hostname.substr(parsedUrl.hostname.length - proxyElement.length) === proxyElement &&
+                        proxyElement.match(/\./g).length === parsedUrl.hostname.match(/\./g).length) {
+                        return true;
+                    }
+
+                    return parsedUrl.hostname === proxyElement;
+                });
+            }
+
+
+            if (shouldProxy) {
+                proxy = {
+                    host: parsedProxyUrl.hostname,
+                    port: parsedProxyUrl.port
                 };
+
+                if (parsedProxyUrl.auth) {
+                    const proxyUrlAuth = parsedProxyUrl.auth.split(":");
+                    proxy.auth = {
+                        username: proxyUrlAuth[0],
+                        password: proxyUrlAuth[1]
+                    };
+                }
             }
         }
     }
@@ -173,24 +183,37 @@ export default async function adapter(config) {
     }
 
     let transport;
+    const isHttpsProxy = isHttpsRequest && (proxy ? isHttps.test(proxy.protocol) : true);
     if (config.transport) {
         transport = config.transport;
     } else if (config.maxRedirects === 0) {
-        transport = isHttps ? adone.std.https : adone.std.http;
+        transport = isHttpsProxy ? adone.std.https : adone.std.http;
     } else {
-        nodeOptions.maxRedirects = config.maxRedirects;
-        transport = isHttps ? http.followRedirects.https : http.followRedirects.http;
+        if (config.maxRedirects) {
+            nodeOptions.maxRedirects = config.maxRedirects;
+        }
+        transport = isHttpsProxy ? http.followRedirects.https : http.followRedirects.http;
     }
 
-    return new Promise((resolve, reject) => {
+    if (config.maxContentLength && config.maxContentLength > -1) {
+        nodeOptions.maxBodyLength = config.maxContentLength;
+    }
+
+    return new Promise(function dispatchHttpRequest(resolvePromise, rejectPromise) {
+        let timer;
+        const resolve = function resolve(value) {
+            clearTimeout(timer);
+            resolvePromise(value);
+        };
+        const reject = function reject(value) {
+            clearTimeout(timer);
+            rejectPromise(value);
+        };
+
         const req = transport.request(nodeOptions, (res) => {
             if (req.aborted) {
                 return;
             }
-
-            // Response has been received so kill timer that handles request timeout
-            clearTimeout(timer);
-            timer = null;
 
             // uncompress the response body transparently if required
             let stream = res;
@@ -254,12 +277,10 @@ export default async function adapter(config) {
         });
 
         req.on("error", (err) => {
-            if (!req.aborted) {
-                reject(__.enhanceError(err, config, null, req));
-            }
+            reject(__.enhanceError(err, config, null, req));
         });
 
-        if (config.timeout && !timer) {
+        if (config.timeout) {
             timer = setTimeout(() => {
                 req.abort();
                 reject(__.createError(`timeout of ${config.timeout}ms exceeded`, config, "ECONNABORTED", req));
@@ -317,6 +338,8 @@ export default async function adapter(config) {
 
         counter.pause(); // on("data") resumes the stream, we dont want it
 
-        data.pipe(counter).pipe(req);
+        data.on("error", (err) => {
+            reject(__.enhanceError(err, config, null, req));
+        }).pipe(counter).pipe(req);
     });
 }

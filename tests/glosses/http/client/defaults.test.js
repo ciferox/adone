@@ -153,8 +153,8 @@ describe("defaults", () => {
         instance.get("/foo");
     });
 
-    it("should be used by custom instance if set after instance created", (done) => {
-        nock("http://example.org")
+    it("should not be used by custom instance if set after instance created", (done) => {
+        nock("http://localhost:80")
             .get("/foo")
             .reply(200, () => {
                 done();

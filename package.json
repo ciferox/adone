@@ -1,7 +1,7 @@
 {
   "name": "adone",
   "description": "The generalized core for building of Cyber Fractal Systems Infrastructures ~ CFSI",
-  "version": "0.6.82",
+  "version": "0.6.83",
   "author": "ADONE core team <info@adone.io>",
   "license": "Apache-2.0",
   "homepage": "https://adone.io/",
@@ -92,6 +92,7 @@
     "ethereumjs-account": "^3.0.0",
     "ethereumjs-block": "^2.2.0",
     "execa": "^1.0.0",
+    "express": "^4.16.4",
     "extend2": "^1.0.0",
     "fast-json-body": "^1.1.0",
     "fast-json-parse": "^1.0.3",

@@ -13,7 +13,28 @@ export default function enhanceError(error, config, code, request, response) {
     if (code) {
         error.code = code;
     }
+
     error.request = request;
     error.response = response;
+    error.isADONEError = true;
+
+    error.toJSON = function () {
+        return {
+            // Standard
+            message: this.message,
+            name: this.name,
+            // Microsoft
+            description: this.description,
+            number: this.number,
+            // Mozilla
+            fileName: this.fileName,
+            lineNumber: this.lineNumber,
+            columnNumber: this.columnNumber,
+            stack: this.stack,
+            // Adone client
+            config: this.config,
+            code: this.code
+        };
+    };
     return error;
 }

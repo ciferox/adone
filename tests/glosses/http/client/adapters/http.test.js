@@ -5,7 +5,7 @@ const {
 let server;
 let proxy;
 
-describe("unit", () => {
+describe("adapters", () => {
     context("http", () => {
         let PORT = null;
 
@@ -23,9 +23,12 @@ describe("unit", () => {
             if (process.env.http_proxy) {
                 delete process.env.http_proxy;
             }
+            if (process.env.no_proxy) {
+                delete process.env.no_proxy;
+            }
         });
 
-        it("should use timeout", (done) => {
+        it("should respect the timeout property", (done) => {
             server = http.createServer((req, res) => {
                 setTimeout(() => {
                     res.end();
@@ -108,7 +111,7 @@ describe("unit", () => {
             });
         });
 
-        it("should limit the number of redirects", (done) => {
+        it.only("should limit the number of redirects", (done) => {
             let i = 1;
             server = http.createServer((req, res) => {
                 res.setHeader("Location", `/${i}`);
@@ -124,7 +127,34 @@ describe("unit", () => {
             });
         });
 
-        it("should use gunzip", (done) => {
+        it("should preserve the HTTP verb on redirect", (done) => {
+            server = http.createServer((req, res) => {
+                if (req.method.toLowerCase() !== "head") {
+                    res.statusCode = 400;
+                    res.end();
+                    return;
+                }
+
+                const parsed = url.parse(req.url);
+                if (parsed.pathname === "/one") {
+                    res.setHeader("Location", "/two");
+                    res.statusCode = 302;
+                    res.end();
+                } else {
+                    res.end();
+                }
+            }).listen(PORT, () => {
+                request.head(`http://localhost:${PORT}/one`).then((res) => {
+                    assert.equal(res.status, 200);
+                    done();
+                }).catch((err) => {
+                    assert.fail(err);
+                    done();
+                });
+            });
+        });
+
+        it("should support transparent gunzip", (done) => {
             const data = {
                 firstName: "Fred",
                 lastName: "Flintstone",
@@ -227,7 +257,7 @@ describe("unit", () => {
             });
         });
 
-        it("should support streaming", (done) => {
+        it("should support streams", (done) => {
             server = http.createServer((req, res) => {
                 req.pipe(res);
             }).listen(PORT, () => {
@@ -247,7 +277,22 @@ describe("unit", () => {
             });
         });
 
-        it("should support buffer", (done) => {
+        it("should pass errors for a failed stream", (done) => {
+            server = http.createServer((req, res) => {
+                req.pipe(res);
+            }).listen(4444, () => {
+                request.post("http://localhost:4444/",
+                    fs.createReadStream("/does/not/exist")
+                ).then((res) => {
+                    assert.fail();
+                }).catch((err) => {
+                    assert.equal(err.message, "ENOENT: no such file or directory, open '/does/not/exist'");
+                    done();
+                });
+            });
+        });
+
+        it("should support buffers", (done) => {
             const buf = Buffer.alloc(1024); // Unsafe buffer < Buffer.poolSize (8192 bytes)
             buf.fill("x");
             server = http.createServer((req, res) => {
@@ -435,6 +480,80 @@ describe("unit", () => {
                     request.get(`http://localhost:${PORT}/`).then((res) => {
                         const base64 = Buffer.from("user:pass", "utf8").toString("base64");
                         expect(res.data).to.be.equal(`Basic ${base64}`);
+                        done();
+                    });
+                });
+            });
+        });
+
+        it("should not use proxy for domains in no_proxy", (done) => {
+            server = http.createServer((req, res) => {
+                res.setHeader("Content-Type", "text/html; charset=UTF-8");
+                res.end("4567");
+            }).listen(4444, () => {
+                proxy = http.createServer((request, response) => {
+                    const parsed = url.parse(request.url);
+                    const opts = {
+                        host: parsed.hostname,
+                        port: parsed.port,
+                        path: parsed.path
+                    };
+
+                    http.get(opts, (res) => {
+                        let body = "";
+                        res.on("data", (data) => {
+                            body += data;
+                        });
+                        res.on("end", () => {
+                            response.setHeader("Content-Type", "text/html; charset=UTF-8");
+                            response.end(`${body}1234`);
+                        });
+                    });
+
+                }).listen(4000, () => {
+                    // set the env variable
+                    process.env.http_proxy = "http://localhost:4000/";
+                    process.env.no_proxy = "foo.com, localhost,bar.net , , quix.co";
+
+                    request.get("http://localhost:4444/").then((res) => {
+                        assert.equal(res.data, "4567", "should not use proxy for domains in no_proxy");
+                        done();
+                    });
+                });
+            });
+        });
+
+        it("should use proxy for domains not in no_proxy", (done) => {
+            server = http.createServer((req, res) => {
+                res.setHeader("Content-Type", "text/html; charset=UTF-8");
+                res.end("4567");
+            }).listen(4444, () => {
+                proxy = http.createServer((request, response) => {
+                    const parsed = url.parse(request.url);
+                    const opts = {
+                        host: parsed.hostname,
+                        port: parsed.port,
+                        path: parsed.path
+                    };
+
+                    http.get(opts, (res) => {
+                        let body = "";
+                        res.on("data", (data) => {
+                            body += data;
+                        });
+                        res.on("end", () => {
+                            response.setHeader("Content-Type", "text/html; charset=UTF-8");
+                            response.end(`${body}1234`);
+                        });
+                    });
+
+                }).listen(4000, () => {
+                    // set the env variable
+                    process.env.http_proxy = "http://localhost:4000/";
+                    process.env.no_proxy = "foo.com, ,bar.net , quix.co";
+
+                    request.get("http://localhost:4444/").then((res) => {
+                        assert.equal(res.data, "45671234", "should use proxy for domains not in no_proxy");
                         done();
                     });
                 });

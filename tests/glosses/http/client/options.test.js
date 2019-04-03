@@ -1,4 +1,4 @@
-const { request, create } = adone.http.client;
+const { request, create, defaults } = adone.http.client;
 
 describe("options", () => {
     describe("common", () => {
@@ -96,6 +96,34 @@ describe("options", () => {
             });
 
             instance.get("http://someotherurl.com/");
+        });
+
+        it("should change only the baseURL of the specified instance", () => {
+            const instance1 = create();
+            const instance2 = create();
+
+            instance1.config.baseURL = "http://instance1.example.com/";
+
+            expect(instance2.config.baseURL).not.to.be.equal("http://instance1.example.com/");
+        });
+
+        it.todo("should change only the headers of the specified instance", () => {
+            const instance1 = create();
+            const instance2 = create();
+
+            instance1.config.headers.common.Authorization = "faketoken";
+            instance2.config.headers.common.Authorization = "differentfaketoken";
+
+            instance1.config.headers.common["Content-Type"] = "application/xml";
+            instance2.config.headers.common["Content-Type"] = "application/x-www-form-urlencoded";
+
+            expect(defaults.headers.common.Authorization).to.be.undefined;
+            expect(instance1.config.headers.common.Authorization).to.be.equal("faketoken");
+            expect(instance2.config.headers.common.Authorization).to.be.equal("differentfaketoken");
+
+            expect(defaults.headers.common["Content-Type"]).to.be.undefined;
+            expect(instance1.config.headers.common["Content-Type"]).to.be.equal("application/xml");
+            expect(instance2.config.headers.common["Content-Type"]).to.be.equal("application/x-www-form-urlencoded");
         });
     });
 

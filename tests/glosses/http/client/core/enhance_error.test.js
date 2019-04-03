@@ -11,6 +11,7 @@ describe("core", "enhanceError", () => {
         expect(error.code).to.be.deep.equal("ESOMETHING");
         expect(error.request).to.be.deep.equal(request);
         expect(error.response).to.be.deep.equal(response);
+        expect(error.isADONEError).to.be.true;
     });
 
     it("should return error", () => {
