@@ -220,7 +220,7 @@ class Query {
         this.key = key;
         this.makePath = makePath;
         this.concurrency = c.ALPHA;
-        this._log = utils.logger(this.dht.peerInfo.id, "query:" + mh.toB58String(key));
+        this._log = utils.logger(this.dht.peerInfo.id, `query:${mh.toB58String(key)}`);
     }
 
     /**
@@ -231,16 +231,20 @@ class Query {
      * @returns {void}
      */
     run(peers, callback) {
+        if (!this.dht._queryManager.running) {
+            this._log.error("Attempt to run query after shutdown");
+            return callback(null, { finalSet: new Set(), paths: [] });
+        }
+        if (peers.length === 0) {
+            this._log.error("Running query with no peers");
+            return callback(null, { finalSet: new Set(), paths: [] });
+        }
+
         const run = {
             peersSeen: new Set(),
             errors: [],
             paths: null // array of states per disjoint path
         };
-
-        if (peers.length === 0) {
-            this._log.error("Running query with no peers");
-            return callback();
-        }
 
         // create correct number of paths
         const numPaths = Math.min(c.DISJOINT_PATHS, peers.length);
@@ -261,6 +265,9 @@ class Query {
                 peersToQuery: null
             };
         });
+
+        // Register this query so we stop it if the DHT stops
+        this.dht._queryManager.queryStarted(this);
 
         // Create a manager to keep track of the worker queue for each path
         this.workerManager = new WorkerManager();
@@ -310,6 +317,7 @@ class Query {
      */
     stop() {
         this.workerManager && this.workerManager.stop();
+        this.dht._queryManager.queryCompleted(this);
     }
 }
 

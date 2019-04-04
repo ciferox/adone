@@ -1,7 +1,3 @@
-const {
-    p2p: { Connection }
-} = adone;
-
 const ConnectionFSM = require("../connection");
 const { DIAL_ABORTED, ERR_BLACKLISTED } = require("../errors");
 const nextTick = require("async/nextTick");
@@ -46,10 +42,8 @@ function createConnectionWithProtocol({ protocol, connection, callback }) {
             return callback(err);
         }
 
-        const proxyConnection = new Connection();
-        proxyConnection.setPeerInfo(connection.theirPeerInfo);
-        proxyConnection.setInnerConn(conn);
-        callback(null, proxyConnection);
+        conn.setPeerInfo(connection.theirPeerInfo);
+        callback(null, conn);
     });
 }
 
@@ -71,6 +65,7 @@ class Queue {
         this.switch = _switch;
         this._queue = [];
         this.blackListed = null;
+        this.blackListCount = 0;
         this.isRunning = false;
         this.onStopped = onStopped;
     }
@@ -99,7 +94,7 @@ class Queue {
     isDialAllowed() {
         if (this.blackListed) {
             // If the blacklist ttl has passed, reset it
-            if (Date.now() - this.blackListed > this.switch.dialer.BLACK_LIST_TTL) {
+            if (Date.now() > this.blackListed) {
                 this.blackListed = null;
                 return true;
             }
@@ -148,10 +143,24 @@ class Queue {
 
     /**
      * Marks the queue as blacklisted. The queue will be immediately aborted.
+     * @returns {void}
      */
     blacklist() {
-        log("blacklisting queue for %s", this.id);
-        this.blackListed = Date.now();
+        this.blackListCount++;
+
+        if (this.blackListCount >= this.switch.dialer.BLACK_LIST_ATTEMPTS) {
+            this.blackListed = Infinity;
+            return;
+        }
+
+        let ttl = this.switch.dialer.BLACK_LIST_TTL * Math.pow(this.blackListCount, 3);
+        const minTTL = ttl * 0.9;
+        const maxTTL = ttl * 1.1;
+
+        // Add a random jitter of 20% to the ttl
+        ttl = Math.floor(Math.random() * (maxTTL - minTTL) + minTTL);
+
+        this.blackListed = Date.now() + ttl;
         this.abort();
     }
 
@@ -178,6 +187,8 @@ class Queue {
                 muxer: null,
                 conn: null
             });
+
+            this.switch.connection.add(connectionFSM);
 
             // Add control events and start the dialer
             connectionFSM.once("connected", () => connectionFSM.protect());
@@ -229,6 +240,10 @@ class Queue {
         // depending on the error.
         connectionFSM.once("error", (err) => {
             queuedDial.callback(err);
+            // Dont blacklist peers we have identified and that we are connected to
+            if (peerInfo.protocols.size > 0 && peerInfo.isConnected()) {
+                return;
+            }
             this.blacklist();
         });
 
@@ -238,13 +253,14 @@ class Queue {
 
         // If we're not muxed yet, add listeners
         connectionFSM.once("muxed", () => {
-            this.switch.connection.add(connectionFSM);
+            this.blackListCount = 0; // reset blacklisting on good connections
             queuedDial.connection = connectionFSM;
             createConnectionWithProtocol(queuedDial);
             next();
         });
 
         connectionFSM.once("unmuxed", () => {
+            this.blackListCount = 0;
             queuedDial.connection = connectionFSM;
             createConnectionWithProtocol(queuedDial);
             next();

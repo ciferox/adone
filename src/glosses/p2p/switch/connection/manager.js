@@ -34,6 +34,7 @@ class ConnectionManager {
         // Only add it if it's not there
         if (!this.get(connection)) {
             this.connections[connection.theirB58Id].push(connection);
+            this.switch.emit("peer-mux-established", connection.theirPeerInfo);
         }
     }
 
@@ -45,7 +46,7 @@ class ConnectionManager {
      */
     get(connection) {
         if (!this.connections[connection.theirB58Id]) {
-            return null; 
+            return null;
         }
 
         for (let i = 0; i < this.connections[connection.theirB58Id].length; i++) {
@@ -81,15 +82,25 @@ class ConnectionManager {
      * @returns {void}
      */
     remove(connection) {
+        // No record of the peer, disconnect it
         if (!this.connections[connection.theirB58Id]) {
-            return; 
+            connection.theirPeerInfo.disconnect();
+            this.switch.emit("peer-mux-closed", connection.theirPeerInfo);
+            return;
         }
 
         for (let i = 0; i < this.connections[connection.theirB58Id].length; i++) {
             if (this.connections[connection.theirB58Id][i] === connection) {
                 this.connections[connection.theirB58Id].splice(i, 1);
-                return;
+                break;
             }
+        }
+
+        // The peer is fully disconnected
+        if (this.connections[connection.theirB58Id].length === 0) {
+            delete this.connections[connection.theirB58Id];
+            connection.theirPeerInfo.disconnect();
+            this.switch.emit("peer-mux-closed", connection.theirPeerInfo);
         }
     }
 
@@ -124,7 +135,7 @@ class ConnectionManager {
      * @returns {void}
      */
     addStreamMuxer(muxer) {
-    // for dialing
+        // for dialing
         this.switch.muxers[muxer.multicodec] = muxer;
 
         // for listening
@@ -180,6 +191,7 @@ class ConnectionManager {
                             return log("identify not successful");
                         }
                         const b58Str = peerInfo.id.toB58String();
+                        peerInfo = this.switch._peerBook.put(peerInfo);
 
                         const connection = new ConnectionFSM({
                             _switch: this.switch,
@@ -190,24 +202,24 @@ class ConnectionManager {
                         });
                         this.switch.connection.add(connection);
 
-                        if (peerInfo.multiaddrs.size > 0) {
-                            // with incomming conn and through identify, going to pick one
-                            // of the available multiaddrs from the other peer as the one
-                            // I'm connected to as we really can't be sure at the moment
-                            // TODO add this consideration to the connection abstraction!
-                            peerInfo.connect(peerInfo.multiaddrs.toArray()[0]);
-                        } else {
-                            // for the case of websockets in the browser, where peers have
-                            // no addr, use just their IPFS id
-                            peerInfo.connect(`/ipfs/${b58Str}`);
+                        // Only update if it's not already connected
+                        if (!peerInfo.isConnected()) {
+                            if (peerInfo.multiaddrs.size > 0) {
+                                // with incomming conn and through identify, going to pick one
+                                // of the available multiaddrs from the other peer as the one
+                                // I'm connected to as we really can't be sure at the moment
+                                // TODO add this consideration to the connection abstraction!
+                                peerInfo.connect(peerInfo.multiaddrs.toArray()[0])
+                            } else {
+                                // for the case of websockets in the browser, where peers have
+                                // no addr, use just their IPFS id
+                                peerInfo.connect(`/ipfs/${b58Str}`)
+                            }
                         }
-                        peerInfo = this.switch._peerBook.put(peerInfo);
 
                         muxedConn.once("close", () => {
                             connection.close();
                         });
-
-                        this.switch.emit("peer-mux-established", peerInfo);
                     });
                 });
             }

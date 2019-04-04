@@ -50,8 +50,6 @@ describe("LimitDialer", () => {
     it("two success", (done) => {
         const dialer = new LimitDialer(2, 10);
 
-        expect(2).checks(done);
-
         // mock transport
         const t1 = {
             dial(addr, cb) {
@@ -69,10 +67,7 @@ describe("LimitDialer", () => {
                     setTimeout(cb, 8);
                     return {
                         source: pull.values([2]),
-                        sink: pull.onEnd((err) => {
-                            // Verify the unused connection gets closed
-                            expect(err).to.not.exist().mark();
-                        })
+                        sink: pull.drain()
                     };
                 }
             }
@@ -86,7 +81,8 @@ describe("LimitDialer", () => {
                 conn,
                 pull.collect((err, res) => {
                     expect(err).to.not.exist();
-                    expect(res).to.be.eql([1]).mark();
+                    expect(res).to.be.eql([1]);
+                    done();
                 })
             );
         });

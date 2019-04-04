@@ -233,7 +233,8 @@ class Switch extends EventEmitter {
         }, (err) => {
             if (err) {
                 log.error(err);
-                return this.emit("error", err);
+                this.emit("error", err);
+                return this.state("stop");
             }
             this.state("done");
         });
@@ -251,7 +252,12 @@ class Switch extends EventEmitter {
             (cb) => {
                 each(this.transports, (transport, cb) => {
                     each(transport.listeners, (listener, cb) => {
-                        listener.close(cb);
+                        listener.close((err) => {
+                            if (err) {
+                                log.error(err);
+                            }
+                            cb();
+                        });
                     }, cb);
                 }, cb);
             },

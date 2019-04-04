@@ -14,6 +14,7 @@ const privateApi = require("./private");
 const Providers = require("./providers");
 const Message = require("./message");
 const RandomWalk = require("./random-walk");
+const QueryManager = require("./query-manager");
 const assert = require("assert");
 const defaultsDeep = require("@nodeutils/defaults-deep");
 
@@ -121,7 +122,7 @@ class KadDHT extends EventEmitter {
         });
 
         /**
-         * Provider management
+         * Random walk management
          *
          * @type {RandomWalk}
          */
@@ -134,6 +135,13 @@ class KadDHT extends EventEmitter {
         this.randomWalkQueriesPerPeriod = parseInt(options.randomWalk.queriesPerPeriod);
         this.randomWalkInterval = parseInt(options.randomWalk.interval);
         this.randomWalkTimeout = parseInt(options.randomWalk.timeout);
+
+        /**
+         * Keeps track of running queries
+         *
+         * @type {QueryManager}
+         */
+        this._queryManager = new QueryManager();
     }
 
     /**
@@ -153,6 +161,7 @@ class KadDHT extends EventEmitter {
      */
     start(callback) {
         this._running = true;
+        this._queryManager.start();
         this.network.start((err) => {
             if (err) {
                 return callback(err);
@@ -177,6 +186,7 @@ class KadDHT extends EventEmitter {
             this.providers.stop();
             this.network.stop(callback);
         });
+        this._queryManager.stop();
     }
 
     /**
