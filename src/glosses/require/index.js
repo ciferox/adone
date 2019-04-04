@@ -1,20 +1,7 @@
-const plugins = [
-    // "syntax.asyncGenerators",
-    "transform.flowStripTypes",
-    ["transform.decorators", { legacy: true }],
-    ["transform.classProperties", { loose: true }],
-    ["transform.privateMethods", { loose: true }],
-    "transform.doExpressions",
-    "transform.exportDefaultFrom",
-    "transform.partialApplication",
-    // "transform.asyncGeneratorFunctions",
-    "transform.modulesCommonjs",
-    // "transform.functionBind",
-    // "transform.objectRestSpread",
-    "transform.numericSeparator",
-    // "transform.exponentiationOperator",
-    // "transform.exportNamespaceFrom"
-];
+const {
+    module
+} = adone;
+
 // if (process.env.ADONE_COVERAGE) {
 //     plugins.unshift(
 //         "syntax.flow",
@@ -29,23 +16,23 @@ const plugins = [
 //         adone.js.coverage.plugin
 //     );
 // }
+
 const options = {
     compact: false,
     only: [/\.js$/],
     sourceMaps: "inline",
-    plugins
+    plugins: module.COMPILER_PLUGINS
 };
-const module = new adone.js.Module(require.main ? require.main.filename : adone.std.path.join(process.cwd(), "index.js"), {
-    transform: adone.js.Module.transforms.transpile(options)
+const mod = new adone.module.Module(require.main ? require.main.filename : adone.std.path.join(process.cwd(), "index.js"), {
+    transform: adone.module.Module.transforms.transpile(options)
 });
-const $require = (path, { transpile = true, cache = true } = {}) => module.require(path, {
-    transform: transpile ? module.transform : null,
-    cache
+const $require = (path, { transpile = true } = {}) => mod.require(path, {
+    transform: transpile ? mod.transform : null
 });
-$require.cache = module.cache;
-$require.main = module;
+$require.cache = mod.cache;
+$require.main = mod;
 $require.options = options;
-$require.resolve = (request) => adone.js.Module._resolveFilename(request, module);
-$require.unref = module.cache.unref.bind(module.cache);
+$require.resolve = (request) => adone.module.Module._resolveFilename(request, mod);
+// $require.unref = module.cache.unref.bind(module.cache);
 
 export default $require;

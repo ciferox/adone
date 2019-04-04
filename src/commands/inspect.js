@@ -30,21 +30,52 @@ const getOwnPropertyDescriptor = (obj, propName) => {
     }
 };
 
-const parseName = (name) => {
+// from lodash internals
+const charCodeOfDot = ".".charCodeAt(0);
+const reEscapeChar = /\\(\\)?/g;
+const rePropName = RegExp(
+    // Match anything that isn't a dot or bracket.
+    "[^.[\\]]+" + "|" +
+    // Or match property names within brackets.
+    "\\[(?:" +
+    // Match a non-string expression.
+    '([^"\'].*)' + "|" +
+    // Or match strings (supports escaping characters).
+    '(["\'])((?:(?!\\2)[^\\\\]|\\\\.)*?)\\2' +
+    ")\\]" + "|" +
+    // Or match "" as the space between consecutive dots or empty brackets.
+    "(?=(?:\\.|\\[\\])(?:\\.|\\[\\]|$))"
+    , "g");
+
+const stringToPath = (string) => {
+    const result = [];
+    if (string.charCodeAt(0) === charCodeOfDot) {
+        result.push("");
+    }
+    string.replace(rePropName, (match, expression, quote, subString) => {
+        let key = match;
+        if (quote) {
+            key = subString.replace(reEscapeChar, "$1");
+        } else if (expression) {
+            key = expression.trim();
+        }
+        result.push(key);
+    });
+    return result;
+};
+
+const cutNamespace = (parts) => {
     const namespaceParts = [];
-    const parts = name.split(".");
+    // const parts = name.split(".");
 
     do {
-        if (!is.namespace(get(global, [...namespaceParts, parts[0]]))) {
+        if (parts[0].startsWith(".") || !is.namespace(get(global, [...namespaceParts, parts[0]]))) {
             break;
         }
         namespaceParts.push(parts.shift());
     } while (parts.length > 0);
 
-    return {
-        namespace: namespaceParts.join("."),
-        objectPath: parts.join(".")
-    };
+    return namespaceParts.join(".");
 };
 
 export default class Inspection extends Subsystem {
@@ -125,7 +156,7 @@ export default class Inspection extends Subsystem {
                 funcDetails: opts.has("funcDetails")
             };
 
-            let name = args.get("name");
+            const name = args.get("name");
 
             if (name.length === 0) {
                 console.log("Global namespaces:");
@@ -133,39 +164,33 @@ export default class Inspection extends Subsystem {
                 return 0;
             }
 
-            const parts = name.split(".");
-            let namespace;
-            let objectPath;
-
+            let parts = stringToPath(name);
+            
             // Reduce 'adone' + 'global' chain...
             while (parts.length > 1) {
                 if (GLOBALS.includes(parts[0]) && GLOBALS.includes(parts[1])) {
                     parts.shift();
-                    name = parts.join(".");
                 } else {
                     break;
                 }
             }
 
             if (!GLOBALS.includes(parts[0])) {
-                throw new error.UnknownException(`Unknown namespace: ${name}`);
+                throw new error.UnknownException(`Unknown namespace: ${parts[0]}`);
             }
 
+            let namespace;
             if (parts[0] === "global") {
                 namespace = "global";
-                objectPath = (parts.length === 1)
-                    ? ""
-                    : parts.slice(1).join(".");
+                parts.shift();
             } else if (parts[0] in global) {
-                const result = parseName(name);
-                namespace = result.namespace;
-                objectPath = result.objectPath;
+                namespace = cutNamespace(parts);
             }
 
             const showValue = opts.has("value");
-            if ((showValue || inspectOptions.asObject) && objectPath.length === 0) {
-                const tmp = namespace.split(".");
-                objectPath = tmp.pop();
+            if ((showValue || inspectOptions.asObject) && parts.length === 0) {
+                const tmp = stringToPath(namespace);
+                parts = [tmp.pop()];
                 namespace = tmp.join(".");
             }
 
@@ -182,11 +207,9 @@ export default class Inspection extends Subsystem {
             }
 
             let result;
-            if (objectPath.length === 0) {
+            if (parts.length === 0) {
                 result = adone.inspect(ns, inspectOptions);
             } else {
-                const parts = objectPath.split(".");
-
                 let obj = ns;
                 for (const part of parts) {
                     const propDescr = getOwnPropertyDescriptor(obj, part);
@@ -202,12 +225,12 @@ export default class Inspection extends Subsystem {
                     case "class":
                         result = showValue
                             ? adone.js.highlight(obj.toString())
-                            : adone.inspect(get(ns, objectPath), inspectOptions);
+                            : adone.inspect(get(ns, parts), inspectOptions);
                         break;
                     default:
                         result = showValue
                             ? obj
-                            : adone.inspect(get(ns, objectPath), inspectOptions);
+                            : adone.inspect(get(ns, parts), inspectOptions);
                 }
             }
             console.log(result);

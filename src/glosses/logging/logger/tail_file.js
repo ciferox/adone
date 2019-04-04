@@ -1,7 +1,7 @@
 const {
     is,
     noop,
-    std: { fs, stream: { Readable }, string_decoder: { StringDecoder } }
+    std: { fs, stream: { Readable }, stringDecoder: { StringDecoder } }
 } = adone;
 
 /**

@@ -218,6 +218,14 @@ const irregularPlurals = {
     woman: "women"
 };
 
+export const getCallsites = () => {
+    const old = Error.prepareStackTrace;
+    Error.prepareStackTrace = (_, stack) => stack;
+    const stack = new Error().stack.slice(1);
+    Error.prepareStackTrace = old;
+    return stack;
+};
+
 /**
  * An array of the own keys of the plain object (see util.keys)
  */

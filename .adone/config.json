@@ -639,6 +639,12 @@
                     "src": "src/glosses/models/**/*.js",
                     "dst": "lib/glosses/models"
                 },
+                "module": {
+                    "description": "Module with support of transpilation",
+                    "task": "transpile",
+                    "src": "src/glosses/module/**/*.js",
+                    "dst": "lib/glosses/module"
+                },
                 "multiformats": {
                     "description": "Self-describing values for Future-proofing",
                     "task": "transpile",

@@ -3,7 +3,7 @@ const {
     is,
     std,
     fs,
-    js
+    module: { Module }
 } = adone;
 
 const CWD_PATH = Symbol();
@@ -19,9 +19,9 @@ export default class Generic extends adone.configuration.Base {
                 encode: null,
                 decode: (buf, { path, key, transpile = false } = {}) => {
                     const content = buf.toString();
-                    const transform = transpile ? js.Module.transforms.transpile(adone.require.options) : null;
+                    const transform = transpile ? Module.transforms.transpile(adone.require.options) : null;
 
-                    const m = new js.Module(path, {
+                    const m = new Module(path, {
                         transform
                     });
 

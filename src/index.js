@@ -128,6 +128,11 @@ Object.defineProperty(global, "adone", {
     value: adone
 });
 
+Object.defineProperty(adone, "adone", {
+    enumerable: true,
+    value: adone
+});
+
 adone.lazify({
     package: "../package.json",
 
@@ -228,6 +233,7 @@ adone.lazify({
     math: "./glosses/math",
     metrics: "./glosses/metrics",
     model: "./glosses/models",
+    module: "./glosses/module",
     multiformat: "./glosses/multiformats",
     multi: "./glosses/multi",
     net: "./glosses/net",

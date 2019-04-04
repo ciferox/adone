@@ -38,7 +38,7 @@ testContext.global = testContext;
  * This allows us to run our unittests
  */
 const runModuleInTestContext = (id: string, relativeFilename: string) => {
-    const filename = adone.js.Module.resolve(id, {
+    const filename = adone.module.resolve(id, {
         basedir: path.dirname(relativeFilename)
     });
 

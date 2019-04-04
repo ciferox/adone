@@ -99,7 +99,7 @@ function resolveStandardizedName(
     const standardizedName = standardizeName(type, name);
 
     try {
-        return adone.js.Module.resolve(standardizedName, { basedir: dirname });
+        return adone.module.resolve(standardizedName, { basedir: dirname });
     } catch (e) {
         if (e.code !== "MODULE_NOT_FOUND") {
             throw e; 
@@ -108,7 +108,7 @@ function resolveStandardizedName(
         if (standardizedName !== name) {
             let resolvedOriginal = false;
             try {
-                adone.js.Module.resolve(name, { basedir: dirname });
+                adone.module.resolve(name, { basedir: dirname });
                 resolvedOriginal = true;
             } catch (e2) { }
 
@@ -119,7 +119,7 @@ function resolveStandardizedName(
 
         let resolvedBabel = false;
         try {
-            adone.js.Module.resolve(standardizeName(type, `@babel/${name}`), {
+            adone.module.resolve(standardizeName(type, `@babel/${name}`), {
                 basedir: dirname
             });
             resolvedBabel = true;
@@ -132,7 +132,7 @@ function resolveStandardizedName(
         let resolvedOppositeType = false;
         const oppositeType = type === "preset" ? "plugin" : "preset";
         try {
-            adone.js.Module.resolve(standardizeName(oppositeType, name), { basedir: dirname });
+            adone.module.resolve(standardizeName(oppositeType, name), { basedir: dirname });
             resolvedOppositeType = true;
         } catch (e2) { }
 
