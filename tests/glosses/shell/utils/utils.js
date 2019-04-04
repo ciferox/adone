@@ -1,7 +1,7 @@
 const {
     is,
     cli: { chalk },
-    std: { child_process: child, path },
+    std: { childProcess, path },
     shell: { common }
 } = adone;
 
@@ -28,13 +28,13 @@ const skipOnWinForEPERM = (action, testCase) => {
 exports.skipOnWinForEPERM = skipOnWinForEPERM;
 
 const runScript = (script, cb) => {
-    child.execFile(common.config.execPath, ["-e", script], cb);
+    childProcess.execFile(common.config.execPath, ["-e", script], cb);
 };
 exports.runScript = runScript;
 
 const sleep = (time) => {
     const testDirectoryPath = path.dirname(__dirname);
-    child.execFileSync(common.config.execPath, [
+    childProcess.execFileSync(common.config.execPath, [
         path.join(testDirectoryPath, "resources", "exec", "slow.js"),
         time.toString()
     ]);
@@ -44,7 +44,7 @@ exports.sleep = sleep;
 const mkfifo = (dir) => {
     if (process.platform !== "win32") {
         const fifo = `${dir}fifo`;
-        child.execFileSync("mkfifo", [fifo]);
+        childProcess.execFileSync("mkfifo", [fifo]);
         return fifo;
     }
     return null;

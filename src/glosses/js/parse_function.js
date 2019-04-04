@@ -98,6 +98,6 @@ export default (code, options) => {
 
     options = Object.assign({}, options);
 
-    const node = adone.js.compiler.parseExpression(result.value, options);
+    const node = adone.js.parseExpression(result.value, options);
     return plugins.reduce((res, fn) => fn(node, res) || res, result);
 };

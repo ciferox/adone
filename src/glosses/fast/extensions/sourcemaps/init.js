@@ -34,10 +34,10 @@ export default function plugin({ __ }) {
             if (!sourceMap && options.identityMap) {
                 const fileType = file.extname;
                 const source = util.normalizePath(file.relative);
-                const generator = new sourcemap.Generator({ file: source });
+                const generator = new sourcemap.SourceMapGenerator({ file: source });
 
                 if (fileType === ".js") {
-                    const { tokens } = adone.js.compiler.parse(fileContent, { tokens: true });
+                    const { tokens } = adone.js.parse(fileContent, { tokens: true });
                     for (const token of tokens) {
                         if (token.type.label === "eof") {
                             break;

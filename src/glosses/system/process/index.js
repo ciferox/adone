@@ -524,7 +524,7 @@ export const exec = (cmd, args, opts) => {
 
     let spawned;
     try {
-        spawned = std.child_process.spawn(parsed.cmd, parsed.args, parsed.opts);
+        spawned = std.childProcess.spawn(parsed.cmd, parsed.args, parsed.opts);
     } catch (err) {
         return Promise.reject(err);
     }
@@ -662,7 +662,7 @@ export const execSync = (cmd, args, opts) => {
         throw new TypeError("The `input` option cannot be a stream in sync mode");
     }
 
-    const result = std.child_process.spawnSync(parsed.cmd, parsed.args, parsed.opts);
+    const result = std.childProcess.spawnSync(parsed.cmd, parsed.args, parsed.opts);
 
     if (result.error || result.status !== 0) {
         throw (result.error || new Error(result.stderr === "" ? result.stdout : result.stderr));

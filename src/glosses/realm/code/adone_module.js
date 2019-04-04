@@ -1,6 +1,6 @@
 const {
     fs,
-    js: { compiler: { traverse } }.
+    js: { compiler: { traverse } },
     realm
 } = adone;
 

@@ -1,6 +1,6 @@
 describe("database", "local", "Persistence", () => {
     const {
-        std: { fs, path, child_process: cp },
+        std: { fs, path, childProcess },
         database: { local: { Model: model, Datastore, Persistence, Storage: storage } }
     } = adone;
 
@@ -752,7 +752,7 @@ describe("database", "local", "Persistence", () => {
 
             // Loading it in a separate process that we will crash before finishing the loadDatabase
             const code = await new Promise((resolve) => {
-                cp.fork(adone.std.path.join(__dirname, "load_and_crash"), [file.path()]).on("exit", resolve);
+                childProcess.fork(adone.std.path.join(__dirname, "load_and_crash"), [file.path()]).on("exit", resolve);
             });
 
             expect(code).to.be.equal(1); // See loadAndCrash.js

@@ -402,7 +402,7 @@ export default class Terminfo {
 
         try {
             // if no stdio are passed, the command will report 'not a TTY'
-            ttyPath = adone.std.child_process.execSync("tty", { stdio: [stdin, null, null] }).toString();
+            ttyPath = adone.std.childProcess.execSync("tty", { stdio: [stdin, null, null] }).toString();
         } catch (error) {
             ttyPath = error.stdout.toString();
         }
@@ -2532,16 +2532,16 @@ export default class Terminfo {
             return 65001;
         }
 
-        // adone.std.child_process.execSync('chcp 65001', { stdio: 'ignore', timeout: 1500 });
+        // adone.std.childProcess.execSync('chcp 65001', { stdio: 'ignore', timeout: 1500 });
 
         try {
             // Produces something like: 'Active code page: 437\n\n'
-            ccp = adone.std.child_process.execFileSync(`${env.WINDIR}\\system32\\chcp.com`, [], {
+            ccp = adone.std.childProcess.execFileSync(`${env.WINDIR}\\system32\\chcp.com`, [], {
                 stdio: ["ignore", "pipe", "ignore"],
                 encoding: "ascii",
                 timeout: 1500
             });
-            // ccp = adone.std.child_process.execSync('chcp', {
+            // ccp = adone.std.childProcess.execSync('chcp', {
             //   stdio: ['ignore', 'pipe', 'ignore'],
             //   encoding: 'ascii',
             //   timeout: 1500

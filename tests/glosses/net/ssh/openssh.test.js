@@ -3,7 +3,7 @@ const { Server } = adone.net.ssh;
 const { util } = adone.net.ssh;
 
 const join = path.join;
-const { spawn, exec } = adone.std.child_process;
+const { spawn, exec } = adone.std.childProcess;
 
 const fixturesdir = join(__dirname, "fixtures");
 

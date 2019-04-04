@@ -107,7 +107,7 @@ describe("crypto", "jwa", () => {
         it(`RS${bits}: openssl sign -> js verify`, (done) => {
             const input = "iodine";
             const algo = jwa(`rs${bits}`);
-            const dgst = std.child_process.spawn("openssl", ["dgst", `-sha${bits}`, "-sign", filePath("rsa-private.pem")], {
+            const dgst = std.childProcess.spawn("openssl", ["dgst", `-sha${bits}`, "-sign", filePath("rsa-private.pem")], {
                 cwd: FIXTURES_PATH
             });
             let buffer = Buffer.alloc(0);
@@ -147,7 +147,7 @@ describe("crypto", "jwa", () => {
         it(`ES${bits}: openssl sign -> js verify`, (done) => {
             const input = "strawberry";
             const algo = jwa(`es${bits}`);
-            const dgst = std.child_process.spawn("openssl", ["dgst", `-sha${bits}`, "-sign", filePath(`ec${bits}-private.pem`)]);
+            const dgst = std.childProcess.spawn("openssl", ["dgst", `-sha${bits}`, "-sign", filePath(`ec${bits}-private.pem`)]);
             let buffer = Buffer.alloc(0);
             dgst.stdin.end(input);
             dgst.stdout.on("data", (buf) => {
@@ -170,7 +170,7 @@ describe("crypto", "jwa", () => {
         const inputFile = filePath("interop.input.txt");
         const signatureFile = filePath("interop.sig.txt");
 
-        const opensslVerify = (keyfile) => std.child_process.spawn("openssl", ["dgst", `-sha${bits}`, "-verify", keyfile, "-signature", signatureFile, inputFile]);
+        const opensslVerify = (keyfile) => std.childProcess.spawn("openssl", ["dgst", `-sha${bits}`, "-verify", keyfile, "-signature", signatureFile, inputFile]);
 
         it(`ES${bits}: js sign -> openssl verify`, () => {
             const publicKeyFile = filePath(`ec${bits}-public.pem`);
@@ -198,7 +198,7 @@ describe("crypto", "jwa", () => {
         const inputFile = filePath("interop.input.txt");
         const signatureFile = filePath("interop.sig.txt");
 
-        const opensslVerify = (keyfile) => std.child_process.spawn("openssl", ["dgst", `-sha${bits}`, "-verify", keyfile, "-signature", signatureFile, inputFile]);
+        const opensslVerify = (keyfile) => std.childProcess.spawn("openssl", ["dgst", `-sha${bits}`, "-verify", keyfile, "-signature", signatureFile, inputFile]);
 
         it(`RS${bits}: js sign -> openssl verify`, () => {
             const publicKeyFile = filePath("rsa-public.pem");

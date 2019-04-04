@@ -20,7 +20,7 @@ export default function mixin(compiler) {
         configurable: true,
         writable: true
     });
-    compiler.map = new sourcemap.Generator();
+    compiler.map = new sourcemap.SourceMapGenerator();
     compiler.position = { line: 1, column: 1 };
     compiler.content = {};
     compiler.files = {};

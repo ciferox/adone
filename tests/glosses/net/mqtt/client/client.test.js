@@ -1,4 +1,4 @@
-const { stream: { eos }, std: { path, net, child_process: { fork } } } = adone;
+const { stream: { eos }, std: { path, net, childProcess: { fork } } } = adone;
 const { connect, Client } = adone.net.mqtt.client;
 const abstractClientTests = require("./abstract_client");
 import { MqttServer } from "./server";

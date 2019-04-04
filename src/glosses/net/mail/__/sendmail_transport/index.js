@@ -1,4 +1,4 @@
-const { is, net: { mail: { __ } }, std: { child_process: { spawn } } } = adone;
+const { is, net: { mail: { __ } }, std: { childProcess: { spawn } } } = adone;
 
 /**
  * Generates a Transport object for Sendmail

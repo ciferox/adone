@@ -7,7 +7,7 @@ export {
 export { resolvePlugin, resolvePreset } from "./config/files";
 
 // export { version } from "./package.json";
-export const version = "7.4.0";
+export const version = "7.4.3";
 
 export { getEnv } from "./config/helpers/environment";
 

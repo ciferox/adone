@@ -1,5 +1,5 @@
 const {
-    std: { child_process: { spawn, exec: stdExec } },
+    std: { childProcess: { spawn, exec: stdExec } },
     lodash: _
 } = adone;
 

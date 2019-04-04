@@ -1,11 +1,11 @@
 // @flow
 
 const {
-    is
+    is,
+    sourcemap: sourceMap
 } = adone;
 
-import type { SourceMap } from "convert-source-map";
-import sourceMap from "source-map";
+// import type { SourceMap } from "convert-source-map";
 
 export default function mergeSourceMap(
     inputMap: SourceMap,

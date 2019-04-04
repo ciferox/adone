@@ -1,5 +1,5 @@
 const {
-    std: { string_decoder: { StringDecoder }, stream: { Stream }, os, path, crypto },
+    std: { stringDecoder: { StringDecoder }, stream: { Stream }, os, path, crypto },
     event,
     is,
     error

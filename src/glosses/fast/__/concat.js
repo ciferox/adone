@@ -1,4 +1,8 @@
-const { is, util, sourcemap } = adone;
+const {
+    is,
+    util,
+    sourcemap
+} = adone;
 
 export default class Concat {
     constructor(generateSourceMap, fileName, separator = Buffer.alloc(0)) {
@@ -11,7 +15,7 @@ export default class Concat {
         }
         this.separator = separator;
         if (this.sourceMapping) {
-            this._sourceMap = sourcemap.createGenerator({ file: util.normalizePath(fileName) });
+            this._sourceMap = new sourcemap.SourceMapGenerator({ file: util.normalizePath(fileName) });
             this.separatorLineOffset = 0;
             this.separatorColumnOffset = 0;
             const separatorString = this.separator.toString();
@@ -25,7 +29,7 @@ export default class Concat {
         }
     }
 
-    add(filePath, content, sourceMap) {
+    async add(filePath, content, sourceMap) {
         filePath = filePath && util.normalizePath(filePath);
         if (!is.buffer(content)) {
             content = Buffer.from(content);
@@ -44,7 +48,7 @@ export default class Concat {
             }
 
             if (sourceMap && sourceMap.mappings && sourceMap.mappings.length > 0) {
-                const upstreamSM = adone.sourcemap.createConsumer(sourceMap);
+                const upstreamSM = await sourcemap.createConsumer(sourceMap);
                 upstreamSM.eachMapping((mapping) => {
                     if (mapping.source) {
                         this._sourceMap.addMapping({

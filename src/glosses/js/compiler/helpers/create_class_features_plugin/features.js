@@ -27,7 +27,7 @@ export function enableFeature(file, feature, loose) {
     if (!hasFeature(file, feature)) {
         file.set(featuresKey, file.get(featuresKey) | feature);
         if (loose) {
-            file.set(looseKey, file.get(looseKey) | feature); 
+            file.set(looseKey, file.get(looseKey) | feature);
         }
     }
 }
@@ -45,19 +45,19 @@ export function verifyUsedFeatures(path, file) {
         if (!hasFeature(file, FEATURES.decorators)) {
             throw path.buildCodeFrameError(
                 "Decorators are not enabled." +
-          "\nIf you are using " +
-          '["@babel/plugin-proposal-decorators", { "legacy": true }], ' +
-          'make sure it comes *before* "@babel/plugin-proposal-class-properties" ' +
-          "and enable loose mode, like so:\n" +
-          '\t["@babel/plugin-proposal-decorators", { "legacy": true }]\n' +
-          '\t["@babel/plugin-proposal-class-properties", { "loose": true }]',
+                "\nIf you are using " +
+                '["@babel/plugin-proposal-decorators", { "legacy": true }], ' +
+                'make sure it comes *before* "@babel/plugin-proposal-class-properties" ' +
+                "and enable loose mode, like so:\n" +
+                '\t["@babel/plugin-proposal-decorators", { "legacy": true }]\n' +
+                '\t["@babel/plugin-proposal-class-properties", { "loose": true }]',
             );
         }
 
         if (path.isPrivate()) {
             throw path.buildCodeFrameError(
                 `Private ${
-                    path.isClassMethod() ? "methods" : "fields"
+                path.isClassMethod() ? "methods" : "fields"
                 } in decorated classes are not supported yet.`,
             );
         }
@@ -78,12 +78,12 @@ export function verifyUsedFeatures(path, file) {
 
     if (
         hasFeature(file, FEATURES.privateMethods) &&
-    hasFeature(file, FEATURES.fields) &&
-    isLoose(file, FEATURES.privateMethods) !== isLoose(file, FEATURES.fields)
+        hasFeature(file, FEATURES.fields) &&
+        isLoose(file, FEATURES.privateMethods) !== isLoose(file, FEATURES.fields)
     ) {
         throw path.buildCodeFrameError(
             "'loose' mode configuration must be the same for both @babel/plugin-proposal-class-properties " +
-        "and @babel/plugin-proposal-private-methods",
+            "and @babel/plugin-proposal-private-methods",
         );
     }
 

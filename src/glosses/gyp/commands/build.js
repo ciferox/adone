@@ -5,7 +5,7 @@ const which = require("which");
 
 const {
     is,
-    std: { path, child_process: { exec } }
+    std: { path, childProcess: { exec } }
 } = adone;
 
 const build = function (gyp, argv) {

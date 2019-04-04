@@ -22,9 +22,9 @@ export default class extends Subsystem {
     })
     async nbuildCommand(args, opts) {
         try {
-            const entryPath = this.parent.resolvePath(args, opts);
-            const manager = await this.parent.getRealm();
-            const observer = await manager.run("nbuild", entryPath);
+            const path = this.parent.resolvePath(args, opts);
+            const manager = await this.parent.connectRealm({ progress: false });
+            const observer = await manager.run("nbuild", { path });
             const result = await observer.result;
 
             if (is.nil(result)) {

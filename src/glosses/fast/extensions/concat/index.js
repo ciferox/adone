@@ -27,7 +27,7 @@ export default function plugin() {
             throw new error.InvalidArgumentException("Missing path in file options");
         }
 
-        return this.throughSync((file) => {
+        return this.throughAsync(async (file) => {
             if (file.isNull()) {
                 return;
             }
@@ -53,7 +53,7 @@ export default function plugin() {
             }
 
             // add file to concat instance
-            data.add(file.relative, file.contents, file.sourceMap);
+            await data.add(file.relative, file.contents, file.sourceMap);
         }, function () {
             // no files passed in, no file goes out
             if (!latestFile || !data) {

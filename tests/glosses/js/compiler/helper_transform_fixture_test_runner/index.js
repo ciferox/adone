@@ -2,12 +2,12 @@ const {
     assert,
     js: { compiler: { core, codeFrameColumns } },
     lodash: { defaults, includes, extend, merge, escapeRegExp },
-    std: { fs, path, vm }
+    std: { fs, path, vm },
+    sourcemap: sourceMap
 } = adone;
 const { buildExternalHelpers } = core;
 
 import getFixtures from "../helper_fixtures";
-import sourceMap from "source-map";
 import * as helpers from "./helpers";
 import resolve from "resolve";
 import checkDuplicatedNodes from "../check_duplicated_nodes";

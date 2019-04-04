@@ -13,7 +13,7 @@ const promisedFilter = (func) => {
 
 const statAsync = promisify(adone.std.fs.stat);
 const readdirAsync = promisify(adone.std.fs.readdir);
-const execAsync = promisify(adone.std.child_process.exec);
+const execAsync = promisify(adone.std.childProcess.exec);
 
 const udevParser = (output) => {
     const udevInfo = output.split("\n").reduce((info, line) => {

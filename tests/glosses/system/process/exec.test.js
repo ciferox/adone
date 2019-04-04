@@ -287,7 +287,7 @@ describe("system", "process", "exec", () => {
 
     if (is.darwin) {
         it("sanity check: child_process.exec also has killed.false if killed indirectly", (done) => {
-            const cp = adone.std.child_process.exec("forever", (err) => {
+            const cp = adone.std.childProcess.exec("forever", (err) => {
                 assert.isTrue(err);
                 assert.isFalse(err.killed);
                 done();

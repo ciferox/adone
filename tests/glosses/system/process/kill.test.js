@@ -3,7 +3,7 @@ describe("system", "process", "kill", () => {
         is,
         promise,
         system: { process: { kill, exists, getChildPids } },
-        std: { child_process: childProcess }
+        std: { childProcess }
     } = adone;
 
     // Ensure the noop process has time to exit

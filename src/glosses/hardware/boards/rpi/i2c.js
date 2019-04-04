@@ -82,7 +82,7 @@ export class I2C extends adone.hardware.board.rpi.Peripheral {
     constructor(config) {
         super(getPins(config));
         this.devices = [];
-        adone.std.child_process.execSync("modprobe i2c-dev");
+        adone.std.childProcess.execSync("modprobe i2c-dev");
     }
 
     destroy() {

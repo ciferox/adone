@@ -4,7 +4,7 @@ import { createMockTransport } from "./mocks/mock-transport";
 const {
     logging: { logger },
     is,
-    std: { fs, path, util, stream, child_process: { spawn } }
+    std: { fs, path, util, stream, childProcess: { spawn } }
 } = adone;
 
 const helpers = exports;

@@ -23,15 +23,15 @@ export default class extends Subsystem {
     async ncleanCommand(args, opts) {
         try {
             const path = this.parent.resolvePath(args, opts);
-            const manager = await this.parent.getRealm();
-            const observer = await manager.run("nclean", path);
+            const manager = await this.parent.connectRealm({ progress: false });
+            const observer = await manager.run("nclean", { path });
             if (is.nil(observer)) {
                 console.log("Nothing to clean");
             } else {
                 await observer.result;
             }
 
-            
+
             return 0;
         } catch (err) {
             console.log(err);

@@ -1,8 +1,8 @@
-
-const Decode = require("string_decoder").StringDecoder;
+const { std: { stringDecoder: { StringDecoder }}} = adone;
 
 module.exports = function (enc) {
-    const decoder = new Decode(enc); let ended;
+    const decoder = new StringDecoder(enc); 
+    let ended;
     return function (read) {
         return function (abort, cb) {
             if (ended) {

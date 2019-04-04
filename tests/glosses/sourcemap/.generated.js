@@ -1,0 +1,1 @@
+exports.test = function() {throw new Error("test");};//@ sourceMappingURL=.generated.js.map

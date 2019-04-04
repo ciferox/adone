@@ -1,21 +1,24 @@
-adone.lazify({
+const __ = adone.lazify({
+    SourceMapGenerator: "./source_map_generator",
+    SourceMapConsumer: ["./source_map_consumer", (mod) => mod.SourceMapConsumer],
+    BasicSourceMapConsumer: ["./source_map_consumer", (mod) => mod.BasicSourceMapConsumer],
+    IndexedSourceMapConsumer: ["./source_map_consumer", (mod) => mod.IndexedSourceMapConsumer],
+    SourceNode: "./source_node",
     convert: "./convert",
-    support: "./support",
-    createConsumer: ["./consumer", (x) => x.createConsumer],
-    Consumer: ["./consumer", (x) => x.SourceMapConsumer],
-    IndexedConsumer: ["./consumer", (x) => x.IndexedSourceMapConsumer],
-    BasicConsumer: ["./consumer", (x) => x.BasicSourceMapConsumer],
-    createGenerator: ["./generator", (x) => x.createGenerator],
-    Generator: ["./generator", (x) => x.SourceMapGenerator],
-    Node: "./node",
-    MappingList: "./mapping_list",
-    util: "./util",
     inline: "./inline",
-    resolveSourceMap: ["./resolve", (x) => x.resolveSourceMap],
-    resolveSourceMapSync: ["./resolve", (x) => x.resolveSourceMapSync],
-    resolveSources: ["./resolve", (x) => x.resolveSources],
-    resolveSourcesSync: ["./resolve", (x) => x.resolveSourcesSync],
-    resolve: ["./resolve", (x) => x.resolve],
-    resolveSync: ["./resolve", (x) => x.resolveSync],
-    parseMapToJSON: ["./resolve", (x) => x.parseMapToJSON]
+    support: "./support"
 }, adone.asNamespace(exports), require);
+
+const {
+    is
+} = adone;
+
+export const createConsumer = (sourceMap) => {
+    if (is.string(sourceMap)) {
+        sourceMap = JSON.parse(sourceMap.replace(/^\)\]\}'/, ""));
+    }
+
+    return is.nil(sourceMap.sections)
+        ? new __.BasicSourceMapConsumer(sourceMap)
+        : new __.IndexedSourceMapConsumer(sourceMap);
+};

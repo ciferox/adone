@@ -9,7 +9,7 @@ let findVS2017;
 const {
     is,
     semver,
-    std: { fs, path, child_process: cp, util: { format: msgFormat, _extend: extend } }
+    std: { fs, path, childProcess, util: { format: msgFormat, _extend: extend } }
 } = adone;
 
 if (is.windows) {
@@ -24,7 +24,7 @@ const PythonFinder = function (python, callback) {
 PythonFinder.prototype = {
     checkPythonLauncherDepth: 0,
     env: process.env,
-    execFile: cp.execFile,
+    execFile: childProcess.execFile,
     log,
     resolve: path.win32 && path.win32.resolve || path.resolve,
     stat: fs.stat,

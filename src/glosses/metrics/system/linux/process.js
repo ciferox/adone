@@ -80,7 +80,7 @@ export default class LinuxProcess extends Process {
         // BOOT|<------------uptime------------->|NOW
 
         // This takes advantage of the fact that ps does all the heavy lifting of sorting out HZ internally.
-        let etime = adone.std.child_process.execSync(adone.sprintf("ps -p %d -o etimes=", youngestPid));
+        let etime = adone.std.childProcess.execSync(adone.sprintf("ps -p %d -o etimes=", youngestPid));
         if (is.buffer(etime)) {
             etime = etime.toString();
         }

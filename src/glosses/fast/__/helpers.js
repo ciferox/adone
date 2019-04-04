@@ -14,7 +14,7 @@ export const applySourceMap = (file, sourceMap) => {
     }
 
     if (file.sourceMap && file.sourceMap.mappings !== "") {
-        const generator = sourcemap.Generator.fromSourceMap(sourcemap.createConsumer(sourceMap));
+        const generator = sourcemap.SourceMapGenerator.fromSourceMap(sourcemap.createConsumer(sourceMap));
         generator.applySourceMap(sourcemap.createConsumer(file.sourceMap));
         file.sourceMap = JSON.parse(generator.toString());
     } else {

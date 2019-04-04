@@ -1,5 +1,5 @@
 
-const cp = adone.std.child_process;
+const cp = adone.std.childProcess;
 const Terminal = require("./terminal");
 
 function Video(options) {

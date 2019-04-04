@@ -53,7 +53,7 @@ const listWindows = async ({ system, username, password, filter, verbose = false
     const headers = verbose ? verboseHeaders : defaultHeaders;
 
     const stdout = await new Promise((resolve, reject) => {
-        std.child_process.execFile("tasklist", args, (err, stdout) => {
+        std.childProcess.execFile("tasklist", args, (err, stdout) => {
             if (err) {
                 return reject(err);
             }
@@ -85,7 +85,7 @@ const listDefault = ({ all } = {}) => {
 
     return Promise.all(["comm", "args", "%cpu"].map((cmd) => {
         return new Promise((resolve, reject) => {
-            std.child_process.execFile("ps", [flags, `pid,${cmd}`], {
+            std.childProcess.execFile("ps", [flags, `pid,${cmd}`], {
                 maxBuffer: TEN_MEGABYTE
             }, (err, stdout) => (err) ? reject(err) : resolve(stdout));
         }).then((stdout) => {

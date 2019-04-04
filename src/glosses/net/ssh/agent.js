@@ -2,7 +2,7 @@ const { is } = adone;
 const Socket = adone.std.net.Socket;
 const path = adone.std.path;
 const fs = adone.std.fs;
-const cp = adone.std.child_process;
+const cp = adone.std.childProcess;
 
 const REQUEST_IDENTITIES = 11;
 const IDENTITIES_ANSWER = 12;

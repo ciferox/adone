@@ -1,5 +1,5 @@
 // Node.js internal encodings.
-const { std: { string_decoder: { StringDecoder } } } = adone;
+const { std: { stringDecoder: { StringDecoder } } } = adone;
 
 class InternalDecoderCesu8 {
     constructor(options, codec) {

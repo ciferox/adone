@@ -1,10 +1,12 @@
 const __ = adone.lazify({
-    Bundle: "./bundle",
+    Sandbox: "./sandbox",
+    Bundler: "./bundler",
     CodeLayout: "./code_layout",
     Inspector: "./inspector",
     Namespace: "./namespace",
     Base: "./base",
     Module: "./module",
+    ModuleOld: "./module_old",
     AdoneModule: "./adone_module",
     Class: "./class",
     Function: "./function",
@@ -21,8 +23,21 @@ const __ = adone.lazify({
     JsNative: "./js_native",
     Adone: "./adone",
     Global: "./global",
-    Native: "./native"
+    Native: "./native",
+    scope: "./scopes",
+    type: "./types",
+    helper: "./helpers"
 }, exports, require);
+
+export const DEFAULT_PARSER_PLUGINS = [
+    ["decorators", { decoratorsBeforeExport: false }],
+    "classProperties",
+    "classPrivateProperties",
+    "classPrivateMethods",
+    "numericSeparator",
+    "partialApplication"
+];
+
 
 export const nodeInfo = (node) => {
     switch (node.type) {

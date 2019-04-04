@@ -109,7 +109,7 @@ export default function normalizeModuleAndLoadMetadata(
         }
 
         if (noInterop) {
-            metadata.interop = "none";
+            metadata.interop = "none"; 
         } else if (esNamespaceOnly) {
             // Both the default and namespace interops pass through __esModule
             // objects, but the namespace interop is used to enable Babel's
@@ -175,7 +175,7 @@ function getModuleMetadata(
         if (child.isImportDeclaration()) {
             const data = getData(child.node.source);
             if (!data.loc) {
-                data.loc = child.node.loc;
+                data.loc = child.node.loc; 
             }
 
             child.get("specifiers").forEach((spec) => {
@@ -224,7 +224,7 @@ function getModuleMetadata(
             hasExports = true;
             const data = getData(child.node.source);
             if (!data.loc) {
-                data.loc = child.node.loc;
+                data.loc = child.node.loc; 
             }
 
             data.reexportAll = {
@@ -234,7 +234,7 @@ function getModuleMetadata(
             hasExports = true;
             const data = getData(child.node.source);
             if (!data.loc) {
-                data.loc = child.node.loc;
+                data.loc = child.node.loc; 
             }
 
             child.get("specifiers").forEach((spec) => {
@@ -273,16 +273,16 @@ function getModuleMetadata(
 
         for (const importName of metadata.imports.values()) {
             if (importName === "default") {
-                needsDefault = true;
-            } else {
-                needsNamed = true;
+                needsDefault = true; 
+} else {
+                needsNamed = true; 
             }
         }
         for (const importName of metadata.reexports.values()) {
             if (importName === "default") {
-                needsDefault = true;
-            } else {
-                needsNamed = true;
+                needsDefault = true; 
+} else {
+                needsNamed = true; 
             }
         }
 
@@ -304,7 +304,7 @@ function getModuleMetadata(
                 // dependency modules are loaded lazily.
                 metadata.lazy = !/\./.test(source);
             } else if (is.array(lazy)) {
-                metadata.lazy = lazy.indexOf(source);
+                metadata.lazy = lazy.indexOf(source) !== -1;
             } else if (is.function(lazy)) {
                 metadata.lazy = lazy(source);
             } else {
@@ -335,7 +335,7 @@ function getLocalExportMetadata(
             kind = "import";
         } else {
             if (child.isExportDefaultDeclaration()) {
-                child = child.get("declaration");
+                child = child.get("declaration"); 
             }
             if (child.isExportNamedDeclaration()) {
                 if (child.node.declaration) {
@@ -442,7 +442,7 @@ function nameAnonymousExports(programPath: NodePath) {
     // Name anonymous exported locals.
     programPath.get("body").forEach((child) => {
         if (!child.isExportDefaultDeclaration()) {
-            return;
+            return; 
         }
         splitExportDeclaration(child);
     });

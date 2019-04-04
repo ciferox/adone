@@ -1,98 +1,92 @@
-const { error } = adone;
-
 /**
- * Respresetns a data structure which is a combination of an array and a set.
- * Adding a new member is O(1), testing for membership is O(1),
- * and finding the index of an element is O(1).
+ * A data structure which is a combination of an array and a set. Adding a new
+ * member is O(1), testing for membership is O(1), and finding the index of an
+ * element is O(1). Removing elements from the set is not supported. Only
+ * strings are supported for membership.
  */
 export default class ArraySet {
     constructor() {
         this._array = [];
-        this._map = new Map();
+        this._set = new Map();
     }
 
     /**
-     * The number of unique items in this ArraySet.
-     * If duplicates have been added, than those do not count towards the size.
-     *
-     * @returns {number}
+     * Static method for creating ArraySet instances from an existing array.
      */
-    get length() {
-        return this._map.size;
+    static fromArray(aArray, aAllowDuplicates) {
+        const set = new ArraySet();
+        for (let i = 0, len = aArray.length; i < len; i++) {
+            set.add(aArray[i], aAllowDuplicates);
+        }
+        return set;
     }
 
     /**
-     * Adds the given value to this set
+     * Return how many unique items are in this ArraySet. If duplicates have been
+     * added, than those do not count towards the size.
      *
-     * @param {string} value
-     * @param {boolean} [allowDuplicates = false] Whether to allow duplicates in the set
+     * @returns Number
      */
-    add(value, allowDuplicates = false) {
-        const isDuplicate = this._map.has(value);
+    size() {
+        return this._set.size;
+    }
+
+    /**
+     * Add the given string to this set.
+     *
+     * @param String aStr
+     */
+    add(aStr, aAllowDuplicates) {
+        const isDuplicate = this.has(aStr);
         const idx = this._array.length;
-        if (!isDuplicate || allowDuplicates) {
-            this._array.push(value);
+        if (!isDuplicate || aAllowDuplicates) {
+            this._array.push(aStr);
         }
         if (!isDuplicate) {
-            this._map.set(value, idx);
+            this._set.set(aStr, idx);
         }
-        return this;
     }
 
     /**
-     * Checks whether the given value is a member of the set
+     * Is the given string a member of this set?
      *
-     * @param {string} value
-     * @returns {boolean}
+     * @param String aStr
      */
-    has(value) {
-        return this._map.has(value);
+    has(aStr) {
+        return this._set.has(aStr);
     }
 
     /**
-     * Returns the index of the given element
+     * What is the index of the given string in the array?
      *
-     * @param {string} value
-     * @returns {any}
+     * @param String aStr
      */
-    indexOf(value) {
-        if (!this._map.has(value)) {
-            return -1;
+    indexOf(aStr) {
+        const idx = this._set.get(aStr);
+        if (idx >= 0) {
+            return idx;
         }
-        return this._map.get(value);
+        throw new Error(`"${aStr}" is not in the set.`);
     }
 
     /**
-     * Returns an element at the given index
-     * @param {number} idx
-     * @returns {any}
-     */
-    at(idx) {
-        if (idx >= 0 && idx < this._array.length) {
-            return this._array[idx];
-        }
-        throw new error.UnknownException(`No element indexed by ${idx}`);
-    }
-
-    /**
-     * Converts the set into an array
+     * What is the element at the given index?
      *
-     * @returns {any[]}
+     * @param Number aIdx
+     */
+    at(aIdx) {
+        if (aIdx >= 0 && aIdx < this._array.length) {
+            return this._array[aIdx];
+        }
+        throw new Error(`No element indexed by ${aIdx}`);
+    }
+
+    /**
+     * Returns the array representation of this set (which has the proper indices
+     * indicated by indexOf). Note that this is a copy of the internal array used
+     * for storing the members so that no one can mess with internal state.
      */
     toArray() {
         return this._array.slice();
-    }
-
-    /**
-     * Creates an ArraySet from the given iterable object
-     *
-     * @returns {ArraySet}
-     */
-    static from(iterable, allowDuplicates) {
-        const set = new ArraySet();
-        for (const i of iterable) {
-            set.add(i, allowDuplicates);
-        }
-        return set;
     }
 }

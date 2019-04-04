@@ -22,7 +22,7 @@ describe("system", "process", () => {
 
     describe("child pids", () => {
         const {
-            std: { path, child_process: cp },
+            std: { path, childProcess },
             system: { process: { getChildPids, kill } },
             util
         } = adone;
@@ -34,7 +34,7 @@ describe("system", "process", () => {
         };
 
         it("spawn a parent process which has a two child processes", async () => {
-            const parent = cp.exec(`node ${scripts.parent}`, (error, stdout, stderr) => { });
+            const parent = childProcess.exec(`node ${scripts.parent}`, (error, stdout, stderr) => { });
 
             await promise.delay(500);
 
@@ -61,7 +61,7 @@ describe("system", "process", () => {
         });
 
         it("should return pids of children of children", async () => {
-            const child = cp.spawn("node", [scripts.spawnChildren]);
+            const child = childProcess.spawn("node", [scripts.spawnChildren]);
             try {
                 let stdout = "";
                 child.stdout.on("data", (buf) => {
@@ -81,7 +81,7 @@ describe("system", "process", () => {
         });
 
         it("spawn a child process and psTree with a string as pid", async () => {
-            const child = cp.exec(`node ${scripts.child}`, (error, stdout, stderr) => { });
+            const child = childProcess.exec(`node ${scripts.child}`, (error, stdout, stderr) => { });
             await promise.delay(200);
             let children = await getChildPids(child.pid.toString());
             await kill(child.pid, {

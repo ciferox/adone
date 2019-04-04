@@ -101,15 +101,15 @@ export class Token {
         this.loc = new SourceLocation(state.startLoc, state.endLoc);
     }
 
-  type: TokenType;
+    type: TokenType;
 
-  value: any;
+    value: any;
 
-  start: number;
+    start: number;
 
-  end: number;
+    end: number;
 
-  loc: SourceLocation;
+    loc: SourceLocation;
 }
 
 // ## Tokenizer
@@ -119,1308 +119,1314 @@ export default class Tokenizer extends LocationParser {
   // parser/util.js
   +unexpected: (pos?: ?number, messageOrType?: string | TokenType) => empty;
 
-  isLookahead: boolean;
+isLookahead: boolean;
 
-  constructor(options: Options, input: string) {
-      super();
-      this.state = new State();
-      this.state.init(options);
-      this.input = input;
-      this.length = input.length;
-      this.isLookahead = false;
-  }
+constructor(options: Options, input: string) {
+    super();
+    this.state = new State();
+    this.state.init(options);
+    this.input = input;
+    this.length = input.length;
+    this.isLookahead = false;
+}
 
-  // Move to the next token
+// Move to the next token
 
-  next(): void {
-      if (this.options.tokens && !this.isLookahead) {
-          this.state.tokens.push(new Token(this.state));
-      }
+next(): void {
+    if (this.options.tokens && !this.isLookahead) {
+        this.state.tokens.push(new Token(this.state));
+    }
 
-      this.state.lastTokEnd = this.state.end;
-      this.state.lastTokStart = this.state.start;
-      this.state.lastTokEndLoc = this.state.endLoc;
-      this.state.lastTokStartLoc = this.state.startLoc;
-      this.nextToken();
-  }
+    this.state.lastTokEnd = this.state.end;
+    this.state.lastTokStart = this.state.start;
+    this.state.lastTokEndLoc = this.state.endLoc;
+    this.state.lastTokStartLoc = this.state.startLoc;
+    this.nextToken();
+}
 
-  // TODO
+// TODO
 
-  eat(type: TokenType): boolean {
-      if (this.match(type)) {
-          this.next();
-          return true;
-      } 
-      return false;
-    
-  }
+eat(type: TokenType): boolean {
+    if (this.match(type)) {
+        this.next();
+        return true;
+    }
+    return false;
 
-  // TODO
+}
 
-  match(type: TokenType): boolean {
-      return this.state.type === type;
-  }
+// TODO
 
-  // TODO
+match(type: TokenType): boolean {
+    return this.state.type === type;
+}
 
-  lookahead(): State {
-      const old = this.state;
-      this.state = old.clone(true);
+// TODO
 
-      this.isLookahead = true;
-      this.next();
-      this.isLookahead = false;
+lookahead(): State {
+    const old = this.state;
+    this.state = old.clone(true);
 
-      const curr = this.state;
-      this.state = old;
-      return curr;
-  }
+    this.isLookahead = true;
+    this.next();
+    this.isLookahead = false;
 
-  // Toggle strict mode. Re-reads the next number or string to please
-  // pedantic tests (`"use strict"; 010;` should fail).
+    const curr = this.state;
+    this.state = old;
+    return curr;
+}
 
-  setStrict(strict: boolean): void {
-      this.state.strict = strict;
-      if (!this.match(tt.num) && !this.match(tt.string)) {
-          return; 
-      }
-      this.state.pos = this.state.start;
-      while (this.state.pos < this.state.lineStart) {
-          this.state.lineStart =
+// Toggle strict mode. Re-reads the next number or string to please
+// pedantic tests (`"use strict"; 010;` should fail).
+
+setStrict(strict: boolean): void {
+    this.state.strict = strict;
+    if (!this.match(tt.num) && !this.match(tt.string)) {
+ return; 
+}
+    this.state.pos = this.state.start;
+    while (this.state.pos < this.state.lineStart) {
+        this.state.lineStart =
         this.input.lastIndexOf("\n", this.state.lineStart - 2) + 1;
-          --this.state.curLine;
-      }
-      this.nextToken();
-  }
+        --this.state.curLine;
+    }
+    this.nextToken();
+}
 
-  curContext(): TokContext {
-      return this.state.context[this.state.context.length - 1];
-  }
+curContext(): TokContext {
+    return this.state.context[this.state.context.length - 1];
+}
 
-  // Read a single token, updating the parser object's token-related
-  // properties.
+// Read a single token, updating the parser object's token-related
+// properties.
 
-  nextToken(): void {
-      const curContext = this.curContext();
-      if (!curContext || !curContext.preserveSpace) {
-          this.skipSpace(); 
-      }
+nextToken(): void {
+    const curContext = this.curContext();
+    if (!curContext || !curContext.preserveSpace) {
+ this.skipSpace(); 
+}
 
-      this.state.containsOctal = false;
-      this.state.octalPosition = null;
-      this.state.start = this.state.pos;
-      this.state.startLoc = this.state.curPosition();
-      if (this.state.pos >= this.length) {
-          this.finishToken(tt.eof);
-          return;
-      }
+    this.state.containsOctal = false;
+    this.state.octalPosition = null;
+    this.state.start = this.state.pos;
+    this.state.startLoc = this.state.curPosition();
+    if (this.state.pos >= this.length) {
+        this.finishToken(tt.eof);
+        return;
+    }
 
-      if (curContext.override) {
-          curContext.override(this);
-      } else {
-          this.getTokenFromCode(this.input.codePointAt(this.state.pos));
-      }
-  }
+    if (curContext.override) {
+        curContext.override(this);
+    } else {
+        this.getTokenFromCode(this.input.codePointAt(this.state.pos));
+    }
+}
 
-  pushComment(
-      block: boolean,
-      text: string,
-      start: number,
-      end: number,
-      startLoc: Position,
-      endLoc: Position,
-  ): void {
-      const comment = {
-          type: block ? "CommentBlock" : "CommentLine",
-          value: text,
-          start,
-          end,
-          loc: new SourceLocation(startLoc, endLoc)
-      };
+pushComment(
+    block: boolean,
+    text: string,
+    start: number,
+    end: number,
+    startLoc: Position,
+    endLoc: Position,
+): void {
+    const comment = {
+        type: block ? "CommentBlock" : "CommentLine",
+        value: text,
+        start,
+        end,
+        loc: new SourceLocation(startLoc, endLoc)
+    };
 
-      if (!this.isLookahead) {
-          if (this.options.tokens) {
-              this.state.tokens.push(comment); 
-          }
-          this.state.comments.push(comment);
-          this.addComment(comment);
-      }
-  }
+    if (!this.isLookahead) {
+        if (this.options.tokens) {
+ this.state.tokens.push(comment); 
+}
+        this.state.comments.push(comment);
+        this.addComment(comment);
+    }
+}
 
-  skipBlockComment(): void {
-      const startLoc = this.state.curPosition();
-      const start = this.state.pos;
-      const end = this.input.indexOf("*/", (this.state.pos += 2));
-      if (end === -1) {
-          this.raise(this.state.pos - 2, "Unterminated comment"); 
-      }
+skipBlockComment(): void {
+    const startLoc = this.state.curPosition();
+    const start = this.state.pos;
+    const end = this.input.indexOf("*/", (this.state.pos += 2));
+    if (end === -1) {
+ this.raise(this.state.pos - 2, "Unterminated comment"); 
+}
 
-      this.state.pos = end + 2;
-      lineBreakG.lastIndex = start;
-      let match;
-      while (
-          (match = lineBreakG.exec(this.input)) &&
-      match.index < this.state.pos
-      ) {
-          ++this.state.curLine;
-          this.state.lineStart = match.index + match[0].length;
-      }
+    this.state.pos = end + 2;
+    lineBreakG.lastIndex = start;
+    let match;
+    while (
+        (match = lineBreakG.exec(this.input)) &&
+    match.index < this.state.pos
+    ) {
+        ++this.state.curLine;
+        this.state.lineStart = match.index + match[0].length;
+    }
 
-      this.pushComment(
-          true,
-          this.input.slice(start + 2, end),
-          start,
-          this.state.pos,
-          startLoc,
-          this.state.curPosition(),
-      );
-  }
+    this.pushComment(
+        true,
+        this.input.slice(start + 2, end),
+        start,
+        this.state.pos,
+        startLoc,
+        this.state.curPosition(),
+    );
+}
 
-  skipLineComment(startSkip: number): void {
-      const start = this.state.pos;
-      const startLoc = this.state.curPosition();
-      let ch = this.input.charCodeAt((this.state.pos += startSkip));
-      if (this.state.pos < this.length) {
-          while (
-              ch !== charCodes.lineFeed &&
+skipLineComment(startSkip: number): void {
+    const start = this.state.pos;
+    const startLoc = this.state.curPosition();
+    let ch = this.input.charCodeAt((this.state.pos += startSkip));
+    if (this.state.pos < this.length) {
+        while (
+            ch !== charCodes.lineFeed &&
         ch !== charCodes.carriageReturn &&
         ch !== charCodes.lineSeparator &&
         ch !== charCodes.paragraphSeparator &&
         ++this.state.pos < this.length
-          ) {
-              ch = this.input.charCodeAt(this.state.pos);
-          }
-      }
+        ) {
+            ch = this.input.charCodeAt(this.state.pos);
+        }
+    }
 
-      this.pushComment(
-          false,
-          this.input.slice(start + startSkip, this.state.pos),
-          start,
-          this.state.pos,
-          startLoc,
-          this.state.curPosition(),
-      );
-  }
+    this.pushComment(
+        false,
+        this.input.slice(start + startSkip, this.state.pos),
+        start,
+        this.state.pos,
+        startLoc,
+        this.state.curPosition(),
+    );
+}
 
-  // Called at the start of the parse and after every token. Skips
-  // whitespace and comments, and.
+// Called at the start of the parse and after every token. Skips
+// whitespace and comments, and.
 
-  skipSpace(): void {
-      loop: while (this.state.pos < this.length) {
-          const ch = this.input.charCodeAt(this.state.pos);
-          switch (ch) {
-              case charCodes.space:
-              case charCodes.nonBreakingSpace:
-              case charCodes.tab:
-                  ++this.state.pos;
-                  break;
-              case charCodes.carriageReturn:
-                  if (
-                      this.input.charCodeAt(this.state.pos + 1) === charCodes.lineFeed
-                  ) {
-                      ++this.state.pos;
-                  }
+skipSpace(): void {
+    loop: while (this.state.pos < this.length) {
+        const ch = this.input.charCodeAt(this.state.pos);
+        switch (ch) {
+            case charCodes.space:
+            case charCodes.nonBreakingSpace:
+            case charCodes.tab:
+                ++this.state.pos;
+                break;
+            case charCodes.carriageReturn:
+                if (
+                    this.input.charCodeAt(this.state.pos + 1) === charCodes.lineFeed
+                ) {
+                    ++this.state.pos;
+                }
 
-              case charCodes.lineFeed:
-              case charCodes.lineSeparator:
-              case charCodes.paragraphSeparator:
-                  ++this.state.pos;
-                  ++this.state.curLine;
-                  this.state.lineStart = this.state.pos;
-                  break;
+            case charCodes.lineFeed:
+            case charCodes.lineSeparator:
+            case charCodes.paragraphSeparator:
+                ++this.state.pos;
+                ++this.state.curLine;
+                this.state.lineStart = this.state.pos;
+                break;
 
-              case charCodes.slash:
-                  switch (this.input.charCodeAt(this.state.pos + 1)) {
-                      case charCodes.asterisk:
-                          this.skipBlockComment();
-                          break;
+            case charCodes.slash:
+                switch (this.input.charCodeAt(this.state.pos + 1)) {
+                    case charCodes.asterisk:
+                        this.skipBlockComment();
+                        break;
 
-                      case charCodes.slash:
-                          this.skipLineComment(2);
-                          break;
+                    case charCodes.slash:
+                        this.skipLineComment(2);
+                        break;
 
-                      default:
-                          break loop;
-                  }
-                  break;
+                    default:
+                        break loop;
+                }
+                break;
 
-              default:
-                  if (isWhitespace(ch)) {
-                      ++this.state.pos;
-                  } else {
-                      break loop;
-                  }
-          }
-      }
-  }
+            default:
+                if (isWhitespace(ch)) {
+                    ++this.state.pos;
+                } else {
+                    break loop;
+                }
+        }
+    }
+}
 
-  // Called at the end of every token. Sets `end`, `val`, and
-  // maintains `context` and `exprAllowed`, and skips the space after
-  // the token, so that the next one's `start` will point at the
-  // right position.
+// Called at the end of every token. Sets `end`, `val`, and
+// maintains `context` and `exprAllowed`, and skips the space after
+// the token, so that the next one's `start` will point at the
+// right position.
 
-  finishToken(type: TokenType, val: any): void {
-      this.state.end = this.state.pos;
-      this.state.endLoc = this.state.curPosition();
-      const prevType = this.state.type;
-      this.state.type = type;
-      this.state.value = val;
+finishToken(type: TokenType, val: any): void {
+    this.state.end = this.state.pos;
+    this.state.endLoc = this.state.curPosition();
+    const prevType = this.state.type;
+    this.state.type = type;
+    this.state.value = val;
 
-      this.updateContext(prevType);
-  }
+    this.updateContext(prevType);
+}
 
-  // ### Token reading
+// ### Token reading
 
-  // This is the function that is called to fetch the next token. It
-  // is somewhat obscure, because it works in character codes rather
-  // than characters, and because operator parsing has been inlined
-  // into it.
-  //
-  // All in the name of speed.
+// This is the function that is called to fetch the next token. It
+// is somewhat obscure, because it works in character codes rather
+// than characters, and because operator parsing has been inlined
+// into it.
+//
+// All in the name of speed.
 
-  // number sign is "#"
-  readToken_numberSign(): void {
-      if (this.state.pos === 0 && this.readToken_interpreter()) {
-          return;
-      }
+// number sign is "#"
+readToken_numberSign(): void {
+    if (this.state.pos === 0 && this.readToken_interpreter()) {
+        return;
+    }
 
-      const nextPos = this.state.pos + 1;
-      const next = this.input.charCodeAt(nextPos);
-      if (next >= charCodes.digit0 && next <= charCodes.digit9) {
-          this.raise(this.state.pos, "Unexpected digit after hash token");
-      }
+    const nextPos = this.state.pos + 1;
+    const next = this.input.charCodeAt(nextPos);
+    if (next >= charCodes.digit0 && next <= charCodes.digit9) {
+        this.raise(this.state.pos, "Unexpected digit after hash token");
+    }
 
-      if (
-          (this.hasPlugin("classPrivateProperties") ||
+    if (
+        (this.hasPlugin("classPrivateProperties") ||
         this.hasPlugin("classPrivateMethods")) &&
-      this.state.classLevel > 0
-      ) {
-          ++this.state.pos;
-          this.finishToken(tt.hash);
-      
-      } else if (
-          this.getPluginOption("pipelineOperator", "proposal") === "smart"
-      ) {
-          this.finishOp(tt.hash, 1);
-      } else {
-          this.raise(this.state.pos, "Unexpected character '#'");
-      }
-  }
+    this.state.classLevel > 0
+    ) {
+        ++this.state.pos;
+        this.finishToken(tt.hash);
 
-  readToken_dot(): void {
-      const next = this.input.charCodeAt(this.state.pos + 1);
-      if (next >= charCodes.digit0 && next <= charCodes.digit9) {
-          this.readNumber(true);
-          return;
-      }
+    } else if (
+        this.getPluginOption("pipelineOperator", "proposal") === "smart"
+    ) {
+        this.finishOp(tt.hash, 1);
+    } else {
+        this.raise(this.state.pos, "Unexpected character '#'");
+    }
+}
 
-      const next2 = this.input.charCodeAt(this.state.pos + 2);
-      if (next === charCodes.dot && next2 === charCodes.dot) {
-          this.state.pos += 3;
-          this.finishToken(tt.ellipsis);
-      } else {
-          ++this.state.pos;
-          this.finishToken(tt.dot);
-      }
-  }
+readToken_dot(): void {
+    const next = this.input.charCodeAt(this.state.pos + 1);
+    if (next >= charCodes.digit0 && next <= charCodes.digit9) {
+        this.readNumber(true);
+        return;
+    }
 
-  readToken_slash(): void {
-      // '/'
-      if (this.state.exprAllowed && !this.state.inType) {
-          ++this.state.pos;
-          this.readRegexp();
-          return;
-      }
+    const next2 = this.input.charCodeAt(this.state.pos + 2);
+    if (next === charCodes.dot && next2 === charCodes.dot) {
+        this.state.pos += 3;
+        this.finishToken(tt.ellipsis);
+    } else {
+        ++this.state.pos;
+        this.finishToken(tt.dot);
+    }
+}
 
-      const next = this.input.charCodeAt(this.state.pos + 1);
-      if (next === charCodes.equalsTo) {
-          this.finishOp(tt.assign, 2);
-      } else {
-          this.finishOp(tt.slash, 1);
-      }
-  }
+readToken_slash(): void {
+    // '/'
+    if (this.state.exprAllowed && !this.state.inType) {
+        ++this.state.pos;
+        this.readRegexp();
+        return;
+    }
 
-  readToken_interpreter(): boolean {
-      if (this.state.pos !== 0 || this.length < 2) {
-          return false; 
-      }
+    const next = this.input.charCodeAt(this.state.pos + 1);
+    if (next === charCodes.equalsTo) {
+        this.finishOp(tt.assign, 2);
+    } else {
+        this.finishOp(tt.slash, 1);
+    }
+}
 
-      const start = this.state.pos;
-      this.state.pos += 1;
+readToken_interpreter(): boolean {
+    if (this.state.pos !== 0 || this.length < 2) {
+ return false; 
+}
 
-      let ch = this.input.charCodeAt(this.state.pos);
-      if (ch !== charCodes.exclamationMark) {
-          return false; 
-      }
+    const start = this.state.pos;
+    this.state.pos += 1;
 
-      while (
-          ch !== charCodes.lineFeed &&
-      ch !== charCodes.carriageReturn &&
-      ch !== charCodes.lineSeparator &&
-      ch !== charCodes.paragraphSeparator &&
-      ++this.state.pos < this.length
-      ) {
-          ch = this.input.charCodeAt(this.state.pos);
-      }
+    let ch = this.input.charCodeAt(this.state.pos);
+    if (ch !== charCodes.exclamationMark) {
+ return false; 
+}
 
-      const value = this.input.slice(start + 2, this.state.pos);
+    while (
+        ch !== charCodes.lineFeed &&
+        ch !== charCodes.carriageReturn &&
+        ch !== charCodes.lineSeparator &&
+        ch !== charCodes.paragraphSeparator &&
+        ++this.state.pos < this.length
+    ) {
+        ch = this.input.charCodeAt(this.state.pos);
+    }
 
-      this.finishToken(tt.interpreterDirective, value);
+    const value = this.input.slice(start + 2, this.state.pos);
 
-      return true;
-  }
+    this.finishToken(tt.interpreterDirective, value);
 
-  readToken_mult_modulo(code: number): void {
-      // '%*'
-      let type = code === charCodes.asterisk ? tt.star : tt.modulo;
-      let width = 1;
-      let next = this.input.charCodeAt(this.state.pos + 1);
-      const exprAllowed = this.state.exprAllowed;
+    return true;
+}
 
-      // Exponentiation operator **
-      if (code === charCodes.asterisk && next === charCodes.asterisk) {
-          width++;
-          next = this.input.charCodeAt(this.state.pos + 2);
-          type = tt.exponent;
-      }
+readToken_mult_modulo(code: number): void {
+    // '%*'
+    let type = code === charCodes.asterisk ? tt.star : tt.modulo;
+    let width = 1;
+    let next = this.input.charCodeAt(this.state.pos + 1);
+    const exprAllowed = this.state.exprAllowed;
 
-      if (next === charCodes.equalsTo && !exprAllowed) {
-          width++;
-          type = tt.assign;
-      }
+    // Exponentiation operator **
+    if (code === charCodes.asterisk && next === charCodes.asterisk) {
+        width++;
+        next = this.input.charCodeAt(this.state.pos + 2);
+        type = tt.exponent;
+    }
 
-      this.finishOp(type, width);
-  }
+    if (next === charCodes.equalsTo && !exprAllowed) {
+        width++;
+        type = tt.assign;
+    }
 
-  readToken_pipe_amp(code: number): void {
-      // '||' '&&' '||=' '&&='
-      const next = this.input.charCodeAt(this.state.pos + 1);
+    this.finishOp(type, width);
+}
 
-      if (next === code) {
-          if (this.input.charCodeAt(this.state.pos + 2) === charCodes.equalsTo) {
-              this.finishOp(tt.assign, 3);
-          } else {
-              this.finishOp(
-                  code === charCodes.verticalBar ? tt.logicalOR : tt.logicalAND,
-                  2,
-              );
-          }
-          return;
-      }
+readToken_pipe_amp(code: number): void {
+    // '||' '&&' '||=' '&&='
+    const next = this.input.charCodeAt(this.state.pos + 1);
 
-      if (code === charCodes.verticalBar) {
-      // '|>'
-          if (next === charCodes.greaterThan) {
-              this.finishOp(tt.pipeline, 2);
-              return;
-          }
-      }
+    if (next === code) {
+        if (this.input.charCodeAt(this.state.pos + 2) === charCodes.equalsTo) {
+            this.finishOp(tt.assign, 3);
+        } else {
+            this.finishOp(
+                code === charCodes.verticalBar ? tt.logicalOR : tt.logicalAND,
+                2,
+            );
+        }
+        return;
+    }
 
-      if (next === charCodes.equalsTo) {
-          this.finishOp(tt.assign, 2);
-          return;
-      }
+    if (code === charCodes.verticalBar) {
+    // '|>'
+        if (next === charCodes.greaterThan) {
+            this.finishOp(tt.pipeline, 2);
+            return;
+        }
+    }
 
-      this.finishOp(
-          code === charCodes.verticalBar ? tt.bitwiseOR : tt.bitwiseAND,
-          1,
-      );
-  }
+    if (next === charCodes.equalsTo) {
+        this.finishOp(tt.assign, 2);
+        return;
+    }
 
-  readToken_caret(): void {
-      // '^'
-      const next = this.input.charCodeAt(this.state.pos + 1);
-      if (next === charCodes.equalsTo) {
-          this.finishOp(tt.assign, 2);
-      } else {
-          this.finishOp(tt.bitwiseXOR, 1);
-      }
-  }
+    this.finishOp(
+        code === charCodes.verticalBar ? tt.bitwiseOR : tt.bitwiseAND,
+        1,
+    );
+}
 
-  readToken_plus_min(code: number): void {
-      // '+-'
-      const next = this.input.charCodeAt(this.state.pos + 1);
+readToken_caret(): void {
+    // '^'
+    const next = this.input.charCodeAt(this.state.pos + 1);
+    if (next === charCodes.equalsTo) {
+        this.finishOp(tt.assign, 2);
+    } else {
+        this.finishOp(tt.bitwiseXOR, 1);
+    }
+}
 
-      if (next === code) {
-          if (
-              next === charCodes.dash &&
+readToken_plus_min(code: number): void {
+    // '+-'
+    const next = this.input.charCodeAt(this.state.pos + 1);
+
+    if (next === code) {
+        if (
+            next === charCodes.dash &&
         !this.inModule &&
         this.input.charCodeAt(this.state.pos + 2) === charCodes.greaterThan &&
         (this.state.lastTokEnd === 0 ||
-          lineBreak.test(
-              this.input.slice(this.state.lastTokEnd, this.state.pos),
-          ))
-          ) {
-              // A `-->` line comment
-              this.skipLineComment(3);
-              this.skipSpace();
-              this.nextToken();
-              return;
-          }
-          this.finishOp(tt.incDec, 2);
-          return;
-      }
+            lineBreak.test(
+                this.input.slice(this.state.lastTokEnd, this.state.pos),
+            ))
+        ) {
+        // A `-->` line comment
+            this.skipLineComment(3);
+            this.skipSpace();
+            this.nextToken();
+            return;
+        }
+        this.finishOp(tt.incDec, 2);
+        return;
+    }
 
-      if (next === charCodes.equalsTo) {
-          this.finishOp(tt.assign, 2);
-      } else {
-          this.finishOp(tt.plusMin, 1);
-      }
-  }
+    if (next === charCodes.equalsTo) {
+        this.finishOp(tt.assign, 2);
+    } else {
+        this.finishOp(tt.plusMin, 1);
+    }
+}
 
-  readToken_lt_gt(code: number): void {
-      // '<>'
-      const next = this.input.charCodeAt(this.state.pos + 1);
-      let size = 1;
+readToken_lt_gt(code: number): void {
+    // '<>'
+    const next = this.input.charCodeAt(this.state.pos + 1);
+    let size = 1;
 
-      if (next === code) {
-          size =
+    if (next === code) {
+        size =
         code === charCodes.greaterThan &&
-        this.input.charCodeAt(this.state.pos + 2) === charCodes.greaterThan
+            this.input.charCodeAt(this.state.pos + 2) === charCodes.greaterThan
             ? 3
             : 2;
-          if (this.input.charCodeAt(this.state.pos + size) === charCodes.equalsTo) {
-              this.finishOp(tt.assign, size + 1);
-              return;
-          }
-          this.finishOp(tt.bitShift, size);
-          return;
-      }
+        if (this.input.charCodeAt(this.state.pos + size) === charCodes.equalsTo) {
+            this.finishOp(tt.assign, size + 1);
+            return;
+        }
+        this.finishOp(tt.bitShift, size);
+        return;
+    }
 
-      if (
-          next === charCodes.exclamationMark &&
-      code === charCodes.lessThan &&
-      !this.inModule &&
-      this.input.charCodeAt(this.state.pos + 2) === charCodes.dash &&
-      this.input.charCodeAt(this.state.pos + 3) === charCodes.dash
-      ) {
-      // `<!--`, an XML-style comment that should be interpreted as a line comment
-          this.skipLineComment(4);
-          this.skipSpace();
-          this.nextToken();
-          return;
-      }
+    if (
+        next === charCodes.exclamationMark &&
+    code === charCodes.lessThan &&
+    !this.inModule &&
+    this.input.charCodeAt(this.state.pos + 2) === charCodes.dash &&
+    this.input.charCodeAt(this.state.pos + 3) === charCodes.dash
+    ) {
+    // `<!--`, an XML-style comment that should be interpreted as a line comment
+        this.skipLineComment(4);
+        this.skipSpace();
+        this.nextToken();
+        return;
+    }
 
-      if (next === charCodes.equalsTo) {
-      // <= | >=
-          size = 2;
-      }
+    if (next === charCodes.equalsTo) {
+    // <= | >=
+        size = 2;
+    }
 
-      this.finishOp(tt.relational, size);
-  }
+    this.finishOp(tt.relational, size);
+}
 
-  readToken_eq_excl(code: number): void {
-      // '=!'
-      const next = this.input.charCodeAt(this.state.pos + 1);
-      if (next === charCodes.equalsTo) {
-          this.finishOp(
-              tt.equality,
-              this.input.charCodeAt(this.state.pos + 2) === charCodes.equalsTo
-                  ? 3
-                  : 2,
-          );
-          return;
-      }
-      if (code === charCodes.equalsTo && next === charCodes.greaterThan) {
-      // '=>'
-          this.state.pos += 2;
-          this.finishToken(tt.arrow);
-          return;
-      }
-      this.finishOp(code === charCodes.equalsTo ? tt.eq : tt.bang, 1);
-  }
+readToken_eq_excl(code: number): void {
+    // '=!'
+    const next = this.input.charCodeAt(this.state.pos + 1);
+    if (next === charCodes.equalsTo) {
+        this.finishOp(
+            tt.equality,
+            this.input.charCodeAt(this.state.pos + 2) === charCodes.equalsTo
+                ? 3
+                : 2,
+        );
+        return;
+    }
+    if (code === charCodes.equalsTo && next === charCodes.greaterThan) {
+    // '=>'
+        this.state.pos += 2;
+        this.finishToken(tt.arrow);
+        return;
+    }
+    this.finishOp(code === charCodes.equalsTo ? tt.eq : tt.bang, 1);
+}
 
-  readToken_question(): void {
-      // '?'
-      const next = this.input.charCodeAt(this.state.pos + 1);
-      const next2 = this.input.charCodeAt(this.state.pos + 2);
-      if (next === charCodes.questionMark && !this.state.inType) {
-          if (next2 === charCodes.equalsTo) {
-              // '??='
-              this.finishOp(tt.assign, 3);
-          } else {
-              // '??'
-              this.finishOp(tt.nullishCoalescing, 2);
-          }
-      } else if (
-          next === charCodes.dot &&
-      !(next2 >= charCodes.digit0 && next2 <= charCodes.digit9)
-      ) {
-      // '.' not followed by a number
-          this.state.pos += 2;
-          this.finishToken(tt.questionDot);
-      } else {
-          ++this.state.pos;
-          this.finishToken(tt.question);
-      }
-  }
+readToken_question(): void {
+    // '?'
+    const next = this.input.charCodeAt(this.state.pos + 1);
+    const next2 = this.input.charCodeAt(this.state.pos + 2);
+    if (next === charCodes.questionMark && !this.state.inType) {
+        if (next2 === charCodes.equalsTo) {
+        // '??='
+            this.finishOp(tt.assign, 3);
+        } else {
+        // '??'
+            this.finishOp(tt.nullishCoalescing, 2);
+        }
+    } else if (
+        next === charCodes.dot &&
+    !(next2 >= charCodes.digit0 && next2 <= charCodes.digit9)
+    ) {
+    // '.' not followed by a number
+        this.state.pos += 2;
+        this.finishToken(tt.questionDot);
+    } else {
+        ++this.state.pos;
+        this.finishToken(tt.question);
+    }
+}
 
-  getTokenFromCode(code: number): void {
-      switch (code) {
-      // The interpretation of a dot depends on whether it is followed
-      // by a digit or another two dots.
+getTokenFromCode(code: number): void {
+    switch (code) {
+        // The interpretation of a dot depends on whether it is followed
+        // by a digit or another two dots.
 
-          case charCodes.dot:
-              this.readToken_dot();
-              return;
+        case charCodes.dot:
+            this.readToken_dot();
+            return;
 
-              // Punctuation tokens.
-          case charCodes.leftParenthesis:
-              ++this.state.pos;
-              this.finishToken(tt.parenL);
-              return;
-          case charCodes.rightParenthesis:
-              ++this.state.pos;
-              this.finishToken(tt.parenR);
-              return;
-          case charCodes.semicolon:
-              ++this.state.pos;
-              this.finishToken(tt.semi);
-              return;
-          case charCodes.comma:
-              ++this.state.pos;
-              this.finishToken(tt.comma);
-              return;
-          case charCodes.leftSquareBracket:
-              ++this.state.pos;
-              this.finishToken(tt.bracketL);
-              return;
-          case charCodes.rightSquareBracket:
-              ++this.state.pos;
-              this.finishToken(tt.bracketR);
-              return;
-          case charCodes.leftCurlyBrace:
-              ++this.state.pos;
-              this.finishToken(tt.braceL);
-              return;
-          case charCodes.rightCurlyBrace:
-              ++this.state.pos;
-              this.finishToken(tt.braceR);
-              return;
+            // Punctuation tokens.
+        case charCodes.leftParenthesis:
+            ++this.state.pos;
+            this.finishToken(tt.parenL);
+            return;
+        case charCodes.rightParenthesis:
+            ++this.state.pos;
+            this.finishToken(tt.parenR);
+            return;
+        case charCodes.semicolon:
+            ++this.state.pos;
+            this.finishToken(tt.semi);
+            return;
+        case charCodes.comma:
+            ++this.state.pos;
+            this.finishToken(tt.comma);
+            return;
+        case charCodes.leftSquareBracket:
+            ++this.state.pos;
+            this.finishToken(tt.bracketL);
+            return;
+        case charCodes.rightSquareBracket:
+            ++this.state.pos;
+            this.finishToken(tt.bracketR);
+            return;
+        case charCodes.leftCurlyBrace:
+            ++this.state.pos;
+            this.finishToken(tt.braceL);
+            return;
+        case charCodes.rightCurlyBrace:
+            ++this.state.pos;
+            this.finishToken(tt.braceR);
+            return;
 
-          case charCodes.colon:
-              if (
-                  this.hasPlugin("functionBind") &&
-          this.input.charCodeAt(this.state.pos + 1) === charCodes.colon
-              ) {
-                  this.finishOp(tt.doubleColon, 2);
-              } else {
-                  ++this.state.pos;
-                  this.finishToken(tt.colon);
-              }
-              return;
+        case charCodes.colon:
+            if (
+                this.hasPlugin("functionBind") &&
+    this.input.charCodeAt(this.state.pos + 1) === charCodes.colon
+            ) {
+                this.finishOp(tt.doubleColon, 2);
+            } else {
+                ++this.state.pos;
+                this.finishToken(tt.colon);
+            }
+            return;
 
-          case charCodes.questionMark:
-              this.readToken_question();
-              return;
+        case charCodes.questionMark:
+            this.readToken_question();
+            return;
 
-          case charCodes.graveAccent:
-              ++this.state.pos;
-              this.finishToken(tt.backQuote);
-              return;
+        case charCodes.graveAccent:
+            ++this.state.pos;
+            this.finishToken(tt.backQuote);
+            return;
 
-          case charCodes.digit0: {
-              const next = this.input.charCodeAt(this.state.pos + 1);
-              // '0x', '0X' - hex number
-              if (next === charCodes.lowercaseX || next === charCodes.uppercaseX) {
-                  this.readRadixNumber(16);
-                  return;
-              }
-              // '0o', '0O' - octal number
-              if (next === charCodes.lowercaseO || next === charCodes.uppercaseO) {
-                  this.readRadixNumber(8);
-                  return;
-              }
-              // '0b', '0B' - binary number
-              if (next === charCodes.lowercaseB || next === charCodes.uppercaseB) {
-                  this.readRadixNumber(2);
-                  return;
-              }
-          }
-          // Anything else beginning with a digit is an integer, octal
-          // number, or float.
-          case charCodes.digit1:
-          case charCodes.digit2:
-          case charCodes.digit3:
-          case charCodes.digit4:
-          case charCodes.digit5:
-          case charCodes.digit6:
-          case charCodes.digit7:
-          case charCodes.digit8:
-          case charCodes.digit9:
-              this.readNumber(false);
-              return;
+        case charCodes.digit0: {
+            const next = this.input.charCodeAt(this.state.pos + 1);
+            // '0x', '0X' - hex number
+            if (next === charCodes.lowercaseX || next === charCodes.uppercaseX) {
+                this.readRadixNumber(16);
+                return;
+            }
+            // '0o', '0O' - octal number
+            if (next === charCodes.lowercaseO || next === charCodes.uppercaseO) {
+                this.readRadixNumber(8);
+                return;
+            }
+            // '0b', '0B' - binary number
+            if (next === charCodes.lowercaseB || next === charCodes.uppercaseB) {
+                this.readRadixNumber(2);
+                return;
+            }
+        }
+        // Anything else beginning with a digit is an integer, octal
+        // number, or float.
+        case charCodes.digit1:
+        case charCodes.digit2:
+        case charCodes.digit3:
+        case charCodes.digit4:
+        case charCodes.digit5:
+        case charCodes.digit6:
+        case charCodes.digit7:
+        case charCodes.digit8:
+        case charCodes.digit9:
+            this.readNumber(false);
+            return;
 
-              // Quotes produce strings.
-          case charCodes.quotationMark:
-          case charCodes.apostrophe:
-              this.readString(code);
-              return;
+            // Quotes produce strings.
+        case charCodes.quotationMark:
+        case charCodes.apostrophe:
+            this.readString(code);
+            return;
 
-              // Operators are parsed inline in tiny state machines. '=' (charCodes.equalsTo) is
-              // often referred to. `finishOp` simply skips the amount of
-              // characters it is given as second argument, and returns a token
-              // of the type given by its first argument.
+            // Operators are parsed inline in tiny state machines. '=' (charCodes.equalsTo) is
+            // often referred to. `finishOp` simply skips the amount of
+            // characters it is given as second argument, and returns a token
+            // of the type given by its first argument.
 
-          case charCodes.slash:
-              this.readToken_slash();
-              return;
+        case charCodes.slash:
+            this.readToken_slash();
+            return;
 
-          case charCodes.percentSign:
-          case charCodes.asterisk:
-              this.readToken_mult_modulo(code);
-              return;
+        case charCodes.percentSign:
+        case charCodes.asterisk:
+            this.readToken_mult_modulo(code);
+            return;
 
-          case charCodes.verticalBar:
-          case charCodes.ampersand:
-              this.readToken_pipe_amp(code);
-              return;
+        case charCodes.verticalBar:
+        case charCodes.ampersand:
+            this.readToken_pipe_amp(code);
+            return;
 
-          case charCodes.caret:
-              this.readToken_caret();
-              return;
+        case charCodes.caret:
+            this.readToken_caret();
+            return;
 
-          case charCodes.plusSign:
-          case charCodes.dash:
-              this.readToken_plus_min(code);
-              return;
+        case charCodes.plusSign:
+        case charCodes.dash:
+            this.readToken_plus_min(code);
+            return;
 
-          case charCodes.lessThan:
-          case charCodes.greaterThan:
-              this.readToken_lt_gt(code);
-              return;
+        case charCodes.lessThan:
+        case charCodes.greaterThan:
+            this.readToken_lt_gt(code);
+            return;
 
-          case charCodes.equalsTo:
-          case charCodes.exclamationMark:
-              this.readToken_eq_excl(code);
-              return;
+        case charCodes.equalsTo:
+        case charCodes.exclamationMark:
+            this.readToken_eq_excl(code);
+            return;
 
-          case charCodes.tilde:
-              this.finishOp(tt.tilde, 1);
-              return;
+        case charCodes.tilde:
+            this.finishOp(tt.tilde, 1);
+            return;
 
-          case charCodes.atSign:
-              ++this.state.pos;
-              this.finishToken(tt.at);
-              return;
+        case charCodes.atSign:
+            ++this.state.pos;
+            this.finishToken(tt.at);
+            return;
 
-          case charCodes.numberSign:
-              this.readToken_numberSign();
-              return;
+        case charCodes.numberSign:
+            this.readToken_numberSign();
+            return;
 
-          case charCodes.backslash:
-              this.readWord();
-              return;
+        case charCodes.backslash:
+            this.readWord();
+            return;
 
-          default:
-              if (isIdentifierStart(code)) {
-                  this.readWord();
-                  return;
-              }
-      }
+        default:
+            if (isIdentifierStart(code)) {
+                this.readWord();
+                return;
+            }
+    }
 
-      this.raise(
-          this.state.pos,
-          `Unexpected character '${String.fromCodePoint(code)}'`,
-      );
-  }
+    this.raise(
+        this.state.pos,
+        `Unexpected character '${String.fromCodePoint(code)}'`,
+    );
+}
 
-  finishOp(type: TokenType, size: number): void {
-      const str = this.input.slice(this.state.pos, this.state.pos + size);
-      this.state.pos += size;
-      this.finishToken(type, str);
-  }
+finishOp(type: TokenType, size: number): void {
+    const str = this.input.slice(this.state.pos, this.state.pos + size);
+    this.state.pos += size;
+    this.finishToken(type, str);
+}
 
-  readRegexp(): void {
-      const start = this.state.pos;
-      let escaped; let inClass;
-      for (;;) {
-          if (this.state.pos >= this.length) {
-              this.raise(start, "Unterminated regular expression");
-          }
-          const ch = this.input.charAt(this.state.pos);
-          if (lineBreak.test(ch)) {
-              this.raise(start, "Unterminated regular expression");
-          }
-          if (escaped) {
-              escaped = false;
-          } else {
-              if (ch === "[") {
-                  inClass = true;
-              } else if (ch === "]" && inClass) {
-                  inClass = false;
-              } else if (ch === "/" && !inClass) {
-                  break;
-              }
-              escaped = ch === "\\";
-          }
-          ++this.state.pos;
-      }
-      const content = this.input.slice(start, this.state.pos);
-      ++this.state.pos;
+readRegexp(): void {
+    const start = this.state.pos;
+    let escaped; let inClass;
+    for (;;) {
+        if (this.state.pos >= this.length) {
+            this.raise(start, "Unterminated regular expression");
+        }
+        const ch = this.input.charAt(this.state.pos);
+        if (lineBreak.test(ch)) {
+            this.raise(start, "Unterminated regular expression");
+        }
+        if (escaped) {
+            escaped = false;
+        } else {
+            if (ch === "[") {
+                inClass = true;
+            } else if (ch === "]" && inClass) {
+                inClass = false;
+            } else if (ch === "/" && !inClass) {
+                break;
+            }
+            escaped = ch === "\\";
+        }
+        ++this.state.pos;
+    }
+    const content = this.input.slice(start, this.state.pos);
+    ++this.state.pos;
 
-      let mods = "";
+    let mods = "";
 
-      while (this.state.pos < this.length) {
-          const char = this.input[this.state.pos];
-          const charCode = this.input.codePointAt(this.state.pos);
+    while (this.state.pos < this.length) {
+        const char = this.input[this.state.pos];
+        const charCode = this.input.codePointAt(this.state.pos);
 
-          if (VALID_REGEX_FLAGS.has(char)) {
-              if (mods.indexOf(char) > -1) {
-                  this.raise(this.state.pos + 1, "Duplicate regular expression flag");
-              }
+        if (VALID_REGEX_FLAGS.has(char)) {
+            if (mods.indexOf(char) > -1) {
+                this.raise(this.state.pos + 1, "Duplicate regular expression flag");
+            }
 
-              ++this.state.pos;
-              mods += char;
-          } else if (
-              isIdentifierChar(charCode) ||
+            ++this.state.pos;
+            mods += char;
+        } else if (
+            isIdentifierChar(charCode) ||
         charCode === charCodes.backslash
-          ) {
-              this.raise(this.state.pos + 1, "Invalid regular expression flag");
-          } else {
-              break;
-          }
-      }
+        ) {
+            this.raise(this.state.pos + 1, "Invalid regular expression flag");
+        } else {
+            break;
+        }
+    }
 
-      this.finishToken(tt.regexp, {
-          pattern: content,
-          flags: mods
-      });
-  }
+    this.finishToken(tt.regexp, {
+        pattern: content,
+        flags: mods
+    });
+}
 
-  // Read an integer in the given radix. Return null if zero digits
-  // were read, the integer value otherwise. When `len` is given, this
-  // will return `null` unless the integer has exactly `len` digits.
+// Read an integer in the given radix. Return null if zero digits
+// were read, the integer value otherwise. When `len` is given, this
+// will return `null` unless the integer has exactly `len` digits.
 
-  readInt(radix: number, len?: number): number | null {
-      const start = this.state.pos;
-      const forbiddenSiblings =
-      radix === 16
-          ? forbiddenNumericSeparatorSiblings.hex
-          : forbiddenNumericSeparatorSiblings.decBinOct;
-      const allowedSiblings =
-      radix === 16
-          ? allowedNumericSeparatorSiblings.hex
-          : radix === 10
-              ? allowedNumericSeparatorSiblings.dec
-              : radix === 8
-                  ? allowedNumericSeparatorSiblings.oct
-                  : allowedNumericSeparatorSiblings.bin;
+readInt(radix: number, len ?: number): number | null {
+    const start = this.state.pos;
+    const forbiddenSiblings =
+        radix === 16
+            ? forbiddenNumericSeparatorSiblings.hex
+            : forbiddenNumericSeparatorSiblings.decBinOct;
+    const allowedSiblings =
+        radix === 16
+            ? allowedNumericSeparatorSiblings.hex
+            : radix === 10
+                ? allowedNumericSeparatorSiblings.dec
+                : radix === 8
+                    ? allowedNumericSeparatorSiblings.oct
+                    : allowedNumericSeparatorSiblings.bin;
 
-      let total = 0;
+    let total = 0;
 
-      for (let i = 0, e = is.nil(len) ? Infinity : len; i < e; ++i) {
-          const code = this.input.charCodeAt(this.state.pos);
-          let val;
+    for (let i = 0, e = is.nil(len) ? Infinity : len; i < e; ++i) {
+        const code = this.input.charCodeAt(this.state.pos);
+        let val;
 
-          if (this.hasPlugin("numericSeparator")) {
-              const prev = this.input.charCodeAt(this.state.pos - 1);
-              const next = this.input.charCodeAt(this.state.pos + 1);
-              if (code === charCodes.underscore) {
-                  if (allowedSiblings.indexOf(next) === -1) {
-                      this.raise(this.state.pos, "Invalid or unexpected token");
-                  }
+        if (this.hasPlugin("numericSeparator")) {
+            const prev = this.input.charCodeAt(this.state.pos - 1);
+            const next = this.input.charCodeAt(this.state.pos + 1);
+            if (code === charCodes.underscore) {
+                if (allowedSiblings.indexOf(next) === -1) {
+                    this.raise(this.state.pos, "Invalid or unexpected token");
+                }
 
-                  if (
-                      forbiddenSiblings.indexOf(prev) > -1 ||
-            forbiddenSiblings.indexOf(next) > -1 ||
-            is.nan(next)
-                  ) {
-                      this.raise(this.state.pos, "Invalid or unexpected token");
-                  }
+                if (
+                    forbiddenSiblings.indexOf(prev) > -1 ||
+                    forbiddenSiblings.indexOf(next) > -1 ||
+                    is.nan(next)
+                ) {
+                    this.raise(this.state.pos, "Invalid or unexpected token");
+                }
 
-                  // Ignore this _ character
-                  ++this.state.pos;
-                  continue;
-              }
-          }
+                // Ignore this _ character
+                ++this.state.pos;
+                continue;
+            }
+        }
 
-          if (code >= charCodes.lowercaseA) {
-              val = code - charCodes.lowercaseA + charCodes.lineFeed;
-          } else if (code >= charCodes.uppercaseA) {
-              val = code - charCodes.uppercaseA + charCodes.lineFeed;
-          } else if (charCodes.isDigit(code)) {
-              val = code - charCodes.digit0; // 0-9
-          } else {
-              val = Infinity;
-          }
-          if (val >= radix) {
-              break; 
-          }
-          ++this.state.pos;
-          total = total * radix + val;
-      }
-      if (
-          this.state.pos === start ||
-      (!is.nil(len) && this.state.pos - start !== len)
-      ) {
-          return null;
-      }
+        if (code >= charCodes.lowercaseA) {
+            val = code - charCodes.lowercaseA + charCodes.lineFeed;
+        } else if (code >= charCodes.uppercaseA) {
+            val = code - charCodes.uppercaseA + charCodes.lineFeed;
+        } else if (charCodes.isDigit(code)) {
+            val = code - charCodes.digit0; // 0-9
+        } else {
+            val = Infinity;
+        }
+        if (val >= radix) {
+ break; 
+}
+        ++this.state.pos;
+        total = total * radix + val;
+    }
+    if (
+        this.state.pos === start ||
+        (!is.nil(len) && this.state.pos - start !== len)
+    ) {
+        return null;
+    }
 
-      return total;
-  }
+    return total;
+}
 
-  readRadixNumber(radix: number): void {
-      const start = this.state.pos;
-      let isBigInt = false;
+readRadixNumber(radix: number): void {
+    const start = this.state.pos;
+    let isBigInt = false;
 
-      this.state.pos += 2; // 0x
-      const val = this.readInt(radix);
-      if (is.nil(val)) {
-          this.raise(this.state.start + 2, `Expected number in radix ${radix}`);
-      }
+    this.state.pos += 2; // 0x
+    const val = this.readInt(radix);
+    if (is.nil(val)) {
+        this.raise(this.state.start + 2, `Expected number in radix ${radix}`);
+    }
 
-      if (this.hasPlugin("bigInt")) {
-          if (this.input.charCodeAt(this.state.pos) === charCodes.lowercaseN) {
-              ++this.state.pos;
-              isBigInt = true;
-          }
-      }
+    if (this.hasPlugin("bigInt")) {
+        if (this.input.charCodeAt(this.state.pos) === charCodes.lowercaseN) {
+            ++this.state.pos;
+            isBigInt = true;
+        }
+    }
 
-      if (isIdentifierStart(this.input.codePointAt(this.state.pos))) {
-          this.raise(this.state.pos, "Identifier directly after number");
-      }
+    if (isIdentifierStart(this.input.codePointAt(this.state.pos))) {
+        this.raise(this.state.pos, "Identifier directly after number");
+    }
 
-      if (isBigInt) {
-          const str = this.input.slice(start, this.state.pos).replace(/[_n]/g, "");
-          this.finishToken(tt.bigint, str);
-          return;
-      }
+    if (isBigInt) {
+        const str = this.input.slice(start, this.state.pos).replace(/[_n]/g, "");
+        this.finishToken(tt.bigint, str);
+        return;
+    }
 
-      this.finishToken(tt.num, val);
-  }
+    this.finishToken(tt.num, val);
+}
 
-  // Read an integer, octal integer, or floating-point number.
+// Read an integer, octal integer, or floating-point number.
 
-  readNumber(startsWithDot: boolean): void {
-      const start = this.state.pos;
-      let isFloat = false;
-      let isBigInt = false;
+readNumber(startsWithDot: boolean): void {
+    const start = this.state.pos;
+    let isFloat = false;
+    let isBigInt = false;
 
-      if (!startsWithDot && is.null(this.readInt(10))) {
-          this.raise(start, "Invalid number");
-      }
-      let octal =
-      this.state.pos - start >= 2 &&
-      this.input.charCodeAt(start) === charCodes.digit0;
-      if (octal) {
-          if (this.state.strict) {
-              this.raise(
-                  start,
-                  "Legacy octal literals are not allowed in strict mode",
-              );
-          }
-          if (/[89]/.test(this.input.slice(start, this.state.pos))) {
-              octal = false;
-          }
-      }
+    if (!startsWithDot && is.null(this.readInt(10))) {
+        this.raise(start, "Invalid number");
+    }
+    let octal =
+    this.state.pos - start >= 2 &&
+    this.input.charCodeAt(start) === charCodes.digit0;
+    if (octal) {
+        if (this.state.strict) {
+            this.raise(
+                start,
+                "Legacy octal literals are not allowed in strict mode",
+            );
+        }
+        if (/[89]/.test(this.input.slice(start, this.state.pos))) {
+            octal = false;
+        }
+    }
 
-      let next = this.input.charCodeAt(this.state.pos);
-      if (next === charCodes.dot && !octal) {
-          ++this.state.pos;
-          this.readInt(10);
-          isFloat = true;
-          next = this.input.charCodeAt(this.state.pos);
-      }
+    let next = this.input.charCodeAt(this.state.pos);
+    if (next === charCodes.dot && !octal) {
+        ++this.state.pos;
+        this.readInt(10);
+        isFloat = true;
+        next = this.input.charCodeAt(this.state.pos);
+    }
 
-      if (
-          (next === charCodes.uppercaseE || next === charCodes.lowercaseE) &&
-      !octal
-      ) {
-          next = this.input.charCodeAt(++this.state.pos);
-          if (next === charCodes.plusSign || next === charCodes.dash) {
-              ++this.state.pos;
-          }
-          if (is.null(this.readInt(10))) {
-              this.raise(start, "Invalid number"); 
-          }
-          isFloat = true;
-          next = this.input.charCodeAt(this.state.pos);
-      }
+    if (
+        (next === charCodes.uppercaseE || next === charCodes.lowercaseE) &&
+    !octal
+    ) {
+        next = this.input.charCodeAt(++this.state.pos);
+        if (next === charCodes.plusSign || next === charCodes.dash) {
+            ++this.state.pos;
+        }
+        if (is.null(this.readInt(10))) {
+ this.raise(start, "Invalid number"); 
+}
+        isFloat = true;
+        next = this.input.charCodeAt(this.state.pos);
+    }
 
-      if (this.hasPlugin("bigInt")) {
-          if (next === charCodes.lowercaseN) {
-              // disallow floats and legacy octal syntax, new style octal ("0o") is handled in this.readRadixNumber
-              if (isFloat || octal) {
-                  this.raise(start, "Invalid BigIntLiteral"); 
-              }
-              ++this.state.pos;
-              isBigInt = true;
-          }
-      }
+    if (this.hasPlugin("bigInt")) {
+        if (next === charCodes.lowercaseN) {
+        // disallow floats and legacy octal syntax, new style octal ("0o") is handled in this.readRadixNumber
+            if (isFloat || octal) {
+ this.raise(start, "Invalid BigIntLiteral"); 
+}
+            ++this.state.pos;
+            isBigInt = true;
+        }
+    }
 
-      if (isIdentifierStart(this.input.codePointAt(this.state.pos))) {
-          this.raise(this.state.pos, "Identifier directly after number");
-      }
+    if (isIdentifierStart(this.input.codePointAt(this.state.pos))) {
+        this.raise(this.state.pos, "Identifier directly after number");
+    }
 
-      // remove "_" for numeric literal separator, and "n" for BigInts
-      const str = this.input.slice(start, this.state.pos).replace(/[_n]/g, "");
+    // remove "_" for numeric literal separator, and "n" for BigInts
+    const str = this.input.slice(start, this.state.pos).replace(/[_n]/g, "");
 
-      if (isBigInt) {
-          this.finishToken(tt.bigint, str);
-          return;
-      }
+    if (isBigInt) {
+        this.finishToken(tt.bigint, str);
+        return;
+    }
 
-      const val = octal ? parseInt(str, 8) : parseFloat(str);
-      this.finishToken(tt.num, val);
-  }
+    const val = octal ? parseInt(str, 8) : parseFloat(str);
+    this.finishToken(tt.num, val);
+}
 
-  // Read a string value, interpreting backslash-escapes.
+// Read a string value, interpreting backslash-escapes.
 
-  readCodePoint(throwOnInvalid: boolean): number | null {
-      const ch = this.input.charCodeAt(this.state.pos);
-      let code;
+readCodePoint(throwOnInvalid: boolean): number | null {
+    const ch = this.input.charCodeAt(this.state.pos);
+    let code;
 
-      if (ch === charCodes.leftCurlyBrace) {
-          const codePos = ++this.state.pos;
-          code = this.readHexChar(
-              this.input.indexOf("}", this.state.pos) - this.state.pos,
-              throwOnInvalid,
-          );
-          ++this.state.pos;
-          if (is.null(code)) {
-              // $FlowFixMe (is this always non-null?)
-              --this.state.invalidTemplateEscapePosition; // to point to the '\'' instead of the 'u'
-          } else if (code > 0x10ffff) {
-              if (throwOnInvalid) {
-                  this.raise(codePos, "Code point out of bounds");
-              } else {
-                  this.state.invalidTemplateEscapePosition = codePos - 2;
-                  return null;
-              }
-          }
-      } else {
-          code = this.readHexChar(4, throwOnInvalid);
-      }
-      return code;
-  }
+    if (ch === charCodes.leftCurlyBrace) {
+        const codePos = ++this.state.pos;
+        code = this.readHexChar(
+            this.input.indexOf("}", this.state.pos) - this.state.pos,
+            throwOnInvalid,
+        );
+        ++this.state.pos;
+        if (is.null(code)) {
+            // $FlowFixMe (is this always non-null?)
+            --this.state.invalidTemplateEscapePosition; // to point to the '\'' instead of the 'u'
+        } else if (code > 0x10ffff) {
+            if (throwOnInvalid) {
+                this.raise(codePos, "Code point out of bounds");
+            } else {
+                this.state.invalidTemplateEscapePosition = codePos - 2;
+                return null;
+            }
+        }
+    } else {
+        code = this.readHexChar(4, throwOnInvalid);
+    }
+    return code;
+}
 
-  readString(quote: number): void {
-      let out = "";
-      let chunkStart = ++this.state.pos;
-      for (;;) {
-          if (this.state.pos >= this.length) {
-              this.raise(this.state.start, "Unterminated string constant");
-          }
-          const ch = this.input.charCodeAt(this.state.pos);
-          if (ch === quote) {
-              break; 
-          }
-          if (ch === charCodes.backslash) {
-              out += this.input.slice(chunkStart, this.state.pos);
-              // $FlowFixMe
-              out += this.readEscapedChar(false);
-              chunkStart = this.state.pos;
-          } else if (
-              ch === charCodes.lineSeparator ||
-        ch === charCodes.paragraphSeparator
-          ) {
-              ++this.state.pos;
-              ++this.state.curLine;
-          } else if (isNewLine(ch)) {
-              this.raise(this.state.start, "Unterminated string constant");
-          } else {
-              ++this.state.pos;
-          }
-      }
-      out += this.input.slice(chunkStart, this.state.pos++);
-      this.finishToken(tt.string, out);
-  }
+readString(quote: number): void {
+    let out = "";
+    let chunkStart = ++this.state.pos;
+    for (;;) {
+        if (this.state.pos >= this.length) {
+            this.raise(this.state.start, "Unterminated string constant");
+        }
+        const ch = this.input.charCodeAt(this.state.pos);
+        if (ch === quote) {
+ break; 
+}
+        if (ch === charCodes.backslash) {
+            out += this.input.slice(chunkStart, this.state.pos);
+            // $FlowFixMe
+            out += this.readEscapedChar(false);
+            chunkStart = this.state.pos;
+        } else if (
+            ch === charCodes.lineSeparator ||
+            ch === charCodes.paragraphSeparator
+        ) {
+            ++this.state.pos;
+            ++this.state.curLine;
+        } else if (isNewLine(ch)) {
+            this.raise(this.state.start, "Unterminated string constant");
+        } else {
+            ++this.state.pos;
+        }
+    }
+    out += this.input.slice(chunkStart, this.state.pos++);
+    this.finishToken(tt.string, out);
+}
 
-  // Reads template string tokens.
+// Reads template string tokens.
 
-  readTmplToken(): void {
-      let out = "";
-      let chunkStart = this.state.pos;
-      let containsInvalid = false;
-      for (;;) {
-          if (this.state.pos >= this.length) {
-              this.raise(this.state.start, "Unterminated template");
-          }
-          const ch = this.input.charCodeAt(this.state.pos);
-          if (
-              ch === charCodes.graveAccent ||
-        (ch === charCodes.dollarSign &&
-          this.input.charCodeAt(this.state.pos + 1) ===
-            charCodes.leftCurlyBrace)
-          ) {
-              if (this.state.pos === this.state.start && this.match(tt.template)) {
-                  if (ch === charCodes.dollarSign) {
-                      this.state.pos += 2;
-                      this.finishToken(tt.dollarBraceL);
-                      return;
-                  } 
-                  ++this.state.pos;
-                  this.finishToken(tt.backQuote);
-                  return;
-          
-              }
-              out += this.input.slice(chunkStart, this.state.pos);
-              this.finishToken(tt.template, containsInvalid ? null : out);
-              return;
-          }
-          if (ch === charCodes.backslash) {
-              out += this.input.slice(chunkStart, this.state.pos);
-              const escaped = this.readEscapedChar(true);
-              if (is.null(escaped)) {
-                  containsInvalid = true;
-              } else {
-                  out += escaped;
-              }
-              chunkStart = this.state.pos;
-          } else if (isNewLine(ch)) {
-              out += this.input.slice(chunkStart, this.state.pos);
-              ++this.state.pos;
-              switch (ch) {
-                  case charCodes.carriageReturn:
-                      if (this.input.charCodeAt(this.state.pos) === charCodes.lineFeed) {
-                          ++this.state.pos;
-                      }
-                  case charCodes.lineFeed:
-                      out += "\n";
-                      break;
-                  default:
-                      out += String.fromCharCode(ch);
-                      break;
-              }
-              ++this.state.curLine;
-              this.state.lineStart = this.state.pos;
-              chunkStart = this.state.pos;
-          } else {
-              ++this.state.pos;
-          }
-      }
-  }
+readTmplToken(): void {
+    let out = "";
+    let chunkStart = this.state.pos;
+    let containsInvalid = false;
+    for (;;) {
+        if (this.state.pos >= this.length) {
+            this.raise(this.state.start, "Unterminated template");
+        }
+        const ch = this.input.charCodeAt(this.state.pos);
+        if (
+            ch === charCodes.graveAccent ||
+            (ch === charCodes.dollarSign &&
+                this.input.charCodeAt(this.state.pos + 1) ===
+                charCodes.leftCurlyBrace)
+        ) {
+            if (this.state.pos === this.state.start && this.match(tt.template)) {
+                if (ch === charCodes.dollarSign) {
+                    this.state.pos += 2;
+                    this.finishToken(tt.dollarBraceL);
+                    return;
+                }
+                ++this.state.pos;
+                this.finishToken(tt.backQuote);
+                return;
 
-  // Used to read escaped characters
+            }
+            out += this.input.slice(chunkStart, this.state.pos);
+            this.finishToken(tt.template, containsInvalid ? null : out);
+            return;
+        }
+        if (ch === charCodes.backslash) {
+            out += this.input.slice(chunkStart, this.state.pos);
+            const escaped = this.readEscapedChar(true);
+            if (is.null(escaped)) {
+                containsInvalid = true;
+            } else {
+                out += escaped;
+            }
+            chunkStart = this.state.pos;
+        } else if (isNewLine(ch)) {
+            out += this.input.slice(chunkStart, this.state.pos);
+            ++this.state.pos;
+            switch (ch) {
+                case charCodes.carriageReturn:
+                    if (this.input.charCodeAt(this.state.pos) === charCodes.lineFeed) {
+                        ++this.state.pos;
+                    }
+                case charCodes.lineFeed:
+                    out += "\n";
+                    break;
+                default:
+                    out += String.fromCharCode(ch);
+                    break;
+            }
+            ++this.state.curLine;
+            this.state.lineStart = this.state.pos;
+            chunkStart = this.state.pos;
+        } else {
+            ++this.state.pos;
+        }
+    }
+}
 
-  readEscapedChar(inTemplate: boolean): string | null {
-      const throwOnInvalid = !inTemplate;
-      const ch = this.input.charCodeAt(++this.state.pos);
-      ++this.state.pos;
-      switch (ch) {
-          case charCodes.lowercaseN:
-              return "\n";
-          case charCodes.lowercaseR:
-              return "\r";
-          case charCodes.lowercaseX: {
-              const code = this.readHexChar(2, throwOnInvalid);
-              return is.null(code) ? null : String.fromCharCode(code);
-          }
-          case charCodes.lowercaseU: {
-              const code = this.readCodePoint(throwOnInvalid);
-              return is.null(code) ? null : String.fromCodePoint(code);
-          }
-          case charCodes.lowercaseT:
-              return "\t";
-          case charCodes.lowercaseB:
-              return "\b";
-          case charCodes.lowercaseV:
-              return "\u000b";
-          case charCodes.lowercaseF:
-              return "\f";
-          case charCodes.carriageReturn:
-              if (this.input.charCodeAt(this.state.pos) === charCodes.lineFeed) {
-                  ++this.state.pos;
-              }
-          case charCodes.lineFeed:
-              this.state.lineStart = this.state.pos;
-              ++this.state.curLine;
-          case charCodes.lineSeparator:
-          case charCodes.paragraphSeparator:
-              return "";
-          default:
-              if (ch >= charCodes.digit0 && ch <= charCodes.digit7) {
-                  const codePos = this.state.pos - 1;
-                  // $FlowFixMe
-                  let octalStr = this.input
-                      .substr(this.state.pos - 1, 3)
-                      .match(/^[0-7]+/)[0];
-                  let octal = parseInt(octalStr, 8);
-                  if (octal > 255) {
-                      octalStr = octalStr.slice(0, -1);
-                      octal = parseInt(octalStr, 8);
-                  }
-                  if (octal > 0) {
-                      if (inTemplate) {
-                          this.state.invalidTemplateEscapePosition = codePos;
-                          return null;
-                      } else if (this.state.strict) {
-                          this.raise(codePos, "Octal literal in strict mode");
-                      } else if (!this.state.containsOctal) {
-                          // These properties are only used to throw an error for an octal which occurs
-                          // in a directive which occurs prior to a "use strict" directive.
-                          this.state.containsOctal = true;
-                          this.state.octalPosition = codePos;
-                      }
-                  }
-                  this.state.pos += octalStr.length - 1;
-                  return String.fromCharCode(octal);
-              }
+// Used to read escaped characters
 
-              return String.fromCharCode(ch);
-      }
-  }
+readEscapedChar(inTemplate: boolean): string | null {
+    const throwOnInvalid = !inTemplate;
+    const ch = this.input.charCodeAt(++this.state.pos);
+    ++this.state.pos;
+    switch (ch) {
+        case charCodes.lowercaseN:
+            return "\n";
+        case charCodes.lowercaseR:
+            return "\r";
+        case charCodes.lowercaseX: {
+            const code = this.readHexChar(2, throwOnInvalid);
+            return is.null(code) ? null : String.fromCharCode(code);
+        }
+        case charCodes.lowercaseU: {
+            const code = this.readCodePoint(throwOnInvalid);
+            return is.null(code) ? null : String.fromCodePoint(code);
+        }
+        case charCodes.lowercaseT:
+            return "\t";
+        case charCodes.lowercaseB:
+            return "\b";
+        case charCodes.lowercaseV:
+            return "\u000b";
+        case charCodes.lowercaseF:
+            return "\f";
+        case charCodes.carriageReturn:
+            if (this.input.charCodeAt(this.state.pos) === charCodes.lineFeed) {
+                ++this.state.pos;
+            }
+        case charCodes.lineFeed:
+            this.state.lineStart = this.state.pos;
+            ++this.state.curLine;
+        case charCodes.lineSeparator:
+        case charCodes.paragraphSeparator:
+            return "";
+        default:
+            if (ch >= charCodes.digit0 && ch <= charCodes.digit7) {
+                const codePos = this.state.pos - 1;
+                // $FlowFixMe
+                let octalStr = this.input
+                    .substr(this.state.pos - 1, 3)
+                    .match(/^[0-7]+/)[0];
+                let octal = parseInt(octalStr, 8);
+                if (octal > 255) {
+                    octalStr = octalStr.slice(0, -1);
+                    octal = parseInt(octalStr, 8);
+                }
+                this.state.pos += octalStr.length - 1;
+                const next = this.input.charCodeAt(this.state.pos);
+                if (
+                    octalStr !== "0" ||
+                    next === charCodes.digit8 ||
+                    next === charCodes.digit9
+                ) {
+                    if (inTemplate) {
+                        this.state.invalidTemplateEscapePosition = codePos;
+                        return null;
+                    } else if (this.state.strict) {
+                        this.raise(codePos, "Octal literal in strict mode");
+                    } else if (!this.state.containsOctal) {
+                        // These properties are only used to throw an error for an octal which occurs
+                        // in a directive which occurs prior to a "use strict" directive.
+                        this.state.containsOctal = true;
+                        this.state.octalPosition = codePos;
+                    }
+                }
 
-  // Used to read character escape sequences ('\x', '\u').
+                return String.fromCharCode(octal);
+            }
 
-  readHexChar(len: number, throwOnInvalid: boolean): number | null {
-      const codePos = this.state.pos;
-      const n = this.readInt(16, len);
-      if (is.null(n)) {
-          if (throwOnInvalid) {
-              this.raise(codePos, "Bad character escape sequence");
-          } else {
-              this.state.pos = codePos - 1;
-              this.state.invalidTemplateEscapePosition = codePos - 1;
-          }
-      }
-      return n;
-  }
+            return String.fromCharCode(ch);
+    }
+}
 
-  // Read an identifier, and return it as a string. Sets `this.state.containsEsc`
-  // to whether the word contained a '\u' escape.
-  //
-  // Incrementally adds only escaped chars, adding other chunks as-is
-  // as a micro-optimization.
+// Used to read character escape sequences ('\x', '\u').
 
-  readWord1(): string {
-      let word = "";
-      this.state.containsEsc = false;
-      const start = this.state.pos;
-      let chunkStart = this.state.pos;
+readHexChar(len: number, throwOnInvalid: boolean): number | null {
+    const codePos = this.state.pos;
+    const n = this.readInt(16, len);
+    if (is.null(n)) {
+        if (throwOnInvalid) {
+            this.raise(codePos, "Bad character escape sequence");
+        } else {
+            this.state.pos = codePos - 1;
+            this.state.invalidTemplateEscapePosition = codePos - 1;
+        }
+    }
+    return n;
+}
 
-      while (this.state.pos < this.length) {
-          const ch = this.input.codePointAt(this.state.pos);
-          if (isIdentifierChar(ch)) {
-              this.state.pos += ch <= 0xffff ? 1 : 2;
-          } else if (this.state.isIterator && ch === charCodes.atSign) {
-              ++this.state.pos;
-          } else if (ch === charCodes.backslash) {
-              this.state.containsEsc = true;
+// Read an identifier, and return it as a string. Sets `this.state.containsEsc`
+// to whether the word contained a '\u' escape.
+//
+// Incrementally adds only escaped chars, adding other chunks as-is
+// as a micro-optimization.
 
-              word += this.input.slice(chunkStart, this.state.pos);
-              const escStart = this.state.pos;
-              const identifierCheck =
-          this.state.pos === start ? isIdentifierStart : isIdentifierChar;
+readWord1(): string {
+    let word = "";
+    this.state.containsEsc = false;
+    const start = this.state.pos;
+    let chunkStart = this.state.pos;
 
-              if (this.input.charCodeAt(++this.state.pos) !== charCodes.lowercaseU) {
-                  this.raise(
-                      this.state.pos,
-                      "Expecting Unicode escape sequence \\uXXXX",
-                  );
-              }
+    while (this.state.pos < this.length) {
+        const ch = this.input.codePointAt(this.state.pos);
+        if (isIdentifierChar(ch)) {
+            this.state.pos += ch <= 0xffff ? 1 : 2;
+        } else if (this.state.isIterator && ch === charCodes.atSign) {
+            ++this.state.pos;
+        } else if (ch === charCodes.backslash) {
+            this.state.containsEsc = true;
 
-              ++this.state.pos;
-              const esc = this.readCodePoint(true);
+            word += this.input.slice(chunkStart, this.state.pos);
+            const escStart = this.state.pos;
+            const identifierCheck =
+                this.state.pos === start ? isIdentifierStart : isIdentifierChar;
 
-              if (
-              // $FlowFixMe (thinks esc may be null, but throwOnInvalid is true)
-                  !identifierCheck(esc, true)
-              ) {
-                  this.raise(escStart, "Invalid Unicode escape");
-              }
+            if (this.input.charCodeAt(++this.state.pos) !== charCodes.lowercaseU) {
+                this.raise(
+                    this.state.pos,
+                    "Expecting Unicode escape sequence \\uXXXX",
+                );
+            }
 
-              // $FlowFixMe
-              word += String.fromCodePoint(esc);
-              chunkStart = this.state.pos;
-          } else {
-              break;
-          }
-      }
-      return word + this.input.slice(chunkStart, this.state.pos);
-  }
+            ++this.state.pos;
+            const esc = this.readCodePoint(true);
 
-  isIterator(word: string): boolean {
-      return word === "@@iterator" || word === "@@asyncIterator";
-  }
+            if (
+                // $FlowFixMe (thinks esc may be null, but throwOnInvalid is true)
+                !identifierCheck(esc, true)
+            ) {
+                this.raise(escStart, "Invalid Unicode escape");
+            }
 
-  // Read an identifier or keyword token. Will check for reserved
-  // words when necessary.
+            // $FlowFixMe
+            word += String.fromCodePoint(esc);
+            chunkStart = this.state.pos;
+        } else {
+            break;
+        }
+    }
+    return word + this.input.slice(chunkStart, this.state.pos);
+}
 
-  readWord(): void {
-      const word = this.readWord1();
-      const type = keywordTypes.get(word) || tt.name;
+isIterator(word: string): boolean {
+    return word === "@@iterator" || word === "@@asyncIterator";
+}
 
-      if (type.keyword && this.state.containsEsc) {
-          this.raise(this.state.pos, `Escape sequence in keyword ${word}`);
-      }
+// Read an identifier or keyword token. Will check for reserved
+// words when necessary.
 
-      // Allow @@iterator and @@asyncIterator as a identifier only inside type
-      if (
-          this.state.isIterator &&
-      (!this.isIterator(word) || !this.state.inType)
-      ) {
-          this.raise(this.state.pos, `Invalid identifier ${word}`);
-      }
+readWord(): void {
+    const word = this.readWord1();
+    const type = keywordTypes.get(word) || tt.name;
 
-      this.finishToken(type, word);
-  }
+    if (type.keyword && this.state.containsEsc) {
+        this.raise(this.state.pos, `Escape sequence in keyword ${word}`);
+    }
 
-  braceIsBlock(prevType: TokenType): boolean {
-      const parent = this.curContext();
-      if (parent === ct.functionExpression || parent === ct.functionStatement) {
-          return true;
-      }
-      if (
-          prevType === tt.colon &&
-      (parent === ct.braceStatement || parent === ct.braceExpression)
-      ) {
-          return !parent.isExpr;
-      }
+    // Allow @@iterator and @@asyncIterator as a identifier only inside type
+    if (
+        this.state.isIterator &&
+    (!this.isIterator(word) || !this.state.inType)
+    ) {
+        this.raise(this.state.pos, `Invalid identifier ${word}`);
+    }
 
-      // The check for `tt.name && exprAllowed` detects whether we are
-      // after a `yield` or `of` construct. See the `updateContext` for
-      // `tt.name`.
-      if (
-          prevType === tt._return ||
-      (prevType === tt.name && this.state.exprAllowed)
-      ) {
-          return lineBreak.test(
-              this.input.slice(this.state.lastTokEnd, this.state.start),
-          );
-      }
+    this.finishToken(type, word);
+}
 
-      if (
-          prevType === tt._else ||
-      prevType === tt.semi ||
-      prevType === tt.eof ||
-      prevType === tt.parenR ||
-      prevType === tt.arrow
-      ) {
-          return true;
-      }
+braceIsBlock(prevType: TokenType): boolean {
+    const parent = this.curContext();
+    if (parent === ct.functionExpression || parent === ct.functionStatement) {
+        return true;
+    }
+    if (
+        prevType === tt.colon &&
+        (parent === ct.braceStatement || parent === ct.braceExpression)
+    ) {
+        return !parent.isExpr;
+    }
 
-      if (prevType === tt.braceL) {
-          return parent === ct.braceStatement;
-      }
+    // The check for `tt.name && exprAllowed` detects whether we are
+    // after a `yield` or `of` construct. See the `updateContext` for
+    // `tt.name`.
+    if (
+        prevType === tt._return ||
+        (prevType === tt.name && this.state.exprAllowed)
+    ) {
+        return lineBreak.test(
+            this.input.slice(this.state.lastTokEnd, this.state.start),
+        );
+    }
 
-      if (
-          prevType === tt._var ||
-      prevType === tt._const ||
-      prevType === tt.name
-      ) {
-          return false;
-      }
+    if (
+        prevType === tt._else ||
+        prevType === tt.semi ||
+        prevType === tt.eof ||
+        prevType === tt.parenR ||
+        prevType === tt.arrow
+    ) {
+        return true;
+    }
 
-      if (prevType === tt.relational) {
-      // `class C<T> { ... }`
-          return true;
-      }
+    if (prevType === tt.braceL) {
+        return parent === ct.braceStatement;
+    }
 
-      return !this.state.exprAllowed;
-  }
+    if (
+        prevType === tt._var ||
+        prevType === tt._const ||
+        prevType === tt.name
+    ) {
+        return false;
+    }
 
-  updateContext(prevType: TokenType): void {
-      const type = this.state.type;
-      let update;
+    if (prevType === tt.relational) {
+        // `class C<T> { ... }`
+        return true;
+    }
 
-      if (type.keyword && (prevType === tt.dot || prevType === tt.questionDot)) {
-          this.state.exprAllowed = false;
-      } else if ((update = type.updateContext)) {
-          update.call(this, prevType);
-      } else {
-          this.state.exprAllowed = type.beforeExpr;
-      }
-  }
+    return !this.state.exprAllowed;
+}
+
+updateContext(prevType: TokenType): void {
+    const type = this.state.type;
+    let update;
+
+    if (type.keyword && (prevType === tt.dot || prevType === tt.questionDot)) {
+        this.state.exprAllowed = false;
+    } else if ((update = type.updateContext)) {
+        update.call(this, prevType);
+    } else {
+        this.state.exprAllowed = type.beforeExpr;
+    }
+}
 }

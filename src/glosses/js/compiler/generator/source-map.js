@@ -1,7 +1,6 @@
-import sourceMap from "source-map";
-
 const {
-    is
+    is,
+    sourcemap: sourceMap
 } = adone;
 
 /**

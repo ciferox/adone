@@ -9,7 +9,7 @@ const {
     logging: { logger },
     is,
     noop,
-    std: { fs, util: { format }, path, stream, child_process: { spawn }, os }
+    std: { fs, util: { format }, path, stream, childProcess: { spawn }, os }
 } = adone;
 
 const {

@@ -16,7 +16,7 @@ const resolveJavascriptFunction = (data) => {
 
     try {
         const source = `(${data})`;
-        const { program: ast } = adone.js.compiler.parse(source);
+        const { program: ast } = adone.js.parse(source);
 
         return !(
             ast.type !== "Program"
@@ -31,7 +31,7 @@ const resolveJavascriptFunction = (data) => {
 
 const constructJavascriptFunction = (data) => {
     const source = `(${data})`;
-    const { program: ast } = adone.js.compiler.parse(source);
+    const { program: ast } = adone.js.parse(source);
 
     if (ast.type !== "Program" ||
         ast.body.length !== 1 ||

@@ -1,9 +1,9 @@
 const {
     assert,
-    std: { fs, path, zlib, child_process: cp }
+    std: { fs, path, zlib, childProcess }
 } = adone;
 
-const exec = cp.execFileSync;
+const exec = childProcess.execFileSync;
 
 function PNG(file, options) {
     let buf;

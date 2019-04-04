@@ -23,5 +23,6 @@ const realm = adone.lazify({
     TransformTask: "./transform_task",
     MountPoint: "./mount_point",
     code: "./code",
+    bundle: "./bundle",
     rootRealm: () => new realm.Manager({ cwd: adone.ROOT_PATH })
 }, adone.asNamespace(exports), require);

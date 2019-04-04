@@ -2,7 +2,7 @@ import Terminfo from "./terminfo";
 
 const {
     is,
-    std: { fs, string_decoder: stringDecoder }
+    std: { fs, stringDecoder }
 } = adone;
 
 const COLOR_SCHEME = Symbol();

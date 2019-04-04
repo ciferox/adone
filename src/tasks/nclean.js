@@ -42,9 +42,9 @@ const clean = async function (manager, entry) {
         });
     }
 }
- 
+
 export default class extends adone.realm.BaseTask {
-    async main(path) {
+    async main({ path } = {}) {
         const entries = this.manager.getEntries({
             path,
             onlyNative: true

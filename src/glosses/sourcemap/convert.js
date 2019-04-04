@@ -1,18 +1,18 @@
-const { std: { fs, path }, error } = adone;
+const {
+    std: { fs, path }
+} = adone;
 
-export const getCommentRegex = () => {
-    return /^\s*\/(?:\/|\*)[@#]\s+sourceMappingURL=data:(?:application|text)\/json;(?:charset[:=]\S+;)?base64,(.*)$/mg;
-};
+export const getCommentRegex = () => /^\s*\/(?:\/|\*)[@#]\s+sourceMappingURL=data:(?:application|text)\/json;(?:charset[:=]\S+?;)?base64,(?:.*)$/mg;
 
-export const getMapFileCommentRegex = () => {
-    // Matches sourceMappingURL in either // or /* comment styles.
-    return /(?:\/\/[@#][ \t]+sourceMappingURL=([^\s'"`]+?)[ \t]*$)|(?:\/\*[@#][ \t]+sourceMappingURL=([^*]+?)[ \t]*(?:\*\/){1}[ \t]*$)/mg;
-};
+export const getMapFileCommentRegex = () => /(?:\/\/[@#][ \t]+sourceMappingURL=([^\s'"`]+?)[ \t]*$)|(?:\/\*[@#][ \t]+sourceMappingURL=([^\*]+?)[ \t]*(?:\*\/){1}[ \t]*$)/mg;
 
 const decodeBase64 = (base64) => Buffer.from(base64, "base64").toString();
+
 const stripComment = (sm) => sm.split(",").pop();
 
-const readFromFileMap = (sm, dir) => {
+const readFromFileMap = function (sm, dir) {
+    // NOTE: this will only work on the server since it attempts to read the map file
+
     const r = getMapFileCommentRegex().exec(sm);
 
     // for some odd reason //# .. captures in 1 and /* .. */ in 2
@@ -22,24 +22,27 @@ const readFromFileMap = (sm, dir) => {
     try {
         return fs.readFileSync(filepath, "utf8");
     } catch (e) {
-        throw new error.Exception(`An error occurred while trying to read the map file at ${filepath}\n${e}`);
+        throw new Error(`An error occurred while trying to read the map file at ${filepath}\n${e}`);
     }
 };
 
 class Converter {
-    constructor(sm, options = {}) {
-        if (options.isFileComment) {
-            sm = readFromFileMap(sm, options, options.commentFileDir);
+    constructor(sm, opts) {
+        opts = opts || {};
+
+        if (opts.isFileComment) {
+            sm = readFromFileMap(sm, opts.commentFileDir);
         }
-        if (options.hasComment) {
+        if (opts.hasComment) {
             sm = stripComment(sm);
         }
-        if (options.isEncoded) {
+        if (opts.isEncoded) {
             sm = decodeBase64(sm);
         }
-        if (options.isJSON || options.isEncoded) {
+        if (opts.isJSON || opts.isEncoded) {
             sm = JSON.parse(sm);
         }
+
         this.sourcemap = sm;
     }
 
@@ -48,23 +51,24 @@ class Converter {
     }
 
     toBase64() {
-        return Buffer.from(this.toJSON()).toString("base64");
+        const json = this.toJSON();
+        return Buffer.from(json, "utf8").toString("base64");
     }
 
     toComment(options) {
         const base64 = this.toBase64();
         const data = `sourceMappingURL=data:application/json;charset=utf-8;base64,${base64}`;
         return options && options.multiline ? `/*# ${data} */` : `//# ${data}`;
-
     }
 
+    // returns copy instead of original
     toObject() {
         return JSON.parse(this.toJSON());
     }
 
     addProperty(key, value) {
         if (this.sourcemap.hasOwnProperty(key)) {
-            throw new error.Exception("property %s already exists on the sourcemap, use set property instead");
+            throw new Error(`property "${key}" already exists on the sourcemap, use set property instead`);
         }
         return this.setProperty(key, value);
     }
@@ -79,13 +83,19 @@ class Converter {
     }
 }
 
-export const fromObject = (obj) => new Converter(obj);
+export const fromObject = function (obj) {
+    return new Converter(obj);
+};
 
-export const fromJSON = (json) => new Converter(json, { isJSON: true });
+export const fromJSON = function (json) {
+    return new Converter(json, { isJSON: true });
+};
 
-export const fromBase64 = (base64) => new Converter(base64, { isEncoded: true });
+export const fromBase64 = function (base64) {
+    return new Converter(base64, { isEncoded: true });
+};
 
-export const fromComment = (comment) => {
+export const fromComment = function (comment) {
     comment = comment
         .replace(/^\/\*/g, "//")
         .replace(/\*\/$/g, "");
@@ -93,29 +103,31 @@ export const fromComment = (comment) => {
     return new Converter(comment, { isEncoded: true, hasComment: true });
 };
 
-export const fromMapFileComment = (comment, dir) => new Converter(comment, {
-    commentFileDir: dir, isFileComment: true, isJSON: true
-});
+export const fromMapFileComment = function (comment, dir) {
+    return new Converter(comment, { commentFileDir: dir, isFileComment: true, isJSON: true });
+};
 
-export const fromMapFileSource = (content, dir) => {
+// Finds last sourcemap comment in file or returns null if none was found
+export const fromSource = function (content) {
+    const m = content.match(getCommentRegex());
+    return m ? fromComment(m.pop()) : null;
+};
+
+// Finds last sourcemap comment in file or returns null if none was found
+export const fromMapFileSource = function (content, dir) {
     const m = content.match(getMapFileCommentRegex());
     return m ? fromMapFileComment(m.pop(), dir) : null;
 };
 
-export const removeComments = (src) => {
+export const removeComments = function (src) {
     return src.replace(getCommentRegex(), "");
 };
 
-export const removeMapFileComments = (src) => {
+export const removeMapFileComments = function (src) {
     return src.replace(getMapFileCommentRegex(), "");
 };
 
-export const generateMapFileComment = (file, options) => {
+export const generateMapFileComment = function (file, options) {
     const data = `sourceMappingURL=${file}`;
     return options && options.multiline ? `/*# ${data} */` : `//# ${data}`;
-};
-
-export const fromSource = (content, largeSource) => {
-    const m = content.match(getCommentRegex());
-    return m ? fromComment(m.pop()) : null;
 };

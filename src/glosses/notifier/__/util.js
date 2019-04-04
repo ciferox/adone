@@ -1,7 +1,7 @@
 const {
     is,
     error,
-    std: { child_process: cp, path, url, os, fs, net }
+    std: { childProcess, path, url, os, fs, net }
 } = adone;
 
 const escapeQuotes = function (str) {
@@ -40,7 +40,7 @@ export const command = (notifier, options) => {
     notifier = shellwordsEscape(notifier);
 
     return new Promise((resolve, reject) => {
-        cp.exec(
+        childProcess.exec(
             `${notifier} ${options.join(" ")}`,
             (error, stdout, stderr) => {
                 if (error || stderr) {
@@ -63,7 +63,7 @@ export const command = (notifier, options) => {
 };
 
 export const fileCommand = (notifier, options) => new Promise((resolve, reject) => {
-    cp.execFile(notifier, options, (error, stdout, stderr) => {
+    childProcess.execFile(notifier, options, (error, stdout, stderr) => {
         if (error || stderr) {
             error = error || new Error();
             error.stdout = stdout;
@@ -76,7 +76,7 @@ export const fileCommand = (notifier, options) => new Promise((resolve, reject) 
 
 export const fileCommandJson = (notifier, options, { timeout } = {}) => new Promise((resolve, reject) => {
     let timer = null;
-    const p = cp.execFile(notifier, options, (error, stdout, stderr) => {
+    const p = childProcess.execFile(notifier, options, (error, stdout, stderr) => {
         clearTimeout(timer);
         if (error || stderr) {
             error = error || new Error();
@@ -128,7 +128,7 @@ export const immediateFileCommand = async (notifier, options) => {
     if (!exists) {
         throw new error.NotExistsException(`Notifier (${notifier}) not found on system`);
     }
-    cp.execFile(notifier, options);
+    childProcess.execFile(notifier, options);
 };
 
 const mapAppIcon = (options) => {

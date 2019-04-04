@@ -1,4 +1,4 @@
-const { std: { net: { Socket }, child_process: { execFileSync, execFile } }, net: { proxy: { socks: { createServer, auth, ServerParser: Parser } } } } = adone;
+const { std: { net: { Socket }, childProcess: { execFileSync, execFile } }, net: { proxy: { socks: { createServer, auth, ServerParser: Parser } } } } = adone;
 
 class FakeStream extends adone.event.Emitter {
     pause() {

@@ -47,7 +47,7 @@ const build = async function (manager, entry) {
 };
 
 export default class extends BaseTask {
-    async main(path) {
+    async main({ path } = {}) {
         const entries = this.manager.getEntries({
             path,
             onlyNative: true

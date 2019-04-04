@@ -19,12 +19,13 @@ const adone = Object.create({
     clearInterval: global.clearInterval,
     setImmediate: global.setImmediate,
     clearImmediate: global.clearImmediate,
+    lazifyMapper: (key, mod) => ((mod !== null && typeof mod === "object" && mod.__esModule === true && "default" in mod) ? mod.default : mod),
     lazify: (modules, _obj, _require = require, {
         asNamespace = false,
         configurable = false,
         enumerable = true,
         writable = false,
-        mapper = (key, mod) => ((mod !== null && typeof mod === "object" && mod.__esModule === true && "default" in mod) ? mod.default : mod)
+        mapper = adone.lazifyMapper 
     } = {}) => {
         const obj = _obj || {};
         Object.keys(modules).forEach((key) => {
@@ -152,9 +153,9 @@ adone.lazify({
     // NodeJS
     std: () => adone.asNamespace(adone.lazify({
         assert: "assert",
-        async_hooks: "async_hooks",
+        asyncHooks: "async_hooks",
         buffer: "buffer",
-        child_process: "child_process",
+        childProcess: "child_process",
         cluster: "cluster",
         console: "console",
         crypto: "crypto",
@@ -171,14 +172,14 @@ adone.lazify({
         net: "net",
         os: "os",
         path: "path",
-        perf_hooks: "perf_hooks",
+        perfHooks: "perf_hooks",
         process: "process",
         punycode: "punycode",
         querystring: "querystring",
         readline: "readline",
         repl: "repl",
         stream: "stream",
-        string_decoder: "string_decoder",
+        stringDecoder: "string_decoder",
         timers: "timers",
         tls: "tls",
         tty: "tty",
@@ -186,7 +187,7 @@ adone.lazify({
         util: "util",
         v8: "v8",
         vm: "vm",
-        worker_threads: "worker_threads",
+        workerThreads: "worker_threads",
         zlib: "zlib"
     }, null, require, { asNamespace: true })),
 
@@ -272,9 +273,9 @@ adone.lazify({
 // Be here until it appears in the official implementation
 require("./glosses/reflect");
 
-if (process.env.ADONE_SOURCEMAPS) {
-    adone.sourcemap.support(Error).install();
-}
+// if (process.env.ADONE_SOURCEMAPS) {
+//     adone.sourcemap.support(Error).install();
+// }
 
 Object.defineProperty(exports, "__esModule", {
     value: true

@@ -230,7 +230,7 @@ export default class OverlayImage extends adone.cli.ui.widget.Element {
     }
 
     renderImage(img, ratio, callback) {
-        if (adone.std.child_process.execSync) {
+        if (adone.std.childProcess.execSync) {
             callback = callback || ((err, result) => result);
             try {
                 return callback(null, this.renderImageSync(img, ratio));
@@ -305,7 +305,7 @@ export default class OverlayImage extends adone.cli.ui.widget.Element {
     }
 
     clearImage(callback) {
-        if (adone.std.child_process.execSync) {
+        if (adone.std.childProcess.execSync) {
             callback = callback || ((err, result) => result);
             try {
                 return callback(null, this.clearImageSync());
@@ -371,7 +371,7 @@ export default class OverlayImage extends adone.cli.ui.widget.Element {
     imageSize(callback) {
         const img = this.file;
 
-        if (adone.std.child_process.execSync) {
+        if (adone.std.childProcess.execSync) {
             callback = callback || ((err, result) => result);
             try {
                 return callback(null, this.imageSizeSync());
@@ -436,7 +436,7 @@ export default class OverlayImage extends adone.cli.ui.widget.Element {
     }
 
     termSize(callback) {
-        if (adone.std.child_process.execSync) {
+        if (adone.std.childProcess.execSync) {
             callback = callback || ((err, result) => result);
             try {
                 return callback(null, this.termSizeSync());
@@ -499,7 +499,7 @@ export default class OverlayImage extends adone.cli.ui.widget.Element {
     }
 
     getPixelRatio(callback) {
-        if (adone.std.child_process.execSync) {
+        if (adone.std.childProcess.execSync) {
             callback = callback || ((err, result) => result);
             try {
                 return callback(null, this.getPixelRatioSync());
@@ -569,7 +569,7 @@ export default class OverlayImage extends adone.cli.ui.widget.Element {
         };
 
         try {
-            adone.std.child_process.execFileSync(OverlayImage.w3mdisplay, [], {
+            adone.std.childProcess.execFileSync(OverlayImage.w3mdisplay, [], {
                 env: process.env,
                 encoding: "utf8",
                 input,
@@ -615,7 +615,7 @@ export default class OverlayImage extends adone.cli.ui.widget.Element {
         delete this._lastSize;
 
         try {
-            adone.std.child_process.execFileSync(OverlayImage.w3mdisplay, [], {
+            adone.std.childProcess.execFileSync(OverlayImage.w3mdisplay, [], {
                 env: process.env,
                 encoding: "utf8",
                 input,
@@ -643,7 +643,7 @@ export default class OverlayImage extends adone.cli.ui.widget.Element {
         const input = `5;${img}\n`;
 
         try {
-            buf = adone.std.child_process.execFileSync(OverlayImage.w3mdisplay, [], {
+            buf = adone.std.childProcess.execFileSync(OverlayImage.w3mdisplay, [], {
                 env: process.env,
                 encoding: "utf8",
                 input,
@@ -668,7 +668,7 @@ export default class OverlayImage extends adone.cli.ui.widget.Element {
         let buf = "";
 
         try {
-            buf = adone.std.child_process.execFileSync(OverlayImage.w3mdisplay, ["-test"], {
+            buf = adone.std.childProcess.execFileSync(OverlayImage.w3mdisplay, ["-test"], {
                 env: process.env,
                 encoding: "utf8",
                 timeout: 1000

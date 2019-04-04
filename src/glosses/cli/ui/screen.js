@@ -280,7 +280,7 @@ export default class Screen extends adone.cli.ui.Node {
         }
         if (is.windows) {
             try {
-                adone.std.child_process.execSync("cls", { stdio: "ignore", timeout: 1000 });
+                adone.std.childProcess.execSync("cls", { stdio: "ignore", timeout: 1000 });
             } catch (e) {
                 //
             }
@@ -314,7 +314,7 @@ export default class Screen extends adone.cli.ui.Node {
         this.term.flush();
         if (is.windows) {
             try {
-                adone.std.child_process.execSync("cls", { stdio: "ignore", timeout: 1000 });
+                adone.std.childProcess.execSync("cls", { stdio: "ignore", timeout: 1000 });
             } catch (e) {
                 //
             }
@@ -1773,7 +1773,7 @@ export default class Screen extends adone.cli.ui.Node {
 
         const screen = this;
         const terminal = screen.terminal;
-        const spawn = adone.std.child_process.spawn;
+        const spawn = adone.std.childProcess.spawn;
         const mouse = terminal.mouseEnabled;
         let ps;
 
