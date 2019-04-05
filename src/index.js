@@ -8,6 +8,7 @@ const PRIVATE_SYMBOL = Symbol();
 
 const adone = Object.create({
     null: Symbol.for("adone:null"),
+    undefined: Symbol.for("adone:undefined"),
     noop: () => { },
     identity: (x) => x,
     truly: () => true,

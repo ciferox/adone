@@ -1,8 +1,9 @@
 const {
     error,
-    realm: { code: { Sandbox, scope } },
+    realm: { code },
     std: { path }
 } = adone;
+const { Sandbox } = code;
 
 describe("Sandbox", () => {
     it("should throw with bad inputs", () => {
@@ -19,7 +20,7 @@ describe("Sandbox", () => {
         assert.equal(sb.cwd, process.cwd());
         assert.equal(sb.adonePath, adone.realm.rootRealm.ROOT_PATH);
         assert.sameMembers(sb.entries, [path.join(process.cwd(), "1.js")]);
-        assert.instanceOf(sb.globalScope, scope.GlobalScope);
+        assert.instanceOf(sb.globalScope, code.GlobalScope);
     });
 
     describe("public methods", () => {

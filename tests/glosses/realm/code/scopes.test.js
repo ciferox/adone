@@ -1,24 +1,24 @@
 const {
     error,
-    realm: { code: { scope } }
+    realm: { code }
 } = adone;
 
 describe("scopes", () => {
     describe("Scope", () => {
         it("defaults", () => {
-            const s = new scope.Scope();
+            const s = new code.Scope();
 
-            assert.equal(s.identifiers.size, 0);
+            assert.equal(s.size, 0);
             assert.lengthOf(s.children, 0);
         });
 
         describe("public methods", () => {
             const methods = [
                 "contains",
-                "addDeclaration"
+                "add"
             ];
 
-            const s = new scope.Scope("a");
+            const s = new code.Scope("a");
 
             for (const m of methods) {
                 it(`${m}()`, () => {
@@ -31,10 +31,10 @@ describe("scopes", () => {
     describe("GlobalScope", () => {
 
         it("defaults", () => {
-            const gs = new scope.GlobalScope();
+            const gs = new code.GlobalScope();
         
-            assert.instanceOf(gs, scope.Scope);
-            assert.sameMembers([...gs.identifiers.keys()], ["global", "console", "undefined"]);
+            assert.instanceOf(gs, code.Scope);
+            assert.sameMembers(gs.identifiers, ["global", "undefined"]);
         });
     });
 

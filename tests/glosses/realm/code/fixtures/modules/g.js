@@ -4,6 +4,6 @@ adone.lazify({
     bb: ["./b", (mod) => mod.bb]
 }, exports, require, {
     mapper(key, mod) {
-        require("d");
+        require("./d");
     }
 });

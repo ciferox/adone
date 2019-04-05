@@ -9,15 +9,15 @@ lazify({
 
 const __ = lazify({
     ff: () => {
-        return require("g");
+        return require("./g");
     },
     d: "./d",
     c: ["./c", (mod) => mod.c]
 }, exports, (...args) => {
-    require("e");
+    require("./e");
     return require(...args);
 }, {
     mapper(key, mod) {
-        require("f");
+        require("./f");
     }
 });

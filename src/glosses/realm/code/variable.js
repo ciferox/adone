@@ -1,17 +1,14 @@
-export default class XVariable extends adone.realm.code.Base {
-    constructor(options) {
-        super(options);
-
-        const node = this.ast;
-        this.name = node.id.name;
-        if (!adone.is.null(node.init)) {
-            this.value = this.createXObject({ ast: node.init, xModule: this.xModule });
-            this.value.name = this.name;
-        }
-        this.kind = null;
-    }
-
-    getType() {
-        return "Variable";
+/**
+ * Variable represents declared variable in some scope.
+ * 
+ * The `value` of variable does not correspond to the one that will be assigned to the variable in runtime,
+ * but that used in the sandbox (in some cases, it equals with the runtime value).
+ */
+export default class Variable {
+    constructor(name, value, isNative = false) {
+        this.name = name;
+        this.value = value;
+        this.refs = 0;
+        this.isNative = isNative;
     }
 }

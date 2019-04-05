@@ -4,6 +4,6 @@ const __ = adone.lazify({
     c: ["./c", (mod) => mod.c]
 }, exports, require, {
     mapper(key, mod) {
-        require("d");
+        require("./d");
     }
 });

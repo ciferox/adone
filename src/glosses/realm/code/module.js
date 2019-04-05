@@ -2,10 +2,9 @@ const {
     error,
     is,
     fs,
-    js: { parse, walk, compiler: { types: t } },
-    realm: { code: { DEFAULT_PARSER_PLUGINS, helper, scope } },
-    std: { path },
-    util
+    js: { walk, compiler: { types: t } },
+    realm: { code },
+    std: { path }
 } = adone;
 
 export default class Module {
@@ -13,11 +12,9 @@ export default class Module {
 
     ast;
 
-    #parserPlugins;
-
     #sandbox;
 
-    constructor({ sandbox, file, parserPlugins = DEFAULT_PARSER_PLUGINS } = {}) {
+    constructor({ sandbox, file } = {}) {
         if (!is.string(file) || file.length === 0) {
             throw new error.NotValidException("Invalid module path");
         } else if (!path.isAbsolute(file)) {
@@ -25,43 +22,49 @@ export default class Module {
         }
 
         this.#sandbox = sandbox;
-        this.#parserPlugins = util.arrify(parserPlugins);
 
-        this.id = adone.std.module._resolveFilename(file);
-        this.basePath = path.dirname(this.id);
+        this.filename = adone.module.resolve(file);
+        this.dirname = path.dirname(this.filename);
 
         this.dependencies = new Map();
-        this.scope = new scope.ModuleScope(this);
+        this.exports = new Map();
+
+        this.scope = new code.ModuleScope(this);
+        this.scope.add(new code.Variable("__dirname", this.dirname, true));
+        this.scope.add(new code.Variable("__filename", this.filename, true));
+        this.scope.add(new code.ExportsVariable(this.exports));
+        this.scope.add(new code.ModuleVariable(this));
+        this.scope.add(new code.RequireVariable(/* ??? */));
     }
 
-    async load() {
-        this.content = await fs.readFile(this.id, { check: true, encoding: "utf8" });
-
-        this.ast = parse(this.content, {
-            sourceType: "module",
-            plugins: this.#parserPlugins
-        });
+    async load({ virtualPath = this.dirname } = {}) {
+        this.content = await this.#sandbox.loadFile(this.filename);
+        this.ast = this.#sandbox.parse(this.content);
 
         const state = {
-            id: this.id,
-            basePath: this.basePath,
+            module: this,
             modulePaths: new Set(),
-            addModulePath(modPath) {
+            addDependency(modPath) {
                 let realPath;
-                if (path.isAbsolute(modPath))  {
+                if (path.isAbsolute(modPath)) {
                     realPath = modPath;
                 } else if (modPath.startsWith("./") || modPath.startsWith("../")) {
-                    realPath = path.resolve(this.basePath, modPath);
+                    realPath = path.resolve(virtualPath, modPath);
+                } else if (this.module.#sandbox.isSpecialModule(virtualPath, modPath)) {
+                    return;
                 }
 
+                realPath = this.module.#sandbox.fixPath(realPath);
+
                 this.modulePaths.add(realPath);
+                return realPath;
             },
             scanLazifyProps(props, c) {
                 for (const prop of props) {
                     if (t.isStringLiteral(prop.value)) {
-                        this.addModulePath(prop.value.value);
+                        this.addDependency(prop.value.value);
                     } else if (t.isArrayExpression(prop.value) && prop.value.elements.length === 2 && t.isStringLiteral(prop.value.elements[0])) {
-                        this.addModulePath(prop.value.elements[0].value);
+                        this.addDependency(prop.value.elements[0].value);
                     } else {
                         c(prop.value);
                     }
@@ -69,46 +72,78 @@ export default class Module {
             }
         };
 
-        const self = this;
-
         walk.recursive(this.ast.program, {
             CallExpression(node, state, c) {
                 if (node.callee.name === "require" && t.isStringLiteral(node.arguments[0])) {
-                    state.addModulePath(node.arguments[0].value);
+                    state.addDependency(node.arguments[0].value);
                 }
             },
             ImportDeclaration(node, state, c) {
-                state.addModulePath(node.source.value);
+                const modPath = state.addDependency(node.source.value);
+
+                for (const specifier of node.specifiers) {
+                    if (t.isImportDefaultSpecifier(specifier)) {
+                        state.module.scope.add(new code.ExternalVariable(specifier.local.name, modPath));
+                    }
+                }
             },
             ExpressionStatement(node, state, c) {
-                if (self.#isADONELazifier(node.expression)) {
+                // Process adone lazyfier
+                if (state.module.#isADONELazifier(node.expression)) {
                     const objExpr = node.expression.arguments[0];
                     if (t.isObjectExpression(objExpr)) {
                         state.scanLazifyProps(objExpr.properties, c);
                     }
                     node.expression.arguments.forEach((arg) => c(arg));
-                } else {
-                    c(node.expression);
-                }
+                } 
+
+                c(node.expression);
             },
             VariableDeclaration(node, state, c) {
-                if (self.#isADONELazifier(node.declarations[0].init)) {
-                    const objExpr = node.declarations[0].init.arguments[0];
-                    if (t.isObjectExpression(objExpr)) {
-                        state.scanLazifyProps(objExpr.properties, c);
+                for (const decl of node.declarations) {
+                    const initNode = node.declarations[0].init;
+                    
+                    // Process adone lazyfier
+                    if (state.module.#isADONELazifier(initNode)) {
+                        const objExpr = initNode.arguments[0];
+                        if (t.isObjectExpression(objExpr)) {
+                            state.scanLazifyProps(objExpr.properties, c);
+                        }
+                        initNode.arguments.forEach((arg) => c(arg));
                     }
-                    node.declarations[0].init.arguments.forEach((arg) => c(arg));
-                } else {
-                    node.declarations.forEach((d) => c(d));
+
+                    state.module.#processVariableDeclarator(decl);
+
+                    c(decl);
                 }
             }
         }, state);
 
         // Load all dependencies
-        for (const modPath of state.modulePaths) {
+        for (const modPath of state.modulePaths.values()) {
             // eslint-disable-next-line no-await-in-loop
-            const mod = await this.#sandbox.loadAndCacheModule(modPath);
-            this.dependencies.set(mod.id, mod);
+            this.addDependencyModule(await this.#sandbox.loadAndCacheModule(modPath));
+        }
+    }
+
+    #processVariableDeclarator(node) {
+        if (t.isIdentifier(node.id)) {
+            if (t.isLiteral(node.init)) {
+                if (t.isRegExpLiteral(node.init)) {
+                    this.scope.add(new code.Variable(node.id.name, new RegExp(node.init.pattern)));
+                } else if (t.isNullLiteral(node.init)) {
+                    this.scope.add(new code.Variable(node.id.name, null));
+                } else {
+                    this.scope.add(new code.Variable(node.id.name, node.init.value));
+                }
+            } else if (t.isExpression(node.init)) {
+                this.scope.add(new code.Variable(node.id.name, new code.Expression(node.init)));
+            } else if (t.isIdentifier(node.init)) {
+                this.scope.add(new code.Variable(node.id.name, new code.Reference(node.init.name)))
+            }
+            
+        } else if (t.isObjectPattern(node.id)) {
+
         }
     }
 
@@ -118,11 +153,15 @@ export default class Module {
         }
 
         if (t.isMemberExpression(node.callee)) {
-            return helper.getMemberExpressionName(node.callee) === "adone.lazify";
+            return code.helper.getMemberExpressionName(node.callee) === "adone.lazify";
         } else if (t.isIdentifier(node.callee)) {
             // TODO: need more carefull validation
             return node.callee.name === "lazify";
         }
         return false;
+    }
+
+    addDependencyModule(mod) {
+        this.dependencies.set(mod.filename, mod);
     }
 }
