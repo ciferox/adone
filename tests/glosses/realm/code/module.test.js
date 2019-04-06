@@ -1,184 +1,211 @@
+import { getModulePath, createSandbox, createModule, suiteRunner } from "./helpers";
+
 const {
     error,
     realm: { code },
     std: { path }
 } = adone;
-const { Module, Sandbox } = code;
-
-const getPath = (...args) => path.join(__dirname, "fixtures", "modules", ...args);
 
 describe("Module", () => {
     let sandbox;
 
-    const createModule = (path) => new Module({ sandbox, file: path });
-
     before(() => {
-        sandbox = new Sandbox({
-            input: getPath("empty")
+        sandbox = createSandbox({
+            input: __filename
         });
     });
 
     it("should throw with invalid value of file", () => {
-        assert.throws(() => new Module(), error.NotValidException);
-        assert.throws(() => new Module({}), error.NotValidException);
-        assert.throws(() => new Module({ file: "" }), error.NotValidException);
-        assert.throws(() => new Module({ file: "relative/path" }), error.NotValidException);
-    });
-
-    it("defaults", () => {
-        const mod = createModule(getPath("a"));
-
-        assert.equal(mod.filename, `${getPath("a")}.js`);
-        assert.isUndefined(mod.ast);
-        assert.isUndefined(mod.content);
-        assert.lengthOf(mod.dependencies, 0);
+        assert.throws(() => new code.Module(), error.NotValidException);
+        assert.throws(() => new code.Module({}), error.NotValidException);
+        assert.throws(() => new code.Module({ file: "" }), error.NotValidException);
+        assert.throws(() => new code.Module({ file: "relative/path" }), error.NotValidException);
     });
 
     describe("public methods", () => {
         const methods = [
-            "load"
+            "load",
+            "addDependencyModule"
         ];
 
-        const s = createModule(getPath("a"));
+        let mod;
+        before(async () => {
+            mod = await createModule(__filename, {
+                sandbox
+            });
+        });
 
         for (const m of methods) {
+            // eslint-disable-next-line no-loop-func
             it(`${m}()`, () => {
-                assert.isFunction(s[m]);
+                assert.isFunction(mod[m]);
             });
         }
     });
 
-    it("should allow load empty files", async () => {
-        const mod = createModule(getPath("empty.js"));
-        await mod.load();
+    describe("ast processor", () => {
+        const suite = suiteRunner("./modules_ast_processor");
 
-        assert.equal(mod.content, "");
-        assert.equal(mod.ast.program.sourceType, "module");
-        assert.lengthOf(mod.ast.program.body, 0);
+        before(async () => {
+            await suite.before();
+        });
+
+        after(async () => {
+            await suite.after();
+        });
+
+        suite.run();
     });
 
-    describe("scope", () => {
-        describe("literals", () => {
-            it("get only native vars", async () => {
-                const mod = createModule(getPath("a"));
-                await mod.load();
 
-                const vars = mod.scope.getAll({ declared: false });
-                assert.sameMembers(vars.map((v) => v.name), ["__dirname", "__filename", "exports", "module", "require"]);
-                assert.equal(mod.scope.get("__dirname").value, mod.dirname);
-                assert.equal(mod.scope.get("__filename").value, mod.filename);
-                assert.strictEqual(mod.scope.get("module").value, mod);
-            });
+    describe("scopes", () => {
+    //     describe("expressions", () => {
+    //         it("common expressions", async () => {
+    //             const mod = await createModule(getModulePath("expressions1"), {
+    //                 sandbox,
+    //                 load: true
+    //             });
 
-            it("get only declared vars", async () => {
-                const mod = createModule(getPath("a"));
-                await mod.load();
+    //             const vars = mod.scope.getAll({ native: false });
+    //             const ids = ["fs", "obj", "arr1", "arr2"];
+    //             assert.sameMembers(vars.map((v) => v.name), ids);
 
-                const vars = mod.scope.getAll({ native: false });
-                assert.sameMembers(vars.map((v) => v.name), ["str", "num", "isUnix", "re", "_null"]);
-                assert.equal(mod.scope.get("str").value, "adone");
-                assert.equal(mod.scope.get("num").value, 1);
-                assert.equal(mod.scope.get("isUnix").value, true);
-                assert.deepEqual(mod.scope.get("re").value, new RegExp("^a"));
-                assert.equal(mod.scope.get("_null").value, null);
-            });
+    //             for (const id of ids) {
+    //                 assert.instanceOf(mod.scope.get(id).value, code.Expression);
+    //             }
+    //         });
 
-            it("get all vars", async () => {
-                const mod = createModule(getPath("a"));
-                await mod.load();
+    //         it("functions expressions", async () => {
+    //             const mod = await createModule(getModulePath("expressions2"), {
+    //                 sandbox,
+    //                 load: true
+    //             });
+    //             // arrowFn = () => {}
+    //             const vars = mod.scope.getAll({ native: false });
+    //             const ids = ["namedNoop", "noop"/*, "arrowFn"*/];
+    //             assert.sameMembers(vars.map((v) => v.name), ids);
 
-                const vars = mod.scope.getAll();
-                assert.sameMembers(vars.map((v) => v.name), ["__dirname", "__filename", "exports", "module", "require", "str", "num", "isUnix", "re", "_null"]);
-            });
-        });
+    //             for (const id of ids) {
+    //                 assert.instanceOf(mod.scope.get(id).value, code.Function);
+    //             }
+    //         });
+    //     });
 
-        describe("expressions", () => {
-            it("common expressions", async () => {
-                const mod = createModule(getPath("aa"));
-                await mod.load();
+    //     describe("nested scopes", () => {
+    //         const cases = ["a"/*, "b", "c", "d"*/];
 
-                const vars = mod.scope.getAll({ native: false });
-                const ids = ["fs", "arrowFn", "namedNoop", "noop", "obj", "arr1", "arr2"];
-                assert.sameMembers(vars.map((v) => v.name), ids);
-
-                for (const id of ids) {
-                    assert.instanceOf(mod.scope.get(id).value, code.Expression);
-                }
-            });
-        });
+    //         for (const c of cases) {
+    //             // eslint-disable-next-line no-loop-func
+    //             it(`one-level function declaration (${c})`, async () => {
+    //                 const mod = await createModule(getModulePath(`scopes1${c}`), {
+    //                     sandbox,
+    //                     load: true
+    //                 });
+    
+    //                 assert.sameMembers(mod.scope.getAll({ native: false }).map((v) => v.name), ["a", "fn"]);
+    //                 assert.instanceOf(mod.scope.get("fn").value, code.Function);
+    //                 assert.equal(mod.scope.get("a").value, "adone");
+    //                 assert.lengthOf(mod.scope.children, 1);
+    //                 assert.instanceOf(mod.scope.children[0], code.FunctionScope);
+    //                 assert.sameMembers(mod.scope.children[0].getAll({ native: false }).map((v) => v.name), ["a"]);
+    //                 assert.equal(mod.scope.children[0].get("a").value, 8);
+    //             });
+    //         }
+    //     });
     });
 
-    describe("dependencies", () => {
-        it("single with require()", async () => {
-            const mod = createModule(getPath("b.js"));
-            await mod.load();
+    // describe("dependencies", () => {
+    //     it("single with require()", async () => {
+    //         const mod = await createModule(getModulePath("b.js"), {
+    //             sandbox,
+    //             load: true
+    //         });
 
-            assert.sameMembers([...mod.dependencies.keys()], [getPath("a.js")]);
-        });
+    //         assert.sameMembers([...mod.dependencies.keys()], [getModulePath("a.js")]);
+    //     });
 
-        it("multiple with require()", async () => {
-            const mod = createModule(getPath("c"));
-            await mod.load();
+    //     it("multiple with require()", async () => {
+    //         const mod = await createModule(getModulePath("c"), {
+    //             sandbox,
+    //             load: true
+    //         });
 
-            assert.sameMembers([...mod.dependencies.keys()], [getPath("a.js"), getPath("b.js")]);
-        });
+    //         assert.sameMembers([...mod.dependencies.keys()], [getModulePath("a.js"), getModulePath("b.js")]);
+    //     });
 
-        it("multiple with require() recursively", async () => {
-            const mod = createModule(getPath("d"));
-            await mod.load();
+    //     it("multiple with require() recursively", async () => {
+    //         const mod = await createModule(getModulePath("d"), {
+    //             sandbox,
+    //             load: true
+    //         });
 
-            assert.sameMembers([...mod.dependencies.keys()], [getPath("a.js"), getPath("b.js"), getPath("c", "index.js")]);
-        });
+    //         assert.sameMembers([...mod.dependencies.keys()], [getModulePath("a.js"), getModulePath("b.js"), getModulePath("c", "index.js")]);
+    //     });
 
-        it("single with 'import'", async () => {
-            const mod = createModule(getPath("e"));
-            await mod.load();
+    //     it("single with 'import'", async () => {
+    //         const mod = await createModule(getModulePath("e"), {
+    //             sandbox,
+    //             load: true
+    //         });
 
-            assert.sameMembers([...mod.dependencies.keys()], [getPath("a.js")]);
-        });
+    //         assert.sameMembers([...mod.dependencies.keys()], [getModulePath("a.js")]);
+    //     });
 
-        it("multiple with 'import'", async () => {
-            const mod = createModule(getPath("f"));
-            await mod.load();
+    //     it("multiple with 'import'", async () => {
+    //         const mod = await createModule(getModulePath("f"), {
+    //             sandbox,
+    //             load: true
+    //         });
 
-            assert.sameMembers([...mod.dependencies.keys()], [getPath("a.js"), getPath("b.js"), getPath("c", "index.js")]);
-        });
+    //         assert.sameMembers([...mod.dependencies.keys()], [getModulePath("a.js"), getModulePath("b.js"), getModulePath("c", "index.js")]);
+    //     });
 
-        it("adone.lazify", async () => {
-            const mod = createModule(getPath("g"));
-            await mod.load();
+    //     it("adone.lazify", async () => {
+    //         const mod = await createModule(getModulePath("g"), {
+    //             sandbox,
+    //             load: true
+    //         });
 
-            assert.sameMembers([...mod.dependencies.keys()], [getPath("a.js"), getPath("b.js"), getPath("d.js")]);
-        });
+    //         assert.sameMembers([...mod.dependencies.keys()], [getModulePath("a.js"), getModulePath("b.js"), getModulePath("d.js")]);
+    //     });
 
-        it("const __ = adone.lazify", async () => {
-            const mod = createModule(getPath("h"));
-            await mod.load();
+    //     it("const __ = adone.lazify", async () => {
+    //         const mod = await createModule(getModulePath("h"), {
+    //             sandbox,
+    //             load: true
+    //         });
 
-            assert.sameMembers([...mod.dependencies.keys()], [getPath("a.js"), getPath("b.js"), getPath("c", "index.js"), getPath("d.js")]);
-        });
+    //         assert.sameMembers([...mod.dependencies.keys()], [getModulePath("a.js"), getModulePath("b.js"), getModulePath("c", "index.js"), getModulePath("d.js")]);
+    //     });
 
-        it("many lazifiers", async () => {
-            const mod = createModule(getPath("i"));
-            await mod.load();
+    //     it("many lazifiers", async () => {
+    //         const mod = await createModule(getModulePath("i"), {
+    //             sandbox,
+    //             load: true
+    //         });
 
-            // console.log(adone.inspect(mod.ast.program, { depth: 6 }));
+    //         // console.log(adone.inspect(mod.ast.program, { depth: 6 }));
 
-            assert.sameMembers([...mod.dependencies.keys()], [getPath("a.js"), getPath("b.js"), getPath("c", "index.js"), getPath("d.js"), getPath("e.js"), getPath("f.js"), getPath("g.js")]);
-        });
+    //         assert.sameMembers([...mod.dependencies.keys()], [getModulePath("a.js"), getModulePath("b.js"), getModulePath("c", "index.js"), getModulePath("d.js"), getModulePath("e.js"), getModulePath("f.js"), getModulePath("g.js")]);
+    //     });
 
-        it("should ignore special modules", async () => {
-            const mod = createModule(getPath("specials"));
-            await mod.load();
-            assert.sameMembers([...mod.dependencies.keys()], [getPath("c", "index.js")]);
-        });
+    //     it("should ignore special modules", async () => {
+    //         const mod = await createModule(getModulePath("specials"), {
+    //             sandbox,
+    //             load: true
+    //         });
 
-        describe("adone/cli module", () => {
-            it.todo("should correctly process 'require(\"..\")'", async () => {
-                const mod = createModule(path.join(adone.SRC_PATH, "app", "adone.js"));
-                await mod.load({ virtualPath: adone.BIN_PATH });
-                // console.log([...mod.dependencies.keys()]);
-            });
-        });
-    });
+    //         assert.sameMembers([...mod.dependencies.keys()], [getModulePath("c", "index.js")]);
+    //     });
+
+    //     describe("adone/cli module", () => {
+    //         it.todo("should correctly process 'require(\"..\")'", async () => {
+    //             const mod = await createModule(path.join(adone.SRC_PATH, "app", "adone.js"), {
+    //                 sandbox,
+    //                 load: { virtualPath: adone.BIN_PATH }
+    //             });
+    //             // console.log([...mod.dependencies.keys()]);
+    //         });
+    //     });
+    // });
 });

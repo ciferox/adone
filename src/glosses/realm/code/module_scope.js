@@ -3,7 +3,8 @@ const {
 } = adone;
 
 export default class ModuleScope extends code.Scope {
-    // constructor() {
-    //     super();
-    // }
+    constructor(module) {
+        super(/*module.ast.program.body*/);
+        this.module = module;
+    }
 }

@@ -1,3 +1,5 @@
+import { createModule } from "./helpers";
+
 const {
     error,
     realm: { code }
@@ -9,16 +11,20 @@ describe("scopes", () => {
             const s = new code.Scope();
 
             assert.equal(s.size, 0);
+            assert.isNull(s.astNodes, null);
             assert.lengthOf(s.children, 0);
         });
 
         describe("public methods", () => {
             const methods = [
                 "contains",
-                "add"
+                "addDeclaration",
+                "get",
+                "getAll",
+                "addChild"
             ];
 
-            const s = new code.Scope("a");
+            const s = new code.Scope();
 
             for (const m of methods) {
                 it(`${m}()`, () => {
@@ -29,13 +35,12 @@ describe("scopes", () => {
     });
 
     describe("GlobalScope", () => {
-
         it("defaults", () => {
             const gs = new code.GlobalScope();
         
             assert.instanceOf(gs, code.Scope);
+            assert.isNull(gs.astNodes, null);
             assert.sameMembers(gs.identifiers, ["global", "undefined"]);
         });
     });
-
 });

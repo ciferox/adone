@@ -1,4 +1,4 @@
-const a = require("../a");
+const a = require("../a1");
 require("../b");
 
 export default {

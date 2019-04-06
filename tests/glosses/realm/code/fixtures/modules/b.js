@@ -1,4 +1,4 @@
-require("./a");
+require("./a1");
 
 export default {
     b: 1,

@@ -1,12 +1,12 @@
 const {
-    error,
-    lodash
+    error
 } = adone;
 
 export default class Scope {
-    #variables = new Map();
+    #variables = new adone.collection.HashSet(null, (v) => v.name);
 
-    constructor() {
+    constructor(/*nodes = null*/) {
+        // this.astNodes = nodes;
         this.children = [];
     }
 
@@ -15,15 +15,19 @@ export default class Scope {
     }
 
     get identifiers() {
-        return [...this.#variables.keys()];
+        return [...this.#variables.values()].map((v) => v.name);
     }
 
     contains(name) {
-        return this.#variables.has(name);
+        return this.#variables.has({ name });
     }
 
     get(name) {
-        return this.#variables.get(name);
+        if (!this.contains(name)) {
+            throw new error.NotExistsException(`Variable '${name}' not found`);
+        }
+
+        return [...this.#variables.values()].find((v) => v.name === name);
     }
 
     getAll({ native = true, declared = true } = {}) {
@@ -32,10 +36,14 @@ export default class Scope {
             .filter((v) => (!v.isNative && declared) || v.isNative);
     }
 
-    add(variable) {
-        if (this.#variables.has(variable.name)) {
+    addDeclaration(variable) {
+        if (this.#variables.has(variable)) {
             throw new error.ExistsException(`Identifier '${variable.name}' has already been declared`);
         }
-        this.#variables.set(variable.name, variable);
+        this.#variables.add(variable);
+    }
+
+    addChild(scope) {
+        this.children.push(scope);
     }
 }

@@ -77,6 +77,7 @@ export default class Sandbox {
                 sandbox: this,
                 file: realPath
             });
+            
             await mod.load();
 
             this.#modulesCache.set(realPath, mod);

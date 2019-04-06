@@ -1,16 +1,40 @@
 const __ = adone.lazify({
     Sandbox: "./sandbox",
+    AstProcessor: "./ast_processor",
     Module: "./module",
-    Variable: "./variable",
+
+    BaseNode: "./base_node",
+    Identifier: "./nodes/identifier",
+    BlockStatement: "./nodes/block_statement",
+    FunctionDeclaration: "./nodes/function_declaration",
+    FunctionExpression: "./nodes/function_expression",
+    ArrowFunctionExpression: "./nodes/arrow_function_expression",
+    VariableDeclaration: "./nodes/variable_declaration",
+    VariableDeclarator: "./nodes/variable_declarator",
+    MemberExpression: "./nodes/member_expression",
+    ObjectExpression: "./nodes/object_expression",
+    ArrayExpression: "./nodes/array_expression",
+    NewExpression: "./nodes/new_expression",
+    CallExpression: "./nodes/call_expression",
+    DoExpression: "./nodes/do_expression",
+    StringLiteral: "./nodes/string_literal",
+    NumericLiteral: "./nodes/numeric_literal",
+    BooleanLiteral: "./nodes/boolean_literal",
+    RegExpLiteral: "./nodes/regexp_literal",
+    TemplateLiteral: "./nodes/template_literal",
+    NullLiteral: "./nodes/null_literal",
+
     Expression: "./expression",
+    Function: "./function",
     Reference: "./reference",
 
+    Variable: "./variable",
     ExternalVariable: "./variables/external",
     UndefinedVariable: "./variables/undefined",
     ExportsVariable: "./variables/exports",
     ModuleVariable: "./variables/module",
     RequireVariable: "./variables/require",
-    
+
     Scope: "./scope",
     GlobalScope: "./global_scope",
     ModuleScope: "./module_scope",
@@ -18,7 +42,7 @@ const __ = adone.lazify({
     BlockScope: "./block_scope",
 
     helper: "./helpers"
-    
+
 
     // Bundler: "./bundler",
     // CodeLayout: "./code_layout",
@@ -28,7 +52,6 @@ const __ = adone.lazify({
     // ModuleOld: "./module_old",
     // AdoneModule: "./adone_module",
     // Class: "./class",
-    // Function: "./function",
     // ArrowFunction: "./arrow_function",
     // LazyFunction: "./lazy_function",
     // Object: "./object",
@@ -49,7 +72,8 @@ export const DEFAULT_PARSER_PLUGINS = [
     "classPrivateProperties",
     "classPrivateMethods",
     "numericSeparator",
-    "partialApplication"
+    "partialApplication",
+    "doExpressions"
 ];
 
 

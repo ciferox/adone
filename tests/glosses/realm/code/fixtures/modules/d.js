@@ -1,5 +1,5 @@
 function a() {
-    return require("./a");
+    return require("./a1");
 }
 
 export const exps = {

@@ -4,7 +4,10 @@
 export default class Stack {
     constructor() {
         this._list = [];
-        this.length = 0;
+    }
+
+    get length() {
+        return this._list.length;
     }
 
     /**
@@ -13,17 +16,16 @@ export default class Stack {
      * @returns {boolean}
      */
     get empty() {
-        return this.length === 0;
+        return this._list.length === 0;
     }
 
     /**
      * The top element of the stack
      */
     get top() {
-        if (!this.length) {
-            return;
-        }
-        return this._list[this.length - 1];
+        return (this._list.length > 0)
+            ? this._list[this._list.length - 1]
+            : undefined;
     }
 
     /**
@@ -33,7 +35,6 @@ export default class Stack {
      */
     push(v) {
         this._list.push(v);
-        ++this.length;
         return this;
     }
 
@@ -43,10 +44,6 @@ export default class Stack {
      * @returns {any} top element value
      */
     pop() {
-        if (!this.length) {
-            return;
-        }
-        --this.length;
         return this._list.pop();
     }
 
@@ -54,7 +51,7 @@ export default class Stack {
      * Returns an iterator over the values
      */
     *[Symbol.iterator]() {
-        for (let i = this.length - 1; i >= 0; --i) {
+        for (let i = this._list.length - 1; i >= 0; --i) {
             yield this._list[i];
         }
     }
@@ -63,19 +60,16 @@ export default class Stack {
      * Moves everything from the stack to another stack
      */
     moveTo(target) {
-        const len = this.length;
+        const len = this._list.length;
         for (let i = 0; i < len; ++i) {
             target._list.push(this._list[len - i - 1]);
         }
-        target.length += len;
-        this.length = 0;
         this._list.length = 0;
         return this;
     }
 
     clear() {
         this._list.length = 0;
-        this.length = 0;
         return this;
     }
 
