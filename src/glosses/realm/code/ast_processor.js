@@ -116,7 +116,7 @@ export default class AstProcessor {
     enterBlockStatement(node, ancestors) {
         const parentAstNode = ancestors[ancestors.length - 2];
         let scope;
-        if (t.isFunctionDeclaration(parentAstNode)) {
+        if (t.isFunctionDeclaration(parentAstNode) || t.isFunctionExpression(parentAstNode) || t.isArrowFunctionExpression(parentAstNode)) {
             scope = new code.FunctionScope();
             this.nodes.top.scope = scope; // Set scope in function node
         } else {
@@ -132,8 +132,10 @@ export default class AstProcessor {
     }
 
     enterFunctionDeclaration(node, ancestors) {
-        this.scopes.top.addDeclaration(new code.Variable(node.ast.id.name, node));
-
+        this.#addDeclaration({
+            name: node.ast.id.name,
+            node
+        });
 
         // astProcessor.processBlockStatement(node, scope);
     }
@@ -159,20 +161,10 @@ export default class AstProcessor {
         const astNode = node.ast;
      
         if (t.isIdentifier(astNode.id)) {
-            this.scopes.top.addDeclaration(new code.Variable(astNode.id.name, adone.null, node));
-            // if (t.isLiteral(astNode.init)) {
-            //     let v;
-            //     if (t.isRegExpLiteral(astNode.init)) {
-            //         v = new code.Variable(astNode.id.name, new RegExp(astNode.init.pattern), node);
-            //     } else if (t.isNullLiteral(astNode.init)) {
-            //         v = new code.Variable(astNode.id.name, null, node);
-            //     } else {
-            //         v = new code.Variable(astNode.id.name, astNode.init.value, node);
-            //     }
-            //     this.scopes.top.addDeclaration(v);
-            // } else {
-                
-            // }
+            this.#addDeclaration({
+                name: astNode.id.name,
+                node
+            })
             
             // else if (t.isExpression(node.init)) {
             //     this.scopes.top.add(new code.Variable(node.id.name, new code.Reference(node.init.name)));
@@ -298,7 +290,10 @@ export default class AstProcessor {
         }
     }
 
-    
+    #addDeclaration(options) {
+        this.scopes.top.addDeclaration(new code.Variable(options));
+    }
+
     // processBlockStatement(node, scope) {
     //     this.scopes.push(scope);
     //     for (const n of node.body) {

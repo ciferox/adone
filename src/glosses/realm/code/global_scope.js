@@ -6,7 +6,10 @@ export default class GlobalScope extends code.Scope {
     constructor() {
         super();
 
-        this.addDeclaration(new code.Variable("global", global, true));
+        this.addDeclaration(new code.Variable({
+            name: "global",
+            rawValue: global
+        }));
         this.addDeclaration(new code.UndefinedVariable());
     }
 }

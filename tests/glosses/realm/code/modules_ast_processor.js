@@ -140,5 +140,51 @@ const
             assert.instanceOf(mod.scope.get("noopFn").value, code.FunctionExpression);
             assert.instanceOf(mod.scope.get("noop").value, code.ArrowFunctionExpression);
         }
+    },
+    {
+        realName: "scopes.js",
+        load: true,
+        testName: "nested scope - one level",
+        content: [`
+const a = "adone";
+
+function fn() {
+    const a = 8;
+    return a;
+}`, `
+const a = "adone";
+
+const fn = function fn_() {
+    const a = 8;
+    return a;
+}`, `
+const a = "adone";
+
+const fn = function () {
+    const a = 8;
+    return a;
+}`, `
+const a = "adone";
+
+const fn = () => {
+    const a = 8;
+    return a;
+}`],
+        check(mod, filePath, index) {
+            assert.sameMembers(mod.scope.getAll({ native: false }).map((v) => v.name), ["a", "fn"]);
+            if (index === 0) {
+                assert.instanceOf(mod.scope.get("fn").node, code.FunctionDeclaration);
+            } else {
+                assert.instanceOf(mod.scope.get("fn").node, code.VariableDeclarator);
+            }
+            assert.instanceOf(mod.scope.get("a").node, code.VariableDeclarator);
+            assert.equal(mod.scope.get("a").rawValue, "adone");
+            assert.instanceOf(mod.scope.get("a").value, code.StringLiteral);
+            assert.lengthOf(mod.scope.children, 1);
+            assert.instanceOf(mod.scope.children[0], code.FunctionScope);
+            assert.sameMembers(mod.scope.children[0].getAll({ native: false }).map((v) => v.name), ["a"]);
+            assert.equal(mod.scope.children[0].get("a").rawValue, 8);
+            assert.instanceOf(mod.scope.children[0].get("a").value, code.NumericLiteral);
+        }
     }
 ];

@@ -1,5 +1,6 @@
 const {
     is,
+    js: { compiler: { types: t } },
     realm: { code }
 } = adone;
 
@@ -10,14 +11,27 @@ const {
  * but that used in the sandbox (in some cases, it equals with the runtime value).
  */
 export default class Variable {
-    constructor(name, value = adone.null, node = null) {
+    constructor({ name, value = adone.null, node = null } = {}) {
         this.name = name;
         this.value = value;
         this.refs = 0;
         this.node = node;
-        
-        if (node instanceof code.BaseNode) {
+
+
+        if (!is.null(node)) {
             node.variable = this;
+
+            const initNode = node.ast.init;
+            
+            if (t.isLiteral(initNode)) {
+                if (t.isRegExpLiteral(initNode)) {
+                    this.rawValue = new RegExp(initNode.pattern);
+                } else if (t.isNullLiteral(initNode)) {
+                    this.rawValue = null;
+                } else {
+                    this.rawValue = initNode.value;
+                }
+            }
         }
     }
 

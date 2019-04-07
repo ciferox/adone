@@ -49,17 +49,21 @@ export const suiteRunner = (suite) => {
             await fs.rm(tmpPath);
         },
         run() {
-            for (const { descr, realName, fileName, testName, content = "", check, load } of __.tests) {
-                // eslint-disable-next-line no-loop-func
-                it(testName, async () => {
-                    const filePath = await createFile(realName, content);
-                    const mod = await createModule(path.join(tmpPath, fileName || realName), {
-                        sandbox,
-                        load
-                    });
+            for (const { descr, realName, fileName, testName, content, check, load } of __.tests) {
+                const contents = adone.util.arrify(content);
+                for (let i = 0; i < contents.length; i++) {
+                    const c = contents[i] || "";
+                    // eslint-disable-next-line no-loop-func
+                    it(`${testName} - (case ${i + 1})`, async () => {
+                        const filePath = await createFile(realName, c);
+                        const mod = await createModule(path.join(tmpPath, fileName || realName), {
+                            sandbox,
+                            load
+                        });
 
-                    await check(mod, filePath);
-                });
+                        await check(mod, filePath, i);
+                    });
+                }
             }
         }
     };

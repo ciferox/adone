@@ -30,8 +30,14 @@ export default class Module {
         this.ast = this.sandbox.parse(this.content);
 
         this.scope = new code.ModuleScope(this);
-        this.scope.addDeclaration(new code.Variable("__dirname", this.dirname));
-        this.scope.addDeclaration(new code.Variable("__filename", this.filename));
+        this.scope.addDeclaration(new code.Variable({
+            name: "__dirname",
+            rawValue: this.dirname
+        }));
+        this.scope.addDeclaration(new code.Variable({
+            name: "__filename",
+            rawValue: this.filename
+        }));
         this.scope.addDeclaration(new code.ExportsVariable(this.exports));
         this.scope.addDeclaration(new code.ModuleVariable(this));
         this.scope.addDeclaration(new code.RequireVariable(/* ??? */));

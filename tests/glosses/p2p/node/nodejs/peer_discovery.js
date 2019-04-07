@@ -4,7 +4,6 @@ const createNode = require("../utils/create_node");
 const echo = require("../utils/echo");
 
 const {
-    p2p: { PeerId, PeerInfo },
     std: { path, crypto }
 } = adone;
 
@@ -14,6 +13,7 @@ const signalling = require(srcPath("transports", "webrtc_star/sig-server"));
 describe("peer discovery", () => {
     let nodeA;
     let nodeB;
+    let nodeC;
     let port = 24642;
     let ss;
 
@@ -45,6 +45,15 @@ describe("peer discovery", () => {
                     nodeB = node;
                     node.handle("/echo/1.0.0", echo);
                     node.start(cb);
+                }),
+                (cb) => createNode([
+                    "/ip4/0.0.0.0/tcp/0",
+                    `/ip4/127.0.0.1/tcp/${port}/ws/p2p-webrtc-star`
+                ], options, (err, node) => {
+                    expect(err).to.not.exist();
+                    nodeC = node;
+                    node.handle("/echo/1.0.0", echo);
+                    node.start(cb);
                 })
             ], done);
         });
@@ -53,6 +62,7 @@ describe("peer discovery", () => {
             parallel([
                 (cb) => nodeA.stop(cb),
                 (cb) => nodeB.stop(cb),
+                (cb) => nodeC.stop(cb),
                 (cb) => ss.stop().then(cb)
             ], done);
         });
@@ -246,6 +256,7 @@ describe("peer discovery", () => {
                 peerDiscovery: {
                     mdns: {
                         enabled: true,
+                        interval: 1e3, // discover quickly
                         // use a random tag to prevent CI collision
                         serviceTag: crypto.randomBytes(10).toString("hex")
                     }
@@ -253,12 +264,23 @@ describe("peer discovery", () => {
             }
         });
 
-        it("find a peer", function (done) {
-            this.timeout(15 * 1000);
+        it("find peers", (done) => {
+            const expectedPeers = new Set([
+                nodeB.peerInfo.id.toB58String(),
+                nodeC.peerInfo.id.toB58String()
+            ]);
 
-            nodeA.once("peer:discovery", (peerInfo) => {
-                expect(nodeB.peerInfo.id.toB58String())
-                    .to.eql(peerInfo.id.toB58String());
+            function finish() {
+                nodeA.removeAllListeners("peer:discovery");
+                expect(expectedPeers.size).to.eql(0);
+                done();
+            }
+
+            nodeA.on("peer:discovery", (peerInfo) => {
+                expectedPeers.delete(peerInfo.id.toB58String());
+                if (expectedPeers.size === 0) {
+                    finish();
+                }
                 done();
             });
         });
@@ -279,12 +301,24 @@ describe("peer discovery", () => {
             }
         });
 
-        it("find a peer", function (done) {
-            this.timeout(15 * 1000);
-            nodeA.once("peer:discovery", (peerInfo) => {
-                expect(nodeB.peerInfo.id.toB58String())
-                    .to.eql(peerInfo.id.toB58String());
+        it("find peers", function (done) {
+            this.timeout(20e3);
+            const expectedPeers = new Set([
+                nodeB.peerInfo.id.toB58String(),
+                nodeC.peerInfo.id.toB58String()
+            ]);
+
+            function finish() {
+                nodeA.removeAllListeners("peer:discovery");
+                expect(expectedPeers.size).to.eql(0);
                 done();
+            }
+
+            nodeA.on("peer:discovery", (peerInfo) => {
+                expectedPeers.delete(peerInfo.id.toB58String());
+                if (expectedPeers.size === 0) {
+                    finish();
+                }
             });
         });
     });
@@ -298,6 +332,7 @@ describe("peer discovery", () => {
                 peerDiscovery: {
                     mdns: {
                         enabled: true,
+                        interval: 1e3, // discovery quickly
                         // use a random tag to prevent CI collision
                         serviceTag: crypto.randomBytes(10).toString("hex")
                     },
@@ -308,12 +343,23 @@ describe("peer discovery", () => {
             }
         });
 
-        it("find a peer", function (done) {
-            this.timeout(15 * 1000);
-            nodeA.once("peer:discovery", (peerInfo) => {
-                expect(nodeB.peerInfo.id.toB58String())
-                    .to.eql(peerInfo.id.toB58String());
+        it("find peers", (done) => {
+            const expectedPeers = new Set([
+                nodeB.peerInfo.id.toB58String(),
+                nodeC.peerInfo.id.toB58String()
+            ]);
+
+            function finish() {
+                nodeA.removeAllListeners("peer:discovery");
+                expect(expectedPeers.size).to.eql(0);
                 done();
+            }
+
+            nodeA.on("peer:discovery", (peerInfo) => {
+                expectedPeers.delete(peerInfo.id.toB58String());
+                if (expectedPeers.size === 0) {
+                    finish();
+                }
             });
         });
     });
@@ -327,25 +373,47 @@ describe("peer discovery", () => {
                     },
                     webRTCStar: {
                         enabled: false
+                    },
+                    dht: {
+                        enabled: true,
+                        kBucketSize: 20,
+                        randomWalk: {
+                            enabled: true,
+                            queriesPerPeriod: 1,
+                            interval: 1000, // start the query sooner
+                            timeout: 3000
+                        }
                     }
                 }
             }
         });
 
-        it("find a peer", function (done) {
-            this.timeout(15 * 1000);
+        it("find peers through the dht", (done) => {
+            const expectedPeers = new Set([
+                nodeB.peerInfo.id.toB58String(),
+                nodeC.peerInfo.id.toB58String()
+            ]);
 
-            nodeA.once("peer:discovery", (peerInfo) => {
-                expect(nodeB.peerInfo.id.toB58String())
-                    .to.eql(peerInfo.id.toB58String());
+            function finish() {
+                nodeA.removeAllListeners("peer:discovery");
+                expect(expectedPeers.size).to.eql(0);
                 done();
+            }
+
+            nodeA.on("peer:discovery", (peerInfo) => {
+                expectedPeers.delete(peerInfo.id.toB58String());
+                if (expectedPeers.size === 0) {
+                    finish();
+                }
             });
 
-            // connect two dhts
-            const publicPeerId = new PeerId(nodeB._dht.peerInfo.id.id, null, nodeB._dht.peerInfo.id.pubKey);
-            const target = new PeerInfo(publicPeerId);
-            target.multiaddrs = nodeB._dht.peerInfo.multiaddrs;
-            nodeA._dht.switch.dial(target, (err) => {
+            // Topology:
+            // A -> B
+            // C -> B
+            nodeA.dial(nodeB.peerInfo, (err) => {
+                expect(err).to.not.exist();
+            });
+            nodeC.dial(nodeB.peerInfo, (err) => {
                 expect(err).to.not.exist();
             });
         });
