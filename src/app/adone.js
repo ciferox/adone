@@ -65,6 +65,39 @@ class AdoneCLI extends app.Application {
     }
 
     run() {
+        const code = `
+var a = function(a, b) {
+    return a + b;
+}`;
+
+        const {
+            js: { codeshift }
+        } = adone;
+
+        const j = codeshift;
+        // codeshift(code)
+        //     .find(codeshift.Identifier)
+        //     .forEach((path) => {
+        //         // do something with path
+        //         console.log(path.node.name);
+        //     });
+
+        console.log(j(code)
+            .find(j.FunctionExpression)
+            // We check for this expression, as if it's in a function expression, we don't want to re-bind "this" by
+            // using the arrowFunctionExpression. As that could potentially have some unintended consequences.
+            .filter((p) => j(p).find(j.ThisExpression).size() == 0)
+            .replaceWith((p) => {
+                let body = p.value.body;
+                // We can get a bit clever here. If we have a function that consists of a single return statement in it's body,
+                // we can transform it to the more compact arrowFunctionExpression (a, b) => a + b, vs (a + b) => { return a + b }
+                const useExpression = body.type === "BlockStatement" && body.body.length === 1 && body.body[0].type === "ReturnStatement";
+                body = useExpression ? body.body[0].argument : body;
+                return j.arrowFunctionExpression(p.value.params, body, useExpression);
+            })
+            .toSource());
+
+        return 0;
         // print usage message by default
         console.log(`${this.helper.getHelpMessage()}\n`);
         return 0;

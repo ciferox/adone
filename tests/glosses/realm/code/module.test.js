@@ -59,38 +59,6 @@ describe("Module", () => {
 
 
     describe("scopes", () => {
-    //     describe("expressions", () => {
-    //         it("common expressions", async () => {
-    //             const mod = await createModule(getModulePath("expressions1"), {
-    //                 sandbox,
-    //                 load: true
-    //             });
-
-    //             const vars = mod.scope.getAll({ native: false });
-    //             const ids = ["fs", "obj", "arr1", "arr2"];
-    //             assert.sameMembers(vars.map((v) => v.name), ids);
-
-    //             for (const id of ids) {
-    //                 assert.instanceOf(mod.scope.get(id).value, code.Expression);
-    //             }
-    //         });
-
-    //         it("functions expressions", async () => {
-    //             const mod = await createModule(getModulePath("expressions2"), {
-    //                 sandbox,
-    //                 load: true
-    //             });
-    //             // arrowFn = () => {}
-    //             const vars = mod.scope.getAll({ native: false });
-    //             const ids = ["namedNoop", "noop"/*, "arrowFn"*/];
-    //             assert.sameMembers(vars.map((v) => v.name), ids);
-
-    //             for (const id of ids) {
-    //                 assert.instanceOf(mod.scope.get(id).value, code.Function);
-    //             }
-    //         });
-    //     });
-
     //     describe("nested scopes", () => {
     //         const cases = ["a"/*, "b", "c", "d"*/];
 

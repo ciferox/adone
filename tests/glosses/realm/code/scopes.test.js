@@ -11,7 +11,6 @@ describe("scopes", () => {
             const s = new code.Scope();
 
             assert.equal(s.size, 0);
-            assert.isNull(s.astNodes, null);
             assert.lengthOf(s.children, 0);
         });
 
@@ -39,7 +38,6 @@ describe("scopes", () => {
             const gs = new code.GlobalScope();
         
             assert.instanceOf(gs, code.Scope);
-            assert.isNull(gs.astNodes, null);
             assert.sameMembers(gs.identifiers, ["global", "undefined"]);
         });
     });

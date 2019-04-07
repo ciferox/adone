@@ -5,11 +5,29 @@ const {
 
 const util = require("./util");
 const binarySearch = require("./binary_search");
-const base64VLQ = require("./base64_vlq"); // eslint-disable-line no-unused-vars
 const readWasm = require("./read_wasm");
 const wasm = require("./wasm");
 
 const INTERNAL = Symbol("smcInternal");
+
+/**
+ * Cheat to get around inter-twingled classes.  `factory()` can be at the end
+ * where it has access to non-hoisted classes, but it gets hoisted itself.
+ */
+const _factory = (aSourceMap, aSourceMapURL) => {
+    let sourceMap = aSourceMap;
+    if (is.string(aSourceMap)) {
+        sourceMap = util.parseSourceMapInput(aSourceMap);
+    }
+
+    const consumer = !is.nil(sourceMap.sections)
+        ? new IndexedSourceMapConsumer(sourceMap, aSourceMapURL)
+        : new BasicSourceMapConsumer(sourceMap, aSourceMapURL);
+    return Promise.resolve(consumer);
+};
+
+const _factoryBSM = (aSourceMap, aSourceMapURL) => BasicSourceMapConsumer.fromSourceMap(aSourceMap, aSourceMapURL);
+
 
 export class SourceMapConsumer {
     constructor(aSourceMap, aSourceMapURL) {
@@ -990,24 +1008,4 @@ export class IndexedSourceMapConsumer extends SourceMapConsumer {
             this._sections[i].consumer.destroy();
         }
     }
-}
-
-/**
- * Cheat to get around inter-twingled classes.  `factory()` can be at the end
- * where it has access to non-hoisted classes, but it gets hoisted itself.
- */
-function _factory(aSourceMap, aSourceMapURL) {
-    let sourceMap = aSourceMap;
-    if (is.string(aSourceMap)) {
-        sourceMap = util.parseSourceMapInput(aSourceMap);
-    }
-
-    const consumer = !is.nil(sourceMap.sections)
-        ? new IndexedSourceMapConsumer(sourceMap, aSourceMapURL)
-        : new BasicSourceMapConsumer(sourceMap, aSourceMapURL);
-    return Promise.resolve(consumer);
-}
-
-function _factoryBSM(aSourceMap, aSourceMapURL) {
-    return BasicSourceMapConsumer.fromSourceMap(aSourceMap, aSourceMapURL);
 }

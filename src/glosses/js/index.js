@@ -8,5 +8,7 @@ adone.lazify({
     parseFunction: "./parse_function",
     walk: "./walk",
     tokens: "./tokens",
-    highlight: "./highlight"
+    highlight: "./highlight",
+    recast: "./recast",
+    codeshift: "./codeshift"
 }, adone.asNamespace(exports), require);
