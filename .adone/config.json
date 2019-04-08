@@ -340,29 +340,6 @@
                                     }
                                 }
                             }
-                        },
-                        "redis": {
-                            "description": "Redis is a key/value database",
-                            "task": "transpile",
-                            "src": "src/glosses/databases/redis/**/*.js",
-                            "dst": "lib/glosses/databases/redis",
-                            "native": {
-                                "src": "src/glosses/databases/redis/__/redis/libparser/native",
-                                "dst": "lib/glosses/databases/redis/__/redis/libparser/native",
-                                "type": "gyp"
-                            }
-                        },
-                        "odm": {
-                            "description": "Object document mapper",
-                            "task": "transpile",
-                            "src": "src/glosses/databases/odm/**/*.js",
-                            "dst": "lib/glosses/databases/odm"
-                        },
-                        "orm": {
-                            "description": "ORM implementation",
-                            "task": "transpile",
-                            "src": "src/glosses/databases/orm/**/*.js",
-                            "dst": "lib/glosses/databases/orm"
                         }
                     }
                 },
@@ -466,66 +443,6 @@
                         "native-gyp": {
                             "src": "src/glosses/gyp/gyp/**/*",
                             "dst": "lib/glosses/gyp/gyp"
-                        }
-                    }
-                },
-                "hardware": {
-                    "description": "Hardware stuff",
-                    "task": "transpile",
-                    "src": "src/glosses/hardware/**/*.js",
-                    "dst": "lib/glosses/hardware",
-                    "scheme": {
-                        "board": {
-                            "description": "Development boards",
-                            "task": "transpile",
-                            "src": "src/glosses/hardware/boards/**/*.js",
-                            "dst": "lib/glosses/hardware/boards",
-                            "scheme": {
-                                "rpi": {
-                                    "description": "SaspberryPI board",
-                                    "task": "transpile",
-                                    "src": "src/glosses/hardware/boards/rpi/**/*.js",
-                                    "dst": "lib/glosses/hardware/boards/rpi",
-                                    "native": {
-                                        "src": "src/glosses/hardware/boards/rpi/gpio/native",
-                                        "dst": "lib/glosses/hardware/boards/rpi/gpio/native",
-                                        "type": "gyp"
-                                    }
-                                }
-                            }
-                        },
-                        "hid": {
-                            "description": "HID bus",
-                            "task": "transpile",
-                            "src": "src/glosses/hardware/hid/**/*.js",
-                            "dst": "lib/glosses/hardware/hid",
-                            "native": {
-                                "src": "src/glosses/hardware/hid/native",
-                                "dst": "lib/glosses/hardware/hid/native",
-                                "type": "gyp"
-                            }
-                        },
-                        "i2c": {
-                            "description": "I2C bus",
-                            "task": "transpile",
-                            "src": "src/glosses/hardware/i2c/**/*.js",
-                            "dst": "lib/glosses/hardware/i2c",
-                            "native": {
-                                "src": "src/glosses/hardware/i2c/native",
-                                "dst": "lib/glosses/hardware/i2c/native",
-                                "type": "gyp"
-                            }
-                        },
-                        "serial": {
-                            "description": "Serial bus",
-                            "task": "transpile",
-                            "src": "src/glosses/hardware/serial/**/*.js",
-                            "dst": "lib/glosses/hardware/serial",
-                            "native": {
-                                "src": "src/glosses/hardware/serial/native",
-                                "dst": "lib/glosses/hardware/serial/native",
-                                "type": "gyp"
-                            }
                         }
                     }
                 },

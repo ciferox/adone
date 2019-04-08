@@ -224,7 +224,6 @@ adone.lazify({
     git: "./glosses/git",
     globals: "./glosses/globals",
     gyp: "./glosses/gyp",
-    hardware: "./glosses/hardware",
     http: "./glosses/http",
     inspect: "./glosses/inspect",
     ipfs: "./glosses/ipfs",
