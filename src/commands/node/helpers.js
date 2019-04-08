@@ -94,7 +94,7 @@ export const downloadNode = async ({ version, outPath, force = false, progressBa
     const cachePath = await getCachePath();
     let fullPath = await getCachePath({ version, archiveType, platform, arch });
 
-    if (!is.string(outPath)) {
+    if (!is.string(outPath) || outPath.length === 0) {
         outPath = cachePath;
     }
 

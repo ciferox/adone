@@ -25,17 +25,11 @@ const {
 } = adone;
 const { chalk, style, chalkify } = cli;
 
-const bold = chalkify("bold", chalk);
-const normal = chalkify("", chalk);
+const activeStyle = chalkify("bold.underline.#388E3C", chalk);
+const cachedStyle = chalkify("#388E3C", chalk);
+const inactiveStyle = chalkify("white", chalk);
 
 const IGNORE_FILES = ["LICENSE", "CHANGELOG.md", "README.md"];
-
-const itemStyle = (item, isCurrent) => {
-
-    return isCurrent
-        ? bold
-        : normal;
-}
 
 export default class NodeCommand extends Subsystem {
     @command({
@@ -67,13 +61,25 @@ export default class NodeCommand extends Subsystem {
 
             const activeVersion = await getActiveNodeVersion();
 
+            const cachedVersions = (await fs.readdir(await getCachePath())).map((f) => /^node-(v\d+\.\d+\.\d+)-.+/.exec(f)[1]);
+
+            // cachedVersions
+            const styledItem = (item) => {
+                const isCurrent = item.version === activeVersion;
+
+                if (isCurrent) {
+                    return `${adone.text.unicode.symbol.bullet} ${`${activeStyle(item.version)}`}`;
+                } else if (cachedVersions.includes(item.version)) {
+                    return `  ${cachedStyle(item.version)}`;
+                }
+                return `  ${inactiveStyle(item.version)}`;
+            }
+            
+
             const model = [
                 {
                     id: "version",
-                    handle: (item) => {
-                        const isCurrent = item.version === activeVersion;
-                        return `${isCurrent ? adone.text.unicode.symbol.bullet : " "} ${style.primary(`${itemStyle(item, isCurrent)(item.version)}`)}${item.lts ? chalk.grey(" (LTS)") : ""}`;
-                    }
+                    handle: (item) => `${styledItem(item)}${item.lts ? chalk.grey(" (LTS)") : ""}`
                 }
             ];
 
@@ -82,10 +88,7 @@ export default class NodeCommand extends Subsystem {
                     id: "date",
                     width: 12,
                     align: "right",
-                    handle: (item) => {
-                        const isCurrent = item.version === activeVersion;
-                        return itemStyle(item, isCurrent)(chalk.grey(item.date));
-                    }
+                    handle: (item) => chalk.grey(item.date)
                 });
             }
 
@@ -236,6 +239,7 @@ export default class NodeCommand extends Subsystem {
                 const delFiles = (await fs.readdirp(unpackedActivePath, {
                     directories: false
                 })).map((info) => info.path).filter((p) => !IGNORE_FILES.includes(p));
+                await fs.rm(std.path.dirname(unpackedActivePath));
 
                 cli.updateProgress({
                     message: "deleting previous files"
@@ -256,6 +260,8 @@ export default class NodeCommand extends Subsystem {
                 await fs.copy(unpackedPath, basePath, {
                     filter: (src, item) => !IGNORE_FILES.includes(item)
                 });
+
+                await fs.rm(std.path.dirname(unpackedPath));
 
                 cli.updateProgress({
                     message: `Node.js ${style.primary(version)} successfully activated`,
