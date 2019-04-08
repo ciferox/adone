@@ -6,8 +6,6 @@ const {
 } = adone;
 
 const COLOR_SCHEME = Symbol();
-const BAR = Symbol();
-const SILENT = Symbol();
 const ACTIVE_PROMPT = Symbol();
 
 const env = process.env;
@@ -395,10 +393,11 @@ const supportsColor = function (stream) {
 };
 
 class Terminal extends adone.event.Emitter {
+    progressBar = null;
+
     constructor() {
         super();
 
-        this[BAR] = null;
         this[ACTIVE_PROMPT] = null;
         this[COLOR_SCHEME] = adone.lazify({
             primary: () => this.chalkify("#388E3C"),
@@ -3108,27 +3107,31 @@ class Terminal extends adone.event.Emitter {
         } else {
             options = message;
         }
-        this[BAR] = new this.Progress(options);
-        this[BAR].update(0);
+        this.progressBar = new this.Progress(options);
+        this.progressBar.update(0);
     }
 
-    updateProgress({ clean = false, schema, message, status } = {}) {
-        if (is.null(this[BAR])) {
+    updateProgress({ clean = false, schema, message, status, reset = false } = {}) {
+        if (is.null(this.progressBar) || reset) {
+            if (clean) {
+                this.progressBar.clear();
+            }
             this.progress(message);
         }
+
         if (is.string(message)) {
             schema = `:spinner ${message}`;
         } else if (!is.string(schema)) {
             schema = ":spinner";
         }
-        this[BAR].setSchema(schema);
+        this.progressBar.setSchema(schema);
         if (is.boolean(status) || is.string(status)) {
             if (clean) {
-                this[BAR].clean = true;
+                this.progressBar.clean = true;
             }
-            this[BAR].complete(status);
+            this.progressBar.complete(status);
             if (status) {
-                this[BAR] = null;
+                this.progressBar = null;
             }
         }
     }
@@ -3142,7 +3145,7 @@ class Terminal extends adone.event.Emitter {
     }
 
     separator(value) {
-        return new this.prompt.Separator(value);
+        return new this.prompt.Separdownloadator(value);
     }
 }
 Terminal.prototype.type = "program";

@@ -78,7 +78,7 @@ const cutNamespace = (parts) => {
     return namespaceParts.join(".");
 };
 
-export default class Inspection extends Subsystem {
+export default class InspectionCommand extends Subsystem {
     @mainCommand({
         arguments: [
             {

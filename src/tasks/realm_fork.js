@@ -90,7 +90,6 @@ export default class extends realm.BaseTask {
             message: "copying root files"
         });
 
-
         await fast.src(rootFileNames, {
             cwd: srcRealm.ROOT_PATH,
             base: srcRealm.ROOT_PATH

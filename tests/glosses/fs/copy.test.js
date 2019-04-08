@@ -226,7 +226,7 @@ describe("fs", "copy", () => {
         it("should apply filter when it is applied only to dest", async () => {
             const timeCond = new Date().getTime();
 
-            const filter = (s, d) => fs.statSync(d).birthtime.getTime() < timeCond;
+            const filter = (s, i, d) => fs.statSync(d).birthtime.getTime() < timeCond;
 
             const src = path.join(TEST_DIR, "src");
             await fs.mkdirp(src);
@@ -244,7 +244,7 @@ describe("fs", "copy", () => {
 
         it("should apply filter when it is applied to both src and dest", async () => {
             const timeCond = new Date().getTime();
-            const filter = (s, d) => s.split(".").pop() !== "css" && fs.statSync(path.dirname(d)).birthtime.getTime() > timeCond;
+            const filter = (s, i, d) => s.split(".").pop() !== "css" && fs.statSync(path.dirname(d)).birthtime.getTime() > timeCond;
 
             const dest = path.join(TEST_DIR, "dest");
             await adone.promise.delay(1000);

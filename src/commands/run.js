@@ -8,7 +8,7 @@ const {
     std
 } = adone;
 
-export default class Run extends Subsystem {
+export default class RunCommand extends Subsystem {
     @mainCommand({
         blindMode: true,
         arguments: [

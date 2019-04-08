@@ -113,7 +113,8 @@ export default async (source, dest, options = {}) => {
                     return onError(err);
                 }
                 items.forEach((item) => {
-                    startCopy(std.path.join(dir, item));
+                    const fpath = std.path.join(dir, item);
+                    startCopy(fpath, std.path.relative(source, fpath));
                 });
                 return doneOne();
             });
@@ -249,7 +250,7 @@ export default async (source, dest, options = {}) => {
             });
         };
 
-        const startCopy = (source) => {
+        const startCopy = (source, item) => {
             started++;
             if (filter) {
                 if (filter instanceof RegExp) {
@@ -258,7 +259,7 @@ export default async (source, dest, options = {}) => {
                         return doneOne(true);
                     }
                 } else if (is.function(filter)) {
-                    if (!filter(source, dest)) {
+                    if (!filter(source, item, dest)) {
                         return doneOne(true);
                     }
                 }
@@ -266,6 +267,6 @@ export default async (source, dest, options = {}) => {
             return getStats(source);
         };
 
-        startCopy(currentPath);
+        startCopy(currentPath, "");
     });
 };

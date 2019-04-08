@@ -127,6 +127,11 @@ describe("semver", () => {
             assert.ok(!cmp(v0, "!=", v1, loose), `!cmp(${v0}!=${v1})`);
             assert.ok(!cmp(v0, "===", v1, loose), `!cmp(${v0}===${v1})`);
             assert.ok(cmp(v0, "!==", v1, loose), `cmp(${v0}!==${v1})`);
+            // also test with an object. they are === because obj.version matches
+            assert.ok(cmp(new SemVer(v0, { loose }), "===", new SemVer(v1, { loose })), `!cmp(${v0}===${v1}) object`);
+            assert.ok(cmp(v0, "!==", v1, loose), `cmp(${v0}!==${v1})`);
+            assert.ok(!cmp(new SemVer(v0, loose), "!==", new SemVer(v1, loose)), `cmp(${v0}!==${v1}) object`);
+
             assert.ok(!gt(v0, v1, loose), `!gt('${v0}', '${v1}')`);
             assert.ok(gte(v0, v1, loose), `gte('${v0}', '${v1}')`);
             assert.ok(!lt(v0, v1, loose), `!lt('${v0}', '${v1}')`);
@@ -203,6 +208,7 @@ describe("semver", () => {
             ["~1.0", "1.0.2"], // >=1.0.0 <1.1.0,
             ["~ 1.0", "1.0.2"],
             ["~ 1.0.3", "1.0.12"],
+            ["~ 1.0.3alpha", "1.0.12", { loose: true }],
             [">=1", "1.0.0"],
             [">= 1", "1.0.0"],
             ["<1.2", "1.1.1"],
@@ -447,7 +453,7 @@ describe("semver", () => {
             ["1.2.0", "premajor", "2.0.0-dev.0", false, "dev"],
             ["1.2.3-1", "premajor", "2.0.0-dev.0", false, "dev"],
             ["1.2.0-1", "minor", "1.2.0", false, "dev"],
-            ["1.0.0-1", "major", "1.0.0", false, "dev"],
+            ["1.0.0-1", "major", "1.0.0", "dev"],
             ["1.2.3-dev.bar", "prerelease", "1.2.3-dev.0", false, "dev"]
 
         ].forEach((v) => {
@@ -499,6 +505,78 @@ describe("semver", () => {
             const found = diff(version1, version2);
             const cmd = `diff(${version1}, ${version2})`;
             assert.equal(found, wanted, `${cmd} === ${wanted}`);
+        });
+    });
+
+    it("minimum version in range tests", () => {
+        // [range, minimum, loose]
+        [
+            // Stars
+            ["*", "0.0.0"],
+            ["* || >=2", "0.0.0"],
+            [">=2 || *", "0.0.0"],
+            [">2 || *", "0.0.0"],
+
+            // equal
+            ["1.0.0", "1.0.0"],
+            ["1.0", "1.0.0"],
+            ["1.0.x", "1.0.0"],
+            ["1.0.*", "1.0.0"],
+            ["1", "1.0.0"],
+            ["1.x.x", "1.0.0"],
+            ["1.x.x", "1.0.0"],
+            ["1.*.x", "1.0.0"],
+            ["1.x.*", "1.0.0"],
+            ["1.x", "1.0.0"],
+            ["1.*", "1.0.0"],
+            ["=1.0.0", "1.0.0"],
+
+            // Tilde
+            ["~1.1.1", "1.1.1"],
+            ["~1.1.1-beta", "1.1.1-beta"],
+            ["~1.1.1 || >=2", "1.1.1"],
+
+            // Carot
+            ["^1.1.1", "1.1.1"],
+            ["^1.1.1-beta", "1.1.1-beta"],
+            ["^1.1.1 || >=2", "1.1.1"],
+
+            // '-' operator
+            ["1.1.1 - 1.8.0", "1.1.1"],
+            ["1.1 - 1.8.0", "1.1.0"],
+
+            // Less / less or equal
+            ["<2", "0.0.0"],
+            ["<0.0.0-beta", "0.0.0-0"],
+            ["<0.0.1-beta", "0.0.0"],
+            ["<2 || >4", "0.0.0"],
+            [">4 || <2", "0.0.0"],
+            ["<=2 || >=4", "0.0.0"],
+            [">=4 || <=2", "0.0.0"],
+            ["<0.0.0-beta >0.0.0-alpha", "0.0.0-alpha.0"],
+            [">0.0.0-alpha <0.0.0-beta", "0.0.0-alpha.0"],
+
+            // Greater than or equal
+            [">=1.1.1 <2 || >=2.2.2 <2", "1.1.1"],
+            [">=2.2.2 <2 || >=1.1.1 <2", "1.1.1"],
+
+            // Greater than but not equal
+            [">1.0.0", "1.0.1"],
+            [">1.0.0-0", "1.0.0-0.0"],
+            [">1.0.0-beta", "1.0.0-beta.0"],
+            [">2 || >1.0.0", "1.0.1"],
+            [">2 || >1.0.0-0", "1.0.0-0.0"],
+            [">2 || >1.0.0-beta", "1.0.0-beta.0"],
+
+            // Impossible range
+            [">4 <3", null]
+        ].forEach((tuple) => {
+            const range = tuple[0];
+            const version = tuple[1];
+            const loose = tuple[2] || false;
+            const msg = `minVersion(${range}, ${loose}) = ${version}`;
+            const min = semver.minVersion(range, loose);
+            assert.ok(min === version || (min && min.version === version), msg);
         });
     });
 
@@ -712,6 +790,37 @@ describe("semver", () => {
         });
     });
 
+    it("compare main vs pre", () => {
+        const s = new SemVer("1.2.3");
+        assert.equal(s.compareMain("2.3.4"), -1);
+        assert.equal(s.compareMain("1.2.4"), -1);
+        assert.equal(s.compareMain("0.1.2"), 1);
+        assert.equal(s.compareMain("1.2.2"), 1);
+        assert.equal(s.compareMain("1.2.3-pre"), 0);
+
+        const p = new SemVer("1.2.3-alpha.0.pr.1");
+        assert.equal(p.comparePre("9.9.9-alpha.0.pr.1"), 0);
+        assert.equal(p.comparePre("1.2.3"), -1);
+        assert.equal(p.comparePre("1.2.3-alpha.0.pr.2"), -1);
+        assert.equal(p.comparePre("1.2.3-alpha.0.2"), 1);
+    });
+
+    it("rcompareIdentifiers and compareIdentifiers", () => {
+        const set = [
+            ["1", "2"],
+            ["alpha", "beta"],
+            ["0", "beta"]
+        ];
+        set.forEach((ab) => {
+            const a = ab[0];
+            const b = ab[1];
+            assert.equal(semver.compareIdentifiers(a, b), -1);
+            assert.equal(semver.rcompareIdentifiers(a, b), 1);
+        });
+        assert.equal(semver.compareIdentifiers("0", "0"), 0);
+        assert.equal(semver.rcompareIdentifiers("0", "0"), 0);
+    });
+
     it("strict vs loose ranges", () => {
         [
             [">=01.02.03", ">=1.2.3"],
@@ -795,8 +904,10 @@ describe("semver", () => {
             const comparator2 = new Comparator(v[1]);
             const expect = v[2];
 
-            const actual1 = comparator1.intersects(comparator2);
-            const actual2 = comparator2.intersects(comparator1);
+            let actual1 = comparator1.intersects(comparator2);
+            let actual2 = comparator2.intersects(comparator1);
+            actual1 = comparator1.intersects(comparator2, false);
+            actual2 = comparator2.intersects(comparator1, { loose: false });
             const actual3 = semver.intersects(comparator1, comparator2);
             const actual4 = semver.intersects(comparator2, comparator1);
             const actual5 = semver.intersects(comparator1, comparator2, true);
@@ -829,12 +940,19 @@ describe("semver", () => {
     it("ranges intersect", () => {
         [
             ["1.3.0 || <1.0.0 >2.0.0", "1.3.0 || <1.0.0 >2.0.0", true],
-            ["<1.0.0 >2.0.0", ">0.0.0", true],
+            ["<1.0.0 >2.0.0", ">0.0.0", false],
+            [">0.0.0", "<1.0.0 >2.0.0", false],
             ["<1.0.0 >2.0.0", ">1.4.0 <1.6.0", false],
             ["<1.0.0 >2.0.0", ">1.4.0 <1.6.0 || 2.0.0", false],
             [">1.0.0 <=2.0.0", "2.0.0", true],
             ["<1.0.0 >=2.0.0", "2.1.0", false],
-            ["<1.0.0 >=2.0.0", ">1.4.0 <1.6.0 || 2.0.0", false]
+            ["<1.0.0 >=2.0.0", ">1.4.0 <1.6.0 || 2.0.0", false],
+            ["1.5.x", "<1.5.0 || >=1.6.0", false],
+            ["<1.5.0 || >=1.6.0", "1.5.x", false],
+            ["<1.6.16 || >=1.7.0 <1.7.11 || >=1.8.0 <1.8.2", ">=1.6.16 <1.7.0 || >=1.7.11 <1.8.0 || >=1.8.2", false],
+            ["<=1.6.16 || >=1.7.0 <1.7.11 || >=1.8.0 <1.8.2", ">=1.6.16 <1.7.0 || >=1.7.11 <1.8.0 || >=1.8.2", true],
+            [">=1.0.0", "<=1.0.0", true],
+            [">1.0.0 <1.0.0", "<=0.0.0", false]
         ].forEach((v) => {
             const range1 = new Range(v[0]);
             const range2 = new Range(v[1]);
@@ -868,6 +986,11 @@ describe("semver", () => {
         });
         assert.instanceOf(err, TypeError);
         assert.equal(err.message, "a Range is required");
+    });
+
+    it("really big numeric prerelease value", () => {
+        const r = new SemVer(`1.2.3-beta.${Number.MAX_SAFE_INTEGER}0`);
+        assert.sameMembers(r.prerelease, ["beta", "90071992547409910"]);
     });
 
     it("outside with bad hilo throws", () => {

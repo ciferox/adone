@@ -3,7 +3,7 @@ const osenv = require("osenv");
 
 const {
     is,
-    std: { fs, path, child_process }
+    std: { fs, path, childProcess }
 } = adone;
 
 adone.lazify({
@@ -155,7 +155,7 @@ export class Gyp extends adone.event.Emitter {
             if (!completed && !code) {
                 log.error("Completion callback never invoked!");
                 issueMessage();
-                adone.app.runtime.app.exit(6);
+                adone.app.runtime.app.stop(6);
             }
         });
 
@@ -163,7 +163,7 @@ export class Gyp extends adone.event.Emitter {
             log.error("UNCAUGHT EXCEPTION");
             log.error("stack", err.stack);
             issueMessage();
-            adone.app.runtime.app.exit(7);
+            adone.app.runtime.app.stop(7);
         });
 
         // start running the given commands!
@@ -180,7 +180,7 @@ export class Gyp extends adone.event.Emitter {
         if (!opts.silent && !opts.stdio) {
             opts.stdio = [0, 1, 2];
         }
-        const cp = child_process.spawn(command, args, opts);
+        const cp = childProcess.spawn(command, args, opts);
         log.info("spawn", command);
         log.info("spawn args", args);
         return cp;

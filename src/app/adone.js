@@ -18,10 +18,22 @@ const command = (name) => std.path.join(__dirname, "..", "lib", "commands", name
 @subsystem({
     subsystems: [
         {
-            name: "run",
+            name: "inspect",
             group: "common",
-            description: "Run application/script/code",
-            subsystem: command("run")
+            description: "Inspect adone namespace/object",
+            subsystem: command("inspect")
+        },
+        {
+            name: "node",
+            group: "common",
+            description: "Node.js version management",
+            subsystem: command("node")
+        },
+        {
+            name: "pkg",
+            group: "common",
+            description: "Create executable package",
+            subsystem: command("pkg")
         },
         {
             name: "realm",
@@ -30,10 +42,10 @@ const command = (name) => std.path.join(__dirname, "..", "lib", "commands", name
             subsystem: command("realm")
         },
         {
-            name: "inspect",
+            name: "run",
             group: "common",
-            description: "Inspect adone namespace/object",
-            subsystem: command("inspect")
+            description: "Run application/script/code",
+            subsystem: command("run")
         }
     ]
 })
