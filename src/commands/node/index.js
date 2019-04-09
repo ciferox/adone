@@ -1,26 +1,13 @@
-import {
-    getNodePath,
-    getCachePath,
-    getNodeArchiveName,
-    getActiveNodeVersion,
-    checkNodeVersion,
-    downloadIndex,
-    downloadNode,
-    unpackNode
-} from "./helpers";
-
 const {
     cli,
-    error,
     fs,
-    is,
     app: {
         Subsystem,
         command
     },
+    nodejs,
     semver,
     pretty,
-    util,
     std
 } = adone;
 const { chalk, style, chalkify } = cli;
@@ -32,6 +19,10 @@ const inactiveStyle = chalkify("white", chalk);
 const IGNORE_FILES = ["LICENSE", "CHANGELOG.md", "README.md"];
 
 export default class NodeCommand extends Subsystem {
+    onConfigure() {
+        this.nodejsManager = new nodejs.NodejsManager();
+    }
+
     @command({
         name: ["list", "ls"],
         description: "Display Node.js releases",
@@ -51,7 +42,7 @@ export default class NodeCommand extends Subsystem {
             cli.updateProgress({
                 message: `downloading ${style.accent("index.json")}`
             });
-            const indexJson = await downloadIndex();
+            const indexJson = await nodejs.getReleases();
 
             const options = opts.getAll();
 
@@ -59,22 +50,20 @@ export default class NodeCommand extends Subsystem {
                 ? true
                 : semver.satisfies(item.version.substr(1), adone.package.engines.node, false));
 
-            const activeVersion = await getActiveNodeVersion();
-
-            const cachedVersions = (await fs.readdir(await getCachePath())).map((f) => /^node-(v\d+\.\d+\.\d+)-.+/.exec(f)[1]);
+            const currentVersion = await nodejs.getCurrentVersion();
+            const downloadedVersions = await this.nodejsManager.getDownloadedVersions();
 
             // cachedVersions
             const styledItem = (item) => {
-                const isCurrent = item.version === activeVersion;
+                const isCurrent = item.version === currentVersion;
 
                 if (isCurrent) {
                     return `${adone.text.unicode.symbol.bullet} ${`${activeStyle(item.version)}`}`;
-                } else if (cachedVersions.includes(item.version)) {
+                } else if (downloadedVersions.includes(item.version)) {
                     return `  ${cachedStyle(item.version)}`;
                 }
                 return `  ${inactiveStyle(item.version)}`;
-            }
-            
+            };
 
             const model = [
                 {
@@ -149,23 +138,30 @@ export default class NodeCommand extends Subsystem {
                 message: "checking version"
             });
 
-            const version = await checkNodeVersion(args.get("version"));
+            const version = await nodejs.checkVersion(args.get("version"));
 
             cli.updateProgress({
-                schema: `downloading ${style.primary(version)} [:bar] :current/:total :percent`
+                message: "waiting"
             });
 
-            const savedPath = await downloadNode({
+            const result = await this.nodejsManager.download({
                 version,
                 outPath: opts.get("out"),
                 force: opts.get("force"),
-                progressBar: cli.progressBar
+                progressBar: true
             });
 
-            cli.updateProgress({
-                message: `Saved to ${style.accent(savedPath)}`,
-                status: true
-            });
+            if (result.downloaded) {
+                cli.updateProgress({
+                    message: `Saved to ${style.accent(result.path)}`,
+                    status: true
+                });
+            } else { 
+                cli.updateProgress({
+                    message: `Already downloaded: ${style.accent(result.path)}`,
+                    status: true
+                });
+            }
 
             return 0;
         } catch (err) {
@@ -193,11 +189,6 @@ export default class NodeCommand extends Subsystem {
             {
                 name: ["--force", "-F"],
                 description: "Force download"
-            },
-            {
-                name: ["--out", "-O"],
-                type: String,
-                description: "Output path"
             }
         ]
     })
@@ -207,10 +198,11 @@ export default class NodeCommand extends Subsystem {
                 message: "checking version"
             });
 
-            const version = await checkNodeVersion(args.get("version"));
-            const activeVersion = await getActiveNodeVersion();
+            const version = await nodejs.checkVersion(args.get("version"));
+            const currentVersion = await nodejs.getCurrentVersion();
+            const prefixPath = await nodejs.getPrefixPath();
 
-            if (version === activeVersion) {
+            if (version === currentVersion) {
                 cli.updateProgress({
                     message: `Node.js ${style.primary(version)} is active`,
                     status: true
@@ -220,44 +212,26 @@ export default class NodeCommand extends Subsystem {
                     message: "waiting"
                 });
 
-                const [cachedPath, activeCachedPath] = await Promise.all([
-                    this.#downloadIfNotExists({ version }),
-                    this.#downloadIfNotExists({ version: activeVersion })
-                ]);
+                await this.nodejsManager.download({
+                    version,
+                    progressBar: true
+                });
 
                 cli.updateProgress({
-                    message: `unpacking ${style.accent(getNodeArchiveName({ version }))}`
+                    message: `unpacking ${style.accent(nodejs.getArchiveName({ version }))}`
                 });
-                const unpackedPath = await unpackNode({ version });
-
-                cli.updateProgress({
-                    message: `unpacking ${style.accent(getNodeArchiveName({ version: activeVersion }))}`
-                });
-                const unpackedActivePath = await unpackNode({ version: activeVersion });
-
-
-                const delFiles = (await fs.readdirp(unpackedActivePath, {
-                    directories: false
-                })).map((info) => info.path).filter((p) => !IGNORE_FILES.includes(p));
-                await fs.rm(std.path.dirname(unpackedActivePath));
+                const unpackedPath = await this.nodejsManager.unpack({ version });
 
                 cli.updateProgress({
                     message: "deleting previous files"
                 });
-
-                const basePath = std.path.dirname(std.path.dirname(await getNodePath()));
-                for (const file of delFiles) {
-                    try {
-                        await fs.unlink(std.path.join(basePath, file));
-                    } catch (err) {
-                        // ignore
-                    }
-                }
+                await this.nodejsManager.deleteCurrent();
 
                 cli.updateProgress({
-                    message: "copying files"
+                    message: "copying new files"
                 });
-                await fs.copy(unpackedPath, basePath, {
+                
+                await fs.copy(unpackedPath, prefixPath, {
                     filter: (src, item) => !IGNORE_FILES.includes(item)
                 });
 
@@ -278,23 +252,5 @@ export default class NodeCommand extends Subsystem {
             });
             return 1;
         }
-    }
-
-    async #downloadIfNotExists({ version } = {}) {
-        let cachedPath = await getCachePath({ version });
-        if (!(await fs.exists(cachedPath))) {
-            const progressBar = new cli.Progress({
-                clean: true,
-                schema: `downloading ${style.primary(version)} [:bar] :current/:total :percent`
-            });
-            progressBar.update(0);
-
-            cachedPath = await downloadNode({
-                version,
-                progressBar
-            });
-        }
-
-        return cachedPath;
     }
 }
