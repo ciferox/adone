@@ -143,7 +143,7 @@ adone.lazify({
     ETC_PATH: () => adone.std.path.join(adone.ROOT_PATH, "etc"),
     OPT_PATH: () => adone.std.path.join(adone.ROOT_PATH, "opt"),
     VAR_PATH: () => adone.std.path.join(adone.ROOT_PATH, "var"),
-    PACKAGES_PATH: () => adone.std.path.join(adone.ROOT_PATH, "node_modules"),
+    MODULES_PATH: () => adone.std.path.join(adone.ROOT_PATH, "node_modules"),
     SHARE_PATH: () => adone.std.path.join(adone.ROOT_PATH, "share"),
     LIB_PATH: () => adone.std.path.join(adone.ROOT_PATH, "lib"),
     LOGS_PATH: () => adone.std.path.join(adone.VAR_PATH, "logs"),

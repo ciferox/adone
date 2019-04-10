@@ -7,10 +7,70 @@ const {
 } = adone;
 
 adone.lazify({
-    NodejsManager: "./manager"
+    NodejsManager: "./manager",
+    NodejsPackager: "./packager"
 }, adone.asNamespace(exports), require);
 
-export const getArchiveName = ({ version, platform = std.os.platform(), arch = std.os.arch(), archiveType = ".tar.xz" } = {}) => `node-${version}-${platform}-${arch}${archiveType}`;
+const versionRegex = () => /^v\d+\.\d+\.\d+/;
+
+export const getCurrentPlatform = () => {
+    const platform = std.os.platform();
+    switch (platform) {
+        case "win32":
+            return "win";
+        default:
+            return platform;
+    }
+};
+
+export const getCurrentArch = () => {
+    const arch = std.os.arch();
+    switch (arch) {
+        case "ia32":
+        case "x32":
+            return "x86";
+        default:
+            return arch;
+    }
+};
+
+export const DEFAULT_EXT = is.windows
+    ? ".zip"
+    : ".tar.xz";
+
+const UNIX_EXTS = ["", ".tar.gz", ".tar.xz"];
+const WIN_EXTS = ["", ".7z", ".zip"];
+
+export const getArchiveName = async ({ version, platform = getCurrentPlatform(), arch = getCurrentArch(), type = "release", ext = DEFAULT_EXT } = {}) => {
+    if (!is.string(version) || !versionRegex().test(version)) {
+        throw new error.NotValidException("Invalid version parameter");
+    }
+    if (ext.length > 0 && !ext.startsWith(".")) {
+        ext = `.${ext}`;
+    }
+
+    if (type === "sources" || type === "headers") {
+        if (!UNIX_EXTS.includes(ext)) {
+            throw new error.NotValidException(`Archive extension should be '.tar.gz' or '.tar.xz. Got '${ext}'`);
+        }
+        const suffix = type === "headers"
+            ? "-headers"
+            : "";
+        return `node-${version}${suffix}${ext}`;
+    } else if (type !== "release") {
+        throw new error.NotValidException(`Unknown type of archive: ${type}`);
+    }
+
+    if (platform === "win") {
+        if (!WIN_EXTS.includes(ext)) {
+            throw new error.NotValidException(`For 'win' platform archive extension should be '.7z' or '.zip. Got '${ext}`);
+        }
+    } else if (!UNIX_EXTS.includes(ext)) {
+        throw new error.NotValidException(`For unix platforms archive extension should be '.tar.gz' or '.tar.xz. Got '${ext}`);
+    }
+
+    return `node-${version}-${platform}-${arch}${ext}`;
+};
 
 export const getReleases = async () => (await adone.http.client.request("https://nodejs.org/download/release/index.json")).data;
 

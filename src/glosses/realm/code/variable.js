@@ -11,11 +11,12 @@ const {
  * but that used in the sandbox (in some cases, it equals with the runtime value).
  */
 export default class Variable {
-    constructor({ name, value = adone.null, node = null } = {}) {
+    constructor({ name, value = adone.null, node = null, isArg = false } = {}) {
         this.name = name;
         this.value = value;
         this.refs = 0;
         this.node = node;
+        this.isArg = isArg;
 
 
         if (!is.null(node)) {

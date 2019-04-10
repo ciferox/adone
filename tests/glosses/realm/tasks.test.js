@@ -193,7 +193,7 @@ describe("realm", "common tasks", () => {
             await assert.throws(async () => rootRealm.runAndWait("realmFork", {
                 srcRealm: rootRealm,
                 name: "realm1",
-                basePath: getRealmPathFor()
+                destPath: getRealmPathFor()
             }), error.ExistsException);
         });
 
@@ -209,7 +209,7 @@ describe("realm", "common tasks", () => {
                 await assert.throws(async () => rootRealm.runAndWait("realmFork", {
                     srcRealm,
                     name: ".adone",
-                    basePath: newRealmsPath
+                    destPath: newRealmsPath
                 }), error.NotValidException);
             });
         }
@@ -218,7 +218,7 @@ describe("realm", "common tasks", () => {
             await assert.throws(async () => rootRealm.runAndWait("realmFork", {
                 srcRealm: getRealmPathFor("empty_dir"),
                 name: "bad",
-                basePath: newRealmsPath
+                destPath: newRealmsPath
             }), /no such file or directory/);
         });
 
@@ -226,7 +226,7 @@ describe("realm", "common tasks", () => {
             await assert.throws(async () => rootRealm.runAndWait("realmFork", {
                 srcRealm: getRealmPathFor("realm_no_config"),
                 name: "bad",
-                basePath: newRealmsPath
+                destPath: newRealmsPath
             }), /no such file or directory/);
         });
 
@@ -234,7 +234,7 @@ describe("realm", "common tasks", () => {
             const destRealm = await rootRealm.runAndWait("realmFork", {
                 srcRealm: getRealmPathFor("no_tasks"),
                 name: "1",
-                basePath: newRealmsPath
+                destPath: newRealmsPath
             });
 
             const destPath = std.path.join(newRealmsPath, "1");
@@ -246,7 +246,7 @@ describe("realm", "common tasks", () => {
             const destRealm = await rootRealm.runAndWait("realmFork", {
                 srcRealm: getRealmPathFor("realm3"),
                 name: "2",
-                basePath: newRealmsPath
+                destPath: newRealmsPath
             });
 
             const destPath = std.path.join(newRealmsPath, "2");
@@ -260,7 +260,7 @@ describe("realm", "common tasks", () => {
             const destRealm = await rootRealm.runAndWait("realmFork", {
                 srcRealm: rootRealm,
                 name: ".adone",
-                basePath: await fs.tmpName()
+                destPath: await fs.tmpName()
             });
             tmpPath = std.path.dirname(destRealm.cwd);
 
@@ -273,7 +273,7 @@ describe("realm", "common tasks", () => {
                 std.path.relative(rootRealm.cwd, rootRealm.RUNTIME_PATH),
                 std.path.relative(rootRealm.cwd, rootRealm.SPECIAL_PATH),
                 std.path.relative(rootRealm.cwd, rootRealm.SRC_PATH),
-                std.path.relative(rootRealm.cwd, rootRealm.PACKAGES_PATH),
+                std.path.relative(rootRealm.cwd, rootRealm.MODULES_PATH),
                 std.path.relative(rootRealm.cwd, rootRealm.TESTS_PATH)
             ];
 
@@ -302,7 +302,7 @@ describe("realm", "common tasks", () => {
             superRealm = await rootRealm.runAndWait("realmFork", {
                 srcRealm: rootRealm,
                 name: "adone",
-                basePath: await getTmpPath()
+                destPath: await getTmpPath()
             });
             tmpPath = std.path.dirname(superRealm.cwd);
         });
@@ -316,7 +316,7 @@ describe("realm", "common tasks", () => {
                 await rootRealm.runAndWait("realmMerge", {
                     subRealm: getRealmPathFor("realm1")
                 });
-            }, error.NotValidException, /super-realm/);
+            }, error.NotValidException);
         });
 
         it("merge realm without subRealm should be thrown", async () => {
@@ -324,7 +324,7 @@ describe("realm", "common tasks", () => {
                 await rootRealm.runAndWait("realmMerge", {
                     superRealm
                 });
-            }, error.NotValidException, /sub-realm/);
+            }, error.NotValidException);
         });
 
         it("merge realm with symlink=false", async () => {

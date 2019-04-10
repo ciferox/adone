@@ -1,4 +1,9 @@
 {
+    "artifacts": {
+        "custom": [
+            "somefile"
+        ]
+    },
     "tasks": {
         "basePath": "lib"
     },

@@ -8,6 +8,7 @@ const {
 
 const TYPES = [
     "BlockStatement",
+    "ReturnStatement",
     "Identifier",
     "FunctionDeclaration",
     "VariableDeclaration",
@@ -25,7 +26,9 @@ const TYPES = [
     "BooleanLiteral",
     "RegExpLiteral",
     "TemplateLiteral",
-    "NullLiteral"
+    "NullLiteral",
+    "ObjectPattern",
+    "ObjectProperty"
 ];
 
 const visitors = {};
@@ -84,6 +87,8 @@ for (const t of TYPES) {
 // },
 
 export default class AstProcessor {
+    #functionParams = [];
+
     constructor({ module, virtualPath } = {}) {
         this.module = module;
         this.modulePaths = new Set();
@@ -125,10 +130,34 @@ export default class AstProcessor {
 
         this.scopes.top.addChild(scope);
         this.scopes.push(scope);
+
+        // handle function params
+        if (this.#functionParams.length > 0) {
+            for (const param of this.#functionParams) {
+                if (t.isObjectPattern(param.node.ast)) {
+                    for (const prop of param.node.properties) {
+                        if (t.isIdentifier(prop.key.ast)) {
+                            this.#addDeclaration({
+                                name: prop.key.ast.name,
+                                node: prop.key,
+                                value: prop.value
+                            });
+                        }
+                    }
+                } else {
+                    this.#addDeclaration(param);
+                }
+            }
+            this.#functionParams.length = 0;
+        }
     }
 
     exitBlockStatement() {
         this.scopes.pop();
+    }
+
+    enterReturnStatement(node) {
+
     }
 
     enterFunctionDeclaration(node, ancestors) {
@@ -159,13 +188,13 @@ export default class AstProcessor {
 
     enterVariableDeclarator(node) {
         const astNode = node.ast;
-     
+
         if (t.isIdentifier(astNode.id)) {
             this.#addDeclaration({
                 name: astNode.id.name,
                 node
-            })
-            
+            });
+
             // else if (t.isExpression(node.init)) {
             //     this.scopes.top.add(new code.Variable(node.id.name, new code.Reference(node.init.name)));
             //     // if (t.isFunctionExpression(node.init) || t.isArrowFunctionExpression(node.init)) {
@@ -187,9 +216,23 @@ export default class AstProcessor {
     }
 
     enterIdentifier(node, ancestors) {
-        if (t.isVariableDeclarator(this.nodes.top.ast)) {
+        const parentAstNode = this.nodes.top.ast;
+        if (t.isVariableDeclarator(parentAstNode)) {
             return;
-        } 
+        } else if ((t.isFunctionDeclaration(parentAstNode) || t.isFunctionExpression(parentAstNode) || t.isArrowFunctionExpression(parentAstNode)) && parentAstNode.id !== node.ast) {
+            // function param
+            this.#functionParams.push({
+                name: node.ast.name,
+                node,
+                isArg: true
+            });
+        } else if (t.isObjectProperty(parentAstNode)) {
+            if (node.ast === parentAstNode.key) {
+                this.nodes.top.key = node;
+            } else if (node.ast === parentAstNode.value) {
+                this.nodes.top.value = node;
+            }
+        }
     }
 
     enterMemberExpression(node, ancestors) {
@@ -288,6 +331,20 @@ export default class AstProcessor {
             this.nodes.top.variable.value = node;
             return;
         }
+    }
+
+    enterObjectPattern(node) {
+        if ((t.isFunctionDeclaration(this.nodes.top.ast) || t.isFunctionExpression(this.nodes.top.ast) || t.isArrowFunctionExpression(this.nodes.top.ast))) {
+            // function param
+            this.#functionParams.push({
+                node
+            });
+        }
+    }
+
+    enterObjectProperty(node) {
+        const objNode = this.nodes.top;
+        objNode.addProperty(node);
     }
 
     #addDeclaration(options) {

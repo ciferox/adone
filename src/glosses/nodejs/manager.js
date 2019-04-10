@@ -23,28 +23,24 @@ export default class NodejsManager {
     constructor({ cache } = {}) {
         this.cache = cache || {};
         if (!this.cache.basePath) {
-            this.cache.basePath = system.env.home();
-        }
-        if (!this.cache.dirName) {
-            this.cache.dirName = ".anodejs_cache";
+            this.cache.basePath = std.path.join(system.env.home(), ".anodejs_cache");
         }
         this.cache.downloadDir = this.cache.downloadDir || "download";
     }
 
     async getCachePath(...dirs) {
-        const cachePath = std.path.join(this.cache.basePath, this.cache.dirName, ...dirs);
+        const cachePath = std.path.join(this.cache.basePath, ...dirs);
         await fs.mkdirp(cachePath);
 
         return cachePath;
     }
 
-    async getDownloadPath({ version, archiveType, platform, arch } = {}) {
-        const path = await this.getCachePath(this.cache.downloadDir);
+    async getDownloadPath() {
+        return this.getCachePath(this.cache.downloadDir);
+    }
 
-        return version
-            ? std.path.join(path, nodejs.getArchiveName({ version, archiveType, platform, arch }))
-            : path;
-
+    async getCachedArchivePath({ version, ext, platform, type, arch } = {}) {
+        return std.path.join(await this.getCachePath(this.cache.downloadDir), await nodejs.getArchiveName({ version, type, ext, platform, arch }));
     }
 
     async getDownloadedVersions() {
@@ -53,21 +49,25 @@ export default class NodejsManager {
     }
 
     /**
-     * Tries download Node.js from official site.
+     * Tries download Node.js archive from official site.
      * 
      * @param {*} param0 
      * @returns {Object { path, downloaded }} 
      */
-    async download({ version, outPath, force = false, progressBar = false, platform, arch, archiveType } = {}) {
-        const archName = nodejs.getArchiveName({ version, archiveType, platform, arch });
+    async download({ version, outPath, force = false, progressBar = false, platform, arch, ext, type } = {}) {
+        if (!version) {
+            version = await nodejs.checkVersion("latest");
+        }
+
+        const archName = await nodejs.getArchiveName({ version, type, ext, platform, arch });
 
         const tmpPath = await fs.tmpName();
 
-        const cachePath = await this.getDownloadPath();
-        let fullPath = await this.getDownloadPath({ version, archiveType, platform, arch });
+        const downloadPath = await this.getDownloadPath();
+        let fullPath = await this.getCachedArchivePath({ version, type, ext, platform, arch });
 
         if (!is.string(outPath) || outPath.length === 0) {
-            outPath = cachePath;
+            outPath = downloadPath;
         }
 
         fullPath = std.path.join(outPath, archName);
@@ -77,7 +77,7 @@ export default class NodejsManager {
             downloaded: false
         };
 
-        if (outPath === cachePath && !force && await fs.exists(fullPath)) {
+        if (outPath === downloadPath && !force && await fs.exists(fullPath)) {
             result.downloaded = false;
             return result;
         }
@@ -127,15 +127,16 @@ export default class NodejsManager {
         return result;
     }
 
-    async unpack({ outPath, version, platform, arch, archiveType } = {}) {
+    // TODO: need more advanced configuration
+    async unpack({ outPath, version, platform, arch, type, ext } = {}) {
         const destPath = outPath || await fs.tmpName();
-        const fullPath = await this.getDownloadPath({ version, archiveType, platform, arch });
+        const fullPath = await this.getCachedArchivePath({ version, type, ext, platform, arch });
         await adone.fast.src(fullPath)
             .decompress("xz")
             .unpack("tar", { inRoot: true })
             .dest(destPath);
 
-        return std.path.join(destPath, nodejs.getArchiveName({ version, archiveType: "" }));
+        return std.path.join(destPath, await nodejs.getArchiveName({ version, ext: "" }));
     }
 
     async deleteCurrent() {

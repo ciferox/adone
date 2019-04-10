@@ -186,5 +186,93 @@ const fn = () => {
             assert.equal(mod.scope.children[0].get("a").rawValue, 8);
             assert.instanceOf(mod.scope.children[0].get("a").value, code.NumericLiteral);
         }
+    },
+    {
+        realName: "scopes2.js",
+        load: true,
+        testName: "nested scopes - two levels",
+        content: [`
+const a = "adone";
+
+function fn() {
+    const handler = (b) => {
+        let a = true;
+        return typeof b === undefined
+            ? a
+            : b;
+    }
+    const a = 8;
+    return handler(a);
+}`, `
+const a = "adone";
+
+function fn() {
+    function handler (b) {
+        let a = true;
+        return typeof b === undefined
+            ? a
+            : b;
+    }
+    const a = 8;
+    return handler(a);
+}`, `
+const a = "adone";
+
+function fn() {
+    const handler = function (b) {
+        let a = true;
+        return typeof b === undefined
+            ? a
+            : b;
+    }
+    const a = 8;
+    return handler(a);
+}`, `
+const a = "adone";
+
+function fn() {
+    const handler = function ({ b }) {
+        let a = true;
+        return typeof b === undefined
+            ? a
+            : b;
+    }
+    const a = 8;
+    return handler(a);
+}`],
+        check(mod, filePath, index) {
+            assert.sameMembers(mod.scope.getAll({ native: false }).map((v) => v.name), ["a", "fn"]);
+            if (index === 0) {
+                assert.instanceOf(mod.scope.get("fn").node, code.FunctionDeclaration);
+            }
+            
+            assert.instanceOf(mod.scope.get("a").node, code.VariableDeclarator);
+            assert.equal(mod.scope.get("a").rawValue, "adone");
+            assert.instanceOf(mod.scope.get("a").value, code.StringLiteral);
+            assert.lengthOf(mod.scope.children, 1);
+            const nestedScope1 = mod.scope.children[0];
+            assert.instanceOf(nestedScope1, code.FunctionScope);
+            assert.sameMembers(nestedScope1.getAll({ native: false }).map((v) => v.name), ["a", "handler"]);
+            assert.equal(nestedScope1.get("a").rawValue, 8);
+            assert.instanceOf(nestedScope1.get("a").value, code.NumericLiteral);
+            assert.equal(nestedScope1.get("handler").rawValue, undefined);
+            if (index === 0) {
+                assert.instanceOf(nestedScope1.get("handler").node, code.VariableDeclarator);
+            } else if (index === 1) {
+                assert.instanceOf(nestedScope1.get("handler").node, code.FunctionDeclaration);
+            }
+
+            assert.lengthOf(nestedScope1.children, 1);
+            const nestedScope2 = nestedScope1.children[0];
+            assert.instanceOf(nestedScope2, code.FunctionScope);
+            assert.sameMembers(nestedScope2.getAll({ native: false }).map((v) => v.name), ["a", "b"]);
+            assert.equal(nestedScope2.get("a").rawValue, true);
+            assert.instanceOf(nestedScope2.get("a").value, code.BooleanLiteral);
+            assert.equal(nestedScope2.get("b").rawValue, undefined);
+            assert.instanceOf(nestedScope2.get("b").node, code.Identifier);
+            if (index === 0) {
+                assert.isTrue(nestedScope2.get("b").isArg);
+            }
+        }
     }
 ];

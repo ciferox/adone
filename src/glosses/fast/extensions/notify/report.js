@@ -34,7 +34,7 @@ const createRenderFunction = (template) => {
             }
             return fn(obj);
         } catch (err) {
-            adone.logWarn(`Notify string rendering failed due to: ${err.message}`);
+            console.warn(`Notify string rendering failed due to: ${err.message}`);
             return template;
         }
     };

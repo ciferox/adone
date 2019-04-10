@@ -25,7 +25,7 @@ export default class extends realm.BaseTask {
         }
     }
 
-    async main({ srcRealm, basePath, name, exclude } = {}) {
+    async main({ srcRealm, destPath, name, exclude } = {}) {
         this.manager.notify(this, "progress", {
             message: "checking"
         });
@@ -38,8 +38,8 @@ export default class extends realm.BaseTask {
             throw new error.NotValidException(`Invalid type of srcRealm: ${adone.typeOf(srcRealm)}`);
         }
 
-        if (!is.string(basePath) || basePath.length === 0) {
-            throw new error.NotValidException(`Invalid basePath: ${adone.inspect(basePath)}`);
+        if (!is.string(destPath) || destPath.length === 0) {
+            throw new error.NotValidException(`Invalid destPath: ${adone.inspect(destPath)}`);
         }
 
         if (!is.string(name) || name.length === 0) {
@@ -57,7 +57,7 @@ export default class extends realm.BaseTask {
             message: "preparing to copy common realm files"
         });
 
-        const destCwd = std.path.resolve(basePath, name);
+        const destCwd = std.path.resolve(destPath, name);
         if (await fs.exists(destCwd)) {
             throw new error.ExistsException(`Path '${destCwd}' already exists`);
         }
@@ -70,58 +70,48 @@ export default class extends realm.BaseTask {
         //     : `!${glob}`
         // );
 
-        const DIRS = [
-            std.path.relative(srcRealm.cwd, srcRealm.BIN_PATH),
-            std.path.relative(srcRealm.cwd, srcRealm.RUNTIME_PATH),
-            std.path.relative(srcRealm.cwd, srcRealm.ETC_PATH),
-            std.path.relative(srcRealm.cwd, srcRealm.OPT_PATH),
-            std.path.relative(srcRealm.cwd, srcRealm.VAR_PATH),
-            std.path.relative(srcRealm.cwd, srcRealm.SHARE_PATH),
-            std.path.relative(srcRealm.cwd, srcRealm.LIB_PATH),
-            std.path.relative(srcRealm.cwd, srcRealm.SPECIAL_PATH),
-            std.path.relative(srcRealm.cwd, srcRealm.SRC_PATH),
-            std.path.relative(srcRealm.cwd, srcRealm.PACKAGES_PATH),
-            std.path.relative(srcRealm.cwd, srcRealm.TESTS_PATH)
-        ];
+        // const allFiles = await fs.readdir(srcRealm.ROOT_PATH);
 
-        const rootFileNames = (await fs.readdir(srcRealm.ROOT_PATH)).filter((name) => !DIRS.includes(name));
+        // const natives = srcRealm.artifacts.map((info) => info.path);
 
-        this.manager.notify(this, "progress", {
-            message: "copying root files"
-        });
+        // const rootFileNames = (await fs.readdir(srcRealm.ROOT_PATH)).filter((name) => !natives.includes(name));
 
-        await fast.src(rootFileNames, {
-            cwd: srcRealm.ROOT_PATH,
-            base: srcRealm.ROOT_PATH
-        }).dest(this.destCwd, {
-            produceFiles: true
-        });
+        // this.manager.notify(this, "progress", {
+        //     message: "copying root files"
+        // });
 
-        for (const dir of DIRS) {
-            this.manager.notify(this, "progress", {
-                message: `copying ${cli.style.accent(dir)}`
-            });
+        // await fast.src(rootFileNames, {
+        //     cwd: srcRealm.ROOT_PATH,
+        //     base: srcRealm.ROOT_PATH
+        // }).dest(this.destCwd, {
+        //     produceFiles: true
+        // });
+
+        // for (const dir of DIRS) {
+        //     this.manager.notify(this, "progress", {
+        //         message: `copying ${cli.style.accent(dir)}`
+        //     });
     
-            const cwd = std.path.join(srcRealm.ROOT_PATH, dir);
-            const base = cwd;
-            const dstPath = std.path.join(this.destCwd, dir);
-            // eslint-disable-next-line no-await-in-loop
-            await fast.src("**/*", {
-                cwd,
-                base
-            }).dest(dstPath, {
-                produceFiles: true
-            });
-        }
+        //     const cwd = std.path.join(srcRealm.ROOT_PATH, dir);
+        //     const base = cwd;
+        //     const dstPath = std.path.join(this.destCwd, dir);
+        //     // eslint-disable-next-line no-await-in-loop
+        //     await fast.src("**/*", {
+        //         cwd,
+        //         base
+        //     }).dest(dstPath, {
+        //         produceFiles: true
+        //     });
+        // }
 
-        this.manager.notify(this, "progress", {
-            message: `realm ${cli.style.primary(srcRealm.name)} successfully forked into ${cli.style.accent(this.destCwd)}`,
-            status: true
-        });
+        // this.manager.notify(this, "progress", {
+        //     message: `realm ${cli.style.primary(srcRealm.name)} successfully forked into ${cli.style.accent(this.destCwd)}`,
+        //     status: true
+        // });
 
-        this.destRealm = new realm.Manager({
-            cwd: this.destCwd
-        });
+        // this.destRealm = new realm.Manager({
+        //     cwd: this.destCwd
+        // });
 
         return this.destRealm;
     }

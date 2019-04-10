@@ -6,6 +6,7 @@ const __ = adone.lazify({
     BaseNode: "./base_node",
     Identifier: "./nodes/identifier",
     BlockStatement: "./nodes/block_statement",
+    ReturnStatement: "./nodes/return_statement",
     FunctionDeclaration: "./nodes/function_declaration",
     FunctionExpression: "./nodes/function_expression",
     ArrowFunctionExpression: "./nodes/arrow_function_expression",
@@ -23,6 +24,8 @@ const __ = adone.lazify({
     RegExpLiteral: "./nodes/regexp_literal",
     TemplateLiteral: "./nodes/template_literal",
     NullLiteral: "./nodes/null_literal",
+    ObjectPattern: "./nodes/object_pattern",
+    ObjectProperty: "./nodes/object_property",
 
     Expression: "./expression",
     Function: "./function",

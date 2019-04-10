@@ -1,4 +1,13 @@
 {
+    "artifacts": {
+        "kri": [
+            ".adone",
+            "bin",
+            "lib",
+            "share",
+            "package.json"
+        ]
+    },
     "tasks": {
         "basePath": "lib/tasks",
         "tags": {

@@ -254,7 +254,7 @@ export default async (source, dest, options = {}) => {
             started++;
             if (filter) {
                 if (filter instanceof RegExp) {
-                    adone.logWarn("Warning: fs-extra: Passing a RegExp filter is deprecated, use a function");
+                    console.warn("Warning: fs-extra: Passing a RegExp filter is deprecated, use a function");
                     if (!filter.test(source)) {
                         return doneOne(true);
                     }

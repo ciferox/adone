@@ -27,7 +27,7 @@ export default class extends Subsystem {
             await rootRealm.runAndWait("realmFork", {
                 srcRealm: process.cwd(),
                 name: args.get("name"),
-                basePath: opts.get("path")
+                destPath: opts.get("path")
             });
 
             return 0;

@@ -54,6 +54,10 @@ yarn-error.log*
 /opt/
 /tmp/
 
+# lock files
+package-lock.json
+yarn.lock
+
 # realm specific
 /.adone/dev.json
 

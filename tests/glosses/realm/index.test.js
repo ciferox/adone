@@ -172,6 +172,30 @@ describe("realm", () => {
         });
     });
 
+    describe("artifacts", () => {
+        it("get 'dir' artifacts", async () => {
+            const mgr = await createManagerFor({ name: "realm1" });
+            assert.sameMembers(mgr.getArtifacts("dir").map((v) => v.path), [".adone", "lib"]);
+        });
+
+        it("get 'file' artifacts", async () => {
+            const mgr = await createManagerFor({ name: "realm1" });
+            assert.sameMembers(mgr.getArtifacts("file").map((v) => v.path), ["package.json", "README.md", "somefile"]);
+        });
+
+        it("get 'common' artifacts", async () => {
+            const mgr = await createManagerFor({ name: "realm1" });
+            assert.sameMembers(mgr.getArtifacts("common").map((v) => v.path), [".adone", "lib", "package.json", "README.md"]);
+        });
+
+        it("get 'custom' artifacts", async () => {
+            const mgr = await createManagerFor({ name: "realm1" });
+            assert.sameMembers(mgr.getArtifacts("custom").map((v) => v.path), ["somefile"]);
+        });
+    });
+
+
+
     describe.skip("type handlers", () => {
         it("", async () => {
 

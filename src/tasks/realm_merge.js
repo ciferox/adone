@@ -4,6 +4,7 @@ const {
     cli: { style },
     error,
     is,
+    fast,
     fs,
     std,
     realm

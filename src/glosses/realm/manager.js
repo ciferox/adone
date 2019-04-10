@@ -56,12 +56,35 @@ const trySuperRealmAt = (cwd) => {
     return superRealm;
 };
 
+const COMMON_FILENAMES = [
+    ["", "root"],
+    "bin",
+    "run",
+    "etc",
+    "opt",
+    "var",
+    "share",
+    "lib",
+    "src",
+    [".adone", "special"],
+    "tests",
+    "tmp",
+    ["node_modules", "modules"],
+    ["realm.lock", "lockfile"],
+    ["package.json", "package"],
+    ["shanifile.js", "shanifile"],
+    "LICENSE",
+    ["README.md", "readme"]
+].map((v) => is.string(v) ? [v, v] : v);
+
 export default class RealmManager extends task.Manager {
     #connected = false;
-    
+
     #connectiong = false;
-    
+
     #superRealm = null;
+
+    #artifacts = [];
 
     constructor({ cwd = process.cwd() } = {}) {
         super();
@@ -70,21 +93,6 @@ export default class RealmManager extends task.Manager {
             throw new error.NotValidException(`Invalid type of cwd: ${adone.typeOf(cwd)}`);
         }
         this.cwd = cwd;
-
-        this.ROOT_PATH = std.path.join(cwd);
-        this.BIN_PATH = std.path.join(cwd, "bin");
-        this.RUNTIME_PATH = std.path.join(cwd, "run");
-        this.ETC_PATH = std.path.join(cwd, "etc");
-        this.OPT_PATH = std.path.join(cwd, "opt");
-        this.VAR_PATH = std.path.join(cwd, "var");
-        this.SHARE_PATH = std.path.join(cwd, "share");
-        this.LIB_PATH = std.path.join(cwd, "lib");
-        this.LOGS_PATH = std.path.join(cwd, "var", "logs");
-        this.SPECIAL_PATH = std.path.join(cwd, ".adone");
-        this.SRC_PATH = std.path.join(cwd, "src");
-        this.TESTS_PATH = std.path.join(cwd, "tests");
-        this.PACKAGES_PATH = std.path.join(cwd, "node_modules");
-        this.LOCKFILE_PATH = std.path.join(cwd, "realm.lock");
 
         this.config = realm.Configuration.loadSync({
             cwd
@@ -103,7 +111,7 @@ export default class RealmManager extends task.Manager {
                 return cfg;
             }
         }, this)
-        
+
         this.package = require(std.path.join(cwd, "package.json"));
 
         // Scan for super realm
@@ -176,10 +184,43 @@ export default class RealmManager extends task.Manager {
                     });
                 }
             }
-            
+
             // Add all public tasks from all super realms.
             if (!is.null(this.superRealm)) {
                 await this.#addTasksFromSuperRealm(this.superRealm);
+            }
+
+            // collect artifacts
+            const rootFiles = await fs.readdir(this.cwd);
+            const cfgArtifacts = this.config.get("artifacts") || {};
+            const customArtifacts = Object.keys(cfgArtifacts);
+
+            for (const file of rootFiles) {
+                const fullPath = std.path.join(this.cwd, file);
+                const artifact = {
+                    path: file,
+                    attrs: new Set([(await fs.isDirectory(fullPath))
+                        ? "dir"
+                        : "file"])
+                };
+
+                const item = COMMON_FILENAMES.find((v) => v[0] === file);
+                if (item) {
+                    Object.defineProperty(this, `${item[1].toUpperCase()}_PATH`, {
+                        enumerable: true,
+                        value: fullPath
+                    });
+
+                    artifact.attrs.add("common");
+                }
+
+                for (const ca of customArtifacts) {
+                    if (cfgArtifacts[ca].includes(file)) {
+                        artifact.attrs.add(ca);
+                    }
+                }
+
+                this.#artifacts.push(artifact);
             }
 
             // Add default type handlers
@@ -198,6 +239,19 @@ export default class RealmManager extends task.Manager {
         } finally {
             this.#connectiong = false;
         }
+    }
+
+    getArtifacts(attr) {
+        const artifacts = [];
+        const attrs = util.arrify(attr);
+
+        for (const info of this.#artifacts) {
+            if (attrs.reduce((sum, item) => sum + (info.attrs.has(item) ? 1 : 0), 0) === attrs.length) {
+                artifacts.push(info);
+            }
+        }
+
+        return artifacts;
     }
 
     getEntries({ path, onlyNative = false, excludeVirtual = true } = {}) {
@@ -282,17 +336,17 @@ export default class RealmManager extends task.Manager {
     }
 
     async #addTasksFromSuperRealm(superRealm) {
-        if (is.null(superRealm)) {
-            return;
-        }
-        const tasks = superRealm.getTasksByTag(realm.TAG.PUB);
-        for (const taskInfo of tasks) {
-            if (!this.hasTask(taskInfo.name)) {
-                // eslint-disable-next-line no-await-in-loop
-                await this.addTask(taskInfo.name, taskInfo.Class, util.pick(taskInfo, ["concurrency", "interval", "singleton", "description", "tag"]));
-            }
-        }
-
-        return this.#addTasksFromSuperRealm(superRealm.superRealm);
+    if (is.null(superRealm)) {
+        return;
     }
+    const tasks = superRealm.getTasksByTag(realm.TAG.PUB);
+    for (const taskInfo of tasks) {
+        if (!this.hasTask(taskInfo.name)) {
+            // eslint-disable-next-line no-await-in-loop
+            await this.addTask(taskInfo.name, taskInfo.Class, util.pick(taskInfo, ["concurrency", "interval", "singleton", "description", "tag"]));
+        }
+    }
+
+    return this.#addTasksFromSuperRealm(superRealm.superRealm);
+}
 }

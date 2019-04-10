@@ -42,6 +42,12 @@ const command = (name) => std.path.join(__dirname, "..", "lib", "commands", name
             subsystem: command("realm")
         },
         {
+            name: "repl",
+            group: "common",
+            description: "ADONE-charged async REPL",
+            subsystem: command("repl")
+        },
+        {
             name: "run",
             group: "common",
             description: "Run application/script/code",
