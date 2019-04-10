@@ -336,17 +336,17 @@ export default class RealmManager extends task.Manager {
     }
 
     async #addTasksFromSuperRealm(superRealm) {
-    if (is.null(superRealm)) {
-        return;
-    }
-    const tasks = superRealm.getTasksByTag(realm.TAG.PUB);
-    for (const taskInfo of tasks) {
-        if (!this.hasTask(taskInfo.name)) {
-            // eslint-disable-next-line no-await-in-loop
-            await this.addTask(taskInfo.name, taskInfo.Class, util.pick(taskInfo, ["concurrency", "interval", "singleton", "description", "tag"]));
+        if (is.null(superRealm)) {
+            return;
         }
-    }
+        const tasks = superRealm.getTasksByTag(realm.TAG.PUB);
+        for (const taskInfo of tasks) {
+            if (!this.hasTask(taskInfo.name)) {
+                // eslint-disable-next-line no-await-in-loop
+                await this.addTask(taskInfo.name, taskInfo.Class, util.pick(taskInfo, ["concurrency", "interval", "singleton", "description", "tag"]));
+            }
+        }
 
-    return this.#addTasksFromSuperRealm(superRealm.superRealm);
-}
+        return this.#addTasksFromSuperRealm(superRealm.superRealm);
+    }
 }
