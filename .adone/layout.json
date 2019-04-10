@@ -52,7 +52,7 @@
                 "entry": "index.js"
             },
             "cli": {
-                "namespace": true,
+                "namespace": false,
                 "base": "src/cli",
                 "entry": "index.js",
                 "glob": "**/*.js"
@@ -156,6 +156,12 @@
             "fsm": {
                 "namespace": true,
                 "base": "src/fsm",
+                "entry": "index.js",
+                "glob": "**/*.js"
+            },
+            "inspect": {
+                "namespace": false,
+                "base": "src/inspect",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },

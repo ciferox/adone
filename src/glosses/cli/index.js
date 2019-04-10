@@ -3175,4 +3175,4 @@ const __ = adone.lazify({
     ui: "./ui"
 }, terminal, require);
 
-export default adone.asNamespace(terminal);
+export default terminal;

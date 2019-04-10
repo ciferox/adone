@@ -576,4 +576,4 @@ adone.lazify({
     function: "./function"
 }, inspect, require);
 
-export default adone.asNamespace(inspect);
+export default inspect;

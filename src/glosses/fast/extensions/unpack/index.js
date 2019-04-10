@@ -2,7 +2,7 @@ export default function plugin() {
     const {
         is,
         std,
-        x
+        error
     } = adone;
 
     return function unpack(archiveType, { inRoot = false, dirname, ...extractorOptions } = {}) {
