@@ -74,9 +74,10 @@ export default class REPL {
     start() {
         if (is.string(this.options.banner)) {
             console.log(this.options.banner);
+            this.options = adone.util.omit(this.options, "banner");
         }
 
-        this.instance = repl.start(adone.util.omit(this.options, "banner"));
+        this.instance = repl.start(this.options);
 
         const originalEval = this.instance.eval;
 
