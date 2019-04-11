@@ -14,6 +14,9 @@ const mixinPax = (header, pax) => {
     if (pax.linkpath) {
         header.linkname = pax.linkpath;
     }
+    if (pax.size) {
+        header.size = parseInt(pax.size, 10);
+    }
     header.pax = pax;
     return header;
 };
@@ -37,12 +40,13 @@ const emptyStream = (self, offset) => {
 };
 
 export default class RawUnpackStream extends Writable {
-    constructor(opts) {
+    constructor(opts = {}) {
         super(opts);
 
         this._offset = 0;
         this._buffer = new adone.collection.BufferList();
         this._missing = 0;
+        this._partial = false;
         this._onparse = adone.noop;
         this._header = null;
         this._stream = null;
@@ -110,14 +114,14 @@ export default class RawUnpackStream extends Writable {
 
         const ongnulongpath = function () {
             const size = self._header.size;
-            this._gnuLongPath = headers.decodeLongPath(b.slice(0, size));
+            this._gnuLongPath = headers.decodeLongPath(b.slice(0, size), opts.filenameEncoding);
             b.consume(size);
             onstreamend();
         };
 
         const ongnulonglinkpath = function () {
             const size = self._header.size;
-            this._gnuLongLinkPath = headers.decodeLongPath(b.slice(0, size));
+            this._gnuLongLinkPath = headers.decodeLongPath(b.slice(0, size), opts.filenameEncoding);
             b.consume(size);
             onstreamend();
         };
@@ -126,7 +130,7 @@ export default class RawUnpackStream extends Writable {
             const offset = self._offset;
             let header;
             try {
-                header = self._header = headers.decode(b.slice(0, 512));
+                header = self._header = headers.decode(b.slice(0, 512), opts.filenameEncoding);
             } catch (err) {
                 self.emit("error", err);
             }
@@ -188,6 +192,7 @@ export default class RawUnpackStream extends Writable {
             oncontinue();
         };
 
+        this._onheader = onheader;
         this._parse(512, onheader);
     }
 
@@ -212,6 +217,9 @@ export default class RawUnpackStream extends Writable {
         }
         this._offset += size;
         this._missing = size;
+        if (onparse === this._onheader) {
+            this._partial = false;
+        }
         this._onparse = onparse;
     }
 
@@ -236,6 +244,9 @@ export default class RawUnpackStream extends Writable {
         const s = this._stream;
         const b = this._buffer;
         const missing = this._missing;
+        if (data.length) {
+            this._partial = true;
+        }
 
         // we do not reach end-of-chunk now. just forward it
 
@@ -268,5 +279,12 @@ export default class RawUnpackStream extends Writable {
 
         this._overflow = overflow;
         this._onparse();
+    }
+
+    _final(cb) {
+        if (this._partial) {
+            return this.destroy(new Error("Unexpected end of data"));
+        }
+        cb();
     }
 }

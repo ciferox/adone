@@ -320,8 +320,7 @@ export const unpackStream = (cwd = process.cwd(), opts = {}) => {
                 return next(); // skip links on win for now before it can be tested
             }
             fs.unlink(name, () => {
-                const srcpath = path.resolve(cwd, header.linkname);
-
+                const srcpath = path.join(cwd, path.join("/", header.linkname));
                 fs.link(srcpath, name, (err) => {
                     if (err && err.code === "EPERM" && opts.hardlinkAsFilesFallback) {
                         stream = fs.createReadStream(srcpath);

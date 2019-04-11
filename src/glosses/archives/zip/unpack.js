@@ -7,7 +7,7 @@ const {
     stream
 } = adone;
 
-const cp437 = '\u0000☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■ ';
+const cp437 = '\u0000☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■ ';
 const decodeBuffer = (buffer, start, end, isUtf8) => {
     if (isUtf8) {
         return buffer.toString("utf8", start, end);
@@ -35,7 +35,7 @@ const readUInt64LE = (buffer, offset) => {
 const readAndAssertNoEof = async (reader, buffer, offset, length, position) => {
     if (length === 0) {
         // fs.read will throw an out-of-bounds error if you try to read 0 bytes from a 0 byte file
-        return Buffer.alloc(0);
+        return Buffer.allocUnsafe(0);
     }
     const bytesRead = await reader.read(buffer, offset, length, position);
     if (bytesRead < length) {
@@ -60,6 +60,9 @@ export const fromRandomAccessReader = async (reader, totalSize, options) => {
     if (is.nil(options.validateEntrySizes)) {
         options.validateEntrySizes = true;
     }
+    if (is.nil(options.strictFileNames)) {
+        options.strictFileNames = false;
+    }
     if (!is.number(totalSize)) {
         throw new error.InvalidArgumentException("expected totalSize parameter to be a number");
     }
@@ -79,7 +82,7 @@ export const fromRandomAccessReader = async (reader, totalSize, options) => {
     const eocdrWithoutCommentSize = 22;
     const maxCommentSize = 0xffff; // 2-byte size
     const bufferSize = Math.min(eocdrWithoutCommentSize + maxCommentSize, totalSize);
-    const buffer = Buffer.alloc(bufferSize);
+    const buffer = Buffer.allocUnsafe(bufferSize);
     const bufferReadStart = totalSize - buffer.length;
 
     await readAndAssertNoEof(reader, buffer, 0, bufferSize, bufferReadStart);
@@ -126,14 +129,15 @@ export const fromRandomAccessReader = async (reader, totalSize, options) => {
                 options.autoClose,
                 options.lazyEntries,
                 decodeStrings,
-                options.validateEntrySizes
+                options.validateEntrySizes,
+                options.strictFileNames
             );
         }
 
         // ZIP64 format
 
         // ZIP64 Zip64 end of central directory locator
-        const zip64EocdlBuffer = Buffer.alloc(20);
+        const zip64EocdlBuffer = Buffer.allocUnsafe(20);
         const zip64EocdlOffset = bufferReadStart + i - zip64EocdlBuffer.length;
 
         // eslint-disable-next-line
@@ -149,7 +153,7 @@ export const fromRandomAccessReader = async (reader, totalSize, options) => {
         // 16 - total number of disks
 
         // ZIP64 end of central directory record
-        const zip64EocdrBuffer = Buffer.alloc(56);
+        const zip64EocdrBuffer = Buffer.allocUnsafe(56);
 
         // eslint-disable-next-line
         await readAndAssertNoEof(reader, zip64EocdrBuffer, 0, zip64EocdrBuffer.length, zip64EocdrOffset);
@@ -179,7 +183,8 @@ export const fromRandomAccessReader = async (reader, totalSize, options) => {
             options.autoClose,
             options.lazyEntries,
             decodeStrings,
-            options.validateEntrySizes
+            options.validateEntrySizes,
+            options.strictFileNames
         );
     }
     throw new error.IllegalStateException("end of central directory record signature not found");
@@ -201,6 +206,9 @@ export const fromFd = async (fd, options) => {
     if (is.nil(options.validateEntrySizes)) {
         options.validateEntrySizes = true;
     }
+    if (is.nil(options.strictFileNames)) {
+        options.strictFileNames = false;
+    }
     const stats = await fs.fstat(fd);
     const reader = new fs.RandomAccessFdReader(fd);
     return fromRandomAccessReader(reader, stats.size, options);
@@ -221,6 +229,9 @@ export const open = async (path, options) => {
     }
     if (is.nil(options.validateEntrySizes)) {
         options.validateEntrySizes = true;
+    }
+    if (is.nil(options.strictFileNames)) {
+        options.strictFileNames = false;
     }
     const fd = await fs.open(path, "r");
     try {
@@ -244,6 +255,9 @@ export const fromBuffer = async (buffer, options) => {
     }
     if (is.nil(options.validateEntrySizes)) {
         options.validateEntrySizes = true;
+    }
+    if (is.nil(options.strictFileNames)) {
+        options.strictFileNames = false;
     }
     const reader = new fs.RandomAccessBufferReader(buffer);
     return fromRandomAccessReader(reader, buffer.length, options);
@@ -302,7 +316,8 @@ class ZipFile extends event.Emitter {
         autoClose,
         lazyEntries,
         decodeStrings,
-        validateEntrySizes
+        validateEntrySizes,
+        strictFileNames
     ) {
         super();
 
@@ -324,6 +339,7 @@ class ZipFile extends event.Emitter {
         this.lazyEntries = Boolean(lazyEntries);
         this.decodeStrings = Boolean(decodeStrings);
         this.validateEntrySizes = Boolean(validateEntrySizes);
+        this.strictFileNames = Boolean(strictFileNames);
         this.isOpen = true;
         this.emittedError = false;
 
@@ -367,7 +383,7 @@ class ZipFile extends event.Emitter {
         if (this.emittedError) {
             return null;
         }
-        let buffer = Buffer.alloc(46);
+        let buffer = Buffer.allocUnsafe(46);
 
         try {
             await readAndAssertNoEof(this.reader, buffer, 0, buffer.length, this.readEntryCursor);
@@ -415,7 +431,7 @@ class ZipFile extends event.Emitter {
 
             this.readEntryCursor += 46;
 
-            buffer = Buffer.alloc(entry.fileNameLength + entry.extraFieldLength + entry.fileCommentLength);
+            buffer = Buffer.allocUnsafe(entry.fileNameLength + entry.extraFieldLength + entry.fileCommentLength);
             await readAndAssertNoEof(this.reader, buffer, 0, buffer.length, this.readEntryCursor);
             // 46 - File name
             const isUtf8 = (entry.generalPurposeBitFlag & 0x800) !== 0;
@@ -435,7 +451,7 @@ class ZipFile extends event.Emitter {
                 if (dataEnd > extraFieldBuffer.length) {
                     throw new error.IllegalStateException("extra field length exceeds extra field buffer size");
                 }
-                const dataBuffer = Buffer.alloc(dataSize);
+                const dataBuffer = Buffer.allocUnsafe(dataSize);
                 extraFieldBuffer.copy(dataBuffer, 0, dataStart, dataEnd);
                 entry.extraFields.push({
                     id: headerId,
@@ -542,7 +558,11 @@ class ZipFile extends event.Emitter {
             }
 
             if (this.decodeStrings) {
-                const errorMessage = validateFileName(entry.fileName);
+                if (!this.strictFileNames) {
+                    // allow backslash
+                    entry.fileName = entry.fileName.replace(/\\/g, "/");
+                }
+                const errorMessage = validateFileName(entry.fileName, this.validateFileNameOptions);
                 if (!is.nil(errorMessage)) {
                     throw new error.Exception(errorMessage);
                 }
@@ -632,7 +652,7 @@ class ZipFile extends event.Emitter {
         }
         // make sure we don't lose the fd before we open the actual read stream
         this.reader.ref();
-        const buffer = Buffer.alloc(30);
+        const buffer = Buffer.allocUnsafe(30);
         await readAndAssertNoEof(this.reader, buffer, 0, buffer.length, entry.relativeOffsetOfLocalHeader);
         try {
             // 0 - Local file header signature = 0x04034b50

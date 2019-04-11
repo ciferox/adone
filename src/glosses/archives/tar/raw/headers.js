@@ -170,7 +170,7 @@ const decodeOct = (val, offset, length) => {
 
 };
 
-const decodeStr = (val, offset, length) => val.slice(offset, indexOf(val, 0, offset, offset + length)).toString();
+const decodeStr = (val, offset, length, encoding) => val.slice(offset, indexOf(val, 0, offset, offset + length)).toString(encoding);
 
 const addLength = (str) => {
     const len = Buffer.byteLength(str);
@@ -182,7 +182,7 @@ const addLength = (str) => {
     return (len + digits) + str;
 };
 
-export const decodeLongPath = (buf) => decodeStr(buf, 0, buf.length);
+export const decodeLongPath = (buf, encoding) => decodeStr(buf, 0, buf.length, encoding);
 
 export const encodePax = (opts) => { // TODO: encode more stuff in pax
     const result = [];
@@ -287,24 +287,24 @@ export const encode = (opts) => {
     return buf;
 };
 
-export const decode = (buf) => {
+export const decode = (buf, filenameEncoding) => {
     let typeflag = buf[156] === 0 ? 0 : buf[156] - ZERO_OFFSET;
 
-    let name = decodeStr(buf, 0, 100);
+    let name = decodeStr(buf, 0, 100, filenameEncoding);
     const mode = decodeOct(buf, 100, 8);
     const uid = decodeOct(buf, 108, 8);
     const gid = decodeOct(buf, 116, 8);
     const size = decodeOct(buf, 124, 12);
     const mtime = decodeOct(buf, 136, 12);
     const type = toType(typeflag);
-    const linkname = buf[157] === 0 ? null : decodeStr(buf, 157, 100);
+    const linkname = buf[157] === 0 ? null : decodeStr(buf, 157, 100, filenameEncoding);
     const uname = decodeStr(buf, 265, 32);
     const gname = decodeStr(buf, 297, 32);
     const devmajor = decodeOct(buf, 329, 8);
     const devminor = decodeOct(buf, 337, 8);
 
     if (buf[345]) {
-        name = `${decodeStr(buf, 345, 155)}/${name}`;
+        name = `${decodeStr(buf, 345, 155, filenameEncoding)}/${name}`;
     }
 
     // to support old tar versions that use trailing / to indicate dirs

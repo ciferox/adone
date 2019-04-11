@@ -3,7 +3,7 @@ export default function plugin() {
         is,
         std,
         fs,
-        x
+        error
     } = adone;
 
     return function pack(archiveType, packerOptions = {}) {

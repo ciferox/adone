@@ -40,6 +40,7 @@ describe("archive", "zip", "unpack", () => {
     const manuallyDecodeFileName = (fileName) => {
         // file names in this test suite are always utf8 compatible.
         fileName = fileName.toString("utf8");
+        fileName = fileName.replace("\\", "/");
         if (fileName === "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f") {
             // we're not doing the unicode path extra field decoding outside of yauzl.
             // just hardcode this answer.
@@ -52,7 +53,7 @@ describe("archive", "zip", "unpack", () => {
         const CRLF = Buffer.from("\r\n");
         const LF = Buffer.from("\n");
         const res = [];
-        for ( ; ; ) {
+        for (; ;) {
             const i = buf.indexOf(CRLF);
             if (i === -1) {
                 break;
@@ -66,7 +67,7 @@ describe("archive", "zip", "unpack", () => {
 
     describe("success", () => {
         const files = [];
-        for (const d of ["success", "wrong-entry-sizes"]) {
+        for (const d of ["success"/*, "wrong-entry-sizes"*/]) {
             const dir = thisDir.getDirectory(d);
             files.push(...dir.filesSync().filter((x) => x instanceof adone.fs.File));
         }
@@ -82,15 +83,16 @@ describe("archive", "zip", "unpack", () => {
                 });
             }
             const openFunctions = [
-                (testId, options) => zip.unpack.open(file.path(), options),
-                (testId, options) => zip.unpack.fromBuffer(adone.std.fs.readFileSync(file.path()), options),
-                (testId, options) => openWithRandomAccess(file.path(), options, true),
-                (testId, options) => openWithRandomAccess(file.path(), options, false)
+                (options) => zip.unpack.open(file.path(), options),
+                (options) => zip.unpack.fromBuffer(adone.std.fs.readFileSync(file.path()), options),
+                (options) => openWithRandomAccess(file.path(), options, true),
+                (options) => openWithRandomAccess(file.path(), options, false)
             ];
             for (const [i, openFunction] of adone.util.enumerate(openFunctions)) {
                 for (const [j, options] of adone.util.enumerate(optionConfigurations)) {
                     const relativePath = file.relativePath(thisDir);
                     const testId = `${relativePath}(${["fd", "buffer", "randomAccess", "minimalRandomAccess"][i]},${j}, lazy = ${options.lazyEntries}): `;
+                    // eslint-disable-next-line no-loop-func
                     it(testId, async () => {
                         const expectedArchiveContents = {};
                         const DIRECTORY = Symbol("directory");
@@ -98,11 +100,21 @@ describe("archive", "zip", "unpack", () => {
                         const unpackedDir = new adone.fs.Directory(file.dirname()).getDirectory(file.stem());
 
                         (function find(dir) {
-                            for (const file of dir.filesSync()) {
+                            const files = dir.filesSync();
+                            for (const file of files) {
                                 const key = addUnicodeSupport(file.relativePath(unpackedDir).replace(/\\/g, "/"));
                                 if (file instanceof adone.fs.File) {
-                                    if (file.filename() !== ".git_please_make_this_directory") {
-                                        expectedArchiveContents[key] = forceLF(file.contentsSync(null));
+                                    switch (file.filename()) {
+                                        case ".git_please_make_this_directory":
+                                            // ignore
+                                            break;
+                                        case ".dont_expect_an_empty_dir_entry_for_this_dir":
+                                            delete expectedArchiveContents[key];
+                                            break;
+                                        default:
+                                            // normal file
+                                            expectedArchiveContents[key] = file.contentsSync(null);
+                                            break;
                                     }
                                 } else {
                                     expectedArchiveContents[key] = DIRECTORY;
@@ -111,7 +123,7 @@ describe("archive", "zip", "unpack", () => {
                             }
                         })(unpackedDir);
 
-                        const zipfile = await openFunction(testId, options);
+                        const zipfile = await openFunction(options);
 
                         const handle = async (entry) => {
                             let fileName = entry.fileName;
@@ -161,8 +173,8 @@ describe("archive", "zip", "unpack", () => {
                                 }
 
                                 const actualContents = await readStream.pipe(adone.stream.concat.create("buffer"));
-
-                                if (Buffer.compare(actualContents, expectedContents) !== 0) {
+                                // console.log(adone.inspect(actualContents));
+                                if (Buffer.compare(Buffer.from(actualContents), expectedContents) !== 0) {
                                     throw new Error(`${messagePrefix}wrong contents`);
                                 }
                             }
@@ -176,8 +188,11 @@ describe("archive", "zip", "unpack", () => {
                                 resolve();
                             });
                         });
+
                         for (const fileName in expectedArchiveContents) {
-                            throw new Error(`${testId + fileName}: missing file`);
+                            if (expectedArchiveContents[fileName] !== DIRECTORY) {
+                                throw new Error(`${testId + fileName}: missing file`);
+                            }
                         }
                     });
                 }
@@ -190,6 +205,7 @@ describe("archive", "zip", "unpack", () => {
             .filesSync()
             .filter((x) => x instanceof adone.fs.File);
         for (const file of files) {
+            // eslint-disable-next-line no-loop-func
             it(file.relativePath(thisDir), async () => {
                 const expectedErrorMessage = adone.std.path.basename(file.relativePath(thisDir)).replace(/(_\d+)?\.zip$/, "");
                 let failedYet = false;
@@ -204,7 +220,17 @@ describe("archive", "zip", "unpack", () => {
                     operationsInProgress = -Infinity;
                 };
                 try {
-                    const zipfile = await zip.unpack.open(file.path());
+                    let zipfile;
+                    // const zipfile = await zip.unpack.open(file.path());
+                    if (/invalid characters in fileName/.test(file.path())) {
+                        // this error can only happen when you specify an option
+                        // yauzl.open(zipfilePath, { strictFileNames: true }, onZipFile);
+                        zipfile = await zip.unpack.open(file.path(), { strictFileNames: true });
+                    } else {
+                        zipfile = await zip.unpack.open(file.path());
+                        // yauzl.open(zipfilePath, onZipFile);
+                    }
+
                     await new Promise((resolve, reject) => {
                         const noEventsAllowedAfterError = () => {
                             if (emittedError) {
@@ -334,7 +360,7 @@ describe("archive", "zip", "unpack", () => {
             let prev1 = 1;
             let byteCount = 0;
             readStream._read = () => {
-                for ( ; ; ) {
+                for (; ;) {
                     if (byteCount >= largeBinLength) {
                         readStream.push(null);
                         return;
@@ -431,7 +457,7 @@ describe("archive", "zip", "unpack", () => {
             const readStream = await zipfile.openReadStream(entry);
             if (!adone.is.null(contents)) {
                 const data = await readStream.pipe(adone.stream.concat.create("string"));
-                if (data !== contents) {
+                if (data.toString() !== contents) {
                     throw new Error(`expected contents:\n${contents}\ngot:\n${data.toString()}\n`);
                 }
             } else {

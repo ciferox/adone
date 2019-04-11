@@ -1,10 +1,15 @@
-const { is, archive: { tar }, stream: { concat }, std } = adone;
+const {
+    is,
+    archive: { tar },
+    stream: { concat },
+    std
+} = adone;
 
 describe("archive", "tar", "raw", () => {
     const fixtures = new adone.fs.Directory(std.path.join(__dirname, "fixtures"));
 
     describe("pack", () => {
-        specify("one file", async () => {
+        it("one file", async () => {
             const pack = new tar.RawPackStream();
 
             pack.entry({
@@ -25,7 +30,7 @@ describe("archive", "tar", "raw", () => {
             expect(data).to.be.deep.equal(await file.contents("buffer"));
         });
 
-        specify("multi file", async () => {
+        it("multi file", async () => {
             const pack = new tar.RawPackStream();
 
             pack.entry({
@@ -56,7 +61,7 @@ describe("archive", "tar", "raw", () => {
             expect(data).to.be.deep.equal(await fixtures.getFile("multi-file.tar").contents("buffer"));
         });
 
-        specify("pax", async () => {
+        it("pax", async () => {
             const pack = new tar.RawPackStream();
 
             pack.entry({
@@ -77,7 +82,7 @@ describe("archive", "tar", "raw", () => {
             expect(data).to.be.deep.equal(await fixtures.getFile("pax.tar").contents("buffer"));
         });
 
-        specify("types", async () => {
+        it("types", async () => {
             const pack = new tar.RawPackStream();
 
             pack.entry({
@@ -101,7 +106,7 @@ describe("archive", "tar", "raw", () => {
                 gname: "staff",
                 uid: 501,
                 gid: 20,
-                size: 9  // Should convert to zero
+                size: 9 // Should convert to zero
             });
 
             pack.finalize();
@@ -111,7 +116,7 @@ describe("archive", "tar", "raw", () => {
             expect(data).to.be.deep.equal(await fixtures.getFile("types.tar").contents("buffer"));
         });
 
-        specify("long name", async () => {
+        it("long name", async () => {
             const pack = new tar.RawPackStream();
 
             pack.entry({
@@ -132,7 +137,7 @@ describe("archive", "tar", "raw", () => {
             expect(data).to.be.deep.equal(await fixtures.getFile("long-name.tar").contents("buffer"));
         });
 
-        specify("large uid gid", async () => {
+        it("large uid gid", async () => {
             const pack = new tar.RawPackStream();
 
             pack.entry({
@@ -153,7 +158,7 @@ describe("archive", "tar", "raw", () => {
             expect(data).to.be.deep.equal(await fixtures.getFile("large-uid-gid.tar").contents("buffer"));
         });
 
-        specify("unicode", async () => {
+        it("unicode", async () => {
             const pack = new tar.RawPackStream();
 
             pack.entry({
@@ -181,7 +186,7 @@ describe("archive", "tar", "raw", () => {
             if (!is.number(index)) {
                 return defaultValue;
             }
-            index = ~~index;  // Coerce to integer.
+            index = ~~index; // Coerce to integer.
             if (index >= len) {
                 return len;
             }
@@ -195,7 +200,7 @@ describe("archive", "tar", "raw", () => {
             return 0;
         };
 
-        specify("one file", async () => {
+        it("one file", async () => {
             const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
@@ -231,7 +236,7 @@ describe("archive", "tar", "raw", () => {
             expect(entries[0].data.toString()).to.be.equal("hello world\n");
         });
 
-        specify("chunked one file", async () => {
+        it("chunked one file", async () => {
             const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
@@ -272,7 +277,7 @@ describe("archive", "tar", "raw", () => {
             expect(entries[0].data.toString()).to.be.equal("hello world\n");
         });
 
-        specify("multi file", async () => {
+        it("multi file", async () => {
             const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
@@ -325,7 +330,7 @@ describe("archive", "tar", "raw", () => {
             }]);
         });
 
-        specify("chunked multi file", async () => {
+        it("chunked multi file", async () => {
             const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
@@ -382,7 +387,7 @@ describe("archive", "tar", "raw", () => {
             }]);
         });
 
-        specify("pax", async () => {
+        it("pax", async () => {
             const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
@@ -420,7 +425,7 @@ describe("archive", "tar", "raw", () => {
             }]);
         });
 
-        specify("types", async () => {
+        it("types", async () => {
             const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
@@ -473,7 +478,7 @@ describe("archive", "tar", "raw", () => {
             }]);
         });
 
-        specify("long name", async () => {
+        it("long name", async () => {
             const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
@@ -510,7 +515,7 @@ describe("archive", "tar", "raw", () => {
             }]);
         });
 
-        specify("unicode bsd", async () => {  // can unpack a bsdtar unicoded tarball
+        it("unicode bsd", async () => { // can unpack a bsdtar unicoded tarball
             const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
@@ -548,7 +553,7 @@ describe("archive", "tar", "raw", () => {
             }]);
         });
 
-        specify("unicode", async () => {
+        it("unicode", async () => {
             const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
@@ -586,7 +591,7 @@ describe("archive", "tar", "raw", () => {
             }]);
         });
 
-        specify("name is 100", async () => {
+        it("name is 100", async () => {
             const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
@@ -609,7 +614,7 @@ describe("archive", "tar", "raw", () => {
             expect(entries[0].data).to.be.deep.equal(Buffer.from("hello\n"));
         });
 
-        specify("invalid file", (done) => {
+        it("invalid file", (done) => {
             const extract = new tar.RawUnpackStream();
 
             extract.on("error", (err) => {
@@ -622,7 +627,7 @@ describe("archive", "tar", "raw", () => {
             });
         });
 
-        specify("space prefixed", async () => {
+        it("space prefixed", async () => {
             const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
@@ -643,7 +648,7 @@ describe("archive", "tar", "raw", () => {
             expect(entries).to.have.lengthOf(4);
         });
 
-        specify("gnu long path", async () => {
+        it("gnu long path", async () => {
             const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
@@ -665,7 +670,7 @@ describe("archive", "tar", "raw", () => {
             expect(entries[0].header.name).to.have.length.at.least(100);
         });
 
-        specify("base 256 uid and gid", async () => {
+        it("base 256 uid and gid", async () => {
             const extract = new tar.RawUnpackStream();
 
             let entries = new Promise((resolve) => {
@@ -687,7 +692,7 @@ describe("archive", "tar", "raw", () => {
             expect(entries[0].header.gid).to.be.equal(1876110778);
         });
 
-        specify("base 256 size", async () => {
+        it("base 256 size", async () => {
             const extract = new tar.RawUnpackStream();
             const p = new Promise((resolve) => {
                 extract.on("entry", (header, stream, callback) => {
@@ -711,6 +716,118 @@ describe("archive", "tar", "raw", () => {
             });
             extract.end(await fixtures.getFile("base-256-size.tar").contents("buffer"));
             await p;
+        });
+
+        it("latin-1", async (done) => { // can unpack filenames encoded in latin-1
+            // This is the older name for the "latin1" encoding in Node
+            const extract = new tar.RawUnpackStream({ filenameEncoding: "binary" });
+            let noEntries = false;
+
+            extract.on("entry", (header, stream, callback) => {
+                assert.deepEqual(header, {
+                    name: "En français, s'il vous plaît?.txt",
+                    mode: parseInt("644", 8),
+                    uid: 0,
+                    gid: 0,
+                    size: 14,
+                    mtime: new Date(1495941034000),
+                    type: "file",
+                    linkname: null,
+                    uname: "root",
+                    gname: "root",
+                    devmajor: 0,
+                    devminor: 0
+                });
+
+                stream.pipe(concat.create((data) => {
+                    noEntries = true;
+                    assert.equal(data.toString(), "Hello, world!\n");
+                    callback();
+                }));
+            });
+
+            extract.on("finish", () => {
+                assert.ok(noEntries);
+                done();
+            });
+
+            extract.end(await fixtures.getFile("latin1.tar").contents("buffer"));
+        });
+
+        it("incomplete", async (done) => {
+            const extract = new tar.RawUnpackStream();
+
+            extract.on("entry", (header, stream, callback) => {
+                callback();
+            });
+
+            extract.on("error", (err) => {
+                assert.equal(err.message, "Unexpected end of data");
+                done();
+            });
+
+            extract.on("finish", () => {
+                assert.false("should not finish");
+            });
+
+            extract.end(await fixtures.getFile("incomplete.tar").contents("buffer"));
+        });
+    });
+
+    describe.skip("slow", function () {
+        this.timeout(1000 * 1000);
+
+        it("huge", async (done) => {
+            const extract = new tar.RawUnpackStream();
+            let noEntries = false;
+            const hugeFileSize = 8804630528; // ~8.2GB
+            let dataLength = 0;
+
+            const countStream = new std.stream.Writable();
+            countStream._write = function (chunk, encoding, done) {
+                dataLength += chunk.length;
+                done();
+            };
+
+            // Make sure we read the correct pax size entry for a file larger than 8GB.
+            extract.on("entry", (header, stream, callback) => {
+                assert.deepEqual(header, {
+                    devmajor: 0,
+                    devminor: 0,
+                    gid: 20,
+                    gname: "staff",
+                    linkname: null,
+                    mode: 420,
+                    mtime: new Date(1521214967000),
+                    name: "huge.txt",
+                    pax: {
+                        "LIBARCHIVE.creationtime": "1521214954",
+                        "SCHILY.dev": "16777218",
+                        "SCHILY.ino": "91584182",
+                        "SCHILY.nlink": "1",
+                        atime: "1521214969",
+                        ctime: "1521214967",
+                        size: hugeFileSize.toString()
+                    },
+                    size: hugeFileSize,
+                    type: "file",
+                    uid: 502,
+                    uname: "apd4n"
+                });
+
+                noEntries = true;
+                stream.pipe(countStream);
+            });
+
+            extract.on("finish", () => {
+                assert.ok(noEntries);
+                assert.equal(dataLength, hugeFileSize);
+                done();
+            });
+
+            const gunzip = std.zlib.createGunzip();
+            const reader = std.fs.createReadStream((await fixtures.get("huge.tar.gz")).path());
+            reader.pipe(gunzip).pipe(extract);
         });
     });
 });

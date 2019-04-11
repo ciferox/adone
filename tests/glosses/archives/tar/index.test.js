@@ -1,4 +1,9 @@
-const { is: { windows }, noop, archive: { tar }, std } = adone;
+const {
+    is: { windows },
+    noop,
+    archive: { tar },
+    std
+} = adone;
 
 describe("archive", "tar", () => {
     const mtime = function (st) {
@@ -16,7 +21,7 @@ describe("archive", "tar", () => {
         await copy.unlink();
     });
 
-    specify("copy a -> copy/a", async () => {
+    it("copy a -> copy/a", async () => {
         const a = fixtures.getDirectory("a");
         const b = fixtures.getDirectory("copy", "a");
 
@@ -39,7 +44,7 @@ describe("archive", "tar", () => {
         expect(await fileA.contents()).to.be.equal(await fileB.contents());
     });
 
-    specify("copy b -> copy/b", async () => {
+    it("copy b -> copy/b", async () => {
         const a = fixtures.getDirectory("b");
         const b = fixtures.getDirectory("copy", "b");
 
@@ -72,7 +77,7 @@ describe("archive", "tar", () => {
         expect(await fileA.contents()).to.be.equal(await fileB.contents());
     });
 
-    specify("symlink", async function () {
+    it("symlink", async function () {
         if (windows) { // no symlink support on win32 currently. TODO: test if this can be enabled somehow
             this.skip();
             return;
@@ -105,7 +110,7 @@ describe("archive", "tar", () => {
         expect(await linkA.contents()).to.be.equal(await linkB.contents());
     });
 
-    specify("follow symlinks", async function () {
+    it("follow symlinks", async function () {
         if (windows) { // no symlink support on win32 currently. TODO: test if this can be enabled somehow
             this.skip();
             return;
@@ -138,7 +143,7 @@ describe("archive", "tar", () => {
         expect(await file1.contents()).to.be.equal(await file2.contents());
     });
 
-    specify("strip", async () => {
+    it("strip", async () => {
         const a = fixtures.getDirectory("b");
         const b = fixtures.getDirectory("copy", "b-strip");
 
@@ -152,7 +157,7 @@ describe("archive", "tar", () => {
         expect(files[0].relativePath(b)).to.be.equal("test.txt");
     });
 
-    specify("strip + map", async () => {
+    it("strip + map", async () => {
         const a = fixtures.getDirectory("b");
         const b = fixtures.getDirectory("copy", "b-strip");
 
@@ -171,7 +176,7 @@ describe("archive", "tar", () => {
         expect(files[0].relativePath(b)).to.be.equal("TEST.TXT");
     });
 
-    specify("map + dir + permissions", async () => {
+    it("map + dir + permissions", async () => {
         const a = fixtures.getDirectory("b");
         const b = fixtures.getDirectory("copy", "b-perms");
 
@@ -195,7 +200,7 @@ describe("archive", "tar", () => {
         }
     });
 
-    specify("specific entries", async () => {
+    it("specific entries", async () => {
         const a = fixtures.getDirectory("d");
         const b = fixtures.getDirectory("copy", "d-entries");
 
@@ -220,7 +225,7 @@ describe("archive", "tar", () => {
         expect(subDir[0].filename()).to.be.equal("file5");
     });
 
-    specify("check type while mapping header on packing", (done) => {
+    it("check type while mapping header on packing", (done) => {
         const a = fixtures.getDirectory("e");
         let i = 0;
 
@@ -241,7 +246,7 @@ describe("archive", "tar", () => {
         tar.packStream(a.path(), { map: checkHeaderType });
     });
 
-    specify("finish callbacks", (done) => {
+    it("finish callbacks", (done) => {
         const a = fixtures.getDirectory("a");
         const b = fixtures.getDirectory("copy", "a");
 
@@ -273,8 +278,7 @@ describe("archive", "tar", () => {
         });
     });
 
-    specify("not finalizing the pack", async () => {
-
+    it("not finalizing the pack", async () => {
         const a = fixtures.getDirectory("a");
         const b = fixtures.getDirectory("b");
 
@@ -303,5 +307,39 @@ describe("archive", "tar", () => {
         assert.deepEqual(containers.map((x) => x.filename()), ["a-files", "b-files"]);
         const aFiles = await out.getDirectory("a-files").files();
         assert.deepEqual(aFiles.map((x) => x.filename()), ["hello.txt"]);
+    });
+
+    it("no abs hardlink targets", async (done) => {
+        const out = fixtures.getDirectory("invalid");
+        const outside = fixtures.getFile("outside");
+
+        await out.create();
+        await out.clean();
+
+        const s = new tar.RawPackStream();
+
+        await outside.write("something");
+
+        s.entry({
+            type: "link",
+            name: "link",
+            linkname: outside.path()
+        });
+
+        s.entry({
+            name: "link"
+        }, "overwrite");
+
+        s.finalize();
+
+        await s.pipe(tar.unpackStream(out.path())).on("error", (err) => {
+            assert.ok(err, "had error");
+            outside.contents("utf8").then(async (str) => {
+                assert.equal(str, "something");
+                await out.unlink();
+                await outside.unlink();
+                done();
+            });
+        });
     });
 });

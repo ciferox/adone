@@ -92,7 +92,7 @@ const getEndOfCentralDirectoryRecord = (self, actuallyJustTellMeHowLongItWouldBe
         return END_OF_CENTRAL_DIRECTORY_RECORD_SIZE;
     }
 
-    const eocdrBuffer = Buffer.alloc(END_OF_CENTRAL_DIRECTORY_RECORD_SIZE);
+    const eocdrBuffer = Buffer.allocUnsafe(END_OF_CENTRAL_DIRECTORY_RECORD_SIZE + self.comment.length);
     // end of central dir signature                       4 bytes  (0x06054b50)
     eocdrBuffer.writeUInt32LE(0x06054b50, 0);
     // number of this disk                                2 bytes
@@ -108,9 +108,9 @@ const getEndOfCentralDirectoryRecord = (self, actuallyJustTellMeHowLongItWouldBe
     // offset of start of central directory with respect to the starting disk number  4 bytes
     eocdrBuffer.writeUInt32LE(normalOffsetOfStartOfCentralDirectory, 16);
     // .ZIP file comment length                           2 bytes
-    eocdrBuffer.writeUInt16LE(0, 20);
+    eocdrBuffer.writeUInt16LE(self.comment.length, 20);
     // .ZIP file comment                                  (variable size)
-    // no comment
+    self.comment.copy(eocdrBuffer, 22);
 
     if (!needZip64Format) {
         return eocdrBuffer;
@@ -118,7 +118,7 @@ const getEndOfCentralDirectoryRecord = (self, actuallyJustTellMeHowLongItWouldBe
 
     // ZIP64 format
     // ZIP64 End of Central Directory Record
-    const zip64EocdrBuffer = Buffer.alloc(ZIP64_END_OF_CENTRAL_DIRECTORY_RECORD_SIZE);
+    const zip64EocdrBuffer = Buffer.allocUnsafe(ZIP64_END_OF_CENTRAL_DIRECTORY_RECORD_SIZE);
     // zip64 end of central dir signature                                             4 bytes  (0x06064b50)
     zip64EocdrBuffer.writeUInt32LE(0x06064b50, 0);
     // size of zip64 end of central directory record                                  8 bytes
@@ -144,7 +144,7 @@ const getEndOfCentralDirectoryRecord = (self, actuallyJustTellMeHowLongItWouldBe
 
 
     // ZIP64 End of Central Directory Locator
-    const zip64EocdlBuffer = Buffer.alloc(ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR_SIZE);
+    const zip64EocdlBuffer = Buffer.allocUnsafe(ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR_SIZE);
     // zip64 end of central dir locator signature                               4 bytes  (0x07064b50)
     zip64EocdlBuffer.writeUInt32LE(0x07064b50, 0);
     // number of the disk with the start of the zip64 end of central directory  4 bytes
@@ -161,6 +161,8 @@ const getEndOfCentralDirectoryRecord = (self, actuallyJustTellMeHowLongItWouldBe
         eocdrBuffer
     ]);
 };
+
+const EMPTY_BUFFER = Buffer.allocUnsafe(0);
 
 class Entry {
     constructor(metadataPath, isDirectory, options) {
@@ -200,6 +202,20 @@ class Entry {
             }
         }
         this.forceZip64Format = Boolean(options.forceZip64Format);
+        if (options.fileComment) {
+            if (is.string(options.fileComment)) {
+                this.fileComment = Buffer.from(options.fileComment, "utf-8");
+            } else {
+                // It should be a Buffer
+                this.fileComment = options.fileComment;
+            }
+            if (this.fileComment.length > 0xffff) {
+                throw new Error("fileComment is too large");
+            }
+        } else {
+            // no comment.
+            this.fileComment = EMPTY_BUFFER;
+        }
     }
 
     setLastModDate(date) {
@@ -243,7 +259,7 @@ class Entry {
             uncompressedSize = this.uncompressedSize;
         }
 
-        const fixedSizeStuff = Buffer.alloc(LOCAL_FILE_HEADER_FIXED_SIZE);
+        const fixedSizeStuff = Buffer.allocUnsafe(LOCAL_FILE_HEADER_FIXED_SIZE);
         let generalPurposeBitFlag = FILE_NAME_IS_UTF8;
         if (!this.crcAndFileSizeKnown) {
             generalPurposeBitFlag |= UNKNOWN_CRC32_AND_FILE_SIZES;
@@ -283,10 +299,10 @@ class Entry {
     getDataDescriptor() {
         if (this.crcAndFileSizeKnown) {
             // the Mac Archive Utility requires this not be present unless we set general purpose bit 3
-            return Buffer.alloc(0);
+            return Buffer.allocUnsafe(0);
         }
         if (!this.useZip64Format()) {
-            const buffer = Buffer.alloc(DATA_DESCRIPTOR_SIZE);
+            const buffer = Buffer.allocUnsafe(DATA_DESCRIPTOR_SIZE);
             // optional signature (required according to Archive Utility)
             buffer.writeUInt32LE(0x08074b50, 0);
             // crc-32                          4 bytes
@@ -298,7 +314,7 @@ class Entry {
             return buffer;
         }
         // ZIP64 format
-        const buffer = Buffer.alloc(ZIP64_DATA_DESCRIPTOR_SIZE);
+        const buffer = Buffer.allocUnsafe(ZIP64_DATA_DESCRIPTOR_SIZE);
         // optional signature (unknown if anyone cares about this)
         buffer.writeUInt32LE(0x08074b50, 0);
         // crc-32                          4 bytes
@@ -311,7 +327,7 @@ class Entry {
     }
 
     getCentralDirectoryRecord() {
-        const fixedSizeStuff = Buffer.alloc(CENTRAL_DIRECTORY_RECORD_FIXED_SIZE);
+        const fixedSizeStuff = Buffer.allocUnsafe(CENTRAL_DIRECTORY_RECORD_FIXED_SIZE);
         let generalPurposeBitFlag = FILE_NAME_IS_UTF8;
         if (!this.crcAndFileSizeKnown) {
             generalPurposeBitFlag |= UNKNOWN_CRC32_AND_FILE_SIZES;
@@ -329,7 +345,7 @@ class Entry {
             versionNeededToExtract = VERSION_NEEDED_TO_EXTRACT_ZIP64;
 
             // ZIP64 extended information extra field
-            zeiefBuffer = Buffer.alloc(ZIP64_EXTENDED_INFORMATION_EXTRA_FIELD_SIZE);
+            zeiefBuffer = Buffer.allocUnsafe(ZIP64_EXTENDED_INFORMATION_EXTRA_FIELD_SIZE);
             // 0x0001                  2 bytes    Tag for this "extra" block type
             zeiefBuffer.writeUInt16LE(0x0001, 0);
             // Size                    2 bytes    Size of this "extra" block
@@ -344,7 +360,7 @@ class Entry {
             // (omit)
         } else {
             versionNeededToExtract = VERSION_NEEDED_TO_EXTRACT_UTF8;
-            zeiefBuffer = Buffer.alloc(0);
+            zeiefBuffer = Buffer.allocUnsafe(0);
         }
 
         // central file header signature   4 bytes  (0x02014b50)
@@ -372,7 +388,7 @@ class Entry {
         // extra field length              2 bytes
         fixedSizeStuff.writeUInt16LE(zeiefBuffer.length, 30);
         // file comment length             2 bytes
-        fixedSizeStuff.writeUInt16LE(0, 32);
+        fixedSizeStuff.writeUInt16LE(this.fileComment.length, 32);
         // disk number start               2 bytes
         fixedSizeStuff.writeUInt16LE(0, 34);
         // internal file attributes        2 bytes
@@ -387,9 +403,9 @@ class Entry {
             // file name (variable size)
             this.utf8FileName,
             // extra field (variable size)
-            zeiefBuffer
+            zeiefBuffer,
             // file comment (variable size)
-            // empty comment
+            this.fileComment
         ]);
     }
 
@@ -438,7 +454,7 @@ const calculateFinalSize = (self) => {
             }
         }
 
-        centralDirectorySize += CENTRAL_DIRECTORY_RECORD_FIXED_SIZE + entry.utf8FileName.length;
+        centralDirectorySize += CENTRAL_DIRECTORY_RECORD_FIXED_SIZE + entry.utf8FileName.length + entry.fileComment.length;
         if (useZip64Format) {
             centralDirectorySize += ZIP64_EXTENDED_INFORMATION_EXTRA_FIELD_SIZE;
         }
@@ -453,7 +469,7 @@ const calculateFinalSize = (self) => {
         endOfCentralDirectorySize += ZIP64_END_OF_CENTRAL_DIRECTORY_RECORD_SIZE +
             ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR_SIZE;
     }
-    endOfCentralDirectorySize += END_OF_CENTRAL_DIRECTORY_RECORD_SIZE;
+    endOfCentralDirectorySize += END_OF_CENTRAL_DIRECTORY_RECORD_SIZE + self.comment.length;
     return pretendOutputCursor + centralDirectorySize + endOfCentralDirectorySize;
 };
 
@@ -559,6 +575,41 @@ const validateMetadataPath = (metadataPath, isDirectory) => {
     }
     return metadataPath;
 };
+
+const cp437 = '\u0000☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼ !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■ ';
+if (cp437.length !== 256) {
+    throw new Error("assertion failure");
+}
+let reverseCp437 = null;
+
+const encodeCp437 = function (string) {
+    if (/^[\x20-\x7e]*$/.test(string)) {
+        // CP437, ASCII, and UTF-8 overlap in this range.
+        return Buffer.from(string, "utf-8");
+    }
+
+    // This is the slow path.
+    if (is.nil(reverseCp437)) {
+        // cache this once
+        reverseCp437 = {};
+        for (let i = 0; i < cp437.length; i++) {
+            reverseCp437[cp437[i]] = i;
+        }
+    }
+
+    const result = Buffer.allocUnsafe(string.length);
+    for (let i = 0; i < string.length; i++) {
+        const b = reverseCp437[string[i]];
+        if (is.nil(b)) {
+            throw new Error(`character not encodable in CP437: ${JSON.stringify(string[i])}`);
+        }
+        result[i] = b;
+    }
+
+    return result;
+};
+
+const eocdrSignatureBuffer = Buffer.from([0x50, 0x4b, 0x05, 0x06]);
 
 export class ZipFile extends event.Emitter {
     constructor() {
@@ -687,6 +738,24 @@ export class ZipFile extends event.Emitter {
             this.finalSizeCallback = resolve;
         });
         this.forceZip64Eocd = Boolean(options.forceZip64Format);
+        if (options.comment) {
+            if (is.string(options.comment)) {
+                this.comment = encodeCp437(options.comment);
+            } else {
+                // It should be a Buffer
+                this.comment = options.comment;
+            }
+            if (this.comment.length > 0xffff) {
+                throw new Error("comment is too large");
+            }
+            // gotta check for this, because the zipfile format is actually ambiguous.
+            if (this.comment.includes(eocdrSignatureBuffer)) {
+                throw new Error("comment contains end of central directory record signature");
+            }
+        } else {
+            // no comment.
+            this.comment = EMPTY_BUFFER;
+        }
         pumpEntries(this);
         return promise;
     }

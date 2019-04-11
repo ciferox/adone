@@ -20,7 +20,7 @@ export default function plugin() {
                 ? file.dirname
                 : dirname
                     ? dirname
-                    : std.path.resolve(file.dirname, file.stem)
+                    : std.path.resolve(file.dirname, file.stem);
             switch (archiveType) {
                 case "tar": {
                     const isBuffer = file.isBuffer();
