@@ -172,12 +172,7 @@ export default class RunCommand extends Subsystem {
     }
 
     async _runScript(path, args, { sourcemaps, force } = {}) {
-        let scriptPath = path;
-        if (!std.path.isAbsolute(scriptPath)) {
-            scriptPath = std.path.resolve(process.cwd(), scriptPath);
-        }
-
-        if (!(await fs.exists(scriptPath)) && force) {
+        if (!(await fs.exists(path)) && force) {
             await adone.util.Editor.edit({
                 path,
                 save: true
@@ -195,13 +190,13 @@ export default class RunCommand extends Subsystem {
             }
         }
 
-        adone.__argv__ = [process.argv[0], scriptPath, ...args];
+        adone.__argv__ = [process.argv[0], path, ...args];
 
         if (sourcemaps) {
-            adone.sourcemap.support(Error).install();
+            adone.sourcemap.support.install();
         }
 
-        let result = adone.require(scriptPath);
+        let result = adone.require(path);
         if (result.__esModule && (is.function(result.default) || is.class(result.default))) {
             result = result.default;
         }

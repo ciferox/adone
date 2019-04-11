@@ -83,10 +83,6 @@ class AdoneCLI extends app.Application {
     }
 
     async run() {
-        await adone.fast.src("/home/overlord/.anodejs_cache/download/node-v11.13.0-win-x64.zip")
-            .extract()
-            .dest("/________/alldone/lab/extract");
-
         // print usage message by default
         console.log(`${this.helper.getHelpMessage()}\n`);
         return 0;

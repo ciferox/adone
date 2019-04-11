@@ -190,14 +190,12 @@ export default async (App, {
         runtime.app = null;
     }
 
-    if (useArgs) {
-        // redefine argv
-        if (is.array(adone.__argv__)) {
-            process.argv = adone.__argv__;
-            delete adone.__argv__;
-        }
+    // redefine argv
+    if (is.array(adone.__argv__)) {
+        process.argv = adone.__argv__;
+        delete adone.__argv__;
     }
-
+    
     class XApplication extends adone.app.Application { }
 
     const props = [];

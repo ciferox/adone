@@ -226,10 +226,9 @@ export class Stream extends event.Emitter {
 
     @checkDestroyed(2)
     through(transform, flush) {
-        if (is.asyncFunction(transform)) {
-            return this.throughAsync(transform, flush);
-        }
-        return this.throughSync(transform, flush);
+        return is.asyncFunction(transform)
+            ? this.throughAsync(transform, flush)
+            : this.throughSync(transform, flush);
     }
 
     @checkDestroyed(1)
@@ -237,14 +236,13 @@ export class Stream extends event.Emitter {
         if (!is.function(callback)) {
             throw new error.InvalidArgumentException("'callback' must be a function");
         }
-        if (is.asyncFunction(callback)) {
-            return this.throughAsync(async function (value) {
+        return is.asyncFunction(callback)
+            ? this.throughAsync(async function (value) {
                 this.push(await callback(value));
+            })
+            : this.throughSync(function (value) {
+                this.push(callback(value));
             });
-        }
-        return this.throughSync(function (value) {
-            this.push(callback(value));
-        });
     }
 
     @checkDestroyed(2)
@@ -257,22 +255,21 @@ export class Stream extends event.Emitter {
             throw new error.InvalidArgumentException("'callback' must be a function");
         }
 
-        if (is.asyncFunction(condition) || is.asyncFunction(callback)) {
-            return this.throughAsync(async function (x) {
+        return (is.asyncFunction(condition) || is.asyncFunction(callback))
+            ? this.throughAsync(async function (x) {
                 if (await condition(x)) {
                     this.push(await callback(x));
                 } else {
                     this.push(x);
                 }
+            })
+            : this.throughSync(function (x) {
+                if (condition(x)) {
+                    this.push(callback(x));
+                } else {
+                    this.push(x);
+                }
             });
-        }
-        return this.throughSync(function (x) {
-            if (condition(x)) {
-                this.push(callback(x));
-            } else {
-                this.push(x);
-            }
-        });
     }
 
     @checkDestroyed(1)
@@ -280,18 +277,17 @@ export class Stream extends event.Emitter {
         if (!is.function(callback)) {
             throw new error.InvalidArgumentException("'callback' must be a function");
         }
-        if (is.asyncFunction(callback)) {
-            return this.throughAsync(async function (value) {
+        return is.asyncFunction(callback)
+            ? this.throughAsync(async function (value) {
                 if (await callback(value)) {
                     this.push(value);
                 }
+            })
+            : this.throughSync(function (value) {
+                if (callback(value)) {
+                    this.push(value);
+                }
             });
-        }
-        return this.throughSync(function (value) {
-            if (callback(value)) {
-                this.push(value);
-            }
-        });
     }
 
     @checkDestroyed(2)
@@ -299,29 +295,26 @@ export class Stream extends event.Emitter {
         if (!is.function(callback)) {
             throw new error.InvalidArgumentException("'callback' must be a function");
         }
-        if (is.asyncFunction(callback)) {
-            if (wait) {
-                return this.throughAsync(async function (value) {
+        return is.asyncFunction(callback)
+            ? (wait)
+                ? this.throughAsync(async function (value) {
                     await callback(value);
                     if (passthrough) {
                         this.push(value);
                     }
-                }).resume();
-            }
-            return this.throughAsync(function (value) {
+                }).resume()
+                : this.throughAsync(function (value) {
+                    callback(value);
+                    if (passthrough) {
+                        this.push(value);
+                    }
+                }).resume()
+            : this.throughSync(function (value) {
                 callback(value);
                 if (passthrough) {
                     this.push(value);
                 }
             }).resume();
-
-        }
-        return this.throughSync(function (value) {
-            callback(value);
-            if (passthrough) {
-                this.push(value);
-            }
-        }).resume();
     }
 
     @checkDestroyed(2)
@@ -329,16 +322,15 @@ export class Stream extends event.Emitter {
         if (!is.function(callback)) {
             throw new error.InvalidArgumentException("'callback' must be a function");
         }
-        if (passthrough) {
-            return this.throughSync(function (value) {
+        return passthrough
+            ? this.throughSync(function (value) {
                 this.push(value);
             }, () => {
                 callback();
+            }).resume()
+            : this.throughSync(noop, () => {
+                callback();
             }).resume();
-        }
-        return this.throughSync(noop, () => {
-            callback();
-        }).resume();
     }
 
     @checkDestroyed(2)

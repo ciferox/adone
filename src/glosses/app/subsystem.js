@@ -56,7 +56,8 @@ export default class Subsystem extends adone.fsm.StateMachine {
     #owned = false;
 
     constructor({ name, transitions, allowedStates } = {}) {
-        let scheme = SUBSYSTEM_FSM_SCHEME;
+        let scheme = util.clone(SUBSYSTEM_FSM_SCHEME);
+
         if (is.array(transitions)) {
             scheme.transitions.push(...transitions);
         }

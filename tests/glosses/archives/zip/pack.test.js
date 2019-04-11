@@ -145,95 +145,48 @@ describe("archive", "zip", "pack", () => {
             }
         });
 
-        // (function () {
-        //     const zipfile = new yazl.ZipFile();
-        //     try {
-        //         zipfile.end({
-        //             comment: bufferFrom("01234567890123456789" + "\x50\x4b\x05\x06" + "01234567890123456789")
-        //         });
-        //     } catch (e) {
-        //         if (e.toString().indexOf("comment contains end of central directory record signature") !== -1) {
-        //             console.log("block eocdr signature in comment: pass");
-        //             return;
-        //         }
-        //     }
-        //     throw new Error("expected error for including eocdr signature in comment");
-        // })();
+        it("case 2", async () => {
+            const zipfile = new pack.ZipFile();
+            try {
+                await zipfile.end({
+                    comment: Buffer.from("01234567890123456789" + "\x50\x4b\x05\x06" + "01234567890123456789")
+                });
+            } catch (e) {
+                assert.isTrue(e.toString().includes("comment contains end of central directory record signature"));
+                return;
+            }
+            assert.fail("expected error for including eocdr signature in comment");
+        });
 
-        // (function () {
-        //     const testCases = [
-        //         ["Hello World!", "Hello World!"],
-        //         [bufferFrom("Hello!"), "Hello!"],
-        //         [weirdChars, weirdChars]
-        //     ];
-        //     testCases.forEach((testCase, i) => {
-        //         const zipfile = new yazl.ZipFile();
-        //         // all options parameters are optional
-        //         zipfile.addBuffer(bufferFrom("hello"), "hello.txt", { compress: false, fileComment: testCase[0] });
-        //         zipfile.end((finalSize) => {
-        //             if (finalSize === -1) {
-        //                 throw new Error("finalSize should be known");
-        //             }
-        //             zipfile.outputStream.pipe(new BufferList(((err, data) => {
-        //                 if (err) {
-        //                     throw err;
-        //                 }
-        //                 if (data.length !== finalSize) {
-        //                     throw new Error(`finalSize prediction is wrong. ${finalSize} !== ${data.length}`);
-        //                 }
-        //                 yauzl.fromBuffer(data, (err, zipfile) => {
-        //                     if (err) {
-        //                         throw err;
-        //                     }
-        //                     const entryNames = ["hello.txt"];
-        //                     zipfile.on("entry", (entry) => {
-        //                         let expectedName = entryNames.shift();
-        //                         if (entry.fileComment !== testCase[1]) {
-        //                             throw new Error(`fileComment is wrong. ${JSON.stringify(entry.fileComment)} !== ${JSON.stringify(testCase[1])}`);
-        //                         }
-        //                     });
-        //                     zipfile.on("end", () => {
-        //                         if (entryNames.length === 0) { console.log("fileComment(" + i + "): pass"); }
-        //                     });
-        //                 });
-        //             })));
-        //         });
-        //     });
-        // })();
+        it("case 3", async (done) => {
+            const testCases = [
+                ["Hello World!", "Hello World!"],
+                [Buffer.from("Hello!"), "Hello!"],
+                [weirdChars, weirdChars]
+            ];
+
+            for (let i = 0; i < testCases.length; i++) {
+                const testCase = testCases[i];
+                const zipfile = new pack.ZipFile();
+                // all options parameters are optional
+                zipfile.addBuffer(Buffer.from("hello"), "hello.txt", { compress: false, fileComment: testCase[0] });
+                // eslint-disable-next-line no-await-in-loop
+                const finalSize = await zipfile.end();
+                expect(finalSize).not.to.be.equal(-1, "final size should be known");
+                // eslint-disable-next-line no-await-in-loop
+                const data = await zipfile.outputStream.pipe(new BufferList());
+                expect(data.length).to.be.equal(finalSize, "prediction is wrong");
+                // eslint-disable-next-line no-await-in-loop
+                const zipFile = await unpack.fromBuffer(data);
+                zipFile.on("entry", (entry) => {
+                    assert.equal(entry.fileComment, testCase[1], "fileComment is wrong");
+                });
+                zipFile.on("end", () => {
+                    if (i === (testCases.length - 1)) {
+                        done();
+                    }
+                });
+            }
+        });
     });
-    // it("comment 1", async () => {
-    //     const zipfile = new pack.ZipFile();
-    //     const comment = "Hello World";
-    //     // zipfile.comment = comment;
-    //     const finalSize = await zipfile.end({
-    //         comment
-    //     });
-    //     expect(finalSize).not.to.be.equal(-1, "final size should be known");
-    //     const data = await zipfile.outputStream.pipe(new BufferList());
-    //     expect(data.length).to.be.equal(finalSize, "prediction is wrong");
-    //     const zipFile = await unpack.fromBuffer(data);
-    //     expect(zipFile.comment).to.be.equal(comment, "fileComment didn't match");
-    // });
-
-    // it("comment 2", async (done) => {
-    //     const fileComment = "Hello World";
-    //     const zipfile = new pack.ZipFile();
-    //     // all options parameters are optional
-    //     zipfile.addBuffer(Buffer.from("hello"), "hello.txt", { compress: false, fileComment });
-    //     const finalSize = await zipfile.end();
-    //     expect(finalSize).not.to.be.equal(-1, "final size should be known");
-    //     const data = await zipfile.outputStream.pipe(new BufferList());
-    //     expect(data.length).to.be.equal(finalSize, "prediction is wrong");
-    //     const zipFile = await unpack.fromBuffer(data);
-    //     const entryNames = ["hello.txt"];
-    //     zipFile.on("entry", (entry) => {
-    //         entryNames.shift();
-    //         expect(entry.comment).to.be.equal(fileComment, "fileComment didn't match");
-    //     });
-    //     zipFile.on("end", () => {
-    //         if (entryNames.length === 0) {
-    //             done();
-    //         }
-    //     });
-    // });
 });

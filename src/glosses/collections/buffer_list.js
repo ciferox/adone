@@ -1,29 +1,14 @@
-const { is, std: { stream: { Duplex: DuplexStream } }, promise } = adone;
+const {
+    is,
+    std: { stream: { Duplex: DuplexStream } },
+    promise
+} = adone;
 
-/**
- * @typedef {Buffer | BufferList | string | number | Array<Buffer | BufferList | string | number>} Appendable
- */
-
-/**
- * Represents a Node.js Buffer list collector, reader and streamer with callback/promise interface support
- */
 export default class BufferList extends DuplexStream {
-    /**
-     * @param {Appendable | Function} initial if a value given then it is appended to the list, if a callback given then
-     * it will be called with all the collected data when the stream end or with an error if will occur
-     *
-     */
     constructor(initial) {
         super();
 
         this._bufs = [];
-
-        /**
-         * The length of the list in bytes.
-         * This is the sum of the lengths of all of the buffers contained in the list,
-         * minus any initial offset for a semi-consumed buffer at the beginning.
-         * Should accurately represent the total number of bytes that can be read from the list
-         */
         this.length = 0;
 
         this._deferred = promise.defer();
@@ -65,12 +50,15 @@ export default class BufferList extends DuplexStream {
         }
     }
 
-    /**
-     * Adds an additional buffer or BufferList to the internal list
-     *
-     * @param {Appendable} buf
-     * @returns {this}
-     */
+    _reverseOffset(blOffset) {
+        const bufferId = blOffset[0];
+        let offset = blOffset[1];
+        for (let i = 0; i < bufferId; i++) {
+            offset += this._bufs[i].length;
+        }
+        return offset;
+    }
+
     append(buf) {
         let i = 0;
 
@@ -87,7 +75,7 @@ export default class BufferList extends DuplexStream {
             }
         } else if (!is.nil(buf)) {
             // coerce number arguments to strings, since Buffer(number) does
-            // uninitialized memory allocationthen
+            // uninitialized memory allocation
             if (is.number(buf)) {
                 buf = buf.toString();
             }
@@ -121,29 +109,19 @@ export default class BufferList extends DuplexStream {
         this.consume(size);
     }
 
-    /**
-     * Ends the stream
-     */
     end(chunk) {
         super.end(chunk);
         this._deferred.resolve(this.slice());
     }
 
-    /**
-     * Returns the byte at the specified index
-     *
-     * @return {number}
-     */
     get(index) {
-        return this.slice(index, index + 1)[0];
+        if (index > this.length || index < 0) {
+            return undefined;
+        }
+        const offset = this._offset(index);
+        return this._bufs[offset[0]][offset[1]];
     }
 
-    /**
-     * Returns a new Buffer object containing the bytes within the range specified.
-     *
-     * @param {number} [start] slice from
-     * @param {number} [end] slice to
-     */
     slice(start, end) {
         if (is.number(start) && start < 0) {
             start += this.length;
@@ -154,16 +132,6 @@ export default class BufferList extends DuplexStream {
         return this.copy(null, 0, start, end);
     }
 
-    /**
-     * Copies the content of the list in the dest buffer
-     * starting from destStart and containing the bytes within the range specified with srcStart to srcEnd
-     *
-     * @param {Buffer} dst
-     * @param {number} [dstStart] writes from this position
-     * @param {number} [srcStart] reads bytes from this position
-     * @param {number} [srcEnd]  read bytes to this position
-     * @returns {Buffer}
-     */
     copy(dst, dstStart, srcStart, srcEnd) {
         if (!is.number(srcStart) || srcStart < 0) {
             srcStart = 0;
@@ -212,7 +180,7 @@ export default class BufferList extends DuplexStream {
         }
 
         if (!copy) { // a slice, we need something to copy in to
-            dst = Buffer.alloc(len);
+            dst = Buffer.allocUnsafe(len);
         }
 
         for (i = off[0]; i < this._bufs.length; i++) {
@@ -236,17 +204,9 @@ export default class BufferList extends DuplexStream {
         return dst;
     }
 
-    /**
-     * Returns a new BufferList object containing the bytes within the range specified.
-     * No copies will be performed. All buffers in the result share memory with the original list.
-     *
-     * @param {number} start slice from
-     * @param {number} end slice to
-     * @returns {BufferList}
-     */
     shallowSlice(start, end) {
         start = start || 0;
-        end = end || this.length;
+        end = !is.number(end) ? this.length : end;
 
         if (start < 0) {
             start += this.length;
@@ -255,10 +215,12 @@ export default class BufferList extends DuplexStream {
             end += this.length;
         }
 
+        if (start === end) {
+            return new BufferList();
+        }
         const startOffset = this._offset(start);
         const endOffset = this._offset(end);
         const buffers = this._bufs.slice(startOffset[0], endOffset[0] + 1);
-
 
         if (endOffset[1] === 0) {
             buffers.pop();
@@ -273,20 +235,10 @@ export default class BufferList extends DuplexStream {
         return new BufferList(buffers);
     }
 
-    /**
-     * Return a string representation of the buffer
-     *
-     * @param {string} encoding
-     * @param {number} start
-     * @param {number} end
-     */
     toString(encoding, start, end) {
         return this.slice(start, end).toString(encoding);
     }
 
-    /**
-     * Shifts bytes off the start of the list
-     */
     consume(bytes) {
         while (this._bufs.length) {
             if (bytes >= this._bufs[0].length) {
@@ -302,9 +254,6 @@ export default class BufferList extends DuplexStream {
         return this;
     }
 
-    /**
-     * Performs a shallow-copy of the list
-     */
     duplicate() {
         let i = 0;
         const copy = new BufferList();
@@ -316,20 +265,87 @@ export default class BufferList extends DuplexStream {
         return copy;
     }
 
-    /**
-     * Destroys the stream
-     */
-    destroy() {
+    _destroy(err, cb) {
         this._bufs.length = 0;
         this.length = 0;
-        this.push(null);
+        cb(err);
+    }
+
+    indexOf(search, offset, encoding) {
+        if (is.undefined(encoding) && is.string(offset)) {
+            encoding = offset;
+            offset = undefined;
+        }
+        if (is.function(search) || is.array(search)) {
+            throw new TypeError('The "value" argument must be one of type string, Buffer, BufferList, or Uint8Array.');
+        } else if (is.number(search)) {
+            search = Buffer.from([search]);
+        } else if (is.string(search)) {
+            search = Buffer.from(search, encoding);
+        } else if (search instanceof BufferList) {
+            search = search.slice();
+        } else if (!is.buffer(search)) {
+            search = Buffer.from(search);
+        }
+
+        offset = Number(offset || 0);
+        if (isNaN(offset)) {
+            offset = 0;
+        }
+
+        if (offset < 0) {
+            offset = this.length + offset;
+        }
+
+        if (offset < 0) {
+            offset = 0;
+        }
+
+        if (search.length === 0) {
+            return offset > this.length ? this.length : offset;
+        }
+
+        const blOffset = this._offset(offset);
+        let blIndex = blOffset[0]; // index of which internal buffer we're working on
+        let buffOffset = blOffset[1]; // offset of the internal buffer we're working on
+
+        // scan over each buffer
+        for (blIndex; blIndex < this._bufs.length; blIndex++) {
+            const buff = this._bufs[blIndex];
+            while (buffOffset < buff.length) {
+                const availableWindow = buff.length - buffOffset;
+                if (availableWindow >= search.length) {
+                    const nativeSearchResult = buff.indexOf(search, buffOffset);
+                    if (nativeSearchResult !== -1) {
+                        return this._reverseOffset([blIndex, nativeSearchResult]);
+                    }
+                    buffOffset = buff.length - search.length + 1; // end of native search window
+                } else {
+                    const revOffset = this._reverseOffset([blIndex, buffOffset]);
+                    if (this._match(revOffset, search)) {
+                        return revOffset;
+                    }
+                    buffOffset++;
+                }
+            }
+            buffOffset = 0;
+        }
+        return -1;
+    }
+
+    _match(offset, search) {
+        if (this.length - offset < search.length) {
+            return false;
+        }
+        for (let searchOffset = 0; searchOffset < search.length; searchOffset++) {
+            if (this.get(offset + searchOffset) !== search[searchOffset]) {
+                return false;
+            }
+        }
+        return true;
     }
 }
 
-/**
- * All of the standard byte-reading methods of the Buffer interface are implemented
- * and will operate across internal Buffer boundaries transparently
- */
 const methods = {
     readDoubleBE: 8,
     readDoubleLE: 8,
@@ -344,12 +360,21 @@ const methods = {
     readUInt16BE: 2,
     readUInt16LE: 2,
     readInt8: 1,
-    readUInt8: 1
+    readUInt8: 1,
+    readIntBE: null,
+    readIntLE: null,
+    readUIntBE: null,
+    readUIntLE: null
 };
 
 for (const m in methods) {
-    BufferList.prototype[m] = function (offset) {
-        return this.slice(offset, offset + methods[m])[m](0);
-    };
+    if (is.null(methods[m])) {
+        BufferList.prototype[m] = function (offset, byteLength) {
+            return this.slice(offset, offset + byteLength)[m](0, byteLength);
+        };
+    } else {
+        BufferList.prototype[m] = function (offset) {
+            return this.slice(offset, offset + methods[m])[m](0);
+        };
+    }
 }
-
