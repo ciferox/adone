@@ -247,7 +247,8 @@ const fs = adone.lazify({
     upath: "./upath",
     dirname: "./dirname",
     copy: "./copy",
-    copyTo: "./copy_to"
+    copyTo: "./copy_to",
+    readChunk: "./read_chunk"
 }, adone.asNamespace(exports), require);
 
 const expandReadOptions = (options = {}) => is.string(options) ? { encoding: options } : options;

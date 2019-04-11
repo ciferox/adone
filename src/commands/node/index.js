@@ -100,11 +100,12 @@ export default class NodeCommand extends Subsystem {
 
             return 0;
         } catch (err) {
-            // console.log(pretty.error(err));
             cli.updateProgress({
                 message: err.message,
-                status: false
+                status: false,
+                clean: true
             });
+            // console.log(pretty.error(err));
             return 1;
         }
     }
@@ -122,11 +123,35 @@ export default class NodeCommand extends Subsystem {
         ],
         options: [
             {
+                name: ["--type", "-T"],
+                description: "Distribution type",
+                choices: ["release", "sources", "headers"],
+                default: "release"
+            },
+            {
+                name: ["--platform", "-P"],
+                description: "Platform name",
+                choices: ["linux", "win", "darwin", "sunos", "aix"],
+                default: nodejs.getCurrentPlatform()
+            },
+            {
+                name: ["--arch", "-A"],
+                description: "CPU architecture",
+                choices: ["x64", "x86", "arm64", "armv7l", "armv6l", "ppc64le", "ppc64", "s390x"],
+                default: nodejs.getCurrentArch()
+            },
+            {
+                name: ["--ext", "-E"],
+                description: "Archive extension",
+                type: String,
+                default: nodejs.DEFAULT_EXT
+            },
+            {
                 name: ["--force", "-F"],
                 description: "Force download"
             },
             {
-                name: ["--out", "-O"],
+                name: ["--out-path", "-O"],
                 type: String,
                 description: "Output path"
             }
@@ -146,9 +171,8 @@ export default class NodeCommand extends Subsystem {
 
             const result = await this.nodejsManager.download({
                 version,
-                outPath: opts.get("out"),
-                force: opts.get("force"),
-                progressBar: true
+                progressBar: true,
+                ...opts.getAll()
             });
 
             if (result.downloaded) {
@@ -156,7 +180,7 @@ export default class NodeCommand extends Subsystem {
                     message: `Saved to ${style.accent(result.path)}`,
                     status: true
                 });
-            } else { 
+            } else {
                 cli.updateProgress({
                     message: `Already downloaded: ${style.accent(result.path)}`,
                     status: true
@@ -165,11 +189,11 @@ export default class NodeCommand extends Subsystem {
 
             return 0;
         } catch (err) {
-            // console.log(pretty.error(err));
             cli.updateProgress({
                 message: err.message,
                 status: false
             });
+            // console.log(pretty.error(err));
             return 1;
         }
     }
@@ -230,7 +254,7 @@ export default class NodeCommand extends Subsystem {
                 cli.updateProgress({
                     message: "copying new files"
                 });
-                
+
                 await fs.copy(unpackedPath, prefixPath, {
                     filter: (src, item) => !IGNORE_FILES.includes(item)
                 });
@@ -245,11 +269,11 @@ export default class NodeCommand extends Subsystem {
 
             return 0;
         } catch (err) {
-            // console.log(pretty.error(err));
             cli.updateProgress({
                 message: err.message,
                 status: false
             });
+            // console.log(pretty.error(err));
             return 1;
         }
     }

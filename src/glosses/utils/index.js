@@ -86,7 +86,8 @@ adone.lazify({
     toMs: "./to_ms",
     omit: "./omit",
     globParent: "./glob_parent",
-    clone: "./clone"
+    clone: "./clone",
+    detectFileType: "./detect_file_type"
 }, adone.asNamespace(exports), require);
 
 const irregularPlurals = {

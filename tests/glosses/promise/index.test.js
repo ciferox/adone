@@ -244,18 +244,6 @@ describe("promise", () => {
             }).to.throw(adone.error.InvalidArgumentException, "The first argument must be a function");
         });
 
-        it("should set the promisified property", () => {
-            const getSecrets = adone.noop;
-            const f = promise.promisify(getSecrets);
-            expect(f[Symbol.for("adone:promise:promisified")]).to.be.true();
-        });
-
-        it("should set the promisified source property", () => {
-            const getSecrets = adone.noop;
-            const f = promise.promisify(getSecrets);
-            expect(f[Symbol.for("adone:promise:promisify_source")]).to.be.equal(getSecrets);
-        });
-
         it("should use a custom context", async () => {
             const f = function (cb) {
                 cb(null, this.a + this.b);
@@ -268,10 +256,16 @@ describe("promise", () => {
             expect(await g.call(ctx)).to.be.equal(4);
         });
 
-        it("should use the same function name", () => {
-            const helloWorld = function () { };
-            const g = promise.promisify(helloWorld);
-            expect(g.name).to.be.equal(helloWorld.name);
+        describe("multiArgs", () => {
+            it("normal", async () => {
+                const fn = (cb) => setImmediate(() => cb(null, "a", "b"));
+                assert.deepEqual(await promise.promisify(fn, { multiArgs: true })(), ["a", "b"]);
+            });
+
+            it("rejection", async () => {
+                const fixture1 = (cb) => setImmediate(() => cb("e", "a", "b"));
+                assert.deepEqual(await promise.promisify(fixture1, { multiArgs: true })().catch((error) => error), ["e", "a", "b"]);
+            });
         });
     });
 
@@ -284,8 +278,6 @@ describe("promise", () => {
             const b = promise.promisifyAll(a);
             expect(await b.fAsync()).to.be.equal(1);
             expect(await b.bAsync()).to.be.equal(2);
-            expect(b.fAsync[Symbol.for("adone:promise:promisified")]).to.be.true();
-            expect(b.bAsync[Symbol.for("adone:promise:promisified")]).to.be.true();
         });
 
         it("should not modify the prev functions", () => {
@@ -402,46 +394,6 @@ describe("promise", () => {
         it("returning a rejected promise in the callback for an already rejected promise changes the rejection reason", async () => {
             await promise.finally(Promise.reject(new Error("orig err")), () => Promise.reject(fixtureErr)).catch((err) => {
                 assert.equal(err, fixtureErr);
-            });
-        });
-    });
-
-    describe("custom promisifier", () => {
-        const input = "adone";
-        const err = new adone.error.NotValidException();
-        const a = {
-            ok(input, callback) {
-                setTimeout(() => {
-                    callback(input);
-                }, 1);
-            },
-            bad(input, callback, errback) {
-                setTimeout(() => {
-                    errback(err);
-                }, 1);
-            }
-        };
-
-        const b = promise.promisifyAll(a, {
-            promisifier(originalMethod) {
-                return function (...args) {
-                    return new Promise(((f, r) => {
-                        args.push(f, r);
-                        originalMethod.apply(this, args);
-                    }));
-                };
-            }
-        });
-
-        it("normal execution", () => {
-            return b.okAsync(input).then((result) => {
-                assert.equal(result, input);
-            });
-        });
-
-        it("execution with error", () => {
-            return b.badAsync(input).then(assert.fail, (e) => {
-                assert.equal(e, err);
             });
         });
     });
@@ -675,6 +627,26 @@ describe("promise", () => {
             await assert.throws(async () => {
                 await props(obj);
             }, "oops");
+        });
+    });
+
+
+    describe("try", () => {
+        const fixture = Symbol("fixture");
+        const fixtureError = new Error("fixture");
+
+        it("main", async () => {
+            assert.equal(await promise.try(() => fixture), fixture);
+
+            await assert.throws(async () => promise.try(() => Promise.reject(fixtureError)), fixtureError.message);
+
+            await assert.throws(async () => promise.try(() => {
+                throw fixtureError;
+            }), fixtureError.message);
+        });
+
+        it("allows passing arguments through", async () => {
+            assert.equal(await promise.try((argument) => argument, fixture), fixture);
         });
     });
 });

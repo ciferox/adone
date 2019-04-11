@@ -5,9 +5,6 @@ const {
 
 adone.asNamespace(exports);
 
-const PROMISIFIED = Symbol.for("adone:promise:promisified");
-const PROMISIFY_SOURCE = Symbol.for("adone:promise:promisify_source");
-
 /**
  * @typedef Deferred
  * @property {Function} resolve
@@ -127,6 +124,28 @@ export const callbackify = (fn) => {
     };
 };
 
+const processFn = (fn, context, args, multiArgs, resolve, reject) => {
+    if (multiArgs) {
+        args.push((...result) => {
+            if (result[0]) {
+                reject(result);
+            } else {
+                result.shift();
+                resolve(result);
+            }
+        });
+    } else {
+        args.push((err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result);
+            }
+        });
+    }
+    fn.apply(context, args);
+};
+
 /**
  * Converts a callback function to a promise-based function
  *
@@ -134,50 +153,20 @@ export const callbackify = (fn) => {
  * @param {object} [context] Context to bind to new function
  * @returns {Function}
  */
-export const promisify = (fn, { context = null, promisifier = null } = {}) => {
+export const promisify = (fn, { context = null, multiArgs = false } = {}) => {
     if (!is.function(fn)) {
         throw new adone.error.InvalidArgumentException("The first argument must be a function");
     }
 
-    const { name } = fn;
-    let res;
-
-    if (context) {
-        res = {
-            [name]: (...args) => new Promise((resolve, reject) => {
-                args.push((err, result) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(result);
-                    }
-                });
-                fn.apply(context, args);
-            })
+    return context
+        ? (...args) => new Promise((resolve, reject) => {
+            processFn(fn, context, args, multiArgs, resolve, reject);
+        })
+        : function (...args) {
+            return new Promise((resolve, reject) => {
+                processFn(fn, this, args, multiArgs, resolve, reject);
+            });
         };
-    } else {
-        res = {
-            [name](...args) {
-                return new Promise((resolve, reject) => {
-                    args.push((err, result) => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve(result);
-                        }
-                    });
-                    fn.apply(this, args);
-                });
-            }
-        };
-    }
-
-    if (is.function(promisifier)) {
-        res[name] = promisifier(fn, res[name]);
-    }
-    res[name][PROMISIFIED] = true;
-    res[name][PROMISIFY_SOURCE] = fn;
-    return res[name];
 };
 
 /**
@@ -189,15 +178,15 @@ export const promisify = (fn, { context = null, promisifier = null } = {}) => {
  * @param {object} [context] Context to bind to new functions
  * @returns {object} object with promisified functions
  */
-export const promisifyAll = (source, { suffix = "Async", filter = adone.truly, context, promisifier } = {}) => {
+export const promisifyAll = (source, { suffix = "Async", filter = adone.truly, context } = {}) => {
     if (is.function(source)) {
-        return promisify(source, { context, promisifier });
+        return promisify(source, { context });
     }
 
     const target = Object.create(source);
     for (const [key, value] of util.entries(source, { all: true })) {
         if (is.function(value) && filter(key)) {
-            target[`${key}${suffix}`] = promisify(value, { context, promisifier });
+            target[`${key}${suffix}`] = promisify(value, { context });
         }
     }
     return target;
@@ -312,3 +301,10 @@ export const props = async (obj) => {
     }));
     return result;
 };
+
+
+const try_ = (fn, ...args) => new Promise((resolve) => {
+    resolve(fn(...args));
+});
+
+export { try_ as try };

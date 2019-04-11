@@ -8,7 +8,7 @@ const {
 
 adone.lazify({
     NodejsManager: "./manager",
-    NodejsPackager: "./packager"
+    NodejsCompiler: "./compiler"
 }, adone.asNamespace(exports), require);
 
 const versionRegex = () => /^v\d+\.\d+\.\d+/;

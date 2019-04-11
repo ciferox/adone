@@ -45,7 +45,12 @@ export default class NodejsManager {
 
     async getDownloadedVersions() {
         const files = await fs.readdir(await this.getDownloadPath());
-        return files.map((f) => /^node-(v\d+\.\d+\.\d+)-.+/.exec(f)[1]);
+        return files.map((f) => {
+            const result = /^node-(v\d+\.\d+\.\d+)-.+/.exec(f);
+            return !is.null(result)
+                ? result[[1]]
+                : "";
+        }).filter(adone.identity);
     }
 
     /**
@@ -131,9 +136,13 @@ export default class NodejsManager {
     async unpack({ outPath, version, platform, arch, type, ext } = {}) {
         const destPath = outPath || await fs.tmpName();
         const fullPath = await this.getCachedArchivePath({ version, type, ext, platform, arch });
+        // await adone.fast.src(fullPath)
+        //     .decompress("xz")
+        //     .unpack("tar", { inRoot: true })
+        //     .dest(destPath);
+
         await adone.fast.src(fullPath)
-            .decompress("xz")
-            .unpack("tar", { inRoot: true })
+            .extract()
             .dest(destPath);
 
         return std.path.join(destPath, await nodejs.getArchiveName({ version, ext: "" }));
