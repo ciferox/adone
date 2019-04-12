@@ -76,8 +76,11 @@ export class Stream extends Writable {
         if (is.function(opts)) {
             cb = opts;
             opts = {};
-        }
-        if (!opts) {
+        } else if (is.string(opts)) {
+            opts = {
+                encoding: opts
+            };
+        } else if (!opts) {
             opts = {};
         }
 

@@ -5,7 +5,6 @@ adone.lazify({
     compress: "./extensions/compress",
     decompress: "./extensions/decompress",
     pack: "./extensions/pack",
-    unpack: "./extensions/unpack",
     archive: "./extensions/archive",
     extract: "./extensions/extract",
     transpile: "./extensions/transpile",

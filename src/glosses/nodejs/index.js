@@ -41,7 +41,7 @@ export const DEFAULT_EXT = is.windows
 const UNIX_EXTS = ["", ".tar.gz", ".tar.xz"];
 const WIN_EXTS = ["", ".7z", ".zip"];
 
-export const getArchiveName = async ({ version, platform = getCurrentPlatform(), arch = getCurrentArch(), type = "release", ext = DEFAULT_EXT } = {}) => {
+export const getArchiveName = async ({ version, platform = getCurrentPlatform(), arch = getCurrentArch(), type = "release", omitSuffix = false, ext = DEFAULT_EXT } = {}) => {
     if (!is.string(version) || !versionRegex().test(version)) {
         throw new error.NotValidException("Invalid version parameter");
     }
@@ -54,7 +54,9 @@ export const getArchiveName = async ({ version, platform = getCurrentPlatform(),
             throw new error.NotValidException(`Archive extension should be '.tar.gz' or '.tar.xz. Got '${ext}'`);
         }
         const suffix = type === "headers"
-            ? "-headers"
+            ? omitSuffix
+                ? ""
+                : "-headers"
             : "";
         return `node-${version}${suffix}${ext}`;
     } else if (type !== "release") {

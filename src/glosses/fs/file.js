@@ -48,6 +48,10 @@ export default class File {
         return stdFs.lstatSync(this._path);
     }
 
+    async isSymbolicLink() {
+        return (await this.lstat()).isSymbolicLink();
+    }
+
     async utimes(atime, mtime) {
         await fs.utimes(this._path, atime, mtime);
     }

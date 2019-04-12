@@ -1,5 +1,6 @@
 const {
     is,
+    fs,
     error,
     std,
     util
@@ -116,7 +117,7 @@ export default class File {
     }
 
     isSymbolic() {
-        return Boolean(this.isNull() && this.stat && this.stat.isSymbolicLink());
+        return this.isNull() && this.stat && (this.stat.isSymbolicLink() || ((this.stat.mode & fs.constants.S_IFMT) === fs.constants.S_IFLNK));
     }
 
     get cwd() {

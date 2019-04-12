@@ -25,26 +25,24 @@ export default class NodejsManager {
         if (!this.cache.basePath) {
             this.cache.basePath = std.path.join(system.env.home(), ".anodejs_cache");
         }
-        this.cache.downloadDir = this.cache.downloadDir || "download";
+        this.cache.download = this.cache.download || "download";
+        this.cache.release = this.cache.release || "release";
+        this.cache.sources = this.cache.sources || "sources";
+        this.cache.headers = this.cache.headers || "headers";
     }
 
     async getCachePath(...dirs) {
         const cachePath = std.path.join(this.cache.basePath, ...dirs);
         await fs.mkdirp(cachePath);
-
         return cachePath;
     }
 
-    async getDownloadPath() {
-        return this.getCachePath(this.cache.downloadDir);
-    }
-
-    async getCachedArchivePath({ version, ext, platform, type, arch } = {}) {
-        return std.path.join(await this.getCachePath(this.cache.downloadDir), await nodejs.getArchiveName({ version, type, ext, platform, arch }));
+    async getCachePathFor(dirName, options) {
+        return std.path.join(await this.getCachePath(dirName), await nodejs.getArchiveName(options));
     }
 
     async getDownloadedVersions() {
-        const files = await fs.readdir(await this.getDownloadPath());
+        const files = await fs.readdir(await this.getCachePath(this.cache.download));
         return files.map((f) => {
             const result = /^node-(v\d+\.\d+\.\d+)-.+/.exec(f);
             return !is.null(result)
@@ -68,8 +66,8 @@ export default class NodejsManager {
 
         const tmpPath = await fs.tmpName();
 
-        const downloadPath = await this.getDownloadPath();
-        let fullPath = await this.getCachedArchivePath({ version, type, ext, platform, arch });
+        const downloadPath = await this.getCachePath(this.cache.download);
+        let fullPath = await this.getCachePathFor(this.cache.download, { version, type, ext, platform, arch });
 
         if (!is.string(outPath) || outPath.length === 0) {
             outPath = downloadPath;
@@ -132,20 +130,20 @@ export default class NodejsManager {
         return result;
     }
 
-    // TODO: need more advanced configuration
-    async unpack({ outPath, version, platform, arch, type, ext } = {}) {
-        const destPath = outPath || await fs.tmpName();
-        const fullPath = await this.getCachedArchivePath({ version, type, ext, platform, arch });
-        // await adone.fast.src(fullPath)
-        //     .decompress("xz")
-        //     .unpack("tar", { inRoot: true })
-        //     .dest(destPath);
+    // TODO: force disable 'strip' mode when extracting to default cache
+    async extract({ outPath, version, platform, arch, type, ext, strip = false } = {}) {
+        const destPath = outPath || await this.getCachePath(this.cache[type || "release"]);
+        const fullPath = await this.getCachePathFor(this.cache.download, { version, type, ext, platform, arch });
 
         await adone.fast.src(fullPath)
-            .extract()
+            .extract({
+                strip: strip ? 1 : 0
+            })
             .dest(destPath);
 
-        return std.path.join(destPath, await nodejs.getArchiveName({ version, ext: "" }));
+        return strip
+            ? destPath
+            : std.path.join(destPath, await nodejs.getArchiveName({ version, platform, arch, type, omitSuffix: true, ext: "" }));
     }
 
     async deleteCurrent() {

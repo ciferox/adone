@@ -189,9 +189,9 @@ export default class Directory {
     }
 
     async clean() {
-        const files = await this.files();
-        for (const file of files) {
-            await file.unlink(); // eslint-disable-line
+        const items = await this.find({ files: true, dirs: true });
+        for (const item of items) {
+            await item.unlink(); // eslint-disable-line
         }
     }
 

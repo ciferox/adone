@@ -1,25 +1,23 @@
+import { stripDir } from "./helpers";
+
 const {
     is,
     archive: { zip: { unpack } },
-    std
+    std: { fs: { Stats, constants: { S_IFMT, S_IFDIR, S_IFLNK } }, path }
 } = adone;
 
-const IFMT = std.fs.constants.S_IFMT;
-const IFDIR = std.fs.constants.S_IFDIR;
-const IFLNK = std.fs.constants.S_IFLNK;
-
-const getType = (entry, mode) => ((mode & IFMT) === IFLNK)
+const getType = (entry, mode) => ((mode & S_IFMT) === S_IFLNK)
     ? "link"
-    : ((mode & IFMT) === IFDIR || ((entry.versionMadeBy >> 8) === 0 && entry.externalFileAttributes === 16))
+    : ((mode & S_IFMT) === S_IFDIR || ((entry.versionMadeBy >> 8) === 0 && entry.externalFileAttributes === 16))
         ? "dir"
         : "file";
 
 
 export default () => ({
-    name: "Zip",
+    name: "ZIP",
     supportBuffer: true,
     supportStream: false,
-    async run(stream, file, { dirname, ...options } = {}) {
+    async run(stream, file, { dirname, strip, ...options } = {}) {
         const contents = file.contents;
         const zipfile = await unpack.fromBuffer(contents, { ...options, lazyEntries: true });
 
@@ -29,7 +27,7 @@ export default () => ({
                 break;
             }
             const entryFile = file.clone();
-            entryFile.stat = new std.fs.Stats();
+            entryFile.stat = new Stats();
             const mode = entryFile.stat.mode = (entry.externalFileAttributes >> 16) & 0xFFFF;
             entryFile.stat.mtime = entry.getLastModDate().toDate();
             entryFile.stat.mtimeMs = entryFile.stat.mtime.getTime();
@@ -44,14 +42,15 @@ export default () => ({
                 entryFile.stat.mode = 420;
             }
 
+            entryFile.path = path.resolve(dirname, stripDir(entry.fileName, strip));
             if (t === "dir") {
-                entryFile.path = std.path.resolve(dirname, entry.fileName.slice(0, -1));
                 entryFile.contents = null;
             } else if (t === "file") {
-                entryFile.path = std.path.resolve(dirname, entry.fileName);
                 entryFile.contents = await zipfile.openReadStream(entry); // eslint-disable-line
             } else {
-                entryFile.symlink = await zipfile.openReadStream(entry); // eslint-disable-line
+                entryFile.contents = null;
+                const s = await zipfile.openReadStream(entry); // eslint-disable-line
+                entryFile.symlink = await s.pipe(adone.stream.concat.create("string")); // eslint-disable-line
             }
             stream.push(entryFile);
         }

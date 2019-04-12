@@ -13,7 +13,7 @@ const adone = Object.create({
     identity: (x) => x,
     truly: () => true,
     falsely: () => false,
-    o: (...props) => props.length > 0 ? Object.assign({}, ...props) : {},
+    o: (...props) => props.length > 0 ? Object.assign({}, ...props) : Object.create(null),
     setTimeout: global.setTimeout,
     clearTimeout: global.clearTimeout,
     setInterval: global.setInterval,

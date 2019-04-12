@@ -9,8 +9,9 @@ export default function plugin() {
             lzma: "lzma",
             gz: "gz",
             xz: "xz",
+            bz2: "bz2",
             brotli: "br",
-            deflate: "deflate" // ?
+            deflate: "zz"
         }[compressorType];
 
         return this.through(async function compressor(file) {

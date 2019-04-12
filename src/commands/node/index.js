@@ -244,7 +244,7 @@ export default class NodeCommand extends Subsystem {
                 cli.updateProgress({
                     message: `unpacking ${style.accent(await nodejs.getArchiveName({ version }))}`
                 });
-                const unpackedPath = await this.nodejsManager.unpack({ version });
+                const unpackedPath = await this.nodejsManager.extract({ version });
 
                 cli.updateProgress({
                     message: "deleting previous files"

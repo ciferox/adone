@@ -59,6 +59,10 @@ describe("nodejs", () => {
             assert.equal(await nodejs.getArchiveName({ version: "v11.13.0", type: "headers" }), `node-v11.13.0-headers${defaultExt}`);
         });
 
+        it("get archive name of headers with omitted suffix", async () => {
+            assert.equal(await nodejs.getArchiveName({ version: "v11.13.0", type: "headers", omitSuffix: true }), `node-v11.13.0${defaultExt}`);
+        });
+
         it("get archive name without ext", async () => {
             assert.equal(await nodejs.getArchiveName({ version: "v11.13.0", ext: "" }), `node-v11.13.0-${platform}-${arch}`);
         });
@@ -73,13 +77,10 @@ describe("nodejs", () => {
             return tmpPath;
         };
 
-        const createManager = async ({ basePath, downloadDir } = {}) => {
-            basePath = basePath || await createTmpPath();
+        const createManager = async (cache = {}) => {
+            cache.basePath = cache.basePath || await createTmpPath();
             return new nodejs.NodejsManager({
-                cache: {
-                    basePath,
-                    downloadDir
-                }
+                cache
             });
         };
 
@@ -95,7 +96,10 @@ describe("nodejs", () => {
 
             assert.deepEqual(nm.cache, {
                 basePath: path.join(system.env.home(), ".anodejs_cache"),
-                downloadDir: "download"
+                download: "download",
+                release: "release",
+                sources: "sources",
+                headers: "headers"
             });
         });
 
@@ -105,16 +109,25 @@ describe("nodejs", () => {
 
             assert.deepEqual(nm.cache, {
                 basePath,
-                downloadDir: "download"
+                download: "download",
+                release: "release",
+                sources: "sources",
+                headers: "headers"
             });
         });
 
-        it("custom download dir name", async () => {
+        it("custom cache dirs", async () => {
             const nm = await createManager({
-                downloadDir: "archives"
+                download: "archives",
+                release: "rel",
+                sources: "srcs",
+                headers: "hdrs"
             });
 
-            assert.equal(nm.cache.downloadDir, "archives");
+            assert.equal(nm.cache.download, "archives");
+            assert.equal(nm.cache.release, "rel");
+            assert.equal(nm.cache.sources, "srcs");
+            assert.equal(nm.cache.headers, "hdrs");
         });
 
         it("getCachePath() without parameters should returl base path", async () => {
@@ -126,8 +139,8 @@ describe("nodejs", () => {
         it("getCachePath() should create all sub directories", async () => {
             const nm = await createManager();
 
-            let p = await nm.getCachePath(nm.cache.downloadDir);
-            assert.equal(p, path.join(nm.cache.basePath, nm.cache.downloadDir));
+            let p = await nm.getCachePath(nm.cache.download);
+            assert.equal(p, path.join(nm.cache.basePath, nm.cache.download));
             assert.isTrue(await fs.isDirectory(p));
 
             p = await nm.getCachePath("some", "nested", "dir");
@@ -135,9 +148,15 @@ describe("nodejs", () => {
             assert.isTrue(await fs.isDirectory(p));
         });
 
-        it("getDownloadPath() should create all sub directories", async () => {
+        it("getCachePath() should create all sub directories", async () => {
             const nm = await createManager();
-            assert.equal(await nm.getDownloadPath(), await nm.getCachePath(nm.cache.downloadDir));
+            let p = await nm.getCachePath(nm.cache.download);
+            assert.equal(p, path.join(nm.cache.basePath, nm.cache.download));
+            assert.isTrue(await fs.isDirectory(p));
+
+            p = await nm.getCachePath(nm.cache.release);
+            assert.equal(p, path.join(nm.cache.basePath, nm.cache.release));
+            assert.isTrue(await fs.isDirectory(p));
         });
 
         describe("donwload", () => {
@@ -148,7 +167,7 @@ describe("nodejs", () => {
                 const result = await nm.download();
 
                 assert.equal(result.downloaded, true);
-                const archivePath = path.join(await nm.getCachedArchivePath({ version }));
+                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version }));
                 assert.equal(result.path, archivePath);
                 assert.isTrue(await fs.isFile(archivePath));
             });
@@ -160,7 +179,7 @@ describe("nodejs", () => {
                 const result = await nm.download({ version });
 
                 assert.equal(result.downloaded, true);
-                const archivePath = path.join(await nm.getCachedArchivePath({ version }));
+                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version }));
                 assert.equal(result.path, archivePath);
                 assert.isTrue(await fs.isFile(archivePath));
             });
@@ -174,7 +193,7 @@ describe("nodejs", () => {
                 const result = await nm.download({ platform, ext });
 
                 assert.equal(result.downloaded, true);
-                const archivePath = path.join(await nm.getCachedArchivePath({ version, platform, ext }));
+                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version, platform, ext }));
                 assert.equal(result.path, archivePath);
                 assert.isTrue(await fs.isFile(archivePath));
             });
@@ -189,7 +208,7 @@ describe("nodejs", () => {
                 const result = await nm.download({ platform, arch, ext });
 
                 assert.equal(result.downloaded, true);
-                const archivePath = path.join(await nm.getCachedArchivePath({ version, platform, arch, ext }));
+                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version, platform, arch, ext }));
                 assert.equal(result.path, archivePath);
                 assert.isTrue(await fs.isFile(archivePath));
             });
@@ -202,7 +221,7 @@ describe("nodejs", () => {
                 const result = await nm.download({ version, type });
 
                 assert.equal(result.downloaded, true);
-                const archivePath = path.join(await nm.getCachedArchivePath({ version, type }));
+                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version, type }));
                 assert.equal(result.path, archivePath);
                 assert.isTrue(await fs.isFile(archivePath));
             });
@@ -216,10 +235,81 @@ describe("nodejs", () => {
                 const result = await nm.download({ version, type, ext });
 
                 assert.equal(result.downloaded, true);
-                const archivePath = path.join(await nm.getCachedArchivePath({ version, type, ext }));
+                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version, type, ext }));
                 assert.equal(result.path, archivePath);
                 assert.isTrue(await fs.isFile(archivePath));
             });
+        });
+
+        describe("extract", () => {
+            const cases = [
+                {
+                    platform: "win",
+                    ext: ".zip"
+                },
+                {
+                    platform: "win",
+                    ext: ".zip",
+                    strip: true
+                },
+                {
+                    platform: "linux",
+                    ext: ".tar.gz"
+                },
+                {
+                    platform: "linux",
+                    ext: ".tar.gz",
+                    strip: true
+                },
+                {
+                    platform: "linux",
+                    ext: ".tar.xz"
+                },
+                {
+                    platform: "linux",
+                    ext: ".tar.xz",
+                    strip: true
+                },
+                {
+                    type: "sources",
+                    ext: ".tar.gz"
+                },
+                {
+                    type: "sources",
+                    ext: ".tar.xz",
+                    strip: true
+                },
+                {
+                    type: "headers",
+                    ext: ".tar.gz"
+                },
+                {
+                    type: "headers",
+                    ext: ".tar.xz",
+                    strip: true
+                }
+            ];
+
+            for (const c of cases) {
+                // eslint-disable-next-line no-loop-func
+                it(adone.inspect(c, { style: "inline", minimal: true }), async () => {
+                    const nm = await createManager();
+
+                    const version = await nodejs.checkVersion("latest");
+                    await nm.download({ version, ...c });
+                    const destPath = await nm.extract({ version, ...c });
+
+                    let archivePath;
+                    if (c.strip) {
+                        archivePath = await nm.getCachePath(nm.cache[c.type || "release"]);
+                    } else {
+                        archivePath = await nm.getCachePathFor(nm.cache[c.type || "release"], { version, ...c, omitSuffix: true, ext: "" });
+                    }
+                    assert.equal(destPath, archivePath);
+                    assert.isTrue(await fs.isDirectory(destPath));
+                    assert.sameMembers(await fs.readdir(destPath), await fs.readdir(archivePath));
+                });
+            }
         });
     });
 });
