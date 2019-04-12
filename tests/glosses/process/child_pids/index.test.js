@@ -3,7 +3,7 @@ const {
     promise
 } = adone;
 
-describe("system", "process", "child pids", () => {
+describe("process", "child pids", () => {
     const {
         std: { path, childProcess },
         process: { getChildPids, kill },
@@ -11,9 +11,9 @@ describe("system", "process", "child pids", () => {
     } = adone;
 
     const scripts = {
-        parent: path.join(__dirname, "fixtures", "child_pids", "parent.js"),
-        child: path.join(__dirname, "fixtures", "child_pids", "child.js"),
-        spawnChildren: path.join(__dirname, "fixtures", "child_pids", "spawn_children.js")
+        parent: path.join(__dirname, "fixtures", "parent.js"),
+        child: path.join(__dirname, "fixtures", "child.js"),
+        spawnChildren: path.join(__dirname, "fixtures", "spawn_children.js")
     };
 
     it("spawn a parent process which has a two child processes", async () => {

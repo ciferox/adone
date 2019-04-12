@@ -2,7 +2,7 @@ const {
     is
 } = adone;
 
-describe("system", "process", "pids by ports", () => {
+describe("process", "pids by ports", () => {
     const {
         net: { util: { getPort } },
         process: { getPidByPort, getPidsByPorts, getAllPidsByPorts },

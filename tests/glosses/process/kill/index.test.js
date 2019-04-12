@@ -1,4 +1,4 @@
-describe("system", "process", "kill", () => {
+describe("process", "kill", () => {
     const {
         is,
         promise,
@@ -137,7 +137,7 @@ describe("system", "process", "kill", () => {
 
     describe("tree", () => {
         it("should kill the entire process tree", async () => {
-            const child = forkProcess("fixtures/child_pids/spawn_children");
+            const child = forkProcess("../child_pids/fixtures/spawn_children");
             const exit = spy();
             child.on("exit", exit);
             try {

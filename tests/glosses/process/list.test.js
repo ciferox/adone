@@ -2,7 +2,7 @@ const {
     is
 } = adone;
 
-describe("system", "process", "list processes", () => {
+describe("process", "list processes", () => {
     const {
         process: { list }
     } = adone;

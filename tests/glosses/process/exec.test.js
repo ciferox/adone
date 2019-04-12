@@ -1,4 +1,4 @@
-describe("system", "process", "exec", () => {
+describe("process", "exec", () => {
     const {
         is,
         std: { stream, path, fs },
