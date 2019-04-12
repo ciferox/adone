@@ -64,24 +64,24 @@ describe("Common", () => {
 });
 
 
-describe("stripEof", () => {
-    const { stripEof } = adone.text;
+describe("stripLastNewline", () => {
+    const { stripLastNewline } = adone.text;
     it("string", () => {
-        assert.equal(stripEof("foo\n"), "foo");
-        assert.equal(stripEof("foo\nbar\n"), "foo\nbar");
-        assert.equal(stripEof("foo\n\n\n"), "foo\n\n");
-        assert.equal(stripEof("foo\r\n"), "foo");
-        assert.equal(stripEof("foo\r"), "foo");
-        assert.equal(stripEof("foo\n\r\n"), "foo\n");
+        assert.equal(stripLastNewline("foo\n"), "foo");
+        assert.equal(stripLastNewline("foo\nbar\n"), "foo\nbar");
+        assert.equal(stripLastNewline("foo\n\n\n"), "foo\n\n");
+        assert.equal(stripLastNewline("foo\r\n"), "foo");
+        assert.equal(stripLastNewline("foo\r"), "foo");
+        assert.equal(stripLastNewline("foo\n\r\n"), "foo\n");
     });
 
     it("buffer", () => {
-        assert.equal(stripEof(Buffer.from("foo\n")).toString(), "foo");
-        assert.equal(stripEof(Buffer.from("foo\nbar\n")).toString(), "foo\nbar");
-        assert.equal(stripEof(Buffer.from("foo\n\n\n").toString()), "foo\n\n");
-        assert.equal(stripEof(Buffer.from("foo\r\n")).toString(), "foo");
-        assert.equal(stripEof(Buffer.from("foo\r")).toString(), "foo");
-        assert.equal(stripEof(Buffer.from("foo\n\r\n")).toString(), "foo\n");
+        assert.equal(stripLastNewline(Buffer.from("foo\n")).toString(), "foo");
+        assert.equal(stripLastNewline(Buffer.from("foo\nbar\n")).toString(), "foo\nbar");
+        assert.equal(stripLastNewline(Buffer.from("foo\n\n\n").toString()), "foo\n\n");
+        assert.equal(stripLastNewline(Buffer.from("foo\r\n")).toString(), "foo");
+        assert.equal(stripLastNewline(Buffer.from("foo\r")).toString(), "foo");
+        assert.equal(stripLastNewline(Buffer.from("foo\n\r\n")).toString(), "foo\n");
     });
 });
 

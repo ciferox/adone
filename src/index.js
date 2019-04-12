@@ -26,7 +26,7 @@ const adone = Object.create({
         configurable = false,
         enumerable = true,
         writable = false,
-        mapper = adone.lazifyMapper 
+        mapper = adone.lazifyMapper
     } = {}) => {
         const obj = _obj || {};
         Object.keys(modules).forEach((key) => {
@@ -242,6 +242,7 @@ adone.lazify({
     notifier: "./glosses/notifier",
     p2p: "./glosses/p2p",
     pretty: "./glosses/pretty",
+    process: "./glosses/process",
     promise: "./glosses/promise",
     punycode: "./glosses/punycode",
     realm: "./glosses/realm",
@@ -274,8 +275,8 @@ adone.lazify({
     async: "./glosses/async",
     lodash: "./glosses/lodash"
 }, adone, require, {
-    asNamespace: true
-});
+        asNamespace: true
+    });
 
 // Be here until it appears in the official implementation
 require("./glosses/reflect");

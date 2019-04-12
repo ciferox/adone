@@ -45,7 +45,7 @@ const expose = (result) => {
 };
 
 const machineId = async (original = false) => {
-    const result = await adone.system.process.shell(guid[process.platform]);
+    const result = await adone.process.shell(guid[process.platform]);
     const id = expose(result.stdout.toString());
     return original ? id : adone.crypto.hash.sha256(id, "hex");
 };

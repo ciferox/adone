@@ -1,0 +1,10 @@
+#!/usr/bin/env node
+"use strict";
+
+require("a");
+
+const {
+    process: { exec }
+} = adone;
+
+console.log(exec("forever", { cleanup: false }).pid);

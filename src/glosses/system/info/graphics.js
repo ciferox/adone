@@ -1,5 +1,6 @@
 const {
     is,
+    noop,
     std: { childProcess: { exec, execSync } }
 } = adone;
 
@@ -220,7 +221,7 @@ export const graphics = (callback) => {
                 return !is.nil(el) && el;
             });
         } catch (e) {
-            util.noop();
+            noop();
         }
         for (let i = 0; i < lines.length; i++) {
             if (lines[i].trim() !== "") {

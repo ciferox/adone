@@ -118,7 +118,7 @@ export default class RunCommand extends Subsystem {
             runArgs.push(...rest);
 
             // We can run script directly with 'adone' pre-require.
-            const child = adone.system.process.exec(process.execPath, runArgs, {
+            const child = adone.process.exec(process.execPath, runArgs, {
                 stdio: ["inherit", "inherit", "inherit"]
             });
 
@@ -127,9 +127,9 @@ export default class RunCommand extends Subsystem {
                 await adone.promise.delay(10);
 
                 // Force kill all childs
-                const pids = await adone.system.process.getChildPids(process.pid);
+                const pids = await adone.process.getChildPids(process.pid);
                 if (pids.length > 0) {
-                    await adone.system.process.kill(pids.map((x) => x.pid));
+                    await adone.process.kill(pids.map((x) => x.pid));
                 }
             });
 

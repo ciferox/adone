@@ -300,7 +300,7 @@ export const indent = (string, spaces) => {
     return result;
 };
 
-export const stripEof = (x) => {
+export const stripLastNewline = (x) => {
     const lf = is.string(x) ? "\n" : "\n".charCodeAt();
     const cr = is.string(x) ? "\r" : "\r".charCodeAt();
 
@@ -314,8 +314,6 @@ export const stripEof = (x) => {
 
     return x;
 };
-
-export const stripLastCRLF = (str) => str.replace(/(\r?\n|\r)$/, "");
 
 export const stripBom = (x) => {
     if (x.charCodeAt(0) === 0xFEFF) {

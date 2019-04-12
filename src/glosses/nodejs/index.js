@@ -83,7 +83,7 @@ export const getPrefixPath = async () => std.path.dirname(std.path.dirname(await
 export const getCurrentVersion = async () => {
     try {
         const exePath = await getExePath();
-        return adone.system.process.execStdout(exePath, ["--version"]);
+        return adone.process.execStdout(exePath, ["--version"]);
     } catch (err) {
         return "";
     }

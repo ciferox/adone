@@ -176,6 +176,7 @@
     "marky": "^1.2.0",
     "memory-stream": "^0.0.3",
     "merge-options": "^1.0.1",
+    "merge-stream": "^1.0.1",
     "middie": "^4.0.0",
     "mime-types": "^2.1.21",
     "mkdirp": "~0.5.1",

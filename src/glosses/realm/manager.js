@@ -46,10 +46,10 @@ const trySuperRealmAt = (cwd) => {
         // Validation...
 
         // try to require realm config
-        require(std.path.join(superRealm.SPECIAL_PATH, "config.json"));
+        require(std.path.join(superRealm.cwd, ".adone", "config.json"));
 
         // try to require package.json
-        require(std.path.join(superRealm.ROOT_PATH, "package.json"));
+        require(std.path.join(superRealm.cwd, "package.json"));
     } catch (err) {
         superRealm = null;
     }
@@ -336,17 +336,17 @@ export default class RealmManager extends task.Manager {
     }
 
     async #addTasksFromSuperRealm(superRealm) {
-        if (is.null(superRealm)) {
-            return;
-        }
-        const tasks = superRealm.getTasksByTag(realm.TAG.PUB);
-        for (const taskInfo of tasks) {
-            if (!this.hasTask(taskInfo.name)) {
-                // eslint-disable-next-line no-await-in-loop
-                await this.addTask(taskInfo.name, taskInfo.Class, util.pick(taskInfo, ["concurrency", "interval", "singleton", "description", "tag"]));
-            }
-        }
-
-        return this.#addTasksFromSuperRealm(superRealm.superRealm);
+    if (is.null(superRealm)) {
+        return;
     }
+    const tasks = superRealm.getTasksByTag(realm.TAG.PUB);
+    for (const taskInfo of tasks) {
+        if (!this.hasTask(taskInfo.name)) {
+            // eslint-disable-next-line no-await-in-loop
+            await this.addTask(taskInfo.name, taskInfo.Class, util.pick(taskInfo, ["concurrency", "interval", "singleton", "description", "tag"]));
+        }
+    }
+
+    return this.#addTasksFromSuperRealm(superRealm.superRealm);
+}
 }

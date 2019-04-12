@@ -6,7 +6,7 @@ const {
     fs,
     cmake: { environment, Toolset, TargetOptions, CMLog, Dist },
     std: { path },
-    system: { process: { execStdout } },
+    process: { execStdout },
     lodash: _,
     shell
 } = adone;

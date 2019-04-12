@@ -703,6 +703,12 @@
                     "src": "src/glosses/pretty/**/*.js",
                     "dst": "lib/glosses/pretty"
                 },
+                "process": {
+                    "description": "Process utilites",
+                    "task": "transpile",
+                    "src": "src/glosses/process/**/*.js",
+                    "dst": "lib/glosses/process"
+                },
                 "promise": {
                     "description": "Promise utilites",
                     "task": "transpile",

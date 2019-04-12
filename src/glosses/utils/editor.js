@@ -1,7 +1,7 @@
 const {
     is,
     fs,
-    system: { process: { exec } }
+    process: { exec }
 } = adone;
 
 export default class Editor {

@@ -112,7 +112,7 @@ export default class NodeCommand extends Subsystem {
 
     @command({
         name: ["download", "get"],
-        description: "Download Node.js of the specified version",
+        description: "Download Node.js",
         arguments: [
             {
                 name: "version",
@@ -199,8 +199,88 @@ export default class NodeCommand extends Subsystem {
     }
 
     @command({
+        name: "extract",
+        description: "Extract cached Node.js",
+        arguments: [
+            {
+                name: "version",
+                type: String,
+                default: "latest",
+                description: "Node.js version ('latest', 'latest-lts', '11.0.0', 'v10.15.3', ...)"
+            }
+        ],
+        options: [
+            {
+                name: ["--type", "-T"],
+                description: "Distribution type",
+                choices: ["release", "sources", "headers"],
+                default: "release"
+            },
+            {
+                name: ["--platform", "-P"],
+                description: "Platform name",
+                choices: ["linux", "win", "darwin", "sunos", "aix"],
+                default: nodejs.getCurrentPlatform()
+            },
+            {
+                name: ["--arch", "-A"],
+                description: "CPU architecture",
+                choices: ["x64", "x86", "arm64", "armv7l", "armv6l", "ppc64le", "ppc64", "s390x"],
+                default: nodejs.getCurrentArch()
+            },
+            {
+                name: ["--ext", "-E"],
+                description: "Archive extension",
+                type: String,
+                default: nodejs.DEFAULT_EXT
+            },
+            {
+                name: ["--force", "-F"],
+                description: "Force download"
+            },
+            {
+                name: ["--out-path", "-O"],
+                type: String,
+                description: "Output path"
+            }
+        ]
+    })
+    async extract(args, opts) {
+        try {
+            cli.updateProgress({
+                message: "checking version"
+            });
+
+            const version = await nodejs.checkVersion(args.get("version"));
+
+            cli.updateProgress({
+                message: "extracting"
+            });
+
+            const destPath = await this.nodejsManager.extract({
+                version,
+                ...opts.getAll()
+            });
+
+            cli.updateProgress({
+                message: `Extracted to ${style.accent(destPath)}`,
+                status: true
+            });
+
+            return 0;
+        } catch (err) {
+            cli.updateProgress({
+                message: err.message,
+                status: false
+            });
+            // console.log(pretty.error(err));
+            return 1;
+        }
+    }
+
+    @command({
         name: "activate",
-        description: "Activate Node.js of the specified version",
+        description: "Activate Node.js",
         arguments: [
             {
                 name: "version",
@@ -266,6 +346,78 @@ export default class NodeCommand extends Subsystem {
                     status: true
                 });
             }
+
+            return 0;
+        } catch (err) {
+            cli.updateProgress({
+                message: err.message,
+                status: false
+            });
+            // console.log(pretty.error(err));
+            return 1;
+        }
+    }
+
+    @command({
+        name: "pkg",
+        description: "Create executable package",
+        arguments: [
+            {
+                name: "version",
+                type: String,
+                default: "latest",
+                description: "Node.js version ('latest', 'latest-lts', '11.0.0', 'v10.15.3', ...)"
+            }
+        ],
+        options: [
+            {
+                name: ["--force", "-F"],
+                description: "Force download"
+            }
+        ]
+    })
+    async pkg(args, opts) {
+        try {
+            cli.updateProgress({
+                message: "checking version"
+            });
+            const version = await nodejs.checkVersion(args.get("version"));
+            const type = "sources";
+
+            let sourcesPath = await this.nodejsManager.getCachePathFor(this.nodejsManager.cache.sources, { version, type, ext: "" });
+            if (!(await fs.exists(sourcesPath))) {
+                sourcesPath = await this.nodejsManager.getCachePathFor(this.nodejsManager.cache.download, { version, type });
+                if (!(await fs.exists(sourcesPath))) {
+                    cli.updateProgress({
+                        message: "waiting"
+                    });
+
+                    await this.nodejsManager.download({
+                        version,
+                        type,
+                        progressBar: true
+                    });
+                }
+
+                cli.updateProgress({
+                    message: "extracting"
+                });
+                sourcesPath = await this.nodejsManager.extract({
+                    version,
+                    type
+                });
+            }
+
+            const nodejsCompiler = new nodejs.NodejsCompiler({
+                cwd: sourcesPath
+            });
+
+            
+
+            cli.updateProgress({
+                message: "done",
+                status: true
+            });
 
             return 0;
         } catch (err) {

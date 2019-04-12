@@ -212,7 +212,7 @@ describe("cli", "Chalk", () => {
         });
 
         it("disable colors if they are not supported", async () => {
-            const res = await adone.system.process.execStdout("node", {
+            const res = await adone.process.execStdout("node", {
                 input: new adone.collection.BufferList(`
                     require("${adone.ROOT_PATH}");
                     console.log(adone.cli.chalk.hex('#ff6159')('test'))

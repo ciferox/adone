@@ -1,0 +1,17 @@
+#!/usr/bin/env node
+
+require("a");
+const {
+    process: { exec },
+    std: { fs }
+} = adone;
+
+const fd = fs.openSync(process.argv[2], "w");
+
+const cp = exec("noop", ["foo"], {
+    detached: true,
+    stdio: ["ignore", fd]
+});
+cp.unref();
+
+process.exit();

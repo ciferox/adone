@@ -2,7 +2,7 @@ const {
     crypto: { jws },
     fs,
     std,
-    system: { process: { shell } }
+    process: { shell }
 } = adone;
 
 const FIXTURES_PATH = std.path.join(__dirname, "fixtures");

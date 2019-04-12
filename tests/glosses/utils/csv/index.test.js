@@ -677,7 +677,7 @@ describe("util", "csv", () => {
 
     it.skip("binary stanity", async () => {
         const binPath = path.resolve(__dirname, "../bin/csv-parser");
-        const { stdout } = await adone.system.process.shell(`echo "a\n1" | node ${binPath}`);
+        const { stdout } = await adone.process.shell(`echo "a\n1" | node ${binPath}`);
 
         assert.deepEqual(stdout);
     });

@@ -1,6 +1,6 @@
 const {
     noop,
-    system: { process: { execStdout } },
+    process: { execStdout },
     std: { path }
 } = adone;
 

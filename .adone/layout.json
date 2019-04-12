@@ -48,30 +48,30 @@
             },
             "async": {
                 "namespace": true,
-                "base": "src/async",
+                "base": "src/glosses/async",
                 "entry": "index.js"
             },
             "cli": {
                 "namespace": false,
-                "base": "src/cli",
+                "base": "src/glosses/cli",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "cmake": {
                 "namespace": true,
-                "base": "src/cmake",
+                "base": "src/glosses/cmake",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "collection": {
                 "namespace": true,
-                "base": "src/collections",
+                "base": "src/glosses/collections",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "compressor": {
                 "namespace": true,
-                "base": "src/compressors",
+                "base": "src/glosses/compressors",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
@@ -83,268 +83,274 @@
             },
             "crypto": {
                 "namespace": true,
-                "base": "src/crypto",
+                "base": "src/glosses/crypto",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "crypto2": {
                 "namespace": true,
-                "base": "src/crypto2",
+                "base": "src/glosses/crypto2",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "data": {
                 "namespace": true,
-                "base": "src/data",
+                "base": "src/glosses/data",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "database": {
                 "namespace": true,
-                "base": "src/databases",
+                "base": "src/glosses/databases",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "datastore": {
                 "namespace": true,
-                "base": "src/datastores",
+                "base": "src/glosses/datastores",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "datetime": {
                 "namespace": true,
-                "base": "src/datetime",
+                "base": "src/glosses/datetime",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "diff": {
                 "namespace": true,
-                "base": "src/diff",
+                "base": "src/glosses/diff",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "error": {
                 "namespace": true,
-                "base": "src/errors",
+                "base": "src/glosses/errors",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "event": {
                 "namespace": true,
-                "base": "src/events",
+                "base": "src/glosses/events",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "fake": {
                 "namespace": true,
-                "base": "src/fake",
+                "base": "src/glosses/fake",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "fast": {
                 "namespace": true,
-                "base": "src/fast",
+                "base": "src/glosses/fast",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "fs": {
                 "namespace": true,
-                "base": "src/fs",
+                "base": "src/glosses/fs",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "fsm": {
                 "namespace": true,
-                "base": "src/fsm",
+                "base": "src/glosses/fsm",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "inspect": {
                 "namespace": false,
-                "base": "src/inspect",
+                "base": "src/glosses/inspect",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "is": {
                 "namespace": true,
-                "base": "src/is",
+                "base": "src/glosses/is",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "js": {
                 "namespace": true,
-                "base": "src/js",
+                "base": "src/glosses/js",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "lodash": {
                 "namespace": true,
-                "base": "src/lodash",
+                "base": "src/glosses/lodash",
                 "entry": "index.js"
             },
             "logging": {
                 "namespace": true,
-                "base": "src/logging",
+                "base": "src/glosses/logging",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "math": {
                 "namespace": true,
-                "base": "src/math",
+                "base": "src/glosses/math",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "metrics": {
                 "namespace": true,
-                "base": "src/metrics",
+                "base": "src/glosses/metrics",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "model": {
                 "namespace": true,
-                "base": "src/models",
+                "base": "src/glosses/models",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "multiformat": {
                 "namespace": true,
-                "base": "src/multiformats",
+                "base": "src/glosses/multiformats",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "net": {
                 "namespace": true,
-                "base": "src/net",
+                "base": "src/glosses/net",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "netron": {
                 "namespace": true,
-                "base": "src/netron",
+                "base": "src/glosses/netron",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "notifier": {
                 "namespace": true,
-                "base": "src/notifier",
+                "base": "src/glosses/notifier",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "p2p": {
                 "namespace": true,
-                "base": "src/p2p",
+                "base": "src/glosses/p2p",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "pretty": {
                 "namespace": true,
-                "base": "src/pretty",
+                "base": "src/glosses/pretty",
+                "entry": "index.js",
+                "glob": "**/*.js"
+            },
+            "process": {
+                "namespace": true,
+                "base": "src/glosses/process",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "promise": {
                 "namespace": true,
-                "base": "src/promise",
+                "base": "src/glosses/promise",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "punycode": {
                 "namespace": true,
-                "base": "src/punycode",
+                "base": "src/glosses/punycode",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "realm": {
                 "namespace": true,
-                "base": "src/realm",
+                "base": "src/glosses/realm",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "regex": {
                 "namespace": true,
-                "base": "src/regex",
+                "base": "src/glosses/regex",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "require": {
-                "base": "src/require",
+                "base": "src/glosses/require",
                 "entry": "index.js"
             },
             "schema": {
                 "namespace": true,
-                "base": "src/schema",
+                "base": "src/glosses/schema",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "semver": {
                 "namespace": true,
-                "base": "src/semver",
+                "base": "src/glosses/semver",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "shell": {
                 "namespace": true,
-                "base": "src/shell",
+                "base": "src/glosses/shell",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "sourcemap": {
                 "namespace": true,
-                "base": "src/sourcemap",
+                "base": "src/glosses/sourcemap",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "stream": {
                 "namespace": true,
-                "base": "src/streams",
+                "base": "src/glosses/streams",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "system": {
                 "namespace": true,
-                "base": "src/system",
+                "base": "src/glosses/system",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "task": {
                 "namespace": true,
-                "base": "src/tasks",
+                "base": "src/glosses/tasks",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "templating": {
                 "namespace": true,
-                "base": "src/termplating",
+                "base": "src/glosses/termplating",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "text": {
                 "namespace": true,
-                "base": "src/text",
+                "base": "src/glosses/text",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "typeof": {
-                "entry": "src/typeof/index.js"
+                "entry": "src/glosses/typeof/index.js"
             },
             "uri": {
-                "entry": "src/uri/index.js"
+                "entry": "src/glosses/uri/index.js"
             },
             "util": {
                 "namespace": true,
-                "base": "src/utils",
+                "base": "src/glosses/utils",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "vault": {
                 "namespace": true,
-                "base": "src/vault",
+                "base": "src/glosses/vault",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "web": {
                 "namespace": true,
-                "base": "src/web",
+                "base": "src/glosses/web",
                 "entry": "index.js",
                 "glob": "**/*.js"
             }

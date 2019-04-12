@@ -10,7 +10,7 @@ const getGitUser = async () => {
     let name;
     let email;
     const {
-        system: { process: { execStdout } }
+        process: { execStdout }
     } = adone;
 
     try {
