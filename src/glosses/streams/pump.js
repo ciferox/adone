@@ -7,9 +7,9 @@ const {
 } = adone;
 
 const isFS = function (stream) {
-    if (!fs) {
+    if (!fs) { // browser
         return false;
-    } // browser
+    }
     return (stream instanceof (fs.ReadStream || noop) || stream instanceof (fs.WriteStream || noop)) && is.function(stream.close);
 };
 
@@ -96,7 +96,7 @@ const pump = function () {
         });
     });
 
-    streams.reduce(pipe);
+    return streams.reduce(pipe);
 };
 
 module.exports = pump;

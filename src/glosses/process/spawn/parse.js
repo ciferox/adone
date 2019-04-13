@@ -4,17 +4,21 @@ const {
     std: { path }
 } = adone;
 
-const niceTry = require("nice-try");
-const resolveCommand = require("./util/resolveCommand");
+const resolveCommand = require("./util/resolve_command");
 const escape = require("./util/escape");
-const readShebang = require("./util/readShebang");
+const readShebang = require("./util/read_shebang");
 
 const isWin = process.platform === "win32";
 const isExecutableRegExp = /\.(?:com|exe)$/i;
 const isCmdShimRegExp = /node_modules[\\/].bin[\\/][^\\/]+\.cmd$/i;
 
 // `options.shell` is supported in Node ^4.8.0, ^5.7.0 and >= 6.0.0
-const supportsShellOption = niceTry(() => semver.satisfies(process.version, "^4.8.0 || ^5.7.0 || >= 6.0.0", true)) || false;
+let supportsShellOption;
+try {
+    supportsShellOption = semver.satisfies(process.version, "^4.8.0 || ^5.7.0 || >= 6.0.0", true) || false;
+} catch (err) {
+    supportsShellOption = false;
+}
 
 const detectShebang = function (parsed) {
     parsed.file = resolveCommand(parsed);

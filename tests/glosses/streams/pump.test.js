@@ -22,9 +22,11 @@ describe("stream", "pump", () => {
         let wsClosed = false;
         let rsClosed = false;
         let callbackCalled = false;
+        let timeout = null;
 
         const check = function () {
             if (wsClosed && rsClosed && callbackCalled) {
+                clearTimeout(timeout);
                 done();
             }
         };
@@ -44,11 +46,11 @@ describe("stream", "pump", () => {
             check();
         });
 
-        if (res) {
+        if (res !== ws) {
             assert.fail();
         }
 
-        setTimeout(() => {
+        timeout = setTimeout(() => {
             rs.destroy();
         }, 1000);
     });

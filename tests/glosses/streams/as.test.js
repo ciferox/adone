@@ -66,8 +66,8 @@ describe("stream", "as", () => {
         await assert.throws(async () => setup(["abcd"], { maxBuffer: 3 }));
         await assert.doesNotThrow(async () => setup(["abc"], { maxBuffer: 3 }));
 
-        assert.throws(async () => setup.buffer(["abcd"], { maxBuffer: 3 }));
-        assert.doesNotThrow(async () => setup.buffer(["abc"], { maxBuffer: 3 }));
+        await assert.throws(async () => setup.buffer(["abcd"], { maxBuffer: 3 }));
+        await assert.doesNotThrow(async () => setup.buffer(["abc"], { maxBuffer: 3 }));
     });
 
     it("maxBuffer applies to length of arrays when in objectMode", async () => {
@@ -80,6 +80,10 @@ describe("stream", "as", () => {
         await assert.doesNotThrow(async () => setup.array(["ab", "cd", "ef"], { encoding: "utf8", maxBuffer: 6 }));
         await assert.throws(async () => setup.array(["ab", "cd", "ef"], { encoding: "buffer", maxBuffer: 5 }), /maxBuffer exceeded/);
         await assert.doesNotThrow(async () => setup.array(["ab", "cd", "ef"], { encoding: "buffer", maxBuffer: 6 }));
+    });
+
+    it("maxBuffer throws a MaxBufferError", async () => {
+        await assert.throws(async () => setup(["abcd"], { maxBuffer: 3 }), adone.error.OutOfRangeException);
     });
 
     it("Promise rejects when input stream emits an error", async () => {
@@ -99,13 +103,9 @@ describe("stream", "as", () => {
             this.push(reads.shift());
         };
 
-        try {
-            await as.string(readable);
-            assert.fail("should throw");
-        } catch (err) {
-            assert.equal(err, error);
-            assert.equal(err.bufferedData, data);
-        }
+        const err = await assert.throws(async () => as.string(readable));
+        assert.equal(err, error);
+        assert.equal(err.bufferedData, data);
     });
 
 });

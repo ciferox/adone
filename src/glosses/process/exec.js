@@ -1,15 +1,9 @@
 const {
     is,
-    process: { errname, spawn },
+    process: { errname, spawn, onExit },
     std: { path, os, childProcess },
     text: { stripLastNewline }
 } = adone;
-
-const npmRunPath = require("npm-run-path");
-const isStream = require("is-stream");
-const _getStream = require("get-stream");
-const mergeStream = require("merge-stream");
-const onExit = require("signal-exit");
 
 const alias = ["stdin", "stdout", "stderr"];
 const hasAlias = (opts) => alias.some((x) => Boolean(opts[x]));
@@ -80,7 +74,7 @@ const handleArgs = (command, args, options) => {
     }
 
     if (options.preferLocal) {
-        options.env = npmRunPath.env({
+        options.env = adone.system.env.all({
             ...options,
             cwd: options.localDir
         });
@@ -111,7 +105,7 @@ const handleInput = (spawned, input) => {
         return;
     }
 
-    if (isStream(input)) {
+    if (is.stream(input)) {
         input.pipe(spawned.stdin);
     } else {
         spawned.stdin.end(input);
@@ -133,7 +127,7 @@ const makeAllStream = (spawned) => {
         return;
     }
 
-    const mixed = mergeStream();
+    const mixed = adone.stream.merge();
 
     if (spawned.stdout) {
         mixed.add(spawned.stdout);
@@ -161,12 +155,12 @@ const getStream = (process, stream, { encoding, buffer, maxBuffer }) => {
                 .once("error", reject);
         });
     } else if (encoding) {
-        ret = _getStream(process[stream], {
+        ret = adone.stream.as.string(process[stream], {
             encoding,
             maxBuffer
         });
     } else {
-        ret = _getStream.buffer(process[stream], { maxBuffer });
+        ret = adone.stream.as.buffer(process[stream], { maxBuffer });
     }
 
     return ret.catch((error) => {
@@ -430,7 +424,7 @@ export const execSync = (command, args, options) => {
     const parsed = handleArgs(command, args, options);
     const joinedCommand = joinCommand(command, args);
 
-    if (isStream(parsed.options.input)) {
+    if (is.stream(parsed.options.input)) {
         throw new TypeError("The `input` option cannot be a stream in sync mode");
     }
 

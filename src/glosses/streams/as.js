@@ -1,10 +1,9 @@
-const PassThrough = adone.std.stream.PassThrough;
+const {
+    std: { stream: { PassThrough } },
+    stream: { pump }
+} = adone;
 
-const bufferStream = (opts) => {
-    opts = Object.assign({}, opts);
-
-    const array = opts.array;
-    let encoding = opts.encoding;
+const bufferStream = ({ array, encoding } = {}) => {
     const buffer = encoding === "buffer";
     let objectMode = false;
 
@@ -49,50 +48,33 @@ const bufferStream = (opts) => {
     return stream;
 };
 
-export const string = (inputStream, opts) => {
+export const string = (inputStream, { array, encoding, maxBuffer = Infinity } = {}) => {
     if (!inputStream) {
         return Promise.reject(new Error("Expected a stream"));
     }
 
-    opts = Object.assign({ maxBuffer: Infinity }, opts);
-
-    const maxBuffer = opts.maxBuffer;
     let stream;
-    let clean;
 
-    const p = new Promise((resolve, reject) => {
-        const error = (err) => {
-            if (err) { // null check
+    return new Promise((resolve, reject) => {
+        const rejectPromise = (err) => {
+            if (err) { // A null check
                 err.bufferedData = stream.getBufferedValue();
             }
 
             reject(err);
         };
 
-        stream = bufferStream(opts);
-        inputStream.once("error", error);
-        inputStream.pipe(stream);
+        stream = pump(inputStream, bufferStream({ array, encoding }), (err) =>
+            err ? rejectPromise(err) : resolve()
+        );
 
         stream.on("data", () => {
             if (stream.getBufferedLength() > maxBuffer) {
-                reject(new Error("maxBuffer exceeded"));
+                rejectPromise(new adone.error.OutOfRangeException("maxBuffer exceeded"));
             }
         });
-        stream.once("error", error);
-        stream.on("end", resolve);
-
-        clean = () => {
-            // some streams doesn't implement the `stream.Readable` interface correctly
-            if (inputStream.unpipe) {
-                inputStream.unpipe(stream);
-            }
-        };
-    });
-
-    p.then(clean, clean);
-
-    return p.then(() => stream.getBufferedValue());
+    }).then(() => stream.getBufferedValue());
 };
 
-export const buffer = (stream, opts) => string(stream, Object.assign({}, opts, { encoding: "buffer" }));
-export const array = (stream, opts) => string(stream, Object.assign({}, opts, { array: true }));
+export const buffer = (stream, options) => string(stream, Object.assign({}, options, { encoding: "buffer" }));
+export const array = (stream, options) => string(stream, Object.assign({}, options, { array: true }));

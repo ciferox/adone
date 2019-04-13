@@ -2,8 +2,6 @@ const {
     std: { fs }
 } = adone;
 
-const shebangCommand = require("shebang-command");
-
 export const readShebang = function (command) {
     // Read the first 150 bytes from the file
     const size = 150;
@@ -18,5 +16,5 @@ export const readShebang = function (command) {
     } catch (e) { /* Empty */ }
 
     // Attempt to extract shebang (null is returned if not a shebang)
-    return shebangCommand(buffer.toString());
+    return adone.util.shebang.command(buffer.toString());
 };

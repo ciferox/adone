@@ -17,7 +17,8 @@ const __ = adone.lazify({
     spawnSync: ["./spawn", (mod) => mod.spawnSync],
     exists: "./exists",
     list: "./list",
-    kill: "./kill"
+    kill: "./kill",
+    onExit: "./on_exit"
 }, adone.asNamespace(exports), require);
 
 export const errname = (code) => adone.std.util.getSystemErrorName(code);

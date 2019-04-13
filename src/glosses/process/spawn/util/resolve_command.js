@@ -1,10 +1,10 @@
 const {
     is,
+    fs: { whichSync },
     std: { path }
 } = adone;
 
-const which = require("which");
-const pathKey = require("path-key")();
+const pathKey = adone.system.env.pathKey();
 
 const resolveCommandAttempt = function (parsed, withoutPathExt) {
     const cwd = process.cwd();
@@ -23,7 +23,7 @@ const resolveCommandAttempt = function (parsed, withoutPathExt) {
     let resolved;
 
     try {
-        resolved = which.sync(parsed.command, {
+        resolved = whichSync(parsed.command, {
             path: (parsed.options.env || process.env)[pathKey],
             pathExt: withoutPathExt ? path.delimiter : undefined
         });

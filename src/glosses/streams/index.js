@@ -25,5 +25,6 @@ adone.lazify({
     pull: "./pull",
     pump: "./pump",
     CombinedStream: "./combined_stream",
-    DelayedStream: "./delayed_stream"
+    DelayedStream: "./delayed_stream",
+    merge: "./merge"
 }, adone.asNamespace(exports), require);

@@ -24,7 +24,7 @@ const command = (name) => std.path.join(__dirname, "..", "lib", "commands", name
             subsystem: command("inspect")
         },
         {
-            name: ["nodejs", "node"],
+            name: "node",
             group: "common",
             description: "Node.js toolkit",
             subsystem: command("node")
