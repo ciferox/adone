@@ -77,7 +77,7 @@ const COMMON_FILENAMES = [
     ["README.md", "readme"]
 ].map((v) => is.string(v) ? [v, v] : v);
 
-export default class RealmManager extends task.Manager {
+export default class RealmManager extends task.TaskManager {
     #connected = false;
 
     #connectiong = false;
@@ -179,7 +179,9 @@ export default class RealmManager extends task.Manager {
             for (const [tag, tasks] of Object.entries(tags)) {
                 for (const [name, TaskClass] of Object.entries(tasks)) {
                     // eslint-disable-next-line no-await-in-loop
-                    await this.addTask(name, TaskClass, {
+                    await this.addTask({
+                        name,
+                        task: TaskClass,
                         tag
                     });
                 }
@@ -343,7 +345,11 @@ export default class RealmManager extends task.Manager {
     for (const taskInfo of tasks) {
         if (!this.hasTask(taskInfo.name)) {
             // eslint-disable-next-line no-await-in-loop
-            await this.addTask(taskInfo.name, taskInfo.Class, util.pick(taskInfo, ["concurrency", "interval", "singleton", "description", "tag"]));
+            await this.addTask({
+                name: taskInfo.name,
+                task: taskInfo.Class,
+                ...util.pick(taskInfo, ["concurrency", "interval", "singleton", "description", "tag"])
+            });
         }
     }
 

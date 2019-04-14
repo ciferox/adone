@@ -7,7 +7,8 @@ const {
 const INTERNAL = Symbol.for("adone.app.Application#internal");
 
 const _bootstrapApp = async (app, {
-    useArgs
+    useArgs,
+    version
 }) => {
     if (is.null(runtime.app)) {
         runtime.app = app;
@@ -67,7 +68,7 @@ const _bootstrapApp = async (app, {
                 app: { AppHelper }
             } = adone;
 
-            const appHelper = new AppHelper(app);
+            const appHelper = new AppHelper(app, { version });
             app.helper = appHelper;
 
             app._setErrorScope(true);
@@ -161,7 +162,8 @@ const _bootstrapApp = async (app, {
 };
 
 export default async (App, {
-    useArgs = false
+    useArgs = false,
+    version
 } = {}) => {
     if (is.null(runtime.app) && is.class(App)) {
         const app = new App();
@@ -176,7 +178,8 @@ export default async (App, {
         }
 
         return _bootstrapApp(app, {
-            useArgs
+            useArgs,
+            version
         });
     }
 
@@ -195,7 +198,7 @@ export default async (App, {
         process.argv = adone.__argv__;
         delete adone.__argv__;
     }
-    
+
     class XApplication extends adone.app.Application { }
 
     const props = [];
@@ -223,6 +226,7 @@ export default async (App, {
     }
 
     return _bootstrapApp(app, {
-        useArgs
+        useArgs,
+        version
     });
 };

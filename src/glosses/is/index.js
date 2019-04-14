@@ -750,7 +750,7 @@ adone.lazify({
     task: () => (obj) => obj instanceof adone.task.Task,
     flowTask: () => (obj) => obj instanceof adone.task.Flow,
     taskObserver: () => (obj) => obj instanceof adone.task.TaskObserver,
-    taskManager: () => (obj) => obj instanceof adone.task.Manager,
+    taskManager: () => (obj) => obj instanceof adone.task.TaskManager,
 
     realm: () => (obj) => obj instanceof adone.realm.Manager,
 

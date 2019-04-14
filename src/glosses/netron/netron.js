@@ -10,7 +10,7 @@ const __ = adone.private(adone.netron);
 
 export default class Netron extends adone.event.AsyncEmitter {
     constructor({
-        taskManager = new adone.task.Manager(),
+        taskManager = new adone.task.TaskManager(),
         responseTimeout = 60000 * 3,
         proxifyContexts = false,
         uid
@@ -258,7 +258,7 @@ export default class Netron extends adone.event.AsyncEmitter {
         } else {
             throw new error.NotValidException("Invalid task. Task class should be function or class inherited from adone.task.IsomorphicTask");
         }
-        return this.taskManager.addTask(name, task, options);
+        return this.taskManager.addTask({ name, task, ...options });
     }
 
     /**
@@ -295,7 +295,9 @@ export default class Netron extends adone.event.AsyncEmitter {
             if (!this.taskManager.hasTask(t.task)) {
                 if (t.task in adone.netron.task) {
                     // eslint-disable-next-line
-                    await this.taskManager.addTask(t.task, adone.netron.task[t.task], {
+                    await this.taskManager.addTask({
+                        name: t.task,
+                        task: adone.netron.task[t.task],
                         singleton: true
                     });
                 } else {

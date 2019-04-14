@@ -1,3 +1,7 @@
+const {
+    is
+} = adone;
+
 export const STATE = {
     IDLE: 0,
     STARTING: 1,
@@ -10,7 +14,7 @@ export const STATE = {
 };
 
 adone.lazify({
-    Manager: "./manager",
+    TaskManager: "./manager",
     TaskObserver: "./task_observer",
     Task: "./task",
     IsomorphicTask: "./isomorphic_task",
@@ -27,10 +31,26 @@ adone.lazifyPrivate({
     OBSERVER_SYMBOL: () => Symbol()
 }, exports, require);
 
+// Decorators
+const TASK_ANNOTATION = "task";
+
+const setTaskMeta = (target, info) => Reflect.defineMetadata(TASK_ANNOTATION, info, target);
+export const getTaskMeta = (target) => Reflect.getMetadata(TASK_ANNOTATION, target);
+
+export const task = (taskInfo = {}) => (target) => {
+    const info = getTaskMeta(target);
+    if (is.undefined(info)) {
+        setTaskMeta(target, taskInfo);
+    } else {
+        Object.assign(info, taskInfo);
+    }
+};
+
+
 /**
  * Runs task in series.
  * 
- * @param {adone.task.Manager} manager
+ * @param {adone.task.TaskManager} manager
  * @param {array} tasks array of task names
  */
 export const runSeries = (manager, tasks, ...args) => manager.runOnce(adone.task.SeriesFlowTask, { args, tasks });
@@ -38,7 +58,7 @@ export const runSeries = (manager, tasks, ...args) => manager.runOnce(adone.task
 /**
  * Runs tasks in parallel.
  * 
- * @param {adone.task.Manager} manager
+ * @param {adone.task.TaskManager} manager
  * @param {array} tasks array of tasks
  */
 export const runParallel = (manager, tasks, ...args) => manager.runOnce(adone.task.ParallelFlowTask, { args, tasks });

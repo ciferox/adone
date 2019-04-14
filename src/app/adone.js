@@ -121,5 +121,6 @@ class AdoneCLI extends app.Application {
 }
 
 app.run(AdoneCLI, {
-    useArgs: true
+    useArgs: true,
+    version: adone.package.version
 });

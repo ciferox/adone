@@ -3,7 +3,6 @@ const {
     is,
     cli,
     error,
-    std,
     text,
     pretty,
     util
@@ -52,7 +51,6 @@ const UNNAMED = Symbol();
 const EMPTY_VALUE = Symbol();
 const COMMAND = Symbol();
 const MAIN_COMMAND = Symbol.for("adone.app.CliApplication#mainCommand");
-const VERSION = Symbol();
 
 const escape = (x) => x.replace(/%/g, "%%");
 
@@ -1334,16 +1332,16 @@ class Command {
                         message: arg.getShortHelpMessage()
                     };
                 }), {
-                        model: [
-                            { id: "left-spacing", width: 4 },
-                            { id: "names", maxWidth: 40, wordwrap: true },
-                            { id: "between-cells", width: 2 },
-                            { id: "message", wordwrap: false }
-                        ],
-                        width: "100%",
-                        borderless: true,
-                        noHeader: true
-                    }));
+                    model: [
+                        { id: "left-spacing", width: 4 },
+                        { id: "names", maxWidth: 40, wordwrap: true },
+                        { id: "between-cells", width: 2 },
+                        { id: "message", wordwrap: false }
+                    ],
+                    width: "100%",
+                    borderless: true,
+                    noHeader: true
+                }));
             }
             if (options.length) {
                 if (this.arguments.length) {
@@ -1372,16 +1370,16 @@ class Command {
                             message: opt.getShortHelpMessage()
                         };
                     }), {
-                            model: [
-                                { id: "left-spacing", width: 4 },
-                                { id: "names", maxWidth: 40, wordwrap: true },
-                                { id: "between-cells", width: 2 },
-                                { id: "message", wordwrap: true }
-                            ],
-                            width: "100%",
-                            borderless: true,
-                            noHeader: true
-                        }));
+                        model: [
+                            { id: "left-spacing", width: 4 },
+                            { id: "names", maxWidth: 40, wordwrap: true },
+                            { id: "between-cells", width: 2 },
+                            { id: "message", wordwrap: true }
+                        ],
+                        width: "100%",
+                        borderless: true,
+                        noHeader: true
+                    }));
                 }
             }
             if (commands.length) {
@@ -1411,16 +1409,16 @@ class Command {
                             message: cmd.getShortHelpMessage()
                         };
                     }), {
-                            model: [
-                                { id: "left-spacing", width: 4 },
-                                { id: "names", maxWidth: 40, wordwrap: true },
-                                { id: "between-cells", width: 2 },
-                                { id: "message", wordwrap: true }
-                            ],
-                            width: "100%",
-                            borderless: true,
-                            noHeader: true
-                        }));
+                        model: [
+                            { id: "left-spacing", width: 4 },
+                            { id: "names", maxWidth: 40, wordwrap: true },
+                            { id: "between-cells", width: 2 },
+                            { id: "message", wordwrap: true }
+                        ],
+                        width: "100%",
+                        borderless: true,
+                        noHeader: true
+                    }));
                 }
             }
         }
@@ -1460,12 +1458,13 @@ const mergeGroupsLists = (a, b) => {
 };
 
 export default class AppHelper {
-    constructor(app, argv = process.argv.slice(2)) {
+    #version;
+
+    constructor(app, { argv = process.argv.slice(2), version } = {}) {
         this.app = app;
         this.argv = argv;
-
         this[MAIN_COMMAND] = null;
-        this[VERSION] = null;
+        this.#version = version;
 
         this.defineMainCommand();
     }
@@ -1484,26 +1483,9 @@ export default class AppHelper {
     }
 
     async getVersion() {
-        if (!is.null(this[VERSION])) {
-            return this[VERSION];
-        }
-        let currentPath = __dirname;
-        for (; ;) {
-            const packagePath = std.path.join(currentPath, "package.json");
-            try {
-                // eslint-disable-next-line
-                const data = JSON.parse(await adone.fs.readFile(packagePath));
-                return this[VERSION] = data.version;
-            } catch (err) {
-                //
-            }
-            const nextPath = std.path.dirname(currentPath);
-            if (currentPath === nextPath) { // that was the root
-                break;
-            }
-            currentPath = nextPath;
-        }
-        return this[VERSION] = undefined;
+        return is.string(this.#version)
+            ? this.#version
+            : (this.#version = "unknown");
     }
 
     defineMainCommand(options) {

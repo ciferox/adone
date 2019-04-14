@@ -152,7 +152,9 @@ describe("Netron", () => {
                 }
             }
 
-            await netron.addTask("custom", MyTask, {
+            await netron.addTask({
+                name: "custom",
+                task: MyTask,
                 singleton: true
             });
 

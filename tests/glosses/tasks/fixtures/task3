@@ -1,0 +1,6 @@
+@adone.task.task("3")
+export default class Task1 extends adone.task.Task {
+    main() {
+        return 3;
+    }
+}
