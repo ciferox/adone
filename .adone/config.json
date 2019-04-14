@@ -678,12 +678,6 @@
                     "src": "src/glosses/netron/**/*.js",
                     "dst": "lib/glosses/netron"
                 },
-                "nodejs": {
-                    "description": "Tools for managing of Node.js",
-                    "task": "transpile",
-                    "src": "src/glosses/nodejs/**/*.js",
-                    "dst": "lib/glosses/nodejs"
-                },
                 "notifier": {
                     "description": "Implementation of system notifier",
                     "task": "transpile",

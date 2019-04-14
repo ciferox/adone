@@ -238,7 +238,6 @@ adone.lazify({
     multi: "./glosses/multi",
     net: "./glosses/net",
     netron: "./glosses/netron",
-    nodejs: "./glosses/nodejs",
     notifier: "./glosses/notifier",
     p2p: "./glosses/p2p",
     pretty: "./glosses/pretty",

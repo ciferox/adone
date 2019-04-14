@@ -5,7 +5,7 @@ const {
 
 export default {
     options: {
-        tests: "tests/{app,glosses,project}/**/*.test.js",
+        tests: "tests/{app,glosses}/**/*.test.js",
         first: false,
         timeout: 30000,
         showHandles: false,
@@ -13,7 +13,6 @@ export default {
         dontUseMap: false,
         itself: false,
         allTimings: false,
-        skip: "glosses.databases.mongo,glosses.databases.mysql",
         timers: false,
         showHooks: false,
         keepHooks: false,
@@ -22,37 +21,8 @@ export default {
         callGc: true
     },
     transpiler: {
-        plugins: [
-            "transform.flowStripTypes",
-            ["transform.decorators", { legacy: true }],
-            ["transform.classProperties", { loose: true }],
-            ["transform.privateMethods", { loose: true }],
-            "transform.doExpressions",
-            // "transform.asyncGeneratorFunctions",
-            "transform.modulesCommonjs",
-            // "transform.functionBind",
-            // "transform.objectRestSpread",
-            "transform.numericSeparator",
-            // "transform.exponentiationOperator",
-            // ["transform.importReplace", {
-            //     old: "adone",
-            //     new: path.resolve(__dirname, "lib")
-            // }, "adone"],
-            // ["transform.importReplace", {
-            //     old: "shani",
-            //     new: path.resolve(__dirname, "lib", "glosses", "shani")
-            // }, "shani"],
-            // ["transform.importReplace", {
-            //     old: "fast",
-            //     new: path.resolve(__dirname, "lib", "glosses", "fast")
-            // }, "fast"],
-            // ["transform.importReplace", {
-            //     old: "omnitron",
-            //     new: path.resolve(__dirname, "lib", "omnitron")
-            // }, "omnitron"]
-        ],
-        compact: false,
-        ignore: [/vendor/]
+        plugins: adone.module.COMPILER_PLUGINS,
+        compact: false
     },
     mapping: async (p) => {
         if (await fs.exists(p)) {
