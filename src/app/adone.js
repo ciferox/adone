@@ -1,4 +1,4 @@
-#!/usr/local/bin/node
+#!/usr/bin/env node
 
 import "..";
 import Configuration from "../lib/app/configuration";
@@ -20,14 +20,8 @@ const command = (name) => std.path.join(__dirname, "..", "lib", "commands", name
         {
             name: "inspect",
             group: "common",
-            description: "Inspect adone namespace/object",
+            description: "Inspect namespace/object",
             subsystem: command("inspect")
-        },
-        {
-            name: "node",
-            group: "common",
-            description: "Node.js toolkit",
-            subsystem: command("node")
         },
         {
             name: "realm",
@@ -38,7 +32,7 @@ const command = (name) => std.path.join(__dirname, "..", "lib", "commands", name
         {
             name: "repl",
             group: "common",
-            description: "ADONE-charged async REPL",
+            description: "Async REPL",
             subsystem: command("repl")
         },
         {

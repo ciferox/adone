@@ -1,6 +1,6 @@
 #! /usr/bin/env node
 
-require("a");
+require("adone");
 
 const YargsPromise = require('yargs-promise')
 const yargs = require('yargs/yargs')

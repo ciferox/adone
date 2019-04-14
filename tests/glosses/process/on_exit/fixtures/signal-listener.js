@@ -1,4 +1,4 @@
-require("a");
+require("adone");
 
 setTimeout(() => { });
 

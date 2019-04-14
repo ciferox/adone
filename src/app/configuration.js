@@ -2,7 +2,7 @@ const {
     error,
     is,
     std,
-    util
+    util: { arrify }
 } = adone;
 
 const CONFIG_NAME = "cli.json";
@@ -16,7 +16,7 @@ export default class Configuration extends adone.configuration.Generic {
     }
 
     getGroups() {
-        return adone.util.arrify(this.raw.groups);
+        return arrify(this.raw.groups);
     }
 
     hasGroup(name) {
@@ -50,7 +50,7 @@ export default class Configuration extends adone.configuration.Generic {
     }
 
     setCommand(cmd) {
-        const commands = this.raw.commands = util.arrify(this.raw.commands);
+        const commands = this.raw.commands = arrify(this.raw.commands);
         let i;
         for (i = 0; i < commands.length; i++) {
             if (commands[i].name === cmd.name) {
@@ -75,7 +75,7 @@ export default class Configuration extends adone.configuration.Generic {
     }
 
     getCommands() {
-        return adone.util.arrify(this.raw.commands);
+        return arrify(this.raw.commands);
     }
 
     hasLink(linkName) {
@@ -118,7 +118,7 @@ export default class Configuration extends adone.configuration.Generic {
     }
 
     getLinks() {
-        return adone.util.arrify(this.raw.links);
+        return arrify(this.raw.links);
     }
 
     load() {
@@ -126,8 +126,8 @@ export default class Configuration extends adone.configuration.Generic {
     }
 
     save() {
-        this.raw.commands.sort((a, b) => a.name > b.name);
-        this.raw.groups.sort((a, b) => a.name > b.name);
+        arrify(this.raw.commands).sort((a, b) => a.name > b.name);
+        arrify(this.raw.groups).sort((a, b) => a.name > b.name);
 
         return super.save(CONFIG_NAME, null, {
             space: "    "
@@ -165,7 +165,7 @@ export default class Configuration extends adone.configuration.Generic {
             },
             {
                 name: "subsystem",
-                description: "Еhird party commands"
+                description: "Third party commands"
             }
         ]
     };

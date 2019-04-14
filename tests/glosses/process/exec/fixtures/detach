@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require("a");
+require("adone");
 const {
     process: { exec },
     std: { fs }

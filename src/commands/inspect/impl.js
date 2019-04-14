@@ -9,8 +9,6 @@ const {
     pretty
 } = adone;
 
-const GLOBALS = ["adone", "global"];
-
 const getOwnPropertyDescriptor = (obj, propName) => {
     let descr = Object.getOwnPropertyDescriptor(obj, propName);
     if (!is.undefined(descr)) {
@@ -78,7 +76,7 @@ const cutNamespace = (parts) => {
     return namespaceParts.join(".");
 };
 
-export default class InspectionCommand extends Subsystem {
+export default ({ globals } = {}) => class InspectionCommand extends Subsystem {
     @mainCommand({
         arguments: [
             {
@@ -160,22 +158,22 @@ export default class InspectionCommand extends Subsystem {
 
             if (name.length === 0) {
                 console.log("Global namespaces:");
-                console.log(pretty.json(GLOBALS));
+                console.log(pretty.json(globals));
                 return 0;
             }
 
             let parts = stringToPath(name);
-            
+
             // Reduce 'adone' + 'global' chain...
             while (parts.length > 1) {
-                if (GLOBALS.includes(parts[0]) && GLOBALS.includes(parts[1])) {
+                if (globals.includes(parts[0]) && globals.includes(parts[1])) {
                     parts.shift();
                 } else {
                     break;
                 }
             }
 
-            if (!GLOBALS.includes(parts[0])) {
+            if (!globals.includes(parts[0])) {
                 throw new error.UnknownException(`Unknown namespace: ${parts[0]}`);
             }
 
@@ -195,15 +193,12 @@ export default class InspectionCommand extends Subsystem {
             }
 
             let ns;
-            switch (namespace) {
-                case "global":
-                    ns = global;
-                    break;
-                case "adone":
-                    ns = adone;
-                    break;
-                default:
-                    ns = get(global, namespace);
+            if (namespace === "global") {
+                ns = global;
+            } else if (!namespace.includes(".")) {
+                ns = global[namespace];
+            } else {
+                ns = get(global, namespace);
             }
 
             let result;
@@ -241,4 +236,4 @@ export default class InspectionCommand extends Subsystem {
             return 1;
         }
     }
-}
+};

@@ -1,1 +1,1 @@
-export import a = require("a");
+export import a = require("adone");

@@ -1,4 +1,4 @@
-require("a");
+require("adone");
 
 let counter = 0;
 

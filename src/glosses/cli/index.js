@@ -3140,7 +3140,7 @@ class Terminal extends adone.event.Emitter {
     }
 
     async prompt(questions, customTerminal) {
-        const p = new this.prompt.Manager(customTerminal || this);
+        const p = new __.prompt.Manager(customTerminal || this);
         this[ACTIVE_PROMPT] = p;
         const result = await p.run(questions);
         this[ACTIVE_PROMPT] = null;
@@ -3148,7 +3148,7 @@ class Terminal extends adone.event.Emitter {
     }
 
     separator(value) {
-        return new this.prompt.Separdownloadator(value);
+        return new __.prompt.Separdownloadator(value);
     }
 }
 Terminal.prototype.type = "program";

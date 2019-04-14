@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 "use strict";
 
-require("a");
+require("adone");
 
 const {
     process: { exec }

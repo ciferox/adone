@@ -2,7 +2,8 @@
 /* eslint-disable camelcase */
 const {
     is,
-    std: { path, fs }
+    std: { path, fs },
+    util: { arrify }
 } = adone;
 
 const current = (process.versions && process.versions.node && process.versions.node.split(".")) || [];
@@ -264,16 +265,25 @@ const resolve = function (x, options) {
         if (x === ".." || x.slice(-1) === "/") {
             res += "/";
         }
-        const m = loadAsFileSync(res) || loadAsDirectorySync(res);
+        const m = loadAsFile(res) || loadAsDirectory(res);
         if (m) {
             return m;
         }
     } else if (core[x]) {
         return x;
     } else {
-        const n = loadNodeModulesSync(x, absoluteStart);
-        if (n) {
-            return n;
+        const locations = [
+            undefined,
+            path.join(adone.system.env.home(), ".node_modules"),
+            path.join(adone.system.env.home(), ".node_libraries"),
+            path.join(path.dirname(process.execPath), "..", "lib", "node")
+        ];
+
+        for (const loc of locations) {
+            const n = loadNodeModules(x, absoluteStart, loc);
+            if (n) {
+                return n;
+            }
         }
     }
 
@@ -285,7 +295,7 @@ const resolve = function (x, options) {
     err.code = "MODULE_NOT_FOUND";
     throw err;
 
-    function loadAsFileSync(x) {
+    function loadAsFile(x) {
         const pkg = loadpkg(path.dirname(x));
 
         if (pkg && pkg.dir && pkg.pkg && opts.pathFilter) {
@@ -339,7 +349,7 @@ const resolve = function (x, options) {
         return { pkg, dir };
     }
 
-    function loadAsDirectorySync(x) {
+    function loadAsDirectory(x) {
         const pkgfile = path.join(x, "/package.json");
         if (isFile(pkgfile)) {
             let pkg;
@@ -362,11 +372,11 @@ const resolve = function (x, options) {
                     pkg.main = "index";
                 }
                 try {
-                    const m = loadAsFileSync(path.resolve(x, pkg.main));
+                    const m = loadAsFile(path.resolve(x, pkg.main));
                     if (m) {
                         return m;
                     }
-                    const n = loadAsDirectorySync(path.resolve(x, pkg.main));
+                    const n = loadAsDirectory(path.resolve(x, pkg.main));
                     if (n) {
                         return n;
                     }
@@ -374,18 +384,21 @@ const resolve = function (x, options) {
             }
         }
 
-        return loadAsFileSync(path.join(x, "/index"));
+        return loadAsFile(path.join(x, "/index"));
     }
 
-    function loadNodeModulesSync(x, start) {
-        const dirs = nodeModulesPaths(start, opts, x);
+    function loadNodeModules(x, start, dirs) {
+        dirs = dirs
+            ? arrify(dirs)
+            : nodeModulesPaths(start, opts, x);
+
         for (let i = 0; i < dirs.length; i++) {
             const dir = dirs[i];
-            const m = loadAsFileSync(path.join(dir, "/", x));
+            const m = loadAsFile(path.join(dir, "/", x));
             if (m) {
                 return m;
             }
-            const n = loadAsDirectorySync(path.join(dir, "/", x));
+            const n = loadAsDirectory(path.join(dir, "/", x));
             if (n) {
                 return n;
             }
@@ -393,6 +406,8 @@ const resolve = function (x, options) {
     }
 };
 
+resolve.nodeModulesPaths = nodeModulesPaths;
 resolve.core = core;
+resolve.isCore = (x) => core[x];
 
 export default resolve;

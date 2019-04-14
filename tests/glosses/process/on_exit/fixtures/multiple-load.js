@@ -1,4 +1,4 @@
-require("a");
+require("adone");
 
 const onExitPath = adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "process", "on_exit.js");
 

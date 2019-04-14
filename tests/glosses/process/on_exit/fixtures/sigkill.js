@@ -1,4 +1,4 @@
-require("a");
+require("adone");
 
 // SIGKILL can't be caught, and in fact, even trying to add the
 // listener will throw an error.

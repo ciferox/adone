@@ -1,4 +1,4 @@
-// require("a");
+// require("adone");
 
 const {
     std: { childProcess: { spawn }, path: { join } }
