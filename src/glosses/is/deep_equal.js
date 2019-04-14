@@ -69,13 +69,8 @@ function memoizeSet(leftHandOperand, rightHandOperand, memoizeMap, result) {
     }
 }
 
-/**
- * !
- * Primary Export
- */
-
-module.exports = deepEqual;
-module.exports.MemoizeMap = MemoizeMap;
+deepEqual.MemoizeMap = MemoizeMap;
+export default deepEqual;
 
 /**
  * Assert deeply nested sameValue equality between two objects of any type.

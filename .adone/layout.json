@@ -52,7 +52,7 @@
                 "entry": "index.js"
             },
             "cli": {
-                "namespace": false,
+                "namespace": true,
                 "base": "src/glosses/cli",
                 "entry": "index.js",
                 "glob": "**/*.js"

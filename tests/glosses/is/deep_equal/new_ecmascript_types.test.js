@@ -27,7 +27,7 @@ try {
 function describeIf(condition) {
     return condition ? describe : describe.skip;
 }
-describe("ES2015 Specific", () => {
+describe("is", "deepEqual", "ES2015 Specific", () => {
 
     describeIf(symbolExists && is.function(String.prototype[Symbol.iterator]))("string iterator", () => {
 

@@ -275,8 +275,8 @@ adone.lazify({
     async: "./glosses/async",
     lodash: "./glosses/lodash"
 }, adone, require, {
-        asNamespace: true
-    });
+    asNamespace: true
+});
 
 // Be here until it appears in the official implementation
 require("./glosses/reflect");

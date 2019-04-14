@@ -1,4 +1,5 @@
 const {
+    is,
     cli,
     fs,
     app: {
@@ -361,63 +362,66 @@ export default class NodeCommand extends Subsystem {
     @command({
         name: "pkg",
         description: "Create executable package",
-        arguments: [
+        options: [
             {
-                name: "version",
+                name: "--version",
                 type: String,
                 default: "latest",
                 description: "Node.js version ('latest', 'latest-lts', '11.0.0', 'v10.15.3', ...)"
-            }
-        ],
-        options: [
+            },
             {
-                name: ["--force", "-F"],
-                description: "Force download"
+                name: "--config",
+                type: String,
+                description: "Path to packager configuration file"
+            },
+            {
+                name: "--fresh",
+                description: "Force download and extract"
+            },
+            {
+                name: "--force-configure",
+                description: "Force configure"
+            },
+            {
+                name: "--force-build",
+                description: "Force build"
             }
         ]
     })
     async pkg(args, opts) {
         try {
-            cli.updateProgress({
-                message: "checking version"
-            });
-            const version = await nodejs.checkVersion(args.get("version"));
-            const type = "sources";
-
-            let sourcesPath = await this.nodejsManager.getCachePathFor(this.nodejsManager.cache.sources, { version, type, ext: "" });
-            if (!(await fs.exists(sourcesPath))) {
-                sourcesPath = await this.nodejsManager.getCachePathFor(this.nodejsManager.cache.download, { version, type });
-                if (!(await fs.exists(sourcesPath))) {
-                    cli.updateProgress({
-                        message: "waiting"
-                    });
-
-                    await this.nodejsManager.download({
-                        version,
-                        type,
-                        progressBar: true
-                    });
+            const packager = new nodejs.NodejsPackager({
+                make: ["-j8"],
+                ...opts.getAll(),
+                manager: this.nodejsManager,
+                log: (options) => {
+                    if (options.stderr) {
+                        cli.updateProgress({
+                            status: false,
+                            clean: true
+                        });
+                        console.error(options.stderr);
+                    } else if (options.stdout) {
+                        cli.updateProgress({
+                            status: true,
+                            clean: true
+                        });
+                        console.log(options.stdout);
+                    } else {
+                        cli.updateProgress(options);
+                    }
                 }
-
-                cli.updateProgress({
-                    message: "extracting"
-                });
-                sourcesPath = await this.nodejsManager.extract({
-                    version,
-                    type
-                });
-            }
-
-            const nodejsCompiler = new nodejs.NodejsCompiler({
-                cwd: sourcesPath
             });
 
-            
+            await packager.prepareBuild();
 
             cli.updateProgress({
                 message: "done",
-                status: true
+                status: true,
+                // clean: true
             });
+
+            // console.log(adone.inspect(result, { style: "color" }));
 
             return 0;
         } catch (err) {

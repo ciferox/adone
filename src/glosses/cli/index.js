@@ -5,6 +5,9 @@ const {
     std: { fs, stringDecoder }
 } = adone;
 
+// Cli mock
+const __ = {};
+
 const COLOR_SCHEME = Symbol();
 const ACTIVE_PROMPT = Symbol();
 
@@ -400,15 +403,15 @@ class Terminal extends adone.event.Emitter {
 
         this[ACTIVE_PROMPT] = null;
         this[COLOR_SCHEME] = adone.lazify({
-            primary: () => this.chalkify("#388E3C"),
-            secondary: () => this.chalkify("#2196F3"),
-            accent: () => this.chalkify("#7C4DFF"),
-            focus: () => this.chalkify("#009688"),
-            inactive: () => this.chalkify("#616161"),
-            error: () => this.chalkify("#D32F2F"),
-            warn: () => this.chalkify("#FF5722"),
-            info: () => this.chalkify("#FFEB3B"),
-            notice: () => this.chalkify("#FFEB3B")
+            primary: () => __.chalkify("#388E3C"),
+            secondary: () => __.chalkify("#2196F3"),
+            accent: () => __.chalkify("#7C4DFF"),
+            focus: () => __.chalkify("#009688"),
+            inactive: () => __.chalkify("#616161"),
+            error: () => __.chalkify("#D32F2F"),
+            warn: () => __.chalkify("#FF5722"),
+            info: () => __.chalkify("#FFEB3B"),
+            notice: () => __.chalkify("#FFEB3B")
         }, null);
 
         this._native = null;
@@ -3107,7 +3110,7 @@ class Terminal extends adone.event.Emitter {
         } else {
             options = message;
         }
-        this.progressBar = new this.Progress(options);
+        this.progressBar = new __.Progress(options);
         this.progressBar.update(0);
     }
 
@@ -3149,11 +3152,24 @@ class Terminal extends adone.event.Emitter {
     }
 }
 Terminal.prototype.type = "program";
-Terminal.prototype.Terminal = Terminal;
+// Terminal.prototype.Terminal = Terminal;
 
 const terminal = new Terminal();
-terminal.Terminal = Terminal;
-terminal.Terminfo = Terminfo;
+
+adone.lazify({
+    Progress: "./progress",
+    esc: "./esc",
+    Chalk: "./chalk",
+    chalk: () => __.Chalk(),
+    chalkify: "./chalkify",
+    gradient: "./gradient",
+    ui: "./ui"
+}, __, require);
+
+__.Terminal = Terminal;
+__.Terminfo = Terminfo;
+
+adone.util.mockInstance(terminal, __);
 
 adone.lazify({
     BasePrompt: "./prompt/base_prompt",
@@ -3162,17 +3178,6 @@ adone.lazify({
     Paginator: "./prompt/paginator",
     Choices: "./prompt/choices",
     type: "./prompt/types"
-}, adone.asNamespace(terminal.prompt), require);
+}, adone.asNamespace(__.prompt), require);
 
-
-const __ = adone.lazify({
-    Progress: "./progress",
-    esc: "./esc",
-    Chalk: "./chalk",
-    chalk: () => __.Chalk(),
-    chalkify: "./chalkify",
-    gradient: "./gradient",
-    ui: "./ui"
-}, terminal, require);
-
-export default terminal;
+export default adone.asNamespace(__);
