@@ -8,6 +8,7 @@ const {
     realm
 } = adone;
 
+@adone.task.task("realmFork")
 export default class extends realm.BaseTask {
     get arch() {
         const arch = process.arch;

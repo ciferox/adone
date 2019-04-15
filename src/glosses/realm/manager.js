@@ -21,23 +21,6 @@ const checkEntry = (entry) => {
     return true;
 };
 
-const loadTasks = (path, index) => {
-    let indexFile;
-    if (is.string(index)) {
-        indexFile = index;
-    } else {
-        indexFile = "index.js";
-    }
-    const fullPath = std.path.join(path, indexFile);
-    if (fs.existsSync(fullPath)) {
-        const mod = adone.require(fullPath);
-        return mod.default
-            ? mod.default
-            : mod;
-    }
-    return {};
-};
-
 const trySuperRealmAt = (cwd) => {
     let superRealm = new realm.Manager({
         cwd
@@ -159,33 +142,32 @@ export default class RealmManager extends task.TaskManager {
                 await this.superRealm.connect();
             }
 
-            const tags = {};
+            // const tags = {};
             const tasksConfig = this.config.raw.tasks;
             if (is.object(tasksConfig) && is.string(tasksConfig.basePath)) {
                 const basePath = std.path.join(this.cwd, tasksConfig.basePath);
                 if (fs.existsSync(basePath)) {
                     if (is.object(tasksConfig.tags)) {
-                        for (const [t, indexFile] of Object.entries(tasksConfig.tags)) {
-                            tags[t] = loadTasks(basePath, indexFile);
+                        for (const [tag, path] of Object.entries(tasksConfig.tags)) {
+                            await this.loadTasksFrom(std.path.join(basePath, path), {
+                                tag
+                            });
                         }
-                    } else {
-                        // Load only default index
-                        tags[realm.TAG.PUB] = loadTasks(basePath, "index.js");
                     }
                 }
             }
 
-            // Add self contained tasks
-            for (const [tag, tasks] of Object.entries(tags)) {
-                for (const [name, TaskClass] of Object.entries(tasks)) {
-                    // eslint-disable-next-line no-await-in-loop
-                    await this.addTask({
-                        name,
-                        task: TaskClass,
-                        tag
-                    });
-                }
-            }
+            // // Add self contained tasks
+            // for (const [tag, tasks] of Object.entries(tags)) {
+            //     for (const [name, TaskClass] of Object.entries(tasks)) {
+            //         // eslint-disable-next-line no-await-in-loop
+            //         await this.addTask({
+            //             name,
+            //             task: TaskClass,
+            //             tag
+            //         });
+            //     }
+            // }
 
             // Add all public tasks from all super realms.
             if (!is.null(this.superRealm)) {

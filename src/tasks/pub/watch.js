@@ -65,6 +65,7 @@ class WatchTask extends TransformTask {
     }
 }
 
+@adone.task.task("watch")
 export default class extends BaseTask {
     async main(path) {
         const observer = await adone.task.runParallel(this.manager, this.manager.getEntries({ path }).map((entry) => ({

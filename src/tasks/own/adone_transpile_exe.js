@@ -1,10 +1,11 @@
-import TranspileExeTask from "./transpile_exe";
-import { importAdoneReplacer } from "./helpers";
+import TranspileExeTask from "../pub/transpile_exe";
+import { importAdoneReplacer } from "../helpers";
 
 const {
     std
 } = adone;
 
+@adone.task.task("adoneTranspileExe")
 export default class AdoneTranspileExeTask extends TranspileExeTask {
     plugins(params) {
         const plugins = super.plugins(params);

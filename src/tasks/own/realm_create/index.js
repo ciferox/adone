@@ -12,6 +12,7 @@ const __ = adone.lazify({
     helper: "./helpers"
 }, null, require);
 
+@adone.task.task("realmCreate")
 export default class extends realm.BaseTask {
     async main(info = {}) {
         if (!is.string(info.basePath)) {

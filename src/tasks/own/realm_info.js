@@ -5,6 +5,7 @@ const {
     realm
 } = adone;
 
+@adone.task.task("realmInfo")
 export default class extends realm.BaseTask {
     get arch() {
         const arch = process.arch;

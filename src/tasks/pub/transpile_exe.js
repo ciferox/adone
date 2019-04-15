@@ -1,5 +1,6 @@
 import TranspileTask from "./transpile";
 
+@adone.task.task("transpileExe")
 export default class TranspileExeTask extends TranspileTask {
     transform(stream, params) {
         return super.transform(stream, params).chmod({

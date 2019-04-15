@@ -3,6 +3,7 @@ const {
     std
 } = adone;
 
+@adone.task.task("adoneDotCompiler")
 export default class AdoneDotCompilerTask extends adone.realm.TransformTask {
     async initialize(params) {
         this.defs = (await fast.src(std.path.join(adone.util.globParent(params.src), "*.def"), {

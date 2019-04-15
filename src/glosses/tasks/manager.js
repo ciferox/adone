@@ -85,7 +85,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
      * 
      * @param {string|array} path  list of locations from which tasks be loaded
      */
-    async loadTasksFrom(path, { transpile = false } = {}) {
+    async loadTasksFrom(path, { transpile = false, tag, ignoreExts = [".map"] } = {}) {
         let paths;
         if (is.string(path)) {
             paths = adone.util.arrify(path);
@@ -96,15 +96,21 @@ export default class TaskManager extends adone.event.AsyncEmitter {
         }
 
         for (const p of paths) {
+            if (!(await adone.fs.exists(p))) {
+                continue;
+            }
             const files = await adone.fs.readdir(p);
-
             for (const f of files) {
+                if (ignoreExts.includes(adone.std.path.extname(f))) {
+                    continue;
+                }
                 let fullPath;
                 try {
                     fullPath = adone.module.resolve(adone.std.path.join(p, f));
                 } catch (err) {
                     continue;
                 }
+
                 if (await adone.fs.isDirectory(fullPath)) {
                     continue;
                 }
@@ -133,8 +139,10 @@ export default class TaskManager extends adone.event.AsyncEmitter {
                 }
 
                 for (const task of tasks) {
+                    // console.log(fullPath);
                     await this.addTask({
-                        task
+                        task,
+                        tag
                     });
                 }
             }

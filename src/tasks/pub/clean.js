@@ -40,6 +40,7 @@ const clean = async function (manager, entry) {
     });
 };
 
+@adone.task.task("clean")
 export default class extends BaseTask {
     async main({ path } = {}) {
         const observer = await adone.task.runParallel(this.manager, this.manager.getEntries({ path }).map((entry) => ({

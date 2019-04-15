@@ -1,4 +1,4 @@
-import { checkRealm } from "./helpers";
+import { checkRealm } from "../helpers";
 
 const {
     cli: { style },
@@ -8,6 +8,7 @@ const {
     util
 } = adone;
 
+@adone.task.task("realmMountExports")
 export default class extends realm.BaseTask {
     async main({ superRealm, subRealm } = {}) {
         this.manager.notify(this, "progress", {

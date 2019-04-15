@@ -11,9 +11,8 @@
     "tasks": {
         "basePath": "lib/tasks",
         "tags": {
-            "pub": "index.js",
-            "own": "index_own.js",
-            "dev": "index_dev.js"
+            "pub": "pub",
+            "own": "own"
         }
     },
     "mountPoints": "lib/mount_points",

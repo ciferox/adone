@@ -1,4 +1,4 @@
-import { checkRealm } from "./helpers";
+import { checkRealm } from "../helpers";
 
 const {
     cli: { style },
@@ -10,6 +10,7 @@ const {
     realm
 } = adone;
 
+@adone.task.task("realmMerge")
 export default class extends realm.BaseTask {
     async main({ superRealm, subRealm, symlink = false } = {}) {
         this.manager.notify(this, "progress", {

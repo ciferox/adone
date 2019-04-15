@@ -41,8 +41,10 @@ export const task = (taskInfo = {}) => (target) => {
     const info = getTaskMeta(target);
     if (is.undefined(info)) {
         setTaskMeta(target, taskInfo);
-    } else {
+    } else if (is.object(info)) {
         Object.assign(info, taskInfo);
+    } else {
+        setTaskMeta(target, taskInfo);
     }
 };
 

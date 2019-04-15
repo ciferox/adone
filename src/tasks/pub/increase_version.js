@@ -7,6 +7,7 @@ const {
 
 const VERSION_PARTS = ["major", "minor", "patch", "premajor", "preminor", "prepatch", "prerelease"];
 
+@adone.task.task("increaseVersion")
 export default class extends BaseTask {
     async main({ part = "minor", preid = undefined, loose = false } = {}) {
         const config = this.manager.config;

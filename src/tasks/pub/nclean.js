@@ -41,8 +41,9 @@ const clean = async function (manager, entry) {
             cwd: manager.cwd
         });
     }
-}
+};
 
+@adone.task.task("nclean")
 export default class extends adone.realm.BaseTask {
     async main({ path } = {}) {
         const entries = this.manager.getEntries({

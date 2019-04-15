@@ -46,6 +46,7 @@ const build = async function (manager, entry) {
     }
 };
 
+@adone.task.task("nbuild")
 export default class extends BaseTask {
     async main({ path } = {}) {
         const entries = this.manager.getEntries({

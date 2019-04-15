@@ -1,3 +1,4 @@
+@adone.task.task("transpile")
 export default class TranspileTask extends adone.realm.TransformTask {
     transform(stream, params) {
         const transpileOptions = {
