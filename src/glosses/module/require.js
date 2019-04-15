@@ -13,16 +13,14 @@
 //     );
 // }
 
-const mod = new adone.module.Module(require.main ? require.main.filename : adone.std.path.join(process.cwd(), "index.js"));
+const mod = new adone.module.Module(require.main ? require.main.filename : adone.std.path.join(process.cwd(), "index.js"), {
+    transforms: [
+        adone.module.transform.compiler()
+    ]
+});
 const $require = (path) => mod.require(path);
 $require.cache = mod.cache;
 $require.main = mod;
-$require.options = {
-    compact: false,
-    only: [/\.js$/],
-    sourceMaps: "inline",
-    plugins: adone.module.COMPILER_PLUGINS
-};
 $require.resolve = (request) => adone.module.Module._resolveFilename(request, mod);
 $require.uncache = (id) => mod.uncache(id);
 

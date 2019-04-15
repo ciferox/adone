@@ -72,7 +72,7 @@ export default function cloneNode<T: Object>(node: T, deep: boolean = true): T {
         newNode.leadingComments = node.leadingComments;
     }
     if (has(node, "innerComments")) {
-        newNode.innerComments = node.innerCmments;
+        newNode.innerComments = node.innerComments;
     }
     if (has(node, "trailingComments")) {
         newNode.trailingComments = node.trailingComments;

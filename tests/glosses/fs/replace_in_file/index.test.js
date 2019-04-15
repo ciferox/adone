@@ -354,7 +354,37 @@ describe("fs", "replaceInfFile", () => {
         });
         const test1 = fs.readFileSync(fixture("test1"), "utf8");
         expect(test1).to.equal("a b c");
-        expect(fs.readFileSync(join(backupPath, "test1"), "utf8"), testData);
+        expect(fs.readFileSync(join(backupPath, "test1"), "utf8")).to.be.equal(testData);
+        await adone.fs.rm(backupPath);
+    });
+
+    it("should create backup directory is not exists", async () => {
+        const backupPath = await adone.fs.tmpName();
+        await replaceInFile({
+            cwd: fixture(),
+            files: "test1",
+            from: /re\splace/g,
+            to: "b",
+            backupPath: join(backupPath, "a", "B", "c")
+        });
+        const test1 = fs.readFileSync(fixture("test1"), "utf8");
+        expect(test1).to.equal("a b c");
+        expect(fs.readFileSync(join(join(backupPath, "a", "B", "c"), "test1"), "utf8")).to.be.equal(testData);
+        await adone.fs.rm(backupPath);
+    });
+
+    it("should not backup if content is not replaced", async () => {
+        const backupPath = await adone.fs.tmpName();
+        await replaceInFile({
+            cwd: fixture(),
+            files: "test1",
+            from: /c e/g,
+            to: "b",
+            backupPath
+        });
+        const test1 = fs.readFileSync(fixture("test1"), "utf8");
+        expect(test1).to.equal(testData);
+        assert.isFalse(await adone.fs.exists(join(backupPath, "test1")));
         await adone.fs.rm(backupPath);
     });
 });

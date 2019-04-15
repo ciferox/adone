@@ -21,7 +21,7 @@ export default class Generic extends adone.configuration.Base {
                     const content = buf.toString();
 
                     const m = new Module(path, {
-                        transpile: transpile ? adone.require.options : null
+                        transforms: transpile ? [adone.module.transform.compiler()] : []
                     });
 
                     m._compile(content, path);

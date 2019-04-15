@@ -1,28 +1,28 @@
 const {
     is,
-    module: { resolve, babelTransform, COMPILER_PLUGINS },
+    module: { resolve },
     std: { module: NodeModule, path }
 } = adone;
 
 export default class Module extends NodeModule {
-    #transform = null;
-
-    constructor(id, { parent = null } = {}) {
+    constructor(id, { parent = null, transforms = [] } = {}) {
         super(id, parent);
-        this.#transform = babelTransform({
-            compact: false,
-            only: [/\.js$/],
-            sourceMaps: "inline",
-            plugins: COMPILER_PLUGINS
-        });
+        this.transforms = transforms;
+    }
+
+    addTransform(fn) {
+        if (!is.function(fn)) {
+            throw new error.InvalidArgumentException(`Transform must be a function`);
+        }
+        this.transforms.push(fn);
+        return this;
     }
 
     _compile(content, filename) {
-        // console.log(is.function(this.#transform));
-        // return this.#transform
-            // ?
-             super._compile(this.#transform(content, filename), filename)
-            // : super._compile(content, filename);
+        for (const t of this.transforms) {
+            content = t(this, content, filename);
+        }
+        super._compile(content, filename);
     }
 
     require(id) {
@@ -42,7 +42,8 @@ export default class Module extends NodeModule {
         }
 
         const module = new Module(filename, {
-            parent: this 
+            parent: this,
+            transforms: this.transforms
         });
         NodeModule._cache[filename] = module;
 

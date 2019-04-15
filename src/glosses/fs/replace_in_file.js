@@ -46,10 +46,6 @@ const validateOptions = async (options) => {
         options.encoding = "utf-8";
     }
 
-    if (is.string(options.backupPath) && !(await fs.exists(options.backupPath))) {
-        await fs.mkdirp(options.backupPath);
-    }
-
     return {
         ...DEFAULTS,
         ...options
@@ -83,10 +79,6 @@ export default async (options) => {
     const results = await Promise.all(paths.map(async (file) => {
         const filePath = path.resolve(cwd, file);
         const contents = await fs.readFile(filePath, encoding);
-
-        if (shouldBackup) {
-            await fs.copyFile(filePath, path.join(options.backupPath, file));
-        }
 
         const from = arrify(options.from);
         const isArray = is.array(to);
@@ -122,6 +114,16 @@ export default async (options) => {
             return { file, hasChanged: true };
         }
 
+        if (shouldBackup) {
+            const dstPath = path.join(options.backupPath, file);
+            await fs.mkdirp(path.dirname(dstPath));
+            await fs.writeFile(dstPath, contents, encoding);
+            const stats = await fs.lstat(filePath);
+            await fs.utimes(dstPath, stats.atime, stats.mtime);
+            await fs.chmod(dstPath, stats.mode);
+            await fs.chown(dstPath, stats.uid, stats.gid);
+        }
+        
         await fs.writeFile(filePath, newContents, encoding);
         return { file, hasChanged: true };
     }));
