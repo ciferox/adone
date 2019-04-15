@@ -380,4 +380,22 @@ describe("regex", () => {
             }
         });
     });
+
+    it("nodeModules", () => {
+        const { nodeModules } = regex;
+        assert.isTrue(nodeModules().test("node_modules"));
+        assert.isTrue(nodeModules().test("node_modules/foo/bar.js"));
+        assert.isTrue(nodeModules().test("node_modules\\foo\\bar.js"));
+        assert.isTrue(nodeModules().test("./node_modules"));
+        assert.isTrue(nodeModules().test(".\\node_modules"));
+        assert.isTrue(nodeModules().test("/foo/bar/node_modules/blah.js"));
+        assert.isTrue(nodeModules().test("\\foo\\bar\\node_modules\\blah.js"));
+        assert.isTrue(nodeModules().test("node_modules/foo/bar.js"));
+        assert.isTrue(nodeModules().test("foo/node_modulesa/bar/node_modules/foo"));
+        assert.isFalse(nodeModules().test("foo/node_modulesa/bar/node_modulesb/foo"));
+        assert.isFalse(nodeModules().test("anode_modules"));
+        assert.isFalse(nodeModules().test("node_modulesb"));
+        assert.isFalse(nodeModules().test("node_modules.js"));
+
+    });
 });

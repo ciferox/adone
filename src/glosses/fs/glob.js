@@ -841,6 +841,7 @@ class Glob extends event.Emitter {
         absolute = false,
         normalized = false,
         index = false,
+        ignore = [],
         root = defaultRoot,
         lstatCache,
         statCache,
@@ -852,10 +853,9 @@ class Glob extends event.Emitter {
 
         const matchPatterns = [];
 
-        const ignoreList = [];
         for (const pattern of util.arrify(patterns)) {
             if (pattern[0] === "!") {
-                ignoreList.push(pattern.slice(1));
+                ignore.push(pattern.slice(1));
             } else {
                 matchPatterns.push(pattern);
             }
@@ -870,11 +870,11 @@ class Glob extends event.Emitter {
         /** @type {(x: string) => boolean} */
         let isChildDirIgnored = adone.falsely;
 
-        if (ignoreList.length) {
+        if (ignore.length) {
             const childPatterns = [];
             const childDirPatterns = [];
             const overallPatterns = [];
-            for (const pattern of ignoreList) {
+            for (const pattern of ignore) {
                 const normalizedPattern = normalize(pattern);
                 const re = util.match.makeRe(normalizedPattern, { dot: true });
 

@@ -727,12 +727,6 @@
                     "src": "src/glosses/reflect/index.js",
                     "dst": "lib/glosses/reflect"
                 },
-                "require": {
-                    "description": "Advanced require with ES2018 support",
-                    "task": "transpile",
-                    "src": "src/glosses/require/index.js",
-                    "dst": "lib/glosses/require"
-                },
                 "runtime": {
                     "description": "Application wide runtime information",
                     "task": "transpile",

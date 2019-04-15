@@ -3116,7 +3116,7 @@ class Terminal extends adone.event.Emitter {
 
     updateProgress({ clean = false, schema, message, status, reset = false } = {}) {
         if (is.null(this.progressBar) || reset) {
-            if (clean) {
+            if (clean && this.progressBar) {
                 this.progressBar.clear();
             }
             this.progress(message);

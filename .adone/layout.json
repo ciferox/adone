@@ -272,10 +272,6 @@
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
-            "require": {
-                "base": "src/glosses/require",
-                "entry": "index.js"
-            },
             "schema": {
                 "namespace": true,
                 "base": "src/glosses/schema",

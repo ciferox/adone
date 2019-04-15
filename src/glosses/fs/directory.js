@@ -252,10 +252,12 @@ export default class Directory {
         return fs.symlink(this._path, path).then(() => new fs.SymbolicLinkDirectory(path));
     }
 
+    // TODO: need review
     copyTo(destPath, options) {
         return fs.copyTo(this._path, destPath, options);
     }
 
+    // TODO: need review
     copyFrom(srcPath, options) {
         return fs.copyTo(srcPath, this._path, options);
     }

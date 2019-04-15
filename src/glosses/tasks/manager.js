@@ -109,9 +109,16 @@ export default class TaskManager extends adone.event.AsyncEmitter {
                     continue;
                 }
 
-                let modExports = (transpile)
-                    ? adone.require(fullPath)
-                    : require(fullPath);
+                let modExports;
+                
+                try {
+                    modExports = (transpile)
+                        ? adone.require(fullPath)
+                        : require(fullPath);
+                } catch (err) {
+                    // ignore non kavascript files
+                    continue;
+                }
                 if (modExports.default) {
                     modExports = modExports.default;
                 }

@@ -246,12 +246,10 @@ adone.lazify({
     punycode: "./glosses/punycode",
     realm: "./glosses/realm",
     regex: "./glosses/regex",
-    require: "./glosses/require",
     schema: "./glosses/schema",
     semver: "./glosses/semver",
     shell: "./glosses/shell",
     sourcemap: "./glosses/sourcemap",
-    sprintf: "./glosses/text/sprintf",
     stream: "./glosses/streams",
     system: "./glosses/system",
     task: "./glosses/tasks",
@@ -262,6 +260,12 @@ adone.lazify({
     util: "./glosses/utils",
     vault: "./glosses/vault",
     web: "./glosses/web"
+}, adone);
+
+// mappings
+adone.lazify({
+    require: "./glosses/module/require",
+    sprintf: "./glosses/text/sprintf"
 }, adone);
 
 // lazify non-extendable objects in std

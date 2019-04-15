@@ -62,3 +62,5 @@ export const uuid5 = () => /^[0-9a-f]{8}-[0-9a-f]{4}-[5][0-9a-f]{3}-[89ab][0-9a-
 export const ansi = () => /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g;
 
 export const shebang = () => /^#!(.*)/;
+
+export const nodeModules = () => /^(?:.*[\\/])?node_modules(?:[\\/].*)?$/;

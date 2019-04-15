@@ -147,7 +147,7 @@ export default () => class RunCommand extends Subsystem {
 
     async _runCode(code) {
         const m = new adone.module.Module(process.cwd(), {
-            transform: adone.module.Module.transforms.transpile(adone.require.options)
+            transpile: adone.require.options
         });
 
         m._compile(code, "index.js");
