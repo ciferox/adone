@@ -1,15 +1,32 @@
 {
     "artifacts": {
-        "kri": [
-            ".adone",
-            "bin",
-            "lib",
-            "share",
-            "package.json"
+        "share": [
+            "share"
+        ],
+        "src": [
+            "src"
+        ],
+        "configs": [
+            "etc",
+            ".eslintignore",
+            ".eslinkrc.js",
+            ".gitattributes",
+            ".gitignore",
+            ".npmignore",
+            "jsconfig.json"
+        ],
+        "info": [
+            "LICENSE",
+            "README.md"
+        ],
+        "tests": [
+            "tests",
+            "shanifile.js"
         ]
     },
     "tasks": {
         "basePath": "lib/tasks",
+        "default": false,
         "tags": {
             "pub": "pub",
             "own": "own"

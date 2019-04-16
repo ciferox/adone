@@ -234,10 +234,11 @@ export const getCallsites = () => {
 const objectOwnProps = Object.getOwnPropertyNames({}.__proto__);
 
 export const arrify = (val) => {
-    if (is.undefined(val)) {
-        return [];
-    }
-    return !is.array(val) ? [val] : val;
+    return is.undefined(val)
+        ? []
+        : !is.array(val)
+            ? [val]
+            : val;
 };
 
 export const slice = (args, sliceStart = 0, sliceEnd) => {

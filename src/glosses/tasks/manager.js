@@ -1,6 +1,8 @@
 const {
+    fs,
     is,
-    error
+    error,
+    util
 } = adone;
 
 const { MANAGER_SYMBOL } = adone.private(adone.task);
@@ -85,23 +87,32 @@ export default class TaskManager extends adone.event.AsyncEmitter {
      * 
      * @param {string|array} path  list of locations from which tasks be loaded
      */
-    async loadTasksFrom(path, { transpile = false, tag, ignoreExts = [".map"] } = {}) {
+    async loadTasksFrom(path, { transpile = false, tag, ignore, ignoreExts = [".map"] } = {}) {
         let paths;
         if (is.string(path)) {
-            paths = adone.util.arrify(path);
+            paths = util.arrify(path);
         } else if (is.array(path)) {
             paths = path;
         } else {
             throw new error.InvalidArgumentException("Invalid 'path' argument");
         }
 
+        ignore = util.arrify(ignore);
+
         for (const p of paths) {
-            if (!(await adone.fs.exists(p))) {
+            if (!(await fs.exists(p))) {
                 continue;
             }
-            const files = await adone.fs.readdir(p);
+
+            let files;
+            if (await fs.isDirectory(p)) {
+                files = await fs.readdir(p);
+            } else {
+                files = [p];
+            }
+
             for (const f of files) {
-                if (ignoreExts.includes(adone.std.path.extname(f))) {
+                if (ignoreExts.includes(adone.std.path.extname(f)) || ignore.includes(f)) {
                     continue;
                 }
                 let fullPath;
@@ -111,7 +122,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
                     continue;
                 }
 
-                if (await adone.fs.isDirectory(fullPath)) {
+                if (await fs.isDirectory(fullPath)) {
                     continue;
                 }
 
@@ -122,6 +133,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
                         ? adone.require(fullPath)
                         : require(fullPath);
                 } catch (err) {
+                    // console.log(adone.pretty.error(err));
                     // ignore non javascript files
                     continue;
                 }
@@ -509,7 +521,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
         };
 
         if (concurrency !== Infinity && concurrency > 0) {
-            taskInfo.throttle = adone.util.throttle.create({
+            taskInfo.throttle = util.throttle.create({
                 concurrency,
                 interval
             });
@@ -555,6 +567,14 @@ export default class TaskManager extends adone.event.AsyncEmitter {
                     name = meta;
                 } else if (is.object(meta)) {
                     name = meta.name;
+                }
+
+                if (!name && is.class(task)) {
+                    name = task.name;
+                }
+
+                if (!name) {
+                    throw new error.NotValidException(`Invalid name of task: ${name}`);
                 }
             }
 

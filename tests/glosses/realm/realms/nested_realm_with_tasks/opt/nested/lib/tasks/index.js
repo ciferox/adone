@@ -1,28 +1,26 @@
 const {
-    realm: { BaseTask
-    }
+    task: { task },
+    realm: { BaseTask }
 } = adone;
 
-class NestedTaskA extends BaseTask {
+@task("nestedA")
+export class NestedTaskA extends BaseTask {
     main() {
         return "aaa";
     }
 }
 
-class NestedTaskB extends BaseTask {
+@task("nestedB")
+export class NestedTaskB extends BaseTask {
     main() {
         return "bbb";
     }
 }
 
-class DummyTask extends BaseTask {
+@task("dummy")
+export class DummyTask extends BaseTask {
     main() {
         return "nested dummy";
     }
 }
 
-adone.lazify({
-    nestedA: () => NestedTaskA,
-    nestedB: () => NestedTaskB,
-    dummy: () => DummyTask
-}, exports);

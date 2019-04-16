@@ -2,7 +2,7 @@
     "tasks": {
         "basePath": "lib/tasks",
         "tags": {
-            "pub": "index.js",
+            "pub": "pub",
             "own": "index_own.js"
         }
     }

@@ -34,7 +34,7 @@ export default class extends realm.BaseTask {
 
         const all = (common && struct && tasks) || (!common && !struct && !tasks);
 
-        const r = new realm.Manager({ cwd });
+        const r = new realm.RealmManager({ cwd });
         await r.connect();
 
         this.manager.notify(this, "progress", {

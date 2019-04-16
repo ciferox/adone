@@ -16,7 +16,7 @@ export const importAdoneReplacer = (replacer) => () => ({
 export const checkRealm = async (r) => {
     let result = r;
     if (is.string(result)) {
-        result = new realm.Manager({
+        result = new realm.RealmManager({
             cwd: r
         });
     }

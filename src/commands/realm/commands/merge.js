@@ -7,7 +7,7 @@ export default class extends Subsystem {
     async main(args, opts) {
         try {
             const superRealm = await this.parent.connectRealm();
-            const subRealm = new adone.realm.Manager({
+            const subRealm = new adone.realm.RealmManager({
                 cwd: process.cwd()
             });
             await subRealm.connect();

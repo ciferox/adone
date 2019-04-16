@@ -22,7 +22,7 @@ const checkEntry = (entry) => {
 };
 
 const trySuperRealmAt = (cwd) => {
-    let superRealm = new realm.Manager({
+    let superRealm = new realm.RealmManager({
         cwd
     });
     try {
@@ -40,7 +40,6 @@ const trySuperRealmAt = (cwd) => {
 };
 
 const COMMON_FILENAMES = [
-    ["", "root"],
     "bin",
     "run",
     "etc",
@@ -131,7 +130,7 @@ export default class RealmManager extends task.TaskManager {
         return this.#superRealm;
     }
 
-    async connect() {
+    async connect({ transpile } = {}) {
         if (this.#connected || this.#connectiong) {
             return;
         }
@@ -139,21 +138,32 @@ export default class RealmManager extends task.TaskManager {
 
         try {
             if (!is.null(this.superRealm)) {
-                await this.superRealm.connect();
+                await this.superRealm.connect({ transpile });
             }
 
-            // const tags = {};
             const tasksConfig = this.config.raw.tasks;
             if (is.object(tasksConfig) && is.string(tasksConfig.basePath)) {
-                const basePath = std.path.join(this.cwd, tasksConfig.basePath);
-                if (fs.existsSync(basePath)) {
+                const tasksBasePath = this.getPath(tasksConfig.basePath);
+
+                if (fs.existsSync(tasksBasePath)) {
                     if (is.object(tasksConfig.tags)) {
                         for (const [tag, path] of Object.entries(tasksConfig.tags)) {
-                            await this.loadTasksFrom(std.path.join(basePath, path), {
+                            await this.loadTasksFrom(std.path.join(tasksBasePath, path), {
+                                transpile,
                                 tag
                             });
                         }
                     }
+                }
+
+                if (tasksConfig.default !== false) {
+                    const ignore = is.object(tasksConfig.tags)
+                        ? [...Object.values(tasksConfig.tags)]
+                        : [];
+                    await this.loadTasksFrom(tasksBasePath, {
+                        transpile,
+                        ignore
+                    });
                 }
             }
 
@@ -174,6 +184,10 @@ export default class RealmManager extends task.TaskManager {
                 await this.#addTasksFromSuperRealm(this.superRealm);
             }
 
+            // ROOT_PATH
+            this.#definePathVar("root", this.cwd);
+            // console.log(this.cwd);
+
             // collect artifacts
             const rootFiles = await fs.readdir(this.cwd);
             const cfgArtifacts = this.config.get("artifacts") || {};
@@ -189,11 +203,9 @@ export default class RealmManager extends task.TaskManager {
                 };
 
                 const item = COMMON_FILENAMES.find((v) => v[0] === file);
+
                 if (item) {
-                    Object.defineProperty(this, `${item[1].toUpperCase()}_PATH`, {
-                        enumerable: true,
-                        value: fullPath
-                    });
+                    this.#definePathVar(item[1], fullPath);
 
                     artifact.attrs.add("common");
                 }
@@ -223,6 +235,17 @@ export default class RealmManager extends task.TaskManager {
         } finally {
             this.#connectiong = false;
         }
+    }
+
+    #definePathVar(prefix, value) {
+        Object.defineProperty(this, `${prefix.toUpperCase()}_PATH`, {
+            enumerable: true,
+            value
+        });
+    }
+
+    getPath(...args) {
+        return std.path.join(this.cwd, ...args);
     }
 
     getArtifacts(attr) {
@@ -320,21 +343,21 @@ export default class RealmManager extends task.TaskManager {
     }
 
     async #addTasksFromSuperRealm(superRealm) {
-    if (is.null(superRealm)) {
-        return;
-    }
-    const tasks = superRealm.getTasksByTag(realm.TAG.PUB);
-    for (const taskInfo of tasks) {
-        if (!this.hasTask(taskInfo.name)) {
-            // eslint-disable-next-line no-await-in-loop
-            await this.addTask({
-                name: taskInfo.name,
-                task: taskInfo.Class,
-                ...util.pick(taskInfo, ["concurrency", "interval", "singleton", "description", "tag"])
-            });
+        if (is.null(superRealm)) {
+            return;
         }
-    }
+        const tasks = superRealm.getTasksByTag(realm.TAG.PUB);
+        for (const taskInfo of tasks) {
+            if (!this.hasTask(taskInfo.name)) {
+                // eslint-disable-next-line no-await-in-loop
+                await this.addTask({
+                    name: taskInfo.name,
+                    task: taskInfo.Class,
+                    ...util.pick(taskInfo, ["concurrency", "interval", "singleton", "description", "tag"])
+                });
+            }
+        }
 
-    return this.#addTasksFromSuperRealm(superRealm.superRealm);
-}
+        return this.#addTasksFromSuperRealm(superRealm.superRealm);
+    }
 }

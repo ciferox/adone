@@ -26,13 +26,13 @@ export default class extends realm.BaseTask {
         }
     }
 
-    async main({ srcRealm, destPath, name, exclude } = {}) {
+    async main({ srcRealm, destPath, name, onlyArtifacts } = {}) {
         this.manager.notify(this, "progress", {
             message: "checking"
         });
 
         if (is.string(srcRealm)) {
-            srcRealm = new realm.Manager({ cwd: srcRealm });
+            srcRealm = new realm.RealmManager({ cwd: srcRealm });
         }
 
         if (!srcRealm || !is.realm(srcRealm)) {
@@ -52,7 +52,9 @@ export default class extends realm.BaseTask {
         });
 
         // Connect to source realm
-        await srcRealm.connect();
+        await srcRealm.connect({
+            transpile: true
+        });
 
         this.manager.notify(this, "progress", {
             message: "preparing to copy common realm files"
@@ -66,53 +68,54 @@ export default class extends realm.BaseTask {
         this.destCwd = destCwd;
         await fs.mkdirp(this.destCwd);
 
-        // const srcGlob = util.arrify(exclude).map((glob) => glob.startsWith("!")
-        //     ? glob
-        //     : `!${glob}`
-        // );
+        const artifacts = new Set;
+        let artifactTags = new Set();
 
-        // const allFiles = await fs.readdir(srcRealm.ROOT_PATH);
+        if (!onlyArtifacts) {
+            const files = await fs.readdir(srcRealm.ROOT_PATH);
+            files.forEach((file) => artifacts.add(file));
+        } else if (is.string(onlyArtifacts)) {
+            artifactTags.add(onlyArtifacts);
+        } else if (is.array(onlyArtifacts)) {
+            onlyArtifacts.forEach((tag) => artifactTags.add(tag));
+        }
 
-        // const natives = srcRealm.artifacts.map((info) => info.path);
+        for (const attr of artifactTags.values()) {
+            const files = srcRealm.getArtifacts(attr).map((info) => info.path);
+            files.forEach((file) => artifacts.add(file));
+        }
 
-        // const rootFileNames = (await fs.readdir(srcRealm.ROOT_PATH)).filter((name) => !natives.includes(name));
+        // artifacts required for a realm
+        artifacts.add(".adone");
+        artifacts.add("package.json");
 
-        // this.manager.notify(this, "progress", {
-        //     message: "copying root files"
-        // });
+        this.manager.notify(this, "progress", {
+            message: "copying realm artifactTags"
+        });
 
-        // await fast.src(rootFileNames, {
-        //     cwd: srcRealm.ROOT_PATH,
-        //     base: srcRealm.ROOT_PATH
-        // }).dest(this.destCwd, {
-        //     produceFiles: true
-        // });
+        for (const dir of artifacts.values()) {
+            this.manager.notify(this, "progress", {
+                message: `copying ${cli.style.accent(dir)}`
+            });
 
-        // for (const dir of DIRS) {
-        //     this.manager.notify(this, "progress", {
-        //         message: `copying ${cli.style.accent(dir)}`
-        //     });
-    
-        //     const cwd = std.path.join(srcRealm.ROOT_PATH, dir);
-        //     const base = cwd;
-        //     const dstPath = std.path.join(this.destCwd, dir);
-        //     // eslint-disable-next-line no-await-in-loop
-        //     await fast.src("**/*", {
-        //         cwd,
-        //         base
-        //     }).dest(dstPath, {
-        //         produceFiles: true
-        //     });
-        // }
+            const fromPath = std.path.join(srcRealm.ROOT_PATH, dir);
+            const toPath = std.path.join(this.destCwd, dir);
 
-        // this.manager.notify(this, "progress", {
-        //     message: `realm ${cli.style.primary(srcRealm.name)} successfully forked into ${cli.style.accent(this.destCwd)}`,
-        //     status: true
-        // });
+            if (await fs.isDirectory(fromPath)) {
+                await fs.copy(fromPath, toPath);
+            } else {
+                await fs.copyFile(fromPath, toPath, { overwrite: false });
+            }
+        }
 
-        // this.destRealm = new realm.Manager({
-        //     cwd: this.destCwd
-        // });
+        this.manager.notify(this, "progress", {
+            message: `realm ${cli.style.primary(srcRealm.name)} successfully forked into ${cli.style.accent(this.destCwd)}`,
+            status: true
+        });
+
+        this.destRealm = new realm.RealmManager({
+            cwd: this.destCwd
+        });
 
         return this.destRealm;
     }

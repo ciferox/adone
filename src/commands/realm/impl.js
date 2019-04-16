@@ -140,7 +140,7 @@ export default () => class RealmCommand extends app.Subsystem {
     async connectRealm({ cwd, progress = true } = {}) {
         let manager;
         if (is.string(cwd)) {
-            manager = new realm.Manager({ cwd });
+            manager = new realm.RealmManager({ cwd });
         } else {
             manager = realm.rootRealm;
         }

@@ -18,11 +18,10 @@ export const TAG = {
 const realm = adone.lazify({
     Configuration: "./configuration",
     DevConfiguration: "./dev_configuration",
-    Manager: "./manager",
+    RealmManager: "./manager",
     BaseTask: "./base_task",
     TransformTask: "./transform_task",
     MountPoint: "./mount_point",
     code: "./code",
-    bundle: "./bundle",
-    rootRealm: () => new realm.Manager({ cwd: adone.ROOT_PATH })
+    rootRealm: () => new realm.RealmManager({ cwd: adone.ROOT_PATH })
 }, adone.asNamespace(exports), require);

@@ -98,7 +98,7 @@ export default class extends realm.BaseTask {
             status: true
         });
 
-        return new realm.Manager({ cwd });
+        return new realm.RealmManager({ cwd });
     }
 
     async undo(err) {

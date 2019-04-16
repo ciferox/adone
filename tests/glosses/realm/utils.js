@@ -15,9 +15,11 @@ export const getRealmName = () => `project${realmCounter++}`;
 export const getRealmPathFor = (...args) => std.path.join(__dirname, "realms", ...args);
 
 export const createManagerFor = async ({ name, connect = true }) => {
-    const manager = new realm.Manager({
+    const manager = new realm.RealmManager({
         cwd: getRealmPathFor(...util.arrify(name))
     });
-    connect && await manager.connect();
+    connect && await manager.connect({
+        transpile: true
+    });
     return manager;
 };

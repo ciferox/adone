@@ -255,7 +255,7 @@ describe("realm", "common tasks", () => {
             assert.sameMembers(await fs.readdir(std.path.join(getRealmPathFor("realm3"), "lib", "tasks")), await fs.readdir(std.path.join(destRealm.cwd, "lib", "tasks")));
         });
 
-        it("fork adone realm", async function () {
+        it("fork whole adone realm", async function () {
             this.timeout(300 * 1000);
             const destRealm = await rootRealm.runAndWait("realmFork", {
                 srcRealm: rootRealm,
@@ -264,33 +264,22 @@ describe("realm", "common tasks", () => {
             });
             tmpPath = std.path.dirname(destRealm.cwd);
 
-            const DIRS = [
-                std.path.relative(rootRealm.cwd, rootRealm.BIN_PATH),
-                std.path.relative(rootRealm.cwd, rootRealm.ETC_PATH),
-                std.path.relative(rootRealm.cwd, rootRealm.VAR_PATH),
-                std.path.relative(rootRealm.cwd, rootRealm.SHARE_PATH),
-                std.path.relative(rootRealm.cwd, rootRealm.LIB_PATH),
-                std.path.relative(rootRealm.cwd, rootRealm.RUNTIME_PATH),
-                std.path.relative(rootRealm.cwd, rootRealm.SPECIAL_PATH),
-                std.path.relative(rootRealm.cwd, rootRealm.SRC_PATH),
-                std.path.relative(rootRealm.cwd, rootRealm.MODULES_PATH),
-                std.path.relative(rootRealm.cwd, rootRealm.TESTS_PATH)
-            ];
-
-            for (const dir of DIRS) {
-                // eslint-disable-next-line no-await-in-loop
-                const srcFiles = await fs.readdir(std.path.join(rootRealm.cwd, dir));
-
-                if (srcFiles.length > 0) {
-                    // eslint-disable-next-line no-await-in-loop
-                    const dstFiles = await fs.readdir(std.path.join(destRealm.cwd, dir));
-                    assert.sameMembers(srcFiles, dstFiles);
-                }
-            }
-
-            const srcRootFiles = (await fs.readdir(rootRealm.cwd)).filter((name) => !DIRS.includes(name));
-            const dstRootFiles = (await fs.readdir(destRealm.cwd)).filter((name) => !DIRS.includes(name));
+            const srcRootFiles = (await fs.readdir(rootRealm.cwd));
+            const dstRootFiles = (await fs.readdir(destRealm.cwd));
             assert.sameMembers(srcRootFiles, dstRootFiles);
+        });
+
+        it("fork only specified artifacts of adone realm", async () => {
+            const destRealm = await rootRealm.runAndWait("realmFork", {
+                srcRealm: rootRealm,
+                name: ".adone",
+                destPath: await fs.tmpName(),
+                onlyArtifacts: ["share", "info"]
+            });
+            tmpPath = std.path.dirname(destRealm.cwd);
+
+            const dstRootFiles = (await fs.readdir(destRealm.cwd));
+            assert.sameMembers(dstRootFiles, [".adone", "package.json", "share", "LICENSE", "README.md"]);
         });
     });
 
@@ -356,7 +345,7 @@ describe("realm", "common tasks", () => {
             assert.isTrue(st.isSymbolicLink());
             const mergedList = (await fs.readdirp(mergedPath)).map((entry) => std.path.relative(subRealm, entry.fullPath));
             assert.isTrue(mergedList.includes(std.path.join(".adone", "dev.json")));
-            const mergedRealm = new realm.Manager({
+            const mergedRealm = new realm.RealmManager({
                 cwd: mergedPath
             });
             assert.equal(mergedRealm.devConfig.raw.superRealm, superRealm.cwd);
