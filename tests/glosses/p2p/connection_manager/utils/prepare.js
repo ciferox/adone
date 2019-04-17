@@ -1,9 +1,9 @@
 const series = require("async/series");
 const each = require("async/each");
 
-const createThing = require("./create_thing");
 const connectAll = require("./connect_all");
 const tryConnectAll = require("./try_connect_all");
+const createNode = require("./create_node");
 
 const {
     is
@@ -23,7 +23,7 @@ module.exports = (count, options) => {
     const create = (done) => {
         const tasks = [];
         for (let i = 0; i < count; i++) {
-            tasks.push((cb) => createThing(options.shift() || {}, cb));
+            tasks.push((cb) => createNode(options.shift() || {}, cb));
         }
 
         series(tasks, (err, things) => {
@@ -65,10 +65,8 @@ module.exports = (count, options) => {
         }
 
         each(nodes, (node, cb) => {
-            node.connManager.stop();
             series([
-                (cb) => node.libp2pNode.stop(cb),
-                (cb) => node.repo.teardown(cb)
+                (cb) => node.stop(cb)
             ], cb);
         }, done);
     };
@@ -80,6 +78,6 @@ module.exports = (count, options) => {
         before,
         after,
         things: () => nodes,
-        connManagers: () => nodes.map((node) => node.connManager)
+        connManagers: () => nodes.map((node) => node.connectionManager)
     };
 };

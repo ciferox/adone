@@ -66,12 +66,17 @@ describe("peer discovery", () => {
                 (cb) => ss.stop().then(cb)
             ], done);
         });
+
+        afterEach(() => {
+            sinon.restore();
+        });
     };
 
     describe("module registration", () => {
         it("should enable by default a module passed as an object", (done) => {
             const mockDiscovery = {
                 on: sinon.stub(),
+                removeListener: sinon.stub(),
                 start: sinon.stub().callsArg(0),
                 stop: sinon.stub().callsArg(0)
             };
@@ -92,6 +97,7 @@ describe("peer discovery", () => {
         it("should enable by default a module passed as a function", (done) => {
             const mockDiscovery = {
                 on: sinon.stub(),
+                removeListener: sinon.stub(),
                 start: sinon.stub().callsArg(0),
                 stop: sinon.stub().callsArg(0)
             };
@@ -114,6 +120,7 @@ describe("peer discovery", () => {
         it("should enable module by configutation", (done) => {
             const mockDiscovery = {
                 on: sinon.stub(),
+                removeListener: sinon.stub(),
                 start: sinon.stub().callsArg(0),
                 stop: sinon.stub().callsArg(0),
                 tag: "mockDiscovery"
@@ -149,6 +156,7 @@ describe("peer discovery", () => {
         it("should disable module by configutation", (done) => {
             const mockDiscovery = {
                 on: sinon.stub(),
+                removeListener: sinon.stub(),
                 start: sinon.stub().callsArg(0),
                 stop: sinon.stub().callsArg(0),
                 tag: "mockDiscovery"
@@ -184,6 +192,7 @@ describe("peer discovery", () => {
         it("should register module passed as function", (done) => {
             const mockDiscovery = {
                 on: sinon.stub(),
+                removeListener: sinon.stub(),
                 start: sinon.stub().callsArg(0),
                 stop: sinon.stub().callsArg(0)
             };
@@ -221,6 +230,7 @@ describe("peer discovery", () => {
         it("should register module passed as object", (done) => {
             const mockDiscovery = {
                 on: sinon.stub(),
+                removeListener: sinon.stub(),
                 start: sinon.stub().callsArg(0),
                 stop: sinon.stub().callsArg(0),
                 tag: "mockDiscovery"
@@ -247,16 +257,44 @@ describe("peer discovery", () => {
         });
     });
 
-    describe("MulticastDNS", () => {
+    describe("discovery scenarios", () => {
         setup({
             config: {
                 dht: {
                     enabled: false
                 },
                 peerDiscovery: {
+                    autoDial: false,
+                    bootstrap: {
+                        enabled: true,
+                        list: []
+                    }
+                }
+            }
+        });
+
+        it("should ignore self on discovery", () => {
+            const discoverySpy = sinon.spy();
+            nodeA.on("peer:discovery", discoverySpy);
+            nodeA._discovery[0].emit("peer", nodeA.peerInfo);
+
+            expect(discoverySpy.called).to.eql(false);
+            expect(nodeA.peerBook.getAllArray()).to.have.length(0);
+            expect();
+        });
+    });
+
+    describe("MulticastDNS", () => {
+        setup({
+            config: {
+                dht: {
+                    enabled: false
+                },
+                autoDial: true,
+                peerDiscovery: {
                     mdns: {
                         enabled: true,
-                        interval: 1e3, // discover quickly
+                        interval: 200, // discover quickly
                         // use a random tag to prevent CI collision
                         serviceTag: crypto.randomBytes(10).toString("hex")
                     }
@@ -294,6 +332,7 @@ describe("peer discovery", () => {
                     enabled: false
                 },
                 peerDiscovery: {
+                    autoDial: true,
                     webRTCStar: {
                         enabled: true
                     }
@@ -330,9 +369,10 @@ describe("peer discovery", () => {
                     enabled: false
                 },
                 peerDiscovery: {
+                    autoDial: true,
                     mdns: {
                         enabled: true,
-                        interval: 1e3, // discovery quickly
+                        interval: 200, // discovery quickly
                         // use a random tag to prevent CI collision
                         serviceTag: crypto.randomBytes(10).toString("hex")
                     },
@@ -368,6 +408,7 @@ describe("peer discovery", () => {
         setup({
             config: {
                 peerDiscovery: {
+                    autoDial: true,
                     mdns: {
                         enabled: false
                     },
@@ -380,7 +421,7 @@ describe("peer discovery", () => {
                         randomWalk: {
                             enabled: true,
                             queriesPerPeriod: 1,
-                            interval: 1000, // start the query sooner
+                            interval: 200, // start the query sooner
                             timeout: 3000
                         }
                     }
@@ -416,6 +457,47 @@ describe("peer discovery", () => {
             nodeC.dial(nodeB.peerInfo, (err) => {
                 expect(err).to.not.exist();
             });
+        });
+    });
+
+    describe("auto dial", () => {
+        setup({
+            connectionManager: {
+                minPeers: 1
+            },
+            config: {
+                peerDiscovery: {
+                    autoDial: true,
+                    mdns: {
+                        enabled: false
+                    },
+                    webRTCStar: {
+                        enabled: false
+                    },
+                    bootstrap: {
+                        enabled: true,
+                        list: []
+                    }
+                },
+                dht: {
+                    enabled: false
+                }
+            }
+        });
+
+        it("should only dial when the peer count is below the low watermark", (done) => {
+            const bootstrap = nodeA._discovery[0];
+            sinon.stub(nodeA._switch.dialer, "connect").callsFake((peerInfo) => {
+                nodeA._switch.connection.connections[peerInfo.id.toB58String()] = [];
+            });
+
+            bootstrap.emit("peer", nodeB.peerInfo);
+            bootstrap.emit("peer", nodeC.peerInfo);
+
+            // Only nodeB should get dialed
+            expect(nodeA._switch.dialer.connect.callCount).to.eql(1);
+            expect(nodeA._switch.dialer.connect.getCall(0).args[0]).to.eql(nodeB.peerInfo);
+            done();
         });
     });
 });

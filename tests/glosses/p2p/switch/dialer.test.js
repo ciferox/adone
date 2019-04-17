@@ -8,23 +8,46 @@ const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosse
 
 const Queue = require(srcPath("dialer/queue"));
 const QueueManager = require(srcPath("dialer/queueManager"));
+const { PRIORITY_HIGH, PRIORITY_LOW } = require(srcPath("constants"));
 
 const utils = require("./utils");
 const createInfos = utils.createInfos;
 
 describe("dialer", () => {
     let switchA;
+    let switchB;
 
-    before((done) => createInfos(1, (err, infos) => {
+    before((done) => createInfos(2, (err, infos) => {
         expect(err).to.not.exist();
 
         switchA = new Switch(infos[0], new PeerBook());
+        switchB = new Switch(infos[1], new PeerBook());
 
         done();
     }));
 
     afterEach(() => {
         sinon.restore();
+    });
+
+    describe("connect", () => {
+        afterEach(() => {
+            switchA.dialer.clearBlacklist(switchB._peerInfo);
+        });
+
+        it("should use default options", (done) => {
+            switchA.dialer.connect(switchB._peerInfo, (err) => {
+                expect(err).to.exist();
+                done();
+            });
+        });
+
+        it("should be able to use custom options", (done) => {
+            switchA.dialer.connect(switchB._peerInfo, { useFSM: true, priority: PRIORITY_HIGH }, (err) => {
+                expect(err).to.exist();
+                done();
+            });
+        });
     });
 
     describe("queue", () => {
@@ -54,7 +77,7 @@ describe("dialer", () => {
                     id: { toB58String: () => "QmA" }
                 },
                 protocol: null,
-                useFSM: true,
+                options: { useFSM: true, priority: PRIORITY_LOW },
                 callback: (err) => {
                     expect(err.code).to.eql("DIAL_ABORTED");
                     done();
@@ -71,7 +94,7 @@ describe("dialer", () => {
                     isConnected: () => null
                 },
                 protocol: "/echo/1.0.0",
-                useFSM: true,
+                options: { useFSM: true, priority: PRIORITY_HIGH },
                 callback: () => { }
             };
 
@@ -95,7 +118,7 @@ describe("dialer", () => {
                     isConnected: () => null
                 },
                 protocol: null,
-                useFSM: true,
+                options: { useFSM: true, priority: PRIORITY_LOW },
                 callback: () => { }
             };
 
@@ -116,7 +139,7 @@ describe("dialer", () => {
                     isConnected: () => null
                 },
                 protocol: null,
-                useFSM: true,
+                options: { useFSM: true, priority: PRIORITY_LOW },
                 callback: (err) => {
                     expect(runSpy.called).to.eql(false);
                     expect(hasSpy.called).to.eql(true);

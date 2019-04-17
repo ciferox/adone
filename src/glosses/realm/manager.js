@@ -167,18 +167,6 @@ export default class RealmManager extends task.TaskManager {
                 }
             }
 
-            // // Add self contained tasks
-            // for (const [tag, tasks] of Object.entries(tags)) {
-            //     for (const [name, TaskClass] of Object.entries(tasks)) {
-            //         // eslint-disable-next-line no-await-in-loop
-            //         await this.addTask({
-            //             name,
-            //             task: TaskClass,
-            //             tag
-            //         });
-            //     }
-            // }
-
             // Add all public tasks from all super realms.
             if (!is.null(this.superRealm)) {
                 await this.#addTasksFromSuperRealm(this.superRealm);

@@ -5,7 +5,7 @@ const Queue = require("./queue");
 const { DIAL_ABORTED } = require("../errors");
 const nextTick = require("async/nextTick");
 const retimer = require("retimer");
-const { QUARTER_HOUR } = require("../constants");
+const { QUARTER_HOUR, PRIORITY_HIGH } = require("../constants");
 const debug = require("debug");
 const log = debug("libp2p:switch:dial:manager");
 const noop = () => { };
@@ -105,17 +105,24 @@ class DialQueueManager {
      * @param {DialRequest} dialRequest
      * @returns {void}
      */
-    add({ peerInfo, protocol, useFSM, callback }) {
+    add({ peerInfo, protocol, options, callback }) {
         callback = callback ? once(callback) : noop;
 
         // Add the dial to its respective queue
         const targetQueue = this.getQueue(peerInfo);
-        // If we have too many cold calls, abort the dial immediately
-        if (this._coldCallQueue.size >= this.switch.dialer.MAX_COLD_CALLS && !protocol) {
-            return nextTick(callback, DIAL_ABORTED());
+        // Cold Call
+        if (options.priority > PRIORITY_HIGH) {
+            // If we have too many cold calls, abort the dial immediately
+            if (this._coldCallQueue.size >= this.switch.dialer.MAX_COLD_CALLS) {
+                return nextTick(callback, DIAL_ABORTED())
+            }
+
+            if (this._queue.has(targetQueue.id)) {
+                return nextTick(callback, DIAL_ABORTED())
+            }
         }
 
-        targetQueue.add(protocol, useFSM, callback);
+        targetQueue.add(protocol, options.useFSM, callback);
 
         // If we're already connected to the peer, start the queue now
         // While it might cause queues to go over the max parallel amount,
@@ -132,15 +139,12 @@ class DialQueueManager {
 
         // Add the id to its respective queue set if the queue isn't running
         if (!targetQueue.isRunning) {
-            if (protocol) {
+            if (options.priority <= PRIORITY_HIGH) {
                 this._queue.add(targetQueue.id);
                 this._coldCallQueue.delete(targetQueue.id);
                 // Only add it to the cold queue if it's not in the normal queue
-            } else if (!this._queue.has(targetQueue.id)) {
-                this._coldCallQueue.add(targetQueue.id);
-                // The peer is already in the normal queue, abort the cold call
             } else {
-                return nextTick(callback, DIAL_ABORTED());
+                this._coldCallQueue.add(targetQueue.id);
             }
         }
         this.run();
@@ -153,7 +157,7 @@ class DialQueueManager {
         if (!this.isRunning) {
             return;
         }
-        
+
         if (this._dialingQueues.size < this.switch.dialer.MAX_PARALLEL_DIALS) {
             let nextQueue = { done: true };
             // Check the queue first and fall back to the cold call queue

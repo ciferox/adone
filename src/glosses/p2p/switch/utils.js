@@ -12,7 +12,7 @@ module.exports.msHandle = (multistream, connection) => {
     return new Promise((resolve, reject) => {
         multistream.handle(connection, (err) => {
             if (err) {
-                return reject(err); 
+                return reject(err);
             }
             resolve();
         });
@@ -29,7 +29,7 @@ module.exports.msSelect = (multistream, protocol) => {
     return new Promise((resolve, reject) => {
         multistream.select(protocol, (err, connection) => {
             if (err) {
-                return reject(err); 
+                return reject(err);
             }
             resolve(connection);
         });
@@ -47,9 +47,20 @@ module.exports.identifyDialer = (connection, cryptoPeerInfo) => {
     return new Promise((resolve, reject) => {
         identify.dialer(connection, cryptoPeerInfo, (err, peerInfo, observedAddrs) => {
             if (err) {
-                return reject(err); 
+                return reject(err);
             }
             resolve({ peerInfo, observedAddrs });
         });
     });
+};
+
+/**
+ * Get unique values from `arr` using `getValue` to determine
+ * what is used for uniqueness
+ * @param {Array} arr The array to get unique values for
+ * @param {function(value)} getValue The function to determine what is compared
+ * @returns {Array}
+ */
+module.exports.uniqueBy = (arr, getValue) => {
+    return [...new Map(arr.map((i) => [getValue(i), i])).values()];
 };

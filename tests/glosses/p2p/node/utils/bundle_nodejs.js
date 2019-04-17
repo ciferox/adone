@@ -51,6 +51,7 @@ class TestNode extends Node {
             },
             config: {
                 peerDiscovery: {
+                    autoDial: true,
                     mdns: {
                         interval: 10000,
                         enabled: false

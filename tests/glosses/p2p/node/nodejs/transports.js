@@ -435,6 +435,7 @@ describe("transports", () => {
                         },
                         config: {
                             peerDiscovery: {
+                                autoDial: false,
                                 [wstar.discovery.tag]: {
                                     enabled: true
                                 }
@@ -450,7 +451,13 @@ describe("transports", () => {
                 },
                 (cb) => createNode([
                     "/ip4/0.0.0.0/tcp/0"
-                ], (err, node) => {
+                ], {
+                    config: {
+                        peerDiscovery: {
+                            autoDial: false
+                        }
+                    }
+                }, (err, node) => {
                     expect(err).to.not.exist();
                     nodeTCP = node;
                     node.handle("/echo/1.0.0", echo);
@@ -458,7 +465,13 @@ describe("transports", () => {
                 }),
                 (cb) => createNode([
                     "/ip4/127.0.0.1/tcp/25022/ws"
-                ], (err, node) => {
+                ], {
+                    config: {
+                        peerDiscovery: {
+                            autoDial: false
+                        }
+                    }
+                }, (err, node) => {
                     expect(err).to.not.exist();
                     nodeWS = node;
                     node.handle("/echo/1.0.0", echo);
@@ -477,6 +490,7 @@ describe("transports", () => {
                         },
                         config: {
                             peerDiscovery: {
+                                autoDial: false,
                                 [wstar.discovery.tag]: {
                                     enabled: true
                                 }
@@ -640,6 +654,7 @@ describe("transports", () => {
                         },
                         config: {
                             peerDiscovery: {
+                                autoDial: false,
                                 [wstar.discovery.tag]: {
                                     enabled: true
                                 }

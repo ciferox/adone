@@ -34,7 +34,12 @@ class ConnectionManager {
         // Only add it if it's not there
         if (!this.get(connection)) {
             this.connections[connection.theirB58Id].push(connection);
-            this.switch.emit("peer-mux-established", connection.theirPeerInfo);
+            this.switch.emit("connection:start", connection.theirPeerInfo);
+            if (connection.getState() === "MUXED") {
+                this.switch.emit("peer-mux-established", connection.theirPeerInfo);
+            } else {
+                connection.once("muxed", () => this.switch.emit("peer-mux-established", connection.theirPeerInfo));
+            }
         }
     }
 
@@ -84,8 +89,10 @@ class ConnectionManager {
     remove(connection) {
         // No record of the peer, disconnect it
         if (!this.connections[connection.theirB58Id]) {
-            connection.theirPeerInfo.disconnect();
-            this.switch.emit("peer-mux-closed", connection.theirPeerInfo);
+            if (connection.theirPeerInfo) {
+                connection.theirPeerInfo.disconnect();
+                this.switch.emit("peer-mux-closed", connection.theirPeerInfo);
+            }
             return;
         }
 
@@ -102,6 +109,9 @@ class ConnectionManager {
             connection.theirPeerInfo.disconnect();
             this.switch.emit("peer-mux-closed", connection.theirPeerInfo);
         }
+
+        // A tracked connection was closed, let the world know
+        this.switch.emit("connection:end", connection.theirPeerInfo);
     }
 
     /**
@@ -209,11 +219,11 @@ class ConnectionManager {
                                 // of the available multiaddrs from the other peer as the one
                                 // I'm connected to as we really can't be sure at the moment
                                 // TODO add this consideration to the connection abstraction!
-                                peerInfo.connect(peerInfo.multiaddrs.toArray()[0])
+                                peerInfo.connect(peerInfo.multiaddrs.toArray()[0]);
                             } else {
                                 // for the case of websockets in the browser, where peers have
                                 // no addr, use just their IPFS id
-                                peerInfo.connect(`/ipfs/${b58Str}`)
+                                peerInfo.connect(`/ipfs/${b58Str}`);
                             }
                         }
 

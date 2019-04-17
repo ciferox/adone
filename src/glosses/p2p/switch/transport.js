@@ -1,3 +1,6 @@
+/**
+ * eslint-disable func-style
+ */
 const {
     is
 } = adone;
@@ -8,10 +11,56 @@ const debug = require("debug");
 const log = debug("libp2p:switch:transport");
 
 const LimitDialer = require("./limit-dialer");
-const { DIAL_TIMEOUT } = require('./constants')
+const { DIAL_TIMEOUT } = require("./constants");
+const { uniqueBy } = require("./utils");
 
 // number of concurrent outbound dials to make per peer, same as go-libp2p-swtch
 const defaultPerPeerRateLimit = 8;
+
+/**
+ * Expand addresses in peer info into array of addresses with and without peer
+ * ID suffix.
+ *
+ * @param {PeerInfo} peerInfo Our peer info object
+ * @returns {String[]}
+ */
+function ourAddresses(peerInfo) {
+    const ourPeerId = peerInfo.id.toB58String();
+    return peerInfo.multiaddrs.toArray()
+        .reduce((ourAddrs, addr) => {
+            const peerId = addr.getPeerId();
+            addr = addr.toString();
+            const otherAddr = peerId
+                ? addr.slice(0, addr.lastIndexOf(`/ipfs/${peerId}`))
+                : `${addr}/ipfs/${ourPeerId}`;
+            return ourAddrs.concat([addr, otherAddr]);
+        }, [])
+        .filter((a) => Boolean(a))
+        .concat(`/ipfs/${ourPeerId}`);
+}
+
+const RelayProtos = [
+    "p2p-circuit",
+    "p2p-websocket-star",
+    "p2p-webrtc-star",
+    "p2p-stardust"
+];
+
+/**
+ * Get the destination address of a (possibly relay) multiaddr as a string
+ *
+ * @param {Multiaddr} addr
+ * @returns {String}
+ */
+function getDestination(addr) {
+    const protos = addr.protoNames().reverse();
+    const splitProto = protos.find((p) => RelayProtos.includes(p));
+    addr = addr.toString();
+    if (!splitProto) {
+        return addr;
+    }
+    return addr.slice(addr.lastIndexOf(splitProto) + splitProto.length);
+}
 
 /**
  * Manages the transports for the switch. This simplifies dialing and listening across
@@ -51,7 +100,7 @@ class TransportManager {
      * @returns {void}
      */
     remove(key, callback) {
-        callback = callback || function () {};
+        callback = callback || function () { };
 
         if (!this.switch.transports[key]) {
             return callback();
@@ -124,10 +173,17 @@ class TransportManager {
         handler = this.switch._connectionHandler(key, handler);
 
         const transport = this.switch.transports[key];
-        const multiaddrs = TransportManager.dialables(
-            transport,
-            this.switch._peerInfo.multiaddrs.distinct()
-        );
+        let originalAddrs = this.switch._peerInfo.multiaddrs.toArray();
+
+        // Until TCP can handle distinct addresses on listen, https://github.com/libp2p/interface-transport/issues/41,
+        // make sure we aren't trying to listen on duplicate ports. This also applies to websockets.
+        originalAddrs = uniqueBy(originalAddrs, (addr) => {
+            // Any non 0 port should register as unique
+            const port = Number(addr.toOptions().port);
+            return isNaN(port) || port === 0 ? addr.toString() : port;
+        });
+
+        const multiaddrs = TransportManager.dialables(transport, originalAddrs);
 
         if (!transport.listeners) {
             transport.listeners = [];
@@ -199,28 +255,24 @@ class TransportManager {
      * @returns {Array<Multiaddr>}
      */
     static dialables(transport, multiaddrs, peerInfo) {
-    // If we dont have a proper transport, return no multiaddrs
+        // If we dont have a proper transport, return no multiaddrs
         if (!transport || !transport.filter) {
-            return []; 
+            return [];
         }
 
         const transportAddrs = transport.filter(multiaddrs);
-        if (!peerInfo) {
+        if (!peerInfo || !transportAddrs.length) {
             return transportAddrs;
         }
 
-        const ourAddrs = peerInfo.multiaddrs.toArray();
-        return transportAddrs.filter((addr) => {
+        const ourAddrs = ourAddresses(peerInfo);
+
+        const result = transportAddrs.filter((transportAddr) => {
             // If our address is in the destination address, filter it out
-            return !ourAddrs.find((pAddr) => {
-                try {
-                    addr.decapsulate(pAddr);
-                } catch (err) {
-                    return false;
-                }
-                return true;
-            });
+            return !ourAddrs.some((a) => getDestination(transportAddr).startsWith(a));
         });
+
+        return result;
     }
 }
 

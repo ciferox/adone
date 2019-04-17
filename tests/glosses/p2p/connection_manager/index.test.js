@@ -32,6 +32,7 @@ describe("p2p", "connection manager", () => {
             manager.on("disconnected", () => {
                 disconnects++;
                 expect(disconnects).to.be.most(PEER_COUNT - 2);
+                manager.removeAllListeners("disconnected");
                 done();
             });
 
@@ -65,6 +66,7 @@ describe("p2p", "connection manager", () => {
             manager.on("disconnected", () => {
                 disconnects++;
                 expect(disconnects).to.be.most(PEER_COUNT - 2);
+                manager.removeAllListeners("disconnected");
                 stopped = true;
                 done();
             });
@@ -102,6 +104,7 @@ describe("p2p", "connection manager", () => {
             manager.on("disconnected", () => {
                 disconnects++;
                 expect(disconnects).to.be.most(PEER_COUNT - 2);
+                manager.removeAllListeners("disconnected");
                 done();
             });
 
@@ -126,6 +129,7 @@ describe("p2p", "connection manager", () => {
             manager.on("disconnected", () => {
                 disconnects++;
                 expect(disconnects).to.be.most(PEER_COUNT - 2);
+                manager.removeAllListeners("disconnected");
                 done();
             });
 
@@ -153,6 +157,7 @@ describe("p2p", "connection manager", () => {
             manager.on("disconnected", () => {
                 disconnects++;
                 expect(disconnects).to.be.most(PEER_COUNT - 2);
+                manager.removeAllListeners("disconnected");
                 done();
             });
 
@@ -179,6 +184,7 @@ describe("p2p", "connection manager", () => {
             manager.on("disconnected", () => {
                 disconnects++;
                 expect(disconnects).to.be.most(PEER_COUNT - 2);
+                manager.removeAllListeners("disconnected");
                 done();
             });
 
@@ -213,6 +219,7 @@ describe("p2p", "connection manager", () => {
                 disconnects++;
                 expect(disconnects).to.be.most(PEER_COUNT - 2);
                 expect(peerId).to.not.be.equal(firstConnectedPeer);
+                manager.removeAllListeners("disconnected");
                 done();
             });
 

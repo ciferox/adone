@@ -6,9 +6,9 @@ export default function plugin() {
         error
     } = adone;
 
-    return function pack(archiveType, packerOptions = {}) {
-        if (!(archiveType in adone.archive)) {
-            throw new error.InvalidArgumentException(`Unknown archive type: ${archiveType}`);
+    return function pack(type, packerOptions = {}) {
+        if (!(type in adone.archive)) {
+            throw new error.InvalidArgumentException(`Unknown archive type: ${type}`);
         }
         if (is.string(packerOptions)) {
             packerOptions = { filename: packerOptions };
@@ -19,10 +19,10 @@ export default function plugin() {
         } = packerOptions;
 
         if (!is.string(filename)) {
-            throw new error.InvalidArgumentException("fast.pack: You must specify filename");
+            throw new error.InvalidArgumentException("Invalid filename argument");
         }
 
-        switch (archiveType) {
+        switch (type) {
             case "tar": {
                 const archive = adone.archive.tar;
                 const stream = new archive.RawPackStream();
@@ -84,7 +84,7 @@ export default function plugin() {
                     compress = true
                 } = packerOptions;
                 let resultFile = null;
-                return this.through(/** @param {adone.fast.I.File} file */async (file) => {
+                return this.through(async (file) => {
                     if (file.isNull() && !file.isSymbolic() && !file.isDirectory()) {
                         // ok? add an empty file?
                         return;
@@ -120,7 +120,7 @@ export default function plugin() {
                 });
             }
             default: {
-                throw new error.NotImplementedException(`support for ${archiveType} archives is not implemented`);
+                throw new error.NotImplementedException(`support for ${type} archives is not implemented`);
             }
         }
     };

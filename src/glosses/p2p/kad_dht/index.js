@@ -38,6 +38,7 @@ class KadDHT extends EventEmitter {
      * @property {number} queriesPerPeriod how many queries to run per period (default: 1)
      * @property {number} interval how often to run the the random-walk process, in milliseconds (default: 300000)
      * @property {number} timeout how long to wait for the the random-walk query to run, in milliseconds (default: 10000)
+     * @property {number} delay how long to wait before starting the first random walk, in milliseconds (default: 10000)
      */
 
     /**
@@ -57,7 +58,6 @@ class KadDHT extends EventEmitter {
         options = options || {};
         options.validators = options.validators || {};
         options.selectors = options.selectors || {};
-        options.randomWalk = defaultsDeep(options.randomWalk, c.defaultRandomWalk);
 
         /**
          * Local reference to the libp2p-switch instance
@@ -71,14 +71,14 @@ class KadDHT extends EventEmitter {
          *
          * @type {number}
          */
-        this.kBucketSize = options.kBucketSize || 20;
+        this.kBucketSize = options.kBucketSize || c.K;
 
         /**
-         * Number of closest peers to return on kBucket search, default 6
+         * Number of closest peers to return on kBucket search, default 20
          *
          * @type {number}
          */
-        this.ncp = options.ncp || 6;
+        this.ncp = options.ncp || c.K;
 
         /**
          * The routing table.
@@ -126,15 +126,7 @@ class KadDHT extends EventEmitter {
          *
          * @type {RandomWalk}
          */
-        this.randomWalk = new RandomWalk(this);
-
-        /**
-         * Random walk state, default true
-         */
-        this.randomWalkEnabled = Boolean(options.randomWalk.enabled);
-        this.randomWalkQueriesPerPeriod = parseInt(options.randomWalk.queriesPerPeriod);
-        this.randomWalkInterval = parseInt(options.randomWalk.interval);
-        this.randomWalkTimeout = parseInt(options.randomWalk.timeout);
+        this.randomWalk = new RandomWalk(this, options.randomWalk);
 
         /**
          * Keeps track of running queries
@@ -167,8 +159,8 @@ class KadDHT extends EventEmitter {
                 return callback(err);
             }
 
-            // Start random walk if enabled
-            this.randomWalkEnabled && this.randomWalk.start(this.randomWalkQueriesPerPeriod, this.randomWalkInterval, this.randomWalkTimeout);
+            // Start random walk, it will not run if it's disabled
+            this.randomWalk.start();
             callback();
         });
     }
