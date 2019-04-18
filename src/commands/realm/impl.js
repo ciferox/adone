@@ -25,7 +25,7 @@ const subCommand = (name) => std.path.join(__dirname, "commands", name);
     ],
     subsystems: [
         {
-            name: "create",
+            name: ["create", "new"],
             group: "generic",
             description: "Create new realm",
             subsystem: subCommand("create")

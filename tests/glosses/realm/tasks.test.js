@@ -165,11 +165,12 @@ describe("realm", "common tasks", () => {
 
     describe("fork realm", () => {
         let tmpPath;
-        before(async () => {
+
+        beforeEach(async () => {
             await fs.mkdirp(newRealmsPath);
         });
 
-        after(async () => {
+        afterEach(async () => {
             await fs.rm(tmpTestPath);
             if (is.string(tmpPath) && await fs.exists(tmpPath)) {
                 await fs.rm(tmpPath);
@@ -178,22 +179,22 @@ describe("realm", "common tasks", () => {
 
         it("fork without 'name' should be thrown", async () => {
             await assert.throws(async () => rootRealm.runAndWait("realmFork", {
-                srcRealm: rootRealm
+                realm: rootRealm
             }), error.NotValidException);
         });
 
         it("fork without 'basePath' should be thrown", async () => {
             await assert.throws(async () => rootRealm.runAndWait("realmFork", {
-                srcRealm: rootRealm,
+                realm: rootRealm,
                 name: "test"
             }), error.NotValidException);
         });
 
         it("fork at existing path should be thrown", async () => {
             await assert.throws(async () => rootRealm.runAndWait("realmFork", {
-                srcRealm: rootRealm,
+                realm: rootRealm,
                 name: "realm1",
-                destPath: getRealmPathFor()
+                path: getRealmPathFor()
             }), error.ExistsException);
         });
 
@@ -209,32 +210,32 @@ describe("realm", "common tasks", () => {
                 await assert.throws(async () => rootRealm.runAndWait("realmFork", {
                     srcRealm,
                     name: ".adone",
-                    destPath: newRealmsPath
+                    path: newRealmsPath
                 }), error.NotValidException);
             });
         }
 
         it("fork empty dir should be thrown", async () => {
             await assert.throws(async () => rootRealm.runAndWait("realmFork", {
-                srcRealm: getRealmPathFor("empty_dir"),
+                realm: getRealmPathFor("empty_dir"),
                 name: "bad",
-                destPath: newRealmsPath
+                path: newRealmsPath
             }), /no such file or directory/);
         });
 
         it("fork dir without .adone/config.json should be thrown", async () => {
             await assert.throws(async () => rootRealm.runAndWait("realmFork", {
-                srcRealm: getRealmPathFor("realm_no_config"),
+                realm: getRealmPathFor("realm_no_config"),
                 name: "bad",
-                destPath: newRealmsPath
+                path: newRealmsPath
             }), /no such file or directory/);
         });
 
         it("fork empty realm", async () => {
             const destRealm = await rootRealm.runAndWait("realmFork", {
-                srcRealm: getRealmPathFor("no_tasks"),
+                realm: getRealmPathFor("no_tasks"),
                 name: "1",
-                destPath: newRealmsPath
+                path: newRealmsPath
             });
 
             const destPath = std.path.join(newRealmsPath, "1");
@@ -244,9 +245,9 @@ describe("realm", "common tasks", () => {
 
         it("fork simple realm", async () => {
             const destRealm = await rootRealm.runAndWait("realmFork", {
-                srcRealm: getRealmPathFor("realm3"),
+                realm: getRealmPathFor("realm3"),
                 name: "2",
-                destPath: newRealmsPath
+                path: newRealmsPath
             });
 
             const destPath = std.path.join(newRealmsPath, "2");
@@ -255,12 +256,25 @@ describe("realm", "common tasks", () => {
             assert.sameMembers(await fs.readdir(std.path.join(getRealmPathFor("realm3"), "lib", "tasks")), await fs.readdir(std.path.join(destRealm.cwd, "lib", "tasks")));
         });
 
+        it("fork whole realm when 'artifactTags=[]'", async () => {
+            const destRealm = await rootRealm.runAndWait("realmFork", {
+                realm: getRealmPathFor("realm1"),
+                name: "1",
+                path: newRealmsPath,
+                artifactTags: []
+            });
+
+            const destPath = std.path.join(newRealmsPath, "1");
+            assert.equal(destRealm.cwd, destPath);
+            assert.sameMembers(await fs.readdir(getRealmPathFor("realm1")), await fs.readdir(destRealm.cwd));
+        });
+
         it("fork whole adone realm", async function () {
             this.timeout(300 * 1000);
             const destRealm = await rootRealm.runAndWait("realmFork", {
-                srcRealm: rootRealm,
+                realm: rootRealm,
                 name: ".adone",
-                destPath: await fs.tmpName()
+                path: await fs.tmpName()
             });
             tmpPath = std.path.dirname(destRealm.cwd);
 
@@ -269,12 +283,12 @@ describe("realm", "common tasks", () => {
             assert.sameMembers(srcRootFiles, dstRootFiles);
         });
 
-        it("fork only specified artifacts of adone realm", async () => {
+        it("fork only specified artifactTags of adone realm", async () => {
             const destRealm = await rootRealm.runAndWait("realmFork", {
-                srcRealm: rootRealm,
+                realm: rootRealm,
                 name: ".adone",
-                destPath: await fs.tmpName(),
-                onlyArtifacts: ["share", "info"]
+                path: await fs.tmpName(),
+                artifactTags: ["share", "info"]
             });
             tmpPath = std.path.dirname(destRealm.cwd);
 
@@ -289,9 +303,9 @@ describe("realm", "common tasks", () => {
         before(async function () {
             this.timeout(300 * 1000);
             superRealm = await rootRealm.runAndWait("realmFork", {
-                srcRealm: rootRealm,
+                realm: rootRealm,
                 name: "adone",
-                destPath: await getTmpPath()
+                path: await getTmpPath()
             });
             tmpPath = std.path.dirname(superRealm.cwd);
         });

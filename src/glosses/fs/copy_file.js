@@ -87,14 +87,14 @@ class FileCopier extends Emitter {
 
 export default async (src, dst, options) => {
     if (!src || !dst) {
-        throw new error.InvalidArgumentException("Source and destination required");
+        throw new error.CopyException("Source and destination required");
     }
 
     src = path.resolve(src);
     dst = path.resolve(dst);
 
     if (!(await fs.isFile(src))) {
-        throw new error.NotValidException("Source path should point to file");
+        throw new error.CopyException("Source path should point to file");
     }
 
     const copier = new FileCopier(src, dst, options);

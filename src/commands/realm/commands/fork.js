@@ -18,6 +18,11 @@ export default class extends Subsystem {
                 type: String,
                 required: true,
                 help: "Destination path"
+            },
+            {
+                name: ["--tags", "-T"],
+                nargs: "*",
+                description: "Tags of realm artifact ('file', 'dir', 'common', ...)"
             }
         ]
     })
@@ -25,9 +30,10 @@ export default class extends Subsystem {
         try {
             const rootRealm = await this.parent.connectRealm();
             await rootRealm.runAndWait("realmFork", {
-                srcRealm: process.cwd(),
+                realm: process.cwd(),
                 name: args.get("name"),
-                destPath: opts.get("path")
+                path: opts.get("path"),
+                artifactTags: opts.get("tags")
             });
 
             return 0;

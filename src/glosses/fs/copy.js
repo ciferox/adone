@@ -1,272 +1,431 @@
 const {
-    error,
+    error: { errno, CopyException },
+    event: { Emitter },
     is,
-    fs,
-    std
+    fs: { junk, createReadStream, createWriteStream, stat, lstat, readlink, readdir, symlink, mkdirp, rm },
+    std: { path, fs: { utimes } },
+    util
 } = adone;
 
-export default async (source, dest, options = {}) => {
-    const basePath = process.cwd();
-    const currentPath = std.path.resolve(basePath, source);
-    const targetPath = std.path.resolve(basePath, dest);
-    if (currentPath === targetPath) {
-        throw new error.NotAllowedException("Source and destination must not be the same.");
+const emitterMixin = (obj) => {
+    for (const k of Object.getOwnPropertyNames(Emitter.prototype)) {
+        obj[k] = Emitter.prototype[k];
     }
 
-    const stats = await fs.lstat(source);
-    let dir = null;
-    if (stats.isDirectory()) {
-        const parts = dest.split(std.path.sep);
-        parts.pop();
-        dir = parts.join(std.path.sep);
-    } else {
-        dir = std.path.dirname(dest);
-    }
-
-    await fs.mkdirp(dir);
-
-    return new Promise((resolve, reject) => {
-        const filter = options.filter;
-        const transform = options.transform;
-        let overwrite = options.overwrite;
-        // If overwrite is undefined, use clobber, otherwise default to true:
-        if (is.undefined(overwrite)) {
-            overwrite = options.clobber;
+    Object.defineProperty(obj, "_events", {
+        get() {
+            return this.__events || (this.__events = {});
+        },
+        set(val) {
+            this.__events = val;
         }
-        if (is.undefined(overwrite)) {
-            overwrite = true;
-        }
-        const errorOnExist = options.errorOnExist;
-        const dereference = options.dereference;
-        const preserveTimestamps = options.preserveTimestamps === true;
-
-        let started = 0;
-        let finished = 0;
-        let running = 0;
-
-        let errored = false;
-
-        const doneOne = (skipped) => {
-            if (!skipped) {
-                running--;
-            }
-            finished++;
-            if ((started === finished) && (running === 0)) {
-                return resolve();
-            }
-        };
-
-        const onError = (err) => {
-            // ensure callback is defined & called only once:
-            if (!errored) {
-                errored = true;
-                return reject(err);
-            }
-        };
-
-        const copyFile = (file, target) => {
-            const readStream = fs.createReadStream(file.name);
-            const writeStream = fs.createWriteStream(target, { mode: file.mode });
-
-            readStream.on("error", onError);
-            writeStream.on("error", onError);
-
-            if (transform) {
-                transform(readStream, writeStream, file);
-            } else {
-                writeStream.on("open", () => {
-                    readStream.pipe(writeStream);
-                });
-            }
-
-            writeStream.once("close", () => {
-                std.fs.chmod(target, file.mode, (err) => {
-                    if (err) {
-                        return onError(err);
-                    }
-                    if (preserveTimestamps) {
-                        fs.utimesMillis(target, file.atime, file.mtime, (err) => {
-                            if (err) {
-                                return onError(err);
-                            }
-                            return doneOne();
-                        });
-                    } else {
-                        doneOne();
-                    }
-                });
-            });
-        };
-
-        const rmFile = (file, done) => {
-            std.fs.unlink(file, (err) => {
-                if (err) {
-                    return onError(err);
-                }
-                return done();
-            });
-        };
-
-        const copyDir = (dir) => {
-            fs.readdir(dir, (err, items) => {
-                if (err) {
-                    return onError(err);
-                }
-                items.forEach((item) => {
-                    const fpath = std.path.join(dir, item);
-                    startCopy(fpath, std.path.relative(source, fpath));
-                });
-                return doneOne();
-            });
-        };
-
-        const mkDir = (dir, target) => {
-            std.fs.mkdir(target, dir.mode, (err) => {
-                if (err) {
-                    return onError(err);
-                }
-                // despite setting mode in fs.mkdir, doesn't seem to work
-                // so we set it here.
-                std.fs.chmod(target, dir.mode, (err) => {
-                    if (err) {
-                        return onError(err);
-                    }
-                    copyDir(dir.name);
-                });
-            });
-        };
-
-        const isWritable = (path, done) => {
-            std.fs.lstat(path, (err) => {
-                if (err) {
-                    if (err.code === "ENOENT") {
-                        return done(true);
-                    }
-                    return done(false);
-                }
-                return done(false);
-            });
-        };
-
-        const onDir = (dir) => {
-            const target = dir.name.replace(currentPath, targetPath.replace("$", "$$$$")); // escapes '$' with '$$'
-            isWritable(target, (writable) => {
-                if (writable) {
-                    return mkDir(dir, target);
-                }
-                copyDir(dir.name);
-            });
-        };
-
-        const onFile = (file) => {
-            const target = file.name.replace(currentPath, targetPath.replace("$", "$$$$")); // escapes '$' with '$$'
-            isWritable(target, (writable) => {
-                if (writable) {
-                    copyFile(file, target);
-                } else {
-                    if (overwrite) {
-                        rmFile(target, () => {
-                            copyFile(file, target);
-                        });
-                    } else if (errorOnExist) {
-                        onError(new Error(`${target} already exists`));
-                    } else {
-                        doneOne();
-                    }
-                }
-            });
-        };
-
-        const makeLink = (linkPath, target) => {
-            std.fs.symlink(linkPath, target, (err) => {
-                if (err) {
-                    return onError(err);
-                }
-                return doneOne();
-            });
-        };
-
-        const checkLink = (resolvedPath, target) => {
-            if (dereference) {
-                resolvedPath = std.path.resolve(basePath, resolvedPath);
-            }
-            isWritable(target, (writable) => {
-                if (writable) {
-                    return makeLink(resolvedPath, target);
-                }
-                std.fs.readlink(target, (err, targetDest) => {
-                    if (err) {
-                        return onError(err);
-                    }
-
-                    if (dereference) {
-                        targetDest = std.path.resolve(basePath, targetDest);
-                    }
-                    if (targetDest === resolvedPath) {
-                        return doneOne();
-                    }
-                    return rmFile(target, () => {
-                        makeLink(resolvedPath, target);
-                    });
-                });
-            });
-        };
-
-        const onLink = (link) => {
-            const target = link.replace(currentPath, targetPath);
-            std.fs.readlink(link, (err, resolvedPath) => {
-                if (err) {
-                    return onError(err);
-                }
-                checkLink(resolvedPath, target);
-            });
-        };
-
-        const getStats = (source) => {
-            const stat = dereference ? std.fs.stat : std.fs.lstat;
-            running++;
-            stat(source, (err, stats) => {
-                if (err) {
-                    return onError(err);
-                }
-
-                // We need to get the mode from the stats object and preserve it.
-                const item = {
-                    name: source,
-                    mode: stats.mode,
-                    mtime: stats.mtime, // modified time
-                    atime: stats.atime, // access time
-                    stats // temporary
-                };
-
-                if (stats.isDirectory()) {
-                    return onDir(item);
-                } else if (stats.isFile() || stats.isCharacterDevice() || stats.isBlockDevice()) {
-                    return onFile(item);
-                } else if (stats.isSymbolicLink()) {
-                    // Symlinks don't really need to know about the mode.
-                    return onLink(source);
-                }
-            });
-        };
-
-        const startCopy = (source, item) => {
-            started++;
-            if (filter) {
-                if (filter instanceof RegExp) {
-                    console.warn("Warning: fs-extra: Passing a RegExp filter is deprecated, use a function");
-                    if (!filter.test(source)) {
-                        return doneOne(true);
-                    }
-                } else if (is.function(filter)) {
-                    if (!filter(source, item, dest)) {
-                        return doneOne(true);
-                    }
-                }
-            }
-            return getStats(source);
-        };
-
-        startCopy(currentPath, "");
     });
+
+    obj.off = function (event, fn) {
+        switch (arguments.length) {
+            case 2:
+                this.removeListener(event, fn);
+                return this;
+            case 1:
+                this.removeAllListeners(event);
+                return this;
+            case 0:
+                this.removeAllListeners();
+                return this;
+        }
+    };
+
+    return obj;
+};
+
+const fsError = (code, path) => {
+    const errorType = errno.code[code];
+    const message = `${errorType.code}, ${errorType.description} ${path}`;
+    const error = new Error(message);
+    error.errno = errorType.errno;
+    error.code = errorType.code;
+    error.path = path;
+    return error;
+};
+
+// TODO: expose somewhere in adone
+const slash = (input) => {
+    const isExtendedLengthPath = /^\\\\\?\\/.test(input);
+    const hasNonAscii = /[^\u0000-\u0080]+/.test(input); // eslint-disable-line no-control-regex
+
+    return (isExtendedLengthPath || hasNonAscii)
+        ? input
+        : input.replace(/\\/g, "/");
+};
+
+
+const batch = (inputs, iteratee, options) => {
+    const results = options.results ? [] : undefined;
+    if (inputs.length === 0) {
+        return Promise.resolve(results);
+    }
+    return new Promise(((resolve, reject) => {
+        let currentIndex = -1;
+        let activeWorkers = 0;
+        const startWorker = function (input) {
+            ++activeWorkers;
+            iteratee(input).then((result) => {
+                --activeWorkers;
+                if (results) {
+                    results.push(result);
+                }
+                if (currentIndex < inputs.length - 1) {
+                    startWorker(inputs[++currentIndex]);
+                } else if (activeWorkers === 0) {
+                    resolve(results);
+                }
+            }).catch(reject);
+        };
+
+        while (currentIndex < Math.min(inputs.length, options.concurrency) - 1) {
+            startWorker(inputs[++currentIndex]);
+        }
+    }));
+};
+
+const getFileListing = (srcPath, shouldExpandSymlinks) => {
+    return readdir(srcPath)
+        .then((filenames) => {
+            return Promise.all(
+                filenames.map((filename) => {
+                    const filePath = path.join(srcPath, filename);
+                    return (shouldExpandSymlinks ? stat : lstat)(filePath)
+                        .then((stats) => {
+                            if (stats.isDirectory()) {
+                                return getFileListing(filePath, shouldExpandSymlinks)
+                                    .then((childPaths) => {
+                                        return [filePath].concat(childPaths);
+                                    });
+                            }
+                            return [filePath];
+
+                        });
+                })
+            )
+                .then(function mergeArrays(arrays) {
+                    return Array.prototype.concat.apply([], arrays);
+                });
+        });
+};
+
+const getFilePaths = (src, shouldExpandSymlinks) => {
+    return (shouldExpandSymlinks ? stat : lstat)(src)
+        .then((stats) => {
+            if (stats.isDirectory()) {
+                return getFileListing(src, shouldExpandSymlinks)
+                    .then((filenames) => {
+                        return [src].concat(filenames);
+                    });
+            }
+            return [src];
+
+        });
+};
+
+
+const dotFilter = (relativePath) => {
+    const filename = path.basename(relativePath);
+    return filename.charAt(0) !== ".";
+};
+
+const junkFilter = (relativePath) => {
+    const filename = path.basename(relativePath);
+    return !junk.is(filename);
+};
+
+const matcher = (path, filter, options) => {
+    const typeOf = adone.typeOf(filter);
+    switch (typeOf) {
+        case "Array": {
+            if (filter.length === 0) {
+                return true;
+            }
+            const fns = [];
+            const patterns = [];
+            for (const f of filter) {
+                if (is.function(f)) {
+                    fns.push(f);
+                } else {
+                    patterns.push(f);
+                }
+            }
+            return fns.some((f) => f(path)) || util.match(path, patterns, options).length > 0;
+        }
+        case "function":
+            return filter(path);
+        case "string":
+        case "RegExp": {
+            return util.match(path, filter, options).length > 0;
+        }
+    }
+};
+
+const getFilteredPaths = (paths, src, base, filter, options) => {
+    const useDotFilter = !options.dot;
+    const useJunkFilter = !options.junk;
+
+    if (!filter && !useDotFilter && !useJunkFilter) {
+        return paths.map((filePath) => path.relative(src, filePath));
+    }
+    return paths.filter((p) => {
+        const pp = path.relative(base, p);
+        return (!useDotFilter || dotFilter(pp)) && (!useJunkFilter || junkFilter(pp)) && (!filter || matcher(slash(pp), filter, options));
+    }).map((p) => path.relative(src, p));
+};
+
+const ensureDirectoryExists = (path) => mkdirp(path);
+
+const ensureDestinationIsWritable = (destPath, srcStats, shouldOverwriteExistingFiles) => {
+    return lstat(destPath)
+        .catch((error) => {
+            const shouldIgnoreError = error.code === "ENOENT";
+            if (shouldIgnoreError) {
+                return null;
+            }
+            throw error;
+        })
+        .then((destStats) => {
+            const destExists = Boolean(destStats);
+            if (!destExists) {
+                return true;
+            }
+
+            const isMergePossible = srcStats.isDirectory() && destStats.isDirectory();
+            if (isMergePossible) {
+                return true;
+            }
+
+            if (shouldOverwriteExistingFiles) {
+                return rm(destPath, { force: true }).then(() => true);
+            }
+            throw fsError("EEXIST", destPath);
+
+        });
+};
+
+const prepareForCopy = (srcPath, destPath, options) => {
+    const shouldExpandSymlinks = Boolean(options.expand);
+    const shouldOverwriteExistingFiles = Boolean(options.overwrite);
+    return (shouldExpandSymlinks ? stat : lstat)(srcPath)
+        .then((stats) => {
+            return ensureDestinationIsWritable(destPath, stats, shouldOverwriteExistingFiles)
+                .then(() => {
+                    return stats;
+                });
+        });
+};
+
+
+const createCopyFunction = (fn, stats, hasFinished, emitEvent, events) => {
+    const startEvent = events.startEvent;
+    const completeEvent = events.completeEvent;
+    const errorEvent = events.errorEvent;
+    return function (srcPath, destPath, stats, options) {
+        // Multiple chains of promises are fired in parallel,
+        // so when one fails we need to prevent any future
+        // copy operations
+        if (hasFinished()) {
+            return Promise.reject();
+        }
+        const metadata = {
+            src: srcPath,
+            dest: destPath,
+            stats
+        };
+        emitEvent(startEvent, metadata);
+        const parentDirectory = path.dirname(destPath);
+        return ensureDirectoryExists(parentDirectory)
+            .then(() => {
+                return fn(srcPath, destPath, stats, options);
+            })
+            .then(() => {
+                if (!hasFinished()) {
+                    emitEvent(completeEvent, metadata);
+                }
+                return metadata;
+            })
+            .catch((error) => {
+                if (!hasFinished()) {
+                    emitEvent(errorEvent, error, metadata);
+                }
+                throw error;
+            });
+    };
+};
+
+const copyFile = (srcPath, destPath, stats, options) => {
+    return new Promise(((resolve, reject) => {
+        let hasFinished = false;
+        const read = createReadStream(srcPath);
+        const write = createWriteStream(destPath, {
+            flags: "w",
+            mode: stats.mode
+        });
+        const handleCopyFailed = (error) => {
+            if (hasFinished) {
+                return;
+            }
+            hasFinished = true;
+            if (is.function(read.close)) {
+                read.close();
+            }
+            if (is.function(write.close)) {
+                write.close();
+            }
+            return reject(error);
+        };
+        read.on("error", handleCopyFailed);
+
+        write.on("error", handleCopyFailed);
+        write.on("finish", () => {
+            utimes(destPath, stats.atime, stats.mtime, () => {
+                hasFinished = true;
+                resolve();
+            });
+        });
+
+        let transformStream = null;
+        if (options.transform) {
+            transformStream = options.transform(srcPath, destPath, stats);
+            if (transformStream) {
+                transformStream.on("error", handleCopyFailed);
+                read.pipe(transformStream).pipe(write);
+            } else {
+                read.pipe(write);
+            }
+        } else {
+            read.pipe(write);
+        }
+    }));
+};
+
+const copySymlink = (srcPath, destPath, stats, options) => {
+    return readlink(srcPath)
+        .then((link) => {
+            return symlink(link, destPath);
+        });
+};
+
+const copyDirectory = (srcPath, destPath, stats, options) => {
+    return mkdirp(destPath)
+        .catch((error) => {
+            const shouldIgnoreError = error.code === "EEXIST";
+            if (shouldIgnoreError) {
+                return;
+            }
+            throw error;
+        });
+};
+
+const getCopyFunction = (stats, hasFinished, emitEvent) => {
+    if (stats.isDirectory()) {
+        return createCopyFunction(copyDirectory, stats, hasFinished, emitEvent, {
+            startEvent: "createDirectoryStart",
+            completeEvent: "createDirectoryComplete",
+            errorEvent: "createDirectoryError"
+        });
+    } else if (stats.isSymbolicLink()) {
+        return createCopyFunction(copySymlink, stats, hasFinished, emitEvent, {
+            startEvent: "createSymlinkStart",
+            completeEvent: "createSymlinkComplete",
+            errorEvent: "createSymlinkError"
+        });
+    }
+    return createCopyFunction(copyFile, stats, hasFinished, emitEvent, {
+        startEvent: "copyFileStart",
+        completeEvent: "copyFileComplete",
+        errorEvent: "copyFileError"
+    });
+};
+
+const _copy = (srcPath, destPath, hasFinished, emitEvent, options) => {
+    return prepareForCopy(srcPath, destPath, options)
+        .then((stats) => {
+            const copyFunction = getCopyFunction(stats, hasFinished, emitEvent);
+            return copyFunction(srcPath, destPath, stats, options);
+        })
+        .catch((error) => {
+            if (error instanceof CopyException) {
+                throw error;
+            }
+            const copyError = new CopyException(error.message);
+            copyError.error = error;
+            copyError.data = {
+                src: srcPath,
+                dest: destPath
+            };
+            throw copyError;
+        })
+        .then((result) => {
+            return result;
+        });
+};
+
+export default (src, dest, options = {}) => {
+    const parentDirectory = path.dirname(dest);
+    const shouldExpandSymlinks = Boolean(options.expand);
+
+    let emitter;
+    let hasFinished = false;
+    const base = options.base || src;
+    const promise = ensureDirectoryExists(parentDirectory)
+        .then(() => {
+            return getFilePaths(src, shouldExpandSymlinks);
+        })
+        .then((filePaths) => {
+            const filteredPaths = getFilteredPaths(filePaths, src, base, options.filter, {
+                dot: options.dot,
+                junk: options.junk
+            });
+            return filteredPaths.map((relativePath) => {
+                const inputPath = relativePath;
+                const outputPath = options.rename ? options.rename(inputPath) : inputPath;
+                return {
+                    src: path.join(src, inputPath),
+                    dest: path.join(dest, outputPath)
+                };
+            });
+        })
+        .then((operations) => {
+            const hasFinishedGetter = function () {
+                return hasFinished;
+            };
+            const emitEvent = function () {
+                emitter.emit.apply(emitter, arguments);
+            };
+            return batch(operations, (operation) => {
+                return _copy(operation.src, operation.dest, hasFinishedGetter, emitEvent, options);
+            }, {
+                    results: options.results !== false,
+                    concurrency: options.concurrency || 255
+                });
+        })
+        .catch((error) => {
+            if (error instanceof CopyException) {
+                emitter.emit("error", error.error, error.data);
+                throw error.error;
+            } else {
+                throw error;
+            }
+        })
+        .then((results) => {
+            emitter.emit("complete", results);
+            return results;
+        })
+        .then((results) => {
+            hasFinished = true;
+            return results;
+        })
+        .catch((error) => {
+            hasFinished = true;
+            throw error;
+        });
+
+    emitter = emitterMixin(promise);
+    return emitter;
 };

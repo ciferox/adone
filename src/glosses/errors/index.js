@@ -60,6 +60,7 @@ export class LimitExceededException extends Exception { }
 export class EncodingException extends Exception { }
 export class ImmutableException extends Exception { }
 export class OutOfRangeException extends Exception { }
+export class CopyException extends Exception { }
 
 export class NetworkException extends Exception { }
 export class BindException extends NetworkException { }
@@ -167,6 +168,7 @@ export const idExceptionMap = {
     29: EncodingException,
     30: ImmutableException,
     31: OutOfRangeException,
+    32: CopyException,
     
     99: AggregateException,
 
@@ -210,5 +212,6 @@ export const getStdId = (err) => stdIdMap[err.constructor.name];
 
 
 adone.lazify({
+    errno: "./errno",
     stack: "./stack"
 }, exports, require);

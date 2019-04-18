@@ -249,7 +249,8 @@ const fs = adone.lazify({
     copy: "./copy",
     readChunk: "./read_chunk",
     replaceInFile: "./replace_in_file",
-    copyFile: "./copy_file"
+    copyFile: "./copy_file",
+    junk: "./junk"
 }, adone.asNamespace(exports), require);
 
 const expandReadOptions = (options = {}) => is.string(options) ? { encoding: options } : options;

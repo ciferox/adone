@@ -154,7 +154,8 @@ export default ({ globals } = {}) => class InspectionCommand extends Subsystem {
                 funcDetails: opts.has("funcDetails")
             };
 
-            const name = args.get("name");
+            const name = args.get("name").split(".").filter(adone.identity).join(".");
+            console.log(name);
 
             if (name.length === 0) {
                 console.log("Global namespaces:");

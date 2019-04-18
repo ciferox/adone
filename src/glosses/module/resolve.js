@@ -272,12 +272,14 @@ const resolve = function (x, options) {
     } else if (core[x]) {
         return x;
     } else {
-        const locations = [
-            undefined,
-            path.join(adone.system.env.home(), ".node_modules"),
-            path.join(adone.system.env.home(), ".node_libraries"),
-            path.join(path.dirname(process.execPath), "..", "lib", "node")
-        ];
+        const locations = [undefined];
+        if (opts.searchGlobal) {
+            locations.push(
+                path.join(adone.system.env.home(), ".node_modules"),
+                path.join(adone.system.env.home(), ".node_libraries"),
+                path.join(path.dirname(process.execPath), "..", "lib", "node")
+            );
+        }
 
         for (const loc of locations) {
             const n = loadNodeModules(x, absoluteStart, loc);

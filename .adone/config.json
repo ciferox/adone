@@ -9,7 +9,7 @@
         "configs": [
             "etc",
             ".eslintignore",
-            ".eslinkrc.js",
+            ".eslintrc.js",
             ".gitattributes",
             ".gitignore",
             ".npmignore",
