@@ -99,7 +99,7 @@ describe("realm", () => {
             assert.lengthOf(rootRealm.getTaskNames(), 0);
 
             await rootRealm.connect();
-            
+
             assert.strictEqual(rootRealm.connected, true);
             assert.sameMembers(rootRealm.getTaskNames(), CORE_TASKS);
         });
@@ -130,7 +130,7 @@ describe("realm", () => {
             });
             await n1.connect();
             const superRealm = n1.superRealm;
-            
+
             assert.strictEqual(n1.connected, true);
             assert.strictEqual(superRealm.connected, true);
         });
@@ -177,22 +177,29 @@ describe("realm", () => {
     describe("artifacts", () => {
         it("get 'dir' artifacts", async () => {
             const mgr = await createManagerFor({ name: "realm1" });
-            assert.sameMembers(mgr.getArtifacts("dir").map((v) => v.path), [".adone", "lib"]);
+            assert.sameMembers(mgr.artifacts.get("dir").map((v) => v.path), [".adone", "lib"]);
         });
 
         it("get 'file' artifacts", async () => {
             const mgr = await createManagerFor({ name: "realm1" });
-            assert.sameMembers(mgr.getArtifacts("file").map((v) => v.path), ["package.json", "README.md", "somefile"]);
+            assert.sameMembers(mgr.artifacts.get("file").map((v) => v.path), ["package.json", "README.md", "somefile"]);
         });
 
         it("get 'common' artifacts", async () => {
             const mgr = await createManagerFor({ name: "realm1" });
-            assert.sameMembers(mgr.getArtifacts("common").map((v) => v.path), [".adone", "lib", "package.json", "README.md"]);
+            assert.sameMembers(mgr.artifacts.get("common").map((v) => v.path), [".adone", "lib", "package.json", "README.md"]);
         });
 
         it("get 'custom' artifacts", async () => {
             const mgr = await createManagerFor({ name: "realm1" });
-            assert.sameMembers(mgr.getArtifacts("custom").map((v) => v.path), ["somefile"]);
+            assert.sameMembers(mgr.artifacts.get("custom").map((v) => v.path), ["somefile"]);
+        });
+
+        it("simple sub artifacts", async () => {
+            const mgr = await createManagerFor({ name: "nested_realm_with_tasks" });
+            assert.sameMembers(mgr.artifacts.get("some").map((v) => v.path), ["somefile"]);
+            assert.sameMembers(mgr.artifacts.get("opt.nested.lib").map((v) => v.path), ["opt/nested/lib"]);
+            assert.sameMembers(mgr.artifacts.get("lib.tasks").map((v) => v.path), ["lib/tasks"]);
         });
     });
 

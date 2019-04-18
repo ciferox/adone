@@ -39,34 +39,14 @@ const trySuperRealmAt = (cwd) => {
     return superRealm;
 };
 
-const COMMON_FILENAMES = [
-    "bin",
-    "run",
-    "etc",
-    "opt",
-    "var",
-    "share",
-    "lib",
-    "src",
-    [".adone", "special"],
-    "tests",
-    "tmp",
-    ["node_modules", "modules"],
-    ["realm.lock", "lockfile"],
-    ["package.json", "package"],
-    ["shanifile.js", "shanifile"],
-    "LICENSE",
-    ["README.md", "readme"]
-].map((v) => is.string(v) ? [v, v] : v);
-
 export default class RealmManager extends task.TaskManager {
     #connected = false;
 
     #connectiong = false;
 
-    #superRealm = null;
+    #connectOptions = {};
 
-    #artifacts = [];
+    #superRealm = null;
 
     constructor({ cwd = process.cwd() } = {}) {
         super();
@@ -96,26 +76,7 @@ export default class RealmManager extends task.TaskManager {
 
         this.package = require(std.path.join(cwd, "package.json"));
 
-        // Scan for super realm
-        const parentPath = std.path.dirname(this.cwd);
-        const baseName = std.path.basename(parentPath);
-        if (baseName === "opt") {
-            this.#superRealm = trySuperRealmAt(std.path.dirname(parentPath));
-        }
-        // check 'dev' section for merge information
-        if (is.null(this.#superRealm)) {
-            try {
-                const devConfig = adone.realm.DevConfiguration.loadSync({
-                    cwd
-                });
-
-                if (is.string(devConfig.raw.superRealm)) {
-                    this.#superRealm = trySuperRealmAt(devConfig.raw.superRealm);
-                }
-            } catch (err) {
-                //
-            }
-        }
+        this.#checkSuperRealm();
     }
 
     get name() {
@@ -130,17 +91,14 @@ export default class RealmManager extends task.TaskManager {
         return this.#superRealm;
     }
 
-    async connect({ transpile } = {}) {
+    async connect(options = {}) {
         if (this.#connected || this.#connectiong) {
             return;
         }
         this.#connectiong = true;
+        this.#connectOptions = options;
 
         try {
-            if (!is.null(this.superRealm)) {
-                await this.superRealm.connect({ transpile });
-            }
-
             const tasksConfig = this.config.raw.tasks;
             if (is.object(tasksConfig) && is.string(tasksConfig.basePath)) {
                 const tasksBasePath = this.getPath(tasksConfig.basePath);
@@ -149,7 +107,7 @@ export default class RealmManager extends task.TaskManager {
                     if (is.object(tasksConfig.tags)) {
                         for (const [tag, path] of Object.entries(tasksConfig.tags)) {
                             await this.loadTasksFrom(std.path.join(tasksBasePath, path), {
-                                transpile,
+                                transpile: options.transpile,
                                 tag
                             });
                         }
@@ -161,61 +119,18 @@ export default class RealmManager extends task.TaskManager {
                         ? [...Object.values(tasksConfig.tags)]
                         : [];
                     await this.loadTasksFrom(tasksBasePath, {
-                        transpile,
+                        transpile: options.transpile,
                         ignore
                     });
                 }
             }
 
-            // Add all public tasks from all super realms.
-            if (!is.null(this.superRealm)) {
-                await this.#addTasksFromSuperRealm(this.superRealm);
+            if (this.#checkSuperRealm()) {
+                await this.#connectSuperRealm(options);
             }
 
-            // ROOT_PATH
-            this.#definePathVar("root", this.cwd);
-            // console.log(this.cwd);
+            this.artifacts = await realm.RealmArtifacts.collect(this);
 
-            // collect artifacts
-            const rootFiles = await fs.readdir(this.cwd);
-            const cfgArtifacts = this.config.get("artifacts") || {};
-            const customArtifacts = Object.keys(cfgArtifacts);
-
-            for (const file of rootFiles) {
-                const fullPath = std.path.join(this.cwd, file);
-                const artifact = {
-                    path: file,
-                    attrs: new Set([(await fs.isDirectory(fullPath))
-                        ? "dir"
-                        : "file"])
-                };
-
-                const item = COMMON_FILENAMES.find((v) => v[0] === file);
-
-                if (item) {
-                    this.#definePathVar(item[1], fullPath);
-
-                    artifact.attrs.add("common");
-                }
-
-                for (const ca of customArtifacts) {
-                    if (cfgArtifacts[ca].includes(file)) {
-                        artifact.attrs.add(ca);
-                    }
-                }
-
-                this.#artifacts.push(artifact);
-            }
-
-            // Add default type handlers
-            // const handlerNames = (await adone.fs.readdir(std.path.join(__dirname, "handlers"))).filter((name) => name.endsWith(".js"));
-            // const handlers = {};
-
-            // for (const name of handlerNames) {
-            //     handlers[std.path.basename(name, ".js").replace(/_/g, ".")] = `.${adone.std.path.sep}${std.path.join("handlers", name)}`;
-            // }
-
-            // this.typeHandler = adone.lazify(handlers, null, require);
             this.#connected = true;
         } catch (err) {
             this.#connected = false;
@@ -225,28 +140,8 @@ export default class RealmManager extends task.TaskManager {
         }
     }
 
-    #definePathVar(prefix, value) {
-        Object.defineProperty(this, `${prefix.toUpperCase()}_PATH`, {
-            enumerable: true,
-            value
-        });
-    }
-
     getPath(...args) {
         return std.path.join(this.cwd, ...args);
-    }
-
-    getArtifacts(attr) {
-        const artifacts = [];
-        const attrs = util.arrify(attr);
-
-        for (const info of this.#artifacts) {
-            if (attrs.reduce((sum, item) => sum + (info.attrs.has(item) ? 1 : 0), 0) === attrs.length) {
-                artifacts.push(info);
-            }
-        }
-
-        return artifacts;
     }
 
     getEntries({ path, onlyNative = false, excludeVirtual = true } = {}) {
@@ -268,41 +163,20 @@ export default class RealmManager extends task.TaskManager {
             : entries;
     }
 
-    // addTypeHandler(typeName, handler) {
-    // }
-
-    // getTypeHandler(typeName) {
-    //     const HandlerClass = this.typeHandler[typeName];
-
-    //     if (!is.class(HandlerClass)) {
-    //         throw new error.NotSupportedException(`Unsupported type: ${typeName}`);
-    //     }
-
-    //     return new HandlerClass(this);
-    // }
-
-    // getAllTypeHandlers() {
-    //     return Object.keys(this.typeHandler).map((name) => {
-    //         const THClass = this.typeHandler[name];
-    //         return new THClass(this);
-    //     });
-    // }
-
-    // registerComponent(adoneConf, destPath) {
-    //     return this.getTypeHandler(adoneConf.raw.type).register(adoneConf, destPath);
-    // }
-
-    // unregisterComponent(adoneConf) {
-    //     return this.getTypeHandler(adoneConf.raw.type).unregister(adoneConf);
-    // }
-
     async run(name, ...args) {
+        let result;
         try {
-            const result = await super.run(name, ...args);
+            result = await super.run(name, ...args);
             return result;
         } catch (err) {
-            if (err instanceof error.NotExistsException && !is.null(this.superRealm)) {
-                return this.superRealm.run(name, ...args);
+            if (err instanceof error.NotExistsException) {                
+                if (this.#checkSuperRealm() === 1) {
+                    await this.#connectSuperRealm(this.#connectOptions);
+                }
+                if (!is.null(this.superRealm)) {
+                    // try again
+                    return super.run(name, ...args);
+                }
             }
             throw err;
         }
@@ -316,7 +190,7 @@ export default class RealmManager extends task.TaskManager {
     }
 
     async lock() {
-        return lockfile.create(this.ROOT_PATH, {
+        return lockfile.create(this.cwd, {
             lockfilePath: this.LOCKFILE_PATH
         });
     }
@@ -325,27 +199,56 @@ export default class RealmManager extends task.TaskManager {
         const options = {
             lockfilePath: this.LOCKFILE_PATH
         };
-        if (await lockfile.check(this.ROOT_PATH, options)) {
-            return lockfile.release(this.ROOT_PATH, options);
+        if (await lockfile.check(this.cwd, options)) {
+            return lockfile.release(this.cwd, options);
         }
     }
 
-    async #addTasksFromSuperRealm(superRealm) {
-        if (is.null(superRealm)) {
-            return;
-        }
-        const tasks = superRealm.getTasksByTag(realm.TAG.PUB);
-        for (const taskInfo of tasks) {
-            if (!this.hasTask(taskInfo.name)) {
-                // eslint-disable-next-line no-await-in-loop
-                await this.addTask({
-                    name: taskInfo.name,
-                    task: taskInfo.Class,
-                    ...util.pick(taskInfo, ["concurrency", "interval", "singleton", "description", "tag"])
-                });
+    async #connectSuperRealm(options) {
+        // Use resources from super realm.
+        if (!is.null(this.superRealm)) {
+            await this.superRealm.connect(options);
+
+            // add tasks from super realm
+            const tasks = this.superRealm.getTasksByTag(realm.TAG.PUB);
+            for (const taskInfo of tasks) {
+                if (!this.hasTask(taskInfo.name)) {
+                    // eslint-disable-next-line no-await-in-loop
+                    await this.addTask({
+                        name: taskInfo.name,
+                        task: taskInfo.Class,
+                        ...util.pick(taskInfo, ["suspendable", "cancelable", "concurrency", "interval", "singleton", "description", "tag"])
+                    });
+                }
             }
         }
+    }
 
-        return this.#addTasksFromSuperRealm(superRealm.superRealm);
+    #checkSuperRealm() {
+        if (is.null(this.superRealm)) {
+            // Scan for super realm
+            const parentPath = std.path.dirname(this.cwd);
+            const baseName = std.path.basename(parentPath);
+            if (baseName === "opt") {
+                this.#superRealm = trySuperRealmAt(std.path.dirname(parentPath));
+            }
+            // check 'dev' section for merge information
+            if (is.null(this.#superRealm)) {
+                try {
+                    const devConfig = adone.realm.DevConfiguration.loadSync({
+                        cwd: this.cwd
+                    });
+
+                    if (is.string(devConfig.raw.superRealm)) {
+                        this.#superRealm = trySuperRealmAt(devConfig.raw.superRealm);
+                    }
+                } catch (err) {
+                    //
+
+                }
+            }
+            return is.null(this.#superRealm) ? 0 : 1;
+        }
+        return 2;
     }
 }

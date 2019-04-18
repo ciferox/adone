@@ -74,12 +74,12 @@ export default class extends BaseTask {
             artifactTags = new Set(artifactTags.split(","));
         } else if (!artifactTags || artifactTags.length === 0) {
             artifactTags = new Set();
-            const files = await fs.readdir(realm.ROOT_PATH);
+            const files = await fs.readdir(realm.cwd);
             files.forEach((file) => artifacts.add(file));
         }
 
         for (const attr of artifactTags.values()) {
-            const files = realm.getArtifacts(attr).map((info) => info.path);
+            const files = realm.artifacts.get(attr).map((info) => info.path);
             files.forEach((file) => artifacts.add(file));
         }
 
@@ -96,12 +96,12 @@ export default class extends BaseTask {
                 message: `copying ${cli.style.accent(dir)}`
             });
 
-            const fromPath = std.path.join(realm.ROOT_PATH, dir);
+            const fromPath = std.path.join(realm.cwd, dir);
             const toPath = std.path.join(this.destCwd, dir);
 
             if (await fs.isDirectory(fromPath)) {
                 await fs.copy(fromPath, toPath, {
-                    base: realm.ROOT_PATH,
+                    base: realm.cwd,
                     results: false,
                     dot: true,
                     junk: true,

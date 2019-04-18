@@ -1,4 +1,15 @@
 {
+    "artifacts": {
+        "opt.nested.lib": [
+            "opt/nested/lib"
+        ],
+        "lib.tasks": [
+            "lib/tasks"
+        ],
+        "some": [
+            "somefile"
+        ]
+    },
     "tasks": {
         "basePath": "lib/tasks",
         "tags": {

@@ -24,9 +24,9 @@ export default class extends realm.BaseTask {
             message: "merging"
         });
 
-        await adone.fs.mkdirp(this.superRealm.OPT_PATH);
+        await adone.fs.mkdirp(this.superRealm.cwd);
 
-        this.optRealmPath = std.path.join(this.superRealm.OPT_PATH, this.subRealm.name);
+        this.optRealmPath = std.path.join(this.superRealm.cwd, this.subRealm.name);
 
         if (symlink) {
             await this.#createSymlink();

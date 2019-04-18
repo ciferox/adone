@@ -1,4 +1,4 @@
-export const all == [
+export const all = [
     {
         errno: -2,
         code: "ENOENT",

@@ -6,6 +6,25 @@
         "src": [
             "src"
         ],
+        "src.app": [
+            "src/app"
+        ],
+        "src.commands": [
+            "src/commands"
+        ],
+        "src.common": [
+            "src/glosses",
+            "src/index.js"
+        ],
+        "src.tasks": [
+            "src/tasks"
+        ],
+        "src.native": [
+            "src/native"
+        ],
+        "lib.tasks": [
+            "lib/tasks"
+        ],
         "configs": [
             "etc",
             ".eslintignore",
