@@ -1,6 +1,6 @@
 const {
     is,
-    configuration,
+    configuration: { GenericConfig }
 } = adone;
 
 const _updateList = (config, listName, values) => {
@@ -12,10 +12,10 @@ const _updateList = (config, listName, values) => {
             config.raw[listName].push(item);
         }
     }
-}
+};
 
 export const create = async ({ cwd, include, exclude, skipNpm } = {}) => {
-    const config = new configuration.Jsconfig({
+    const config = new GenericConfig({
         cwd
     });
 
@@ -40,5 +40,7 @@ export const create = async ({ cwd, include, exclude, skipNpm } = {}) => {
         _updateList(config, "exclude", include);
     }
 
-    return config.save();
-}
+    return config.save("jsconfig.json", {
+        space: "  "
+    });
+};

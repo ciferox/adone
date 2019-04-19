@@ -1,8 +1,7 @@
 export default {
     "realm": {
         "artifactTags": [
-            "src.common",
-            "src.commands",
+            "src",
             "lib.tasks",
             "info",
             "share"

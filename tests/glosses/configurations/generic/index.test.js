@@ -1,12 +1,12 @@
 const {
     is,
-    configuration,
+    configuration: { GenericConfig },
     std
 } = adone;
 
 const fixture = std.path.join.bind(std.path.join, __dirname, "fixtures");
 
-describe("configuration", "Generic", () => {
+describe("configuration", "GenericConfig", () => {
     let conf;
 
     const options = {
@@ -14,133 +14,70 @@ describe("configuration", "Generic", () => {
     };
 
     beforeEach(() => {
-        conf = new configuration.Generic(options);
+        conf = new GenericConfig(options);
     });
 
-    it("by default load config at root", async () => {
-        await conf.load("a.js");
+    it("default supported extensions", () => {
+        assert.sameMembers(conf.getSupportedExtensions(), [".js", ".mjs", ".json", ".json5", ".bson", ".mpak", ".yaml"]);
+    });
+
+    it("should not load config without extension", async () => {
+        await assert.throws(async () => conf.load("simple"));
+    });
+
+    it("should throw exceptions on load es6-config without 'transpile' flag", async () => {
+        const conf = new GenericConfig();
+        await assert.throws(async () => conf.load(fixture("simple_es.js"), true), SyntaxError);
+
+        // load ok
+        await conf.load(fixture("simple_es.js"), {
+            transpile: true
+        });
+    });
+
+    it("load config", async () => {
+        await conf.load("simple.js");
         assert.equal(conf.raw.val, "value1");
         assert.equal(conf.raw.num, 8);
         assert.ok(is.date(conf.raw.nowTm));
     });
 
-    it("load config", async () => {
-        await conf.load("a.js", true);
-        assert.ok(is.propertyDefined(conf.raw, "a"));
-        assert.equal(conf.raw.a.val, "value1");
-        assert.equal(conf.raw.a.num, 8);
-        assert.ok(is.date(conf.raw.a.nowTm));
-    });
-
-    it("should not load config without extension", async () => {
-        const err = await assert.throws(async () => conf.load("a", true));
-        assert.instanceOf(err, adone.error.NotExistsException);
-    });
-
-    it("load simple config with specified name", async () => {
-        await conf.load("a.js", "common");
-        assert.ok(is.propertyDefined(conf.raw, "common"));
-        assert.equal(conf.raw.common.val, "value1");
-        assert.equal(conf.raw.common.num, 8);
-        assert.ok(is.date(conf.raw.common.nowTm));
-    });
-
-    it.skip("should assign config on load several times", async () => {
-        await conf.load("a.js", true);
-        assert.ok(is.propertyDefined(conf.raw, "a"));
-        assert.equal(conf.raw.a.val, "value1");
-        assert.equal(conf.raw.a.num, 8);
-        const dt = conf.raw.a.nowTm;
-        assert.ok(is.date(dt));
-        await conf.load("b.js", "a", {
-            transpile: true
-        });
-        assert.ok(is.propertyDefined(conf.raw, "a"));
-        assert.equal(conf.raw.a.val, "value2");
-        assert.equal(conf.raw.a.num, 8);
-        assert.ok(is.date(conf.raw.a.nowTm1));
-        assert.equal(dt, conf.raw.a.nowTm);
-    });
-
-    it("should throw exceptions on load es6-config without 'transpile' flag", async () => {
-        const conf = new configuration.Generic();
-        const err = await assert.throws(async () => conf.load(fixture("b.js"), true));
-        assert.instanceOf(err, adone.error.NotValidException);
-    });
-
-    it("load dir", async () => {
-        await conf.load("withfns", true, {
-            transpile: true
-        });
-        assert.ok(is.propertyDefined(conf.raw, "a"));
-        assert.ok(is.propertyDefined(conf.raw, "b"));
-        assert.ok(is.propertyDefined(conf.raw, "c"));
-    });
-
-    it("load config with function", async () => {
-        await conf.load("withfns/a.js", true);
-        assert.ok(is.propertyDefined(conf.raw, "a"));
-        assert.equal(conf.raw.a.str, "value1");
-        assert.equal(conf.raw.a.func1(), "value1");
-    });
-
-    it("load config with function at root", async () => {
-        await conf.load("withfns/a.js");
-        assert.equal(conf.raw.str, "value1");
-        assert.equal(conf.raw.func1(), "value1");
-    });
-
-    it("load config with multiple functions", async () => {
-        await conf.load("withfns/c.js", true, {
-            transpile: true
-        });
-        assert.ok(is.propertyDefined(conf.raw, "c"));
-        assert.ok(is.date(conf.raw.c.nowTm));
-        assert.equal(conf.raw.c.sub1.func1(), "value1");
-        assert.ok(is.date(conf.raw.c.sub1.sub2.func1()));
-        assert.equal(conf.raw.c.sub1.sub2.func1(), conf.raw.c.nowTm);
-    });
-
-    it("load config with multiple functions at root", async () => {
-        await conf.load("withfns/c.js", null, {
-            transpile: true
-        });
-        assert.ok(is.date(conf.raw.nowTm));
-        assert.equal(conf.raw.sub1.func1(), "value1");
-        assert.ok(is.date(conf.raw.sub1.sub2.func1()));
-        assert.equal(conf.raw.sub1.sub2.func1(), conf.raw.nowTm);
-    });
-
-    it("load config with async function", async () => {
-        await conf.load("asyncfn.js", true, {
-            transpile: true
-        });
-        assert.ok(is.propertyDefined(conf.raw, "asyncfn"));
-        assert.equal(await conf.raw.asyncfn.afn(adone), 777);
-    });
-
-    const formats = [".json", ".bson", ".mpak", ".json5"];
+    const formats = [".js", ".mjs", ".json", ".bson", ".mpak", ".json5"];
 
     for (const format of formats) {
-        it(`${format} read`, async () => {
-            const conf = new configuration.Generic(options);
+        // eslint-disable-next-line no-loop-func
+        it(`load '${format}'`, async () => {
+            const conf = new GenericConfig(options);
             await conf.load(`a${format}`);
             assert.equal(conf.raw.a, 1);
             assert.equal(conf.raw.b, "adone");
             assert.equal(conf.raw.c, true);
         });
 
-        it(`${format} write`, async () => {
-            const conf = new configuration.Generic(options);
+        // eslint-disable-next-line no-loop-func
+        it(`save ${format}`, async () => {
+            const shouldThrow = [".js", ".mjs"].includes(format);
+            const conf = new GenericConfig(options);
             conf.assign({
                 a: 1,
                 b: "adone",
                 c: true
             });
             const filename = `tmpconf${format}`;
-            await conf.save(filename);
+            try {
+                await conf.save(filename);
+                if (shouldThrow) {
+                    assert.fail(`should throw for: ${format}`);
+                }
+            } catch (err) {
+                if (!shouldThrow) {
+                    throw err;
+                }
+                assert.instanceOf(err, adone.error.NotSupportedException);
+                return;
+            }
 
-            const savedConf = new configuration.Generic(options);
+            const savedConf = new GenericConfig(options);
             await savedConf.load(filename);
             assert.deepEqual(savedConf, conf);
             await adone.fs.unlink(adone.std.path.resolve(options.cwd, filename));
@@ -149,7 +86,7 @@ describe("configuration", "Generic", () => {
 
     it("should throw on read unknown format", async () => {
         try {
-            const conf = new configuration.Generic(options);
+            const conf = new GenericConfig(options);
             await conf.load("unsupport.dat");
         } catch (err) {
             assert.instanceOf(err, adone.error.NotSupportedException);
@@ -158,42 +95,10 @@ describe("configuration", "Generic", () => {
         assert.fail("Should throw NotSupported error");
     });
 
-    it("save nested object (string)", async () => {
-        const conf = new configuration.Generic(options);
-        await conf.load("b.json5", true);
-        await conf.save("nested.json", "b.nested");
-        const savedConf = new configuration.Generic(options);
-        await savedConf.load("nested.json");
-        await adone.fs.unlink(adone.std.path.resolve(options.cwd, "nested.json"));
-        assert.equal(savedConf.raw.str2, "val2");
-        assert.equal(savedConf.raw.num2, 8);
-    });
-
-    it("save nested object (array)", async () => {
-        const conf = new configuration.Generic(options);
-        await conf.load("b.json5", true);
-        await conf.save("nested.json", ["b", "nested"]);
-        const savedConf = new configuration.Generic(options);
-        await savedConf.load("nested.json");
-        await adone.fs.unlink(adone.std.path.resolve(options.cwd, "nested.json"));
-        assert.equal(savedConf.raw.str2, "val2");
-        assert.equal(savedConf.raw.num2, 8);
-    });
-
-    it("should load all es6-configs in directory", async () => {
-        const conf = new configuration.Generic();
-        await conf.load(fixture("es6_configs"), true, {
-            transpile: true
-        });
-        assert.equal(conf.raw.a.name, "adone");
-        assert.equal(conf.raw.b.name, "omnitron");
-        assert.equal(conf.raw.c.name, "specter");
-    });
-
     it("should create destination directory while save", async () => {
-        const conf = new configuration.Generic(options);
-        await conf.load("a.json", true);
-        await conf.save(std.path.join(options.cwd, "1", "2", "3", "a.json"), true);
+        const conf = new GenericConfig(options);
+        await conf.load("a.json");
+        await conf.save(std.path.join(options.cwd, "1", "2", "3", "a.json"));
         await adone.fs.rm(adone.std.path.join(options.cwd, "1"));
     });
 });

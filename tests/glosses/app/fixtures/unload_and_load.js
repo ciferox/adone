@@ -39,7 +39,7 @@ class TestApp extends app.Application {
         console.log("main");
         await this.unloadSubsystem("hello");
         console.log("has", this.hasSubsystem("hello"));
-        console.log("cached", adone.require.cache.has(this.tmpfile.path()));
+        console.log("cached", this.tmpfile.path() in adone.std.module._cache);
         await this.tmpfile.write(subsystemCode(2));
         await this.loadSubsystem(this.tmpfile.path(), {
             name: "hello"

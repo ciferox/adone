@@ -744,7 +744,7 @@ adone.lazify({
     emitter: () => (obj) => obj instanceof adone.event.Emitter,
     asyncEmitter: () => (obj) => obj instanceof adone.event.AsyncEmitter,
     coreStream: () => (obj) => obj instanceof adone.stream.core.Stream,
-    configuration: () => (obj) => obj instanceof adone.configuration.Base,
+    configuration: () => (obj) => obj instanceof adone.configuration.BaseConfig,
     datetime: () => (obj) => obj instanceof adone.datetime.Datetime,
     multiAddress: () => (obj) => obj instanceof adone.multi.address.Multiaddr,
     task: () => (obj) => obj instanceof adone.task.Task,

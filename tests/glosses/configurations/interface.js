@@ -31,11 +31,6 @@ export default (ConfigurationClass) => {
             beforeEach(() => {
                 config = new ConfigurationClass();
             });
-
-            it("getCwd()", () => {
-                assert.isFunction(config.getCwd);
-                assert.strictEqual(config.getCwd(), process.cwd());
-            });
             
             it("getPath()", () => {
                 assert.isFunction(config.getPath);

@@ -2,17 +2,17 @@ const {
     std
 } = adone;
 
-export default class Configuration extends adone.configuration.Generic {
+export default class Configuration extends adone.configuration.GenericConfig {
     getPath() {
         return std.path.join(this.cwd, Configuration.configName);
     }
 
     async load() {
-        return super.load(Configuration.configName, null);
+        return super.load(Configuration.configName);
     }
 
     async save() {
-        return super.save(Configuration.configName, null, {
+        return super.save(Configuration.configName, {
             space: "  "
         });
     }

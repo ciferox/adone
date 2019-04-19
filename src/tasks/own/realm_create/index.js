@@ -41,7 +41,7 @@ export default class extends realm.BaseTask {
         await fs.mkdirp(std.path.join(cwd, ".adone"));
 
         this.manager.notify(this, "progress", {
-            message: `creating ${style.primary(configuration.Npm.configName)}`
+            message: `creating ${style.primary(configuration.NpmConfig.configName)}`
         });
 
         const npmConfig = await __.helper.packageConfig.create(info);

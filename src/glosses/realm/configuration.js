@@ -34,12 +34,12 @@ const addIfNotIncluded = (arr, item) => {
     }
 };
 
-export default class Configuration extends adone.configuration.Generic {
+export default class Configuration extends adone.configuration.GenericConfig {
     /**
      * Returns absolute path of configuration.
      */
     getPath() {
-        return std.path.join(this.getCwd(), Configuration.configName);
+        return std.path.join(this.cwd, Configuration.configName);
     }
 
     /**
@@ -58,8 +58,8 @@ export default class Configuration extends adone.configuration.Generic {
      * 
      * @param {*} cwd path where config should be saved
      */
-    async save({ cwd = this.getCwd() } = {}) {
-        return super.save(is.string(cwd) ? std.path.join(cwd, Configuration.configName) : Configuration.configName, null, {
+    async save({ cwd = this.cwd } = {}) {
+        return super.save(is.string(cwd) ? std.path.join(cwd, Configuration.configName) : Configuration.configName, {
             space: "    "
         });
     }

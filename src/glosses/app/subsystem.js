@@ -267,7 +267,7 @@ export default class Subsystem extends adone.fsm.StateMachine {
 
         await this.deleteSubsystem(name);
         if (is.string(path)) {
-            adone.require.cache.unref(path);
+            adone.require.uncache(path);
         }
     }
 

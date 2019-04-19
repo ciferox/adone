@@ -67,13 +67,13 @@ describe("realm", "common tasks", () => {
             assert.equal(info.cwd, std.path.join(newRealmsPath, info.name));
             assert.isTrue(await fs.exists(info.cwd));
             assert.isTrue(await fs.isFile(std.path.join(info.cwd, realm.Configuration.configName)));
-            assert.isTrue(await fs.isFile(std.path.join(info.cwd, configuration.Npm.configName)));
+            assert.isTrue(await fs.isFile(std.path.join(info.cwd, configuration.NpmConfig.configName)));
             assert.isFalse(await fs.exists(std.path.join(info.cwd, ".gitignore")));
             assert.isFalse(await fs.exists(std.path.join(info.cwd, ".git")));
             assert.isFalse(await fs.exists(std.path.join(info.cwd, ".eslintrc.js")));
             assert.isFalse(await fs.exists(std.path.join(info.cwd, "jsconfig.json")));
 
-            const packageConfig = await configuration.Npm.load({
+            const packageConfig = await configuration.NpmConfig.load({
                 cwd: info.cwd
             });
 
@@ -97,13 +97,13 @@ describe("realm", "common tasks", () => {
             assert.equal(info.cwd, std.path.join(newRealmsPath, info.dir));
             assert.isTrue(await fs.exists(info.cwd));
             assert.isTrue(await fs.isFile(std.path.join(info.cwd, realm.Configuration.configName)));
-            assert.isTrue(await fs.isFile(std.path.join(info.cwd, configuration.Npm.configName)));
+            assert.isTrue(await fs.isFile(std.path.join(info.cwd, configuration.NpmConfig.configName)));
             assert.isFalse(await fs.exists(std.path.join(info.cwd, ".gitignore")));
             assert.isFalse(await fs.exists(std.path.join(info.cwd, ".git")));
             assert.isFalse(await fs.exists(std.path.join(info.cwd, ".eslintrc.js")));
             assert.isFalse(await fs.exists(std.path.join(info.cwd, "jsconfig.json")));
 
-            const packageConfig = await configuration.Npm.load({
+            const packageConfig = await configuration.NpmConfig.load({
                 cwd: info.cwd
             });
 

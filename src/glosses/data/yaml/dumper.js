@@ -100,6 +100,7 @@ class State {
     constructor(options) {
         this.schema = options.schema || yaml.schema.DEFAULT_FULL;
         this.indent = Math.max(1, (options.indent || 2));
+        this.noArrayIndent = options.noArrayIndent || false;
         this.skipInvalid = options.skipInvalid || false;
         this.flowLevel = is.nil(options.flowLevel) ? -1 : options.flowLevel;
         this.styleMap = compileStyleMap(this.schema, options.styles || null);
@@ -687,13 +688,14 @@ const writeNode = (state, level, object, block, compact, iskey) => {
             state.usedDuplicates[duplicateIndex] = true;
         }
         if (type === "Array") {
+            const arrayLevel = (state.noArrayIndent && (level > 0)) ? level - 1 : level;
             if (block && (state.dump.length !== 0)) {
-                writeBlockSequence(state, level, state.dump, compact);
+                writeBlockSequence(state, arrayLevel, state.dump, compact);
                 if (duplicate) {
                     state.dump = `&ref_${duplicateIndex}${state.dump}`;
                 }
             } else {
-                writeFlowSequence(state, level, state.dump);
+                writeFlowSequence(state, arrayLevel, state.dump);
                 if (duplicate) {
                     state.dump = `&ref_${duplicateIndex} ${state.dump}`;
                 }

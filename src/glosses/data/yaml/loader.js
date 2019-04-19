@@ -15,6 +15,9 @@ const PATTERN_FLOW_INDICATORS = /[,[\]{}]/;
 const PATTERN_TAG_HANDLE = /^(?:!|!!|![a-z-]+!)$/i;
 const PATTERN_TAG_URI = /^(?:!|[^,[\]{}])(?:%[0-9a-f]{2}|[0-9a-z\-#;/?:@&=+$,_.!~*'()[\]])*$/i;
 
+
+const _class = (obj) => Object.prototype.toString.call(obj);
+
 const isEOL = (c) => c === 0x0A/* LF */ || c === 0x0D/* CR */;
 
 const isWhiteSpace = (c) => c === 0x09/* Tab */ || c === 0x20/* Space */;
@@ -293,6 +296,30 @@ const storeMappingPair = (
     startLine,
     startPos
 ) => {
+    // The output is a plain object here, so keys can only be strings.
+    // We need to convert keyNode to a string, but doing so can hang the process
+    // (deeply nested arrays that explode exponentially using aliases).
+    if (is.array(keyNode)) {
+        keyNode = Array.prototype.slice.call(keyNode);
+
+        for (let index = 0, quantity = keyNode.length; index < quantity; index += 1) {
+            if (is.array(keyNode[index])) {
+                throwError(state, "nested arrays are not supported inside keys");
+            }
+
+            if (typeof keyNode === "object" && _class(keyNode[index]) === "[object Object]") {
+                keyNode[index] = "[object Object]";
+            }
+        }
+    }
+
+    // Avoid code execution in load() via toString property
+    // (still use its own toString for arrays, timestamps,
+    // and whatever user schema extensions happen to have @@toStringTag)
+    if (typeof keyNode === "object" && _class(keyNode) === "[object Object]") {
+        keyNode = "[object Object]";
+    }
+
     keyNode = String(keyNode);
 
     if (is.null(_result)) {
@@ -647,11 +674,15 @@ const readFlowCollection = (state, nodeIndent) => {
     const overridableKeys = {};
 
     if (ch === 0x5B/* [ */) {
-        terminator = 0x5D;/* ] */
+        terminator = 0x5D;/**
+                           * ]
+                           */
         isMapping = false;
         _result = [];
     } else if (ch === 0x7B/* { */) {
-        terminator = 0x7D;/* } */
+        terminator = 0x7D;/**
+                           * }
+                           */
         isMapping = true;
         _result = {};
     } else {

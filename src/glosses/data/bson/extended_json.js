@@ -315,7 +315,7 @@ const serializeDocument = function (doc, options) {
         throw new Error("not an object instance");
     }
 
-    // the "document" is a BSON type
+    // the "document" is really just a BSON type
     if (doc._bsontype) {
         if (is.function(doc.toExtendedJSON)) {
             // TODO: the two cases below mutate the original document! Bad.  I don't know

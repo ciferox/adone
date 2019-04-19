@@ -3,12 +3,12 @@ const {
     std
 } = adone;
 
-export default class DevConfiguration extends adone.configuration.Generic {
+export default class DevConfiguration extends adone.configuration.GenericConfig {
     /**
      * Returns absolute path of configuration.
      */
     getPath() {
-        return std.path.join(this.getCwd(), DevConfiguration.configName);
+        return std.path.join(this.cwd, DevConfiguration.configName);
     }
 
     /**
@@ -35,8 +35,8 @@ export default class DevConfiguration extends adone.configuration.Generic {
      * 
      * @param {*} cwd path where config should be saved
      */
-    async save({ cwd = this.getCwd() } = {}) {
-        return super.save(is.string(cwd) ? std.path.join(cwd, DevConfiguration.configName) : DevConfiguration.configName, null, {
+    async save({ cwd = this.cwd } = {}) {
+        return super.save(is.string(cwd) ? std.path.join(cwd, DevConfiguration.configName) : DevConfiguration.configName, {
             space: "    "
         });
     }

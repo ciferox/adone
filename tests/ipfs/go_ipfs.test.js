@@ -6,7 +6,7 @@ const {
     std: { fs, path }
 } = adone;
 
-const GO_IPFS_PATH = path.resolve(adone.realm.rootRealm.env.OPT_PATH, "go-ipfs");
+const GO_IPFS_PATH = path.resolve(adone.OPT_PATH, "go-ipfs");
 
 // These tests won't work with promises, wrap the download function to a callback
 const download = function (version, platform, arch, callback) {
@@ -46,7 +46,7 @@ describe("go executable", function () {
             assert.notExists(err);
             assert.isTrue(res.fileName.includes(`ipfs_v${go.defaultVersion}_${goenv.GOOS}-${goenv.GOARCH}`), "Returns the correct filename");
 
-            assert.isTrue(res.installPath === path.resolve(adone.realm.rootRealm.env.OPT_PATH, "go-ipfs") + path.sep, "Returns the correct output path");
+            assert.isTrue(res.installPath === path.resolve(adone.OPT_PATH, "go-ipfs") + path.sep, "Returns the correct output path");
 
             fs.stat(GO_IPFS_PATH, (err, stats) => {
                 assert.notExists(err, "go-ipfs should stat without error");

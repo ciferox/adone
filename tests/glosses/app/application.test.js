@@ -268,7 +268,7 @@ describe("Application", () => {
                 ].join("\n"));
             });
 
-            it("should not transpile by default", async () => {
+            it.todo("should not transpile by default", async () => {
                 const err = await assert.throws(async () => {
                     await forkProcess(fixture("load_external_subsystem.js"), [
                         fixture("subsystems", "sub3.js")

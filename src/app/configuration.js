@@ -7,12 +7,12 @@ const {
 
 const CONFIG_NAME = "cli.json";
 
-export default class Configuration extends adone.configuration.Generic {
+export default class Configuration extends adone.configuration.GenericConfig {
     /**
      * Returns absolute path of configuration.
      */
     getPath() {
-        return std.path.join(this.getCwd(), CONFIG_NAME);
+        return std.path.join(this.cwd, CONFIG_NAME);
     }
 
     getGroups() {
@@ -129,7 +129,7 @@ export default class Configuration extends adone.configuration.Generic {
         arrify(this.raw.commands).sort((a, b) => a.name > b.name);
         arrify(this.raw.groups).sort((a, b) => a.name > b.name);
 
-        return super.save(CONFIG_NAME, null, {
+        return super.save(CONFIG_NAME, {
             space: "    "
         });
     }

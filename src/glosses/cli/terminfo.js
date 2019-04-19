@@ -487,21 +487,21 @@ export default class Terminfo {
     }
 
     _useXtermCap() {
-        return this.injectTermcap(path.join(adone.realm.rootRealm.env.SHARE_PATH, "term", "xterm.termcap"));
+        return this.injectTermcap(path.join(adone.SHARE_PATH, "term", "xterm.termcap"));
     }
 
     _useXtermInfo() {
-        return this.injectTerminfo(path.join(adone.realm.rootRealm.env.SHARE_PATH, "term", "xterm"));
+        return this.injectTerminfo(path.join(adone.SHARE_PATH, "term", "xterm"));
     }
 
     _useInternalInfo(name) {
         name = path.basename(name);
-        return this.injectTerminfo(path.join(adone.realm.rootRealm.env.SHARE_PATH, "term", name));
+        return this.injectTerminfo(path.join(adone.SHARE_PATH, "term", name));
     }
 
     _useInternalCap(name) {
         name = path.basename(name);
-        return this.injectTermcap(path.join(adone.realm.rootRealm.env.SHARE_PATH, "term", `${name}.termcap`));
+        return this.injectTermcap(path.join(adone.SHARE_PATH, "term", `${name}.termcap`));
     }
 
     readTerminfo(term) {

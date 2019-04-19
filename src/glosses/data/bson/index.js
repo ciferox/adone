@@ -1,3 +1,6 @@
+// Not synced with https://github.com/mongodb/js-bson/commit/f4b16d91e969508c6b77b7e1f7b62bc2bc37b126.
+// Should it???
+
 const {
     is
 } = adone;

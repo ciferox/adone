@@ -111,7 +111,7 @@ describe("data", "yaml", "issues", () => {
         ];
         for (const string of DEPRECATED_BOOLEANS_SYNTAX) {
             const dump = yaml.dump(string).trim();
-            expect(((dump === `'${string}'`) || (dump === `"${string}"`))).to.be.true();
+            expect(((dump === `'${string}'`) || (dump === `"${string}"`))).to.be.true;
         }
     });
 
@@ -256,7 +256,7 @@ describe("data", "yaml", "issues", () => {
 
         const onWarning = spy();
         yaml.safeLoad(content, { onWarning });
-        expect(onWarning).to.have.been.calledOnce();
+        expect(onWarning).to.have.been.calledOnce;
     });
 
     specify("Don\'t throw on warning - 203", async () => {
@@ -351,7 +351,7 @@ describe("data", "yaml", "issues", () => {
             assertFunctionPreserved(fnCollatz,
                 [6, 19],
                 [[6, 3, 10, 5, 16, 8, 4, 2, 1],
-                    [19, 58, 29, 88, 44, 22, 11, 34, 17, 52, 26, 13, 40, 20, 10, 5, 16, 8, 4, 2, 1]
+                [19, 58, 29, 88, 44, 22, 11, 34, 17, 52, 26, 13, 40, 20, 10, 5, 16, 8, 4, 2, 1]
                 ], "Hailstone sequence function");
 
             assertFunctionPreserved(fnRot13,
@@ -491,7 +491,7 @@ describe("data", "yaml", "issues", () => {
     });
 
     context("350", () => {
-        it("should allow cast integers as !!float", async () => {
+        it("should return parse docs from loadAll", async () => {
             const data = yaml.safeLoadAll("---\na: 1\n---\nb: 2", "utf8");
             expect(data).to.be.deep.equal([{ a: 1 }, { b: 2 }]);
         });
@@ -645,6 +645,102 @@ describe("data", "yaml", "issues", () => {
             src = { str: "\n  a\nb" };
             dump = yaml.dump(src, { indent: 10 });
             assert.deepEqual(yaml.safeLoad(dump), src);
+        });
+    });
+
+    context("0432", () => {
+        it("should indent arrays an extra level by default", () => {
+            const output = yaml.safeDump({ array: ["a", "b"] });
+            const expected = "array:\n  - a\n  - b\n";
+            assert.strictEqual(output, expected);
+        });
+
+        it("should not indent arrays an extra level when disabled", () => {
+            const output = yaml.safeDump({ array: ["a", "b"] }, { noArrayIndent: true });
+            const expected = "array:\n- a\n- b\n";
+            assert.strictEqual(output, expected);
+        });
+    });
+
+    context("0468", () => {
+        it("should not indent arrays an extra level when disabled", () => {
+            const output = yaml.dump(
+                [
+                    {
+                        a: "a_val",
+                        b: "b_val"
+                    },
+                    {
+                        a: "a2_val",
+                        items: [
+                            {
+                                a: "a_a_val",
+                                b: "a_b_val"
+                            }
+                        ]
+                    }
+                ],
+                { noArrayIndent: true }
+            );
+            const expected = "- a: a_val\n  b: b_val\n- a: a2_val\n  items:\n  - a: a_a_val\n    b: a_b_val\n";
+            assert.strictEqual(output, expected);
+        });
+    });
+
+    context("0475", () => {
+        it("Should not allow nested arrays in map keys (explicit syntax)", async () => {
+            try {
+                const file = fixtures.getFile("0475-case1.yml");
+                yaml.safeLoad(await file.contents());
+            } catch (err) {
+                assert(err.stack.startsWith("YAMLException: nested arrays are not supported inside keys"));
+                return;
+            }
+            assert.fail(null, null, "Expected an error to be thrown");
+        });
+
+        it("Should not allow nested arrays in map keys (implicit syntax)", async () => {
+            try {
+                const file = fixtures.getFile("0475-case2.yml");
+                yaml.safeLoad(await file.contents());
+            } catch (err) {
+                assert(err.stack.startsWith("YAMLException: nested arrays are not supported inside keys"));
+                return;
+            }
+            assert.fail(null, null, "Expected an error to be thrown");
+        });
+    });
+
+    context("0480", () => {
+        it("Should not execute code when object with toString property is used as a key", async () => {
+            const file = fixtures.getFile("0480-fn.yml");
+            const data = yaml.load(await file.contents());
+
+            assert.deepEqual(data, { "[object Object]": "key" });
+        });
+
+        it("Should not execute code when object with __proto__ property is used as a key", async () => {
+            const file = fixtures.getFile("0480-fn2.yml");
+            const data = yaml.load(await file.contents());
+
+            assert.deepEqual(data, { "[object Object]": "key" });
+        });
+
+        it("Should not execute code when object inside array is used as a key", async () => {
+            const file = fixtures.getFile("0480-fn-array.yml");
+            const data = yaml.load(await file.contents());
+
+            assert.deepEqual(data, { "123,[object Object]": "key" });
+        });
+
+        // this test does not guarantee in any way proper handling of date objects,
+        // it just keeps old behavior whenever possible
+        it("Should leave non-plain objects as is", async () => {
+            const file = fixtures.getFile("0480-date.yml");
+            const data = yaml.load(await file.contents());
+
+            assert.deepEqual(Object.keys(data).length, 1);
+            assert(/2019/.test(Object.keys(data)[0]));
         });
     });
 });

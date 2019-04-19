@@ -11,9 +11,9 @@ const Long = require("./long");
 class Timestamp extends Long {
     constructor(low, high) {
         if (low instanceof Long) {
-            super(low.low, low.high);
+            super(low.low, low.high, true);
         } else {
-            super(low, high);
+            super(low, high, true);
         }
     }
 
@@ -37,7 +37,7 @@ class Timestamp extends Long {
      * @return {Timestamp} the timestamp.
      */
     static fromInt(value) {
-        return new Timestamp(Long.fromInt(value));
+        return new Timestamp(Long.fromInt(value, true));
     }
 
     /**
@@ -48,7 +48,7 @@ class Timestamp extends Long {
      * @return {Timestamp} the timestamp.
      */
     static fromNumber(value) {
-        return new Timestamp(Long.fromNumber(value));
+        return new Timestamp(Long.fromNumber(value, true));
     }
 
     /**
@@ -72,14 +72,14 @@ class Timestamp extends Long {
      * @return {Timestamp} the timestamp.
      */
     static fromString(str, opt_radix) {
-        return new Timestamp(Long.fromString(str, opt_radix));
+        return new Timestamp(Long.fromString(str, true, opt_radix));
     }
 
     /**
      * @ignore
      */
     toExtendedJSON() {
-        return { $timestamp: { t: this.high, i: this.low } };
+        return { $timestamp: { t: this.high >>> 0, i: this.low >>> 0 } };
     }
 
     /**
@@ -89,6 +89,8 @@ class Timestamp extends Long {
         return new Timestamp(doc.$timestamp.i, doc.$timestamp.t);
     }
 }
+
+Timestamp.MAX_VALUE = Timestamp.MAX_UNSIGNED_VALUE;
 
 Object.defineProperty(Timestamp.prototype, "_bsontype", { value: "Timestamp" });
 module.exports = Timestamp;

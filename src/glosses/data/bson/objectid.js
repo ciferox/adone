@@ -263,7 +263,7 @@ class ObjectId {
      */
     getTimestamp() {
         const timestamp = new Date();
-        const time = this.id[3] | (this.id[2] << 8) | (this.id[1] << 16) | (this.id[0] << 24);
+        const time = this.id.readUInt32BE(0);
         timestamp.setTime(Math.floor(time) * 1000);
         return timestamp;
     }
@@ -423,7 +423,7 @@ Object.defineProperty(ObjectId.prototype, "generationTime", {
  * @return {String} return the 24 byte hex string representation.
  * @ignore
  */
-ObjectId.prototype.inspect = ObjectId.prototype.toString;
+ObjectId.prototype[adone.std.util.inspect.custom || "inspect"] = ObjectId.prototype.toString;
 
 /**
  * @ignore
