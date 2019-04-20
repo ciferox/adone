@@ -135,19 +135,17 @@ export default class Configuration extends adone.configuration.GenericConfig {
     }
 
     static async load({ cwd } = {}) {
-        if (!is.string(cwd)) {
-            cwd = std.path.join(adone.ETC_PATH, "adone");
-        }
-
         const config = new Configuration({
             cwd
         });
 
-        if (await adone.fs.exists(config.getPath())) {
-            // assign config from home
+        try {
             await config.load(CONFIG_NAME);
             adone.lodash.defaultsDeep(config.raw, Configuration.default);
-        } else {
+        } catch (err) {
+            if (err.code !== "ENOENT") {
+                throw err;
+            }
             config.raw = Configuration.default;
             await config.save();
         }

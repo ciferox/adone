@@ -61,6 +61,7 @@ export default class Downlader extends adone.event.Emitter {
         const res = await http.client.request(this.url, {
             responseType: "stream"
         });
+
         const totalLength = Number(res.headers["content-length"]) || null;
 
         const destStream = await this._createDestStream();

@@ -2,12 +2,12 @@
 const {
     is,
     js: { compiler: { codeFrameColumns, types: t }, parse },
-    lodash: { cloneDeep }
+    lodash: { cloneDeep },
+    sourcemap
 } = adone;
 
 import path from "path";
 import type { PluginPasses } from "../config";
-import convertSourceMap, { typeof Converter } from "convert-source-map";
 import File from "./file/file";
 import generateMissingPluginMessage from "./util/missing-plugin-helper";
 
@@ -31,40 +31,40 @@ export default function normalizeFile(
         // If an explicit object is passed in, it overrides the processing of
         // source maps that may be in the file itself.
         if (typeof options.inputSourceMap === "object") {
-            inputMap = convertSourceMap.fromObject(options.inputSourceMap);
+            inputMap = sourcemap.convert.fromObject(options.inputSourceMap);
         }
 
         if (!inputMap) {
             try {
-                inputMap = convertSourceMap.fromSource(code);
+                inputMap = sourcemap.convert.fromSource(code);
 
                 if (inputMap) {
-                    code = convertSourceMap.removeComments(code);
+                    code = sourcemap.convert.removeComments(code);
                 }
             } catch (err) {
                 // debug("discarding unknown inline input sourcemap", err);
-                code = convertSourceMap.removeComments(code);
+                code = sourcemap.convert.removeComments(code);
             }
         }
 
         if (!inputMap) {
             if (is.string(options.filename)) {
                 try {
-                    inputMap = convertSourceMap.fromMapFileSource(
+                    inputMap = sourcemap.convert.fromMapFileSource(
                         code,
                         path.dirname(options.filename),
                     );
 
                     if (inputMap) {
-                        code = convertSourceMap.removeMapFileComments(code);
+                        code = sourcemap.convert.removeMapFileComments(code);
                     }
                 } catch (err) {
                     // debug("discarding unknown file input sourcemap", err);
-                    code = convertSourceMap.removeMapFileComments(code);
+                    code = sourcemap.convert.removeMapFileComments(code);
                 }
             } else {
                 // debug("discarding un-loadable file input sourcemap");
-                code = convertSourceMap.removeMapFileComments(code);
+                code = sourcemap.convert.removeMapFileComments(code);
             }
         }
     }

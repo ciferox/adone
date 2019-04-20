@@ -41,5 +41,5 @@ fast.extension = asNamespace(lazify({
     notify: "./extensions/notify",
     notifyError: "./extensions/notify"
 }, null, require, {
-    mapper: (key, mod) => mod
+    mapper: (mod) => mod
 }));

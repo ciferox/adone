@@ -1,4 +1,8 @@
-const fs = require("graceful-fs");
+const {
+    is,
+    fs2: { graceful: fs }
+} = adone;
+
 const glob = require("glob");
 const log = require("npmlog");
 const which = require("which");

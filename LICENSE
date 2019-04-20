@@ -6381,3 +6381,23 @@ ISC
 ISC
 
 Copyright 2018 Eemeli Aro <eemeli@gmail.com>
+
+- https://github.com/isaacs/node-graceful-fs
+
+The ISC License
+
+Copyright (c) Isaac Z. Schlueter, Ben Noordhuis, and Contributors
+
+- https://github.com/jprichardson/node-fs-extra
+- https://github.com/jprichardson/node-jsonfile
+
+(The MIT License)
+
+Copyright (c) 2011-2017 JP Richardson
+
+- https://github.com/anodynos/upath
+
+MIT
+
+Copyright(c) 2014-2017 Angelos Pikoulas (agelos.pikoulas@gmail.com)
+

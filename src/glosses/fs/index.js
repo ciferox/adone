@@ -162,6 +162,11 @@ const fs = adone.lazify({
             err ? reject(err) : resolve(stat);
         });
     }),
+    readFile: () => (path, options) => new Promise((resolve, reject) => {
+        std.fs.readFile(path, options, (err, data) => {
+            err ? reject(err) : resolve(data);
+        });
+    }),
     writeFile: () => (file, data, options) => new Promise((resolve, reject) => {
         std.fs.writeFile(file, data, options, (err) => {
             err ? reject(err) : resolve();
@@ -235,6 +240,7 @@ const fs = adone.lazify({
     engine: "./engines",
     lstatSync: () => (path) => std.fs.lstatSync(path),
     statSync: () => (path) => std.fs.statSync(path),
+    readFileSync: () => (path, options) => std.fs.readFileSync(path, options),
     writeFileSync: () => (path, data, options) => std.fs.writeFileSync(path, data, options),
     readdirSync: () => (path, options) => std.fs.readdirSync(path, options),
     accessSync: () => (path, mode) => std.fs.accessSync(path, mode),
@@ -253,40 +259,8 @@ const fs = adone.lazify({
     junk: "./junk"
 }, adone.asNamespace(exports), require);
 
-const expandReadOptions = (options = {}) => is.string(options) ? { encoding: options } : options;
-
-export const readFile = async (filepath, options) => {
-    const {
-        check = false,
-        encoding = null,
-        flags = "r"
-    } = expandReadOptions(options);
-    if (check && !await adone.fs.isFile(filepath)) {
-        return null;
-    }
-    return new Promise((resolve, reject) => std.fs.readFile(filepath, { encoding, flags }, (err, data) => err ? reject(err) : resolve(data)));
-};
-
-export const readFileSync = (filepath, options) => {
-    const {
-        check = false,
-        encoding = null,
-        flags = "r"
-    } = expandReadOptions(options);
-    if (check) {
-        if (!adone.fs.isFileSync(filepath)) {
-            return null;
-        }
-    }
-    try {
-        return std.fs.readFileSync(filepath, { encoding, flags });
-    } catch (err) {
-        return null;
-    }
-};
-
 export const readLines = async (filepath, options) => {
-    const content = await readFile(filepath, options);
+    const content = await fs.readFile(filepath, options);
     if (is.null(content)) {
         return null;
     }
@@ -294,7 +268,7 @@ export const readLines = async (filepath, options) => {
 };
 
 export const readLinesSync = (filepath, options) => {
-    const content = readFileSync(filepath, options);
+    const content = fs.readFileSync(filepath, options);
     if (is.null(content)) {
         return null;
     }
@@ -303,7 +277,7 @@ export const readLinesSync = (filepath, options) => {
 
 // Read file (expected one line of text) splitted by whitespaces.
 export const readWords = async (filepath, options) => {
-    const content = await readFile(filepath, options);
+    const content = await fs.readFile(filepath, options);
     if (is.null(content)) {
         return null;
     }
@@ -311,7 +285,7 @@ export const readWords = async (filepath, options) => {
 };
 
 export const readWordsSync = (filepath, options) => {
-    const content = readFileSync(filepath, options);
+    const content = fs.readFileSync(filepath, options);
     if (is.null(content)) {
         return null;
     }

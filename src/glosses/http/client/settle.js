@@ -10,6 +10,7 @@ const __ = adone.private(adone.http.client);
 export default function settle(resolve, reject, response) {
     const validateStatus = response.config.validateStatus;
     // Note: status is not exposed by XDomainRequest
+
     if (!response.status || !validateStatus || validateStatus(response.status)) {
         resolve(response);
     } else {

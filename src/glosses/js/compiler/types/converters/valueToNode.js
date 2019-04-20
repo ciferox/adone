@@ -1,6 +1,8 @@
 // @flow
-import isPlainObject from "lodash/isPlainObject";
-import isRegExp from "lodash/isRegExp";
+const {
+    lodash: { isPlainObject, isRegExp }
+} = adone;
+
 import isValidIdentifier from "../validators/isValidIdentifier";
 import {
     identifier,

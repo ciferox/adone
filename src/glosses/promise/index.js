@@ -308,3 +308,44 @@ const try_ = (fn, ...args) => new Promise((resolve) => {
 });
 
 export { try_ as try };
+
+
+export const universalify = (fn) => {
+    const props = {
+        name: {
+            value: fn.name
+        },
+        ...Object.keys(fn).reduce((props, k) => {
+            props[k] = {
+                enumerable: true,
+                value: fn[k]
+            };
+            return props;
+        }, {})
+    };
+    return Object.defineProperties(function (...args) {
+        if (is.function(args[args.length - 1])) {
+            fn.apply(this, args);
+        } else {
+            return new Promise((resolve, reject) => {
+                args.push((err, res) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve(res);
+                });
+                fn.apply(this, args);
+            });
+        }
+    }, props);
+};
+
+export const universalifyFromPromise = (fn) => {
+    return Object.defineProperty(function (...args) {
+        const cb = args[args.length - 1];
+        if (!is.function(cb)) {
+            return fn.apply(this, args);
+        }
+        fn.apply(this, args).then((r) => cb(null, r), cb);
+    }, "name", { value: fn.name });
+};

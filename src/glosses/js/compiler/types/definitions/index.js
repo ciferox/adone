@@ -1,5 +1,9 @@
 // @flow
-import toFastProperties from "to-fast-properties";
+
+const {
+    util: { toFastProperties }
+} = adone;
+
 import "./core";
 import "./es2015";
 import "./flow";

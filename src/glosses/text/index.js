@@ -262,11 +262,13 @@ export const stripLastNewline = (x) => {
     return x;
 };
 
-export const stripBom = (x) => {
-    if (x.charCodeAt(0) === 0xFEFF) {
-        return x.slice(1);
+export const stripBom = (content) => {
+    // we do this because JSON.parse would convert it to a utf8 string if encoding wasn't specified
+    if (is.buffer(content)) {
+        content = content.toString("utf8");
     }
-    return x;
+    content = content.replace(/^\uFEFF/, "");
+    return content;
 };
 
 export const toUTF8Array = (str) => {

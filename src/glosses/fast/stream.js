@@ -28,5 +28,5 @@ adone.lazify({
     notifyError: "./extensions/notify",
     wiredep: "./extensions/wiredep"
 }, FastStream.prototype, require, {
-    mapper: (key, mod) => mod.default(key)
+    mapper: (mod, key) => mod.default(key)
 });

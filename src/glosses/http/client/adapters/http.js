@@ -329,17 +329,18 @@ export default async function adapter(config) {
             eventData.lengthComputable = false;
         }
 
-        const counter = new adone.stream.CountingStream();
+        // const counter = new adone.stream.CountingStream();
 
-        counter.on("data", () => {
-            eventData.loaded = counter.count;
-            uploadProgress(eventData);
-        });
+        // counter.on("data", () => {
+        //     console.log("chunk", counter.count);
+        //     eventData.loaded = counter.count;
+        //     uploadProgress(eventData);
+        // });
 
-        counter.pause(); // on("data") resumes the stream, we dont want it
+        // counter.pause(); // on("data") resumes the stream, we dont want it
 
         data.on("error", (err) => {
             reject(__.enhanceError(err, config, null, req));
-        }).pipe(counter).pipe(req);
+        })/*.pipe(counter)*/.pipe(req);
     });
 }

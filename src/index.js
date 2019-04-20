@@ -20,7 +20,7 @@ const adone = Object.create({
     clearInterval: global.clearInterval,
     setImmediate: global.setImmediate,
     clearImmediate: global.clearImmediate,
-    lazifyMapper: (key, mod) => ((mod !== null && typeof mod === "object" && mod.__esModule === true && "default" in mod) ? mod.default : mod),
+    lazifyMapper: (mod) => (mod !== null && typeof mod === "object" && mod.__esModule === true && "default" in mod) ? mod.default : mod,
     lazify: (modules, _obj, _require = require, {
         asNamespace = false,
         configurable = false,
@@ -65,7 +65,11 @@ const adone = Object.create({
                         throw new TypeError(`Invalid module type of ${key}`);
                     }
 
-                    mod = mapper(key, mod);
+                    try {
+                        mod = mapper(mod, key);
+                    } catch (err) {
+                        adone.app.runtime.app.fireException(err);
+                    }
 
                     Object.defineProperty(obj, key, {
                         configurable,
@@ -201,7 +205,6 @@ adone.lazify({
     app: "./glosses/app",
     archive: "./glosses/archives",
     assertion: "./glosses/assertion",
-    bundler: "./glosses/bundler",
     cli: "./glosses/cli",
     cmake: "./glosses/cmake",
     collection: "./glosses/collections",
@@ -219,6 +222,7 @@ adone.lazify({
     fake: "./glosses/fake",
     fast: "./glosses/fast",
     fs: "./glosses/fs",
+    fs2: "./glosses/fs2",
     fsm: "./glosses/fsm",
     geoip: "./glosses/geoip",
     git: "./glosses/git",
@@ -235,11 +239,11 @@ adone.lazify({
     model: "./glosses/models",
     module: "./glosses/module",
     multiformat: "./glosses/multiformats",
-    multi: "./glosses/multi",
     net: "./glosses/net",
     netron: "./glosses/netron",
     notifier: "./glosses/notifier",
     p2p: "./glosses/p2p",
+    path: "./glosses/path",
     pretty: "./glosses/pretty",
     process: "./glosses/process",
     promise: "./glosses/promise",
@@ -258,8 +262,7 @@ adone.lazify({
     typeOf: "./glosses/typeof",
     uri: "./glosses/uri",
     util: "./glosses/utils",
-    vault: "./glosses/vault",
-    web: "./glosses/web"
+    vault: "./glosses/vault"
 }, adone);
 
 // mappings

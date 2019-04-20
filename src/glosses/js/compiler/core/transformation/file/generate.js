@@ -2,11 +2,11 @@
 
 const {
     is,
-    js: { compiler: { generate } }
+    js: { compiler: { generate } },
+    sourcemap
 } = adone;
 
 import type { PluginPasses } from "../../config";
-import convertSourceMap, { type SourceMap } from "convert-source-map";
 
 import type File from "./file";
 import mergeSourceMap from "./merge-map";
@@ -64,7 +64,7 @@ export default function generateCode(
     }
 
     if (opts.sourceMaps === "inline" || opts.sourceMaps === "both") {
-        outputCode += `\n${convertSourceMap.fromObject(outputMap).toComment()}`;
+        outputCode += `\n${sourcemap.convert.fromObject(outputMap).toComment()}`;
     }
 
     if (opts.sourceMaps === "inline") {

@@ -448,6 +448,12 @@
                         }
                     }
                 },
+                "fs2": {
+                    "description": "Replacement of native fs with promises and extras",
+                    "task": "transpile",
+                    "src": "src/glosses/fs2/**/*.js",
+                    "dst": "lib/glosses/fs2"
+                },
                 "fsm": {
                     "description": "Finite State Machine implementation",
                     "task": "transpile",
@@ -725,6 +731,12 @@
                     "src": "src/glosses/p2p/**/*.js",
                     "dst": "lib/glosses/p2p",
                     "predecessor": "https://github.com/libp2p"
+                },
+                "path": {
+                    "description": "Replacement of native path",
+                    "task": "transpile",
+                    "src": "src/glosses/path/**/*.js",
+                    "dst": "lib/glosses/path"
                 },
                 "pretty": {
                     "description": "Useful prettiers/pretty-printers",

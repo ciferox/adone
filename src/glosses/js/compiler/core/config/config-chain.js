@@ -5,7 +5,6 @@ const {
 } = adone;
 
 import path from "path";
-import buildDebug from "debug";
 import {
     validate,
     type ValidatedOptions,
@@ -16,7 +15,6 @@ import {
 } from "./validation/options";
 import pathPatternToRegex from "./pattern-to-regex";
 
-const debug = buildDebug("babel:config:config-chain");
 
 import {
     findPackageData,
@@ -657,22 +655,10 @@ function shouldIgnore(
     dirname: string,
 ): boolean {
     if (ignore && matchesPatterns(context, ignore, dirname)) {
-        debug(
-            "Ignored %o because it matched one of %O from %o",
-            context.filename,
-            ignore,
-            dirname,
-        );
         return true;
     }
 
     if (only && !matchesPatterns(context, only, dirname)) {
-        debug(
-            "Ignored %o because it failed to match one of %O from %o",
-            context.filename,
-            only,
-            dirname,
-        );
         return true;
     }
 

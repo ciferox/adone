@@ -129,7 +129,7 @@ const _bootstrapApp = async (app, {
             if (errors.length) {
                 console.log(`${command.getUsageMessage()}\n`);
                 for (const error of errors) {
-                    console.log(error.message);
+                    console.error(adone.pretty.error(error));
                 }
                 await app.stop(1);
             }

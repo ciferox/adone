@@ -47,7 +47,9 @@ class AdoneCLI extends app.Application {
     async onConfigure() {
         !is.windows && this.exitOnSignal("SIGINT");
 
-        this.config = await Configuration.load();
+        this.config = await Configuration.load({
+            cwd: std.path.join(adone.ETC_PATH, "adone")
+        });
 
         this._configureLogger();
 

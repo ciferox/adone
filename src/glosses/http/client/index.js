@@ -136,7 +136,7 @@ export const defaults = {
             if (is.undefined(headers["Content-Type"])) {
                 headers["Content-Type"] = "application/json;charset=utf-8";
             } else if (headers["Content-Type"].startsWith("application/x-www-form-urlencoded")) {
-                return adone.util.querystring.stringify(data);
+                return util.querystring.stringify(data);
             }
             return JSON.stringify(data); // TODO: must it return json if there is no content-type header?
         }

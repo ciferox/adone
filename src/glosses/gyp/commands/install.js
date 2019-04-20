@@ -1,4 +1,8 @@
-const fs = require("graceful-fs");
+const {
+    is,
+    fs2: { graceful: fs }
+} = adone;
+
 const osenv = require("osenv");
 const tar = require("tar");
 const log = require("npmlog");

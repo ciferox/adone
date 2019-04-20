@@ -26,7 +26,7 @@ export default class Module extends NodeModule {
     }
 
     require(id) {
-        const filename = this.#resolveFilename(id);
+        const filename = NodeModule._resolveFilename(id, this);//this.#resolveFilename(id);
 
         const cachedModule = NodeModule._cache[filename];
         if (cachedModule) {
@@ -61,7 +61,7 @@ export default class Module extends NodeModule {
     }
 
     uncache(id) {
-        const filename = this.#resolveFilename(id);
+        const filename = NodeModule._resolveFilename(id, this);//this.#resolveFilename(id);
         const visited = {};
 
         const mod = NodeModule._cache[filename];
@@ -86,7 +86,10 @@ export default class Module extends NodeModule {
         });
     }
 
-    #resolveFilename(filename) {
-        return resolve(filename, { basedir: path.dirname(this.id) });
-    }
+    // #resolveFilename(filename) {
+    //     return resolve(filename, {
+    //         searchGlobal: true,
+    //         basedir: path.dirname(this.id)
+    //     });
+    // }
 }
