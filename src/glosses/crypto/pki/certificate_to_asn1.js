@@ -5,7 +5,7 @@ const {
     }
 } = adone;
 
-const __ = adone.private(pki);
+const __ = adone.getPrivate(pki);
 
 /**
  * Converts an X.509v3 RSA certificate to an ASN.1 object.

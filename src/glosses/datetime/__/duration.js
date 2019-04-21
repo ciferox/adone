@@ -1,5 +1,5 @@
 const { is } = adone;
-const __ = adone.private(adone.datetime);
+const __ = adone.getPrivate(adone.datetime);
 
 const ordering = ["year", "quarter", "month", "week", "day", "hour", "minute", "second", "millisecond"];
 

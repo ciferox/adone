@@ -2,7 +2,7 @@ const {
     crypto: { asn1 }
 } = adone;
 
-const __ = adone.private(asn1);
+const __ = adone.getPrivate(asn1);
 
 /**
  * Convert number from 2^base to 2^10

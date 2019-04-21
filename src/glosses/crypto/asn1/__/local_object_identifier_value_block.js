@@ -6,7 +6,7 @@ const {
     LocalValueBlock,
     LocalSidValueBlock,
     util
-} = adone.private(asn1);
+} = adone.getPrivate(asn1);
 
 export default class LocalObjectIdentifierValueBlock extends LocalValueBlock {
     /**

@@ -540,4 +540,4 @@ export const create = (source, options) => new Stream(source, options);
 
 export const merge = Stream.merge.bind(Stream); // this way we will always create base core stream...
 
-adone.definePrivate(__, exports);
+adone.definep(__, exports);

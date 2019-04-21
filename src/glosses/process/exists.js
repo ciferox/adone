@@ -5,7 +5,7 @@ const {
 
 const { 
     checkProc
-} = adone.private(adone.process);
+} = adone.getPrivate(adone.process);
 
 export default (proc) => {
     try {

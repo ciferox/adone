@@ -1,5 +1,5 @@
 adone.lazify({
-    native: () => adone.nativeAddon(adone.std.path.join(__dirname, "native", "metrics.node")).System,
+    native: () => adone.requireAddon(adone.std.path.join(__dirname, "native", "metrics.node")).System,
     OS: "./system/operating_system",
     HAL: "./hardware/hal",
     FileSystem: "./system/file_system",

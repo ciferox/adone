@@ -5,7 +5,7 @@ const {
 const {
     LocalValueBlock,
     util
-} = adone.private(asn1);
+} = adone.getPrivate(asn1);
 
 export default class LocalBooleanValueBlock extends LocalValueBlock {
     /**

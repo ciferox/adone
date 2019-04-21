@@ -5,7 +5,7 @@ const {
     }
 } = adone;
 
-const __ = adone.private(pki);
+const __ = adone.getPrivate(pki);
 
 /**
  * Converts a PKCS#10 certification request to an ASN.1 object.

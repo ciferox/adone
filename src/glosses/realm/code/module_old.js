@@ -22,7 +22,7 @@ class AdoneDependencyCollector {
      * Generates a variable name to adone path
      *
      * Private objects are encoded with # prefix
-     * adone.database.#redis.commands means adone.private(adone.database.redis).commands
+     * adone.database.#redis.commands means adone.getPrivate(adone.database.redis).commands
      */
     adonePathToId(p, scope, isPrivate) {
         // TODO: collisions???
@@ -260,7 +260,7 @@ class AdoneDependencyCollector {
                     return;
                 }
 
-                // adone.private call
+                // adone.getPrivate call
                 if (node.init.type !== "CallExpression") {
                     return;
                 }
@@ -269,7 +269,7 @@ class AdoneDependencyCollector {
                     return;
                 }
                 switch (p.value) {
-                    case "adone.private": {
+                    case "adone.getPrivate": {
                         const target = this.nodeToAdonePath(node.init.arguments[0]);
                         if (is.null(target)) {
                             return; // wtf?
@@ -544,7 +544,7 @@ export default class XModule extends realm.code.Base {
                         const declrNode = node.declarations[0];
                         if (!is.null(declrNode.init) && declrNode.init.type === "CallExpression" && declrNode.init.callee.type === "MemberExpression") {
                             const exprName = this._getMemberExpressionName(declrNode.init.callee);
-                            if (exprName === "adone.nativeAddon") {
+                            if (exprName === "adone.requireAddon") {
                                 shouldSkip = true;
                                 if (declrNode.id.type === "Identifier") {
                                     const name = declrNode.id.name;

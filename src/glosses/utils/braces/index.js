@@ -40,14 +40,14 @@ braces.MAX_LENGTH = 1024 * 64;
 
 const memoize = _util.memoize(braces, ["braces", "create", "makeRe"]);
 
-adone.lazifyPrivate({
+adone.lazifyp({
     util: "./utils",
     parser: "./parsers",
     compiler: "./compilers",
     Braces: "./braces"
 }, braces, require);
 
-const __ = adone.private(braces);
+const __ = adone.getPrivate(braces);
 
 
 /**

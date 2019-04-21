@@ -23,7 +23,7 @@ const __ = adone.lazify({
 
 export const errname = (code) => adone.std.util.getSystemErrorName(code);
 
-adone.lazifyPrivate({
+adone.lazifyp({
     platformGetList: () => {
         return is.darwin
             ? () => __.execStdout("netstat", ["-anv", "-p", "tcp"])

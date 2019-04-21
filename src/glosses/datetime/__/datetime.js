@@ -1,5 +1,5 @@
 const { is, datetime } = adone;
-const __ = adone.private(datetime);
+const __ = adone.getPrivate(datetime);
 
 const { hooks, absRound, absFloor, toInt, compareArrays } = __.util;
 

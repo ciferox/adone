@@ -2,7 +2,7 @@ const {
     math: { BigNumber }
 } = adone;
 
-const __ = adone.private(adone.crypto.pki.rsa);
+const __ = adone.getPrivate(adone.crypto.pki.rsa);
 
 /**
  * NOTE: THIS METHOD IS DEPRECATED, use 'decrypt' on a private key object or

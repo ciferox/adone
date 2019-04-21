@@ -1,7 +1,7 @@
 const {
     is,
     promise: { universalify, universalifyFromPromise },
-    lazifyMapper
+    lazify
 } = adone;
 
 adone.asNamespace(exports);
@@ -97,7 +97,7 @@ export const write = function (fd, buffer, ...args) {
 };
 
 // async
-adone.lazify({
+lazify({
     copy: "./copy",
     createFile: "./create_file",
     createLink: "./create_link",
@@ -111,14 +111,14 @@ adone.lazify({
     outputJson: "./output_json",
     remove: "./remove"
 }, exports, require, {
-    mapper: (mod) => universalify(lazifyMapper(mod))
+    mapper: (mod) => universalify(lazify.mapper(mod))
 });
 
 export const pathExists = universalifyFromPromise((path) => exports.access(path).then(() => true).catch(() => false));
 
 
 // sync
-adone.lazify({
+lazify({
     copySync: "./copy/sync",
     createFileSync: "./create_file/sync",
     createLinkSync: "./create_link/sync",
@@ -139,3 +139,7 @@ Object.defineProperty(exports, "promises", {
         return adone.std.fs.promises;
     }
 });
+
+lazify({
+    custom: "./custom"
+}, exports, require);

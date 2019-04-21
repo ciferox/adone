@@ -15,7 +15,7 @@ const {
     VALUABLE_META,
     VALUABLE_TAGS,
     VALUABLE_KEYS
-} = adone.private(vault);
+} = adone.getPrivate(vault);
 
 const VALUABLE_STR_ID = Symbol();
 

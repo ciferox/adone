@@ -7,7 +7,7 @@ const {
     util
 } = adone;
 
-const __ = adone.private(http.client);
+const __ = adone.getPrivate(http.client);
 
 const isHttps = /https:?/;
 

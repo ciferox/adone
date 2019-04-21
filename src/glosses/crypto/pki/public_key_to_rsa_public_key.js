@@ -5,7 +5,7 @@ const {
     }
 } = adone;
 
-const __ = adone.private(pki);
+const __ = adone.getPrivate(pki);
 
 const tobuf = (bn) => {
     return adone.util.buffer.toArrayBuffer(__.bnToBytes(bn));

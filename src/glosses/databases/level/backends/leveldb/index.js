@@ -20,7 +20,7 @@ const factory = () => {
 const fastFuture = global.setImmediate ? factory : () => process.nextTick;
 
 
-const native = adone.nativeAddon(adone.std.path.join(__dirname, "native", "leveldb.node"));
+const native = adone.requireAddon(adone.std.path.join(__dirname, "native", "leveldb.node"));
 
 class Iterator extends AbstractIterator {
     constructor(db, options) {

@@ -1,4 +1,4 @@
-const { processRelease } = adone.private(adone.gyp);
+const { processRelease } = adone.getPrivate(adone.gyp);
 
 it("test process release - process.version = 0.8.20", () => {
     const release = processRelease([], { opts: {} }, "v0.8.20", null);

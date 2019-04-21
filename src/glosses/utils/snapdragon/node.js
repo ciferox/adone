@@ -6,7 +6,7 @@ const {
 
 const {
     util
-} = adone.private(Snapdragon);
+} = adone.getPrivate(Snapdragon);
 
 let ownNames;
 

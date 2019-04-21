@@ -1,4 +1,4 @@
-const { Set } = adone.private(adone.model);
+const { Set } = adone.getPrivate(adone.model);
 
 describe("Set", () => {
     describe("has()", () => {

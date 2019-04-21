@@ -1,4 +1,4 @@
-const { util } = adone.private(adone.util.braces);
+const { util } = adone.getPrivate(adone.util.braces);
 
 describe("util", "braces", "utils", () => {
     describe(".isEmptySets", () => {

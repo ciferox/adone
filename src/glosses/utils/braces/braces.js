@@ -4,12 +4,12 @@ const {
 } = adone;
 const {
     Node
-} = adone.private(adone.util.Snapdragon);
+} = adone.getPrivate(adone.util.Snapdragon);
 const {
     util,
     compiler,
     parser
-} = adone.private(adone.util.braces);
+} = adone.getPrivate(adone.util.braces);
 
 export default class Braces {
     constructor(options) {

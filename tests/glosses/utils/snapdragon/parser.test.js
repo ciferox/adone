@@ -1,5 +1,5 @@
 const { is } = adone;
-const { Parser } = adone.private(adone.util.Snapdragon);
+const { Parser } = adone.getPrivate(adone.util.Snapdragon);
 let parser;
 
 describe("util", "Snapdragon", "parser", () => {

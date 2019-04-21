@@ -6,7 +6,7 @@ const {
     math: { BigNumber }
 } = adone;
 
-const __ = adone.private(pki);
+const __ = adone.getPrivate(pki);
 
 /**
  * Converts a public key from an ASN.1 SubjectPublicKeyInfo or RSAPublicKey.

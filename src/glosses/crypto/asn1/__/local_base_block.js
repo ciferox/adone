@@ -2,7 +2,7 @@ const {
     crypto: { asn1 }
 } = adone;
 
-const { util } = adone.private(asn1);
+const { util } = adone.getPrivate(asn1);
 
 /**
  * Class used as a base block for all remaining ASN.1 classes

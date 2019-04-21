@@ -5,7 +5,7 @@ const {
 const {
     LocalHexBlock,
     LocalBaseBlock
-} = adone.private(asn1);
+} = adone.getPrivate(asn1);
 
 export default class LocalUtf8StringValueBlock extends LocalHexBlock(LocalBaseBlock) {
     /**

@@ -5,7 +5,7 @@ const {
     netron: { Definition }
 } = adone;
 
-const __ = adone.private(adone.netron);
+const __ = adone.getPrivate(adone.netron);
 
 export default class RemoteStub {
     constructor(manager, iInstance) {

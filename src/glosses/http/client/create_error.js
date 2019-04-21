@@ -1,4 +1,4 @@
-const __ = adone.private(adone.http.client);
+const __ = adone.getPrivate(adone.http.client);
 
 /**
  * Create an Error with the specified message, config, error code, and response.

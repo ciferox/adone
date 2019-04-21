@@ -4,7 +4,7 @@ const {
 
 const { 
     platformGetList
-} = adone.private(adone.process);
+} = adone.getPrivate(adone.process);
 
 const cols = is.darwin ? [3, 8] : is.linux ? [4, 6] : [1, 4];
 const isProtocol = (x) => /^\s*(tcp|udp)/i.test(x);

@@ -1,7 +1,7 @@
 export default function plugin() {
     const { is, std: { path }, error, fast: { File } } = adone;
 
-    const { Concat } = adone.private(adone.fast);
+    const { Concat } = adone.getPrivate(adone.fast);
 
     return function concat(file, options = {}) {
 

@@ -28,7 +28,7 @@ const root = any.clone();
 Any.prototype._currentModel = root;
 root._currentModel = root;
 
-const __ = adone.lazifyPrivate({
+const __ = adone.lazifyp({
     alternatives: "./types/alternatives",
     array: "./types/array",
     boolean: "./types/boolean",

@@ -5,7 +5,7 @@ const {
     util
 } = adone;
 
-const { MANAGER_SYMBOL } = adone.private(adone.task);
+const { MANAGER_SYMBOL } = adone.getPrivate(adone.task);
 const ANY_NOTIFICATION = Symbol();
 
 const DUMMY_THROTTLE = (tsk) => tsk();

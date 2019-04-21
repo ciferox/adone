@@ -1,4 +1,4 @@
-const __ = adone.private(adone.http.client);
+const __ = adone.getPrivate(adone.http.client);
 
 /**
  * Resolve or reject a Promise based on response status.

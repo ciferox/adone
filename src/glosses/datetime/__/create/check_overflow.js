@@ -1,4 +1,4 @@
-const __ = adone.private(adone.datetime);
+const __ = adone.getPrivate(adone.datetime);
 
 export default function checkOverflow(m) {
     let overflow;

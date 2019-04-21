@@ -1,4 +1,4 @@
-const { Node, Parser } = adone.private(adone.util.Snapdragon);
+const { Node, Parser } = adone.getPrivate(adone.util.Snapdragon);
 let parser;
 let ast;
 

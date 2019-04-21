@@ -1,121 +1,31 @@
-/* eslint-disable camelcase */
-/* eslint-disable adone/no-array-isarray */
-/* eslint-disable adone/no-null-comp */
-/* eslint-disable adone/no-typeof */
+// Be here until it appears in the official implementation
+require("./reflect");
 
-const NAMESPACE_SYMBOL = Symbol();
-const PRIVATE_SYMBOL = Symbol();
+const common = require("./common");
+const { lazify } = common;
 
 const adone = Object.create({
-    null: Symbol.for("adone:null"),
-    undefined: Symbol.for("adone:undefined"),
-    noop: () => { },
-    identity: (x) => x,
-    truly: () => true,
-    falsely: () => false,
-    o: (...props) => props.length > 0 ? Object.assign({}, ...props) : Object.create(null),
-    setTimeout: global.setTimeout,
-    clearTimeout: global.clearTimeout,
-    setInterval: global.setInterval,
-    clearInterval: global.clearInterval,
-    setImmediate: global.setImmediate,
-    clearImmediate: global.clearImmediate,
-    lazifyMapper: (mod) => (mod !== null && typeof mod === "object" && mod.__esModule === true && "default" in mod) ? mod.default : mod,
-    lazify: (modules, _obj, _require = require, {
-        asNamespace = false,
-        configurable = false,
-        enumerable = true,
-        writable = false,
-        mapper = adone.lazifyMapper
-    } = {}) => {
-        const obj = _obj || {};
-        Object.keys(modules).forEach((key) => {
-            Object.defineProperty(obj, key, {
-                configurable: true,
-                enumerable,
-                get() {
-                    const value = modules[key];
-
-                    let mod;
-                    if (typeof value === "function") {
-                        mod = value(key);
-                    } else if (typeof value === "string") {
-                        try {
-                            mod = _require(value);
-                        } catch (err) {
-                            // console.log(adone.inspect(err, { asObject: true }));
-                            if (err.code !== "MODULE_NOT_FOUND") {
-                                throw err;
-                            }
-                            adone.app.runtime.app.fireException(err);
-                        }
-                    } else if (Array.isArray(value) && value.length >= 1 && typeof value[0] === "string") {
-                        mod = value.reduce((mod, entry, i) => {
-                            if (typeof entry === "function") {
-                                return entry(mod);
-                            } else if (typeof entry === "string") {
-                                if (!(entry in mod)) {
-                                    throw new Error(`Invalid parameter name in ${key}[${i + 1}]`);
-                                }
-                                return mod[entry];
-                            }
-                            throw new TypeError(`Invalid type at ${key}[${i + 1}]`);
-                        }, _require(value.shift()));
-                    } else {
-                        throw new TypeError(`Invalid module type of ${key}`);
-                    }
-
-                    try {
-                        mod = mapper(mod, key);
-                    } catch (err) {
-                        adone.app.runtime.app.fireException(err);
-                    }
-
-                    Object.defineProperty(obj, key, {
-                        configurable,
-                        enumerable,
-                        writable,
-                        value: mod
-                    });
-
-                    try {
-                        return asNamespace
-                            ? adone.asNamespace(mod)
-                            : mod;
-                    } catch (err) {
-                        return mod;
-                    }
-                }
-            });
-        });
-
-        return obj;
-    },
-    lazifyPrivate: (modules, obj, _require = require, options) => {
-        if (adone.is.plainObject(obj[PRIVATE_SYMBOL])) {
-            return adone.lazify(modules, obj[PRIVATE_SYMBOL], _require, options);
-        }
-
-        obj[PRIVATE_SYMBOL] = adone.lazify(modules, null, _require, options);
-        return obj[PRIVATE_SYMBOL];
-    },
-    definePrivate: (modules, obj) => {
-        if (adone.is.plainObject(obj[PRIVATE_SYMBOL])) {
-            Object.assign(obj[PRIVATE_SYMBOL], modules);
-        } else {
-            obj[PRIVATE_SYMBOL] = modules;
-        }
-
-        return obj;
-    },
-    private: (obj) => obj[PRIVATE_SYMBOL],
-    NAMESPACE_SYMBOL,
-    asNamespace: (obj) => {
-        obj[NAMESPACE_SYMBOL] = true;
-        return obj;
-    },
-    // TODO: allow only absolute path
-    nativeAddon: (path) => require(adone.std.path.isAbsolute(path) ? path : adone.std.path.resolve(__dirname, "./native", path))
+    common,
+    // expose some useful commons
+    null: common.null,
+    undefined: common.undefined,
+    noop: common.noop,
+    identity: common.identity,
+    truly: common.truly,
+    falsely: common.falsely,
+    o: common.o,
+    lazify,
+    lazifyp: common.lazifyp,
+    definep: common.definep,
+    getPrivate: common.getPrivate,
+    asNamespace: common.asNamespace,
+    setTimeout: common.setTimeout,
+    clearTimeout: common.clearTimeout,
+    setInterval: common.setInterval,
+    clearInterval: common.clearInterval,
+    setImmediate: common.setImmediate,
+    clearImmediate: common.clearImmediate,
+    EMPTY_BUFFER: common.EMPTY_BUFFER
 });
 
 // Mark some globals as namespaces
@@ -138,7 +48,7 @@ Object.defineProperty(adone, "adone", {
     value: adone
 });
 
-adone.lazify({
+lazify({
     package: "../package.json",
 
     ROOT_PATH: () => adone.std.path.join(__dirname, ".."),
@@ -153,7 +63,6 @@ adone.lazify({
     LOGS_PATH: () => adone.std.path.join(adone.VAR_PATH, "logs"),
     SPECIAL_PATH: () => adone.std.path.join(adone.ROOT_PATH, ".adone"),
     SRC_PATH: () => adone.std.path.join(adone.ROOT_PATH, "src"),
-    EMPTY_BUFFER: () => Buffer.allocUnsafe(0),
     LOGO: () => adone.fs.readFileSync(adone.std.path.join(adone.SHARE_PATH, "media", "adone.txt"), { encoding: "utf8" }),
 
     assert: () => adone.assertion.assert,
@@ -161,7 +70,7 @@ adone.lazify({
     // Namespaces
 
     // NodeJS
-    std: () => adone.asNamespace(adone.lazify({
+    std: () => adone.asNamespace(lazify({
         assert: "assert",
         asyncHooks: "async_hooks",
         buffer: "buffer",
@@ -266,30 +175,26 @@ adone.lazify({
 }, adone);
 
 // mappings
-adone.lazify({
+lazify({
     require: "./glosses/module/require",
+    requireAddon: "./glosses/module/require_addon",
     sprintf: "./glosses/text/sprintf"
 }, adone);
 
 // lazify non-extendable objects in std
-adone.lazify({
+lazify({
     constants: "constants"
 }, adone.std);
 
 // lazify third-party libraries
-adone.lazify({
+lazify({
     async: "./glosses/async",
     lodash: "./glosses/lodash"
 }, adone, require, {
     asNamespace: true
 });
 
-// Be here until it appears in the official implementation
-require("./glosses/reflect");
-
-// if (process.env.ADONE_SOURCEMAPS) {
-//     adone.sourcemap.support(Error).install();
-// }
+common.setLazifyErrorHandler((err) => adone.app.runtime.app.fireException(err));
 
 Object.defineProperty(exports, "__esModule", {
     value: true

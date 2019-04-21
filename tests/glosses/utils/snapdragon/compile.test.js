@@ -1,4 +1,4 @@
-const { Compiler, Parser } = adone.private(adone.util.Snapdragon);
+const { Compiler, Parser } = adone.getPrivate(adone.util.Snapdragon);
 
 let compiler;
 let parser;

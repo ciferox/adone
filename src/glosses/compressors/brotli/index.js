@@ -3,7 +3,7 @@ const {
     std: { stream: { Transform } }
 } = adone;
 
-const { StreamEncode, StreamDecode } = adone.nativeAddon(adone.std.path.join(__dirname, "native", "brotli.node"));
+const { StreamEncode, StreamDecode } = adone.requireAddon(adone.std.path.join(__dirname, "native", "brotli.node"));
 
 class TransformStreamEncode extends Transform {
     constructor(params, sync = false) {

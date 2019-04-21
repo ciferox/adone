@@ -4,7 +4,7 @@ const {
 
 const {
     LocalPrimitiveValueBlock
-} = adone.private(asn1);
+} = adone.getPrivate(asn1);
 
 const {
     BaseBlock

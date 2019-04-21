@@ -2132,7 +2132,7 @@ export default class AppHelper {
                             argument._values.push(argument.value);
                         }
                         if (argument.action === "set") {
-                            const totalNum = util.unique(argument.value).length;
+                            const totalNum = adone.common.unique(argument.value).length;
                             argument.value = argument.choices.reduce((x, y) => { // eslint-disable-line
                                 x[y] = argument.set(argument.value.includes(y), y, totalNum);
                                 return x;

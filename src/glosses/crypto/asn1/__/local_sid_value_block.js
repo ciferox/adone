@@ -6,7 +6,7 @@ const {
     LocalHexBlock,
     LocalBaseBlock,
     util
-} = adone.private(asn1);
+} = adone.getPrivate(asn1);
 
 //region Declaration of ASN.1 ObjectIdentifier type class
 export default class LocalSidValueBlock extends LocalHexBlock(LocalBaseBlock) {

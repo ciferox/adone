@@ -13,7 +13,7 @@ export const ACTION = {
     // MAX: 0x3F
 };
 
-const __ = adone.lazifyPrivate({
+const __ = adone.lazifyp({
     I_DEFINITION_SYMBOL: () => Symbol(),
     I_PEERID_SYMBOL: () => Symbol(),
     InterfaceFactory: "./interface_factory"

@@ -8,7 +8,7 @@ const {
 } = util;
 const {
     util: _util
-} = adone.private(match);
+} = adone.getPrivate(match);
 
 const MAX_LENGTH = 1024 * 64;
 
@@ -37,11 +37,11 @@ adone.lazify({
     parsers: "./parsers"
 }, extglob, require);
 
-adone.lazifyPrivate({
+adone.lazifyp({
     Extglob: "./extglob"
 }, extglob, require);
 
-const __ = adone.private(extglob);
+const __ = adone.getPrivate(extglob);
 
 /**
  * Takes an array of strings and an extglob pattern and returns a new

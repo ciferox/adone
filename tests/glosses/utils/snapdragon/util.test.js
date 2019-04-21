@@ -1,6 +1,6 @@
 const { is } = adone;
 const { Snapdragon } = adone.util;
-const { Parser, Compiler, util } = adone.private(Snapdragon);
+const { Parser, Compiler, util } = adone.getPrivate(Snapdragon);
 
 /**
  * This is a shim used in the unit tests

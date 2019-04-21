@@ -7,7 +7,7 @@ const {
 
 const {
     Node
-} = adone.private(Snapdragon);
+} = adone.getPrivate(Snapdragon);
 
 
 /**

@@ -5,7 +5,7 @@ const {
 
 const {
     util
-} = adone.private(uuid);
+} = adone.getPrivate(uuid);
 
 const v4 = (options, buf, offset) => {
     const i = buf && offset || 0;

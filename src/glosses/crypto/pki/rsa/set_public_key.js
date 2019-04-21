@@ -7,7 +7,7 @@ const {
     }
 } = adone;
 
-const __ = adone.private(adone.crypto.pki.rsa);
+const __ = adone.getPrivate(adone.crypto.pki.rsa);
 
 /**
  * Sets an RSA public key from BigIntegers modulus and exponent.

@@ -232,15 +232,15 @@ describe("fs", "engine", "AbstactEngine", () => {
             }));
             engine.mock(obj);
 
-            expect((await obj.lstat("/a")).isFile()).to.be.true();
+            expect((await obj.lstat("/a")).isFile()).to.be.true;
             expect(await obj.readdir("/b")).to.be.deep.equal(["c"]);
-            expect(lstat).to.have.not.been.called();
-            expect(readdir).to.have.not.been.called();
+            expect(lstat).to.have.not.been.called;
+            expect(readdir).to.have.not.been.called;
             obj.restore();
             obj.lstat();
             obj.readdir();
-            expect(lstat).to.have.been.calledOnce();
-            expect(readdir).to.have.been.calledOnce();
+            expect(lstat).to.have.been.calledOnce;
+            expect(readdir).to.have.been.calledOnce;
         });
 
         it("should support require from memory with std.fs mock", {

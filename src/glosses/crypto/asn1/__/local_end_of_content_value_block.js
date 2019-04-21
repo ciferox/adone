@@ -4,7 +4,7 @@ const {
 
 const {
     LocalValueBlock
-} = adone.private(asn1);
+} = adone.getPrivate(asn1);
 
 export default class LocalEndOfContentValueBlock extends LocalValueBlock {
     /**

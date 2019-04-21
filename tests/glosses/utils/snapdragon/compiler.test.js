@@ -1,4 +1,4 @@
-const { Compiler } = adone.private(adone.util.Snapdragon);
+const { Compiler } = adone.getPrivate(adone.util.Snapdragon);
 let compiler;
 
 describe("util", "Snapdragon", "compiler", () => {

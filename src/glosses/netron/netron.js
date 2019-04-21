@@ -6,7 +6,7 @@ const {
 } = adone;
 
 
-const __ = adone.private(adone.netron);
+const __ = adone.getPrivate(adone.netron);
 
 export default class Netron extends adone.event.AsyncEmitter {
     constructor({

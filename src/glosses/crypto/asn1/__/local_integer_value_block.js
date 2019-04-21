@@ -6,7 +6,7 @@ const {
     LocalHexBlock,
     LocalValueBlock,
     util
-} = adone.private(asn1);
+} = adone.getPrivate(asn1);
 
 const powers2 = [new Uint8Array([1])];
 const digitsString = "0123456789";

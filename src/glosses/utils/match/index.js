@@ -65,7 +65,7 @@ const memoize = _util.memoize(match, [
     "compile"
 ]);
 
-adone.definePrivate({
+adone.definep({
     util: _util
 }, match, require);
 

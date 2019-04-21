@@ -226,7 +226,7 @@ adone.lazify({
 
 
 // Parts of the parser
-// const __ = adone.lazifyPrivate({
+// const __ = adone.lazifyp({
 //     ensureBuffer: "./ensure_buffer",
 //     fnv1a: "./fnv1a",
 //     serialize: "./parser/serializer",

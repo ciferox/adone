@@ -1,4 +1,4 @@
-const { util } = adone.private(adone.util.match.minimal);
+const { util } = adone.getPrivate(adone.util.match.minimal);
 
 describe("util", "match", "minimal", "utils", () => {
     describe(".hasSpecialChars", () => {

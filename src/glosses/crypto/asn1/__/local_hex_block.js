@@ -4,7 +4,7 @@ const {
 
 const {
     util
-} = adone.private(asn1);
+} = adone.getPrivate(asn1);
 
 /**
  * Class used as a base block for all remaining ASN.1 classes

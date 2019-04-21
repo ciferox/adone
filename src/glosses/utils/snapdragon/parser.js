@@ -11,7 +11,7 @@ const {
     util,
     Position,
     error
-} = adone.private(Snapdragon);
+} = adone.getPrivate(Snapdragon);
 
 // .parser() issue
 // eslint-disable-next-line no-unused-vars

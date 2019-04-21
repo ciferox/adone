@@ -4,7 +4,7 @@ const {
     event: { AsyncEmitter }
 } = adone;
 
-const __ = adone.private(adone.netron);
+const __ = adone.getPrivate(adone.netron);
 
 export default class AbstractPeer extends AsyncEmitter {
     #interfaces = new Map();

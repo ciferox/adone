@@ -4,7 +4,7 @@ const {
 
 const {
     util
-} = adone.private(asn1);
+} = adone.getPrivate(asn1);
 
 /**
  * @description Special class providing ability to have "toBER/fromBER" for raw ArrayBuffer

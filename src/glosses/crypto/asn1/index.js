@@ -40,7 +40,7 @@ const asn1 = adone.lazify({
     VisibleString: "./visible_string"
 }, exports, require);
 
-adone.lazifyPrivate({
+adone.lazifyp({
     LocalBaseBlock: "./__/local_base_block",
     LocalBitStringValueBlock: "./__/local_bit_string_value_block",
     LocalBmpStringValueBlock: "./__/local_bmp_string_value_block",
@@ -63,7 +63,7 @@ adone.lazifyPrivate({
     util: "./__/util"
 }, exports, require);
 
-const __ = adone.private(asn1);
+const __ = adone.getPrivate(asn1);
 
 /**
  * Major function for decoding ASN.1 BER array into internal library structuries

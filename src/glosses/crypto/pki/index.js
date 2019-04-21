@@ -59,7 +59,7 @@ const pki = adone.lazify({
     jwkToPem: "./jwk_to_pem"
 }, exports, require);
 
-adone.lazifyPrivate({
+adone.lazifyp({
     bnToBytes: "./__/bn_to_bytes",
     shortNames: "./__/short_names",
     fillMissingFields: "./__/fill_missing_fields",

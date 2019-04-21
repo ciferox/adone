@@ -18,7 +18,7 @@ adone.lazify({
     }, null, require)
 }, adone.asNamespace(exports), require);
 
-adone.lazifyPrivate({
+adone.lazifyp({
     processRelease: "./process-release"
 }, exports, require);
 

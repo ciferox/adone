@@ -6,7 +6,7 @@ const {
     netron: { Netron }
 } = adone;
 
-const __ = adone.private(adone.netron);
+const __ = adone.getPrivate(adone.netron);
 
 const createNetron = (options) => new Netron(options);
 

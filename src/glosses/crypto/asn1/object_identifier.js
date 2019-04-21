@@ -6,7 +6,7 @@ const {
     BaseBlock
 } = asn1;
 
-const __ = adone.private(asn1);
+const __ = adone.getPrivate(asn1);
 
 export default class ObjectIdentifier extends BaseBlock {
     /**

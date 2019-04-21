@@ -4,7 +4,7 @@ const {
     model
 } = adone;
 
-const { Lazy } = adone.private(adone.model);
+const { Lazy } = adone.getPrivate(adone.model);
 
 describe("lazy", () => {
 

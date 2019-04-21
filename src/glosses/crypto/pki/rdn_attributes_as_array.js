@@ -2,7 +2,7 @@ const {
     crypto: { pki }
 } = adone;
 
-const __ = adone.private(adone.crypto.pki);
+const __ = adone.getPrivate(adone.crypto.pki);
 
 /**
  * Converts an RDNSequence of ASN.1 DER-encoded RelativeDistinguishedName

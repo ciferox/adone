@@ -2,7 +2,7 @@ const {
     crypto: { pki }
 } = adone;
 
-const __ = adone.private(pki);
+const __ = adone.getPrivate(pki);
 
 /**
  * Converts ASN.1 CRIAttributes into an array with objects that have type and

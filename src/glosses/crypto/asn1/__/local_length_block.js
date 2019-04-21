@@ -5,7 +5,7 @@ const {
 const {
     LocalBaseBlock,
     util
-} = adone.private(asn1);
+} = adone.getPrivate(asn1);
 
 export default class LocalLengthBlock extends LocalBaseBlock {
     /**

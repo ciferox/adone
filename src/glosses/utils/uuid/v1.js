@@ -6,7 +6,7 @@ const {
 
 const {
     util
-} = adone.private(uuid);
+} = adone.getPrivate(uuid);
 
 // **`v1()` - Generate time-based UUID**
 //

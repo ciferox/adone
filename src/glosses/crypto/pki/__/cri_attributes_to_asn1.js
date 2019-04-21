@@ -5,7 +5,7 @@ const {
     }
 } = adone;
 
-const __ = adone.private(pki);
+const __ = adone.getPrivate(pki);
 
 /**
  * Converts a certification request's attributes to an ASN.1 set of

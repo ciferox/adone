@@ -26,7 +26,7 @@ adone.lazify({
     WaterfallFlowTask: "./waterfall_flow_task"
 }, adone.asNamespace(exports), require);
 
-adone.lazifyPrivate({
+adone.lazifyp({
     MANAGER_SYMBOL: () => Symbol(),
     OBSERVER_SYMBOL: () => Symbol()
 }, exports, require);

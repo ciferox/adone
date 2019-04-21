@@ -7,7 +7,7 @@ const {
     }
 } = adone;
 
-const native = adone.nativeAddon(path.join(__dirname, "native", "fuse.node"));
+const native = adone.requireAddon(path.join(__dirname, "native", "fuse.node"));
 
 adone.asNamespace(exports);
 

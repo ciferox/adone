@@ -6,7 +6,7 @@ const {
 
 assertion.use(assertion.extension.dirty);
 
-const __ = adone.private(vault);
+const __ = adone.getPrivate(vault);
 
 let vaultIndex = 0;
 

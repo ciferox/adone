@@ -138,7 +138,7 @@ adone.lazify({
     capture: "./capture"
 }, Snapdragon, require);
 
-adone.lazifyPrivate({
+adone.lazifyp({
     Position: "./position",
     Compiler: "./compiler",
     Parser: "./parser",
@@ -148,4 +148,4 @@ adone.lazifyPrivate({
     sourcemaps: "./sourcemaps"
 }, Snapdragon, require);
 
-const __ = adone.private(Snapdragon);
+const __ = adone.getPrivate(Snapdragon);

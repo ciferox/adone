@@ -105,9 +105,13 @@
             "dst": "lib/commands",
             "task": "transpile"
         },
-        "index": {
-            "description": "ADONE index file",
-            "src": "src/index.js",
+        "common": {
+            "description": "ADONE common",
+            "src": [
+                "src/index.js",
+                "src/common.js",
+                "src/reflect.js"
+            ],
             "dst": "lib",
             "task": "transpile"
         },

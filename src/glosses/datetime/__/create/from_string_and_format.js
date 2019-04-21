@@ -1,5 +1,5 @@
 const { is } = adone;
-const __ = adone.private(adone.datetime);
+const __ = adone.getPrivate(adone.datetime);
 
 const { hooks } = __.util;
 

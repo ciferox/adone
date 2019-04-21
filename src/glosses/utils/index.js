@@ -524,21 +524,6 @@ export const sortKeys = (object, { deep = false, compare } = {}) => {
     return obj;
 };
 
-export const unique = (array, projection = null) => {
-    const tmp = new Set();
-    const result = [];
-    for (let i = 0; i < array.length; ++i) {
-        const value = array[i];
-        const hash = is.null(projection) ? value : projection(value);
-        if (tmp.has(hash)) {
-            continue;
-        }
-        result.push(value);
-        tmp.add(hash);
-    }
-    return result;
-};
-
 export const invertObject = (source, options) => {
     const dest = {};
     for (const key of keys(source, options)) {

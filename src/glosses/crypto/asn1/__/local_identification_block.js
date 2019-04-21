@@ -6,7 +6,7 @@ const {
     LocalHexBlock,
     LocalBaseBlock,
     util
-} = adone.private(asn1);
+} = adone.getPrivate(asn1);
 
 // Declaration of identification block class
 export default class LocalIdentificationBlock extends LocalHexBlock(LocalBaseBlock) {

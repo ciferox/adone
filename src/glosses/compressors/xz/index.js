@@ -4,7 +4,7 @@ const {
     std: { stream }
 } = adone;
 
-const native = adone.nativeAddon(adone.std.path.join(__dirname, "native", "lzma.node"));
+const native = adone.requireAddon(adone.std.path.join(__dirname, "native", "lzma.node"));
 
 const { Stream } = native;
 

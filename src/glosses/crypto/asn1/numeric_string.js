@@ -4,7 +4,7 @@ const {
 
 const {
     LocalSimpleStringBlock
-} = adone.private(asn1);
+} = adone.getPrivate(asn1);
 
 export default class NumericString extends LocalSimpleStringBlock {
     /**

@@ -2205,7 +2205,7 @@ export class AbstractEngine {
                         const siblings = this._getSiblingMounts(path.replaceParts(parts));
 
                         const files = siblings
-                            ? util.unique(res.concat(siblings)).sort()
+                            ? adone.common.unique(res.concat(siblings)).sort()
                             : res;
 
                         return options.encoding === "buffer"
@@ -2278,7 +2278,7 @@ export class AbstractEngine {
                         const siblings = this._getSiblingMounts(path.replaceParts(parts));
 
                         const files = siblings
-                            ? util.unique(engineFiles.concat(siblings)).sort()
+                            ? adone.common.unique(engineFiles.concat(siblings)).sort()
                             : engineFiles;
 
                         return options.encoding === "buffer"

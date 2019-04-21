@@ -1,5 +1,5 @@
 const { is, datetime } = adone;
-const __ = adone.private(datetime);
+const __ = adone.getPrivate(datetime);
 
 export const match1 = /\d/; //       0 - 9
 export const match2 = /\d\d/; //      00 - 99

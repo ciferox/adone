@@ -6,7 +6,7 @@ const {
 
 const {
     helper
-} = adone.private(adone.fast);
+} = adone.getPrivate(adone.fast);
 
 export class FastLocalMapStream extends adone.fast.LocalStream {
     constructor(source, mappings, options) {

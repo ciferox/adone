@@ -6,7 +6,7 @@ const {
     }
 } = adone;
 
-const __ = adone.private(pki.rsa);
+const __ = adone.getPrivate(pki.rsa);
 
 /**
  * Sets an RSA private key from BigIntegers modulus, exponent, primes,

@@ -3,7 +3,7 @@ const {
     crypto: { pki }
 } = adone;
 
-const __ = adone.private(pki);
+const __ = adone.getPrivate(pki);
 
 /**
  * Fills in missing fields in attributes.

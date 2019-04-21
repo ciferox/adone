@@ -8,7 +8,7 @@ describe("core", () => {
     } = adone;
     const { core } = stream;
 
-    const { SyncTransform, AsyncTransform } = adone.private(core);
+    const { SyncTransform, AsyncTransform } = adone.getPrivate(core);
 
     const nextTick = () => new Promise((resolve) => process.nextTick(resolve));
 

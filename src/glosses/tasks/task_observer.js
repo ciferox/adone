@@ -5,7 +5,7 @@ const {
     task: { STATE }
 } = adone;
 
-const { OBSERVER_SYMBOL } = adone.private(adone.task);
+const { OBSERVER_SYMBOL } = adone.getPrivate(adone.task);
 
 const TASK_INFO = Symbol();
 

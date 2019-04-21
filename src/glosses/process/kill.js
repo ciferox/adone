@@ -13,7 +13,7 @@ const parseInput = (input) => {
 
 const { 
     checkProc
-} = adone.private(adone.process);
+} = adone.getPrivate(adone.process);
 
 export default async (input, { force = false, ignoreCase = false, tree = true, windows } = {}) => {
     const fn = is.windows ? (input) => {

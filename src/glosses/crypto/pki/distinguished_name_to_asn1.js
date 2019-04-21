@@ -1,4 +1,4 @@
-const __ = adone.private(adone.crypto.pki);
+const __ = adone.getPrivate(adone.crypto.pki);
 
 /**
  * Converts a DistinguishedName (subject or issuer) to an ASN.1 object.

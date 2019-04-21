@@ -3730,7 +3730,7 @@ describe("model", () => {
                 name: "myType"
             });
 
-            const { Any } = adone.private(adone.model);
+            const { Any } = adone.getPrivate(adone.model);
             expect(customJoi).to.be.an.instanceof(Any);
         });
 

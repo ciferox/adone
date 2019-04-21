@@ -8,7 +8,7 @@ const {
     asn1
 } = crypto;
 
-const __ = adone.private(pki);
+const __ = adone.getPrivate(pki);
 
 // validator for an X.509v3 certificate
 const x509CertificateValidator = new asn1.Sequence({

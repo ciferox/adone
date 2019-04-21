@@ -15,7 +15,7 @@ adone.lazify({
     FormData: "./form_data"
 }, exports, require);
 
-const __ = adone.lazifyPrivate({
+const __ = adone.lazifyp({
     InterceptorManager: "./interceptor_manager",
     httpAdapter: "./adapters/http",
     createError: "./create_error",

@@ -9,7 +9,7 @@ const {
 } = adone;
 const {
     util: _util
-} = adone.private(match);
+} = adone.getPrivate(match);
 
 /**
  * The main function takes a list of strings and one or more
@@ -87,7 +87,7 @@ adone.lazify({
     parsers: "./parsers"
 }, minimalMatch, require);
 
-adone.definePrivate({
+adone.definep({
     util: _util
 }, minimalMatch);
 

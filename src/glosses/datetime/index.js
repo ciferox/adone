@@ -2,7 +2,7 @@ import { hooks as datetime, setHookCallback } from "./__/utils";
 
 const { is } = adone;
 
-adone.lazifyPrivate({
+adone.lazifyp({
     create: "./__/create",
     unit: "./__/units",
     datetime: "./__/datetime",
@@ -14,7 +14,7 @@ adone.lazifyPrivate({
     tz: "./__/tz"
 }, datetime, require);
 
-const __ = adone.private(datetime);
+const __ = adone.getPrivate(datetime);
 
 const createUnix = (input) => __.create.createLocal(input * 1000);
 const createInZone = (...args) => __.create.createLocal(...args).parseZone();

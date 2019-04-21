@@ -1,4 +1,4 @@
-const __ = adone.private(adone.datetime);
+const __ = adone.getPrivate(adone.datetime);
 
 // start-of-first-week - start-of-year
 const firstWeekOffset = (year, dow, doy) => {

@@ -1,6 +1,6 @@
 const { Snapdragon } = adone.util;
 const { captureSet } = Snapdragon;
-const { Parser } = adone.private(Snapdragon);
+const { Parser } = adone.getPrivate(Snapdragon);
 let parser;
 let ast;
 

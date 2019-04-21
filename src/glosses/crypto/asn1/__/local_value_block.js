@@ -4,7 +4,7 @@ const {
 
 const {
     LocalBaseBlock
-} = adone.private(asn1);
+} = adone.getPrivate(asn1);
 
 //region Declaration of value block class
 export default class LocalValueBlock extends LocalBaseBlock {

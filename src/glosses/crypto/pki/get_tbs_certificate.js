@@ -5,7 +5,7 @@ const {
     }
 } = adone;
 
-const __ = adone.private(pki);
+const __ = adone.getPrivate(pki);
 
 /**
  * Gets the ASN.1 TBSCertificate part of an X.509v3 certificate.

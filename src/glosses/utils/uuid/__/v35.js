@@ -5,7 +5,7 @@ const {
 
 const {
     util
-} = adone.private(uuid);
+} = adone.getPrivate(uuid);
 
 const uuidToBytes = (uuid) => {
     // Note: We assume we're being passed a valid uuid string

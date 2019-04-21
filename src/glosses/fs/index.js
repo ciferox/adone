@@ -5,7 +5,7 @@ const {
 } = adone;
 
 const lazy = adone.lazify({
-    System: () => adone.nativeAddon("metrics.node").System,
+    System: () => adone.requireAddon("metrics.node").System,
     seek: () => lazy.System.seek,
     flock: () => lazy.System.flock,
     statVFS: () => lazy.System.statVFS

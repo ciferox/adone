@@ -12,7 +12,7 @@ describe("util", "tokenizeRegexp", () => {
     const {
         sets,
         util
-    } = adone.private(tokenizeRegexp);
+    } = adone.getPrivate(tokenizeRegexp);
 
     describe("Regexp Tokenizer", () => {
         const char = (c) => {

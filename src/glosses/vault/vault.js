@@ -21,7 +21,7 @@ const {
     valuableId,
     VALUABLE_ID,
     VALUABLE_KEYS
-} = adone.private(vault);
+} = adone.getPrivate(vault);
 
 const createDB = (options) => {
     let backend;

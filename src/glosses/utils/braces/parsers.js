@@ -4,10 +4,10 @@ const {
 
 const {
     Node
-} = adone.private(util.Snapdragon);
+} = adone.getPrivate(util.Snapdragon);
 const {
     util: _util
-} = adone.private(util.braces);
+} = adone.getPrivate(util.braces);
 
 /**
  * Returns true if the character is an extglob character.

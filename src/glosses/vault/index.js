@@ -12,11 +12,11 @@ adone.lazify({
     Valuable: "./valuable"
 }, adone.asNamespace(exports), require);
 
-const __ = adone.lazifyPrivate({
+const __ = adone.lazifyp({
     SlicedValuable: "./sliced_valuable"
 }, exports, require);
 
-adone.definePrivate({
+adone.definep({
     VALUABLE_VAULT: Symbol("vault"),
     VALUABLE_ID: Symbol("id"),
     VALUABLE_META: Symbol("meta"),

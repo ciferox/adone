@@ -4,7 +4,7 @@ const {
     event
 } = adone;
 
-const __ = adone.private(Snapdragon);
+const __ = adone.getPrivate(Snapdragon);
 
 const {
     util,

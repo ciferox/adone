@@ -4,7 +4,7 @@ describe("util", "uuid", () => {
     // Verify ordering of v1 ids created with explicit times
     const TIME = 1321644961388; // 2011-11-18 11:36:01.388-08:00
 
-    const __ = adone.private(uuid);
+    const __ = adone.getPrivate(uuid);
 
     const HASH_SAMPLES = [
         {

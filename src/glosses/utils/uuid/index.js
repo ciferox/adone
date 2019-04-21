@@ -5,7 +5,7 @@ adone.lazify({
     v5: "./v5"
 }, adone.asNamespace(exports), require);
 
-adone.lazifyPrivate({
+adone.lazifyp({
     util: "./__/util",
     v35: "./__/v35",
     md5: "./__/md5",

@@ -8,7 +8,7 @@ const {
     asn1
 } = crypto;
 
-const __ = adone.private(pki);
+const __ = adone.getPrivate(pki);
 
 // validator for a CertificationRequestInfo structure
 const certificationRequestInfoValidator = new asn1.Sequence({

@@ -4,7 +4,7 @@ const {
     util
 } = adone;
 
-const { helper } = adone.private(adone.fast);
+const { helper } = adone.getPrivate(adone.fast);
 
 const replacer = ({ file, base, map } = {}) => {
     return {

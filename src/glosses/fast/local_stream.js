@@ -7,7 +7,7 @@ const {
 
 const {
     helper
-} = adone.private(adone.fast);
+} = adone.getPrivate(adone.fast);
 
 export class FastLocalStream extends adone.fast.Stream {
     constructor(source, { read = true, buffer = true, stream = false, cwd = process.cwd() } = {}) {

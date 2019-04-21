@@ -7,7 +7,7 @@ const {
     pki
 } = crypto;
 
-const __ = adone.private(pki);
+const __ = adone.getPrivate(pki);
 
 /**
  * Creates an empty certification request (a CSR or certificate signing

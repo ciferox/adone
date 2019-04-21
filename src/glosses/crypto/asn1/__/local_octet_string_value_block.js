@@ -6,7 +6,7 @@ const {
     LocalHexBlock,
     LocalConstructedValueBlock,
     util
-} = adone.private(asn1);
+} = adone.getPrivate(asn1);
 
 export default class LocalOctetStringValueBlock extends LocalHexBlock(LocalConstructedValueBlock) {
     /**

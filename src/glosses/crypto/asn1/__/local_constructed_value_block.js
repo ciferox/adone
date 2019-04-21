@@ -5,7 +5,7 @@ const {
 const {
     LocalValueBlock,
     util
-} = adone.private(asn1);
+} = adone.getPrivate(asn1);
 
 // Declaration of basic block for all CONSTRUCTED types
 export default class LocalConstructedValueBlock extends LocalValueBlock {

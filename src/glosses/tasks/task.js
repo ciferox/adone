@@ -2,7 +2,7 @@ const {
     error
 } = adone;
 
-const { MANAGER_SYMBOL, OBSERVER_SYMBOL } = adone.private(adone.task);
+const { MANAGER_SYMBOL, OBSERVER_SYMBOL } = adone.getPrivate(adone.task);
 
 export default class Task {
     constructor() {

@@ -4,7 +4,7 @@ const {
     netron: { Reference, Definitions, Interface }
 } = adone;
 
-const __ = adone.private(adone.netron);
+const __ = adone.getPrivate(adone.netron);
 
 export default class InterfaceFactory {
     constructor(netron) {

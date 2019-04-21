@@ -274,7 +274,7 @@ export default function tokenizeRegexp(regexpStr) {
 
 tokenizeRegexp.types = types;
 
-adone.definePrivate({
+adone.definep({
     sets,
     util
 }, tokenizeRegexp);

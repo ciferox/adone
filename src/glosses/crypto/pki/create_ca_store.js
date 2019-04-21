@@ -7,7 +7,7 @@ const {
     pki
 } = crypto;
 
-const __ = adone.private(pki);
+const __ = adone.getPrivate(pki);
 
 /**
  * Creates a CA store.

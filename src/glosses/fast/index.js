@@ -15,7 +15,7 @@ const fast = lazify({
     watchMap: ["./local_map_stream", (mod) => mod.watchMap]
 }, asNamespace(exports), require);
 
-adone.lazifyPrivate({
+adone.lazifyp({
     Concat: "./__/concat",
     helper: "./__/helpers"
 }, exports, require);

@@ -6,7 +6,7 @@ const {
 const {
     VALUABLE_META,
     VALUABLE_TAGS
-} = adone.private(adone.vault);
+} = adone.getPrivate(adone.vault);
 
 const _PARENT_VALUABLE = Symbol();
 

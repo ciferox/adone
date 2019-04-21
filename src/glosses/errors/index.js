@@ -1,8 +1,6 @@
-const {
-    is
-} = adone;
+import { lazify, isString, asNamespace } from "../../common";
 
-adone.asNamespace(exports);
+asNamespace(exports);
 
 export const exceptionIdMap = {};
 export const stdIdMap = {};
@@ -17,7 +15,7 @@ export class Exception extends Error {
         } else {
             super(message);
             // special case for mpak-serializer
-            if (adone.is.null(message)) {
+            if (message === null) {
                 return;
             }
 
@@ -79,14 +77,14 @@ export class NetronTimeoutException extends Exception { }
 
 const extractPathRegex = /\s+at.*(?:\(|\s)(.*)\)?/;
 const pathRegex = /^(?:(?:(?:node|(?:internal\/[\w/]*|.*node_modules\/babel-polyfill\/.*)?\w+)\.js:\d+:\d+)|native)/;
-const homeDir = adone.std.os.homedir();
+const homeDir = require("os").homedir();
 
 export const cleanStack = (stack, { pretty = false } = {}) => {
     return stack.replace(/\\/g, "/")
         .split("\n")
         .filter((x) => {
             const pathMatches = x.match(extractPathRegex);
-            if (is.null(pathMatches) || !pathMatches[1]) {
+            if (pathMatches === null || !pathMatches[1]) {
                 return true;
             }
 
@@ -116,7 +114,7 @@ const cleanInternalStack = (stack) => stack.replace(/\s+at .*aggregate-error\/in
 export class AggregateException extends Exception {
     constructor(errors) {
         // Even though strings are iterable, we don't allow them to prevent subtle user mistakes
-        if (!errors[Symbol.iterator] || is.string(errors)) {
+        if (!errors[Symbol.iterator] || isString(errors)) {
             throw new TypeError(`Expected input to be iterable, got ${typeof errors}`);
         }
 
@@ -169,7 +167,7 @@ export const idExceptionMap = {
     30: ImmutableException,
     31: OutOfRangeException,
     32: CopyException,
-    
+
     99: AggregateException,
 
     100: NetworkException,
@@ -211,7 +209,7 @@ export const create = (id, message, stack) => {
 export const getStdId = (err) => stdIdMap[err.constructor.name];
 
 
-adone.lazify({
+lazify({
     errno: "./errno",
     stack: "./stack"
 }, exports, require);

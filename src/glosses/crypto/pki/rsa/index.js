@@ -8,7 +8,7 @@ adone.lazify({
     encrypt: "./encrypt"
 }, exports, require);
 
-adone.lazifyPrivate({
+adone.lazifyp({
     decodePKCS1v15: "./__/decode_pkcs1v15",
     encodePKCS1v15: "./__/encode_pkcs1v15",
     emsaPKCS1v15encode: "./__/emsa_pkcs1v15_encode",

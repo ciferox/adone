@@ -5,7 +5,7 @@ const {
 
 const {
     util: _util
-} = adone.private(adone.util.braces);
+} = adone.getPrivate(adone.util.braces);
 
 /**
  * Multiply the segments in the current brace level

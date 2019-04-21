@@ -1,9 +1,7 @@
 const objectProto = Object.prototype;
 const hasOwnProperty = objectProto.hasOwnProperty;
 const toString = objectProto.toString;
-const symToStringTag = Symbol.toStringTag;
 const funcToString = Function.prototype.toString;
-const objectCtorString = funcToString.call(Object);
 
 export const getTag = (value) => {
     const rawTag = toString.call(value);
@@ -11,35 +9,6 @@ export const getTag = (value) => {
         return "null";
     }
     return rawTag.substring(8, rawTag.length - 1).toLowerCase();
-};
-
-
-export const baseGetTag = (value) => {
-    if (value == null) { // eslint-disable-line
-        return value === undefined ? "[object Undefined]" : "[object Null]"; // eslint-disable-line
-    }
-    if (!(symToStringTag && symToStringTag in Object(value))) {
-        return toString.call(value);
-    }
-    const isOwn = hasOwnProperty.call(value, symToStringTag);
-    const tag = value[symToStringTag];
-    let unmasked = false;
-    try {
-        value[symToStringTag] = undefined;
-        unmasked = true;
-    } catch (e) {
-        //
-    }
-
-    const result = toString.call(value);
-    if (unmasked) {
-        if (isOwn) {
-            value[symToStringTag] = tag;
-        } else {
-            delete value[symToStringTag];
-        }
-    }
-    return result;
 };
 
 const callbackNames = ["callback", "callback_", "cb", "cb_", "done", "next"];
@@ -84,9 +53,6 @@ export const safeInteger = Number.isSafeInteger; // eslint-disable-line
 
 export const array = Array.isArray; // eslint-disable-line
 
-// Checks whether given value is a string.
-export const string = (value) => (typeof value === "string"); // eslint-disable-line
-
 // Checks whether given value exists, i.e, not `null` nor `undefined`
 export const exist = (value) => value != null; // eslint-disable-line
 
@@ -94,7 +60,7 @@ export const exist = (value) => value != null; // eslint-disable-line
 export const nil = (value) => value == null; // eslint-disable-line
 
 // Checks whether given value is an empty string, i.e, a string with whitespace characters only.
-export const emptyString = (str) => string(str) && /^\s*$/.test(str);
+export const emptyString = (str) => typeof str === "string" && /^\s*$/.test(str);
 
 // Checks whether given value is a number.
 export const number = (value) => typeof value === "number"; // eslint-disable-line
@@ -138,7 +104,7 @@ export const negativeZero = (val) => (val === 0) && (Number.NEGATIVE_INFINITY ==
 
 export const substring = (substr, str, offset) => {
     // Checks whether one str may be found within another str.
-    if (!string(str)) {
+    if (typeof str !== "string") {
         return false;
     }
 
@@ -183,7 +149,7 @@ export const set = (value) => getTag(value) === "set";
 export const symbol = (value) => getTag(value) === "symbol";
 
 // Checks whether given value is a primitive.
-export const primitive = (value) => nil(value) || number(value) || string(value) || boolean(value) || symbol(value);
+export const primitive = (value) => nil(value) || number(value) || typeof value === "string" || boolean(value) || symbol(value);
 
 export const equal = (value, other) => (value === other || (value !== value && other !== other)); // eslint-disable-line
 
@@ -204,21 +170,9 @@ export const equalArrays = (arr1, arr2) => {
 export const object = (value) => !primitive(value);
 
 // Checks whether given value is path to json-file or may by JS-object.
-export const json = (value) => (string(value) && value.endsWith(".json")) || object(value);
+export const json = (value) => (typeof value === "string" && value.endsWith(".json")) || object(value);
 
-export const plainObject = (value) => {
-    if (!(value != null && typeof value === "object") || baseGetTag(value) !== "[object Object]") { // eslint-disable-line
-        return false;
-    }
-    const proto = Object.getPrototypeOf(value);
-    if (proto === null) { // eslint-disable-line
-        return true;
-    }
-    const Ctor = hasOwnProperty.call(proto, "constructor") && proto.constructor;
-    return function_(Ctor) && Ctor instanceof Ctor && funcToString.call(Ctor) === objectCtorString; // eslint-disable-line
-};
-
-export const namespace = (value) => object(value) && value[adone.NAMESPACE_SYMBOL] === true;
+export const namespace = (value) => object(value) && value[adone.asNamespace.SYMBOL] === true;
 
 // Checks whether given value is an empty object, i.e, an object without any own, enumerable, string keyed properties.
 export const emptyObject = (obj) => object(obj) && Object.keys(obj).length === 0;
@@ -496,8 +450,6 @@ export const promise = (obj) => !nil(obj) && function_(obj.then);
 
 export const validDate = (str) => !isNaN(Date.parse(str)); // eslint-disable-line
 
-export const buffer = (obj) => obj != null && ((Boolean(obj.constructor) && function_(obj.constructor.isBuffer) && obj.constructor.isBuffer(obj)) || Boolean(obj._isBuffer)); // eslint-disable-line
-
 export const callback = (fn, names) => inArray(names || callbackNames, adone.util.functionName(fn));
 
 export const generator = (value) => {
@@ -692,7 +644,7 @@ const uuidPatterns = {
 };
 
 export const uuid = (str, version = "all") => {
-    if (!string(str)) {
+    if (typeof str !== "string") {
         return false;
     }
     const pattern = uuidPatterns[version];
@@ -705,7 +657,7 @@ const toDate = (date) => {
 };
 
 export const before = (str, date = String(new Date())) => {
-    if (!string(str)) {
+    if (typeof str !== "string") {
         return false; // TODO: Date and datetime support
     }
     const comparison = toDate(date);
@@ -715,7 +667,7 @@ export const before = (str, date = String(new Date())) => {
 
 
 export const after = (str, date = String(new Date())) => {
-    if (!string(str)) {
+    if (typeof str !== "string") {
         return false; // TODO: Date and datetime support
     }
     const comparison = toDate(date);
@@ -732,6 +684,10 @@ adone.lazify({
     email: "./email",
     safeRegexp: "./safe_regexp",
     deepEqual: "./deep_equal",
+    // from common
+    string: ["../../common", (mod) => mod.isString],
+    buffer: ["../../common", (mod) => mod.isBuffer],
+    plainObject: ["../../common", (mod) => mod.isPlainObject],
     // eslint-disable-next-line adone/no-typeof
     nodejs: () => Object.prototype.toString.call(typeof process !== "undefined" ? process : 0) === "[object process]",
 
