@@ -1,25 +1,7 @@
 /* eslint-disable func-style */
 import fs from "fs";
+import clone from "./clone";
 import { isFunction } from "../../common";
-
-const clone = (obj) => {
-    if (obj === null || typeof obj !== "object") {
-        return obj;
-    }
-
-    let copy;
-    if (obj instanceof Object) {
-        copy = { __proto__: obj.__proto__ };
-    } else {
-        copy = Object.create(null);
-    }
-
-    Object.getOwnPropertyNames(obj).forEach((key) => {
-        Object.defineProperty(copy, key, Object.getOwnPropertyDescriptor(obj, key));
-    });
-
-    return copy;
-};
 
 const constants = require("constants");
 const platform = process.env.GRACEFUL_FS_PLATFORM || process.platform;
@@ -476,13 +458,13 @@ const patch = (fs) => {
     return fs;
 };
 
-module.exports = patch(clone(fs));
+const base = patch(clone(fs));
 
 // Always patch fs.close/closeSync, because we want to
 // retry() whenever a close happens *anywhere* in the program.
 // This is essential when multiple graceful-fs instances are
 // in play at the same time.
-module.exports.close = (function (fs$close) {
+base.close = (function (fs$close) {
     return function (fd, cb) {
         return fs$close.call(fs, fd, function (err) {
             if (!err) {
@@ -496,7 +478,7 @@ module.exports.close = (function (fs$close) {
     };
 })(fs.close);
 
-module.exports.closeSync = (function (fs$closeSync) {
+base.closeSync = (function (fs$closeSync) {
     return function (fd) {
         // Note that graceful-fs also retries when fs.closeSync() fails.
         // Looks like a bug to me, although it's probably a harmless one.
@@ -505,3 +487,5 @@ module.exports.closeSync = (function (fs$closeSync) {
         return rval;
     };
 })(fs.closeSync);
+
+module.exports = base;
