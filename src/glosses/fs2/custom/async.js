@@ -1,9 +1,9 @@
-import AbstractFileSystem from "./abstract";
+import BaseFileSystem from "./base";
 
 /**
  * This class should be derived by synchronous-only file systems to provide asynchronous methods as well.
  */
-export default class AsyncFileSystem extends AbstractFileSystem {
+export default class AsyncFileSystem extends BaseFileSystem {
     _access(path, mode, callback) {
         try {
             callback(null, this._accessSync(path, mode));
@@ -232,7 +232,7 @@ export default class AsyncFileSystem extends AbstractFileSystem {
         try {
             callback(null, this._unlinkSync(path));
         } catch (err) {
-            callbacK(err);
+            callback(err);
         }
     }
 

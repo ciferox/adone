@@ -2,11 +2,11 @@ const {
     fs2,
     path
 } = adone;
-const { graceful } = fs2;
+const { base } = fs2;
 
 export default (srcpath, dstpath, callback) => {
     const makeLink = (srcpath, dstpath) => {
-        graceful.link(srcpath, dstpath, (err) => {
+        base.link(srcpath, dstpath, (err) => {
             if (err) {
                 return callback(err);
             }
@@ -21,7 +21,7 @@ export default (srcpath, dstpath, callback) => {
         if (destinationExists) {
             return callback(null);
         }
-        graceful.lstat(srcpath, (err) => {
+        base.lstat(srcpath, (err) => {
             if (err) {
                 err.message = err.message.replace("lstat", "ensureLink");
                 return callback(err);

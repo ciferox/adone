@@ -2,11 +2,11 @@ const {
     fs2,
     path
 } = adone;
-const { graceful } = fs2;
+const { base } = fs2;
 
 export default (file, callback) => {
     const makeFile = () => {
-        graceful.writeFile(file, "", (err) => {
+        base.writeFile(file, "", (err) => {
             if (err) {
                 return callback(err);
             }
@@ -14,7 +14,7 @@ export default (file, callback) => {
         });
     };
 
-    graceful.stat(file, (err, stats) => { // eslint-disable-line handle-callback-err
+    base.stat(file, (err, stats) => { // eslint-disable-line handle-callback-err
         if (!err && stats.isFile()) {
             return callback();
         }

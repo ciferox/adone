@@ -2,7 +2,7 @@ const {
     fs2,
     path
 } = adone;
-const { graceful } = fs2;
+const { base } = fs2;
 
 const moveFileSyncAcrossDevice = (src, dest, overwrite) => {
     const BUF_LENGTH = 64 * 1024;
@@ -10,20 +10,20 @@ const moveFileSyncAcrossDevice = (src, dest, overwrite) => {
 
     const flags = overwrite ? "w" : "wx";
 
-    const fdr = graceful.openSync(src, "r");
-    const stat = graceful.fstatSync(fdr);
-    const fdw = graceful.openSync(dest, flags, stat.mode);
+    const fdr = base.openSync(src, "r");
+    const stat = base.fstatSync(fdr);
+    const fdw = base.openSync(dest, flags, stat.mode);
     let pos = 0;
 
     while (pos < stat.size) {
-        const bytesRead = graceful.readSync(fdr, _buff, 0, BUF_LENGTH, pos);
-        graceful.writeSync(fdw, _buff, 0, bytesRead);
+        const bytesRead = base.readSync(fdr, _buff, 0, BUF_LENGTH, pos);
+        base.writeSync(fdw, _buff, 0, bytesRead);
         pos += bytesRead;
     }
 
-    graceful.closeSync(fdr);
-    graceful.closeSync(fdw);
-    return graceful.unlinkSync(src);
+    base.closeSync(fdr);
+    base.closeSync(fdw);
+    return base.unlinkSync(src);
 };
 
 const moveDirSyncAcrossDevice = (src, dest, overwrite) => {
@@ -45,7 +45,7 @@ const moveDirSyncAcrossDevice = (src, dest, overwrite) => {
 };
 
 const moveSyncAcrossDevice = (src, dest, overwrite) => {
-    const stat = graceful.statSync(src);
+    const stat = base.statSync(src);
 
     if (stat.isDirectory()) {
         return moveDirSyncAcrossDevice(src, dest, overwrite);
@@ -57,7 +57,7 @@ const moveSyncAcrossDevice = (src, dest, overwrite) => {
 // extract dest base dir and check if that is the same as src basename
 const isSrcSubdir = (src, dest) => {
     try {
-        return graceful.statSync(src).isDirectory() &&
+        return base.statSync(src).isDirectory() &&
             src !== dest &&
             dest.indexOf(src) > -1 &&
             dest.split(path.dirname(src) + path.sep)[1].split(path.sep)[0] === path.basename(src);
@@ -74,7 +74,7 @@ const moveSync = (src, dest, options) => {
     dest = path.resolve(dest);
 
     if (src === dest) {
-        return graceful.accessSync(src);
+        return base.accessSync(src);
     }
 
     if (isSrcSubdir(src, dest)) {
@@ -86,7 +86,7 @@ const moveSync = (src, dest, options) => {
     const tryRenameSync = () => {
         if (overwrite) {
             try {
-                return graceful.renameSync(src, dest);
+                return base.renameSync(src, dest);
             } catch (err) {
                 if (err.code === "ENOTEMPTY" || err.code === "EEXIST" || err.code === "EPERM") {
                     fs2.removeSync(dest);
@@ -101,8 +101,8 @@ const moveSync = (src, dest, options) => {
             }
         } else {
             try {
-                graceful.linkSync(src, dest);
-                return graceful.unlinkSync(src);
+                base.linkSync(src, dest);
+                return base.unlinkSync(src);
             } catch (err) {
                 if (err.code === "EXDEV" || err.code === "EISDIR" || err.code === "EPERM" || err.code === "ENOTSUP") {
                     return moveSyncAcrossDevice(src, dest, overwrite);

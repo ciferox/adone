@@ -2,20 +2,14 @@
 /* eslint-disable adone/no-null-comp */
 /* eslint-disable adone/no-typeof */
 
-// NOTE: The code of all backends must be self-sufficient to avoid any dependence on ADONE and other thrid-parties.
-// This requirement is primarily due to the fact that backends are used in KRI to implement the bootstraper,
+// NOTE: The code of all filesystems must be self-sufficient to avoid any dependence on ADONE and other thrid-parties.
+// This requirement is primarily due to the fact that filesystems are used in KRI to implement the bootstraper,
 // in which there should not be any third-party dependencies and the size of the codebase should be minimal.
 
 import fs from "fs";
-import { EventEmitter } from "events";
-import { isFunction, isNumber, isString, isBuffer, isWindows, noop, unique } from "../../../common";
+import { isFunction, isNumber, isString, isBuffer, unique } from "../../../common";
 import { NotSupportedException } from "../../errors";
-import { ReadStream, WriteStream } from "./streams";
 import Path from "./path";
-
-const {
-    promise
-} = adone;
 
 const { constants, _toUnixTimestamp } = fs;
 
@@ -108,20 +102,6 @@ class FSException extends Error {
     }
 }
 
-const tryReadSync = (engine, fd, isUserFd, buffer, pos, len) => {
-    let threw = true;
-    let bytesRead;
-    try {
-        bytesRead = engine.readSync(fd, buffer, pos, len);
-        threw = false;
-    } finally {
-        if (threw && !isUserFd) {
-            engine.closeSync(fd);
-        }
-    }
-    return bytesRead;
-};
-
 const errors = {
     ENOENT: (path, syscall, secondPath) => new FSException("ENOENT", "no such file or directory", path, syscall, secondPath),
     EISDIR: (path, syscall, secondPath) => new FSException("EISDIR", "illegal operation on a directory", path, syscall, secondPath),
@@ -136,7 +116,7 @@ const errors = {
     ENOSYS: (syscall) => new FSException("ENOSYS", "function not implemented", undefined, syscall)
 };
 
-const ENGINE = Symbol("ENGINE");
+const FS_INSTANCE = Symbol("FS_INSTANCE");
 const LEVEL = Symbol("LEVEL");
 const PARENT = Symbol("PARENT");
 
@@ -145,8 +125,8 @@ const PARENT = Symbol("PARENT");
 const fsMethods = [
     ["access", true],
     ["accessSync", true],
-    ["appendFile", false],
-    ["appendFileSync", false],
+    ["appendFile", true],
+    ["appendFileSync", true],
     ["chmod", true],
     ["chmodSync", true],
     ["chown", true],
@@ -155,9 +135,9 @@ const fsMethods = [
     ["closeSync", true],
     ["copyFile", true],
     ["copyFileSync", true],
-    ["createReadStream", false],
-    ["createWriteStream", false],
-    // "exists" // deprecated
+    ["createReadStream", true],
+    ["createWriteStream", true],
+    ["exists", true], // deprecated
     ["existsSync", true],
     ["fchmod", true],
     ["fchmodSync", true],
@@ -188,10 +168,10 @@ const fsMethods = [
     ["open", true],
     ["openSync", true],
     ["read", true],
-    ["readdir", false],
-    ["readdirSync", false],
-    ["readFile", false],
-    ["readFileSync", false],
+    ["readdir", true],
+    ["readdirSync", true],
+    ["readFile", true],
+    ["readFileSync", true],
     ["readlink", true],
     ["readlinkSync", true],
     ["readSync", true],
@@ -205,19 +185,19 @@ const fsMethods = [
     ["statSync", true],
     ["symlink", true],
     ["symlinkSync", true],
-    ["truncate", false],
-    ["truncateSync", false],
+    ["truncate", true],
+    ["truncateSync", true],
     ["unlink", true],
     ["unlinkSync", true],
-    ["unwatchFile", false],
     ["utimes", true],
     ["utimesSync", true],
-    ["watch", false],
-    ["watchFile", false],
     ["write", true],
-    ["writeFile", false],
-    ["writeFileSync", false],
-    ["writeSync", true]
+    ["writeFile", true],
+    ["writeFileSync", true],
+    ["writeSync", true],
+    ["watch", true],
+    ["watchFile", true],
+    ["unwatchFile", true]
 ];
 
 const syscallMap = {
@@ -237,341 +217,21 @@ const syscallMap = {
     futimes: "futime" // node throws futime
 };
 
-const emptyStats = () => {
-    const s = new fs.Stats();
-    s.dev = 0;
-    s.mode = 0;
-    s.nlink = 0;
-    s.uid = 0;
-    s.gid = 0;
-    s.rdev = 0;
-    s.blksize = isWindows ? undefined : 0;
-    s.ino = 0;
-    s.size = 0;
-    s.blocks = isWindows ? undefined : 0;
-    s.atimeMs = 0;
-    s.mtimeMs = 0;
-    s.ctimeMs = 0;
-    s.birthtimeMs = 0;
-    s.atime = new Date(0);
-    s.mtime = new Date(0);
-    s.ctime = new Date(0);
-    s.birthtime = new Date(0);
-    return s;
-};
-
-const writeAll = (engine, fd, isUserFd, buffer, offset, length, position, callback) => {
-    let closing;
-    engine.write(fd, buffer, offset, length, position, (err, written) => {
-        if (err) {
-            if (isUserFd || closing) {
-                callback(err);
-                return;
-            }
-            engine.close(fd, () => {
-                callback(err);
-            });
-            return;
-        }
-
-        if (written === length) {
-            if (isUserFd) {
-                callback(null);
-                return;
-            }
-            closing = true;
-            engine.close(fd, (err) => {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-                callback(null);
-            });
-        } else {
-            offset += written;
-            length -= written;
-            if (position !== null) {
-                position += written;
-            }
-            writeAll(engine, fd, isUserFd, buffer, offset, length, position, callback);
-        }
-    });
-};
-
-const isFd = (path) => (path >>> 0) === path;
-
-const kReadFileBufferLength = 8 * 1024;
-const kMaxLength = adone.std.buffer.kMaxLength;
-
-class ReadFileContext {
-    constructor(customFs, path, flags, encoding, callback) {
-        this.customFs = customFs;
-        if (isFd(path)) {
-            this.path = undefined;
-            this.fd = path;
-            this.isUserFd = true;
-        } else {
-            this.path = path;
-            this.fd = undefined;
-            this.isUserFd = false;
-        }
-        this.flags = flags;
-        this.size = undefined;
-        this.buffers = null;
-        this.buffer = null;
-        this.pos = 0;
-        this.encoding = encoding;
-        this.err = null;
-        this.callback = callback;
-    }
-
-    static process(customFs, path, flags, encoding, callback) {
-        const ctx = new ReadFileContext(customFs, path, flags, encoding, callback);
-        ctx.open();
-    }
-
-    open() {
-        const handleOpen = () => {
-            this.customFs.fstat(this.fd, (err, stat) => {
-                if (err) {
-                    this.callback(err);
-                    return;
-                }
-
-                let size;
-                if ((stat.mode & constants.S_IFMT) === constants.S_IFREG) {
-                    size = this.size = stat.size;
-                } else {
-                    size = this.size = 0;
-                }
-
-                if (size === 0) {
-                    this.buffers = [];
-                    this.read();
-                    return;
-                }
-
-                if (size > kMaxLength) {
-                    this.err = new RangeError(`File size is greater than possible Buffer: 0x${kMaxLength.toString(16)} bytes`);
-                    this.close();
-                    return;
-                }
-
-                this.buffer = Buffer.allocUnsafeSlow(size);
-                this.read();
-            });
-        };
-
-        if (!this.isUserFd) {
-            this.customFs.open(this.path, this.flags, 0o666, (err, fd) => {
-                if (err) {
-                    this.callback(err);
-                    return;
-                }
-                this.fd = fd;
-                handleOpen();
-            });
-            return;
-        }
-        handleOpen();
-    }
-
-    read() {
-        let buffer;
-        let offset;
-        let length;
-
-        if (this.size === 0) {
-            buffer = this.buffer = Buffer.allocUnsafeSlow(kReadFileBufferLength);
-            offset = 0;
-            length = kReadFileBufferLength;
-        } else {
-            buffer = this.buffer;
-            offset = this.pos;
-            length = this.size - this.pos;
-        }
-
-        this.customFs.read(this.fd, buffer, offset, length, null, (err, bytesRead) => {
-            if (err) {
-                this.err = err;
-                this.close();
-                return;
-            }
-
-            if (bytesRead === 0) {
-                this.close();
-                return;
-            }
-
-            this.pos += bytesRead;
-
-            if (this.size !== 0) {
-                if (this.pos === this.size) {
-                    this.close();
-                    return;
-                }
-                this.read();
-                return;
-            }
-            // unknown size, just read until we don't get bytes.
-            this.buffers.push(this.buffer.slice(0, bytesRead));
-            this.read();
-        });
-    }
-
-    close() {
-        const handleClose = () => {
-            if (this.err) {
-                this.callback(this.err);
-                return;
-            }
-
-            let buffer;
-
-            if (this.size === 0) {
-                buffer = Buffer.concat(this.buffers, this.pos);
-            } else if (this.pos < this.size) {
-                buffer = this.buffer.slice(0, this.pos);
-            } else {
-                buffer = this.buffer;
-            }
-
-            if (this.encoding) {
-                buffer = buffer.toString(this.encoding);
-            }
-
-            this.callback(null, buffer);
-        };
-
-        if (!this.isUserFd) {
-            this.customFs.close(this.fd, (err) => {
-                if (err) {
-                    this.callback(err);
-                    return;
-                }
-                handleClose();
-            });
-            return;
-        }
-
-        handleClose();
-    }
-}
-
-const statEqual = (prev, curr) => {
-    return prev.dev === curr.dev
-        && prev.ino === curr.ino
-        && prev.uid === curr.uid
-        && prev.gid === curr.gid
-        && prev.mode === curr.mode
-        && prev.size === curr.size
-        && prev.birthtimeMs === curr.birthtimeMs
-        && prev.ctimeMs === curr.ctimeMs
-        && prev.mtimeMs === curr.mtimeMs;
-};
-
-class StatWatcher extends EventEmitter {
-    constructor() {
-        super();
-        this.stopped = false;
-    }
-
-    async start(engine, filename, options) {
-        const { interval, persistent } = options;
-
-        // cache watchers?
-
-        let prev = null;
-        let enoent = false;
-
-        for (; ;) {
-            if (this.stopped) {
-                break;
-            }
-            try {
-                const newStats = await engine.stat(filename); // eslint-disable-line
-                if (prev === null) {
-                    prev = newStats;
-                } else if (!statEqual(prev, newStats)) {
-                    enoent = false;
-                    this.emit("change", prev, newStats);
-                    prev = newStats;
-                }
-            } catch (err) {
-                if (err.code === "ENOENT") {
-                    if (!enoent) {
-                        if (prev === null) {
-                            prev = emptyStats();
-                        }
-                        const newStats = emptyStats();
-                        this.emit("change", prev, newStats);
-                        enoent = true;
-                        prev = newStats;
-                    }
-                }
-            }
-            await promise.delay(interval, { unref: !persistent }); // eslint-disable-line
-        }
-    }
-
-    stop() {
-        this.stopped = true;
-    }
-}
-
-class FSWatcher extends EventEmitter {
-    constructor() {
-        super();
-        this.engine = false;
-        this.watcher = null;
-        this.mountPath = null;
-        this.closed = false;
-    }
-
-    setWatcher(watcher) {
-        if (this.closed) { // it can be closed before we set the watcher instance
-            watcher.close();
-            return;
-        }
-        this.watcher = watcher;
-        this.watcher.on("change", (event, filename) => {
-            this.emit("change", event, filename);
-        });
-    }
-
-    close() {
-        this.closed = true;
-        if (this.watcher) {
-            this.watcher.close();
-        }
-    }
-}
-
-// nodejs callbacks support
-const callbackify = (target, key, descriptor) => {
-    descriptor.value = adone.promise.callbackify(descriptor.value);
-};
-
-/**
- * Represents an abstact fs filesystem.
- */
-export default class AbstractFileSystem {
-    constructor({ root = "/", sep = "/" } = {}) {
+export default class BaseFileSystem {
+    constructor({ root = "/" } = {}) {
         this.structure = {
-            [ENGINE]: this,
+            [FS_INSTANCE]: this,
             [PARENT]: this,
             [LEVEL]: 0
         };
         this._mountsNum = 0;
         this._fd = 10; // generally, no matter which initial value we use, this is a fd counter for internal mappings
         this._fdMap = new Map();
-        this._fileWatchers = new Map();
         this._initialized = false;
         this._initializing = false;
         this._uninitializing = false;
         this._uninitialized = false;
         this.root = root;
-        this.sep = sep;
     }
 
     /**
@@ -585,7 +245,7 @@ export default class AbstractFileSystem {
 
         const visit = async (obj) => {
             for (const v of Object.values(obj)) {
-                if (v instanceof AbstractFileSystem) {
+                if (v instanceof BaseFileSystem) {
                     await v.initialize();
                 } else {
                     await visit(v);
@@ -601,7 +261,7 @@ export default class AbstractFileSystem {
     }
 
     /**
-     * Direved fs-backends should do custom initialization in this method.
+     * Direved fs should do custom initialization in this method.
      */
     _initialize() {
     }
@@ -617,7 +277,7 @@ export default class AbstractFileSystem {
 
         const visit = async (obj) => {
             for (const v of Object.values(obj)) {
-                if (v instanceof AbstractFileSystem) {
+                if (v instanceof BaseFileSystem) {
                     await v.uninitialize();
                 } else {
                     await visit(v);
@@ -633,9 +293,53 @@ export default class AbstractFileSystem {
     }
 
     /**
-     * Direved fs-backends should do custom uninitialization in this method.
+     * Derived fs should do custom uninitialization in this method.
      */
     _uninitialize() {
+    }
+
+    mount(customFs, rawPath) {
+        const path = Path.wrap(rawPath, this.root);
+
+        if (!(path.root in this.structure)) {
+            this.structure[path.root] = {
+                [LEVEL]: 0,
+                [FS_INSTANCE]: this // use the current engine by default
+            };
+            this.structure[path.root][PARENT] = this.structure[path.root];
+        }
+        let root = this.structure[path.root];
+        let level = 0;
+        for (const part of path.parts) {
+            if (!(part in root)) {
+                root[part] = {
+                    [LEVEL]: root[LEVEL],
+                    [PARENT]: root,
+                    [FS_INSTANCE]: root[FS_INSTANCE]
+                };
+            }
+            root = root[part];
+            ++level;
+        }
+        root[LEVEL] = level;
+        root[FS_INSTANCE] = customFs;
+        ++this._mountsNum;
+        return this;
+    }
+
+    mock(obj) {
+        const origMethods = {};
+        for (const method of fsMethods) {
+            origMethods[method] = obj[method];
+            obj[method] = (...args) => this[method](...args);
+        }
+        obj.restore = () => {
+            for (const method of fsMethods) {
+                obj[method] = origMethods[method];
+            }
+            delete obj.restore;
+        };
+        return obj;
     }
 
     createError(code, path, syscall, secondPath) {
@@ -647,7 +351,7 @@ export default class AbstractFileSystem {
     }
 
     _resolve(path) {
-        return Path.resolve(path, { root: this.root, sep: this.sep });
+        return Path.resolve(path, this.root);
     }
 
     // fs methods
@@ -660,8 +364,11 @@ export default class AbstractFileSystem {
         return this._handlePathSync("access", this._resolve(path), [mode]);
     }
 
-    @callbackify
-    async appendFile(path, data, options = {}) {
+    appendFile(path, data, options, callback) {
+        if (isFunction(options)) {
+            callback = options;
+            options = {};
+        }
         if (typeof options !== "object") {
             options = { encoding: options };
         } else {
@@ -670,16 +377,10 @@ export default class AbstractFileSystem {
         options.encoding = options.encoding || "utf8";
         options.mode = options.mode || 0o666;
         options.flag = options.flag || "a";
-
-        // force append behavior when using a supplied file descriptor
-        if (!options.flag || isFd(path)) {
-            options.flag = "a";
-        }
-
-        return this.writeFile(path, data, options);
+        this._handlePath("appendFile", this._resolve(path), callback, data, options);
     }
 
-    appendFileSync(path, data, options = {}) {
+    appendFileSync(path, data, options) {
         if (typeof options !== "object") {
             options = { encoding: options };
         } else {
@@ -688,13 +389,7 @@ export default class AbstractFileSystem {
         options.encoding = options.encoding || "utf8";
         options.mode = options.mode || 0o666;
         options.flag = options.flag || "a";
-
-        // force append behavior when using a supplied file descriptor
-        if (!options.flag || isFd(path)) {
-            options.flag = "a";
-        }
-
-        return this.writeFileSync(path, data, options);
+        return this._handlePathSync("appendFileSync", this._resolve(path), [data, options]);
     }
 
     chmod(path, mode, callback) {
@@ -702,7 +397,7 @@ export default class AbstractFileSystem {
     }
 
     chmodSync(path, mode) {
-        return this._handlePathSync("chmod", this._resolve(path), [mode]);
+        return this._handlePathSync("chmodSync", this._resolve(path), [mode]);
     }
 
     chown(path, uid, gid, callback) {
@@ -766,8 +461,8 @@ export default class AbstractFileSystem {
         //     })
         // ]);
 
-        // const src2 = Path.fromParts(parts1.slice(node1[LEVEL]), { root: engine1.root, sep: engine1.sep });
-        // const dest2 = Path.fromParts(parts2.slice(node2[LEVEL]), { root: engine2.root, sep: engine2.sep });
+        // const src2 = Path.fromParts(parts1.slice(node1[LEVEL]), engine1.root);
+        // const dest2 = Path.fromParts(parts2.slice(node2[LEVEL]), engine2.root);
 
         // // efficient
         // if (engine1 === engine2) {
@@ -883,8 +578,8 @@ export default class AbstractFileSystem {
             throw err;
         }
 
-        const src2 = Path.fromParts(parts1.slice(node1[LEVEL]), { root: engine1.root, sep: engine1.sep });
-        const dest2 = Path.fromParts(parts2.slice(node2[LEVEL]), { root: engine2.root, sep: engine2.sep });
+        const src2 = Path.fromParts(parts1.slice(node1[LEVEL]), engine1.root);
+        const dest2 = Path.fromParts(parts2.slice(node2[LEVEL]), engine2.root);
 
         // efficient
         if (engine1 === engine2) {
@@ -905,11 +600,15 @@ export default class AbstractFileSystem {
     }
 
     createReadStream(path, options) {
-        return new ReadStream(this, path, options);
+        return this._handlePathSync("createReadStream", this._resolve(path), [options]);
     }
 
     createWriteStream(path, options) {
-        return new WriteStream(this, path, options);
+        return this._handlePathSync("createWriteStream", this._resolve(path), [options]);
+    }
+
+    exists(path, callback) {
+        this._handlePath("exists", this._resolve(path), callback);
     }
 
     existsSync(path) {
@@ -1039,8 +738,8 @@ export default class AbstractFileSystem {
         //     })
         // ]);
 
-        // const existingPath2 = Path.fromParts(parts1.slice(node1[LEVEL]), { root: engine1.root, sep: engine1.sep });
-        // const newPath2 = Path.fromParts(parts2.slice(node2[LEVEL]), { root: engine2.root, sep: engine2.sep });
+        // const existingPath2 = Path.fromParts(parts1.slice(node1[LEVEL]), engine1.root);
+        // const newPath2 = Path.fromParts(parts2.slice(node2[LEVEL]),  engine2.root);
 
         // if (engine1 === engine2) {
         //     return engine1.link(existingPath2, newPath2).catch((err) => {
@@ -1099,8 +798,8 @@ export default class AbstractFileSystem {
             throw err;
         }
 
-        const existingPath2 = Path.fromParts(parts1.slice(node1[LEVEL]), { root: engine1.root, sep: engine1.sep });
-        const newPath2 = Path.fromParts(parts2.slice(node2[LEVEL]), { root: engine2.root, sep: engine2.sep });
+        const existingPath2 = Path.fromParts(parts1.slice(node1[LEVEL]), engine1.root);
+        const newPath2 = Path.fromParts(parts2.slice(node2[LEVEL]), engine2.root);
 
         if (engine1 === engine2) {
             try {
@@ -1234,7 +933,7 @@ export default class AbstractFileSystem {
         options.flag = options.flag || "r";
         options.encoding = options.encoding || null;
 
-        ReadFileContext.process(this, path, options.flag, options.encoding, callback);
+        this._handlePath("readFile", this._resolve(path), callback, options);
     }
 
     readFileSync(path, options) {
@@ -1244,79 +943,7 @@ export default class AbstractFileSystem {
         options.flag = options.flag || "r";
         options.encoding = options.encoding || null;
 
-        const isUserFd = isFd(path); // file descriptor ownership
-        const fd = isUserFd ? path : this.openSync(path, options.flag || "r", 0o666);
-
-        let stat;
-        try {
-            stat = this.fstatSync(fd);
-        } catch (err) {
-            if (!isUserFd) {
-                this.closeSync(fd);
-            }
-            throw err;
-        }
-
-        // Use stats array directly to avoid creating an fs.Stats instance just for
-        // our internal use.
-        let size;
-        if ((stat.mode & constants.S_IFMT) === constants.S_IFREG) {
-            size = stat.size;
-        } else {
-            size = 0;
-        }
-        let pos = 0;
-        let buffer; // single buffer with file data
-        let buffers; // list for when size is unknown
-
-        if (size === 0) {
-            buffers = [];
-        } else {
-            try {
-                buffer = Buffer.allocUnsafe(size);
-            } catch (err) {
-                if (!isUserFd) {
-                    this.closeSync(fd);
-                }
-                throw err;
-            }
-        }
-
-        let bytesRead;
-
-        if (size !== 0) {
-            do {
-                bytesRead = tryReadSync(this, fd, isUserFd, buffer, pos, size - pos);
-                pos += bytesRead;
-            } while (bytesRead !== 0 && pos < size);
-        } else {
-            do {
-                // the kernel lies about many files.
-                // Go ahead and try to read some bytes.
-                buffer = Buffer.allocUnsafe(8192);
-                bytesRead = tryReadSync(this, fd, isUserFd, buffer, 0, 8192);
-                if (bytesRead !== 0) {
-                    buffers.push(buffer.slice(0, bytesRead));
-                }
-                pos += bytesRead;
-            } while (bytesRead !== 0);
-        }
-
-        if (!isUserFd) {
-            this.closeSync(fd);
-        }
-
-        if (size === 0) {
-            // data was collected into the buffers list.
-            buffer = Buffer.concat(buffers, pos);
-        } else if (pos < size) {
-            buffer = buffer.slice(0, pos);
-        }
-
-        if (options.encoding) {
-            buffer = buffer.toString(options.encoding);
-        }
-        return buffer;
+        return this._handlePathSync("readFileSync", this._resolve(path), [options]);
     }
 
     readlink(path, options, callback) {
@@ -1407,8 +1034,8 @@ export default class AbstractFileSystem {
         //     })
         // ]);
 
-        // const oldPath2 = Path.fromParts(parts1.slice(node1[LEVEL]), { root: engine1.root, sep: engine1.sep });
-        // const newPath2 = Path.fromParts(parts2.slice(node2[LEVEL]), { root: engine2.root, sep: engine2.sep });
+        // const oldPath2 = Path.fromParts(parts1.slice(node1[LEVEL]), engine1.root);
+        // const newPath2 = Path.fromParts(parts2.slice(node2[LEVEL]), engine2.root);
 
         // if (engine1 === engine2) {
         //     return engine1.rename(oldPath2, newPath2).catch((err) => {
@@ -1468,8 +1095,8 @@ export default class AbstractFileSystem {
             throw err;
         }
 
-        const oldPath2 = Path.fromParts(parts1.slice(node1[LEVEL]), { root: engine1.root, sep: engine1.sep });
-        const newPath2 = Path.fromParts(parts2.slice(node2[LEVEL]), { root: engine2.root, sep: engine2.sep });
+        const oldPath2 = Path.fromParts(parts1.slice(node1[LEVEL]), engine1.root);
+        const newPath2 = Path.fromParts(parts2.slice(node2[LEVEL]), engine2.root);
 
         if (engine1 === engine2) {
             try {
@@ -1514,11 +1141,11 @@ export default class AbstractFileSystem {
 
         // omg, here we have to swap them...
         // and i think we must resolve the target using the engine that will handle the request
-        this._handlePath("symlink", this._resolve(path), callback, new Path(target, { root: this.root, sep: this.sep }), type);
+        this._handlePath("symlink", this._resolve(path), callback, new Path(target, this.root), type);
     }
 
     symlinkSync(target, path, type) {
-        return this._handlePathSync("symlink", this._resolve(path), [new Path(target, { root: this.root, sep: this.sep }), type]);
+        return this._handlePathSync("symlink", this._resolve(path), [new Path(target, this.root), type]);
     }
 
     truncate(path, length, callback) {
@@ -1526,40 +1153,11 @@ export default class AbstractFileSystem {
             callback = length;
             length = 0;
         }
-        if (isNumber(path)) {
-            this.ftruncate(path, length, callback);
-            return;
-        }
-        this.open(path, "r+", (err, fd) => {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            this.ftruncate(fd, length, (err) => {
-                this.close(fd, (errClose) => {
-                    if (err) {
-                        callback(err);
-                    } else if (errClose) {
-                        callback(errClose);
-                    } else {
-                        callback(null);
-                    }
-                });
-            });
-        });
+        this._handlePath("truncate", this._resolve(path), callback, length);
     }
 
     truncateSync(path, length = 0) {
-        if (isNumber(path)) {
-            return this.ftruncate(path, length);
-        }
-        const fd = this.openSync(path, "r+");
-        try {
-            this.ftruncateSync(fd, length);
-        } finally {
-            this.closeSync(fd);
-        }
+        return this._handlePathSync("truncateSync", this._resolve(path), [length]);
     }
 
     unlink(path, callback) {
@@ -1568,19 +1166,6 @@ export default class AbstractFileSystem {
 
     unlinkSync(path) {
         return this._handlePathSync("unlink", this._resolve(path), []);
-    }
-
-    unwatchFile(filename, listener) {
-        if (!this._fileWatchers.has(filename)) {
-            return;
-        }
-        const watcher = this._fileWatchers.get(filename);
-        if (listener) {
-            watcher.removeListener("change", listener);
-        } else {
-            watcher.stop();
-            this._fileWatchers.delete(filename);
-        }
     }
 
     utimes(path, atime, mtime, callback) {
@@ -1594,7 +1179,6 @@ export default class AbstractFileSystem {
         ]);
     }
 
-    // TODO
     watch(filename, options = {}, listener) {
         if (isFunction(options)) {
             [options, listener] = [{}, options];
@@ -1606,21 +1190,7 @@ export default class AbstractFileSystem {
         options.persistent = "persistent" in options ? Boolean(options.persistent) : true;
         options.recursive = Boolean(options.recursive);
 
-        const watcher = new FSWatcher();
-
-        if (listener) {
-            watcher.on("change", listener);
-        }
-
-        this._handlePath("watch", this._resolve(filename), null, options, listener, watcher).catch((err) => {
-            watcher.emit("error", err);
-        });
-
-        return watcher;
-    }
-
-    _watch(filename, options, listener, watcher) {
-        watcher.emit("error", this.createError("ENOSYS", filename, "watch"));
+        return this._handlePathSync("watch", this._resolve(filename), options, listener);
     }
 
     watchFile(filename, options = {}, listener) {
@@ -1630,15 +1200,11 @@ export default class AbstractFileSystem {
         options.persistent = "persistent" in options ? Boolean(options.persistent) : true;
         options.interval = options.interval || 5007;
 
-        const watcher = new StatWatcher();
+        return this._handlePathSync("watchFile", this._resolve(filename), options, listener);
+    }
 
-        watcher.on("change", listener);
-
-        this._fileWatchers.set(filename, watcher); // different options?
-
-        watcher.start(this, filename, options).catch(noop); // actually it should not throw
-
-        return watcher;
+    unwatchFile(filename, listener) {
+        return this._handlePathSync("unwatchFile", this._resolve(filename), listener);
     }
 
     write(fd, buffer, offset, length, position, callback) {
@@ -1678,82 +1244,6 @@ export default class AbstractFileSystem {
         this._handleFd("write", fd, callback, buffer, offset, length);
     }
 
-    writeFile(path, data, options, callback) {
-        if (isFunction(options)) {
-            callback = options;
-            options = {};
-        }
-        if (typeof options !== "object") {
-            options = { encoding: options };
-        } else {
-            options = { ...options };
-        }
-        options.encoding = options.encoding || "utf8";
-        options.mode = options.mode || 0o666;
-        options.flag = options.flag || "w";
-
-        const writeFd = (fd, isUserFd) => {
-            const buffer = data instanceof Uint8Array
-                ? data
-                : Buffer.from(String(data), options.encoding);
-
-            const position = /a/.test(options.flag)
-                ? null
-                : 0;
-
-            writeAll(this, fd, isUserFd, buffer, 0, buffer.length, position, callback);
-        };
-
-        if (isFd(path)) {
-            writeFd(path, true);
-            return;
-        }
-
-        this.open(path, options.flag, options.mode, (err, fd) => {
-            if (err) {
-                callback(err);
-                return;
-            }
-            writeFd(fd, false);
-        });
-    }
-
-    writeFileSync(path, data, options = {}) {
-        if (typeof options !== "object") {
-            options = { encoding: options };
-        } else {
-            options = { ...options };
-        }
-        options.encoding = options.encoding || "utf8";
-        options.mode = options.mode || 0o666;
-        options.flag = options.flag || "w";
-
-        const isUserFd = isFd(path); // file descriptor ownership
-
-        const fd = isUserFd ? path : this.openSync(path, options.flag, options.mode);
-
-        if (!(data instanceof Uint8Array)) {
-            data = Buffer.from(`${data}`, options.encoding || "utf8");
-        }
-        let offset = 0;
-        let length = data.length;
-        let position = /a/.test(options.flag) ? null : 0;
-        try {
-            while (length > 0) {
-                const written = this.writeSync(fd, data, offset, length, position);
-                offset += written;
-                length -= written;
-                if (position !== null) {
-                    position += written;
-                }
-            }
-        } finally {
-            if (!isUserFd) {
-                this.closeSync(fd);
-            }
-        }
-    }
-
     writeSync(fd, buffer, offset, length, position) {
         if (isBuffer(buffer)) {
             if (!isNumber(offset)) {
@@ -1777,6 +1267,34 @@ export default class AbstractFileSystem {
             length = "utf8";
         }
         return this._handleFdSync("write", fd, [buffer, offset, length]);
+    }
+
+    writeFile(path, data, options, callback) {
+        if (isFunction(options)) {
+            callback = options;
+            options = {};
+        }
+        if (typeof options !== "object") {
+            options = { encoding: options };
+        } else {
+            options = { ...options };
+        }
+        options.encoding = options.encoding || "utf8";
+        options.mode = options.mode || 0o666;
+        options.flag = options.flag || "w";
+        this._handlePath("writeFile", this._resolve(path), callback, data, options);
+    }
+
+    writeFileSync(path, data, options) {
+        if (typeof options !== "object") {
+            options = { encoding: options };
+        } else {
+            options = { ...options };
+        }
+        options.encoding = options.encoding || "utf8";
+        options.mode = options.mode || 0o666;
+        options.flag = options.flag || "w";
+        return this._handlePathSync("writeFileSync", this._resolve(path), [data, options]);
     }
 
     // end fs methods
@@ -1865,7 +1383,7 @@ export default class AbstractFileSystem {
                 }
                 node = node[part];
             }
-            const engine = node[ENGINE];
+            const engine = node[FS_INSTANCE];
 
             for (let j = i + 1; j < parts.length; ++j) {
                 switch (parts[j]) {
@@ -1905,7 +1423,7 @@ export default class AbstractFileSystem {
                             // it subPath is not a symlink, readlink will throw EINVAL
                             // so here we have a symlink to a directory
 
-                            const targetPath = new Path(target, { root: engine.root, sep: engine.sep });
+                            const targetPath = new Path(target, engine.root);
 
                             if (targetPath.absolute) {
                                 // assume all absolute links to be relative to the using engine
@@ -1994,7 +1512,7 @@ export default class AbstractFileSystem {
                 }
                 node = node[part];
             }
-            const engine = node[ENGINE];
+            const engine = node[FS_INSTANCE];
 
             const iterateParts = (j) => {
                 if (j >= parts.length) {
@@ -2086,7 +1604,7 @@ export default class AbstractFileSystem {
                                 // it subPath is not a symlink, readlink will throw EINVAL
                                 // so here we have a symlink to a directory
 
-                                const targetPath = new Path(target, { root: engine.root, sep: engine.sep });
+                                const targetPath = new Path(target, engine.root);
 
                                 if (targetPath.absolute) {
                                     // assume all absolute links to be relative to the using engine
@@ -2309,61 +1827,12 @@ export default class AbstractFileSystem {
         }
         return null;
     }
-
-    /**
-     * @param {AbstractFileSystem} engine
-     * @param {string} rawPath
-     */
-    mount(engine, rawPath) {
-        const path = Path.wrap(rawPath, { root: this.root, sep: this.sep });
-
-        if (!(path.root in this.structure)) {
-            this.structure[path.root] = {
-                [LEVEL]: 0,
-                [ENGINE]: this // use the current engine by default
-            };
-            this.structure[path.root][PARENT] = this.structure[path.root];
-        }
-        let root = this.structure[path.root];
-        let level = 0;
-        for (const part of path.parts) {
-            if (!(part in root)) {
-                root[part] = {
-                    [LEVEL]: root[LEVEL],
-                    [PARENT]: root,
-                    [ENGINE]: root[ENGINE]
-                };
-            }
-            root = root[part];
-            ++level;
-        }
-        root[LEVEL] = level;
-        root[ENGINE] = engine;
-        ++this._mountsNum;
-        return this;
-    }
-
-    mock(obj) {
-        const origMethods = {};
-        for (const method of fsMethods) {
-            origMethods[method] = obj[method];
-            obj[method] = (...args) => this[method](...args);
-        }
-        obj.restore = () => {
-            for (const method of fsMethods) {
-                obj[method] = origMethods[method];
-            }
-            delete obj.restore;
-        };
-        return obj;
-    }
 }
-AbstractFileSystem.prototype.constants = constants; // provide the same constants
-AbstractFileSystem.constants = constants;
 
 for (const [method, isAbstract] of fsMethods) {
-    if (isAbstract) {
-        AbstractFileSystem.prototype[`_${method}`] = function () {
+    const m = `_${method}`;
+    if (isAbstract && !BaseFileSystem.prototype[m]) {
+        BaseFileSystem.prototype[m] = function () {
             this.throw("ENOSYS", method);
         };
     }

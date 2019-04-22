@@ -6,7 +6,7 @@ const {
 
 adone.asNamespace(exports);
 
-export const graceful = require("./graceful");
+export const base = require("./base");
 
 const api = [
     "access",
@@ -41,35 +41,35 @@ const api = [
     "unlink",
     "utimes",
     "writeFile"
-].filter((key) => is.function(graceful[key]));
+].filter((key) => is.function(base[key]));
 
-Object.keys(graceful).forEach((key) => {
+Object.keys(base).forEach((key) => {
     if (key === "promises") {
         return;
     }
-    exports[key] = graceful[key];
+    exports[key] = base[key];
 });
 
 // Universalify async methods:
 api.forEach((method) => {
-    exports[method] = universalify(graceful[method]);
+    exports[method] = universalify(base[method]);
 });
 
 // We differ from mz/fs in that we still ship the old, broken, fs.exists()
 // since we are a drop-in replacement for the native module
 export const exists = (filename, callback) => {
     return (is.function(callback))
-        ? graceful.exists(filename, callback)
+        ? base.exists(filename, callback)
         : new Promise((resolve) => {
-            return graceful.exists(filename, resolve);
+            return base.exists(filename, resolve);
         });
 };
 
 export const read = (fd, buffer, offset, length, position, callback) => {
     return (is.function(callback))
-        ? graceful.read(fd, buffer, offset, length, position, callback)
+        ? base.read(fd, buffer, offset, length, position, callback)
         : new Promise((resolve, reject) => {
-            graceful.read(fd, buffer, offset, length, position, (err, bytesRead, buffer) => {
+            base.read(fd, buffer, offset, length, position, (err, bytesRead, buffer) => {
                 if (err) {
                     return reject(err);
                 }
@@ -85,9 +85,9 @@ export const read = (fd, buffer, offset, length, position, callback) => {
 // We need to handle both cases, so we use ...args
 export const write = function (fd, buffer, ...args) {
     return (is.function(args[args.length - 1]))
-        ? graceful.write(fd, buffer, ...args)
+        ? base.write(fd, buffer, ...args)
         : new Promise((resolve, reject) => {
-            graceful.write(fd, buffer, ...args, (err, bytesWritten, buffer) => {
+            base.write(fd, buffer, ...args, (err, bytesWritten, buffer) => {
                 if (err) {
                     return reject(err);
                 }
@@ -130,7 +130,7 @@ lazify({
     writeJsonSync: "./write_json/sync",
     outputFileSync: "./output_file/sync",
     outputJsonSync: "./output_json/sync",
-    pathExistsSync: () => graceful.existsSync,
+    pathExistsSync: () => base.existsSync,
     removeSync: "./remove/sync"
 }, exports, require);
 
@@ -141,5 +141,6 @@ Object.defineProperty(exports, "promises", {
 });
 
 lazify({
-    custom: "./custom"
+    custom: "./custom",
+    createFiles: "./create_files"
 }, exports, require);

@@ -1,4 +1,4 @@
-import AbstractFileSystem from "./abstract";
+import BaseFileSystem from "./base";
 import path from "../../path";
 import {
     access,
@@ -15,7 +15,7 @@ import {
     copyFileSync,
     createReadStream,
     createWriteStream,
-    // "exists" // deprecated
+    exists, // deprecated
     existsSync,
     fchmod,
     fchmodSync,
@@ -46,13 +46,13 @@ import {
     open,
     openSync,
     read,
+    readSync,
     readdir,
     readdirSync,
     readFile,
     readFileSync,
     readlink,
     readlinkSync,
-    readSync,
     realpath,
     realpathSync,
     rename,
@@ -67,23 +67,38 @@ import {
     truncateSync,
     unlink,
     unlinkSync,
-    unwatchFile,
     utimes,
     utimesSync,
-    watch,
-    watchFile,
     write,
+    writeSync,
     writeFile,
     writeFileSync,
-    writeSync
+
+    watch,
+    watchFile,
+    unwatchFile,
+
+    constants,
+    ReadStream,
+    WriteStream
 } from "fs";
 
 const DEFAULT_ROOT = path.resolve("/");
 
-export default class StandardFileSystem extends AbstractFileSystem {
+export default class StandardFileSystem extends BaseFileSystem {
     constructor({ root = DEFAULT_ROOT } = {}) {
-        super({ root, sep: path.sep });
+        super({ root });
+
+        this.constants = constants;
+        this.ReadStream = ReadStream;
+        this.WriteStream = WriteStream;
     }
+
+    cwd() {
+        return process.cwd();
+    }
+
+    // fs common methods
 
     _access(path, mode, callback) {
         access(path.fullPath, mode, callback);
@@ -91,6 +106,14 @@ export default class StandardFileSystem extends AbstractFileSystem {
 
     _accessSync(path, mode) {
         return accessSync(path.fullPath, mode);
+    }
+
+    _appendFile(path, data, options, callback) {
+        appendFile(path.fullPath, data, options, callback);
+    }
+
+    _appendFileSync(path, data, options) {
+        return appendFileSync(path.fullPath, data, options);
     }
 
     _chmod(path, mode, callback) {
@@ -123,6 +146,18 @@ export default class StandardFileSystem extends AbstractFileSystem {
 
     _copyFileSync(src, dest, flags) {
         return copyFileSync(src.fullPath, dest.fullPath, flags);
+    }
+
+    _createReadStream(path, options) {
+        return createReadStream(path.fullPath, options);
+    }
+
+    _createWriteStream(path, options) {
+        return createWriteStream(path.fullPath, options);
+    }
+
+    _exists(path, callback) {
+        return exists(path.fullPath, callback);
     }
 
     _existsSync(path) {
@@ -245,6 +280,10 @@ export default class StandardFileSystem extends AbstractFileSystem {
         read(fd, buffer, offset, length, position, callback);
     }
 
+    _readSync(fd, buffer, offset, length, position) {
+        return readSync(fd, buffer, offset, length, position);
+    }
+
     _readdir(path, options, callback) {
         readdir(path.fullPath, options, callback);
     }
@@ -253,16 +292,20 @@ export default class StandardFileSystem extends AbstractFileSystem {
         return readdirSync(path.fullPath, options);
     }
 
+    _readFile(path, options, callback) {
+        readFile(path.fullPath, options, callback);
+    }
+
+    _readFileSync(path, options) {
+        return readFileSync(path.fullPath, options);
+    }
+
     _readlink(path, options, callback) {
         readlink(path.fullPath, options, callback);
     }
 
     _readlinkSync(path, options) {
         return readlinkSync(path.fullPath, options);
-    }
-
-    _readSync(fd, buffer, offset, length, position) {
-        return readSync(fd, buffer, offset, length, position);
     }
 
     _realpath(path, options, callback) {
@@ -329,15 +372,16 @@ export default class StandardFileSystem extends AbstractFileSystem {
         return utimesSync(path.fullPath, atime, mtime);
     }
 
-    _watch(filename, options, listener, watcher) {
-        const internalWatcher = watch(filename.fullPath, options);
-        watcher.setWatcher(internalWatcher);
+    _watch(filename, options, listener) {
+        return watch(filename.fullPath, options, listener);
     }
 
-    _watchFile(filename, options, listener, watcher) {
-        watchFile(filename.fullPath, options, (prev, curr) => {
-            watcher.emit("change", prev, curr);
-        });
+    _watchFile(filename, options, listener) {
+        return watchFile(filename.fullPath, options, listener);
+    }
+
+    _unwatchFile(filename, listener) {
+        return unwatchFile(filename.fullPath, listener);
     }
 
     _write(fd, buffer, offset, length, position, callback) {
@@ -346,5 +390,13 @@ export default class StandardFileSystem extends AbstractFileSystem {
 
     _writeSync(fd, buffer, offset, length, position) {
         return writeSync(fd, buffer, offset, length, position);
+    }
+
+    _writeFile(path, data, options, callback) {
+        writeFile(path.fullPath, data, options, callback);
+    }
+
+    _writeFileSync(path, data, options) {
+        return writeFileSync(path.fullPath, data, options);
     }
 }

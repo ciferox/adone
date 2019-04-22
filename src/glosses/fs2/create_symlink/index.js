@@ -3,7 +3,7 @@ const {
     fs2,
     path
 } = adone;
-const { graceful } = fs2;
+const { base } = fs2;
 
 /**
  * Function that returns two types of paths, one relative to symlink, and one
@@ -28,7 +28,7 @@ const { graceful } = fs2;
  */
 const symlinkPaths = (srcpath, dstpath, callback) => {
     if (path.isAbsolute(srcpath)) {
-        return graceful.lstat(srcpath, (err) => {
+        return base.lstat(srcpath, (err) => {
             if (err) {
                 err.message = err.message.replace("lstat", "ensureSymlink");
                 return callback(err);
@@ -51,7 +51,7 @@ const symlinkPaths = (srcpath, dstpath, callback) => {
                 toDst: srcpath
             });
         }
-        return graceful.lstat(srcpath, (err) => {
+        return base.lstat(srcpath, (err) => {
             if (err) {
                 err.message = err.message.replace("lstat", "ensureSymlink");
                 return callback(err);
@@ -71,7 +71,7 @@ const symlinkType = (srcpath, type, callback) => {
     if (type) {
         return callback(null, type);
     }
-    graceful.lstat(srcpath, (err, stats) => {
+    base.lstat(srcpath, (err, stats) => {
         if (err) {
             return callback(null, "file");
         }
@@ -106,13 +106,13 @@ const createSymlink = (srcpath, dstpath, type, callback) => {
                         return callback(err);
                     }
                     if (dirExists) {
-                        return graceful.symlink(srcpath, dstpath, type, callback);
+                        return base.symlink(srcpath, dstpath, type, callback);
                     }
                     fs2.mkdirp(dir, (err) => {
                         if (err) {
                             return callback(err);
                         }
-                        graceful.symlink(srcpath, dstpath, type, callback);
+                        base.symlink(srcpath, dstpath, type, callback);
                     });
                 });
             });

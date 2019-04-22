@@ -3,7 +3,7 @@ const {
     fs2,
     path
 } = adone;
-const { graceful } = fs2;
+const { base } = fs2;
 
 export default (file, data, encoding, callback) => {
     if (is.function(encoding)) {
@@ -17,7 +17,7 @@ export default (file, data, encoding, callback) => {
             return callback(err);
         }
         if (itDoes) {
-            return graceful.writeFile(file, data, encoding, callback);
+            return base.writeFile(file, data, encoding, callback);
         }
 
         fs2.mkdirp(dir, (err) => {
@@ -25,7 +25,7 @@ export default (file, data, encoding, callback) => {
                 return callback(err);
             }
 
-            graceful.writeFile(file, data, encoding, callback);
+            base.writeFile(file, data, encoding, callback);
         });
     });
 };

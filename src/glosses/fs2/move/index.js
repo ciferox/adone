@@ -3,7 +3,7 @@ const {
     fs2,
     path
 } = adone;
-const { graceful } = fs2;
+const { base } = fs2;
 
 const moveAcrossDevice = (src, dest, overwrite, cb) => {
     const opts = {
@@ -20,7 +20,7 @@ const moveAcrossDevice = (src, dest, overwrite, cb) => {
 };
 
 const rename = (src, dest, overwrite, cb) => {
-    graceful.rename(src, dest, (err) => {
+    base.rename(src, dest, (err) => {
         if (!err) {
             return cb();
         }
@@ -72,10 +72,10 @@ export default (src, dest, opts, cb) => {
     dest = path.resolve(dest);
 
     if (src === dest) {
-        return graceful.access(src, cb);
+        return base.access(src, cb);
     }
 
-    graceful.stat(src, (err, st) => {
+    base.stat(src, (err, st) => {
         if (err) {
             return cb(err);
         }

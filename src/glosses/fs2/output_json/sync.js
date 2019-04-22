@@ -2,12 +2,12 @@ const {
     fs2,
     path
 } = adone;
-const { graceful } = fs2;
+const { base } = fs2;
 
 export default (file, data, options) => {
     const dir = path.dirname(file);
 
-    if (!graceful.existsSync(dir)) {
+    if (!base.existsSync(dir)) {
         fs2.mkdirpSync(dir);
     }
 

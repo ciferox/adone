@@ -1,6 +1,6 @@
 const {
     is,
-    fs2: { graceful: fs },
+    fs2: { base },
     path
 } = adone;
 
@@ -23,7 +23,7 @@ const mkdirp = (p, opts, callback, made) => {
     }
 
     let mode = opts.mode;
-    const xfs = opts.fs || fs;
+    const xfs = opts.fs || base;
 
     if (is.undefined(mode)) {
         mode = o777 & (~process.umask());

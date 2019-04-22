@@ -1,5 +1,7 @@
 adone.lazify({
-    AbstractFileSystem: "./abstract",
+    BaseFileSystem: "./base",
+    MemoryFileSystemOld: "./memory_old",
     MemoryFileSystem: "./memory",
-    StandardFileSystem: "./standard"
+    StandardFileSystem: "./standard",
+    ZipFileSystem: "./zip"
 }, exports, require);

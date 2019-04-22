@@ -2,7 +2,7 @@ const {
     fs2: fse
 } = adone;
 
-const fs = fse.graceful;
+const fs = fse.base;
 const os = require("os");
 const path = require("path");
 

@@ -5,7 +5,7 @@ const {
 
 const CWD = process.cwd();
 
-const fs = fse.graceful;
+const fs = fse.base;
 const os = require("os");
 const path = require("path");
 

@@ -1,6 +1,6 @@
 const {
     is,
-    fs2: { graceful },
+    fs2: { base },
     path
 } = adone;
 
@@ -14,7 +14,7 @@ const mkdirpSync = (p, opts, made) => {
     }
 
     let mode = opts.mode;
-    const xfs = opts.fs || graceful;
+    const xfs = opts.fs || base;
 
     if (process.platform === "win32" && invalidWin32Path(p)) {
         const errInval = new Error(`${p} contains invalid WIN32 path characters.`);

@@ -1,6 +1,6 @@
 const {
     is,
-    fs2: { graceful: fs },
+    fs2: { base },
     path,
     std: { os }
 } = adone;
@@ -12,11 +12,11 @@ export const hasMillisResSync = () => {
 
     // 550 millis past UNIX epoch
     const d = new Date(1435410243862);
-    fs.writeFileSync(tmpfile, "https://github.com/jprichardson/node-fs-extra/pull/141");
-    const fd = fs.openSync(tmpfile, "r+");
-    fs.futimesSync(fd, d, d);
-    fs.closeSync(fd);
-    return fs.statSync(tmpfile).mtime > 1435410243000;
+    base.writeFileSync(tmpfile, "https://github.com/jprichardson/node-fs-extra/pull/141");
+    const fd = base.openSync(tmpfile, "r+");
+    base.futimesSync(fd, d, d);
+    base.closeSync(fd);
+    return base.statSync(tmpfile).mtime > 1435410243000;
 };
 
 export const hasMillisRes = (callback) => {
@@ -25,23 +25,23 @@ export const hasMillisRes = (callback) => {
 
     // 550 millis past UNIX epoch
     const d = new Date(1435410243862);
-    fs.writeFile(tmpfile, "https://github.com/jprichardson/node-fs-extra/pull/141", (err) => {
+    base.writeFile(tmpfile, "https://github.com/jprichardson/node-fs-extra/pull/141", (err) => {
         if (err) {
             return callback(err);
         }
-        fs.open(tmpfile, "r+", (err, fd) => {
+        base.open(tmpfile, "r+", (err, fd) => {
             if (err) {
                 return callback(err);
             }
-            fs.futimes(fd, d, d, (err) => {
+            base.futimes(fd, d, d, (err) => {
                 if (err) {
                     return callback(err);
                 }
-                fs.close(fd, (err) => {
+                base.close(fd, (err) => {
                     if (err) {
                         return callback(err);
                     }
-                    fs.stat(tmpfile, (err, stats) => {
+                    base.stat(tmpfile, (err, stats) => {
                         if (err) {
                             return callback(err);
                         }
@@ -64,13 +64,13 @@ export const timeRemoveMillis = (timestamp) => {
 };
 
 export const utimesMillis = (path, atime, mtime, callback) => {
-    // if (!HAS_MILLIS_RES) return fs.utimes(path, atime, mtime, callback)
-    fs.open(path, "r+", (err, fd) => {
+    // if (!HAS_MILLIS_RES) return base.utimes(path, atime, mtime, callback)
+    base.open(path, "r+", (err, fd) => {
         if (err) {
             return callback(err);
         }
-        fs.futimes(fd, atime, mtime, (futimesErr) => {
-            fs.close(fd, (closeErr) => {
+        base.futimes(fd, atime, mtime, (futimesErr) => {
+            base.close(fd, (closeErr) => {
                 if (callback) {
                     callback(futimesErr || closeErr);
                 }
@@ -80,7 +80,7 @@ export const utimesMillis = (path, atime, mtime, callback) => {
 };
 
 export const utimesMillisSync = (path, atime, mtime) => {
-    const fd = fs.openSync(path, "r+");
-    fs.futimesSync(fd, atime, mtime);
-    return fs.closeSync(fd);
+    const fd = base.openSync(path, "r+");
+    base.futimesSync(fd, atime, mtime);
+    return base.closeSync(fd);
 };

@@ -1,6 +1,6 @@
 const {
     is,
-    fs2: { graceful: fs }
+    fs2: { base }
 } = adone;
 
 const glob = require("glob");
@@ -164,7 +164,7 @@ const build = function (gyp, argv) {
                         return reject(new Error(notfoundErr));
                     }
                     msbuildPath = path.resolve(msbuilds.pop().path, "msbuild.exe");
-                    fs.stat(msbuildPath, (err, stat) => {
+                    base.stat(msbuildPath, (err, stat) => {
                         if (err) {
                             if (err.code === "ENOENT") {
                                 if (msbuilds.length) {
@@ -227,7 +227,7 @@ const build = function (gyp, argv) {
          * Load the "config.gypi" file that was generated during "configure".
          */
         const loadConfigGypi = function () {
-            fs.readFile(configPath, "utf8", (err, data) => {
+            base.readFile(configPath, "utf8", (err, data) => {
                 if (err) {
                     if (err.code === "ENOENT") {
                         reject(new Error("You must run `node-gyp configure` first!"));

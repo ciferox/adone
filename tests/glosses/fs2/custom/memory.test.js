@@ -1,5198 +1,2471 @@
+import bl from "bl";
+
 const {
     is,
-    fs2,
-    stream: { concat },
-    promise
+    fs2: { custom: { MemoryFileSystem } },
+    std: { url: { URL } }
 } = adone;
+const { VirtualFSError, DEFAULT_ROOT_UID, DEFAULT_ROOT_GID, DEFAULT_FILE_PERM, DEFAULT_DIRECTORY_PERM, DEFAULT_SYMLINK_PERM } = MemoryFileSystem;
 
-const { custom: { MemoryFileSystem } } = fs2;
-const c = MemoryFileSystem.constants;
-const { Stats } = adone.std.fs;
-
-describe.todo("fs2", "custom", "MemoryFileSystem", () => {
-    describe("methods", () => {
-        let engine;
-
-        beforeEach(() => {
-            engine = new MemoryFileSystem();
-        });
-
-        describe("access", () => {
-            it("should does not throw if a file is accessable", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                await engine.access("/a");
-            });
-
-            it("should throw ENOENT if there is no file", async () => {
-                const err = await assert.throws(async () => {
-                    await engine.access("/a");
-                }, "ENOENT: no such file or directory, access '/a'");
-                expect(err.code).to.be.equal("ENOENT");
-            });
-
-            it("should apply 'user' set and throw EACCES if the effective uid is the same but there are no corresponding rights", async () => {
-                engine.add((ctx) => ({
-                    nothing: ctx.file({
-                        contents: "hello",
-                        mode: 0o077
-                    }),
-                    r: ctx.file({
-                        contents: "hello",
-                        mode: 0o477
-                    }),
-                    w: ctx.file({
-                        contents: "hello",
-                        mode: 0o277
-                    }),
-                    x: ctx.file({
-                        contents: "hello",
-                        mode: 0o177
-                    }),
-                    rw: ctx.file({
-                        contents: "hello",
-                        mode: 0o677
-                    }),
-                    rx: ctx.file({
-                        contents: "hello",
-                        mode: 0o577
-                    }),
-                    wx: ctx.file({
-                        contents: "hello",
-                        mode: 0o377
-                    }),
-                    rwx: ctx.file({
-                        contents: "hello",
-                        mode: 0o777
-                    })
-                }));
-
-                {
-                    const err = await assert.throws(async () => {
-                        await engine.access("/nothing", c.X_OK);
-                    }, "EACCES: permission denied, access '/nothing'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                {
-                    const err = await assert.throws(async () => {
-                        await engine.access("/r", c.W_OK | c.X_OK);
-                    }, "EACCES: permission denied, access '/r'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                {
-                    const err = await assert.throws(async () => {
-                        await engine.access("/w", c.R_OK | c.X_OK);
-                    }, "EACCES: permission denied, access '/w'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                {
-                    const err = await assert.throws(async () => {
-                        await engine.access("/x", c.R_OK | c.W_OK);
-                    }, "EACCES: permission denied, access '/x'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                await engine.access("/r", c.R_OK);
-                await engine.access("/w", c.W_OK);
-                await engine.access("/x", c.X_OK);
-                await engine.access("/rw", c.R_OK | c.W_OK);
-                await engine.access("/rx", c.R_OK | c.X_OK);
-                await engine.access("/wx", c.W_OK | c.X_OK);
-                await engine.access("/rwx", c.R_OK | c.W_OK | c.X_OK);
-            });
-
-            it("should apply 'group' set and throw EACCES if the effective gid is the same but there are no corresponding rights", async () => {
-                engine.add((ctx) => ({
-                    nothing: ctx.file({
-                        contents: "hello",
-                        mode: 0o707,
-                        uid: -2
-                    }),
-                    r: ctx.file({
-                        contents: "hello",
-                        mode: 0o747,
-                        uid: -2
-                    }),
-                    w: ctx.file({
-                        contents: "hello",
-                        mode: 0o727,
-                        uid: -2
-                    }),
-                    x: ctx.file({
-                        contents: "hello",
-                        mode: 0o717,
-                        uid: -2
-                    }),
-                    rw: ctx.file({
-                        contents: "hello",
-                        mode: 0o767,
-                        uid: -2
-                    }),
-                    rx: ctx.file({
-                        contents: "hello",
-                        mode: 0o757,
-                        uid: -2
-                    }),
-                    wx: ctx.file({
-                        contents: "hello",
-                        mode: 0o737,
-                        uid: -2
-                    }),
-                    rwx: ctx.file({
-                        contents: "hello",
-                        mode: 0o777,
-                        uid: -2
-                    })
-                }));
-
-                {
-                    const err = await assert.throws(async () => {
-                        await engine.access("/nothing", c.X_OK);
-                    }, "EACCES: permission denied, access '/nothing'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                {
-                    const err = await assert.throws(async () => {
-                        await engine.access("/r", c.W_OK | c.X_OK);
-                    }, "EACCES: permission denied, access '/r'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                {
-                    const err = await assert.throws(async () => {
-                        await engine.access("/w", c.R_OK | c.X_OK);
-                    }, "EACCES: permission denied, access '/w'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                {
-                    const err = await assert.throws(async () => {
-                        await engine.access("/x", c.R_OK | c.W_OK);
-                    }, "EACCES: permission denied, access '/x'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                await engine.access("/r", c.R_OK);
-                await engine.access("/w", c.W_OK);
-                await engine.access("/x", c.X_OK);
-                await engine.access("/rw", c.R_OK | c.W_OK);
-                await engine.access("/rx", c.R_OK | c.X_OK);
-                await engine.access("/wx", c.W_OK | c.X_OK);
-                await engine.access("/rwx", c.R_OK | c.W_OK | c.X_OK);
-            });
-
-            it("should apply 'others' set and throw EACCES if there are no corresponding rights", async () => {
-                engine.add((ctx) => ({
-                    nothing: ctx.file({
-                        contents: "hello",
-                        mode: 0o770,
-                        uid: -2,
-                        gid: -2
-                    }),
-                    r: ctx.file({
-                        contents: "hello",
-                        mode: 0o774,
-                        uid: -2,
-                        gid: -2
-                    }),
-                    w: ctx.file({
-                        contents: "hello",
-                        mode: 0o772,
-                        uid: -2,
-                        gid: -2
-                    }),
-                    x: ctx.file({
-                        contents: "hello",
-                        mode: 0o771,
-                        uid: -2,
-                        gid: -2
-                    }),
-                    rw: ctx.file({
-                        contents: "hello",
-                        mode: 0o776,
-                        uid: -2,
-                        gid: -2
-                    }),
-                    rx: ctx.file({
-                        contents: "hello",
-                        mode: 0o775,
-                        uid: -2,
-                        gid: -2
-                    }),
-                    wx: ctx.file({
-                        contents: "hello",
-                        mode: 0o773,
-                        uid: -2,
-                        gid: -2
-                    }),
-                    rwx: ctx.file({
-                        contents: "hello",
-                        mode: 0o777,
-                        uid: -2,
-                        gid: -2
-                    })
-                }));
-
-                {
-                    const err = await assert.throws(async () => {
-                        await engine.access("/nothing", c.X_OK);
-                    }, "EACCES: permission denied, access '/nothing'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                {
-                    const err = await assert.throws(async () => {
-                        await engine.access("/r", c.W_OK | c.X_OK);
-                    }, "EACCES: permission denied, access '/r'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                {
-                    const err = await assert.throws(async () => {
-                        await engine.access("/w", c.R_OK | c.X_OK);
-                    }, "EACCES: permission denied, access '/w'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                {
-                    const err = await assert.throws(async () => {
-                        await engine.access("/x", c.R_OK | c.W_OK);
-                    }, "EACCES: permission denied, access '/x'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                await engine.access("/r", c.R_OK);
-                await engine.access("/w", c.W_OK);
-                await engine.access("/x", c.X_OK);
-                await engine.access("/rw", c.R_OK | c.W_OK);
-                await engine.access("/rx", c.R_OK | c.X_OK);
-                await engine.access("/wx", c.W_OK | c.X_OK);
-                await engine.access("/rwx", c.R_OK | c.W_OK | c.X_OK);
-            });
-        });
-
-        describe("accessSync", () => {
-            it("should does not throw if a file is accessable", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                engine.accessSync("/a");
-            });
-
-            it("should throw ENOENT if there is no file", () => {
-                const err = assert.throws(() => {
-                    engine.accessSync("/a");
-                }, "ENOENT: no such file or directory, access '/a'");
-                expect(err.code).to.be.equal("ENOENT");
-            });
-
-            it("should apply 'user' set and throw EACCES if the effective uid is the same but there are no corresponding rights", () => {
-                engine.add((ctx) => ({
-                    nothing: ctx.file({
-                        contents: "hello",
-                        mode: 0o077
-                    }),
-                    r: ctx.file({
-                        contents: "hello",
-                        mode: 0o477
-                    }),
-                    w: ctx.file({
-                        contents: "hello",
-                        mode: 0o277
-                    }),
-                    x: ctx.file({
-                        contents: "hello",
-                        mode: 0o177
-                    }),
-                    rw: ctx.file({
-                        contents: "hello",
-                        mode: 0o677
-                    }),
-                    rx: ctx.file({
-                        contents: "hello",
-                        mode: 0o577
-                    }),
-                    wx: ctx.file({
-                        contents: "hello",
-                        mode: 0o377
-                    }),
-                    rwx: ctx.file({
-                        contents: "hello",
-                        mode: 0o777
-                    })
-                }));
-
-                {
-                    const err = assert.throws(() => {
-                        engine.accessSync("/nothing", c.X_OK);
-                    }, "EACCES: permission denied, access '/nothing'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                {
-                    const err = assert.throws(() => {
-                        engine.accessSync("/r", c.W_OK | c.X_OK);
-                    }, "EACCES: permission denied, access '/r'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                {
-                    const err = assert.throws(() => {
-                        engine.accessSync("/w", c.R_OK | c.X_OK);
-                    }, "EACCES: permission denied, access '/w'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                {
-                    const err = assert.throws(() => {
-                        engine.accessSync("/x", c.R_OK | c.W_OK);
-                    }, "EACCES: permission denied, access '/x'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                engine.accessSync("/r", c.R_OK);
-                engine.accessSync("/w", c.W_OK);
-                engine.accessSync("/x", c.X_OK);
-                engine.accessSync("/rw", c.R_OK | c.W_OK);
-                engine.accessSync("/rx", c.R_OK | c.X_OK);
-                engine.accessSync("/wx", c.W_OK | c.X_OK);
-                engine.accessSync("/rwx", c.R_OK | c.W_OK | c.X_OK);
-            });
-
-            it("should apply 'group' set and throw EACCES if the effective gid is the same but there are no corresponding rights", () => {
-                engine.add((ctx) => ({
-                    nothing: ctx.file({
-                        contents: "hello",
-                        mode: 0o707,
-                        uid: -2
-                    }),
-                    r: ctx.file({
-                        contents: "hello",
-                        mode: 0o747,
-                        uid: -2
-                    }),
-                    w: ctx.file({
-                        contents: "hello",
-                        mode: 0o727,
-                        uid: -2
-                    }),
-                    x: ctx.file({
-                        contents: "hello",
-                        mode: 0o717,
-                        uid: -2
-                    }),
-                    rw: ctx.file({
-                        contents: "hello",
-                        mode: 0o767,
-                        uid: -2
-                    }),
-                    rx: ctx.file({
-                        contents: "hello",
-                        mode: 0o757,
-                        uid: -2
-                    }),
-                    wx: ctx.file({
-                        contents: "hello",
-                        mode: 0o737,
-                        uid: -2
-                    }),
-                    rwx: ctx.file({
-                        contents: "hello",
-                        mode: 0o777,
-                        uid: -2
-                    })
-                }));
-
-                {
-                    const err = assert.throws(() => {
-                        engine.accessSync("/nothing", c.X_OK);
-                    }, "EACCES: permission denied, access '/nothing'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                {
-                    const err = assert.throws(() => {
-                        engine.accessSync("/r", c.W_OK | c.X_OK);
-                    }, "EACCES: permission denied, access '/r'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                {
-                    const err = assert.throws(() => {
-                        engine.accessSync("/w", c.R_OK | c.X_OK);
-                    }, "EACCES: permission denied, access '/w'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                {
-                    const err = assert.throws(() => {
-                        engine.accessSync("/x", c.R_OK | c.W_OK);
-                    }, "EACCES: permission denied, access '/x'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                engine.accessSync("/r", c.R_OK);
-                engine.accessSync("/w", c.W_OK);
-                engine.accessSync("/x", c.X_OK);
-                engine.accessSync("/rw", c.R_OK | c.W_OK);
-                engine.accessSync("/rx", c.R_OK | c.X_OK);
-                engine.accessSync("/wx", c.W_OK | c.X_OK);
-                engine.accessSync("/rwx", c.R_OK | c.W_OK | c.X_OK);
-            });
-
-            it("should apply 'others' set and throw EACCES if there are no corresponding rights (sync)", () => {
-                engine.add((ctx) => ({
-                    nothing: ctx.file({
-                        contents: "hello",
-                        mode: 0o770,
-                        uid: -2,
-                        gid: -2
-                    }),
-                    r: ctx.file({
-                        contents: "hello",
-                        mode: 0o774,
-                        uid: -2,
-                        gid: -2
-                    }),
-                    w: ctx.file({
-                        contents: "hello",
-                        mode: 0o772,
-                        uid: -2,
-                        gid: -2
-                    }),
-                    x: ctx.file({
-                        contents: "hello",
-                        mode: 0o771,
-                        uid: -2,
-                        gid: -2
-                    }),
-                    rw: ctx.file({
-                        contents: "hello",
-                        mode: 0o776,
-                        uid: -2,
-                        gid: -2
-                    }),
-                    rx: ctx.file({
-                        contents: "hello",
-                        mode: 0o775,
-                        uid: -2,
-                        gid: -2
-                    }),
-                    wx: ctx.file({
-                        contents: "hello",
-                        mode: 0o773,
-                        uid: -2,
-                        gid: -2
-                    }),
-                    rwx: ctx.file({
-                        contents: "hello",
-                        mode: 0o777,
-                        uid: -2,
-                        gid: -2
-                    })
-                }));
-
-                {
-                    const err = assert.throws(() => {
-                        engine.accessSync("/nothing", c.X_OK);
-                    }, "EACCES: permission denied, access '/nothing'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                {
-                    const err = assert.throws(() => {
-                        engine.accessSync("/r", c.W_OK | c.X_OK);
-                    }, "EACCES: permission denied, access '/r'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                {
-                    const err = assert.throws(() => {
-                        engine.accessSync("/w", c.R_OK | c.X_OK);
-                    }, "EACCES: permission denied, access '/w'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                {
-                    const err = assert.throws(() => {
-                        engine.accessSync("/x", c.R_OK | c.W_OK);
-                    }, "EACCES: permission denied, access '/x'");
-                    expect(err.code).to.be.equal("EACCES");
-                }
-                engine.accessSync("/r", c.R_OK);
-                engine.accessSync("/w", c.W_OK);
-                engine.accessSync("/x", c.X_OK);
-                engine.accessSync("/rw", c.R_OK | c.W_OK);
-                engine.accessSync("/rx", c.R_OK | c.X_OK);
-                engine.accessSync("/wx", c.W_OK | c.X_OK);
-                engine.accessSync("/rwx", c.R_OK | c.W_OK | c.X_OK);
-            });
-        });
-
-        describe("appendFile", () => {
-            it("should append data to a file", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                await engine.appendFile("/a", " world");
-                expect(await engine.readFile("/a", "utf8")).to.be.equal("hello world");
-            });
-
-            it("should create a new file if there is no such file", async () => {
-                await engine.appendFile("/a", "hello");
-                expect(await engine.readFile("/a", "utf8")).to.be.equal("hello");
-            });
-
-            it("should throw EEXIST if the file already exists and the flag is 'ax'", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const err = await assert.throws(async () => {
-                    await engine.appendFile("/a", "hello", { flag: "ax" });
-                }, "EEXIST: file already exists, open '/a'");
-                expect(err.code).to.be.equal("EEXIST");
-            });
-
-            it("should create a new file with 0o666 mode by default", async () => {
-                await engine.appendFile("/a", "hello");
-                const stat = await engine.stat("/a");
-                expect(stat.mode & 0o777).to.be.equal(0o666);
-            });
-
-            it("should create a new file with the given mode", async () => {
-                await engine.appendFile("/a", "hello", { mode: 0o700 });
-                const stat = await engine.stat("/a");
-                expect(stat.mode & 0o777).to.be.equal(0o700);
-            });
-        });
-
-        describe("appendFileSync", () => {
-            it("should append data to a file", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                engine.appendFileSync("/a", " world");
-                expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello world");
-            });
-
-            it("should create a new file if there is no such file", () => {
-                engine.appendFileSync("/a", "hello");
-                expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello");
-            });
-
-            it("should throw EEXIST if the file already exists and the flag is 'ax'", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const err = assert.throws(() => {
-                    engine.appendFileSync("/a", "hello", { flag: "ax" });
-                }, "EEXIST: file already exists, open '/a'");
-                expect(err.code).to.be.equal("EEXIST");
-            });
-
-            it("should create a new file with 0o666 mode by default", () => {
-                engine.appendFileSync("/a", "hello");
-                const stat = engine.statSync("/a");
-                expect(stat.mode & 0o777).to.be.equal(0o666);
-            });
-
-            it("should create a new file with the given mode", () => {
-                engine.appendFileSync("/a", "hello", { mode: 0o700 });
-                const stat = engine.statSync("/a");
-                expect(stat.mode & 0o777).to.be.equal(0o700);
-            });
-        });
-
-        describe("chmod", () => {
-            it("should change file mode", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file({
-                        contents: "hello",
-                        mode: 0o755
-                    })
-                }));
-
-                await engine.chmod("/a", 0o777);
-                const stat = await engine.stat("/a");
-                expect(stat.mode & 0o777).to.be.equal(0o777);
-            });
-
-            it("should throw ENOENT if there is no such file", async () => {
-                const err = await assert.throws(async () => {
-                    await engine.chmod("/a");
-                }, "ENOENT: no such file or directory, chmod '/a'");
-                expect(err.code).to.be.equal("ENOENT");
-            });
-        });
-
-        describe("chmodSync", () => {
-            it("should change file mode", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file({
-                        contents: "hello",
-                        mode: 0o755
-                    })
-                }));
-
-                engine.chmodSync("/a", 0o777);
-                const stat = engine.statSync("/a");
-                expect(stat.mode & 0o777).to.be.equal(0o777);
-            });
-
-            it("should throw ENOENT if there is no such file", () => {
-                const err = assert.throws(() => {
-                    engine.chmodSync("/a");
-                }, "ENOENT: no such file or directory, chmod '/a'");
-                expect(err.code).to.be.equal("ENOENT");
-            });
-        });
-
-        describe("chown", () => {
-            it("should change the file's owner uid/gid", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file({
-                        contents: "hello",
-                        gid: 1,
-                        uid: 1
-                    })
-                }));
-
-                await engine.chown("/a", 2, 2);
-                const stat = await engine.stat("/a");
-                expect(stat.uid).to.be.equal(2);
-                expect(stat.gid).to.be.equal(2);
-            });
-
-            it("should throw ENOENT if there is no such file", async () => {
-                const err = await assert.throws(async () => {
-                    await engine.chown("/a");
-                }, "ENOENT: no such file or directory, chown '/a'");
-                expect(err.code).to.be.equal("ENOENT");
-            });
-        });
-
-        describe("chownSync", () => {
-            it("should change the file's owner uid/gid", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file({
-                        contents: "hello",
-                        gid: 1,
-                        uid: 1
-                    })
-                }));
-
-                engine.chownSync("/a", 2, 2);
-                const stat = engine.statSync("/a");
-                expect(stat.uid).to.be.equal(2);
-                expect(stat.gid).to.be.equal(2);
-            });
-
-            it("should throw ENOENT if there is no such file", () => {
-                const err = assert.throws(() => {
-                    engine.chownSync("/a");
-                }, "ENOENT: no such file or directory, chown '/a'");
-                expect(err.code).to.be.equal("ENOENT");
-            });
-        });
-
-        describe("copyFile", () => {
-            it("should copy file", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file({
-                        contents: "hello",
-                        mode: 0o755,
-                        gid: 0,
-                        uid: 0
-                    })
-                }));
-
-                await engine.copyFile("/a", "/b");
-                expect(await engine.readFile("/a", "utf8")).to.be.equal("hello");
-                expect(await engine.readFile("/b", "utf8")).to.be.equal("hello");
-                const stata = await engine.stat("/a");
-                const statb = await engine.stat("/b");
-                expect(statb.size).to.be.equal(stata.size);
-                expect(statb.mode).to.be.equal(stata.mode);
-                expect(statb.uid).to.be.equal(stata.uid);
-                expect(statb.gid).to.be.equal(stata.gid);
-            });
-
-            it("should not change the source after copying", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file({
-                        contents: "hello",
-                        mode: 0o777,
-                        gid: 0,
-                        uid: 0
-                    })
-                }));
-
-                await engine.copyFile("/a", "/b");
-                await engine.writeFile("/b", " world");
-                await engine.chmod("/b", 0o444);
-                await engine.chown("/b", 1, 1);
-                expect(await engine.readFile("/a", "utf8")).to.be.equal("hello");
-                expect(await engine.readFile("/b", "utf8")).to.be.equal(" world");
-                const stata = await engine.stat("/a");
-                const statb = await engine.stat("/b");
-                expect(stata.size).to.be.equal(5);
-                expect(stata.gid).to.be.equal(0);
-                expect(stata.uid).to.be.equal(0);
-                expect(stata.mode & 0o777).to.be.equal(0o777);
-                expect(statb.size).to.be.equal(6);
-                expect(statb.gid).to.be.equal(1);
-                expect(statb.uid).to.be.equal(1);
-                expect(statb.mode & 0o777).to.be.equal(0o444);
-            });
-
-            it("should rewrite the dest contents if exists", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: ctx.file("some content")
-                }));
-
-                await engine.copyFile("/a", "/b");
-                expect(await engine.readFile("/b", "utf8")).to.be.equal("hello");
-            });
-
-            it("should throw EEXIST if the dest exists and COPYFILE_EXCL is set", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: ctx.file("some content")
-                }));
-
-                const err = await assert.throws(async () => {
-                    await engine.copyFile("/a", "/b", c.COPYFILE_EXCL);
-                }, "EEXIST: file already exists, copyfile '/a' -> '/b'");
-                expect(err.code).to.be.equal("EEXIST");
-            });
-
-            it("should copy file to another directory", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: {
-
-                    }
-                }));
-
-                await engine.copyFile("/a", "/b/c");
-                expect(await engine.readFile("/b/c", "utf8")).to.be.equal("hello");
-            });
-
-            it("should throw ENOENT if the dest directory does not exist", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const err = await assert.throws(async () => {
-                    await engine.copyFile("/a", "/b/c");
-                }, "ENOENT: no such file or directory, copyfile '/a' -> '/b/c'");
-                expect(err.code).to.be.equal("ENOENT");
-            });
-        });
-
-        describe("copyFileSync", () => {
-            it("should copy file", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file({
-                        contents: "hello",
-                        mode: 0o755,
-                        gid: 0,
-                        uid: 0
-                    })
-                }));
-
-                engine.copyFileSync("/a", "/b");
-                expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello");
-                expect(engine.readFileSync("/b", "utf8")).to.be.equal("hello");
-                const stata = engine.statSync("/a");
-                const statb = engine.statSync("/b");
-                expect(statb.size).to.be.equal(stata.size);
-                expect(statb.mode).to.be.equal(stata.mode);
-                expect(statb.uid).to.be.equal(stata.uid);
-                expect(statb.gid).to.be.equal(stata.gid);
-            });
-
-            it("should not change the source after copying", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file({
-                        contents: "hello",
-                        mode: 0o777,
-                        gid: 0,
-                        uid: 0
-                    })
-                }));
-
-                engine.copyFileSync("/a", "/b");
-                engine.writeFileSync("/b", " world");
-                engine.chmodSync("/b", 0o444);
-                engine.chownSync("/b", 1, 1);
-                expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello");
-                expect(engine.readFileSync("/b", "utf8")).to.be.equal(" world");
-                const stata = engine.statSync("/a");
-                const statb = engine.statSync("/b");
-                expect(stata.size).to.be.equal(5);
-                expect(stata.gid).to.be.equal(0);
-                expect(stata.uid).to.be.equal(0);
-                expect(stata.mode & 0o777).to.be.equal(0o777);
-                expect(statb.size).to.be.equal(6);
-                expect(statb.gid).to.be.equal(1);
-                expect(statb.uid).to.be.equal(1);
-                expect(statb.mode & 0o777).to.be.equal(0o444);
-            });
-
-            it("should rewrite the dest contents if exists", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: ctx.file("some content")
-                }));
-
-                engine.copyFileSync("/a", "/b");
-                expect(engine.readFileSync("/b", "utf8")).to.be.equal("hello");
-            });
-
-            it("should throw EEXIST if the dest exists and COPYFILE_EXCL is set", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: ctx.file("some content")
-                }));
-
-                const err = assert.throws(() => {
-                    engine.copyFileSync("/a", "/b", c.COPYFILE_EXCL);
-                }, "EEXIST: file already exists, copyfile '/a' -> '/b'");
-                expect(err.code).to.be.equal("EEXIST");
-            });
-
-            it("should copy file to another directory", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: {
-
-                    }
-                }));
-
-                engine.copyFileSync("/a", "/b/c");
-                expect(engine.readFileSync("/b/c", "utf8")).to.be.equal("hello");
-            });
-
-            it("should throw ENOENT if the dest directory does not exist", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const err = assert.throws(() => {
-                    engine.copyFileSync("/a", "/b/c");
-                }, "ENOENT: no such file or directory, copyfile '/a' -> '/b/c'");
-                expect(err.code).to.be.equal("ENOENT");
-            });
-        });
-
-        describe("createReadStream", () => {
-            it("should create a readable stream", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const stream = engine.createReadStream("/a");
-                const res = await stream.pipe(concat.create("string"));
-                expect(res).to.be.deep.equal("hello");
-            });
-
-            it("should create a read stream for the given fd", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const fd = await engine.open("/a", "r");
-                const stream = await engine.createReadStream(null, { fd, autoClose: true });
-                const res = await stream.pipe(concat.create("string"));
-                expect(res).to.be.deep.equal("hello");
-            });
-        });
-
-        describe("createWriteStream", () => {
-            it("should create a writable stream", async () => {
-                const stream = engine.createWriteStream("/a");
-                stream.end("hello");
-                await new Promise((resolve) => stream.once("finish", resolve));
-                expect(await engine.readFile("/a", "utf8")).to.be.equal("hello");
-            });
-
-            it("should create a write stream for the given fd", async () => {
-                const fd = await engine.open("/a", "w");
-                const stream = engine.createWriteStream(null, { fd, autoClose: true });
-                stream.end("hello");
-                await new Promise((resolve) => stream.once("finish", resolve));
-                expect(await engine.readFile("/a", "utf8")).to.be.equal("hello");
-            });
-        });
-
-        describe("fchmod", () => {
-            it("should change the file mode by the given fd", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file({
-                        contents: "hello",
-                        mode: 0o755
-                    })
-                }));
-
-                const fd = await engine.open("/a", "r");
-                await engine.fchmod(fd, 0o444);
-                await engine.close(fd);
-                const stat = await engine.stat("/a");
-                expect(stat.mode & 0o777).to.be.equal(0o444);
-            });
-
-            it("should throw EBADF if the fd is unknown", async () => {
-                const err = await assert.throws(async () => {
-                    await engine.fchmod(123, 0o444);
-                }, "EBADF: bad file descriptor, fchmod");
-                expect(err.code).to.be.equal("EBADF");
-            });
-        });
-
-        describe("fchmodSync", () => {
-            it("should change the file mode by the given fd", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file({
-                        contents: "hello",
-                        mode: 0o755
-                    })
-                }));
-
-                const fd = engine.openSync("/a", "r");
-                engine.fchmodSync(fd, 0o444);
-                engine.closeSync(fd);
-                const stat = engine.statSync("/a");
-                expect(stat.mode & 0o777).to.be.equal(0o444);
-            });
-
-            it("should throw EBADF if the fd is unknown", () => {
-                const err = assert.throws(() => {
-                    engine.fchmodSync(123, 0o444);
-                }, "EBADF: bad file descriptor, fchmod");
-                expect(err.code).to.be.equal("EBADF");
-            });
-        });
-
-        describe("fchown", () => {
-            it("should change the file uid gid by the given fd", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file({
-                        contents: "hello",
-                        uid: 0,
-                        gid: 0,
-                        mode: 0o777
-                    })
-                }));
-
-                const fd = await engine.open("/a", "r");
-                await engine.fchown(fd, 1, 1);
-                await engine.close(fd);
-                const stat = await engine.stat("/a");
-                expect(stat.gid).to.be.equal(1);
-                expect(stat.uid).to.be.equal(1);
-            });
-
-            it("should throw EBADF if the fd is unknown", async () => {
-                const err = await assert.throws(async () => {
-                    await engine.fchown(123, 1, 1);
-                }, "EBADF: bad file descriptor, fchown");
-                expect(err.code).to.be.equal("EBADF");
-            });
-        });
-
-        describe("fchownSync", () => {
-            it("should change the file uid gid by the given fd", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file({
-                        contents: "hello",
-                        uid: 0,
-                        gid: 0,
-                        mode: 0o777
-                    })
-                }));
-
-                const fd = engine.openSync("/a", "r");
-                engine.fchownSync(fd, 1, 1);
-                engine.closeSync(fd);
-                const stat = engine.statSync("/a");
-                expect(stat.gid).to.be.equal(1);
-                expect(stat.uid).to.be.equal(1);
-            });
-
-            it("should throw EBADF if the fd is unknown", () => {
-                const err = assert.throws(() => {
-                    engine.fchownSync(123, 1, 1);
-                }, "EBADF: bad file descriptor, fchown");
-                expect(err.code).to.be.equal("EBADF");
-            });
-        });
-
-        describe("fdatasync", () => {
-            it("should ... not throw", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-                const fd = await engine.open("/a", "r");
-                await engine.fdatasync(fd);
-                await engine.close(fd);
-            });
-
-            it("should throw EBADF if the fd is unknown", async () => {
-                const err = await assert.throws(async () => {
-                    await engine.fdatasync(14);
-                }, "EBADF: bad file descriptor, fdatasync");
-                expect(err.code).to.be.equal("EBADF");
-            });
-        });
-
-        describe("fdatasyncSync", () => {
-            it("should ... not throw", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-                const fd = engine.openSync("/a", "r");
-                engine.fdatasyncSync(fd);
-                engine.closeSync(fd);
-            });
-
-            it("should throw EBADF if the fd is unknown", () => {
-                const err = assert.throws(() => {
-                    engine.fdatasyncSync(14);
-                }, "EBADF: bad file descriptor, fdatasync");
-                expect(err.code).to.be.equal("EBADF");
-            });
-        });
-
-        describe("fstat", () => {
-            it("should return file stat by the given fd", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const fd = await engine.open("/a", "r");
-                const stat = await engine.fstat(fd);
-                await engine.close(fd);
-                expect(stat).to.be.instanceof(Stats);
-                expect(stat.size).to.be.equal(5);
-            });
-
-            it("should throw EBADF is the fd is unknown", async () => {
-                const err = await assert.throws(async () => {
-                    await engine.fstat(100);
-                }, "EBADF: bad file descriptor, fstat");
-                expect(err.code).to.be.equal("EBADF");
-            });
-        });
-
-        describe("fstatSync", () => {
-            it("should return file stat by the given fd", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const fd = engine.openSync("/a", "r");
-                const stat = engine.fstatSync(fd);
-                engine.closeSync(fd);
-                expect(stat).to.be.instanceof(Stats);
-                expect(stat.size).to.be.equal(5);
-            });
-
-            it("should throw EBADF is the fd is unknown", () => {
-                const err = assert.throws(() => {
-                    engine.fstatSync(100);
-                }, "EBADF: bad file descriptor, fstat");
-                expect(err.code).to.be.equal("EBADF");
-            });
-        });
-
-        describe("fsync", () => {
-            it("should ... not throw", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const fd = await engine.open("/a", "r");
-                await engine.fsync(fd);
-                await engine.close(fd);
-            });
-
-            it("should throw EBADF if the fd is unknown", async () => {
-                const err = await assert.throws(async () => {
-                    await engine.fsync(100);
-                }, "EBADF: bad file descriptor, fsync");
-                expect(err.code).to.be.equal("EBADF");
-            });
-        });
-
-        describe("fsyncSync", () => {
-            it("should ... not throw", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const fd = engine.openSync("/a", "r");
-                engine.fsyncSync(fd);
-                engine.closeSync(fd);
-            });
-
-            it("should throw EBADF if the fd is unknown", () => {
-                const err = assert.throws(() => {
-                    engine.fsyncSync(100);
-                }, "EBADF: bad file descriptor, fsync");
-                expect(err.code).to.be.equal("EBADF");
-            });
-        });
-
-        describe("ftruncate", () => {
-            it("should truncate file to 0 length by the given fd", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const fd = await engine.open("/a", c.O_WRONLY);
-                await engine.ftruncate(fd);
-                await engine.close(fd);
-                expect(await engine.readFile("/a", "utf8")).to.be.empty();
-            });
-
-            it("should truncate file to the given length", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const fd = await engine.open("/a", c.O_WRONLY);
-                await engine.ftruncate(fd, 2);
-                await engine.close(fd);
-                expect(await engine.readFile("/a", "utf8")).to.be.equal("he");
-            });
-
-            it("should throw EINVAL if the fd is not open for writing", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const fd = await engine.open("/a", "r");
-                const err = await assert.throws(async () => {
-                    await engine.ftruncate(fd);
-                }, "EINVAL: invalid argument, ftruncate");
-                expect(err.code).to.be.equal("EINVAL");
-                await engine.close(fd);
-            });
-
-            it("should throw EBADF if the fd is unknown", async () => {
-                const err = await assert.throws(async () => {
-                    await engine.ftruncate(10);
-                }, "EBADF: bad file descriptor, ftruncate");
-                expect(err.code).to.be.equal("EBADF");
-            });
-
-            it("should fill the rest with zeroes if the length is > than the actual size", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-                const fd = await engine.open("/a", c.O_WRONLY);
-                await engine.ftruncate(fd, 15);
-                await engine.close(fd);
-                expect(await engine.readFile("/a", "utf8")).to.be.equal("hello\0\0\0\0\0\0\0\0\0\0");
-            });
-        });
-
-        describe("ftruncateSync", () => {
-            it("should truncate file to 0 length by the given fd", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const fd = engine.openSync("/a", c.O_WRONLY);
-                engine.ftruncateSync(fd);
-                engine.closeSync(fd);
-                expect(engine.readFileSync("/a", "utf8")).to.be.empty();
-            });
-
-            it("should truncate file to the given length", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const fd = engine.openSync("/a", c.O_WRONLY);
-                engine.ftruncateSync(fd, 2);
-                engine.closeSync(fd);
-                expect(engine.readFileSync("/a", "utf8")).to.be.equal("he");
-            });
-
-            it("should throw EINVAL if the fd is not open for writing", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const fd = engine.openSync("/a", "r");
-                const err = assert.throws(() => {
-                    engine.ftruncateSync(fd);
-                }, "EINVAL: invalid argument, ftruncate");
-                expect(err.code).to.be.equal("EINVAL");
-                engine.closeSync(fd);
-            });
-
-            it("should throw EBADF if the fd is unknown", () => {
-                const err = assert.throws(() => {
-                    engine.ftruncateSync(10);
-                }, "EBADF: bad file descriptor, ftruncate");
-                expect(err.code).to.be.equal("EBADF");
-            });
-
-            it("should fill the rest with zeroes if the length is > than the actual size", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-                const fd = engine.openSync("/a", c.O_WRONLY);
-                engine.ftruncateSync(fd, 15);
-                engine.closeSync(fd);
-                expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello\0\0\0\0\0\0\0\0\0\0");
-            });
-        });
-
-        describe("futimes", () => {
-            it("should change atime/mtime by the given fd", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-                const fd = await engine.open("/a", "r");
-                await engine.futimes(fd, 2, 1);
-                await engine.close(fd);
-                const stat = await engine.stat("/a");
-                expect(stat.atimeMs).to.be.equal(2000);
-                expect(stat.mtimeMs).to.be.equal(1000);
-            });
-
-            it("should throw EBADF if the fd is unknown", async () => {
-                const err = await assert.throws(async () => {
-                    await engine.futimes(14, 0, 0);
-                }, "EBADF: bad file descriptor, futime");
-                expect(err.code).to.be.equal("EBADF");
-            });
-        });
-
-        describe("futimesSync", () => {
-            it("should change atime/mtime by the given fd", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-                const fd = engine.openSync("/a", "r");
-                engine.futimesSync(fd, 2, 1);
-                engine.closeSync(fd);
-                const stat = engine.statSync("/a");
-                expect(stat.atimeMs).to.be.equal(2000);
-                expect(stat.mtimeMs).to.be.equal(1000);
-            });
-
-            it("should throw EBADF if the fd is unknown", () => {
-                const err = assert.throws(() => {
-                    engine.futimesSync(14, 0, 0);
-                }, "EBADF: bad file descriptor, futime");
-                expect(err.code).to.be.equal("EBADF");
-            });
-        });
-
-        describe("link", () => {
-            it("should create a hard link (another name) for a file", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                await engine.link("/a", "/b");
-                expect(await engine.readFile("/b", "utf8")).to.be.equal("hello");
-                await engine.appendFile("/a", " world");
-                expect(await engine.readFile("/b", "utf8")).to.be.equal("hello world");
-                await engine.appendFile("/b", "!");
-                expect(await engine.readFile("/a", "utf8")).to.be.equal("hello world!");
-                expect(await engine.readFile("/b", "utf8")).to.be.equal("hello world!");
-            });
-
-            it("should throw EEXIST if the dest already exists", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: ctx.file("hello")
-                }));
-
-                const err = await assert.throws(async () => {
-                    await engine.link("/a", "/b");
-                }, "EEXIST: file already exists, link '/a' -> '/b'");
-                expect(err.code).to.be.equal("EEXIST");
-            });
-
-            it("should throw EPERM if the existing path is a directory", async () => {
-                engine.add(() => ({
-                    a: {
-
-                    }
-                }));
-
-                const err = await assert.throws(async () => {
-                    await engine.link("/a", "/b");
-                }, "EPERM: operation not permitted, link '/a' -> '/b'");
-                expect(err.code).to.be.equal("EPERM");
-            });
-
-            it("should throw EEXIST if the dest exists and the existing path is a directory", async () => {
-                engine.add((ctx) => ({
-                    a: {
-
-                    },
-                    b: ctx.file("hello")
-                }));
-
-                const err = await assert.throws(async () => {
-                    await engine.link("/a", "/b");
-                }, "EEXIST: file already exists, link '/a' -> '/b'");
-                expect(err.code).to.be.equal("EEXIST");
-            });
-
-            it("should support creating links in another directory", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: {
-                        c: ctx.file("hello")
-                    }
-                }));
-
-                await engine.link("/a", "/b/a");
-                expect(await engine.readFile("/b/a", "utf8")).to.be.equal("hello");
-                await engine.appendFile("/a", " world");
-                expect(await engine.readFile("/b/a", "utf8")).to.be.equal("hello world");
-                await engine.appendFile("/b/a", "!");
-                expect(await engine.readFile("/a", "utf8")).to.be.equal("hello world!");
-                expect(await engine.readFile("/b/a", "utf8")).to.be.equal("hello world!");
-            });
-
-            it("should throw ENOENT if the dest directory does not exist", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const err = await assert.throws(async () => {
-                    await engine.link("/a", "/b/a");
-                }, "ENOENT: no such file or directory, link '/a' -> '/b/a'");
-                expect(err.code).to.be.equal("ENOENT");
-            });
-        });
-
-        describe("linkSync", () => {
-            it("should create a hard link (another name) for a file", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                engine.linkSync("/a", "/b");
-                expect(engine.readFileSync("/b", "utf8")).to.be.equal("hello");
-                engine.appendFileSync("/a", " world");
-                expect(engine.readFileSync("/b", "utf8")).to.be.equal("hello world");
-                engine.appendFileSync("/b", "!");
-                expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello world!");
-                expect(engine.readFileSync("/b", "utf8")).to.be.equal("hello world!");
-            });
-
-            it("should throw EEXIST if the dest already exists", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: ctx.file("hello")
-                }));
-
-                const err = assert.throws(() => {
-                    engine.linkSync("/a", "/b");
-                }, "EEXIST: file already exists, link '/a' -> '/b'");
-                expect(err.code).to.be.equal("EEXIST");
-            });
-
-            it("should throw EPERM if the existing path is a directory", () => {
-                engine.add(() => ({
-                    a: {
-
-                    }
-                }));
-
-                const err = assert.throws(() => {
-                    engine.linkSync("/a", "/b");
-                }, "EPERM: operation not permitted, link '/a' -> '/b'");
-                expect(err.code).to.be.equal("EPERM");
-            });
-
-            it("should throw EEXIST if the dest exists and the existing path is a directory", () => {
-                engine.add((ctx) => ({
-                    a: {
-
-                    },
-                    b: ctx.file("hello")
-                }));
-
-                const err = assert.throws(() => {
-                    engine.linkSync("/a", "/b");
-                }, "EEXIST: file already exists, link '/a' -> '/b'");
-                expect(err.code).to.be.equal("EEXIST");
-            });
-
-            it("should support creating links in another directory", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: {
-                        c: ctx.file("hello")
-                    }
-                }));
-
-                engine.linkSync("/a", "/b/a");
-                expect(engine.readFileSync("/b/a", "utf8")).to.be.equal("hello");
-                engine.appendFileSync("/a", " world");
-                expect(engine.readFileSync("/b/a", "utf8")).to.be.equal("hello world");
-                engine.appendFileSync("/b/a", "!");
-                expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello world!");
-                expect(engine.readFileSync("/b/a", "utf8")).to.be.equal("hello world!");
-            });
-
-            it("should throw ENOENT if the dest directory does not exist", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const err = assert.throws(() => {
-                    engine.linkSync("/a", "/b/a");
-                }, "ENOENT: no such file or directory, link '/a' -> '/b/a'");
-                expect(err.code).to.be.equal("ENOENT");
-            });
-        });
-
-        describe("lstat", () => {
-            it("should return file stats", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const stat = await engine.lstat("/a");
-                expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.true();
-                expect(stat.isDirectory()).to.be.false();
-                expect(stat.isSymbolicLink()).to.be.false();
-                expect(stat.size).to.be.equal(5);
-            });
-
-            it("should return directory stats", async () => {
-                engine.add((ctx) => ({
-                    a: {
-                        b: ctx.file("hello")
-                    }
-                }));
-
-                const stat = await engine.lstat("/a");
-                expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.false();
-                expect(stat.isDirectory()).to.be.true();
-                expect(stat.isSymbolicLink()).to.be.false();
-            });
-
-            it("should return symlink stats", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.symlink("b")
-                }));
-
-                const stat = await engine.lstat("/a");
-                expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.false();
-                expect(stat.isDirectory()).to.be.false();
-                expect(stat.isSymbolicLink()).to.be.true();
-            });
-        });
-
-        describe("lstatSync", () => {
-            it("should return file stats", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const stat = engine.lstatSync("/a");
-                expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.true();
-                expect(stat.isDirectory()).to.be.false();
-                expect(stat.isSymbolicLink()).to.be.false();
-                expect(stat.size).to.be.equal(5);
-            });
-
-            it("should return directory stats", () => {
-                engine.add((ctx) => ({
-                    a: {
-                        b: ctx.file("hello")
-                    }
-                }));
-
-                const stat = engine.lstatSync("/a");
-                expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.false();
-                expect(stat.isDirectory()).to.be.true();
-                expect(stat.isSymbolicLink()).to.be.false();
-            });
-
-            it("should return symlink stats", () => {
-                engine.add((ctx) => ({
-                    a: ctx.symlink("b")
-                }));
-
-                const stat = engine.lstatSync("/a");
-                expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.false();
-                expect(stat.isDirectory()).to.be.false();
-                expect(stat.isSymbolicLink()).to.be.true();
-            });
-        });
-
-        describe("mkdir", () => {
-            it("should create a directory with 0o775 mode by default", async () => {
-                await engine.mkdir("/a");
-                const stat = await engine.stat("/a");
-                expect(stat.isDirectory()).to.be.true();
-                expect(stat.mode & 0o777).to.be.equal(0o775);
-            });
-
-            it("should throw EEXIST if the dest already exists", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: ctx.file("hello"),
-                    c: ctx.symlink("d")
-                }));
-
-                {
-                    const err = await assert.throws(async () => {
-                        await engine.mkdir("/a");
-                    }, "EEXIST: file already exists, mkdir '/a'");
-                    expect(err.code).to.be.equal("EEXIST");
-                }
-                {
-                    const err = await assert.throws(async () => {
-                        await engine.mkdir("/b");
-                    }, "EEXIST: file already exists, mkdir '/b'");
-                    expect(err.code).to.be.equal("EEXIST");
-                }
-                {
-                    const err = await assert.throws(async () => {
-                        await engine.mkdir("/c");
-                    }, "EEXIST: file already exists, mkdir '/c'");
-                    expect(err.code).to.be.equal("EEXIST");
-                }
-            });
-
-            it("should throw EACCES if the parent has no write permissions", async () => {
-                engine.add((ctx) => ({
-                    a: [{
-                        c: ctx.file("hello")
-                    }, { mode: 0o555 }]
-                }));
-
-                const err = await assert.throws(async () => {
-                    await engine.mkdir("/a/b");
-                }, "EACCES: permission denied, mkdir '/a/b'");
-                expect(err.code).to.be.equal("EACCES");
-            });
-        });
-
-        describe("mkdirSync", () => {
-            it("should create a directory with 0o775 mode by default", () => {
-                engine.mkdirSync("/a");
-                const stat = engine.statSync("/a");
-                expect(stat.isDirectory()).to.be.true();
-                expect(stat.mode & 0o777).to.be.equal(0o775);
-            });
-
-            it("should throw EEXIST if the dest already exists", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: ctx.file("hello"),
-                    c: ctx.symlink("d")
-                }));
-
-                {
-                    const err = assert.throws(() => {
-                        engine.mkdirSync("/a");
-                    }, "EEXIST: file already exists, mkdir '/a'");
-                    expect(err.code).to.be.equal("EEXIST");
-                }
-                {
-                    const err = assert.throws(() => {
-                        engine.mkdirSync("/b");
-                    }, "EEXIST: file already exists, mkdir '/b'");
-                    expect(err.code).to.be.equal("EEXIST");
-                }
-                {
-                    const err = assert.throws(() => {
-                        engine.mkdirSync("/c");
-                    }, "EEXIST: file already exists, mkdir '/c'");
-                    expect(err.code).to.be.equal("EEXIST");
-                }
-            });
-
-            it("should throw EACCES if the parent has no write permissions", () => {
-                engine.add((ctx) => ({
-                    a: [{
-                        c: ctx.file("hello")
-                    }, { mode: 0o555 }]
-                }));
-
-                const err = assert.throws(() => {
-                    engine.mkdirSync("/a/b");
-                }, "EACCES: permission denied, mkdir '/a/b'");
-                expect(err.code).to.be.equal("EACCES");
-            });
-        });
-
-        describe.skip("mkdtemp", () => {
-            //
-        });
-
-        describe("open", () => {
-            describe("flags", () => {
-                describe("r", () => {
-                    it("should open an existing file for reading", async () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-
-                        const fd = await engine.open("/a", "r");
-                        const buf = Buffer.alloc(3);
-                        await engine.read(fd, buf, 0, 3, 0);
-                        expect(buf).to.be.deep.equal(Buffer.from("hel"));
-                        await engine.close(fd);
-                    });
-
-                    it("should throw ENOENT if there is no such file", async () => {
-                        const err = await assert.throws(async () => {
-                            await engine.open("/a", "r");
-                        }, "ENOENT: no such file or directory, open '/a'");
-                        expect(err.code).to.be.equal("ENOENT");
-                    });
-                });
-
-                describe("r+", () => {
-                    it("should open an existing file for reading and writing", async () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-
-                        const fd = await engine.open("/a", "r+");
-                        const buf = Buffer.alloc(3);
-                        await engine.read(fd, buf, 0, 3, 0);
-                        expect(buf).to.be.deep.equal(Buffer.from("hel"));
-                        await engine.write(fd, "world", 1);
-                        await engine.close(fd);
-                        expect(await engine.readFile("/a", "utf8")).to.be.equal("hworld");
-                    });
-
-                    it("should throw ENOENT if there is no such file", async () => {
-                        const err = await assert.throws(async () => {
-                            await engine.open("/a", "r+");
-                        }, "ENOENT: no such file or directory, open '/a'");
-                        expect(err.code).to.be.equal("ENOENT");
-                    });
-                });
-
-                describe("rs+", () => {
-                    // has no impact in memory engine as i understand
-                    it("should open an existing file for reading and writing in synchronous mode", async () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-
-                        const fd = await engine.open("/a", "rs+");
-                        const buf = Buffer.alloc(3);
-                        await engine.read(fd, buf, 0, 3, 0);
-                        expect(buf).to.be.deep.equal(Buffer.from("hel"));
-                        await engine.write(fd, "world", 1);
-                        await engine.close(fd);
-                        expect(await engine.readFile("/a", "utf8")).to.be.equal("hworld");
-                    });
-
-                    it("should throw ENOENT if there is no such file", async () => {
-                        const err = await assert.throws(async () => {
-                            await engine.open("/a", "rs+");
-                        }, "ENOENT: no such file or directory, open '/a'");
-                        expect(err.code).to.be.equal("ENOENT");
-                    });
-                });
-
-                describe("w", () => {
-                    it("should open file for writing", async () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-
-                        const fd = await engine.open("/a", "w");
-                        await engine.write(fd, "world");
-                        await engine.close(fd);
-                        expect(await engine.readFile("/a", "utf8")).to.be.equal("world");
-                    });
-
-                    it("should create a new file if does not exist", async () => {
-                        const fd = await engine.open("/a", "w");
-                        await engine.write(fd, "world");
-                        await engine.close(fd);
-                        expect(await engine.readFile("/a", "utf8")).to.be.equal("world");
-                    });
-
-                    it("should create a new file with the given mode if does not exist", async () => {
-                        const fd = await engine.open("/a", "w", 0o222);
-                        await engine.write(fd, "world");
-                        await engine.close(fd);
-                        expect(await engine.readFile("/a", "utf8")).to.be.equal("world");
-                        const stat = await engine.stat("/a");
-                        expect(stat.mode & 0o777).to.be.equal(0o222);
-                    });
-
-                    it("should truncate the file if exists", async () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-
-                        const fd = await engine.open("/a", "w");
-                        await engine.close(fd);
-                        expect(await engine.readFile("/a", "utf8")).to.be.empty();
-                    });
-                });
-
-                describe("wx", () => {
-                    it("should open file for writing", async () => {
-                        const fd = await engine.open("/a", "wx");
-                        await engine.write(fd, "world");
-                        await engine.close(fd);
-                        expect(await engine.readFile("/a", "utf8")).to.be.equal("world");
-                    });
-
-                    it("should throw EEXIST if the file exists", async () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-
-                        const err = await assert.throws(async () => {
-                            await engine.open("/a", "wx");
-                        }, "EEXIST: file already exists, open '/a'");
-                        expect(err.code).to.be.equal("EEXIST");
-                    });
-                });
-
-                describe("w+", () => {
-                    it("should open file for reading and writing", async () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-
-                        const fd = await engine.open("/a", "w+");
-                        await engine.write(fd, "world", 0);
-                        const buf = Buffer.alloc(3);
-                        await engine.read(fd, buf, 0, 3, 0);
-                        expect(buf).to.be.deep.equal(Buffer.from("wor"));
-                        await engine.close(fd);
-                        expect(await engine.readFile("/a", "utf8")).to.be.equal("world");
-                    });
-
-                    it("should create the file if does not exist", async () => {
-                        const fd = await engine.open("/a", "w+");
-                        await engine.write(fd, "world", 0);
-                        await engine.close(fd);
-                        expect(await engine.readFile("/a", "utf8")).to.be.equal("world");
-                    });
-
-                    it("should create the file with the given mode if does not exist", async () => {
-                        const fd = await engine.open("/a", "w+", 0o222);
-                        await engine.write(fd, "world", 0);
-                        await engine.close(fd);
-                        expect(await engine.readFile("/a", "utf8")).to.be.equal("world");
-                        const stat = await engine.stat("/a");
-                        expect(stat.mode & 0o777).to.be.equal(0o222);
-                    });
-
-                    it("should truncate the file if exists", async () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-                        const fd = await engine.open("/a", "w+");
-                        await engine.close(fd);
-                        expect(await engine.readFile("/a", "utf8")).to.be.empty();
-                    });
-                });
-
-                describe("wx+", () => {
-                    it("should open file for reading and writing", async () => {
-                        const fd = await engine.open("/a", "wx+");
-                        await engine.write(fd, "world", 0);
-                        const buf = Buffer.alloc(3);
-                        await engine.read(fd, buf, 0, 3, 0);
-                        expect(buf).to.be.deep.equal(Buffer.from("wor"));
-                        await engine.close(fd);
-                        expect(await engine.readFile("/a", "utf8")).to.be.equal("world");
-                    });
-
-                    it("should create the file if does not exist", async () => {
-                        const fd = await engine.open("/a", "wx+");
-                        await engine.write(fd, "world", 0);
-                        await engine.close(fd);
-                        expect(await engine.readFile("/a", "utf8")).to.be.equal("world");
-                    });
-
-                    it("should throw EEXIST if the file exists", async () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-                        const err = await assert.throws(async () => {
-                            await engine.open("/a", "wx+");
-                        }, "EEXIST: file already exists, open '/a'");
-                        expect(err.code).to.be.equal("EEXIST");
-                    });
-                });
-
-                describe("a", () => {
-                    it("should open file for appending", async () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-                        const fd = await engine.open("/a", "a");
-                        await engine.write(fd, " world");
-                        await engine.close(fd);
-                        expect(await engine.readFile("/a", "utf8")).to.be.equal("hello world");
-                    });
-
-                    it("should create the file if does not exist", async () => {
-                        const fd = await engine.open("/a", "a");
-                        await engine.write(fd, "hello");
-                        await engine.close(fd);
-                        expect(await engine.readFile("/a", "utf8")).to.be.equal("hello");
-                    });
-
-                    it("should create the file with the given mode if does not exist", async () => {
-                        const fd = await engine.open("/a", "a", 0o222);
-                        await engine.write(fd, "hello");
-                        await engine.close(fd);
-                        expect(await engine.readFile("/a", "utf8")).to.be.equal("hello");
-                        const stat = await engine.stat("/a");
-                        expect(stat.mode & 0o777).to.be.equal(0o222);
-                    });
-                });
-
-                describe("ax", () => {
-                    it("should create the file if does not exist", async () => {
-                        const fd = await engine.open("/a", "ax");
-                        await engine.write(fd, "hello");
-                        await engine.close(fd);
-                        expect(await engine.readFile("/a", "utf8")).to.be.equal("hello");
-                    });
-
-                    it("should throw EEXIST if the file exists", async () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-                        const err = await assert.throws(async () => {
-                            await engine.open("/a", "ax");
-                        }, "EEXIST: file already exists, open '/a'");
-                        expect(err.code).to.be.equal("EEXIST");
-                    });
-                });
-
-                describe("a+", () => {
-                    it("should open the file for reading and appending", async () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-                        const fd = await engine.open("/a", "a+");
-                        const buf = Buffer.alloc(3);
-                        await engine.read(fd, buf, 0, 3, 0);
-                        await engine.write(fd, " world");
-                        await engine.close(fd);
-                        expect(buf).to.be.deep.equal(Buffer.from("hel"));
-                        expect(await engine.readFile("/a", "utf8")).to.be.equal("hello world");
-                    });
-
-                    it("should create a file if does not exists", async () => {
-                        const fd = await engine.open("/a", "a+");
-                        await engine.write(fd, "hello");
-                        await engine.close(fd);
-                        expect(await engine.readFile("/a", "utf8")).to.be.equal("hello");
-                    });
-                });
-
-                describe("ax+", () => {
-                    it("should open the file for reading and appending", async () => {
-                        const fd = await engine.open("/a", "a+");
-                        await engine.write(fd, "hello", 0);
-                        const buf = Buffer.alloc(3);
-                        await engine.read(fd, buf, 0, 3, 0);
-                        await engine.close(fd);
-                        expect(buf).to.be.deep.equal(Buffer.from("hel"));
-                        expect(await engine.readFile("/a", "utf8")).to.be.equal("hello");
-                    });
-
-                    it("should throw EEXIST if the file exists", async () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-                        const err = await assert.throws(async () => {
-                            await engine.open("/a", "ax+");
-                        }, "EEXIST: file already exists, open '/a'");
-                        expect(err.code).to.be.equal("EEXIST");
-                    });
-                });
-
-                describe("O_CREAT", () => {
-                    it("should create and open the file for reading with given mode", async () => {
-                        const fd = await engine.open("/a", c.O_CREAT, 0o444);
-                        await engine.close(fd);
-                        const stat = await engine.stat("/a");
-                        expect(stat.size).to.be.equal(0);
-                        expect(stat.mode & 0o777).to.be.equal(0o444);
-                    });
-                });
-
-                describe("O_NOFOLLOW", { skip: is.windows }, () => {
-                    it("should throw ELOOP if the pathname is a symlink", async () => {
-                        engine.add((ctx) => ({
-                            a: {
-                                a: ctx.file("hello"),
-                                b: ctx.symlink("a"),
-                                c: ctx.symlink("d") // dangling symlink
-                            }
-                        }));
-                        {
-                            const err = await assert.throws(async () => {
-                                await engine.open("/a/b", c.O_NOFOLLOW);
-                            }, "ELOOP: too many symbolic links encountered, open '/a/b'");
-                            expect(err.code).to.be.equal("ELOOP");
-                        }
-                        {
-                            const err = await assert.throws(async () => {
-                                await engine.open("/a/c", c.O_NOFOLLOW);
-                            }, "ELOOP: too many symbolic links encountered, open '/a/c'");
-                            expect(err.code).to.be.equal("ELOOP");
-                        }
-                    });
-
-                    it("should follow earlier symbolic components", async () => {
-                        engine.add((ctx) => ({
-                            a: {
-                                a: ctx.file("hello"),
-                                b: ctx.symlink("a"),
-                                c: ctx.symlink("d"), // dangling symlink
-                                e: ctx.symlink("..")
-                            }
-                        }));
-                        {
-                            const err = await assert.throws(async () => {
-                                await engine.open("/a/e/a/b", c.O_NOFOLLOW);
-                            }, "ELOOP: too many symbolic links encountered, open '/a/e/a/b'");
-                            expect(err.code).to.be.equal("ELOOP");
-                        }
-                        {
-                            const err = await assert.throws(async () => {
-                                await engine.open("/a/e/a/c", c.O_NOFOLLOW);
-                            }, "ELOOP: too many symbolic links encountered, open '/a/e/a/c'");
-                            expect(err.code).to.be.equal("ELOOP");
-                        }
-                    });
-                });
-
-                describe("O_TRUNC", () => {
-                    it("should truncate a file", async () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-                        const fd = await engine.open("/a", c.O_TRUNC);
-                        await engine.close(fd);
-                        expect(await engine.readFile("/a", "utf8")).to.be.empty();
-                    });
-                });
-            });
-        });
-
-        describe("openSync", () => {
-            describe("flags", () => {
-                describe("r", () => {
-                    it("should open an existing file for reading", () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-
-                        const fd = engine.openSync("/a", "r");
-                        const buf = Buffer.alloc(3);
-                        engine.readSync(fd, buf, 0, 3, 0);
-                        expect(buf).to.be.deep.equal(Buffer.from("hel"));
-                        engine.closeSync(fd);
-                    });
-
-                    it("should throw ENOENT if there is no such file", () => {
-                        const err = assert.throws(() => {
-                            engine.openSync("/a", "r");
-                        }, "ENOENT: no such file or directory, open '/a'");
-                        expect(err.code).to.be.equal("ENOENT");
-                    });
-                });
-
-                describe("r+", () => {
-                    it("should open an existing file for reading and writing", () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-
-                        const fd = engine.openSync("/a", "r+");
-                        const buf = Buffer.alloc(3);
-                        engine.readSync(fd, buf, 0, 3, 0);
-                        expect(buf).to.be.deep.equal(Buffer.from("hel"));
-                        engine.writeSync(fd, "world", 1);
-                        engine.closeSync(fd);
-                        expect(engine.readFileSync("/a", "utf8")).to.be.equal("hworld");
-                    });
-
-                    it("should throw ENOENT if there is no such file", () => {
-                        const err = assert.throws(() => {
-                            engine.openSync("/a", "r+");
-                        }, "ENOENT: no such file or directory, open '/a'");
-                        expect(err.code).to.be.equal("ENOENT");
-                    });
-                });
-
-                describe("rs+", () => {
-                    // has no impact in memory engine as i understand
-                    it("should open an existing file for reading and writing in synchronous mode", () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-
-                        const fd = engine.openSync("/a", "rs+");
-                        const buf = Buffer.alloc(3);
-                        engine.readSync(fd, buf, 0, 3, 0);
-                        expect(buf).to.be.deep.equal(Buffer.from("hel"));
-                        engine.writeSync(fd, "world", 1);
-                        engine.closeSync(fd);
-                        expect(engine.readFileSync("/a", "utf8")).to.be.equal("hworld");
-                    });
-
-                    it("should throw ENOENT if there is no such file", () => {
-                        const err = assert.throws(() => {
-                            engine.openSync("/a", "rs+");
-                        }, "ENOENT: no such file or directory, open '/a'");
-                        expect(err.code).to.be.equal("ENOENT");
-                    });
-                });
-
-                describe("w", () => {
-                    it("should open file for writing", () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-
-                        const fd = engine.openSync("/a", "w");
-                        engine.writeSync(fd, "world");
-                        engine.closeSync(fd);
-                        expect(engine.readFileSync("/a", "utf8")).to.be.equal("world");
-                    });
-
-                    it("should create a new file if does not exist", () => {
-                        const fd = engine.openSync("/a", "w");
-                        engine.writeSync(fd, "world");
-                        engine.closeSync(fd);
-                        expect(engine.readFileSync("/a", "utf8")).to.be.equal("world");
-                    });
-
-                    it("should create a new file with the given mode if does not exist", () => {
-                        const fd = engine.openSync("/a", "w", 0o222);
-                        engine.writeSync(fd, "world");
-                        engine.closeSync(fd);
-                        expect(engine.readFileSync("/a", "utf8")).to.be.equal("world");
-                        const stat = engine.statSync("/a");
-                        expect(stat.mode & 0o777).to.be.equal(0o222);
-                    });
-
-                    it("should truncate the file if exists", () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-
-                        const fd = engine.openSync("/a", "w");
-                        engine.closeSync(fd);
-                        expect(engine.readFileSync("/a", "utf8")).to.be.empty();
-                    });
-                });
-
-                describe("wx", () => {
-                    it("should open file for writing", () => {
-                        const fd = engine.openSync("/a", "wx");
-                        engine.writeSync(fd, "world");
-                        engine.closeSync(fd);
-                        expect(engine.readFileSync("/a", "utf8")).to.be.equal("world");
-                    });
-
-                    it("should throw EEXIST if the file exists", () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-
-                        const err = assert.throws(() => {
-                            engine.openSync("/a", "wx");
-                        }, "EEXIST: file already exists, open '/a'");
-                        expect(err.code).to.be.equal("EEXIST");
-                    });
-                });
-
-                describe("w+", () => {
-                    it("should open file for reading and writing", () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-
-                        const fd = engine.openSync("/a", "w+");
-                        engine.writeSync(fd, "world", 0);
-                        const buf = Buffer.alloc(3);
-                        engine.readSync(fd, buf, 0, 3, 0);
-                        expect(buf).to.be.deep.equal(Buffer.from("wor"));
-                        engine.closeSync(fd);
-                        expect(engine.readFileSync("/a", "utf8")).to.be.equal("world");
-                    });
-
-                    it("should create the file if does not exist", () => {
-                        const fd = engine.openSync("/a", "w+");
-                        engine.writeSync(fd, "world", 0);
-                        engine.closeSync(fd);
-                        expect(engine.readFileSync("/a", "utf8")).to.be.equal("world");
-                    });
-
-                    it("should create the file with the given mode if does not exist", () => {
-                        const fd = engine.openSync("/a", "w+", 0o222);
-                        engine.writeSync(fd, "world", 0);
-                        engine.closeSync(fd);
-                        expect(engine.readFileSync("/a", "utf8")).to.be.equal("world");
-                        const stat = engine.statSync("/a");
-                        expect(stat.mode & 0o777).to.be.equal(0o222);
-                    });
-
-                    it("should truncate the file if exists", () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-                        const fd = engine.openSync("/a", "w+");
-                        engine.closeSync(fd);
-                        expect(engine.readFile("/a", "utf8")).to.be.empty();
-                    });
-                });
-
-                describe("wx+", () => {
-                    it("should open file for reading and writing", () => {
-                        const fd = engine.openSync("/a", "wx+");
-                        engine.writeSync(fd, "world", 0);
-                        const buf = Buffer.alloc(3);
-                        engine.readSync(fd, buf, 0, 3, 0);
-                        expect(buf).to.be.deep.equal(Buffer.from("wor"));
-                        engine.closeSync(fd);
-                        expect(engine.readFileSync("/a", "utf8")).to.be.equal("world");
-                    });
-
-                    it("should create the file if does not exist", () => {
-                        const fd = engine.openSync("/a", "wx+");
-                        engine.writeSync(fd, "world", 0);
-                        engine.closeSync(fd);
-                        expect(engine.readFileSync("/a", "utf8")).to.be.equal("world");
-                    });
-
-                    it("should throw EEXIST if the file exists", () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-                        const err = assert.throws(() => {
-                            engine.openSync("/a", "wx+");
-                        }, "EEXIST: file already exists, open '/a'");
-                        expect(err.code).to.be.equal("EEXIST");
-                    });
-                });
-
-                describe("a", () => {
-                    it("should open file for appending", () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-                        const fd = engine.openSync("/a", "a");
-                        engine.writeSync(fd, " world");
-                        engine.closeSync(fd);
-                        expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello world");
-                    });
-
-                    it("should create the file if does not exist", () => {
-                        const fd = engine.openSync("/a", "a");
-                        engine.writeSync(fd, "hello");
-                        engine.closeSync(fd);
-                        expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello");
-                    });
-
-                    it("should create the file with the given mode if does not exist", () => {
-                        const fd = engine.openSync("/a", "a", 0o222);
-                        engine.writeSync(fd, "hello");
-                        engine.closeSync(fd);
-                        expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello");
-                        const stat = engine.statSync("/a");
-                        expect(stat.mode & 0o777).to.be.equal(0o222);
-                    });
-                });
-
-                describe("ax", () => {
-                    it("should create the file if does not exist", () => {
-                        const fd = engine.openSync("/a", "ax");
-                        engine.writeSync(fd, "hello");
-                        engine.closeSync(fd);
-                        expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello");
-                    });
-
-                    it("should throw EEXIST if the file exists", () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-                        const err = assert.throws(() => {
-                            engine.openSync("/a", "ax");
-                        }, "EEXIST: file already exists, open '/a'");
-                        expect(err.code).to.be.equal("EEXIST");
-                    });
-                });
-
-                describe("a+", () => {
-                    it("should open the file for reading and appending", () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-                        const fd = engine.openSync("/a", "a+");
-                        const buf = Buffer.alloc(3);
-                        engine.readSync(fd, buf, 0, 3, 0);
-                        engine.writeSync(fd, " world");
-                        engine.closeSync(fd);
-                        expect(buf).to.be.deep.equal(Buffer.from("hel"));
-                        expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello world");
-                    });
-
-                    it("should create a file if does not exists", () => {
-                        const fd = engine.openSync("/a", "a+");
-                        engine.writeSync(fd, "hello");
-                        engine.closeSync(fd);
-                        expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello");
-                    });
-                });
-
-                describe("ax+", () => {
-                    it("should open the file for reading and appending", () => {
-                        const fd = engine.openSync("/a", "a+");
-                        engine.writeSync(fd, "hello", 0);
-                        const buf = Buffer.alloc(3);
-                        engine.readSync(fd, buf, 0, 3, 0);
-                        engine.closeSync(fd);
-                        expect(buf).to.be.deep.equal(Buffer.from("hel"));
-                        expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello");
-                    });
-
-                    it("should throw EEXIST if the file exists", () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-                        const err = assert.throws(() => {
-                            engine.openSync("/a", "ax+");
-                        }, "EEXIST: file already exists, open '/a'");
-                        expect(err.code).to.be.equal("EEXIST");
-                    });
-                });
-
-                describe("O_CREAT", () => {
-                    it("should create and open the file for reading with given mode", () => {
-                        const fd = engine.openSync("/a", c.O_CREAT, 0o444);
-                        engine.closeSync(fd);
-                        const stat = engine.statSync("/a");
-                        expect(stat.size).to.be.equal(0);
-                        expect(stat.mode & 0o777).to.be.equal(0o444);
-                    });
-                });
-
-                describe("O_NOFOLLOW", { skip: is.windows }, () => {
-                    it("should throw ELOOP if the pathname is a symlink", () => {
-                        engine.add((ctx) => ({
-                            a: {
-                                a: ctx.file("hello"),
-                                b: ctx.symlink("a"),
-                                c: ctx.symlink("d") // dangling symlink
-                            }
-                        }));
-                        {
-                            const err = assert.throws(() => {
-                                engine.openSync("/a/b", c.O_NOFOLLOW);
-                            }, "ELOOP: too many symbolic links encountered, open '/a/b'");
-                            expect(err.code).to.be.equal("ELOOP");
-                        }
-                        {
-                            const err = assert.throws(() => {
-                                engine.openSync("/a/c", c.O_NOFOLLOW);
-                            }, "ELOOP: too many symbolic links encountered, open '/a/c'");
-                            expect(err.code).to.be.equal("ELOOP");
-                        }
-                    });
-
-                    it.only("should follow earlier symbolic components", () => {
-                        engine.add((ctx) => ({
-                            a: {
-                                a: ctx.file("hello"),
-                                b: ctx.symlink("a"),
-                                c: ctx.symlink("d"), // dangling symlink
-                                e: ctx.symlink("..")
-                            }
-                        }));
-                        {
-                            const err = assert.throws(() => {
-                                engine.openSync("/a/e/a/b", c.O_NOFOLLOW);
-                            }, "ELOOP: too many symbolic links encountered, open '/a/e/a/b'");
-                            expect(err.code).to.be.equal("ELOOP");
-                        }
-                        {
-                            const err = assert.throws(() => {
-                                engine.openSync("/a/e/a/c", c.O_NOFOLLOW);
-                            }, "ELOOP: too many symbolic links encountered, open '/a/e/a/c'");
-                            expect(err.code).to.be.equal("ELOOP");
-                        }
-                    });
-                });
-
-                describe("O_TRUNC", () => {
-                    it("should truncate a file", () => {
-                        engine.add((ctx) => ({
-                            a: ctx.file("hello")
-                        }));
-                        const fd = engine.openSync("/a", c.O_TRUNC);
-                        engine.closeSync(fd);
-                        expect(engine.readFileSync("/a", "utf8")).to.be.empty();
-                    });
-                });
-            });
-        });
-
-        describe("read", () => {
-            it("should read data to a buffer from the given position", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const buf = Buffer.alloc(3);
-                const fd = await engine.open("/a", "r");
-                await engine.read(fd, buf, 0, 3, 0);
-                await engine.close(fd);
-                expect(buf).to.be.deep.equal(Buffer.from("hel"));
-            });
-
-            it("should return the number of read bytes", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const buf = Buffer.alloc(3);
-                const fd = await engine.open("/a", "r");
-                expect(await engine.read(fd, buf, 0, 3, 0)).to.be.equal(3);
-                await engine.close(fd);
-                expect(buf).to.be.deep.equal(Buffer.from("hel"));
-            });
-
-            it("should update file position if the position is null", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("0123456789")
-                }));
-
-                const buf = Buffer.alloc(3);
-                const fd = await engine.open("/a", "r");
-                expect(await engine.read(fd, buf, 0, 3, null)).to.be.equal(3);
-                expect(buf).to.be.deep.equal(Buffer.from("012"));
-                expect(await engine.read(fd, buf, 0, 3, null)).to.be.equal(3);
-                expect(buf).to.be.deep.equal(Buffer.from("345"));
-                expect(await engine.read(fd, buf, 0, 3, null)).to.be.equal(3);
-                expect(buf).to.be.deep.equal(Buffer.from("678"));
-                expect(await engine.read(fd, buf, 0, 3, null)).to.be.equal(1);
-                expect(buf).to.be.deep.equal(Buffer.from("978")); // 78 from the previous reading
-                expect(await engine.read(fd, buf, 0, 3, null)).to.be.equal(0);
-                expect(buf).to.be.deep.equal(Buffer.from("978")); // the previous result
-                await engine.close(fd);
-            });
-
-            it("should not update file position if the positon is given", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("0123456789")
-                }));
-
-                const buf = Buffer.alloc(3);
-                const fd = await engine.open("/a", "r");
-                expect(await engine.read(fd, buf, 0, 3, null)).to.be.equal(3);
-                expect(buf).to.be.deep.equal(Buffer.from("012"));
-                expect(await engine.read(fd, buf, 0, 3, 0)).to.be.equal(3);
-                expect(buf).to.be.deep.equal(Buffer.from("012"));
-                expect(await engine.read(fd, buf, 0, 3, null)).to.be.equal(3);
-                expect(buf).to.be.deep.equal(Buffer.from("345"));
-                await engine.close(fd);
-            });
-
-            it("should throw EBADF if the fd is not opened for reading", async () => {
-                const fd = await engine.open("/a", "w");
-                const err = await assert.throws(async () => {
-                    await engine.read(fd, Buffer.alloc(10), 0, 10, 0);
-                }, "EBADF: bad file descriptor, read");
-                expect(err.code).to.be.equal("EBADF");
-            });
-
-            it("should throw Error if the offset is greather than the buffer length", async () => {
-                const fd = await engine.open("/a", "w+");
-                await assert.throws(async () => {
-                    await engine.read(fd, Buffer.alloc(10), 100, 10, 0);
-                }, Error, "Offset is out of bounds");
-                await engine.close(fd);
-            });
-
-            it("should throw RangeError if the buffer length is not corresponding", async () => {
-                const fd = await engine.open("/a", "w+");
-                await assert.throws(async () => {
-                    await engine.read(fd, Buffer.alloc(10), 0, 100, 0);
-                }, Error, "Length extends beyond buffer");
-                await assert.throws(async () => {
-                    await engine.read(fd, Buffer.alloc(10), 0, 100, 0);
-                }, Error, "Length extends beyond buffer");
-                await engine.close(fd);
-            });
-        });
-
-        describe("readSync", () => {
-            it("should read data to a buffer from the given position", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const buf = Buffer.alloc(3);
-                const fd = engine.openSync("/a", "r");
-                engine.readSync(fd, buf, 0, 3, 0);
-                engine.closeSync(fd);
-                expect(buf).to.be.deep.equal(Buffer.from("hel"));
-            });
-
-            it("should return the number of read bytes", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const buf = Buffer.alloc(3);
-                const fd = engine.openSync("/a", "r");
-                expect(engine.readSync(fd, buf, 0, 3, 0)).to.be.equal(3);
-                engine.close(fd);
-                expect(buf).to.be.deep.equal(Buffer.from("hel"));
-            });
-
-            it("should update file position if the position is null", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("0123456789")
-                }));
-
-                const buf = Buffer.alloc(3);
-                const fd = engine.openSync("/a", "r");
-                expect(engine.readSync(fd, buf, 0, 3, null)).to.be.equal(3);
-                expect(buf).to.be.deep.equal(Buffer.from("012"));
-                expect(engine.readSync(fd, buf, 0, 3, null)).to.be.equal(3);
-                expect(buf).to.be.deep.equal(Buffer.from("345"));
-                expect(engine.readSync(fd, buf, 0, 3, null)).to.be.equal(3);
-                expect(buf).to.be.deep.equal(Buffer.from("678"));
-                expect(engine.readSync(fd, buf, 0, 3, null)).to.be.equal(1);
-                expect(buf).to.be.deep.equal(Buffer.from("978")); // 78 from the previous reading
-                expect(engine.readSync(fd, buf, 0, 3, null)).to.be.equal(0);
-                expect(buf).to.be.deep.equal(Buffer.from("978")); // the previous result
-                engine.closeSync(fd);
-            });
-
-            it("should not update file position if the positon is given", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("0123456789")
-                }));
-
-                const buf = Buffer.alloc(3);
-                const fd = engine.openSync("/a", "r");
-                expect(engine.readSync(fd, buf, 0, 3, null)).to.be.equal(3);
-                expect(buf).to.be.deep.equal(Buffer.from("012"));
-                expect(engine.readSync(fd, buf, 0, 3, 0)).to.be.equal(3);
-                expect(buf).to.be.deep.equal(Buffer.from("012"));
-                expect(engine.readSync(fd, buf, 0, 3, null)).to.be.equal(3);
-                expect(buf).to.be.deep.equal(Buffer.from("345"));
-                engine.closeSync(fd);
-            });
-
-            it("should throw EBADF if the fd is not opened for reading", () => {
-                const fd = engine.openSync("/a", "w");
-                const err = assert.throws(() => {
-                    engine.readSync(fd, Buffer.alloc(10), 0, 10, 0);
-                }, "EBADF: bad file descriptor, read");
-                expect(err.code).to.be.equal("EBADF");
-            });
-
-            it("should throw Error if the offset is greather than the buffer length", () => {
-                const fd = engine.openSync("/a", "w+");
-                assert.throws(() => {
-                    engine.readSync(fd, Buffer.alloc(10), 100, 10, 0);
-                }, Error, "Offset is out of bounds");
-                engine.closeSync(fd);
-            });
-
-            it("should throw RangeError if the buffer length is not corresponding", () => {
-                const fd = engine.openSync("/a", "w+");
-                assert.throws(() => {
-                    engine.readSync(fd, Buffer.alloc(10), 0, 100, 0);
-                }, Error, "Length extends beyond buffer");
-                assert.throws(() => {
-                    engine.readSync(fd, Buffer.alloc(10), 0, 100, 0);
-                }, Error, "Length extends beyond buffer");
-                engine.closeSync(fd);
-            });
-        });
-
-        describe("write", () => {
-            describe("string", () => {
-                it("should write a string at the given position", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("0123456789")
-                    }));
-                    const fd = await engine.open("/a", "r+");
-                    await engine.write(fd, "hello", 1);
-                    await engine.close(fd);
-                    expect(await engine.readFile("/a", "utf8")).to.be.equal("0hello6789");
-                });
-
-                it("should return the number of written bytes", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("0123456789")
-                    }));
-                    const fd = await engine.open("/a", "r+");
-                    expect(await engine.write(fd, "hello", 1)).to.be.equal(5);
-                    await engine.close(fd);
-                });
-
-                it("should write at the current position if the position is not given", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("0123456789")
-                    }));
-                    const fd = await engine.open("/a", "r+");
-                    expect(await engine.write(fd, "hello")).to.be.equal(5);
-                    expect(await engine.write(fd, " ")).to.be.equal(1);
-                    expect(await engine.write(fd, "world")).to.be.equal(5);
-                    await engine.close(fd);
-                    expect(await engine.readFile("/a", "utf8")).to.be.equal("hello world");
-                });
-
-                it("should not change file offset via positional writings", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("0123456789")
-                    }));
-
-                    const fd = await engine.open("/a", "r+");
-                    await engine.write(fd, "hello");
-                    await engine.write(fd, "world", 6);
-                    await engine.write(fd, " ");
-                    await engine.close(fd);
-                    expect(await engine.readFile("/a", "utf8")).to.be.equal("hello world");
-                });
-
-                it("should fill the gap with zeroes if the position is larger than the file size", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-
-                    const fd = await engine.open("/a", "r+");
-                    await engine.write(fd, "world", 10);
-                    await engine.close(fd);
-                    expect(await engine.readFile("/a", "utf8")).to.be.equal("hello\0\0\0\0\0world");
-                });
-
-                it("should set the file position at the end before each write if O_APPEND is set", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-
-                    const fd = await engine.open("/a", "a+");
-                    await engine.write(fd, " ");
-                    await engine.write(fd, "world");
-                    await engine.close(fd);
-                    expect(await engine.readFile("/a", "utf8")).to.be.equal("hello world");
-                });
-
-                it("should read zero bytes after non-positional writes if O_APPEND is set", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-
-                    const fd = await engine.open("/a", "a+");
-                    await engine.write(fd, " ");
-                    const buf = Buffer.alloc(3);
-                    expect(await engine.read(fd, buf, 0, 3)).to.be.equal(0);
-                    expect(buf).to.be.deep.equal(Buffer.alloc(3));
-                    await engine.write(fd, "world");
-                    expect(await engine.read(fd, buf, 0, 3)).to.be.equal(0);
-                    expect(buf).to.be.deep.equal(Buffer.alloc(3));
-                    await engine.close(fd);
-                    expect(await engine.readFile("/a", "utf8")).to.be.equal("hello world");
-                });
-
-                it("should write at the end if the position is given and O_APPEND is set but not change the offset after write", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-
-                    const fd = await engine.open("/a", "a+");
-                    await engine.write(fd, " ", 0);
-                    await engine.write(fd, "world", 0);
-                    const buf = Buffer.alloc(3);
-                    expect(await engine.read(fd, buf, 0, 3)).to.be.equal(3);
-                    expect(buf).to.be.deep.equal(Buffer.from("wor"));
-                    await engine.close(fd);
-                    expect(await engine.readFile("/a", "utf8")).to.be.equal("hello world");
-                });
-
-                it("should encode the string using the given encoding", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-
-                    const fd = await engine.open("/a", "a+");
-                    expect(await engine.write(fd, "010203", undefined, "hex")).to.be.equal(3);
-                    await engine.close(fd);
-                    expect(await engine.readFile("/a", "utf8")).to.be.equal("hello\x01\x02\x03");
-                });
-            });
-
-            describe("buffer", () => {
-                it("should write a buffer at the given position", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("0123456789")
-                    }));
-                    const fd = await engine.open("/a", "r+");
-                    await engine.write(fd, Buffer.from("hello"), undefined, undefined, 1);
-                    await engine.close(fd);
-                    expect(await engine.readFile("/a", "utf8")).to.be.equal("0hello6789");
-                });
-
-                it("should return the number of written bytes", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("0123456789")
-                    }));
-                    const fd = await engine.open("/a", "r+");
-                    expect(await engine.write(fd, Buffer.from("hello"), undefined, undefined, 1)).to.be.equal(5);
-                    await engine.close(fd);
-                });
-
-                it("should not change file offset via positional writings", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("0123456789")
-                    }));
-
-                    const fd = await engine.open("/a", "r+");
-                    await engine.write(fd, Buffer.from("hello"));
-                    await engine.write(fd, Buffer.from("world"), undefined, undefined, 6);
-                    await engine.write(fd, Buffer.from(" "));
-                    await engine.close(fd);
-                    expect(await engine.readFile("/a", "utf8")).to.be.equal("hello world");
-                });
-
-                it("should fill the gap with zeroes if the position is larger than the file size", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-
-                    const fd = await engine.open("/a", "r+");
-                    await engine.write(fd, Buffer.from("world"), undefined, undefined, 10);
-                    await engine.close(fd);
-                    expect(await engine.readFile("/a", "utf8")).to.be.equal("hello\0\0\0\0\0world");
-                });
-
-                it("should set the file position at the end before each write if O_APPEND is set", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-
-                    const fd = await engine.open("/a", "a+");
-                    await engine.write(fd, Buffer.from(" "));
-                    await engine.write(fd, Buffer.from("world"));
-                    await engine.close(fd);
-                    expect(await engine.readFile("/a", "utf8")).to.be.equal("hello world");
-                });
-
-                it("should read zero bytes after non-positional writes if O_APPEND is set", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-
-                    const fd = await engine.open("/a", "a+");
-                    await engine.write(fd, " ");
-                    const buf = Buffer.alloc(3);
-                    expect(await engine.read(fd, buf, 0, 3)).to.be.equal(0);
-                    expect(buf).to.be.deep.equal(Buffer.alloc(3));
-                    await engine.write(fd, Buffer.from("world"));
-                    expect(await engine.read(fd, buf, 0, 3)).to.be.equal(0);
-                    expect(buf).to.be.deep.equal(Buffer.alloc(3));
-                    await engine.close(fd);
-                    expect(await engine.readFile("/a", "utf8")).to.be.equal("hello world");
-                });
-
-                it("should write at the end if the position is given and O_APPEND is set but not change the offset after write", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-
-                    const fd = await engine.open("/a", "a+");
-                    await engine.write(fd, Buffer.from(" "), undefined, undefined, 0);
-                    await engine.write(fd, Buffer.from("world"), undefined, undefined, 0);
-                    const buf = Buffer.alloc(3);
-                    expect(await engine.read(fd, buf, 0, 3)).to.be.equal(3);
-                    expect(buf).to.be.deep.equal(Buffer.from("wor"));
-                    await engine.close(fd);
-                    expect(await engine.readFile("/a", "utf8")).to.be.equal("hello world");
-                });
-
-                it("should write only the part of the buffer at the given position", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("0123456789")
-                    }));
-                    const fd = await engine.open("/a", "r+");
-                    await engine.write(fd, Buffer.from(" hello world"), 1, 5, 1);
-                    await engine.close(fd);
-                    expect(await engine.readFile("/a", "utf8")).to.be.equal("0hello6789");
-                });
-
-                it("should throw RangeError if the offset is out of bounds", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("0123456789")
-                    }));
-                    const fd = await engine.open("/a", "r+");
-                    await assert.throws(async () => {
-                        await engine.write(fd, Buffer.from("hello"), 10, 5);
-                    }, RangeError, "offset out of bounds");
-                    await engine.close(fd);
-                });
-
-                it("should throw RangeError if the length is out of bounds", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("0123456789")
-                    }));
-                    const fd = await engine.open("/a", "r+");
-                    await assert.throws(async () => {
-                        await engine.write(fd, Buffer.from("hello"), 1, 10);
-                    }, RangeError, "length out of bounds");
-                    await engine.close(fd);
-                });
-
-                it("should throw RangeError if off + length if greather than the buffer length", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("0123456789")
-                    }));
-                    const fd = await engine.open("/a", "r+");
-                    await assert.throws(async () => {
-                        await engine.write(fd, Buffer.from("hello"), 1, 5);
-                    }, RangeError, "off + len > buffer.length");
-                });
-            });
-        });
-
-        describe("writeSync", () => {
-            describe("string", () => {
-                it("should write a string at the given position", () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("0123456789")
-                    }));
-                    const fd = engine.openSync("/a", "r+");
-                    engine.writeSync(fd, "hello", 1);
-                    engine.closeSync(fd);
-                    expect(engine.readFileSync("/a", "utf8")).to.be.equal("0hello6789");
-                });
-
-                it("should return the number of written bytes", () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("0123456789")
-                    }));
-                    const fd = engine.openSync("/a", "r+");
-                    expect(engine.writeSync(fd, "hello", 1)).to.be.equal(5);
-                    engine.closeSync(fd);
-                });
-
-                it("should write at the current position if the position is not given", () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("0123456789")
-                    }));
-                    const fd = engine.openSync("/a", "r+");
-                    expect(engine.writeSync(fd, "hello")).to.be.equal(5);
-                    expect(engine.writeSync(fd, " ")).to.be.equal(1);
-                    expect(engine.writeSync(fd, "world")).to.be.equal(5);
-                    engine.closeSync(fd);
-                    expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello world");
-                });
-
-                it("should not change file offset via positional writings", () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("0123456789")
-                    }));
-
-                    const fd = engine.openSync("/a", "r+");
-                    engine.writeSync(fd, "hello");
-                    engine.writeSync(fd, "world", 6);
-                    engine.writeSync(fd, " ");
-                    engine.closeSync(fd);
-                    expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello world");
-                });
-
-                it("should fill the gap with zeroes if the position is larger than the file size", () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-
-                    const fd = engine.openSync("/a", "r+");
-                    engine.writeSync(fd, "world", 10);
-                    engine.closeSync(fd);
-                    expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello\0\0\0\0\0world");
-                });
-
-                it("should set the file position at the end before each write if O_APPEND is set", () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-
-                    const fd = engine.openSync("/a", "a+");
-                    engine.writeSync(fd, " ");
-                    engine.writeSync(fd, "world");
-                    engine.closeSync(fd);
-                    expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello world");
-                });
-
-                it("should read zero bytes after non-positional writes if O_APPEND is set", () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-
-                    const fd = engine.openSync("/a", "a+");
-                    engine.writeSync(fd, " ");
-                    const buf = Buffer.alloc(3);
-                    expect(engine.readSync(fd, buf, 0, 3)).to.be.equal(0);
-                    expect(buf).to.be.deep.equal(Buffer.alloc(3));
-                    engine.writeSync(fd, "world");
-                    expect(engine.readSync(fd, buf, 0, 3)).to.be.equal(0);
-                    expect(buf).to.be.deep.equal(Buffer.alloc(3));
-                    engine.closeSync(fd);
-                    expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello world");
-                });
-
-                it("should write at the end if the position is given and O_APPEND is set but not change the offset after write", () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-
-                    const fd = engine.openSync("/a", "a+");
-                    engine.writeSync(fd, " ", 0);
-                    engine.writeSync(fd, "world", 0);
-                    const buf = Buffer.alloc(3);
-                    expect(engine.readSync(fd, buf, 0, 3)).to.be.equal(3);
-                    expect(buf).to.be.deep.equal(Buffer.from("wor"));
-                    engine.closeSync(fd);
-                    expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello world");
-                });
-
-                it("should encode the string using the given encoding", () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-
-                    const fd = engine.openSync("/a", "a+");
-                    expect(engine.writeSync(fd, "010203", undefined, "hex")).to.be.equal(3);
-                    engine.closeSync(fd);
-                    expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello\x01\x02\x03");
-                });
-            });
-
-            describe("buffer", () => {
-                it("should write a buffer at the given position", () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("0123456789")
-                    }));
-                    const fd = engine.openSync("/a", "r+");
-                    engine.writeSync(fd, Buffer.from("hello"), undefined, undefined, 1);
-                    engine.closeSync(fd);
-                    expect(engine.readFileSync("/a", "utf8")).to.be.equal("0hello6789");
-                });
-
-                it("should return the number of written bytes", () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("0123456789")
-                    }));
-                    const fd = engine.openSync("/a", "r+");
-                    expect(engine.writeSync(fd, Buffer.from("hello"), undefined, undefined, 1)).to.be.equal(5);
-                    engine.closeSync(fd);
-                });
-
-                it("should not change file offset via positional writings", () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("0123456789")
-                    }));
-
-                    const fd = engine.openSync("/a", "r+");
-                    engine.writeSync(fd, Buffer.from("hello"));
-                    engine.writeSync(fd, Buffer.from("world"), undefined, undefined, 6);
-                    engine.writeSync(fd, Buffer.from(" "));
-                    engine.closeSync(fd);
-                    expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello world");
-                });
-
-                it("should fill the gap with zeroes if the position is larger than the file size", () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-
-                    const fd = engine.openSync("/a", "r+");
-                    engine.writeSync(fd, Buffer.from("world"), undefined, undefined, 10);
-                    engine.closeSync(fd);
-                    expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello\0\0\0\0\0world");
-                });
-
-                it("should set the file position at the end before each write if O_APPEND is set", () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-
-                    const fd = engine.openSync("/a", "a+");
-                    engine.writeSync(fd, Buffer.from(" "));
-                    engine.writeSync(fd, Buffer.from("world"));
-                    engine.closeSync(fd);
-                    expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello world");
-                });
-
-                it("should read zero bytes after non-positional writes if O_APPEND is set", () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-
-                    const fd = engine.openSync("/a", "a+");
-                    engine.writeSync(fd, " ");
-                    const buf = Buffer.alloc(3);
-                    expect(engine.readSync(fd, buf, 0, 3)).to.be.equal(0);
-                    expect(buf).to.be.deep.equal(Buffer.alloc(3));
-                    engine.writeSync(fd, Buffer.from("world"));
-                    expect(engine.readSync(fd, buf, 0, 3)).to.be.equal(0);
-                    expect(buf).to.be.deep.equal(Buffer.alloc(3));
-                    engine.closeSync(fd);
-                    expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello world");
-                });
-
-                it("should write at the end if the position is given and O_APPEND is set but not change the offset after write", () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-
-                    const fd = engine.openSync("/a", "a+");
-                    engine.writeSync(fd, Buffer.from(" "), undefined, undefined, 0);
-                    engine.writeSync(fd, Buffer.from("world"), undefined, undefined, 0);
-                    const buf = Buffer.alloc(3);
-                    expect(engine.readSync(fd, buf, 0, 3)).to.be.equal(3);
-                    expect(buf).to.be.deep.equal(Buffer.from("wor"));
-                    engine.closeSync(fd);
-                    expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello world");
-                });
-
-                it("should write only the part of the buffer at the given position", () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("0123456789")
-                    }));
-                    const fd = engine.openSync("/a", "r+");
-                    engine.writeSync(fd, Buffer.from(" hello world"), 1, 5, 1);
-                    engine.closeSync(fd);
-                    expect(engine.readFileSync("/a", "utf8")).to.be.equal("0hello6789");
-                });
-
-                it("should throw RangeError if the offset is out of bounds", () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("0123456789")
-                    }));
-                    const fd = engine.openSync("/a", "r+");
-                    assert.throws(() => {
-                        engine.writeSync(fd, Buffer.from("hello"), 10, 5);
-                    }, RangeError, "offset out of bounds");
-                    engine.closeSync(fd);
-                });
-
-                it("should throw RangeError if the length is out of bounds", () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("0123456789")
-                    }));
-                    const fd = engine.openSync("/a", "r+");
-                    assert.throws(() => {
-                        engine.writeSync(fd, Buffer.from("hello"), 1, 10);
-                    }, RangeError, "length out of bounds");
-                    engine.closeSync(fd);
-                });
-
-                it("should throw RangeError if off + length if greather than the buffer length", () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("0123456789")
-                    }));
-                    const fd = engine.openSync("/a", "r+");
-                    assert.throws(() => {
-                        engine.writeSync(fd, Buffer.from("hello"), 1, 5);
-                    }, RangeError, "off + len > buffer.length");
-                });
-            });
-        });
-
-        describe("readdir", () => {
-            it("should read a directory", async () => {
-                engine.add((ctx) => ({
-                    a: {
-                        b: ctx.file("hello")
-                    },
-                    b: {
-                        c: ctx.file("hello")
-                    }
-                }));
-
-                {
-                    const files = await engine.readdir("/");
-                    expect(files).to.be.deep.equal(["a", "b"]);
-                }
-                {
-                    const files = await engine.readdir("/a");
-                    expect(files).to.be.deep.equal(["b"]);
-                }
-                {
-                    const files = await engine.readdir("/b");
-                    expect(files).to.be.deep.equal(["c"]);
-                }
-            });
-
-            it("should throw ENOENT if there is no such file", async () => {
-                const err = await assert.throws(async () => {
-                    await engine.readdir("/a/b/c");
-                }, "ENOENT: no such file or directory, scandir '/a/b/c'");
-                expect(err.code).to.be.equal("ENOENT");
-            });
-
-            it("should throw ENOTDIR if not a directory", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                {
-                    const err = await assert.throws(async () => {
-                        await engine.readdir("/a");
-                    }, "ENOTDIR: not a directory, scandir '/a'");
-                    expect(err.code).to.be.equal("ENOTDIR");
-                }
-                {
-                    const err = await assert.throws(async () => {
-                        await engine.readdir("/a/");
-                    }, "ENOTDIR: not a directory, scandir '/a/'");
-                    expect(err.code).to.be.equal("ENOTDIR");
-                }
-            });
-
-            describe("symlinks", () => {
-                it("should read a directory referenced by a symlink", async () => {
-                    engine.add((ctx) => ({
-                        a: {
-                            b: ctx.file("hello")
-                        },
-                        c: {
-                            d: ctx.symlink("../a")
-                        },
-                        e: {
-                            f: ctx.symlink("../c/d")
-                        }
-                    }));
-
-                    const files = await engine.readdir("/c/d");
-                    expect(files).to.be.deep.equal(["b"]);
-                });
-
-                it("should read a directory referenced by a chain of symlinks", async () => {
-                    engine.add((ctx) => ({
-                        a: {
-                            b: ctx.file("hello")
-                        },
-                        c: {
-                            d: ctx.symlink("../a")
-                        },
-                        e: {
-                            f: ctx.symlink("../c/d")
-                        }
-                    }));
-
-                    const files = await engine.readdir("/e/f");
-                    expect(files).to.be.deep.equal(["b"]);
-                });
-
-                it("should throw ELOOP when found a symlink loop", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.symlink("b"),
-                        b: ctx.symlink("a")
-                    }));
-
-                    const err = await assert.throws(async () => {
-                        await engine.readdir("/a");
-                    }, "ELOOP: too many symbolic links encountered, scandir '/a'");
-                    expect(err.code).to.be.equal("ELOOP");
-                });
-
-                it("should throw ENOENT if the symlink is dead", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.symlink("b")
-                    }));
-
-                    const err = await assert.throws(async () => {
-                        await engine.readdir("/a");
-                    }, "ENOENT: no such file or directory, scandir '/a'");
-                    expect(err.code).to.be.equal("ENOENT");
-                });
-
-                it("should throw ENOTDIR if the symlink refers not to a directory", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.symlink("b"),
-                        b: ctx.file("a")
-                    }));
-
-                    const err = await assert.throws(async () => {
-                        await engine.readdir("/a");
-                    }, "ENOTDIR: not a directory, scandir '/a'");
-                    expect(err.code).to.be.equal("ENOTDIR");
-                });
-
-                it("should read a directory with .. and symlink references", async () => {
-                    engine.add((ctx) => ({
-                        a: {
-                            b: {
-                                c: ctx.file("hello")
-                            }
-                        },
-                        c: {
-                            d: ctx.symlink("../a/b")
-                        }
-                    }));
-
-                    const files = await engine.readdir("/c/d/../b");
-                    expect(files).to.be.deep.equal(["c"]);
-                });
-            });
-        });
-
-        describe("readdirSync", () => {
-            it("should read a directory", () => {
-                engine.add((ctx) => ({
-                    a: {
-                        b: ctx.file("hello")
-                    },
-                    b: {
-                        c: ctx.file("hello")
-                    }
-                }));
-
-                {
-                    const files = engine.readdirSync("/");
-                    expect(files).to.be.deep.equal(["a", "b"]);
-                }
-                {
-                    const files = engine.readdirSync("/a");
-                    expect(files).to.be.deep.equal(["b"]);
-                }
-                {
-                    const files = engine.readdirSync("/b");
-                    expect(files).to.be.deep.equal(["c"]);
-                }
-            });
-
-            it("should throw ENOENT if there is no such file", () => {
-                const err = assert.throws(() => {
-                    engine.readdirSync("/a/b/c");
-                }, "ENOENT: no such file or directory, scandir '/a/b/c'");
-                expect(err.code).to.be.equal("ENOENT");
-            });
-
-            it("should throw ENOTDIR if not a directory", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                {
-                    const err = assert.throws(() => {
-                        engine.readdirSync("/a");
-                    }, "ENOTDIR: not a directory, scandir '/a'");
-                    expect(err.code).to.be.equal("ENOTDIR");
-                }
-                {
-                    const err = assert.throws(() => {
-                        engine.readdirSync("/a/");
-                    }, "ENOTDIR: not a directory, scandir '/a/'");
-                    expect(err.code).to.be.equal("ENOTDIR");
-                }
-            });
-
-            describe("symlinks", () => {
-                it("should read a directory referenced by a symlink", () => {
-                    engine.add((ctx) => ({
-                        a: {
-                            b: ctx.file("hello")
-                        },
-                        c: {
-                            d: ctx.symlink("../a")
-                        },
-                        e: {
-                            f: ctx.symlink("../c/d")
-                        }
-                    }));
-
-                    const files = engine.readdirSync("/c/d");
-                    expect(files).to.be.deep.equal(["b"]);
-                });
-
-                it("should read a directory referenced by a chain of symlinks", () => {
-                    engine.add((ctx) => ({
-                        a: {
-                            b: ctx.file("hello")
-                        },
-                        c: {
-                            d: ctx.symlink("../a")
-                        },
-                        e: {
-                            f: ctx.symlink("../c/d")
-                        }
-                    }));
-
-                    const files = engine.readdirSync("/e/f");
-                    expect(files).to.be.deep.equal(["b"]);
-                });
-
-                it("should throw ELOOP when found a symlink loop", () => {
-                    engine.add((ctx) => ({
-                        a: ctx.symlink("b"),
-                        b: ctx.symlink("a")
-                    }));
-
-                    const err = assert.throws(() => {
-                        engine.readdirSync("/a");
-                    }, "ELOOP: too many symbolic links encountered, scandir '/a'");
-                    expect(err.code).to.be.equal("ELOOP");
-                });
-
-                it("should throw ENOENT if the symlink is dead", () => {
-                    engine.add((ctx) => ({
-                        a: ctx.symlink("b")
-                    }));
-
-                    const err = assert.throws(() => {
-                        engine.readdirSync("/a");
-                    }, "ENOENT: no such file or directory, scandir '/a'");
-                    expect(err.code).to.be.equal("ENOENT");
-                });
-
-                it("should throw ENOTDIR if the symlink refers not to a directory", () => {
-                    engine.add((ctx) => ({
-                        a: ctx.symlink("b"),
-                        b: ctx.file("a")
-                    }));
-
-                    const err = assert.throws(() => {
-                        engine.readdirSync("/a");
-                    }, "ENOTDIR: not a directory, scandir '/a'");
-                    expect(err.code).to.be.equal("ENOTDIR");
-                });
-
-                it("should read a directory with .. and symlink references", () => {
-                    engine.add((ctx) => ({
-                        a: {
-                            b: {
-                                c: ctx.file("hello")
-                            }
-                        },
-                        c: {
-                            d: ctx.symlink("../a/b")
-                        }
-                    }));
-
-                    const files = engine.readdirSync("/c/d/../b");
-                    expect(files).to.be.deep.equal(["c"]);
-                });
-            });
-        });
-
-        describe("readFile", () => {
-            it("should read a buffer by default", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const buf = await engine.readFile("/a");
-                expect(buf).to.be.a("buffer");
-                expect(buf).to.be.deep.equal(Buffer.from("hello"));
-            });
-
-            it("should read a string if the second argument is an encoding", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const buf = await engine.readFile("/a", "utf8");
-                expect(buf).to.be.a("string");
-                expect(buf).to.be.equal("hello");
-            });
-
-            it("should support the encoding option", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const buf = await engine.readFile("/a", { encoding: "utf8" });
-                expect(buf).to.be.a("string");
-                expect(buf).to.be.equal("hello");
-            });
-
-            it("should support null encoding", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const buf = await engine.readFile("/a", { encoding: null });
-                expect(buf).to.be.a("buffer");
-                expect(buf).to.be.deep.equal(Buffer.from("hello"));
-            });
-
-            it("should support reading by a fd", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                {
-                    const fd = await engine.open("/a", "r");
-                    const buf = Buffer.alloc(10);
-                    await engine.read(fd, buf, 0, 1);
-                    expect(await engine.readFile(fd)).to.be.deep.equal(Buffer.from("ello"));
-                    await engine.close(fd);
-                }
-                {
-                    const fd = await engine.open("/a", "r");
-                    const buf = Buffer.alloc(10);
-                    await engine.read(fd, buf, 0, 1);
-                    expect(await engine.readFile(fd, "utf8")).to.be.deep.equal("ello");
-                    await engine.close(fd);
-                }
-            });
-        });
-
-        describe("readFileSync", () => {
-            it("should read a buffer by default", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const buf = engine.readFileSync("/a");
-                expect(buf).to.be.a("buffer");
-                expect(buf).to.be.deep.equal(Buffer.from("hello"));
-            });
-
-            it("should read a string if the second argument is an encoding", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const buf = engine.readFileSync("/a", "utf8");
-                expect(buf).to.be.a("string");
-                expect(buf).to.be.equal("hello");
-            });
-
-            it("should support the encoding option", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const buf = engine.readFileSync("/a", { encoding: "utf8" });
-                expect(buf).to.be.a("string");
-                expect(buf).to.be.equal("hello");
-            });
-
-            it("should support null encoding", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const buf = engine.readFileSync("/a", { encoding: null });
-                expect(buf).to.be.a("buffer");
-                expect(buf).to.be.deep.equal(Buffer.from("hello"));
-            });
-
-            it("should support reading by a fd", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                {
-                    const fd = engine.openSync("/a", "r");
-                    const buf = Buffer.alloc(10);
-                    engine.readSync(fd, buf, 0, 1);
-                    expect(engine.readFileSync(fd)).to.be.deep.equal(Buffer.from("ello"));
-                    engine.closeSync(fd);
-                }
-                {
-                    const fd = engine.openSync("/a", "r");
-                    const buf = Buffer.alloc(10);
-                    engine.readSync(fd, buf, 0, 1);
-                    expect(engine.readFileSync(fd, "utf8")).to.be.deep.equal("ello");
-                    engine.closeSync(fd);
-                }
-            });
-        });
-
-        describe("readlink", () => {
-            it("should return the target of a symbolic link", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.symlink("a/b/c")
-                }));
-
-                const target = await engine.readlink("/a");
-                expect(target).to.be.deep.equal("a/b/c");
-            });
-
-            it("should not throw if the symlink is dangling", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.symlink("../a")
-                }));
-
-                const target = await engine.readlink("/a");
-                expect(target).to.be.equal("../a");
-            });
-
-            it("should throw EINVAL if the file is not a symbolic link", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: {
-                        c: ctx.file("hello")
-                    }
-                }));
-
-                {
-                    const err = await assert.throws(async () => {
-                        await engine.readlink("/a");
-                    }, "EINVAL: invalid argument, readlink '/a'");
-                    expect(err.code).to.be.equal("EINVAL");
-                }
-                {
-                    const err = await assert.throws(async () => {
-                        await engine.readlink("/b");
-                    }, "EINVAL: invalid argument, readlink '/b'");
-                    expect(err.code).to.be.equal("EINVAL");
-                }
-            });
-        });
-
-        describe("readlinkSync", () => {
-            it("should return the target of a symbolic link", () => {
-                engine.add((ctx) => ({
-                    a: ctx.symlink("a/b/c")
-                }));
-
-                const target = engine.readlinkSync("/a");
-                expect(target).to.be.deep.equal("a/b/c");
-            });
-
-            it("should not throw if the symlink is dangling", () => {
-                engine.add((ctx) => ({
-                    a: ctx.symlink("../a")
-                }));
-
-                const target = engine.readlinkSync("/a");
-                expect(target).to.be.equal("../a");
-            });
-
-            it("should throw EINVAL if the file is not a symbolic link", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: {
-                        c: ctx.file("hello")
-                    }
-                }));
-
-                {
-                    const err = assert.throws(() => {
-                        engine.readlinkSync("/a");
-                    }, "EINVAL: invalid argument, readlink '/a'");
-                    expect(err.code).to.be.equal("EINVAL");
-                }
-                {
-                    const err = assert.throws(() => {
-                        engine.readlinkSync("/b");
-                    }, "EINVAL: invalid argument, readlink '/b'");
-                    expect(err.code).to.be.equal("EINVAL");
-                }
-            });
-        });
-
-        describe("realpath", () => {
-            it("should resolve all the references", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: {
-                        c: {
-                            d: {
-                                a: ctx.symlink("../../../a"),
-                                b: ctx.symlink("..")
-                            }
-                        }
-                    }
-                }));
-
-                expect(await engine.realpath("/a")).to.be.equal("/a");
-                expect(await engine.realpath("/b/../a")).to.be.equal("/a");
-                expect(await engine.realpath("/../a")).to.be.equal("/a");
-                expect(await engine.realpath("/b/../a")).to.be.equal("/a");
-                expect(await engine.realpath("/b/c/../../a")).to.be.equal("/a");
-                expect(await engine.realpath("/b/c//////../../a")).to.be.equal("/a");
-                expect(await engine.realpath("/b/././././../b/.././././a")).to.be.equal("/a");
-                expect(await engine.realpath("/b/c/../c/d/a")).to.be.equal("/a");
-                expect(await engine.realpath("/b/c/../c/d/b/d/b/d/b/d/a")).to.be.equal("/a");
-                expect(await engine.realpath("/b/c/../c/d/b/d/b/d/b/../../../../a")).to.be.equal("/a");
-            });
-
-            it("should return a buffer if requested", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                expect(await engine.realpath("/a")).to.be.equal("/a");
-                expect(await engine.realpath("/a", null)).to.be.equal("/a");
-                expect(await engine.realpath("/a", "buffer")).to.be.deep.equal(Buffer.from("/a"));
-                expect(await engine.realpath("/a", { encoding: "utf8" })).to.be.equal("/a");
-                expect(await engine.realpath("/a", { encoding: null })).to.be.equal("/a");
-                expect(await engine.realpath("/a", { encoding: "buffer" })).to.be.deep.equal(Buffer.from("/a"));
-            });
-
-            it("should throw ENOENT if there is no such file", async () => {
-                await assert.throws(async () => {
-                    await engine.realpath("/hello");
-                }, "ENOENT: no such file or directory, '/hello'");
-            });
-
-            it("should throw ENOENT on dead link", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.symlink("b"),
-                    e: {
-                        c: {
-                            d: ctx.symlink("../../b")
-                        }
-                    }
-                }));
-
-                await assert.throws(async () => {
-                    await engine.realpath("/a");
-                }, "ENOENT: no such file or directory, '/a'");
-
-
-                await assert.throws(async () => {
-                    await engine.realpath("/e/c/d/e/f/g");
-                }, "ENOENT: no such file or directory, '/e/c/d/e/f/g'");
-            });
-        });
-
-        describe("realpathSync", () => {
-            it("should resolve all the references", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: {
-                        c: {
-                            d: {
-                                a: ctx.symlink("../../../a"),
-                                b: ctx.symlink("..")
-                            }
-                        }
-                    }
-                }));
-
-                expect(engine.realpathSync("/a")).to.be.equal("/a");
-                expect(engine.realpathSync("/b/../a")).to.be.equal("/a");
-                expect(engine.realpathSync("/../a")).to.be.equal("/a");
-                expect(engine.realpathSync("/b/../a")).to.be.equal("/a");
-                expect(engine.realpathSync("/b/c/../../a")).to.be.equal("/a");
-                expect(engine.realpathSync("/b/c//////../../a")).to.be.equal("/a");
-                expect(engine.realpathSync("/b/././././../b/.././././a")).to.be.equal("/a");
-                expect(engine.realpathSync("/b/c/../c/d/a")).to.be.equal("/a");
-                expect(engine.realpathSync("/b/c/../c/d/b/d/b/d/b/d/a")).to.be.equal("/a");
-                expect(engine.realpathSync("/b/c/../c/d/b/d/b/d/b/../../../../a")).to.be.equal("/a");
-            });
-
-            it("should return a buffer if requested", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                expect(engine.realpathSync("/a")).to.be.equal("/a");
-                expect(engine.realpathSync("/a", null)).to.be.equal("/a");
-                expect(engine.realpathSync("/a", "buffer")).to.be.deep.equal(Buffer.from("/a"));
-                expect(engine.realpathSync("/a", { encoding: "utf8" })).to.be.equal("/a");
-                expect(engine.realpathSync("/a", { encoding: null })).to.be.equal("/a");
-                expect(engine.realpathSync("/a", { encoding: "buffer" })).to.be.deep.equal(Buffer.from("/a"));
-            });
-
-            it("should throw ENOENT if there is no such file", () => {
-                assert.throws(() => {
-                    engine.realpathSync("/hello");
-                }, "ENOENT: no such file or directory, '/hello'");
-            });
-
-            it("should throw ENOENT on a dangling link", () => {
-                engine.add((ctx) => ({
-                    a: ctx.symlink("b"),
-                    e: {
-                        c: {
-                            d: ctx.symlink("../../b")
-                        }
-                    }
-                }));
-
-                assert.throws(() => {
-                    engine.realpathSync("/a");
-                }, "ENOENT: no such file or directory, '/a'");
-
-
-                assert.throws(() => {
-                    engine.realpathSync("/e/c/d/e/f/g");
-                }, "ENOENT: no such file or directory, '/e/c/d/e/f/g'");
-            });
-        });
-
-        describe("rename", () => {
-            it("should rename a file", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                await engine.rename("/a", "/b");
-                expect(await engine.readdir("/")).to.be.deep.equal(["b"]);
-                expect(await engine.readFile("/b", "utf8")).to.be.equal("hello");
-            });
-
-            it("should throw ENOENT if the dest directory does not exist", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const err = await assert.throws(async () => {
-                    await engine.rename("/a", "/b/c");
-                }, "ENOENT: no such file or directory, rename '/a' -> '/b/c'");
-                expect(err.code).to.be.equal("ENOENT");
-            });
-
-            it("should throw ENOENT if the src does not exist", async () => {
-                const err = await assert.throws(async () => {
-                    await engine.rename("/a", "/b");
-                }, "ENOENT: no such file or directory, rename '/a' -> '/b'");
-                expect(err.code).to.be.equal("ENOENT");
-            });
-
-            it("should throw EACCES if the dest directory has no write permissions", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: [{}, { mode: 0o555 }]
-                }));
-
-                const err = await assert.throws(async () => {
-                    await engine.rename("/a", "/b/a");
-                }, "EACCES: permission denied, rename '/a' -> '/b/a'");
-                expect(err.code).to.be.equal("EACCES");
-            });
-
-            it("should throw EACCES if the src directory has no write permissions", async () => {
-                engine.add((ctx) => ({
-                    a: [{
-                        b: ctx.file("hello"),
-                        c: {
-
-                        }
-                    }, { mode: 0o555 }]
-                }));
-
-                const err = await assert.throws(async () => {
-                    await engine.rename("/a/b", "/a/c/a");
-                }, "EACCES: permission denied, rename '/a/b' -> '/a/c/a'");
-                expect(err.code).to.be.equal("EACCES");
-            });
-
-            it("should work for directories", async () => {
-                engine.add((ctx) => ({
-                    a: {
-                        c: ctx.file("hello")
-                    }
-                }));
-
-                await engine.rename("/a", "/b");
-                expect(await engine.readdir("/")).to.be.deep.equal(["b"]);
-                expect(await engine.readdir("/b")).to.be.deep.equal(["c"]);
-                expect(await engine.readFile("/b/c", "utf8")).to.be.equal("hello");
-            });
-
-            it("should not change the inode", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const stata = await engine.stat("/a");
-                await engine.rename("/a", "/b");
-                const statb = await engine.stat("/b");
-                expect(stata.ino).to.be.equal(statb.ino);
-            });
-
-            it("should replace the dest if it exists", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    c: ctx.file("world")
-                }));
-
-                await engine.link("/c", "/d");
-                let statd = await engine.stat("/d");
-                expect(statd.nlink).to.be.equal(2);
-                await engine.rename("/a", "/c");
-                expect(await engine.readFile("/c", "utf8")).to.be.equal("hello");
-                statd = await engine.stat("/d");
-                expect(statd.nlink).to.be.equal(1);
-                expect(await engine.readFile("/d", "utf8")).to.be.equal("world");
-            });
-
-            it("should throw EISDIR if the dst is a directory but the src is not", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: {
-
-                    }
-                }));
-
-                const err = await assert.throws(async () => {
-                    await engine.rename("/a", "/b");
-                }, "EISDIR: illegal operation on a directory, rename '/a' -> '/b'");
-                expect(err.code).to.be.equal("EISDIR");
-            });
-
-            it("should do nothing if the src and the dst are the same", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                await engine.link("/a", "/b");
-                await engine.rename("/a", "/b");
-                expect(await engine.readFile("/a", "utf8")).to.be.equal("hello");
-                expect(await engine.readFile("/b", "utf8")).to.be.equal("hello");
-            });
-
-            it("should throw ENOTDIR if the src is a directory but the dst is not", async () => {
-                engine.add((ctx) => ({
-                    a: {
-                        a: ctx.file("hello")
-                    },
-                    b: ctx.file("hello")
-                }));
-
-                const err = await assert.throws(async () => {
-                    await engine.rename("/a", "/b");
-                }, "ENOTDIR: not a directory, rename '/a' -> '/b'");
-                expect(err.code).to.be.equal("ENOTDIR");
-            });
-
-            it("should throw ENOTEMPTY if the src is directory and the dst is not empty directory", async () => {
-                engine.add((ctx) => ({
-                    a: {
-                        a: ctx.file("hello")
-                    },
-                    b: {
-                        a: ctx.file("hello")
-                    }
-                }));
-
-                const err = await assert.throws(async () => {
-                    await engine.rename("/a", "/b");
-                }, "ENOTEMPTY: directory not empty, rename '/a' -> '/b'");
-                expect(err.code).to.be.equal("ENOTEMPTY");
-            });
-
-            it("should rename symlinks", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: ctx.symlink("a")
-                }));
-
-                await engine.rename("/b", "/c");
-                const statc = await engine.lstat("/c");
-                expect(statc.isSymbolicLink()).to.be.true();
-                expect(await engine.readFile("/c", "utf8")).to.be.equal("hello");
-            });
-        });
-
-        describe("renameSync", () => {
-            it("should rename a file", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                engine.renameSync("/a", "/b");
-                expect(engine.readdirSync("/")).to.be.deep.equal(["b"]);
-                expect(engine.readFileSync("/b", "utf8")).to.be.equal("hello");
-            });
-
-            it("should throw ENOENT if the dest directory does not exist", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const err = assert.throws(() => {
-                    engine.renameSync("/a", "/b/c");
-                }, "ENOENT: no such file or directory, rename '/a' -> '/b/c'");
-                expect(err.code).to.be.equal("ENOENT");
-            });
-
-            it("should throw ENOENT if the src does not exist", () => {
-                const err = assert.throws(() => {
-                    engine.renameSync("/a", "/b");
-                }, "ENOENT: no such file or directory, rename '/a' -> '/b'");
-                expect(err.code).to.be.equal("ENOENT");
-            });
-
-            it("should throw EACCES if the dest directory has no write permissions", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: [{}, { mode: 0o555 }]
-                }));
-
-                const err = assert.throws(() => {
-                    engine.renameSync("/a", "/b/a");
-                }, "EACCES: permission denied, rename '/a' -> '/b/a'");
-                expect(err.code).to.be.equal("EACCES");
-            });
-
-            it("should throw EACCES if the src directory has no write permissions", () => {
-                engine.add((ctx) => ({
-                    a: [{
-                        b: ctx.file("hello"),
-                        c: {
-
-                        }
-                    }, { mode: 0o555 }]
-                }));
-
-                const err = assert.throws(() => {
-                    engine.renameSync("/a/b", "/a/c/a");
-                }, "EACCES: permission denied, rename '/a/b' -> '/a/c/a'");
-                expect(err.code).to.be.equal("EACCES");
-            });
-
-            it("should work for directories", () => {
-                engine.add((ctx) => ({
-                    a: {
-                        c: ctx.file("hello")
-                    }
-                }));
-
-                engine.renameSync("/a", "/b");
-                expect(engine.readdirSync("/")).to.be.deep.equal(["b"]);
-                expect(engine.readdirSync("/b")).to.be.deep.equal(["c"]);
-                expect(engine.readFileSync("/b/c", "utf8")).to.be.equal("hello");
-            });
-
-            it("should not change the inode", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const stata = engine.statSync("/a");
-                engine.renameSync("/a", "/b");
-                const statb = engine.statSync("/b");
-                expect(stata.ino).to.be.equal(statb.ino);
-            });
-
-            it("should replace the dest if it exists", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    c: ctx.file("world")
-                }));
-
-                engine.linkSync("/c", "/d");
-                let statd = engine.statSync("/d");
-                expect(statd.nlink).to.be.equal(2);
-                engine.renameSync("/a", "/c");
-                expect(engine.readFileSync("/c", "utf8")).to.be.equal("hello");
-                statd = engine.statSync("/d");
-                expect(statd.nlink).to.be.equal(1);
-                expect(engine.readFileSync("/d", "utf8")).to.be.equal("world");
-            });
-
-            it("should throw EISDIR if the dst is a directory but the src is not", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: {
-
-                    }
-                }));
-
-                const err = assert.throws(() => {
-                    engine.renameSync("/a", "/b");
-                }, "EISDIR: illegal operation on a directory, rename '/a' -> '/b'");
-                expect(err.code).to.be.equal("EISDIR");
-            });
-
-            it("should do nothing if the src and the dst are the same", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                engine.linkSync("/a", "/b");
-                engine.renameSync("/a", "/b");
-                expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello");
-                expect(engine.readFileSync("/b", "utf8")).to.be.equal("hello");
-            });
-
-            it("should throw ENOTDIR if the src is a directory but the dst is not", () => {
-                engine.add((ctx) => ({
-                    a: {
-                        a: ctx.file("hello")
-                    },
-                    b: ctx.file("hello")
-                }));
-
-                const err = assert.throws(() => {
-                    engine.renameSync("/a", "/b");
-                }, "ENOTDIR: not a directory, rename '/a' -> '/b'");
-                expect(err.code).to.be.equal("ENOTDIR");
-            });
-
-            it("should throw ENOTEMPTY if the src is directory and the dst is not empty directory", () => {
-                engine.add((ctx) => ({
-                    a: {
-                        a: ctx.file("hello")
-                    },
-                    b: {
-                        a: ctx.file("hello")
-                    }
-                }));
-
-                const err = assert.throws(() => {
-                    engine.renameSync("/a", "/b");
-                }, "ENOTEMPTY: directory not empty, rename '/a' -> '/b'");
-                expect(err.code).to.be.equal("ENOTEMPTY");
-            });
-
-            it("should rename symlinks", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: ctx.symlink("a")
-                }));
-
-                engine.renameSync("/b", "/c");
-                const statc = engine.lstatSync("/c");
-                expect(statc.isSymbolicLink()).to.be.true();
-                expect(engine.readFileSync("/c", "utf8")).to.be.equal("hello");
-            });
-        });
-
-        describe("rmdir", () => {
-            it("should remove an empty directory", async () => {
-                engine.add(() => ({
-                    a: {
-
-                    }
-                }));
-
-                await engine.rmdir("/a");
-                expect(await engine.readdir("/")).to.be.empty();
-            });
-
-            it("should throw ENOTEMPTY if the directory is not empty", async () => {
-                engine.add((ctx) => ({
-                    a: {
-                        a: ctx.file("hello")
-                    }
-                }));
-
-                const err = await assert.throws(async () => {
-                    await engine.rmdir("/a");
-                }, "ENOTEMPTY: directory not empty, rmdir '/a'");
-                expect(err.code).to.be.equal("ENOTEMPTY");
-            });
-
-            it("should throw EINVAL if path has . last component", async () => {
-                engine.add(() => ({
-                    a: {
-
-                    }
-                }));
-
-                const err = await assert.throws(async () => {
-                    await engine.rmdir("/a/.");
-                }, "EINVAL: invalid argument, rmdir '/a/.'");
-                expect(err.code).to.be.equal("EINVAL");
-            });
-        });
-
-        describe("rmdirSync", () => {
-            it("should remove an empty directory", () => {
-                engine.add(() => ({
-                    a: {
-
-                    }
-                }));
-
-                engine.rmdirSync("/a");
-                expect(engine.readdirSync("/")).to.be.empty();
-            });
-
-            it("should throw ENOTEMPTY if the directory is not empty", () => {
-                engine.add((ctx) => ({
-                    a: {
-                        a: ctx.file("hello")
-                    }
-                }));
-
-                const err = assert.throws(() => {
-                    engine.rmdirSync("/a");
-                }, "ENOTEMPTY: directory not empty, rmdir '/a'");
-                expect(err.code).to.be.equal("ENOTEMPTY");
-            });
-
-            it("should throw EINVAL if path has . last component", () => {
-                engine.add(() => ({
-                    a: {
-
-                    }
-                }));
-
-                const err = assert.throws(() => {
-                    engine.rmdirSync("/a/.");
-                }, "EINVAL: invalid argument, rmdir '/a/.'");
-                expect(err.code).to.be.equal("EINVAL");
-            });
-        });
-
-        describe("stat", () => {
-            it("should return file stats", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const stat = await engine.stat("/a");
-                expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.true();
-                expect(stat.isDirectory()).to.be.false();
-                expect(stat.isSymbolicLink()).to.be.false();
-            });
-
-            it("should return directory stat", async () => {
-                engine.add((ctx) => ({
-                    a: {
-                        b: ctx.file("hello")
-                    }
-                }));
-
-                const stat = await engine.stat("/a");
-                expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.false();
-                expect(stat.isDirectory()).to.be.true();
-                expect(stat.isSymbolicLink()).to.be.false();
-            });
-
-            it("should follow symlinks", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: ctx.symlink("a")
-                }));
-
-                const stat = await engine.stat("/b");
-                expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.true();
-                expect(stat.isSymbolicLink()).to.be.false();
-                expect(stat.isDirectory()).to.be.false();
-                expect(stat.size).to.be.equal(5);
-            });
-
-            it("should follow multiple symlinks", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: ctx.symlink("a"),
-                    c: ctx.symlink("b")
-                }));
-
-                const stat = await engine.stat("/c");
-                expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.true();
-                expect(stat.isSymbolicLink()).to.be.false();
-                expect(stat.isDirectory()).to.be.false();
-                expect(stat.size).to.be.equal(5);
-            });
-        });
-
-        describe("statSync", () => {
-            it("should return file stats", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const stat = engine.statSync("/a");
-                expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.true();
-                expect(stat.isDirectory()).to.be.false();
-                expect(stat.isSymbolicLink()).to.be.false();
-            });
-
-            it("should return directory stat", () => {
-                engine.add((ctx) => ({
-                    a: {
-                        b: ctx.file("hello")
-                    }
-                }));
-
-                const stat = engine.statSync("/a");
-                expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.false();
-                expect(stat.isDirectory()).to.be.true();
-                expect(stat.isSymbolicLink()).to.be.false();
-            });
-
-            it("should follow symlinks", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: ctx.symlink("a")
-                }));
-
-                const stat = engine.statSync("/b");
-                expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.true();
-                expect(stat.isSymbolicLink()).to.be.false();
-                expect(stat.isDirectory()).to.be.false();
-                expect(stat.size).to.be.equal(5);
-            });
-
-            it("should follow multiple symlinks", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: ctx.symlink("a"),
-                    c: ctx.symlink("b")
-                }));
-
-                const stat = engine.statSync("/c");
-                expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.true();
-                expect(stat.isSymbolicLink()).to.be.false();
-                expect(stat.isDirectory()).to.be.false();
-                expect(stat.size).to.be.equal(5);
-            });
-        });
-
-        describe("symlink", () => {
-            it("should create a symlink", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                await engine.symlink("a", "/b");
-                const stat = await engine.lstat("/b");
-                expect(stat.isSymbolicLink()).to.be.true();
-                expect(await engine.readlink("/b")).to.be.equal("a");
-                expect(await engine.readFile("/b", "utf8")).to.be.equal("hello");
-            });
-
-            it("should create a dangling symlink", async () => {
-                await engine.symlink("a", "/b");
-                expect(await engine.readlink("/b")).to.be.equal("a");
-                const stat = await engine.lstat("/b");
-                expect(stat.isSymbolicLink()).to.be.true();
-                await assert.throws(async () => {
-                    await engine.readFile("/b");
-                }, "ENOENT: no such file or directory, open '/b'");
-                await engine.writeFile("/a", "hello");
-                expect(await engine.readFile("/b", "utf8")).to.be.equal("hello");
-            });
-
-            it("should throw EEXIST if the dest exists", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const err = await assert.throws(async () => {
-                    await engine.symlink("asdads", "/a");
-                }, "EEXIST: file already exists, symlink 'asdads' -> '/a'");
-                expect(err.code).to.be.equal("EEXIST");
-            });
-
-            it("should throw ENOENT if the dest directory does not exist", async () => {
-                const err = await assert.throws(async () => {
-                    await engine.symlink("a", "/b/a");
-                }, "ENOENT: no such file or directory, symlink 'a' -> '/b/a'");
-                expect(err.code).to.be.equal("ENOENT");
-            });
-        });
-
-        describe("symlinkSync", () => {
-            it("should create a symlink", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                engine.symlinkSync("a", "/b");
-                const stat = engine.lstatSync("/b");
-                expect(stat.isSymbolicLink()).to.be.true();
-                expect(engine.readlinkSync("/b")).to.be.equal("a");
-                expect(engine.readFileSync("/b", "utf8")).to.be.equal("hello");
-            });
-
-            it("should create a dangling symlink", () => {
-                engine.symlinkSync("a", "/b");
-                expect(engine.readlinkSync("/b")).to.be.equal("a");
-                const stat = engine.lstatSync("/b");
-                expect(stat.isSymbolicLink()).to.be.true();
-                assert.throws(() => {
-                    engine.readFileSync("/b");
-                }, "ENOENT: no such file or directory, open '/b'");
-                engine.writeFileSync("/a", "hello");
-                expect(engine.readFileSync("/b", "utf8")).to.be.equal("hello");
-            });
-
-            it("should throw EEXIST if the dest exists", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const err = assert.throws(() => {
-                    engine.symlinkSync("asdads", "/a");
-                }, "EEXIST: file already exists, symlink 'asdads' -> '/a'");
-                expect(err.code).to.be.equal("EEXIST");
-            });
-
-            it("should throw ENOENT if the dest directory does not exist", () => {
-                const err = assert.throws(() => {
-                    engine.symlinkSync("a", "/b/a");
-                }, "ENOENT: no such file or directory, symlink 'a' -> '/b/a'");
-                expect(err.code).to.be.equal("ENOENT");
-            });
-        });
-
-        describe("truncate", () => {
-            it("should truncate a file", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                expect(await engine.readFile("/a", "utf8")).not.to.be.empty();
-                await engine.truncate("/a");
-                expect(await engine.readFile("/a", "utf8")).to.be.empty();
-            });
-
-            it("should truncate a file to the given size", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                await engine.truncate("/a", 2);
-                expect(await engine.readFile("/a", "utf8")).to.be.equal("he");
-            });
-
-            it("should fill the gap with zeroes if the length if greather thatn the file size", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                await engine.truncate("/a", 10);
-                expect(await engine.readFile("/a", "utf8")).to.be.equal("hello\0\0\0\0\0");
+describe("fs2", "custom", "memory2", () => {
+    describe("errors", () => {
+        it("navigating invalid paths - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/test/a/b/c");
+            fs.mkdirpSync("/test/a/bc");
+            fs.mkdirpSync("/test/abc");
+            assert.throws(() => {
+                fs.readdirSync("/test/abc/a/b/c");
             });
-
-            it("should throw EISDIR if the file is a directory", async () => {
-                engine.add(() => ({
-                    a: {
-
-                    }
-                }));
-
-                const err = await assert.throws(async () => {
-                    await engine.truncate("/a", 10);
-                }, "EISDIR: illegal operation on a directory, open '/a'"); // open because it opens the file first
-                expect(err.code).to.be.equal("EISDIR");
+            assert.throws(() => {
+                fs.readdirSync("/abc");
             });
-
-            it("should throw ENOENT if the file does not exist", async () => {
-                const err = await assert.throws(async () => {
-                    await engine.truncate("/a");
-                }, "ENOENT: no such file or directory, open '/a'");
-                expect(err.code).to.be.equal("ENOENT");
+            assert.throws(() => {
+                fs.statSync("/abc");
             });
-        });
-
-        describe("truncateSync", () => {
-            it("should truncate a file", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                expect(engine.readFileSync("/a", "utf8")).not.to.be.empty();
-                engine.truncateSync("/a");
-                expect(engine.readFileSync("/a", "utf8")).to.be.empty();
+            assert.throws(() => {
+                fs.mkdirSync("/test/a/d/b/c");
             });
-
-            it("should truncate a file to the given size", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                engine.truncateSync("/a", 2);
-                expect(engine.readFileSync("/a", "utf8")).to.be.equal("he");
+            assert.throws(() => {
+                fs.writeFileSync("/test/a/d/b/c", "Hello");
             });
-
-            it("should fill the gap with zeroes if the length if greather thatn the file size", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                engine.truncateSync("/a", 10);
-                expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello\0\0\0\0\0");
+            assert.throws(() => {
+                fs.readFileSync("/test/a/d/b/c");
             });
-
-            it("should throw EISDIR if the file is a directory", () => {
-                engine.add(() => ({
-                    a: {
-
-                    }
-                }));
-
-                const err = assert.throws(() => {
-                    engine.truncateSync("/a", 10);
-                }, "EISDIR: illegal operation on a directory, open '/a'"); // open because it opens the file first
-                expect(err.code).to.be.equal("EISDIR");
+            assert.throws(() => {
+                fs.readFileSync("/test/abcd");
             });
-
-            it("should throw ENOENT if the file does not exist", () => {
-                const err = assert.throws(() => {
-                    engine.truncateSync("/a");
-                }, "ENOENT: no such file or directory, open '/a'");
-                expect(err.code).to.be.equal("ENOENT");
+            assert.throws(() => {
+                fs.mkdirSync("/test/abcd/dir");
             });
-        });
-
-        describe("unlink", () => {
-            it("should delete a file", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                await engine.unlink("/a");
-                expect(await engine.readdir("/")).to.be.empty();
+            assert.throws(() => {
+                fs.unlinkSync("/test/abcd");
             });
-
-            it("should remove a symlink", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: ctx.symlink("a")
-                }));
-
-                await engine.unlink("/b");
-                expect(await engine.readdir("/")).to.be.deep.equal(["a"]);
-                expect(await engine.readFile("/a", "utf8")).to.be.equal("hello");
+            assert.throws(() => {
+                fs.unlinkSync("/test/abcd/file");
             });
-
-            it("should throw EISDIR if the file is a directory", async () => {
-                engine.add(() => ({
-                    a: {
-
-                    }
-                }));
-
-                const err = await assert.throws(async () => {
-                    await engine.unlink("/a");
-                }, "EISDIR: illegal operation on a directory, unlink '/a'");
-                expect(err.code).to.be.equal("EISDIR");
+            assert.throws(() => {
+                fs.statSync("/test/a/d/b/c");
             });
-
-            it("should decreate the number of links", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                await engine.link("/a", "/b");
-                expect((await engine.stat("/b")).nlink).to.be.equal(2);
-                await engine.unlink("/a");
-                expect((await engine.stat("/b")).nlink).to.be.equal(1);
+            assert.throws(() => {
+                fs.statSync("/test/abcd");
             });
         });
 
-        describe("unlinkSync", () => {
-            it("should delete a file", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                engine.unlinkSync("/a");
-                expect(engine.readdirSync("/")).to.be.empty();
+        it("various failure situations - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/test/dir");
+            fs.mkdirpSync("/test/dir");
+            fs.writeFileSync("/test/file", "Hello");
+            assert.throws(() => {
+                fs.writeFileSync("/test/dir", "Hello");
             });
-
-            it("should remove a symlink", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: ctx.symlink("a")
-                }));
-
-                engine.unlinkSync("/b");
-                expect(engine.readdirSync("/")).to.be.deep.equal(["a"]);
-                expect(engine.readFileSync("/a", "utf8")).to.be.equal("hello");
+            assert.throws(() => {
+                fs.writeFileSync("/", "Hello");
             });
-
-            it("should throw EISDIR if the file is a directory", () => {
-                engine.add(() => ({
-                    a: {
-
-                    }
-                }));
-
-                const err = assert.throws(() => {
-                    engine.unlinkSync("/a");
-                }, "EISDIR: illegal operation on a directory, unlink '/a'");
-                expect(err.code).to.be.equal("EISDIR");
+            assert.throws(() => {
+                fs.rmdirSync("/");
             });
-
-            it("should decreate the number of links", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                engine.linkSync("/a", "/b");
-                expect(engine.statSync("/b").nlink).to.be.equal(2);
-                engine.unlinkSync("/a");
-                expect(engine.statSync("/b").nlink).to.be.equal(1);
+            assert.throws(() => {
+                fs.unlinkSync("/");
             });
-        });
-
-        describe("unwatchFile", () => {
-            it("should disable watchFile polling", async () => {
-                const change = spy();
-                engine.watchFile("/a", { interval: 100 }, change);
-                await change.waitForCall();
-                await Promise.all([
-                    engine.writeFile("/a", "hello"),
-                    change.waitForCall()
-                ]);
-                expect(change).to.have.callCount(2);
-                engine.unwatchFile("/a");
-                await engine.writeFile("/a", "hello");
-                await promise.delay(200);
-                expect(change).to.have.callCount(2);
+            assert.throws(() => {
+                fs.mkdirSync("/test/dir");
             });
-
-            it("should remove a particular listener", async () => {
-                const change = spy();
-                const change2 = spy();
-                engine.watchFile("/a", { interval: 100 }, change).on("change", change2);
-                await Promise.all([
-                    change.waitForCall(),
-                    change2.waitForCall()
-                ]);
-                await Promise.all([
-                    engine.writeFile("/a", "hello"),
-                    change.waitForCall(),
-                    change2.waitForCall()
-                ]);
-                expect(change).to.have.callCount(2);
-                expect(change2).to.have.callCount(2);
-                engine.unwatchFile("/a", change2);
-                await Promise.all([
-                    engine.writeFile("/a", "hello"),
-                    change.waitForCall()
-                ]);
-                await promise.delay(200);
-                expect(change).to.have.callCount(3);
-                expect(change2).to.have.callCount(2);
-                engine.unwatchFile("/a");
+            assert.throws(() => {
+                fs.mkdirSync("/test/file");
             });
-        });
-
-        describe("utimes", () => {
-            it("should change file's atime/mtime", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                await engine.utimes("/a", 0, 1);
-                const stat = await engine.stat("/a");
-                expect(stat.atimeMs).to.be.equal(0);
-                expect(stat.mtimeMs).to.be.equal(1000);
+            assert.throws(() => {
+                fs.mkdirpSync("/test/file");
             });
-
-            it("should throw ENOENT if the file does not exist", async () => {
-                const err = await assert.throws(async () => {
-                    await engine.utimes("/a", 0, 1);
-                }, "ENOENT: no such file or directory, utime '/a'");
-                expect(err.code).to.be.equal("ENOENT");
+            assert.throws(() => {
+                fs.readdirSync("/test/file");
             });
-        });
-
-        describe("utimesSync", () => {
-            it("should change file's atime/mtime", () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                engine.utimesSync("/a", 0, 1);
-                const stat = engine.statSync("/a");
-                expect(stat.atimeMs).to.be.equal(0);
-                expect(stat.mtimeMs).to.be.equal(1000);
+            assert.throws(() => {
+                fs.readlinkSync("/test/dir");
             });
-
-            it("should throw ENOENT if the file does not exist", () => {
-                const err = assert.throws(() => {
-                    engine.utimesSync("/a", 0, 1);
-                }, "ENOENT: no such file or directory, utime '/a'");
-                expect(err.code).to.be.equal("ENOENT");
+            assert.throws(() => {
+                fs.readlinkSync("/test/file");
             });
         });
-
-        describe("watch", () => {
-            describe("file", () => {
-                it("should emit change when the contents is changed", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-                    const change = spy();
-                    engine.watch("/a", change);
-                    await engine.writeFile("/a", "he");
-                    expect(change).to.have.been.calledOnce();
-                    expect(change).to.have.been.calledWith("change", "a");
-                });
-
-                it("should emit change when atime/mtime is changed", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-                    const change = spy();
-                    engine.watch("/a", change);
-                    await engine.utimes("/a", 1, 1);
-                    expect(change).to.have.been.calledOnce();
-                    expect(change).to.have.been.calledWith("change", "a");
-                });
-
-                it("should emit rename when file is deleted", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-                    const change = spy();
-                    engine.watch("/a", change);
-                    await engine.unlink("/a");
-                    expect(change).to.have.been.calledOnce();
-                    expect(change).to.have.been.calledWith("rename", "a");
-                });
-
-                it("should follow when renames", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-                    const change = spy();
-                    engine.watch("/a", change);
-                    await engine.rename("/a", "/b");
-                    expect(change).to.have.been.calledOnce();
-                    expect(change).to.have.been.calledWith("rename", "a");
-                    await engine.writeFile("/b", "hello");
-                    expect(change).to.have.been.calledTwice();
-                    expect(change).to.have.been.calledWith("change", "a");
-                });
-
-                it("should emit a change event when a hark link is created", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-                    const change = spy();
-                    engine.watch("/a", change);
-                    await engine.link("/a", "/b");
-                    expect(change).to.have.been.calledOnce();
-                    expect(change).to.have.been.calledWith("change", "a");
-                });
-
-                it("should emit a change event when a hark link is changed", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-                    const change = spy();
-                    engine.watch("/a", change);
-                    await engine.link("/a", "/b");
-                    expect(change).to.have.been.calledOnce();
-                    await engine.writeFile("/b", "hello");
-                    expect(change).to.have.been.calledTwice();
-                    expect(change.getCall(1)).to.have.been.calledWith("change", "a");
-                });
-
-                it("should emit a change event when a hark link is deleted", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-                    const change = spy();
-                    engine.watch("/a", change);
-                    await engine.link("/a", "/b");
-                    expect(change).to.have.been.calledOnce();
-                    await engine.unlink("/b");
-                    expect(change).to.have.been.calledTwice();
-                    expect(change.getCall(1)).to.have.been.calledWith("change", "a");
-                });
-
-                it("should emit a change event when the source is deleted", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-                    const change = spy();
-                    engine.watch("/a", change);
-                    await engine.link("/a", "/b");
-                    expect(change).to.have.been.calledOnce();
-                    await engine.unlink("/a");
-                    expect(change).to.have.been.calledTwice();
-                    expect(change.getCall(1)).to.have.been.calledWith("change", "a");
-                });
-
-                it("should emit a change and rename events when the source and hard link are deleted", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-                    const change = spy();
-                    engine.watch("/a", change);
-                    await engine.link("/a", "/b");
-                    expect(change).to.have.been.calledOnce();
-                    await engine.unlink("/a");
-                    expect(change).to.have.been.calledTwice();
-                    expect(change.getCall(1)).to.have.been.calledWith("change", "a");
-                    await engine.unlink("/b");
-                    expect(change).to.have.been.calledThrice();
-                    expect(change.getCall(2)).to.have.been.calledWith("rename", "a");
-                });
-
-                it("should stop watching after close()", async () => {
-                    engine.add((ctx) => ({
-                        a: ctx.file("hello")
-                    }));
-                    const change = spy();
-                    const watcher = engine.watch("/a", change);
-                    await engine.link("/a", "/b");
-                    expect(change).to.have.been.calledOnce();
-                    watcher.close();
-                    await engine.unlink("/a");
-                    expect(change).to.have.been.calledOnce();
-                    await engine.writeFile("/b", "hello");
-                    expect(change).to.have.been.calledOnce();
-                    await engine.unlink("/b");
-                    expect(change).to.have.been.calledOnce();
-                });
-            });
-
-            describe("directory", () => {
-                it("should emit corresponding rename event when a new file appears", async () => {
-                    engine.add(() => ({
-                        a: {
-
-                        }
-                    }));
-
-                    const change = spy();
-                    engine.watch("/a", change);
-                    await engine.writeFile("/a/b", "hello");
-                    expect(change).to.have.callCount(2); // create + write
-                    expect(change.getCall(0)).to.have.been.calledWith("rename", "b");
-                    expect(change.getCall(1)).to.have.been.calledWith("change", "b");
-                    await engine.writeFile("/a/c", "hello");
-                    expect(change).to.have.callCount(4);
-                    expect(change.getCall(2)).to.have.been.calledWith("rename", "c");
-                    expect(change.getCall(3)).to.have.been.calledWith("change", "c");
-                });
-
-                it("should emit rename event when a file from the directory deleted", async () => {
-                    engine.add((ctx) => ({
-                        a: {
-                            b: ctx.file("hello")
-                        }
-                    }));
-
-                    const change = spy();
-                    engine.watch("/a", change);
-                    await engine.unlink("/a/b");
-                    expect(change).to.have.callCount(1); // create + write
-                    expect(change.getCall(0)).to.have.been.calledWith("rename", "b");
-                });
-
-                it("should emit rename event when file is renamed", async () => {
-                    engine.add((ctx) => ({
-                        a: {
-                            b: ctx.file("hello")
-                        }
-                    }));
-
-                    const change = spy();
-                    engine.watch("/a", change);
-                    await engine.rename("/a/b", "/a/c");
-                    expect(change).to.have.callCount(2);
-                    expect(change.getCall(0)).to.have.been.calledWith("rename", "b");
-                    expect(change.getCall(1)).to.have.been.calledWith("rename", "c");
-                });
-
-                it("should stop following the file if it is moved outside the directory", async () => {
-                    engine.add((ctx) => ({
-                        a: {
-                            b: ctx.file("hello")
-                        }
-                    }));
-
-                    const change = spy();
-                    engine.watch("/a", change);
-                    await engine.rename("/a/b", "/c");
-                    expect(change).to.have.callCount(1);
-                    expect(change.getCall(0)).to.have.been.calledWith("rename", "b");
-                    await engine.writeFile("/c", "hello");
-                    expect(change).to.have.callCount(1);
-                });
-
-                it("should handle hard links", async () => {
-                    // here we have some differences
-
-                    engine.add((ctx) => ({
-                        a: {
-                            b: ctx.file("hello")
-                        }
-                    }));
-
-                    const change = spy();
-                    engine.watch("/a", change);
-                    await engine.link("/a/b", "/a/c");
-                    expect(change).to.have.callCount(2);
-                    expect(change.getCall(0)).to.have.been.calledWith("change", "b");
-                    expect(change.getCall(1)).to.have.been.calledWith("rename", "c");
-                    await engine.writeFile("/a/c");
-                    expect(change).to.have.callCount(4);
-                    expect(change.getCall(2)).to.have.been.calledWith("change", "b");
-                    expect(change.getCall(3)).to.have.been.calledWith("change", "c");
-                });
-
-                it("should handle the directory rename, emit rename event with self name", async () => {
-                    engine.add((ctx) => ({
-                        a: {
-                            b: ctx.file("hello")
-                        }
-                    }));
-
-                    const change = spy();
-                    engine.watch("/a", change);
-                    await engine.rename("/a", "/b");
-                    expect(change).to.have.callCount(1);
-                    expect(change.getCall(0)).to.have.been.calledWith("rename", "a");
-                    await engine.writeFile("/b/b");
-                    expect(change).to.have.callCount(2);
-                    expect(change.getCall(1)).to.have.been.calledWith("change", "b");
-                });
-
-                it("should emit rename event if the directory is deleted", async () => {
-                    engine.add(() => ({
-                        a: {
-
-                        }
-                    }));
 
-                    const change = spy();
-                    engine.watch("/a", change);
-                    await engine.rmdir("/a");
-                    expect(change).to.have.callCount(1);
-                    expect(change).to.have.been.calledWith("rename", "a");
-                });
-
-                it("should not intercept nested directories events", async () => {
-                    engine.add((ctx) => ({
-                        a: {
-                            b: {
-                                a: ctx.file("hello")
-                            }
-                        }
-                    }));
-
-                    const change = spy();
-                    engine.watch("/a", change);
-                    await engine.writeFile("/a/b/a", "he");
-                    expect(change).to.have.not.been.called();
-                });
-
-                it("should stop watching after close", async () => {
-                    engine.add((ctx) => ({
-                        a: {
-                            a: ctx.file("hello"),
-                            b: {
-                                a: ctx.file("hello")
-                            }
-                        }
-                    }));
-
-                    const change = spy();
-                    const watcher = engine.watch("/a", change);
-                    await engine.writeFile("/a/a", "");
-                    expect(change).to.have.been.calledOnce();
-                    watcher.close();
-                    await engine.writeFile("/a/a", "");
-                    expect(change).to.have.been.calledOnce();
-                    await engine.unlink("/a/a");
-                    expect(change).to.have.been.calledOnce();
-                    await engine.unlink("/a/b/a");
-                    expect(change).to.have.been.calledOnce();
-                    await engine.rmdir("/a/b");
-                    expect(change).to.have.been.calledOnce();
-                    await engine.rmdir("/a");
-                    expect(change).to.have.been.calledOnce();
+        it("asynchronous errors are passed to callbacks - async", (done) => {
+            const fs = new MemoryFileSystem();
+            fs.readFile("/nonexistent/", (err, content) => {
+                assert.isTrue(err instanceof Error);
+                fs.writeFile("/fail/file", "", (err) => {
+                    assert.isTrue(err instanceof Error);
+                    fs.mkdir("/cannot/do/this", (err) => {
+                        assert.isTrue(err instanceof Error);
+                        fs.readlink("/nolink", (err) => {
+                            assert.isTrue(err instanceof Error);
+                            done();
+                        });
+                    });
                 });
-            });
-        });
-
-        describe("watchFile", () => {
-            it("should setup a watcher that uses stat polling", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-
-                const change = spy();
-                engine.watchFile("/a", { interval: 100 }, change);
-                await promise.delay(300);
-                expect(change).to.have.not.been.called();
-                await engine.writeFile("/a", "a");
-                if (change.callCount === 0) {
-                    await change.waitForCall();
-                }
-                await engine.unwatchFile("/a");
-                const [prev, curr] = change.getCall(0).args;
-                expect(prev.size).to.be.equal(5);
-                expect(curr.size).to.be.equal(1);
-            });
-
-            it("should emit two empty stats if the file does not exist", async () => {
-                const change = spy();
-                engine.watchFile("/a", { interval: 100 }, change);
-                await promise.delay(300);
-                await engine.unwatchFile("/a");
-                expect(change).to.have.been.calledOnce();
-                const [prev, curr] = change.getCall(0).args;
-                expect(prev.ino).to.be.equal(0);
-                expect(curr.ino).to.be.equal(0);
-            });
-
-            it("should emit empty and actual stat when file appears", async () => {
-                const change = spy();
-                engine.watchFile("/a", { interval: 100 }, change);
-                await promise.delay(300);
-                expect(change).to.have.been.calledOnce();
-                await engine.writeFile("/a", "hello");
-                if (change.callCount !== 2) {
-                    await change.waitForCall();
-                }
-                await engine.unwatchFile("/a");
-                const [prev, curr] = change.getCall(1).args;
-                expect(prev.ino).to.be.equal(0);
-                expect(curr.ino).not.to.be.equal(0);
-                expect(curr.size).to.be.equal(5);
-            });
-
-            it("should empty prev stat and empty stat when file disappears", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello")
-                }));
-                const change = spy();
-                engine.watchFile("/a", { interval: 100 }, change);
-                await promise.delay(150);
-                await engine.unlink("/a");
-                if (change.callCount !== 1) {
-                    await change.waitForCall();
-                }
-                engine.unwatchFile("/a");
-                const [prev, curr] = change.getCall(0).args;
-                expect(prev.size).to.be.equal(5);
-                expect(curr.size).to.be.equal(0);
-                expect(prev.ino).not.to.be.equal(0);
-                expect(curr.ino).to.be.equal(0);
             });
         });
     });
 
-    describe("path resolution", () => {
-        let engine;
-
-        before(() => {
-            engine = new MemoryFileSystem();
+    describe("stat types", () => {
+        it("file stat makes sense - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.writeFileSync("/test", "test data");
+            const stat = fs.statSync("/test");
+            assert.isTrue(stat.isFile());
+            assert.isFalse(stat.isDirectory());
+            assert.isFalse(stat.isBlockDevice());
+            assert.isFalse(stat.isCharacterDevice());
+            assert.isFalse(stat.isSocket());
+            assert.isFalse(stat.isSymbolicLink());
+            assert.isFalse(stat.isFIFO());
         });
 
-        afterEach(() => {
-            engine.clean();
+        it("dir stat makes sense - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/dir");
+            const stat = fs.statSync("/dir");
+            assert.isFalse(stat.isFile());
+            assert.isTrue(stat.isDirectory());
+            assert.isFalse(stat.isBlockDevice());
+            assert.isFalse(stat.isCharacterDevice());
+            assert.isFalse(stat.isSocket());
+            assert.isFalse(stat.isSymbolicLink());
+            assert.isFalse(stat.isFIFO());
         });
 
-
-        it("should throw ENOENT if some component does not exist", async () => {
-            engine.add(() => ({
-                "a/b/c": {
-
-                }
-            }));
-
-            const err = await assert.throws(async () => {
-                await engine.lstat("/a/b/c/d/e/f");
-            }, "ENOENT: no such file or directory, lstat '/a/b/c/d/e/f'");
-            expect(err.code).to.be.equal("ENOENT");
+        it("symlink stat makes sense - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.writeFileSync("/a", "data");
+            fs.symlinkSync("/a", "/link-to-a");
+            const stat = fs.lstatSync("/link-to-a");
+            assert.isFalse(stat.isFile());
+            assert.isFalse(stat.isDirectory());
+            assert.isFalse(stat.isBlockDevice());
+            assert.isFalse(stat.isCharacterDevice());
+            assert.isFalse(stat.isSocket());
+            assert.isTrue(stat.isSymbolicLink());
+            assert.isFalse(stat.isFIFO());
         });
+    });
 
-        it("should work if all components exist", async () => {
-            engine.add((ctx) => ({
-                "a/b/c": {
-                    d: ctx.file("hello")
-                }
-            }));
-
-            const stat = await engine.lstat("/a/b/c/d");
-            expect(stat.size).to.be.equal(5);
-        });
-
-        it("should throw ENOTDIR if some component if not a directory", async () => {
-            engine.add((ctx) => ({
-                "a/b": {
-                    c: ctx.file("hello")
-                }
-            }));
-
-            const err = await assert.throws(async () => {
-                await engine.lstat("/a/b/c/d");
-            }, "ENOTDIR: not a directory, lstat '/a/b/c/d'");
-            expect(err.code).to.be.equal("ENOTDIR");
-        });
-
-        it("should not throw if all components are directories", async () => {
-            engine.add(() => ({
-                "a/b/c/d": {
-
-                }
-            }));
-
-            const stat = await engine.lstat("/a/b/c/d");
-            expect(stat.isDirectory()).to.be.true();
-        });
-
-        it("should throw EACCES if some component has no search permissions", async () => {
-            engine.add((ctx) => ({
-                a: {
-                    b: {
-                        c: [{
-                            d: ctx.file("hello")
-                        }, { mode: 0o666 }]
-                    }
-                }
-            }));
-
-            const err = await assert.throws(async () => {
-                await engine.lstat("/a/b/c/d");
-            }, "EACCES: permission denied, lstat '/a/b/c/d'");
-            expect(err.code).to.be.equal("EACCES");
-        });
-
-        it("should handle .. as parent directory", async () => {
-            engine.add((ctx) => ({
-                a: {
-                    b: {
-                        c: ctx.file("hello")
-                    }
-                }
-            }));
-
-            const stat = await engine.stat("/a/b/../b/../b/../../a/b/c");
-            expect(stat.size).to.be.equal(5);
-        });
-
-        it("should throw ENOTDIR if the part before .. is not a directory", async () => {
-            engine.add((ctx) => ({
-                a: {
-                    b: {
-                        c: ctx.file("hello")
-                    }
-                }
-            }));
-
-            const err = await assert.throws(async () => {
-                await engine.lstat("/a/b/c/../c");
-            }, "ENOTDIR: not a directory, lstat '/a/b/c/../c'");
-            expect(err.code).to.be.equal("ENOTDIR");
-        });
-
-        it("should handle . as current directory", async () => {
-            engine.add((ctx) => ({
-                a: {
-                    b: {
-                        c: ctx.file("hello")
-                    }
-                }
-            }));
-
-            const stat = await engine.stat("/a/b/./.././b/././././../b/./././c");
-            expect(stat.size).to.be.equal(5);
-        });
-
-        it("should throw ENOTDIR if the part before . is not a directory", async () => {
-            engine.add((ctx) => ({
-                a: {
-                    b: {
-                        c: ctx.file("hello")
-                    }
-                }
-            }));
-
-            const err = await assert.throws(async () => {
-                await engine.lstat("/a/b/c/./c");
-            }, "ENOTDIR: not a directory, lstat '/a/b/c/./c'");
-            expect(err.code).to.be.equal("ENOTDIR");
-        });
-
-        it("should resolve paths with the trailing slash as an existing directory", async () => {
-            engine.add((ctx) => ({
-                a: {
-                    b: {
-                        c: ctx.file("hello")
-                    }
-                }
-            }));
-
-            expect(await engine.realpath("/a/b/")).to.be.equal("/a/b");
-        });
-
-        it("should throw ENOTDIR if the path ends with / and it is not a directory", async () => {
-            engine.add((ctx) => ({
-                a: {
-                    b: {
-                        c: ctx.file("hello")
-                    }
-                }
-            }));
-
-            const err = await assert.throws(async () => {
-                await engine.lstat("/a/b/c/");
-            }, "ENOTDIR: not a directory, lstat '/a/b/c/'");
-            expect(err.code).to.be.equal("ENOTDIR");
-        });
-
-        it("should ignore consequent component slashes", async () => {
-            engine.add((ctx) => ({
-                a: {
-                    b: {
-                        c: ctx.file("hello")
-                    }
-                }
-            }));
-
-            const stat = await engine.lstat("/a/b//////////../////////////b/./././../b/c");
-            expect(stat.size).to.be.equal(5);
-        });
-
-        it("should ignore consequent trailing slashes", async () => {
-            engine.add((ctx) => ({
-                a: {
-                    b: {
-                        c: ctx.file("hello")
-                    }
-                }
-            }));
-
-            expect(await engine.realpath("/a/b//////////////////////////../b/////////")).to.be.equal("/a/b");
-        });
-
-        it("should not walk down past the root", async () => {
-            engine.add((ctx) => ({
-                a: {
-                    b: ctx.file("hello")
-                }
-            }));
-
-            expect(await engine.readFile("/a/../../../../../a/b", "utf8")).to.be.equal("hello");
-        });
-
-        describe("symlinks", () => {
-            it("should follow symlinks", async () => {
-                engine.add((ctx) => ({
-                    a: {
-                        b: {
-                            c: ctx.file("hello")
-                        }
-                    },
-                    b: {
-                        a: ctx.symlink("../a")
-                    }
-                }));
-
-                const stat = await engine.lstat("/b/a/b/c");
-                expect(stat.size).to.be.equal(5);
+    describe("files", () => {
+        it("can make and remove files - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/test");
+            const buf = Buffer.from("Hello World", "utf8");
+            fs.writeFileSync("/test/hello-world.txt", buf);
+            assert.deepEqual(fs.readFileSync("/test/hello-world.txt"), buf);
+            assert.equal(fs.readFileSync("/test/hello-world.txt", "utf8"), "Hello World");
+            assert.equal(fs.readFileSync("/test/hello-world.txt", { encoding: "utf8" }), "Hello World");
+            fs.writeFileSync("/a", "Test", "utf-8");
+            assert.equal(fs.readFileSync("/a", "utf-8"), "Test");
+            const stat = fs.statSync("/a");
+            assert.isTrue(stat.isFile());
+            assert.isFalse(stat.isDirectory());
+            fs.writeFileSync("/b", "Test", { encoding: "utf8" });
+            assert.equal(fs.readFileSync("/b", "utf-8"), "Test");
+            assert.throws(() => {
+                fs.readFileSync("/test/other-file");
             });
-
-            it("should not throw if the final part is a dangling symlink and resolving is not requested", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.symlink("b")
-                }));
-
-                expect(await engine.readlink("/a")).to.be.equal("b");
+            assert.throws(() => {
+                fs.readFileSync("/test/other-file", "utf8");
             });
+        });
+    });
 
-            it("should throw ENOENT the symlink is dangling", async () => {
-                engine.add((ctx) => ({
-                    b: {
-                        a: ctx.symlink("../a")
+    describe("directories", () => {
+        it("has an empty root directory at startup - sync", () => {
+            const fs = new MemoryFileSystem();
+            assert.deepEqual(fs.readdirSync("/"), []);
+            const stat = fs.statSync("/");
+            assert.equal(stat.isFile(), false);
+            assert.isTrue(stat.isDirectory());
+            assert.isFalse(stat.isSymbolicLink());
+        });
+
+        it("has an empty root directory at startup - async", (done) => {
+            const fs = new MemoryFileSystem();
+            fs.readdir("/", (err, list) => {
+                assert.deepEqual(list, []);
+                fs.stat("/", (err, stat) => {
+                    assert.isFalse(stat.isFile());
+                    assert.isTrue(stat.isDirectory());
+                    assert.isFalse(stat.isSymbolicLink());
+                    done();
+                });
+            });
+        });
+
+        it("is able to make directories - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/first");
+            fs.mkdirSync("/first//sub/");
+            fs.mkdirSync("/first/sub/subsub");
+            fs.mkdirpSync("/first/sub2");
+            fs.mkdirSync("/backslash\\dir");
+            fs.mkdirpSync("/");
+            assert.deepEqual(fs.readdirSync("/"), ["first", "backslash\\dir"]);
+            assert.deepEqual(fs.readdirSync("/first/"), ["sub", "sub2"]);
+            fs.mkdirpSync("/a/depth/sub/dir");
+            assert.equal(fs.existsSync("/a/depth/sub"), true);
+            const stat = fs.statSync("/a/depth/sub");
+            assert.isFalse(stat.isFile());
+            assert.isTrue(stat.isDirectory());
+        });
+
+        it("is able to make directories - async", (done) => {
+            const fs = new MemoryFileSystem();
+            fs.mkdir("/first", (err) => {
+                fs.mkdir("/first//sub/", (err) => {
+                    fs.mkdir("/first/sub2/", (err) => {
+                        fs.mkdir("/backslash\\dir", (err) => {
+                            fs.mkdirp("/", (err) => {
+                                fs.readdir("/", (err, list) => {
+                                    assert.deepEqual(list, ["first", "backslash\\dir"]);
+                                    fs.readdir("/first/", (err, list) => {
+                                        assert.deepEqual(list, ["sub", "sub2"]);
+                                        fs.mkdirp("/a/depth/sub/dir", (err) => {
+                                            fs.exists("/a/depth/sub", (exists) => {
+                                                assert.equal(exists, true);
+                                                fs.stat("/a/depth/sub", (err, stat) => {
+                                                    assert.isFalse(stat.isFile());
+                                                    assert.isTrue(stat.isDirectory());
+                                                    done();
+                                                });
+                                            });
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+
+        it("should not make the root directory - sync", () => {
+            const fs = new MemoryFileSystem();
+            const error = assert.throws(() => {
+                fs.mkdirSync("/");
+            });
+            assert.equal(error.code, "EEXIST");
+        });
+
+        it("should be able to navigate before root - sync", () => {
+            const fs = new MemoryFileSystem();
+            const buf = Buffer.from("Hello World");
+            fs.mkdirSync("/first");
+            fs.writeFileSync("/hello-world.txt", buf);
+            let stat;
+            stat = fs.statSync("/first/../../../../first");
+            assert.isFalse(stat.isFile());
+            assert.isTrue(stat.isDirectory());
+            stat = fs.statSync("/first/../../../../hello-world.txt");
+            assert.isTrue(stat.isFile());
+            assert.isFalse(stat.isDirectory());
+        });
+
+        it("should be able to remove directories - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/first");
+            fs.mkdirSync("/first//sub/");
+            fs.mkdirpSync("/first/sub2");
+            fs.mkdirSync("/backslash\\dir");
+            fs.rmdirSync("/first/sub//");
+            const firstlist = fs.readdirSync("//first");
+            assert.deepEqual(firstlist, ["sub2"]);
+            fs.rmdirSync("/first/sub2");
+            fs.rmdirSync("/first");
+            const exists = fs.existsSync("/first");
+            assert.equal(exists, false);
+            const errorAccess = assert.throws(() => {
+                fs.accessSync("/first");
+            });
+            assert.equal(errorAccess.code, "ENOENT");
+            const errorReadDir = assert.throws(() => {
+                fs.readdirSync("/first");
+            });
+            assert.equal(errorReadDir.code, "ENOENT");
+            const rootlist = fs.readdirSync("/");
+            assert.deepEqual(rootlist, ["backslash\\dir"]);
+        });
+
+        it("rmdir does not traverse the last symlink", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/directory");
+            fs.symlinkSync("/directory", "/linktodirectory");
+            const error = assert.throws(() => {
+                fs.rmdirSync("/linktodirectory");
+            });
+            assert.equal(error.code, "ENOTDIR");
+        });
+
+        it("creating temporary directories - sync", () => {
+            const fs = new MemoryFileSystem();
+            const tempDir = fs.mkdtempSync("/dir");
+            const buf = Buffer.from("abc");
+            fs.writeFileSync(`${tempDir}/test`, buf);
+            assert.equal(fs.readFileSync(`${tempDir}/test`, "utf8"), buf.toString());
+        });
+
+        it("trailing slash refers to the directory instead of a file - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.writeFileSync("/abc");
+            let error;
+            error = assert.throws(() => {
+                fs.accessSync("/abc/");
+            });
+            assert.equal(error.code, "ENOTDIR");
+            error = assert.throws(() => {
+                fs.accessSync("/abc/.");
+            });
+            assert.equal(error.code, "ENOTDIR");
+            error = assert.throws(() => {
+                fs.mkdirSync("/abc/.");
+            });
+            assert.equal(error.code, "ENOTDIR");
+            error = assert.throws(() => {
+                fs.mkdirSync("/abc/");
+            });
+            assert.equal(error.code, "EEXIST");
+        });
+
+        it("trailing slash works for non-existent directories when intending to create them - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/abc/");
+            const stat = fs.statSync("/abc/");
+            assert.isTrue(stat.isDirectory());
+        });
+
+        it("trailing `/.` for mkdirSync should result in errors", () => {
+            const fs = new MemoryFileSystem();
+            let error;
+            error = assert.throws(() => {
+                fs.mkdirSync("/abc/.");
+            });
+            assert.equal(error.code, "ENOENT");
+            fs.mkdirSync("/abc");
+            error = assert.throws(() => {
+                fs.mkdirSync("/abc/.");
+            });
+            assert.equal(error.code, "EEXIST");
+        });
+
+        it("trailing `/.` for mkdirpSync should not result in any errors", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/abc/.");
+            const stat = fs.statSync("/abc");
+            assert.isTrue(stat.isDirectory());
+        });
+    });
+
+    describe("hardlinks", () => {
+        it("multiple hardlinks to the same file - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/test");
+            fs.writeFileSync("/test/a");
+            fs.linkSync("/test/a", "/test/b");
+            const inoA = fs.statSync("/test/a").ino;
+            const inoB = fs.statSync("/test/b").ino;
+            assert.equal(inoA, inoB);
+            assert.deepEqual(fs.readFileSync("/test/a"), fs.readFileSync("/test/b"));
+        });
+
+        it("should not create hardlinks to directories - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/test");
+            const error = assert.throws(() => {
+                fs.linkSync("/test", "/hardlinkttotest");
+            });
+            assert.equal(error.code, "EPERM");
+        });
+    });
+
+    describe("symlinks", () => {
+        it("symlink paths can contain multiple slashes", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/dir");
+            fs.writeFileSync("/dir/test", "hello");
+            fs.symlinkSync("////dir////test", "/linktodirtest");
+            assert.deepEqual(fs.readFileSync("/dir/test"), fs.readFileSync("/linktodirtest"));
+        });
+
+        it("resolves symlink loops 1 - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.symlinkSync("/test", "/test");
+            const error = assert.throws(() => {
+                fs.readFileSync("/test");
+            });
+            assert.equal(error.code, "ELOOP");
+        });
+
+        it("resolves symlink loops 2 - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/dirtolink");
+            fs.symlinkSync("/dirtolink/test", "/test");
+            fs.symlinkSync("/test", "/dirtolink/test");
+            const error = assert.throws(() => {
+                fs.readFileSync("/test/non-existent");
+            });
+            assert.equal(error.code, "ELOOP");
+        });
+
+        it("is able to add and traverse symlinks transitively - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/test");
+            const buf = Buffer.from("Hello World");
+            fs.writeFileSync("/test/hello-world.txt", buf);
+            fs.symlinkSync("/test", "/linktotestdir");
+            assert.equal(fs.readlinkSync("/linktotestdir"), "/test");
+            assert.deepEqual(fs.readdirSync("/linktotestdir"), ["hello-world.txt"]);
+            fs.symlinkSync("/linktotestdir/hello-world.txt", "/linktofile");
+            fs.symlinkSync("/linktofile", "/linktolink");
+            assert.equal(fs.readFileSync("/linktofile", "utf-8"), "Hello World");
+            assert.equal(fs.readFileSync("/linktolink", "utf-8"), "Hello World");
+        });
+
+        it("is able to traverse relative symlinks - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/test");
+            const buf = Buffer.from("Hello World");
+            fs.writeFileSync("/a", buf);
+            fs.symlinkSync("../a", "/test/linktoa");
+            assert.equal(fs.readFileSync("/test/linktoa", "utf-8"), "Hello World");
+        });
+
+        it("unlink does not traverse symlinks - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/test");
+            const buf = Buffer.from("Hello World");
+            fs.writeFileSync("/test/hello-world.txt", buf);
+            fs.symlinkSync("/test", "/linktotestdir");
+            fs.symlinkSync("/linktotestdir/hello-world.txt", "/linktofile");
+            fs.unlinkSync("/linktofile");
+            fs.unlinkSync("/linktotestdir");
+            assert.deepEqual(fs.readdirSync("/test"), ["hello-world.txt"]);
+        });
+
+        it("realpath expands symlinks - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.writeFileSync("/test", Buffer.from("Hello"));
+            fs.symlinkSync("./test", "/linktotest");
+            fs.mkdirSync("/dirwithlinks");
+            fs.symlinkSync("../linktotest", "/dirwithlinks/linktolink");
+            const realPath = fs.realpathSync("/dirwithlinks/linktolink");
+            assert.equal(realPath, "/test");
+        });
+    });
+
+    describe("streams", () => {
+        it("readstream options start and end are both inclusive - async", (done) => {
+            const fs = new MemoryFileSystem();
+            const str = "Hello";
+            fs.writeFileSync("/test", str);
+            const readable = fs.createReadStream(
+                "/test",
+                { encoding: "utf8", start: 0, end: str.length - 1 }
+            );
+            readable.on("readable", () => {
+                assert.equal(readable.read(), str);
+                done();
+            });
+        });
+
+        it("readstreams respect start and end options - async", (done) => {
+            const fs = new MemoryFileSystem();
+            const str = "Hello";
+            fs.writeFileSync("/file", str);
+            fs.createReadStream("/file", {
+                start: 1,
+                end: 3
+            }).pipe(bl((err, data) => {
+                assert.equal(data.toString("utf8"), str.slice(1, 4));
+                done();
+            }));
+        });
+
+        it("readstream respects the start option - async", (done) => {
+            const fs = new MemoryFileSystem();
+            const str = "Hello";
+            fs.writeFileSync("file", str);
+            const offset = 1;
+            const readable = fs.createReadStream("file", { encoding: "utf8", start: offset });
+            readable.on("readable", () => {
+                assert.equal(readable.read(), str.slice(offset));
+                done();
+            });
+        });
+
+        it("readstream end option is ignored without the start option - async", (done) => {
+            const fs = new MemoryFileSystem();
+            const str = "Hello";
+            fs.writeFileSync("file", str);
+            const readable = fs.createReadStream("file", { encoding: "utf8", end: 1 });
+            readable.on("readable", () => {
+                assert.equal(readable.read(), str);
+                done();
+            });
+        });
+
+        it("readstream can use a file descriptor - async", (done) => {
+            const fs = new MemoryFileSystem();
+            const str = "Hello";
+            fs.writeFileSync("file", str);
+            const fd = fs.openSync("file", "r");
+            const offset = 1;
+            fs.lseekSync(fd, offset);
+            const readable = fs.createReadStream("", { encoding: "utf8", fd });
+            readable.on("readable", () => {
+                assert.equal(readable.read(), str.slice(offset));
+                done();
+            });
+        });
+
+        it("readstream with start option overrides the file descriptor position - async", (done) => {
+            const fs = new MemoryFileSystem();
+            const str = "Hello";
+            fs.writeFileSync("file", str);
+            const fd = fs.openSync("file", "r");
+            const offset = 1;
+            const readable = fs.createReadStream("", { encoding: "utf8", fd, start: offset });
+            readable.on("readable", () => {
+                assert.equal(readable.read(), str.slice(offset));
+                const buf = Buffer.allocUnsafe(1);
+                fs.readSync(fd, buf, 0, buf.length);
+                assert.equal(buf.toString("utf8"), str.slice(0, buf.length));
+                done();
+            });
+        });
+
+        it("readstreams handle errors asynchronously - async", (done) => {
+            const fs = new MemoryFileSystem();
+            const stream = fs.createReadStream("/file");
+            stream.on("error", (e) => {
+                assert.isTrue(e instanceof Error);
+                assert.equal(e.code, "ENOENT");
+                done();
+            });
+            stream.read(0);
+        });
+
+        it("readstreams can compose with pipes - async", (done) => {
+            const fs = new MemoryFileSystem();
+            const str = "Hello";
+            fs.writeFileSync("/file", str);
+            fs.createReadStream("/file").pipe(bl((err, data) => {
+                assert.equal(data.toString("utf8"), str);
+                done();
+            }));
+        });
+
+        it("writestream can create and truncate files - async", (done) => {
+            const fs = new MemoryFileSystem();
+            const str = "Hello";
+            fs.createWriteStream("/file").end(str, () => {
+                assert.equal(fs.readFileSync("/file", "utf8"), str);
+                fs.createWriteStream("/file").end(() => {
+                    assert.equal(fs.readFileSync("/file", "utf-8"), "");
+                    done();
+                });
+            });
+        });
+
+        it("writestream can be piped into - async", (done) => {
+            const fs = new MemoryFileSystem();
+            const str = "Hello";
+            bl(Buffer.from(str))
+                .pipe(fs.createWriteStream("/file"))
+                .once("finish", () => {
+                    assert.equal(fs.readFileSync("/file", "utf-8"), str);
+                    done();
+                });
+        });
+
+        it("writestreams handle errors asynchronously - async", (done) => {
+            const fs = new MemoryFileSystem();
+            const writable = fs.createWriteStream("/file/unknown");
+            // note that it is possible to have the finish event occur before the error event
+            writable.once("error", (e) => {
+                assert.isTrue(e instanceof Error);
+                assert.equal(e.code, "ENOENT");
+                done();
+            });
+            writable.end();
+        });
+
+        it("writestreams allow ignoring of the drain event, temporarily ignoring resource usage control - async", (done) => {
+            const fs = new MemoryFileSystem();
+            const waterMark = 10;
+            const writable = fs.createWriteStream("file", { highWaterMark: waterMark });
+            const buf = Buffer.allocUnsafe(waterMark).fill(97);
+            const times = 4;
+            for (let i = 0; i < 4; ++i) {
+                assert.isFalse(writable.write(buf));
+            }
+            writable.end(() => {
+                assert.equal(fs.readFileSync("file", "utf8"), buf.toString().repeat(times));
+                done();
+            });
+        });
+
+        it("writestreams can use the drain event to manage resource control - async", (done) => {
+            const fs = new MemoryFileSystem();
+            const waterMark = 10;
+            const writable = fs.createWriteStream("file", { highWaterMark: waterMark });
+            const buf = Buffer.allocUnsafe(waterMark).fill(97);
+            let times = 10;
+            const timesOrig = times;
+            const writing = () => {
+                let status;
+                do {
+                    status = writable.write(buf);
+                    times -= 1;
+                    if (times === 0) {
+                        writable.end(() => {
+                            assert.equal(
+                                fs.readFileSync("file", "utf8"),
+                                buf.toString().repeat(timesOrig)
+                            );
+                            done();
+                        });
                     }
-                }));
+                } while (times > 0 && status);
+                if (times > 0) {
+                    writable.once("drain", writing);
+                }
+            };
+            writing();
+        });
+    });
 
-                const err = await assert.throws(async () => {
-                    await engine.lstat("/b/a/c");
-                }, "ENOENT: no such file or directory, lstat '/b/a/c'");
-                expect(err.code).to.be.equal("ENOENT");
+    describe("stat time changes", () => {
+        it("truncate and ftruncate will change mtime and ctime - async", (done) => {
+            const fs = new MemoryFileSystem();
+            const str = "abcdef";
+            fs.writeFileSync("/test", str);
+            const stat = fs.statSync("/test");
+            setTimeout(() => {
+                fs.truncateSync("/test", str.length);
+                const stat2 = fs.statSync("/test");
+                assert.isTrue(stat.mtime < stat2.mtime && stat.ctime < stat2.ctime);
+                setTimeout(() => {
+                    const fd = fs.openSync("/test", "r+");
+                    fs.ftruncateSync(fd, str.length);
+                    const stat3 = fs.statSync("/test");
+                    assert.isTrue(stat2.mtime < stat3.mtime && stat2.ctime < stat3.ctime);
+                    setTimeout(() => {
+                        fs.truncateSync(fd, str.length);
+                        const stat4 = fs.statSync("/test");
+                        assert.isTrue(stat3.mtime < stat4.mtime && stat3.ctime < stat4.ctime);
+                        fs.closeSync(fd);
+                        done();
+                    }, 10);
+                }, 10);
+            }, 10);
+        });
+
+        it("fallocate will only change ctime - async", (done) => {
+            const fs = new MemoryFileSystem();
+            const fd = fs.openSync("allocate", "w");
+            fs.writeSync(fd, "abcdef");
+            const stat = fs.statSync("allocate");
+            setTimeout(() => {
+                const offset = 0;
+                const length = 100;
+                fs.fallocate(fd, offset, length, (e) => {
+                    assert.notExists(e);
+                    const stat2 = fs.statSync("allocate");
+                    assert.equal(stat2.size, offset + length);
+                    assert.isTrue(stat2.ctime > stat.ctime);
+                    assert.isTrue(stat2.mtime === stat.mtime);
+                    assert.isTrue(stat2.atime === stat.atime);
+                    fs.closeSync(fd);
+                    done();
+                });
+            }, 10);
+        });
+    });
+
+    describe("directory file descriptors", () => {
+
+        it("directory file descriptors capabilities - async", (done) => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/dir");
+            const dirfd = fs.openSync("/dir", "r");
+            fs.fsyncSync(dirfd);
+            fs.fdatasyncSync(dirfd);
+            fs.fchmodSync(dirfd, 0o666);
+            fs.fchownSync(dirfd, 0, 0);
+            const date = new Date();
+            setTimeout(() => {
+                fs.futimesSync(dirfd, date, date);
+                const stats = fs.fstatSync(dirfd);
+                assert.isTrue(stats instanceof adone.std.fs.Stats);
+                assert.deepEqual(stats.atime, date);
+                assert.deepEqual(stats.mtime, date);
+                fs.closeSync(dirfd);
+                done();
+            }, 100);
+        });
+
+        it("directory file descriptor errors - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/dir");
+            // opening it without fs.constants.O_RDONLY would result in EISDIR
+            const dirfd = fs.openSync("/dir", fs.constants.O_RDONLY | fs.constants.O_DIRECTORY);
+            let error;
+            const buf = Buffer.alloc(10);
+            error = assert.throws(() => {
+                fs.ftruncateSync(dirfd);
             });
-
-            it("should throw ENOENT is the part of symlink is not a directory", async () => {
-                engine.add((ctx) => ({
-                    a: {
-                        b: ctx.file("hello")
-                    },
-                    b: {
-                        a: ctx.symlink("../a/b/c")
-                    }
-                }));
-
-                const err = await assert.throws(async () => {
-                    await engine.lstat("/b/a/c");
-                }, "ENOTDIR: not a directory, lstat '/b/a/c'");
-                expect(err.code).to.be.equal("ENOTDIR");
+            assert.equal(error.code, "EINVAL");
+            error = assert.throws(() => {
+                fs.readSync(dirfd, buf, 0, 10, null);
             });
+            assert.equal(error.code, "EISDIR");
+            error = assert.throws(() => {
+                fs.writeSync(dirfd, buf);
+            });
+            assert.equal(error.code, "EBADF");
+            error = assert.throws(() => {
+                fs.readFileSync(dirfd);
+            });
+            assert.equal(error.code, "EISDIR");
+            error = assert.throws(() => {
+                fs.writeFileSync(dirfd, "test");
+            });
+            assert.equal(error.code, "EBADF");
+            fs.closeSync(dirfd);
+        });
 
-            it("should throw EACCES if the part of symbolic link has no search permissions", async () => {
-                engine.add((ctx) => ({
-                    a: {
-                        b: [{
-                            c: ctx.file("hello"),
-                            d: {
-                                e: ctx.file("hello")
+        it("directory file descriptor's inode nlink becomes 0 after deletion of the directory", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/dir");
+            const fd = fs.openSync("/dir", "r");
+            fs.rmdirSync("/dir");
+            const stat = fs.fstatSync(fd);
+            assert.equal(stat.nlink, 1);
+            fs.closeSync(fd);
+        });
+    });
+
+    describe("file descriptors,", () => {
+        it("appendFileSync moves with the fd position - sync", () => {
+            const fs = new MemoryFileSystem();
+            const fd = fs.openSync("/fdtest", "w+");
+            fs.appendFileSync(fd, "a");
+            fs.appendFileSync(fd, "a");
+            fs.appendFileSync(fd, "a");
+            assert.equal(fs.readFileSync("/fdtest", "utf8"), "aaa");
+            fs.closeSync(fd);
+        });
+
+        it("ftruncateSync truncates the fd position - sync", () => {
+            const fs = new MemoryFileSystem();
+            let fd;
+            fd = fs.openSync("/fdtest", "w+");
+            fs.writeSync(fd, "abcdef");
+            fs.ftruncateSync(fd, 3);
+            fs.writeSync(fd, "ghi");
+            assert.deepEqual(fs.readFileSync("/fdtest", "utf8"), "abcghi");
+            fs.closeSync(fd);
+            fs.writeFileSync("/fdtest", "abcdef");
+            fd = fs.openSync("/fdtest", "r+");
+            const buf = Buffer.allocUnsafe(3);
+            fs.readSync(fd, buf, 0, buf.length);
+            fs.ftruncateSync(fd, 4);
+            fs.readSync(fd, buf, 0, buf.length);
+            assert.deepEqual(buf, Buffer.from("dbc"));
+            fs.closeSync(fd);
+        });
+
+        it("readSync moves with the fd position - sync", () => {
+            const fs = new MemoryFileSystem();
+            const str = "abc";
+            const buf = Buffer.from(str).fill(0);
+            fs.writeFileSync("/fdtest", str);
+            const fd = fs.openSync("/fdtest", "r+");
+            fs.readSync(fd, buf, 0, 1, null);
+            fs.readSync(fd, buf, 1, 1, null);
+            fs.readSync(fd, buf, 2, 1, null);
+            assert.deepEqual(buf, Buffer.from(str));
+            fs.closeSync(fd);
+        });
+
+        it("writeSync moves with the fd position - sync", () => {
+            const fs = new MemoryFileSystem();
+            const fd = fs.openSync("/fdtest", "w+");
+            fs.writeSync(fd, "a");
+            fs.writeSync(fd, "a");
+            fs.writeSync(fd, "a");
+            assert.equal(fs.readFileSync("/fdtest", "utf8"), "aaa");
+            fs.closeSync(fd);
+        });
+
+        it("readSync does not change fd position according to position parameter - sync", () => {
+            const fs = new MemoryFileSystem();
+            let buf = Buffer.alloc(3);
+            let fd;
+            let bytesRead;
+            // reading from position 0 doesn't move the fd from the end
+            fd = fs.openSync("/fdtest", "w+");
+            fs.writeSync(fd, "abcdef");
+            buf = Buffer.alloc(3);
+            bytesRead = fs.readSync(fd, buf, 0, buf.length);
+            assert.equal(bytesRead, 0);
+            bytesRead = fs.readSync(fd, buf, 0, buf.length, 0);
+            assert.equal(bytesRead, 3);
+            assert.deepEqual(buf, Buffer.from("abc"));
+            fs.writeSync(fd, "ghi");
+            assert.deepEqual(fs.readFileSync("/fdtest", "utf8"), "abcdefghi");
+            fs.closeSync(fd);
+            // reading with position null does move the fd
+            fs.writeFileSync("/fdtest", "abcdef");
+            fd = fs.openSync("/fdtest", "r+");
+            bytesRead = fs.readSync(fd, buf, 0, buf.length);
+            assert.equal(bytesRead, 3);
+            fs.writeSync(fd, "ghi");
+            assert.deepEqual(fs.readFileSync("/fdtest", "utf8"), "abcghi");
+            fs.closeSync(fd);
+            // reading with position 0 doesn't move the fd from the start
+            fs.writeFileSync("/fdtest", "abcdef");
+            fd = fs.openSync("/fdtest", "r+");
+            buf = Buffer.alloc(3);
+            bytesRead = fs.readSync(fd, buf, 0, buf.length, 0);
+            assert.equal(bytesRead, 3);
+            fs.writeSync(fd, "ghi");
+            assert.deepEqual(fs.readFileSync("/fdtest", "utf8"), "ghidef");
+            fs.closeSync(fd);
+            // reading with position 3 doesn't move the fd from the start
+            fs.writeFileSync("/fdtest", "abcdef");
+            fd = fs.openSync("/fdtest", "r+");
+            buf = Buffer.alloc(3);
+            bytesRead = fs.readSync(fd, buf, 0, buf.length, 3);
+            assert.equal(bytesRead, 3);
+            fs.writeSync(fd, "ghi");
+            assert.deepEqual(fs.readFileSync("/fdtest", "utf8"), "ghidef");
+            fs.closeSync(fd);
+        });
+
+        it("writeSync does not change fd position according to position parameter - sync", () => {
+            const fs = new MemoryFileSystem();
+            const fd = fs.openSync("./testy", "w+");
+            fs.writeSync(fd, "abcdef");
+            fs.writeSync(fd, "ghi", 0);
+            fs.writeSync(fd, "jkl");
+            assert.deepEqual(fs.readFileSync("./testy", "utf8"), "ghidefjkl");
+            fs.closeSync(fd);
+        });
+
+        it("readFileSync moves with fd position - sync", () => {
+            const fs = new MemoryFileSystem();
+            let fd;
+            fd = fs.openSync("/fdtest", "w+");
+            fs.writeSync(fd, "starting");
+            assert.equal(fs.readFileSync(fd, "utf-8"), "");
+            fs.closeSync(fd);
+            fd = fs.openSync("/fdtest", "r+");
+            assert.equal(fs.readFileSync(fd, "utf-8"), "starting");
+            fs.writeSync(fd, "ending");
+            assert.equal(fs.readFileSync("/fdtest", "utf-8"), "startingending");
+            fs.closeSync(fd);
+        });
+
+        it("writeFileSync writes from the beginning, and does not move the fd position - sync", () => {
+            const fs = new MemoryFileSystem();
+            const fd = fs.openSync("/fdtest", "w+");
+            fs.writeSync(fd, "a");
+            fs.writeSync(fd, "a");
+            fs.writeFileSync(fd, "b");
+            fs.writeSync(fd, "c");
+            assert.equal(fs.readFileSync("/fdtest", "utf8"), "bac");
+            fs.closeSync(fd);
+        });
+
+        it("O_APPEND makes sure that writes always set their fd position to the end - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.writeFileSync("/fdtest", "abc");
+            let buf;
+            let fd;
+            let bytesRead;
+            buf = Buffer.alloc(3);
+            // there's only 1 fd position both writes and reads
+            fd = fs.openSync("/fdtest", "a+");
+            fs.writeSync(fd, "def");
+            bytesRead = fs.readSync(fd, buf, 0, buf.length);
+            assert.equal(bytesRead, 0);
+            fs.writeSync(fd, "ghi");
+            assert.deepEqual(fs.readFileSync("/fdtest", "utf8"), "abcdefghi");
+            fs.closeSync(fd);
+            // even if read moves to to position 3, write will jump the position to the end
+            fs.writeFileSync("/fdtest", "abcdef");
+            fd = fs.openSync("/fdtest", "a+");
+            buf = Buffer.alloc(3);
+            bytesRead = fs.readSync(fd, buf, 0, buf.length);
+            assert.equal(bytesRead, 3);
+            assert.deepEqual(buf, Buffer.from("abc"));
+            fs.writeSync(fd, "ghi");
+            assert.deepEqual(fs.readFileSync("/fdtest", "utf8"), "abcdefghi");
+            bytesRead = fs.readSync(fd, buf, 0, buf.length);
+            assert.equal(bytesRead, 0);
+            fs.closeSync(fd);
+        });
+
+        it("can seek and overwrite parts of a file - sync", () => {
+            const fs = new MemoryFileSystem();
+            const fd = fs.openSync("/fdtest", "w+");
+            fs.writeSync(fd, "abc");
+            fs.lseekSync(fd, -1, fs.constants.SEEK_CUR);
+            fs.writeSync(fd, "d");
+            fs.closeSync(fd);
+            const str = fs.readFileSync("/fdtest", "utf8");
+            assert.equal(str, "abd");
+        });
+
+        it('can seek beyond the file length and create a zeroed "sparse" file - sync', () => {
+            const fs = new MemoryFileSystem();
+            fs.writeFileSync("/fdtest", Buffer.from([0x61, 0x62, 0x63]));
+            const fd = fs.openSync("/fdtest", "r+");
+            fs.lseekSync(fd, 1, fs.constants.SEEK_END);
+            fs.writeSync(fd, Buffer.from([0x64]));
+            fs.closeSync(fd);
+            const buf = fs.readFileSync("/fdtest");
+            assert.deepEqual(buf, Buffer.from([0x61, 0x62, 0x63, 0x00, 0x64]));
+        });
+
+        it("fallocateSync can extend the file length - sync", () => {
+            const fs = new MemoryFileSystem();
+            const fd = fs.openSync("allocate", "w");
+            const offset = 10;
+            const length = 100;
+            fs.fallocateSync(fd, offset, length);
+            const stat = fs.statSync("allocate");
+            assert.equal(stat.size, offset + length);
+            fs.closeSync(fd);
+        });
+
+        it("fallocateSync does not touch existing data - sync", () => {
+            const fs = new MemoryFileSystem();
+            const fd = fs.openSync("allocate", "w+");
+            const str = "abcdef";
+            fs.writeSync(fd, str);
+            const offset = 100;
+            const length = 100;
+            fs.fallocateSync(fd, offset, length);
+            fs.lseekSync(fd, 0);
+            const buf = Buffer.alloc(str.length);
+            fs.readSync(fd, buf, 0, buf.length);
+            assert.equal(buf.toString(), str);
+            fs.closeSync(fd);
+        });
+
+        it("mmap with MAP_PRIVATE on a file descriptor gives me an immediate copy on the file buffer - async", (done) => {
+            const fs = new MemoryFileSystem();
+            const buf1 = Buffer.from("abcdef");
+            const length = 4;
+            const offset = 1;
+            fs.writeFileSync("file", buf1);
+            const fd = fs.openSync("file", "r");
+            fs.mmap(length, fs.constants.MAP_PRIVATE, fd, offset, (e, buf2) => {
+                assert.notExists(e);
+                assert.equal(buf2.length, length);
+                assert.deepEqual(buf2, buf1.slice(offset, offset + length));
+                buf2[0] = "z".charCodeAt();
+                assert.notDeepEqual(buf2, buf1.slice(offset, offset + length));
+                fs.closeSync(fd);
+                done();
+            });
+        });
+
+        it("mmapSync with MAP_SHARED on a file descriptor gives me a persistent reference to the inode buffer", () => {
+            const fs = new MemoryFileSystem();
+            const buf1 = Buffer.from("abcdef");
+            const length = 4;
+            const offset = 1;
+            fs.writeFileSync("file", buf1);
+            const fd = fs.openSync("file", "r+");
+            const buf2 = fs.mmapSync(length, fs.constants.MAP_SHARED, fd, offset);
+            buf2[0] = "z".charCodeAt();
+            // changes to the mmaped buffer propragate to the file
+            assert.deepEqual(fs.readFileSync("file").slice(offset, offset + length), buf2);
+            // changes to the file propagate to the mmaped buffer
+            fs.writeFileSync(fd, buf1);
+            assert.deepEqual(buf1.slice(offset, offset + length), buf2);
+            fs.closeSync(fd);
+        });
+    });
+
+    describe("function calling styles (involving intermediate optional parameters", () => {
+        it("openSync calling styles work - sync", () => {
+            const fs = new MemoryFileSystem();
+            let fd;
+            fd = fs.openSync("/test", "w+");
+            fs.closeSync(fd);
+            fd = fs.openSync("/test2", "w+", 0o666);
+            fs.closeSync(fd);
+        });
+
+        it("open calling styles work - async", (done) => {
+            const fs = new MemoryFileSystem();
+            fs.open("/test", "w+", (err, fd) => {
+                assert.notExists(err);
+                fs.closeSync(fd);
+                fs.open("/test2", "w+", 0o666, (err, fd) => {
+                    assert.notExists(err);
+                    fs.close(fd, (err) => {
+                        assert.notExists(err);
+                        done();
+                    });
+                });
+            });
+        });
+
+        it("readSync calling styles work - sync", () => {
+            // fs.readSync has undocumented optional parameters
+            const fs = new MemoryFileSystem();
+            const str = "Hello World";
+            const buf = Buffer.from(str).fill(0);
+            fs.writeFileSync("/test", str);
+            const fd = fs.openSync("/test", "r+");
+            let bytesRead;
+            bytesRead = fs.readSync(fd, buf);
+            assert.equal(bytesRead, 0);
+            bytesRead = fs.readSync(fd, buf, 0);
+            assert.equal(bytesRead, 0);
+            bytesRead = fs.readSync(fd, buf, 0, 0);
+            assert.equal(bytesRead, 0);
+            bytesRead = fs.readSync(fd, buf, 0, 1);
+            assert.equal(bytesRead, 1);
+            bytesRead = fs.readSync(fd, buf, 0, 0, null);
+            assert.equal(bytesRead, 0);
+            bytesRead = fs.readSync(fd, buf, 0, 1, null);
+            assert.equal(bytesRead, 1);
+            fs.closeSync(fd);
+        });
+
+        it("read calling styles work - async", (done) => {
+            // fs.read does not have intermediate optional parameters
+            const fs = new MemoryFileSystem();
+            const str = "Hello World";
+            const buf = Buffer.from(str).fill(0);
+            fs.writeFileSync("/test", str);
+            const fd = fs.openSync("/test", "r+");
+            fs.read(fd, buf, 0, buf.length, null, (err, bytesRead, buffer) => {
+                assert.notExists(err);
+                assert.deepEqual(buffer, Buffer.from(str));
+                assert.equal(bytesRead, Buffer.from(str).length);
+                fs.closeSync(fd);
+                done();
+            });
+        });
+
+        it("writeSync calling styles work - sync", () => {
+            const fs = new MemoryFileSystem();
+            const fd = fs.openSync("/test", "w");
+            const str = "Hello World";
+            const buf = Buffer.from(str);
+            let bytesWritten;
+            bytesWritten = fs.writeSync(fd, buf);
+            assert.equal(bytesWritten, 11);
+            bytesWritten = fs.writeSync(fd, buf, 0);
+            assert.equal(bytesWritten, 11);
+            fs.writeSync(fd, buf, 0, buf.length);
+            fs.writeSync(fd, buf, 0, buf.length, null);
+            fs.writeSync(fd, str);
+            fs.writeSync(fd, str, null);
+            fs.writeSync(fd, str, null, "utf-8");
+            fs.closeSync(fd);
+            assert.equal(fs.readFileSync("/test", "utf-8"), str.repeat(7));
+        });
+
+        it("write calling styles work - async", (done) => {
+            // fs.write has intermediate optional parameters
+            const fs = new MemoryFileSystem();
+            const fd = fs.openSync("/test", "w+");
+            const str = "Hello World";
+            const buf = Buffer.from(str);
+            fs.write(fd, buf, (err, bytesWritten, buffer) => {
+                assert.notExists(err);
+                assert.equal(bytesWritten, buf.length);
+                assert.deepEqual(buffer, buf);
+                fs.write(fd, buf, 0, (err, bytesWritten, buffer) => {
+                    assert.notExists(err);
+                    assert.equal(bytesWritten, buf.length);
+                    assert.deepEqual(buffer, buf);
+                    fs.write(fd, buf, 0, buf.length, (err, bytesWritten, buffer) => {
+                        assert.notExists(err);
+                        assert.equal(bytesWritten, buf.length);
+                        assert.deepEqual(buffer, buf);
+                        fs.write(fd, buf, 0, buf.length, 0, (err, bytesWritten, buffer) => {
+                            assert.notExists(err);
+                            assert.equal(bytesWritten, buf.length);
+                            assert.deepEqual(buffer, buf);
+                            fs.write(fd, str, (err, bytesWritten, string) => {
+                                assert.notExists(err);
+                                assert.equal(bytesWritten, buf.length);
+                                assert.equal(string, str);
+                                fs.write(fd, str, 0, (err, bytesWritten, string) => {
+                                    assert.notExists(err);
+                                    assert.equal(bytesWritten, buf.length);
+                                    assert.equal(string, str);
+                                    fs.write(fd, str, 0, "utf-8", (err, bytesWritten, string) => {
+                                        assert.notExists(err);
+                                        assert.equal(bytesWritten, buf.length);
+                                        assert.equal(string, str);
+                                        fs.closeSync(fd);
+                                        done();
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+
+        it("readFileSync calling styles work - sync", () => {
+            const fs = new MemoryFileSystem();
+            const str = "Hello World";
+            const buf = Buffer.from(str);
+            fs.writeFileSync("/test", buf);
+            const fd = fs.openSync("/test", "r+");
+            let contents;
+            contents = fs.readFileSync("/test");
+            assert.deepEqual(contents, buf);
+            contents = fs.readFileSync("/test", { encoding: "utf8", flag: "r" });
+            assert.equal(contents, str);
+            contents = fs.readFileSync(fd);
+            assert.deepEqual(contents, buf);
+            contents = fs.readFileSync(fd, { encoding: "utf8", flag: "r" });
+            assert.equal(contents, "");
+            fs.closeSync(fd);
+        });
+
+        it("readFile calling styles work - async", (done) => {
+            const fs = new MemoryFileSystem();
+            const str = "Hello World";
+            const buf = Buffer.from(str);
+            fs.writeFileSync("/test", buf);
+            const fd = fs.openSync("/test", "r+");
+            fs.readFile("/test", (err, data) => {
+                assert.notExists(err);
+                assert.deepEqual(data, buf);
+                fs.readFile("/test", { encoding: "utf8", flag: "r" }, (err, data) => {
+                    assert.notExists(err);
+                    assert.equal(data, str);
+                    fs.readFile(fd, (err, data) => {
+                        assert.notExists(err);
+                        assert.deepEqual(data, buf);
+                        fs.readFile(fd, { encoding: "utf8", flag: "r" }, (err, data) => {
+                            assert.notExists(err);
+                            assert.equal(data, "");
+                            done();
+                        });
+                    });
+                });
+            });
+        });
+
+        it("writeFileSync calling styles work - sync", () => {
+            const fs = new MemoryFileSystem();
+            const fd = fs.openSync("/test", "w+");
+            const str = "Hello World";
+            const buf = Buffer.from(str);
+            fs.writeFileSync("/test", str);
+            assert.deepEqual(fs.readFileSync("/test"), buf);
+            fs.writeFileSync("/test", str, { encoding: "utf8", mode: 0o666, flag: "w" });
+            assert.deepEqual(fs.readFileSync("/test"), buf);
+            fs.writeFileSync("/test", buf);
+            assert.deepEqual(fs.readFileSync("/test"), buf);
+            fs.writeFileSync(fd, str);
+            assert.deepEqual(fs.readFileSync("/test"), buf);
+            fs.writeFileSync(fd, str, { encoding: "utf8", mode: 0o666, flag: "w" });
+            assert.deepEqual(fs.readFileSync("/test"), buf);
+            fs.writeFileSync(fd, buf);
+            assert.deepEqual(fs.readFileSync("/test"), buf);
+            fs.closeSync(fd);
+        });
+
+        it("writeFile calling styles work - async", (done) => {
+            const fs = new MemoryFileSystem();
+            const fd = fs.openSync("/test", "w+");
+            const str = "Hello World";
+            const buf = Buffer.from(str);
+            fs.writeFile("/test", str, (err) => {
+                assert.notExists(err);
+                fs.writeFile("/test", str, { encoding: "utf8", mode: 0o666, flag: "w" }, (err) => {
+                    assert.notExists(err);
+                    fs.writeFile("/test", buf, (err) => {
+                        assert.notExists(err);
+                        fs.writeFile(fd, str, (err) => {
+                            assert.notExists(err);
+                            fs.writeFile(fd, str, { encoding: "utf8", mode: 0o666, flag: "w" }, (err) => {
+                                assert.notExists(err);
+                                fs.writeFile(fd, buf, (err) => {
+                                    assert.notExists(err);
+                                    fs.closeSync(fd);
+                                    done();
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
+
+    describe("current directory side effects", () => {
+        it("cwd() returns the absolute fully resolved path - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/a/b");
+            fs.symlinkSync("/a/b", "/c");
+            fs.chdir("/c");
+            const cwd = fs.cwd();
+            assert.equal(cwd, "/a/b");
+        });
+
+        it("cwd() still works if the current directory is deleted - sync", () => {
+            // nodejs process.cwd() will actually throw ENOENT
+            // but making it work in VFS is harmless
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/removed");
+            fs.chdir("/removed");
+            fs.rmdirSync("../removed");
+            assert.equal(fs.cwd(), "/removed");
+        });
+
+        it("deleted current directory can still use . and .. for traversal - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/removed");
+            const statRoot = fs.statSync("/");
+            fs.chdir("/removed");
+            const statCurrent1 = fs.statSync(".");
+            fs.rmdirSync("../removed");
+            const statCurrent2 = fs.statSync(".");
+            const statParent = fs.statSync("..");
+            assert.equal(statCurrent1.ino, statCurrent2.ino);
+            assert.equal(statRoot.ino, statParent.ino);
+            assert.equal(statCurrent2.nlink, 1);
+            assert.equal(statParent.nlink, 3);
+            const dentryCurrent = fs.readdirSync(".");
+            const dentryParent = fs.readdirSync("..");
+            assert.deepEqual(dentryCurrent, []);
+            assert.deepEqual(dentryParent, []);
+        });
+
+        it("cannot create inodes within a deleted current directory - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.writeFileSync("/dummy", "hello");
+            fs.mkdirSync("/removed");
+            fs.chdir("/removed");
+            fs.rmdirSync("../removed");
+            let error;
+            error = assert.throws(() => {
+                fs.writeFileSync("./a", "abc");
+            });
+            assert.equal(error.code, "ENOENT");
+            error = assert.throws(() => {
+                fs.mkdirSync("./b");
+            });
+            assert.equal(error.code, "ENOENT");
+            error = assert.throws(() => {
+                fs.symlinkSync("../dummy", "c");
+            });
+            assert.equal(error.code, "ENOENT");
+            error = assert.throws(() => {
+                fs.linkSync("../dummy", "d");
+            });
+            assert.equal(error.code, "ENOENT");
+        });
+
+        it("can still chdir when both current and parent directories are deleted", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/removeda/removedb");
+            fs.chdir("/removeda/removedb");
+            fs.rmdirSync("../removedb");
+            fs.rmdirSync("../../removeda");
+            fs.chdir("..");
+            fs.chdir("..");
+            const path = fs.cwd();
+            assert.equal(path, "/");
+        });
+
+        it("cannot chdir into a directory without execute permissions", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/dir");
+            fs.chmodSync("/dir", 0o666);
+            fs.setUid(1000);
+            const error = assert.throws(() => {
+                fs.chdir("/dir");
+            });
+            assert.equal(error.code, "EACCES");
+        });
+
+        it("cannot delete current directory using .", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/removed");
+            fs.chdir("/removed");
+            const error = assert.throws(() => {
+                fs.rmdirSync(".");
+            });
+            assert.equal(error.code, "EINVAL");
+        });
+
+        it("cannot delete parent directory using .. even when current directory is deleted", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/removeda/removedb");
+            fs.chdir("/removeda/removedb");
+            fs.rmdirSync("../removedb");
+            fs.rmdirSync("../../removeda");
+            const error = assert.throws(() => {
+                fs.rmdirSync("..");
+            });
+            // linux reports this as ENOTEMPTY, but EINVAL makes more sense
+            assert.equal(error.code, "EINVAL");
+        });
+
+        it("cannot rename the current or parent directory to a subdirectory", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/cwd");
+            fs.chdir("/cwd");
+            let error;
+            error = assert.throws(() => {
+                fs.renameSync(".", "subdir");
+            });
+            assert.equal(error.code, "EBUSY");
+            fs.mkdirSync("/cwd/cwd");
+            fs.chdir("/cwd/cwd");
+            error = assert.throws(() => {
+                fs.renameSync("..", "subdir");
+            });
+            assert.equal(error.code, "EBUSY");
+        });
+
+        it("cannot rename where the old path is a strict prefix of the new path", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/cwd1/cwd2");
+            fs.chdir("/cwd1/cwd2");
+            let error;
+            error = assert.throws(() => {
+                fs.renameSync("../cwd2", "subdir");
+            });
+            assert.equal(error.code, "EINVAL");
+            fs.mkdirSync("/cwd1/cwd2/cwd3");
+            error = assert.throws(() => {
+                fs.renameSync("./cwd3", "./cwd3/cwd4");
+            });
+            assert.equal(error.code, "EINVAL");
+        });
+    });
+
+    describe("permissions", () => {
+        it("chown changes uid and gid - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/test");
+            fs.chownSync("/test", 1000, 2000);
+            const stat = fs.statSync("/test");
+            assert.equal(stat.uid, 1000);
+            assert.equal(stat.gid, 2000);
+        });
+
+        it("chownr changes uid and gid recursively - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/dir");
+            fs.writeFileSync("/dir/a", "hello");
+            fs.writeFileSync("/dir/b", "world");
+            fs.chownrSync("/dir", 1000, 2000);
+            let stat;
+            stat = fs.statSync("/dir");
+            assert.equal(stat.uid, 1000);
+            assert.equal(stat.gid, 2000);
+            stat = fs.statSync("/dir/a");
+            assert.equal(stat.uid, 1000);
+            assert.equal(stat.gid, 2000);
+            stat = fs.statSync("/dir/b");
+            assert.equal(stat.uid, 1000);
+            assert.equal(stat.gid, 2000);
+            fs.writeFileSync("/file", "hello world");
+            fs.chownrSync("/file", 1000, 2000);
+            stat = fs.statSync("/file");
+            assert.equal(stat.uid, 1000);
+            assert.equal(stat.gid, 2000);
+        });
+
+        it("chownr changes uid and gid recursively - async", (done) => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirSync("/dir");
+            fs.writeFileSync("/dir/a", "hello");
+            fs.writeFileSync("/dir/b", "world");
+            let stat;
+            fs.chownr("/dir", 1000, 2000, ((err) => {
+                assert.notExists(err);
+                stat = fs.statSync("/dir");
+                assert.equal(stat.uid, 1000);
+                assert.equal(stat.gid, 2000);
+                stat = fs.statSync("/dir/a");
+                assert.equal(stat.uid, 1000);
+                assert.equal(stat.gid, 2000);
+                stat = fs.statSync("/dir/b");
+                assert.equal(stat.uid, 1000);
+                assert.equal(stat.gid, 2000);
+                fs.writeFileSync("/file", "hello world");
+                fs.chownr("/file", 1000, 2000, (err) => {
+                    assert.notExists(err);
+                    stat = fs.statSync("/file");
+                    assert.equal(stat.uid, 1000);
+                    assert.equal(stat.gid, 2000);
+                    done();
+                });
+            }));
+        });
+
+        it("chmod with 0 wipes out all permissions - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.writeFileSync("/a", "abc");
+            fs.chmodSync("/a", 0o000);
+            const stat = fs.statSync("/a");
+            assert.equal(stat.mode, fs.constants.S_IFREG);
+        });
+
+        it("mkdir and chmod affects the mode - callback", (done) => {
+            const fs = new MemoryFileSystem();
+            fs.mkdir("/test", 0o644, (err) => {
+                fs.accessSync(
+                    "/test",
+                    (fs.constants.F_OK |
+                        fs.constants.R_OK |
+                        fs.constants.W_OK)
+                );
+                fs.chmod("/test", 0o444, (err) => {
+                    fs.accessSync(
+                        "/test",
+                        (fs.constants.F_OK |
+                            fs.constants.R_OK)
+                    );
+                    done();
+                });
+            });
+        });
+
+        it("umask is correctly applied", () => {
+            const umask = 0o127;
+            const fs = new MemoryFileSystem(umask);
+            fs.writeFileSync("/file", "hello world");
+            fs.mkdirSync("/dir");
+            fs.symlinkSync("/file", "/symlink");
+            let stat;
+            stat = fs.statSync("/file");
+            assert.equal(
+                (stat.mode & (fs.constants.S_IRWXU | fs.constants.S_IRWXG | fs.constants.S_IRWXO)),
+                DEFAULT_FILE_PERM & (~umask)
+            );
+            stat = fs.statSync("/dir");
+            assert.equal(
+                (stat.mode & (fs.constants.S_IRWXU | fs.constants.S_IRWXG | fs.constants.S_IRWXO)),
+                DEFAULT_DIRECTORY_PERM & (~umask)
+            );
+            // umask is not applied to symlinks
+            stat = fs.lstatSync("/symlink");
+            assert.equal(
+                (stat.mode & (fs.constants.S_IRWXU | fs.constants.S_IRWXG | fs.constants.S_IRWXO)),
+                DEFAULT_SYMLINK_PERM
+            );
+        });
+
+        it("non-root users can only chown uid if they own the file and they are chowning to themselves", () => {
+            const fs = new MemoryFileSystem();
+            fs.writeFileSync("file", "hello");
+            fs.chownSync("file", 1000, 1000);
+            fs.setUid(1000);
+            fs.setGid(1000);
+            fs.chownSync("file", 1000, 1000);
+            let error;
+            // you cannot give away files
+            error = assert.throws(() => {
+                fs.chownSync("file", 2000, 2000);
+            });
+            assert.equal(error.code, "EPERM");
+            // if you don't own the file, you also cannot change (even if your change is noop)
+            fs.setUid(3000);
+            error = assert.throws(() => {
+                fs.chownSync("file", 1000, 1000);
+            });
+            assert.equal(error.code, "EPERM");
+            fs.setUid(1000);
+            fs.chownSync("file", 1000, 2000);
+        });
+
+        it("chown can change groups without any problem because we do not have a user group hierarchy - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.writeFileSync("file", "hello");
+            fs.chownSync("file", 1000, 1000);
+            fs.setUid(1000);
+            fs.setGid(1000);
+            fs.chownSync("file", 1000, 2000);
+        });
+
+        it("chmod only works if you are the owner of the file - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.writeFileSync("file", "hello");
+            fs.chownSync("file", 1000, 1000);
+            fs.setUid(1000);
+            fs.chmodSync("file", 0o000);
+            fs.setUid(2000);
+            const error = assert.throws(() => {
+                fs.chmodSync("file", 0o777);
+            });
+            assert.equal(error.code, "EPERM");
+        });
+
+        it("permissions are checked in stages of user, group then other - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/home/1000");
+            fs.chownSync("/home/1000", 1000, 1000);
+            fs.chdir("/home/1000");
+            fs.setUid(1000);
+            fs.setGid(1000);
+            fs.writeFileSync("testfile", "hello");
+            fs.mkdirSync("dir");
+            fs.chmodSync("testfile", 0o764);
+            fs.chmodSync("dir", 0o764);
+            fs.accessSync(
+                "testfile",
+                (fs.constants.R_OK |
+                    fs.constants.W_OK |
+                    fs.constants.X_OK)
+            );
+            fs.accessSync(
+                "dir",
+                (fs.constants.R_OK |
+                    fs.constants.W_OK |
+                    fs.constants.X_OK)
+            );
+            fs.setUid(2000);
+            fs.accessSync(
+                "testfile",
+                (fs.constants.R_OK |
+                    fs.constants.W_OK)
+            );
+            fs.accessSync(
+                "dir",
+                (fs.constants.R_OK |
+                    fs.constants.W_OK)
+            );
+            let error;
+            error = assert.throws(() => {
+                fs.accessSync("testfile", fs.constants.X_OK);
+            });
+            assert.equal(error.code, "EACCES");
+            error = assert.throws(() => {
+                fs.accessSync("dir", fs.constants.X_OK);
+            });
+            assert.equal(error.code, "EACCES");
+            fs.setGid(2000);
+            fs.accessSync("testfile", fs.constants.R_OK);
+            fs.accessSync("dir", fs.constants.R_OK);
+            error = assert.throws(() => {
+                fs.accessSync(
+                    "testfile",
+                    (fs.constants.W_OK |
+                        fs.constants.X_OK)
+                );
+            });
+            assert.equal(error.code, "EACCES");
+            error = assert.throws(() => {
+                fs.accessSync(
+                    "dir",
+                    (fs.constants.W_OK |
+                        fs.constants.X_OK)
+                );
+            });
+            assert.equal(error.code, "EACCES");
+        });
+
+        it("permissions are checked in stages of user, group then other (using chownSync) - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/home/1000");
+            fs.chownSync("/home/1000", 1000, 1000);
+            fs.chdir("/home/1000");
+            fs.setUid(1000);
+            fs.setGid(1000);
+            fs.writeFileSync("testfile", "hello");
+            fs.mkdirSync("dir");
+            fs.chmodSync("testfile", 0o764);
+            fs.chmodSync("dir", 0o764);
+            fs.accessSync(
+                "testfile",
+                (fs.constants.R_OK |
+                    fs.constants.W_OK |
+                    fs.constants.X_OK)
+            );
+            fs.accessSync(
+                "dir",
+                (fs.constants.R_OK |
+                    fs.constants.W_OK |
+                    fs.constants.X_OK)
+            );
+            fs.setUid(DEFAULT_ROOT_UID);
+            fs.setUid(DEFAULT_ROOT_GID);
+            fs.chownSync("testfile", 2000, 1000);
+            fs.chownSync("dir", 2000, 1000);
+            fs.setUid(1000);
+            fs.setGid(1000);
+            fs.accessSync(
+                "testfile",
+                (fs.constants.R_OK |
+                    fs.constants.W_OK)
+            );
+            fs.accessSync(
+                "dir",
+                (fs.constants.R_OK |
+                    fs.constants.W_OK)
+            );
+            let error;
+            error = assert.throws(() => {
+                fs.accessSync("testfile", fs.constants.X_OK);
+            });
+            assert.equal(error.code, "EACCES");
+            error = assert.throws(() => {
+                fs.accessSync("dir", fs.constants.X_OK);
+            });
+            assert.equal(error.code, "EACCES");
+            fs.setUid(DEFAULT_ROOT_UID);
+            fs.setUid(DEFAULT_ROOT_GID);
+            fs.chownSync("testfile", 2000, 2000);
+            fs.chownSync("dir", 2000, 2000);
+            fs.setUid(1000);
+            fs.setGid(1000);
+            fs.accessSync("testfile", fs.constants.R_OK);
+            fs.accessSync("dir", fs.constants.R_OK);
+            error = assert.throws(() => {
+                fs.accessSync(
+                    "testfile",
+                    (fs.constants.W_OK |
+                        fs.constants.X_OK)
+                );
+            });
+            assert.equal(error.code, "EACCES");
+            error = assert.throws(() => {
+                fs.accessSync(
+                    "dir",
+                    (fs.constants.W_OK |
+                        fs.constants.X_OK)
+                );
+            });
+            assert.equal(error.code, "EACCES");
+        });
+
+        it("--x-w-r-- do not provide read write and execute to the user due to permission staging", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/home/1000");
+            fs.chownSync("/home/1000", 1000, 1000);
+            fs.chdir("/home/1000");
+            fs.setUid(1000);
+            fs.setGid(1000);
+            fs.writeFileSync("file", "hello");
+            fs.mkdirSync("dir");
+            fs.chmodSync("file", 0o124);
+            fs.chmodSync("dir", 0o124);
+            let error;
+            error = assert.throws(() => {
+                fs.accessSync(
+                    "file",
+                    (fs.constants.R_OK |
+                        fs.constants.W_OK)
+                );
+            });
+            assert.equal(error.code, "EACCES");
+            error = assert.throws(() => {
+                fs.accessSync(
+                    "dir",
+                    (fs.constants.R_OK |
+                        fs.constants.W_OK)
+                );
+            });
+            assert.equal(error.code, "EACCES");
+            fs.accessSync("file", fs.constants.X_OK);
+            fs.accessSync("dir", fs.constants.X_OK);
+        });
+
+        it("file permissions --- - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/home/1000");
+            fs.chownSync("/home/1000", 1000, 1000);
+            fs.chdir("/home/1000");
+            fs.setUid(1000);
+            fs.setGid(1000);
+            fs.writeFileSync("file", "hello");
+            fs.chmodSync("file", 0o000);
+            let error;
+            error = assert.throws(() => {
+                fs.accessSync("file", fs.constants.X_OK);
+            });
+            assert.equal(error.code, "EACCES");
+            error = assert.throws(() => {
+                fs.openSync("file", "r");
+            });
+            assert.equal(error.code, "EACCES");
+            error = assert.throws(() => {
+                fs.openSync("file", "w");
+            });
+            assert.equal(error.code, "EACCES");
+            const stat = fs.statSync("file");
+            assert.isTrue(stat.isFile());
+        });
+
+        it("file permissions r-- - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/home/1000");
+            fs.chownSync("/home/1000", 1000, 1000);
+            fs.chdir("/home/1000");
+            fs.setUid(1000);
+            fs.setGid(1000);
+            const str = "hello";
+            fs.writeFileSync("file", str);
+            fs.chmodSync("file", 0o400);
+            let error;
+            error = assert.throws(() => {
+                fs.accessSync("file", fs.constants.X_OK);
+            });
+            assert.equal(error.code, "EACCES");
+            assert.equal(fs.readFileSync("file", "utf8"), str);
+            error = assert.throws(() => {
+                fs.openSync("file", "w");
+            });
+            assert.equal(error.code, "EACCES");
+        });
+
+        it("file permissions rw- - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/home/1000");
+            fs.chownSync("/home/1000", 1000, 1000);
+            fs.chdir("/home/1000");
+            fs.setUid(1000);
+            fs.setGid(1000);
+            fs.writeFileSync("file", "world");
+            fs.chmodSync("file", 0o600);
+            const error = assert.throws(() => {
+                fs.accessSync("file", fs.constants.X_OK);
+            });
+            assert.equal(error.code, "EACCES");
+            const str = "hello";
+            fs.writeFileSync("file", str);
+            assert.equal(fs.readFileSync("file", "utf8"), str);
+        });
+
+        it("file permissions rwx - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/home/1000");
+            fs.chownSync("/home/1000", 1000, 1000);
+            fs.chdir("/home/1000");
+            fs.setUid(1000);
+            fs.setGid(1000);
+            fs.writeFileSync("file", "world");
+            fs.chmodSync("file", 0o700);
+            fs.accessSync("file", fs.constants.X_OK);
+            const str = "hello";
+            fs.writeFileSync("file", str);
+            assert.equal(fs.readFileSync("file", "utf8"), str);
+        });
+
+        it("file permissions r-x - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/home/1000");
+            fs.chownSync("/home/1000", 1000, 1000);
+            fs.chdir("/home/1000");
+            fs.setUid(1000);
+            fs.setGid(1000);
+            const str = "hello";
+            fs.writeFileSync("file", str);
+            fs.chmodSync("file", 0o500);
+            fs.accessSync("file", fs.constants.X_OK);
+            assert.equal(fs.readFileSync("file", "utf8"), str);
+        });
+
+        it("file permissions -w- - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/home/1000");
+            fs.chownSync("/home/1000", 1000, 1000);
+            fs.chdir("/home/1000");
+            fs.setUid(1000);
+            fs.setGid(1000);
+            const str = "hello";
+            fs.writeFileSync("file", str);
+            fs.chmodSync("file", 0o200);
+            let error;
+            error = assert.throws(() => {
+                fs.accessSync("file", fs.constants.X_OK);
+            });
+            assert.equal(error.code, "EACCES");
+            fs.writeFileSync("file", str);
+            error = assert.throws(() => {
+                fs.openSync("file", "r");
+            });
+            assert.equal(error.code, "EACCES");
+        });
+
+        it("file permissions -wx - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/home/1000");
+            fs.chownSync("/home/1000", 1000, 1000);
+            fs.chdir("/home/1000");
+            fs.setUid(1000);
+            fs.setGid(1000);
+            const str = "hello";
+            fs.writeFileSync("file", str);
+            fs.chmodSync("file", 0o300);
+            fs.accessSync("file", fs.constants.X_OK);
+            fs.writeFileSync("file", str);
+            const error = assert.throws(() => {
+                fs.openSync("file", "r");
+            });
+            assert.equal(error.code, "EACCES");
+        });
+
+        it("file permissions --x - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/home/1000");
+            fs.chownSync("/home/1000", 1000, 1000);
+            fs.chdir("/home/1000");
+            fs.setUid(1000);
+            fs.setGid(1000);
+            fs.writeFileSync("file", "hello");
+            fs.chmodSync("file", 0o100);
+            fs.accessSync("file", fs.constants.X_OK);
+            let error;
+            error = assert.throws(() => {
+                fs.openSync("file", "w");
+            });
+            assert.equal(error.code, "EACCES");
+            error = assert.throws(() => {
+                fs.openSync("file", "r");
+            });
+            assert.equal(error.code, "EACCES");
+        });
+
+        it("directory permissions --- - sync", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/home/1000");
+            fs.chownSync("/home/1000", 1000, 1000);
+            fs.chdir("/home/1000");
+            fs.setUid(1000);
+            fs.setGid(1000);
+            fs.mkdirSync("---");
+            fs.chmodSync("---", 0o000);
+            const stat = fs.statSync("---");
+            assert.isTrue(stat.isDirectory());
+            let error;
+            error = assert.throws(() => {
+                fs.writeFileSync("---/a", "hello");
+            });
+            assert.equal(error.code, "EACCES");
+            error = assert.throws(() => {
+                fs.chdir("---");
+            });
+            assert.equal(error.code, "EACCES");
+            error = assert.throws(() => {
+                fs.readdirSync("---");
+            });
+            assert.equal(error.code, "EACCES");
+        });
+
+        it("directory permissions r-- - sync", () => {
+            // allows listing entries
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/home/1000");
+            fs.chownSync("/home/1000", 1000, 1000);
+            fs.chdir("/home/1000");
+            fs.setUid(1000);
+            fs.setGid(1000);
+            fs.mkdirSync("r--");
+            fs.writeFileSync("r--/a", "hello");
+            fs.chmodSync("r--", 0o400);
+            let error;
+            error = assert.throws(() => {
+                fs.writeFileSync("r--/b", "hello");
+            });
+            assert.equal(error.code, "EACCES");
+            error = assert.throws(() => {
+                fs.chdir("r--");
+            });
+            assert.equal(error.code, "EACCES");
+            assert.deepEqual(fs.readdirSync("r--"), ["a"]);
+            // you can always change metadata even without write permissions
+            fs.utimesSync("r--", new Date(), new Date());
+            // you cannot access the properties of the children
+            error = assert.throws(() => {
+                fs.statSync("r--/a");
+            });
+            assert.equal(error.code, "EACCES");
+        });
+
+        it("directory permissions rw- - sync", () => {
+            // allows listing entries
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/home/1000");
+            fs.chownSync("/home/1000", 1000, 1000);
+            fs.chdir("/home/1000");
+            fs.setUid(1000);
+            fs.setGid(1000);
+            fs.mkdirSync("rw-");
+            fs.writeFileSync("rw-/a", "hello");
+            fs.chmodSync("rw-", 0o600);
+            let error;
+            // you cannot write into a file
+            error = assert.throws(() => {
+                fs.writeFileSync("rw-/a", "world");
+            });
+            assert.equal(error.code, "EACCES");
+            // you cannot create a new file
+            error = assert.throws(() => {
+                fs.writeFileSync("rw-/b", "hello");
+            });
+            assert.equal(error.code, "EACCES");
+            // you cannot remove files
+            error = assert.throws(() => {
+                fs.unlinkSync("rw-/a");
+            });
+            assert.equal(error.code, "EACCES");
+            // you cannot traverse into it
+            error = assert.throws(() => {
+                fs.chdir("rw-");
+            });
+            assert.equal(error.code, "EACCES");
+            assert.deepEqual(fs.readdirSync("rw-"), ["a"]);
+            fs.utimesSync("rw-", new Date(), new Date());
+            // you cannot access the properties of the children
+            error = assert.throws(() => {
+                fs.statSync("rw-/a");
+            });
+            assert.equal(error.code, "EACCES");
+        });
+
+        it("directory permissions rwx - sync", () => {
+            // allows listing entries, creation of children and traversal
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/home/1000");
+            fs.chownSync("/home/1000", 1000, 1000);
+            fs.chdir("/home/1000");
+            fs.setUid(1000);
+            fs.setGid(1000);
+            fs.mkdirSync("rwx");
+            fs.chmodSync("rwx", 0o700);
+            const str = "abc";
+            fs.writeFileSync("rwx/a", str);
+            assert.equal(fs.readFileSync("rwx/a", "utf8"), str);
+            assert.deepEqual(fs.readdirSync("rwx"), ["a"]);
+            fs.chdir("rwx");
+            const stat = fs.statSync("./a");
+            assert.isTrue(stat.isFile());
+            fs.unlinkSync("./a");
+            fs.rmdirSync("../rwx");
+        });
+
+        it("directory permissions r-x - sync", () => {
+            // allows listing entries and traversal
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/home/1000");
+            fs.chownSync("/home/1000", 1000, 1000);
+            fs.chdir("/home/1000");
+            fs.setUid(1000);
+            fs.setGid(1000);
+            fs.mkdirSync("r-x");
+            fs.mkdirSync("r-x/dir");
+            fs.writeFileSync("r-x/a", "hello");
+            fs.chmodSync("r-x", 0o500);
+            const str = "world";
+            // you can write to the file
+            fs.writeFileSync("r-x/a", str);
+            let error;
+            // you cannot create new files
+            error = assert.throws(() => {
+                fs.writeFileSync("r-x/b", str);
+            });
+            assert.equal(error.code, "EACCES");
+            // you can read the directory
+            assert.deepEqual(fs.readdirSync("r-x"), ["dir", "a"]);
+            // you can read the file
+            assert.equal(fs.readFileSync("r-x/a", "utf8"), str);
+            // you can traverse into the directory
+            fs.chdir("r-x");
+            const stat = fs.statSync("dir");
+            assert.isTrue(stat.isDirectory());
+            // you cannot delete the file
+            error = assert.throws(() => {
+                fs.unlinkSync("./a");
+            });
+            assert.equal(error.code, "EACCES");
+            // cannot delete the directory
+            error = assert.throws(() => {
+                fs.rmdirSync("dir");
+            });
+            assert.equal(error.code, "EACCES");
+        });
+
+        it("directory permissions -w- - sync", () => {
+            // allows nothing
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/home/1000");
+            fs.chownSync("/home/1000", 1000, 1000);
+            fs.chdir("/home/1000");
+            fs.setUid(1000);
+            fs.setGid(1000);
+            fs.mkdirSync("-w-");
+            fs.chmodSync("-w-", 0o000);
+            let error;
+            error = assert.throws(() => {
+                fs.writeFileSync("-w-/a", "hello");
+            });
+            assert.equal(error.code, "EACCES");
+            error = assert.throws(() => {
+                fs.chdir("-w-");
+            });
+            assert.equal(error.code, "EACCES");
+            error = assert.throws(() => {
+                fs.readdirSync("-w-");
+            });
+            assert.equal(error.code, "EACCES");
+        });
+
+        it("directory permissions -wx - sync", () => {
+            // creation of children and allows traversal
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/home/1000");
+            fs.chownSync("/home/1000", 1000, 1000);
+            fs.chdir("/home/1000");
+            fs.setUid(1000);
+            fs.setGid(1000);
+            fs.mkdirSync("-wx");
+            fs.chmodSync("-wx", 0o300);
+            const str = "hello";
+            fs.writeFileSync("-wx/a", str);
+            assert.equal(fs.readFileSync("-wx/a", "utf8"), str);
+            fs.unlinkSync("-wx/a");
+            fs.chdir("-wx");
+            fs.mkdirSync("./dir");
+            const error = assert.throws(() => {
+                fs.readdirSync(".");
+            });
+            assert.equal(error.code, "EACCES");
+            const stat = fs.statSync("./dir");
+            assert.isTrue(stat.isDirectory());
+            fs.rmdirSync("./dir");
+        });
+
+        it("directory permissions --x - sync", () => {
+            // allows traversal
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/home/1000");
+            fs.chownSync("/home/1000", 1000, 1000);
+            fs.chdir("/home/1000");
+            fs.setUid(1000);
+            fs.setGid(1000);
+            fs.mkdirSync("--x");
+            const str = "hello";
+            fs.writeFileSync("--x/a", str);
+            fs.chmodSync("--x", 0o100);
+            fs.chdir("--x");
+            let error;
+            error = assert.throws(() => {
+                fs.writeFileSync("./b", "world");
+            });
+            assert.equal(error.code, "EACCES");
+            error = assert.throws(() => {
+                fs.unlinkSync("./a");
+            });
+            assert.equal(error.code, "EACCES");
+            error = assert.throws(() => {
+                fs.readdirSync(".");
+            });
+            assert.equal(error.code, "EACCES");
+            assert.equal(fs.readFileSync("./a", "utf8"), str);
+        });
+
+        it("changing file permissions does not affect already opened file descriptor", () => {
+            const fs = new MemoryFileSystem();
+            fs.mkdirpSync("/home/1000");
+            fs.chownSync("/home/1000", 1000, 1000);
+            fs.chdir("/home/1000");
+            fs.setUid(1000);
+            fs.setGid(1000);
+            const str = "hello";
+            fs.writeFileSync("file", str);
+            fs.chmodSync("file", 0o777);
+            const fd = fs.openSync("file", "r+");
+            fs.chmodSync("file", 0o000);
+            assert.equal(fs.readFileSync(fd, "utf8"), str);
+            const str2 = "world";
+            fs.writeFileSync(fd, str2);
+            fs.lseekSync(fd, 0);
+            assert.equal(fs.readFileSync(fd, "utf8"), str2);
+            fs.closeSync(fd);
+        });
+
+        it("writeFileSync and appendFileSync respects the mode", () => {
+            const fs = new MemoryFileSystem();
+            let error;
+            // allow others to read only
+            fs.writeFileSync("/test1", "", { mode: 0o004 });
+            fs.appendFileSync("/test2", "", { mode: 0o004 });
+            // become the other
+            fs.setUid(1000);
+            fs.setGid(1000);
+            fs.accessSync("/test1", fs.constants.R_OK);
+            error = assert.throws(() => {
+                fs.accessSync("/test1", fs.constants.W_OK);
+            });
+            assert.equal(error.code, "EACCES");
+            fs.accessSync("/test2", fs.constants.R_OK);
+            error = assert.throws(() => {
+                fs.accessSync("/test1", fs.constants.W_OK);
+            });
+            assert.equal(error.code, "EACCES");
+        });
+    });
+
+    describe("Uint8Array data support", () => {
+        it("Uint8Array data support - sync", () => {
+            const fs = new MemoryFileSystem();
+            const buf = Buffer.from("abc");
+            const array = new Uint8Array(buf);
+            fs.writeFileSync("/a", array);
+            assert.deepEqual(fs.readFileSync("/a"), buf);
+            const fd = fs.openSync("/a", "r+");
+            fs.writeSync(fd, array);
+            fs.lseekSync(fd, 0);
+            const array2 = new Uint8Array(array.length);
+            fs.readSync(fd, array2, 0, array2.length);
+            assert.deepEqual(array2, array);
+            fs.closeSync(fd);
+        });
+    });
+
+    describe("URL path support", () => {
+        it("URL path support - sync", () => {
+            const fs = new MemoryFileSystem();
+            let url;
+            url = new URL("file:///file");
+            const str = "Hello World";
+            fs.writeFileSync(url, str);
+            assert.equal(fs.readFileSync(url, "utf8"), str);
+            const fd = fs.openSync(url, "a+");
+            const str2 = "abc";
+            fs.writeSync(fd, str2);
+            const buf = Buffer.allocUnsafe(str.length + str2.length);
+            fs.lseekSync(fd, 0);
+            fs.readSync(fd, buf, 0, buf.length);
+            assert.deepEqual(buf, Buffer.from(str + str2));
+            url = new URL("file://hostname/file");
+            const error = assert.throws(() => {
+                fs.openSync(url, "w");
+            });
+            assert.equal(error.message, "ERR_INVALID_FILE_URL_HOST");
+            fs.closeSync(fd);
+        });
+    });
+
+    describe("complex tests and character devices", () => {
+        const randomBytes = require("secure-random-bytes");
+
+        const mfs = new MemoryFileSystem();
+
+        const fullDev = {
+            setPos: (fd, position, flags) => {
+                fd._pos = 0;
+            },
+            read: (fd, buffer, position) => {
+                buffer.fill(0);
+                return buffer.length;
+            },
+            write: (fd, buffer, position, extraFlags) => {
+                throw new VirtualFSError(adone.error.errno.code.ENOSPC);
+            }
+        };
+
+        const nullDev = {
+            setPos: (fd, position, flags) => {
+                fd._pos = 0;
+
+            },
+            read: (fd, buffer, position) => {
+                return 0;
+            },
+            write: (fd, buffer, position, extraFlags) => {
+                return buffer.length;
+            }
+        };
+
+
+        const randomDev = {
+            setPos: (fd, position, flags) => {
+                fd._pos = 0;
+
+            },
+            read: (fd, buffer, position) => {
+                const randomBuf = Buffer.from(randomBytes(buffer.length), "ascii");
+                randomBuf.copy(buffer);
+                return randomBuf.length;
+            },
+            write: (fd, buffer, position, extraFlags) => {
+                return buffer.length;
+            }
+        };
+
+        let fds = 0;
+        let fs = null;
+        let ttyInFd = null;
+        let ttyOutFd = null;
+
+        const ttyDev = {
+            open: (fd) => {
+                if (fds === 0) {
+                    if (process.release && process.release.name === "node") {
+                        fs = require("fs");
+                        ttyOutFd = process.stdout.fd;
+                        if (process.platform === "win32") {
+                            // on windows, stdin is in blocking mode
+                            // NOTE: on windows node repl environment, stdin is in raw mode
+                            //       make sure to set process.stdin.setRawMode(false)
+                            ttyInFd = process.stdin.fd;
+                        } else {
+                            // on non-windows, stdin is in non-blocking mode
+                            // to get blocking semantics we need to reopen stdin
+                            try {
+                                // if there are problems opening this
+                                // we assume there is no stdin
+                                ttyInFd = fs.openSync("/dev/fd/0", "rs");
+                            } catch (e) {
+                                //
                             }
-                        }, { mode: 0o666 }]
-                    },
-                    b: {
-                        a: ctx.symlink("../a/b"),
-                        b: ctx.symlink("../a/b/d")
+                        }
                     }
-                }));
-
-                {
-                    const err = await assert.throws(async () => {
-                        await engine.lstat("/b/a/c");
-                    }, "EACCES: permission denied, lstat '/b/a/c'");
-                    expect(err.code).to.be.equal("EACCES");
                 }
-                {
-                    const err = await assert.throws(async () => {
-                        await engine.lstat("/b/b/e");
-                    }, "EACCES: permission denied, lstat '/b/b/e'");
-                    expect(err.code).to.be.equal("EACCES");
+                ++fds;
+            },
+            close: (fd) => {
+                --fds;
+                if (fds === 0) {
+                    if (ttyInFd && fs) {
+                        fs.closeSync(ttyInFd);
+                    }
                 }
+            },
+            read: (fd, buffer, position) => {
+                if (!is.null(ttyInFd) && fs) {
+                    // $FlowFixMe: position parameter allows null
+                    return fs.readSync(ttyInFd, buffer, 0, buffer.length, null);
+                }
+                throw new VirtualFSError(adone.error.errno.code.ENXIO);
+
+            },
+            write: (fd, buffer, position, extraFlags) => {
+                if (!is.null(ttyOutFd) && fs) {
+                    return fs.writeSync(ttyOutFd, buffer);
+                }
+                console.log(buffer.toString());
+                return buffer.length;
+            }
+        };
+
+        const zeroDev = {
+            setPos: (fd, position, flags) => {
+                fd._pos = 0;
+
+            },
+            read: (fd, buffer, position) => {
+                buffer.fill(0);
+                return buffer.length;
+            },
+            write: (fd, buffer, position, extraFlags) => {
+                return buffer.length;
+            }
+        };
+
+
+        mfs.registerCharacterDevice(nullDev, 1, 3);
+        mfs.registerCharacterDevice(zeroDev, 1, 5);
+        mfs.registerCharacterDevice(fullDev, 1, 7);
+        mfs.registerCharacterDevice(randomDev, 1, 8);
+        mfs.registerCharacterDevice(randomDev, 1, 9);
+        mfs.registerCharacterDevice(ttyDev, 4, 0);
+        mfs.registerCharacterDevice(ttyDev, 5, 0);
+        mfs.registerCharacterDevice(ttyDev, 5, 1);
+
+
+        mfs.mkdirSync("/dev");
+        mfs.chmodSync("/dev", 0o775);
+
+        mfs.mknodSync("/dev/null", mfs.constants.S_IFCHR, 1, 3);
+        mfs.mknodSync("/dev/zero", mfs.constants.S_IFCHR, 1, 5);
+        mfs.mknodSync("/dev/full", mfs.constants.S_IFCHR, 1, 7);
+        mfs.mknodSync("/dev/random", mfs.constants.S_IFCHR, 1, 8);
+        mfs.mknodSync("/dev/urandom", mfs.constants.S_IFCHR, 1, 9);
+        mfs.chmodSync("/dev/null", 0o666);
+        mfs.chmodSync("/dev/zero", 0o666);
+        mfs.chmodSync("/dev/full", 0o666);
+        mfs.chmodSync("/dev/random", 0o666);
+        mfs.chmodSync("/dev/urandom", 0o666);
+
+        // tty0 points to the currently active virtual console (on linux this is usually tty1 or tty7)
+        // tty points to the currently active console (physical, virtual or pseudo)
+        // console points to the system console (it defaults to tty0)
+        // refer to the tty character device to understand its implementation
+        mfs.mknodSync("/dev/tty0", mfs.constants.S_IFCHR, 4, 0);
+        mfs.mknodSync("/dev/tty", mfs.constants.S_IFCHR, 5, 0);
+        mfs.mknodSync("/dev/console", mfs.constants.S_IFCHR, 5, 1);
+        mfs.chmodSync("/dev/tty0", 0o600);
+        mfs.chmodSync("/dev/tty", 0o666);
+        mfs.chmodSync("/dev/console", 0o600);
+
+        mfs.mkdirSync("/tmp");
+        mfs.chmodSync("/tmp", 0o777);
+
+        mfs.mkdirSync("/root");
+        mfs.chmodSync("/root", 0o700);
+
+
+        it("contains /tmp", () => {
+            assert.deepEqual(mfs.readdirSync("/tmp"), []);
+            mfs.setUid(1000);
+            mfs.setGid(1000);
+            const tmpDir = mfs.mkdtempSync("/tmp/");
+            const stat = mfs.statSync(tmpDir);
+            assert.isTrue(stat.isDirectory());
+            mfs.chdir("/tmp");
+            mfs.rmdirSync(tmpDir);
+            mfs.setUid(0);
+            mfs.setGid(0);
+        });
+
+        it("contains /root", () => {
+            assert.deepEqual(mfs.readdirSync("/root"), []);
+            mfs.setUid(1000);
+            mfs.setGid(1000);
+            const error = assert.throws(() => {
+                mfs.chdir("/root");
             });
+            assert.equal(error.code, "EACCES");
+            mfs.setUid(0);
+            mfs.setGid(0);
+        });
 
-            it("should throw ENOTDIR if the component symlink resolves as not a directory", async () => {
-                engine.add((ctx) => ({
-                    a: ctx.file("hello"),
-                    b: {
-                        a: ctx.symlink("../a")
-                    }
-                }));
+        it("contains /dev", () => {
+            const stat = mfs.statSync("/dev");
+            assert.isTrue(stat.isDirectory());
+        });
 
-                const err = await assert.throws(async () => {
-                    await engine.lstat("/b/a/a");
-                }, "ENOTDIR: not a directory, lstat '/b/a/a'");
-                expect(err.code).to.be.equal("ENOTDIR");
+        it("/dev/null works - sync", () => {
+            let fd;
+            fd = mfs.openSync("/dev/null", "w");
+            const str = "Hello World";
+            const bytesWritten = mfs.writeSync(fd, str);
+            assert.equal(bytesWritten, Buffer.from(str).length);
+            mfs.lseekSync(fd, 10);
+            const buf = Buffer.from(str);
+            mfs.closeSync(fd);
+            fd = mfs.openSync("/dev/null", "r");
+            const bytesRead = mfs.readSync(fd, buf, 0, buf.length);
+            assert.equal(bytesRead, 0);
+            assert.deepEqual(buf, Buffer.from(str));
+            mfs.closeSync(fd);
+        });
+
+        it("/dev/full works - sync", () => {
+            const error = assert.throws(() => {
+                mfs.writeFileSync("/dev/full", "Hello World");
             });
+            assert.equal(error.code, "ENOSPC");
+            const fd = mfs.openSync("/dev/full", "r");
+            mfs.lseekSync(fd, 10);
+            const buf = Buffer.allocUnsafe(10);
+            const bytesRead = mfs.readSync(fd, buf, 0, buf.length);
+            assert.equal(bytesRead, buf.length);
+            for (let i = 0; i < buf.length; ++i) {
+                assert.equal(buf[i], 0);
+            }
+        });
 
-            it("should correctly handle .. after symlink resolve", async () => {
-                engine.add((ctx) => ({
-                    a: {
-                        b: ctx.file("hello")
-                    },
-                    b: {
-                        a: ctx.symlink("../a")
-                    }
-                }));
+        it("/dev/zero works - sync", () => {
+            let fd;
+            fd = mfs.openSync("/dev/zero", "w");
+            const str = "Hello World";
+            const bytesWritten = mfs.writeSync(fd, str);
+            assert.equal(bytesWritten, Buffer.from(str).length);
+            mfs.closeSync(fd);
+            fd = mfs.openSync("/dev/zero", "r");
+            mfs.lseekSync(fd, 10);
+            const bufLength = 10;
+            const buf = Buffer.allocUnsafe(bufLength);
+            const bytesRead = mfs.readSync(fd, buf, 0, buf.length);
+            assert.equal(bytesRead, buf.length);
+            assert.deepEqual(buf, Buffer.alloc(bufLength));
+            mfs.closeSync(fd);
+        });
 
-                expect(await engine.realpath("/b/a/../a/b")).to.be.equal("/a/b");
+        it("/dev/random and /dev/urandom works - sync", () => {
+            let fdRandom;
+            let fdUrandom;
+            fdRandom = mfs.openSync("/dev/random", "w");
+            fdUrandom = mfs.openSync("/dev/urandom", "w");
+            const str = "Hello World";
+            let bytesWritten;
+            bytesWritten = mfs.writeSync(fdRandom, str);
+            assert.equal(bytesWritten, Buffer.from(str).length);
+            bytesWritten = mfs.writeSync(fdUrandom, str);
+            assert.equal(bytesWritten, Buffer.from(str).length);
+            mfs.closeSync(fdRandom);
+            mfs.closeSync(fdUrandom);
+            fdRandom = mfs.openSync("/dev/random", "r");
+            fdUrandom = mfs.openSync("/dev/urandom", "r");
+            let buf;
+            buf = Buffer.alloc(10);
+            mfs.readSync(fdRandom, buf, 0, buf.length);
+            assert.notDeepEqual(buf, Buffer.alloc(10));
+            buf = Buffer.alloc(10);
+            mfs.readSync(fdUrandom, buf, 0, buf.length);
+            assert.notDeepEqual(buf, Buffer.alloc(10));
+            mfs.closeSync(fdRandom);
+            mfs.closeSync(fdUrandom);
+        });
+
+        it("/dev/tty0, /dev/tty, and /dev/console", () => {
+            const tty0Fd = mfs.openSync("/dev/tty0", "w");
+            const ttyFd = mfs.openSync("/dev/tty", "w");
+            const consoleFd = mfs.openSync("/dev/console", "w");
+            const message = "\tTESTING TTY MESSAGE\n";
+            let bytesWritten;
+            bytesWritten = mfs.writeSync(tty0Fd, message);
+            assert.equal(bytesWritten, message.length);
+            bytesWritten = mfs.writeSync(ttyFd, message);
+            assert.equal(bytesWritten, message.length);
+            bytesWritten = mfs.writeSync(consoleFd, message);
+            assert.equal(bytesWritten, message.length);
+            // unlike other character devices, tty does not allow seeking
+            let error;
+            error = assert.throws(() => {
+                mfs.lseekSync(tty0Fd, 10);
             });
+            assert.equal(error.code, "ESPIPE");
+            error = assert.throws(() => {
+                mfs.lseekSync(ttyFd, 10);
+            });
+            assert.equal(error.code, "ESPIPE");
+            error = assert.throws(() => {
+                mfs.lseekSync(consoleFd, 10);
+            });
+            assert.equal(error.code, "ESPIPE");
+            // we cannot test reading without blocking the thread
+            // so reading must be tested manually
+            // you need to test sequential reads like this
+            // const fd = fs.openSync('/dev/tty', 'r');
+            // const buf = Buffer.alloc(10);
+            // console.log(fs.readSync(fd, buf, 0, buf.length));
+            // console.log(buf.toString());
+            // console.log(fs.readSync(fd, buf, 0, buf.length));
+            // console.log(buf.toString());
+            // pipe 20 characters into the program, and you should see
+            // the first 10 characters and then the second 10 characters
         });
     });
 });

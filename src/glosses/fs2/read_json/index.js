@@ -3,7 +3,7 @@ const {
     fs2,
     text: { stripBom }
 } = adone;
-const { graceful } = fs2;
+const { base } = fs2;
 
 export default (file, options, callback) => {
     if (is.nil(callback)) {
@@ -16,7 +16,7 @@ export default (file, options, callback) => {
     }
 
     options = options || {};
-    const fs = options.fs || graceful;
+    const fs = options.fs || base;
 
     let shouldThrow = true;
     if ("throws" in options) {

@@ -2,12 +2,12 @@ const {
     fs2,
     path
 } = adone;
-const { graceful } = fs2;
+const { base } = fs2;
 
 export default (file) => {
     let stats;
     try {
-        stats = graceful.statSync(file);
+        stats = base.statSync(file);
     } catch (e) {
         //
     }
@@ -16,9 +16,9 @@ export default (file) => {
     }
 
     const dir = path.dirname(file);
-    if (!graceful.existsSync(dir)) {
+    if (!base.existsSync(dir)) {
         fs2.mkdirpSync(dir);
     }
 
-    graceful.writeFileSync(file, "");
+    base.writeFileSync(file, "");
 };

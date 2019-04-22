@@ -87,9 +87,9 @@ class AdoneCLI extends app.Application {
             fs2
         } = adone;
         const { custom } = fs2;
-        const { MemoryFileSystem, AbstractFileSystem, StandardFileSystem } = custom;
+        const { MemoryFileSystem, BaseFileSystem } = custom;
 
-        const abstract = new AbstractFileSystem()
+        const baseFs = new BaseFileSystem()
             .mount(new MemoryFileSystem().add((ctx) => ({
                 a: ctx.file("hello")
             })), "/")
@@ -97,7 +97,7 @@ class AdoneCLI extends app.Application {
                 c: ctx.file("hello")
             })), "/b");
 
-        abstract.readdir("/", (err, files) => {
+        baseFs.readdir("/", (err, files) => {
             console.log(files);
             // assert.notExists(err);
             // expect(files).to.be.deep.equal(["a", "b"]).mark();

@@ -4,7 +4,7 @@ const {
     fs2,
     path
 } = adone;
-const { graceful } = fs2;
+const { base } = fs2;
 
 const utimesSync = require("../util/utimes.js").utimesMillisSync;
 
@@ -18,7 +18,7 @@ function startCopy(destStat, src, dest, opts) {
 }
 
 function getStats(destStat, src, dest, opts) {
-    const statSync = opts.dereference ? graceful.statSync : graceful.lstatSync;
+    const statSync = opts.dereference ? base.statSync : base.lstatSync;
     const srcStat = statSync(src);
 
     if (srcStat.isDirectory()) {
@@ -41,7 +41,7 @@ function onFile(srcStat, destStat, src, dest, opts) {
 
 function mayCopyFile(srcStat, src, dest, opts) {
     if (opts.overwrite) {
-        graceful.unlinkSync(dest);
+        base.unlinkSync(dest);
         return copyFile(srcStat, src, dest, opts);
     } else if (opts.errorOnExist) {
         throw new Error(`'${dest}' already exists`);
@@ -49,9 +49,9 @@ function mayCopyFile(srcStat, src, dest, opts) {
 }
 
 function copyFile(srcStat, src, dest, opts) {
-    if (is.function(graceful.copyFileSync)) {
-        graceful.copyFileSync(src, dest);
-        graceful.chmodSync(dest, srcStat.mode);
+    if (is.function(base.copyFileSync)) {
+        base.copyFileSync(src, dest);
+        base.chmodSync(dest, srcStat.mode);
         if (opts.preserveTimestamps) {
             return utimesSync(dest, srcStat.atime, srcStat.mtime);
         }
@@ -64,22 +64,22 @@ function copyFileFallback(srcStat, src, dest, opts) {
     const BUF_LENGTH = 64 * 1024;
     const _buff = require("../util/buffer")(BUF_LENGTH);
 
-    const fdr = graceful.openSync(src, "r");
-    const fdw = graceful.openSync(dest, "w", srcStat.mode);
+    const fdr = base.openSync(src, "r");
+    const fdw = base.openSync(dest, "w", srcStat.mode);
     let pos = 0;
 
     while (pos < srcStat.size) {
-        const bytesRead = graceful.readSync(fdr, _buff, 0, BUF_LENGTH, pos);
-        graceful.writeSync(fdw, _buff, 0, bytesRead);
+        const bytesRead = base.readSync(fdr, _buff, 0, BUF_LENGTH, pos);
+        base.writeSync(fdw, _buff, 0, bytesRead);
         pos += bytesRead;
     }
 
     if (opts.preserveTimestamps) {
-        graceful.futimesSync(fdw, srcStat.atime, srcStat.mtime);
+        base.futimesSync(fdw, srcStat.atime, srcStat.mtime);
     }
 
-    graceful.closeSync(fdr);
-    graceful.closeSync(fdw);
+    base.closeSync(fdr);
+    base.closeSync(fdw);
 }
 
 function onDir(srcStat, destStat, src, dest, opts) {
@@ -93,13 +93,13 @@ function onDir(srcStat, destStat, src, dest, opts) {
 }
 
 function mkDirAndCopy(srcStat, src, dest, opts) {
-    graceful.mkdirSync(dest);
+    base.mkdirSync(dest);
     copyDir(src, dest, opts);
-    return graceful.chmodSync(dest, srcStat.mode);
+    return base.chmodSync(dest, srcStat.mode);
 }
 
 function copyDir(src, dest, opts) {
-    graceful.readdirSync(src).forEach((item) => copyDirItem(item, src, dest, opts));
+    base.readdirSync(src).forEach((item) => copyDirItem(item, src, dest, opts));
 }
 
 function copyDirItem(item, src, dest, opts) {
@@ -110,24 +110,24 @@ function copyDirItem(item, src, dest, opts) {
 }
 
 function onLink(destStat, src, dest, opts) {
-    let resolvedSrc = graceful.readlinkSync(src);
+    let resolvedSrc = base.readlinkSync(src);
 
     if (opts.dereference) {
         resolvedSrc = path.resolve(process.cwd(), resolvedSrc);
     }
 
     if (destStat === notExist) {
-        return graceful.symlinkSync(resolvedSrc, dest);
+        return base.symlinkSync(resolvedSrc, dest);
     }
     let resolvedDest;
     try {
-        resolvedDest = graceful.readlinkSync(dest);
+        resolvedDest = base.readlinkSync(dest);
     } catch (err) {
         // dest exists and is a regular file or directory,
         // Windows may throw UNKNOWN error. If dest already exists,
         // fs throws error anyway, so no need to guard against it here.
         if (err.code === "EINVAL" || err.code === "UNKNOWN") {
-            return graceful.symlinkSync(resolvedSrc, dest);
+            return base.symlinkSync(resolvedSrc, dest);
         }
         throw err;
     }
@@ -141,7 +141,7 @@ function onLink(destStat, src, dest, opts) {
     // prevent copy if src is a subdir of dest since unlinking
     // dest in this case would result in removing src contents
     // and therefore a broken symlink would be created.
-    if (graceful.statSync(dest).isDirectory() && isSrcSubdir(resolvedDest, resolvedSrc)) {
+    if (base.statSync(dest).isDirectory() && isSrcSubdir(resolvedDest, resolvedSrc)) {
         throw new Error(`Cannot overwrite '${resolvedDest}' with '${resolvedSrc}'.`);
     }
     return copyLink(resolvedSrc, dest);
@@ -149,8 +149,8 @@ function onLink(destStat, src, dest, opts) {
 }
 
 function copyLink(resolvedSrc, dest) {
-    graceful.unlinkSync(dest);
-    return graceful.symlinkSync(resolvedSrc, dest);
+    base.unlinkSync(dest);
+    return base.symlinkSync(resolvedSrc, dest);
 }
 
 // return true if dest is a subdir of src, otherwise false.
@@ -161,10 +161,10 @@ function isSrcSubdir(src, dest) {
 }
 
 function checkStats(src, dest) {
-    const srcStat = graceful.statSync(src);
+    const srcStat = base.statSync(src);
     let destStat;
     try {
-        destStat = graceful.statSync(dest);
+        destStat = base.statSync(dest);
     } catch (err) {
         if (err.code === "ENOENT") {
             return { srcStat, destStat: notExist };
@@ -207,7 +207,7 @@ export default (src, dest, opts) => {
     }
 
     const destParent = path.dirname(dest);
-    if (!graceful.existsSync(destParent)) {
+    if (!base.existsSync(destParent)) {
         fs2.mkdirpSync(destParent);
     }
     return startCopy(destStat, src, dest, opts);

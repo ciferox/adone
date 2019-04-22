@@ -4,7 +4,7 @@ const {
     fs2,
     path
 } = adone;
-const { graceful } = fs2;
+const { base } = fs2;
 
 const utimes = require("../util/utimes").utimesMillis;
 
@@ -48,7 +48,7 @@ function startCopy(destStat, src, dest, opts, cb) {
 }
 
 function getStats(destStat, src, dest, opts, cb) {
-    const stat = opts.dereference ? graceful.stat : graceful.lstat;
+    const stat = opts.dereference ? base.stat : base.lstat;
     stat(src, (err, srcStat) => {
         if (err) {
             return cb(err);
@@ -75,7 +75,7 @@ function onFile(srcStat, destStat, src, dest, opts, cb) {
 
 function mayCopyFile(srcStat, src, dest, opts, cb) {
     if (opts.overwrite) {
-        graceful.unlink(dest, (err) => {
+        base.unlink(dest, (err) => {
             if (err) {
                 return cb(err);
             }
@@ -89,8 +89,8 @@ function mayCopyFile(srcStat, src, dest, opts, cb) {
 }
 
 function copyFile(srcStat, src, dest, opts, cb) {
-    if (is.function(graceful.copyFile)) {
-        return graceful.copyFile(src, dest, (err) => {
+    if (is.function(base.copyFile)) {
+        return base.copyFile(src, dest, (err) => {
             if (err) {
                 return cb(err);
             }
@@ -101,9 +101,9 @@ function copyFile(srcStat, src, dest, opts, cb) {
 }
 
 function copyFileFallback(srcStat, src, dest, opts, cb) {
-    const rs = graceful.createReadStream(src);
+    const rs = base.createReadStream(src);
     rs.on("error", (err) => cb(err)).once("open", () => {
-        const ws = graceful.createWriteStream(dest, { mode: srcStat.mode });
+        const ws = base.createWriteStream(dest, { mode: srcStat.mode });
         ws.on("error", (err) => cb(err))
             .on("open", () => rs.pipe(ws))
             .once("close", () => setDestModeAndTimestamps(srcStat, dest, opts, cb));
@@ -111,7 +111,7 @@ function copyFileFallback(srcStat, src, dest, opts, cb) {
 }
 
 function setDestModeAndTimestamps(srcStat, dest, opts, cb) {
-    graceful.chmod(dest, srcStat.mode, (err) => {
+    base.chmod(dest, srcStat.mode, (err) => {
         if (err) {
             return cb(err);
         }
@@ -133,7 +133,7 @@ function onDir(srcStat, destStat, src, dest, opts, cb) {
 }
 
 function mkDirAndCopy(srcStat, src, dest, opts, cb) {
-    graceful.mkdir(dest, (err) => {
+    base.mkdir(dest, (err) => {
         if (err) {
             return cb(err);
         }
@@ -141,13 +141,13 @@ function mkDirAndCopy(srcStat, src, dest, opts, cb) {
             if (err) {
                 return cb(err);
             }
-            return graceful.chmod(dest, srcStat.mode, cb);
+            return base.chmod(dest, srcStat.mode, cb);
         });
     });
 }
 
 function copyDir(src, dest, opts, cb) {
-    graceful.readdir(src, (err, items) => {
+    base.readdir(src, (err, items) => {
         if (err) {
             return cb(err);
         }
@@ -180,7 +180,7 @@ function copyDirItem(items, item, src, dest, opts, cb) {
 }
 
 function onLink(destStat, src, dest, opts, cb) {
-    graceful.readlink(src, (err, resolvedSrc) => {
+    base.readlink(src, (err, resolvedSrc) => {
         if (err) {
             return cb(err);
         }
@@ -190,15 +190,15 @@ function onLink(destStat, src, dest, opts, cb) {
         }
 
         if (destStat === notExist) {
-            return graceful.symlink(resolvedSrc, dest, cb);
+            return base.symlink(resolvedSrc, dest, cb);
         }
-        graceful.readlink(dest, (err, resolvedDest) => {
+        base.readlink(dest, (err, resolvedDest) => {
             if (err) {
                 // dest exists and is a regular file or directory,
                 // Windows may throw UNKNOWN error. If dest already exists,
                 // fs throws error anyway, so no need to guard against it here.
                 if (err.code === "EINVAL" || err.code === "UNKNOWN") {
-                    return graceful.symlink(resolvedSrc, dest, cb);
+                    return base.symlink(resolvedSrc, dest, cb);
                 }
                 return cb(err);
             }
@@ -222,11 +222,11 @@ function onLink(destStat, src, dest, opts, cb) {
 }
 
 function copyLink(resolvedSrc, dest, cb) {
-    graceful.unlink(dest, (err) => {
+    base.unlink(dest, (err) => {
         if (err) {
             return cb(err);
         }
-        return graceful.symlink(resolvedSrc, dest, cb);
+        return base.symlink(resolvedSrc, dest, cb);
     });
 }
 
@@ -238,11 +238,11 @@ function isSrcSubdir(src, dest) {
 }
 
 function checkStats(src, dest, cb) {
-    graceful.stat(src, (err, srcStat) => {
+    base.stat(src, (err, srcStat) => {
         if (err) {
             return cb(err);
         }
-        graceful.stat(dest, (err, destStat) => {
+        base.stat(dest, (err, destStat) => {
             if (err) {
                 if (err.code === "ENOENT") {
                     return cb(null, { srcStat, destStat: notExist });

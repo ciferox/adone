@@ -1,5 +1,5 @@
 const {
-    fs2: { graceful }
+    fs2: { base }
 } = adone;
 
 export default (options) => {
@@ -12,9 +12,9 @@ export default (options) => {
         "readdir"
     ];
     methods.forEach((m) => {
-        options[m] = options[m] || graceful[m];
+        options[m] = options[m] || base[m];
         m = `${m}Sync`;
-        options[m] = options[m] || graceful[m];
+        options[m] = options[m] || base[m];
     });
 
     options.maxBusyTries = options.maxBusyTries || 3;

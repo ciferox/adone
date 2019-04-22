@@ -4,7 +4,7 @@ const {
     is,
     fs2
 } = adone;
-const { graceful } = fs2;
+const { base } = fs2;
 
 export default (file, obj, options, callback) => {
     if (is.nil(callback)) {
@@ -12,7 +12,7 @@ export default (file, obj, options, callback) => {
         options = {};
     }
     options = options || {};
-    const fs = options.fs || graceful;
+    const fs = options.fs || base;
 
     let str = "";
     try {
