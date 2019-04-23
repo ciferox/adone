@@ -400,3 +400,4 @@ export default class StandardFileSystem extends BaseFileSystem {
         return writeFileSync(path.fullPath, data, options);
     }
 }
+StandardFileSystem.prototype.path = path;

@@ -10,111 +10,10 @@ import fs from "fs";
 import { isFunction, isNumber, isString, isBuffer, unique } from "../../../common";
 import { NotSupportedException } from "../../errors";
 import Path from "./path";
+import { createError, FSException } from "./fs_exception";
 
 const { constants, _toUnixTimestamp } = fs;
 
-class FSException extends Error {
-    constructor(code, description, path, syscall, secondPath) {
-        super();
-        Object.defineProperties(this, {
-            code: {
-                value: code,
-                enumerable: false
-            },
-            description: {
-                value: description,
-                enumerable: false
-            },
-            message: {
-                enumerable: false,
-                writable: true
-            },
-            _path: {
-                value: path,
-                enumerable: false,
-                writable: true
-            },
-            _syscall: {
-                value: syscall,
-                enumerable: false,
-                writable: true
-            },
-            _secondPath: {
-                value: secondPath,
-                enumerable: false,
-                writable: true
-            }
-        });
-        this._updateMessage();
-    }
-
-    get path() {
-        return this._path;
-    }
-
-    set path(v) {
-        this._path = v;
-        this._updateMessage();
-    }
-
-    get secondPath() {
-        return this._secondPath;
-    }
-
-    set secondPath(v) {
-        this._secondPath = v;
-        this._updateMessage();
-    }
-
-    get syscall() {
-        return this._syscall;
-    }
-
-    set syscall(v) {
-        this._syscall = v;
-        this._updateMessage();
-    }
-
-    _updateMessage() {
-        let message = `${this.code}: ${this.description}`;
-        if (this._syscall) {
-            message += `, ${this._syscall}`;
-        }
-
-        if (this._path) {
-            if (!this._syscall) {
-                message += ",";
-            }
-            message += ` '${this._path.fullPath}'`;
-            if (this._secondPath) {
-                message += ` -> '${this._secondPath.fullPath}'`;
-            }
-        }
-
-        this.message = message;
-    }
-
-    /**
-     * @param {Path} path
-     */
-    mount(path) {
-        this.path = path.mount(this.path);
-    }
-}
-
-const errors = {
-    ENOENT: (path, syscall, secondPath) => new FSException("ENOENT", "no such file or directory", path, syscall, secondPath),
-    EISDIR: (path, syscall, secondPath) => new FSException("EISDIR", "illegal operation on a directory", path, syscall, secondPath),
-    ENOTDIR: (path, syscall, secondPath) => new FSException("ENOTDIR", "not a directory", path, syscall, secondPath),
-    ELOOP: (path, syscall, secondPath) => new FSException("ELOOP", "too many symbolic links encountered", path, syscall, secondPath),
-    EINVAL: (path, syscall, secondPath) => new FSException("EINVAL", "invalid argument", path, syscall, secondPath),
-    EBADF: (syscall) => new FSException("EBADF", "bad file descriptor", undefined, syscall),
-    EEXIST: (path, syscall, secondPath) => new FSException("EEXIST", "file already exists", path, syscall, secondPath),
-    ENOTEMPTY: (path, syscall, secondPath) => new FSException("ENOTEMPTY", "directory not empty", path, syscall, secondPath),
-    EACCES: (path, syscall, secondPath) => new FSException("EACCES", "permission denied", path, syscall, secondPath),
-    EPERM: (path, syscall, secondPath) => new FSException("EPERM", "operation not permitted", path, syscall, secondPath),
-    ENOSYS: (syscall) => new FSException("ENOSYS", "function not implemented", undefined, syscall)
-};
 
 const FS_INSTANCE = Symbol("FS_INSTANCE");
 const LEVEL = Symbol("LEVEL");
@@ -342,18 +241,6 @@ export default class BaseFileSystem {
         return obj;
     }
 
-    createError(code, path, syscall, secondPath) {
-        return errors[code](path, syscall, secondPath);
-    }
-
-    throw(code, path, syscall, secondPath) {
-        throw this.createError(code, path, syscall, secondPath);
-    }
-
-    _resolve(path) {
-        return Path.resolve(path, this.root);
-    }
-
     // fs methods
 
     access(path, mode = constants.F_OK, callback) {
@@ -488,7 +375,7 @@ export default class BaseFileSystem {
         //         return err; // does it mean that the file exists?
         //     });
         //     if (destStat) {
-        //         this.throw("EEXIST", src, "copyfile", dest);
+        //         this._throw("EEXIST", src, "copyfile", dest);
         //     }
         // }
 
@@ -895,7 +782,7 @@ export default class BaseFileSystem {
     _readdir(path, options, callback) {
         const siblings = this._getSiblingMounts(path);
         if (!siblings) {
-            this.throw("ENOENT", path, "scandir");
+            this._throw("ENOENT", path, undefined, "scandir");
         }
         // entries must be added inside _handlePath as siblings, hm...
         callback(null, []);
@@ -916,7 +803,7 @@ export default class BaseFileSystem {
     _readdirSync(path) {
         const siblings = this._getSiblingMounts(path);
         if (!siblings) {
-            this.throw("ENOENT", path, "scandir");
+            this._throw("ENOENT", path, undefined, "scandir");
         }
         // entries must be added inside _handlePath as siblings, hm...
         return [];
@@ -1302,7 +1189,7 @@ export default class BaseFileSystem {
 
     _handleFdSync(method, mappedFd, args = []) {
         if (!this._fdMap.has(mappedFd)) {
-            this.throw("EBADF", syscallMap[method]);
+            this._throw("EBADF", syscallMap[method]);
         }
         const { fd, engine } = this._fdMap.get(mappedFd);
         const res = engine === this
@@ -1317,7 +1204,7 @@ export default class BaseFileSystem {
 
     _handleFd(method, mappedFd, callback, ...args) {
         if (!this._fdMap.has(mappedFd)) {
-            callback(this.createError("EBADF", syscallMap[method]));
+            callback(this._createError("EBADF", syscallMap[method]));
             return;
         }
         const { fd, engine } = this._fdMap.get(mappedFd);
@@ -1340,7 +1227,7 @@ export default class BaseFileSystem {
         return mapped;
     }
 
-    _chooseEngineSync(path, method, secondPath) {
+    _chooseEngineSync(path, method, dest) {
         if (!this.structure[path.root]) {
             // must be handled by this engine, no other case
             return [this, this.structure, path.parts];
@@ -1396,15 +1283,15 @@ export default class BaseFileSystem {
                         } catch (err) {
                             if (err instanceof FSException) {
                                 err.path = path;
-                                if (secondPath) {
-                                    err.secondPath = secondPath;
+                                if (dest) {
+                                    err.secondPath = dest;
                                 }
                                 err.syscall = syscallMap[method];
                             }
                             throw err;
                         }
                         if (!stat.isDirectory()) {
-                            this.throw("ENOTDIR", path, syscallMap[method], secondPath);
+                            this._throw("ENOTDIR", path, dest, syscallMap[method]);
                         }
                         parts.splice(j, 1);
                         --j;
@@ -1416,7 +1303,7 @@ export default class BaseFileSystem {
                             const stat = engine.statSync(subPath); // eslint-disable-line
                             if (stat.isFile()) {
                                 // this is a file, but the pattern is "subPath/.." which is applicable only for directories
-                                this.throw("ENOTDIR", path, syscallMap[method], secondPath);
+                                this._throw("ENOTDIR", path, dest, syscallMap[method]);
                             }
                             const target = engine.readlinkSync(subPath); // eslint-disable-line
 
@@ -1436,11 +1323,11 @@ export default class BaseFileSystem {
                         } catch (err) {
                             switch (err.code) {
                                 case "ENOENT": {
-                                    this.throw("ENOENT", path, syscallMap[method], secondPath);
+                                    this._throw("ENOENT", path, dest, syscallMap[method]);
                                     break;
                                 }
                                 case "ENOTDIR": {
-                                    this.throw("ENOTDIR", path, syscallMap[method], secondPath);
+                                    this._throw("ENOTDIR", path, dest, syscallMap[method]);
                                     break;
                                 }
                                 case "EINVAL": {
@@ -1468,7 +1355,7 @@ export default class BaseFileSystem {
         }
     }
 
-    _chooseEngine(path, method, secondPath, callback) {
+    _chooseEngine(path, method, dest, callback) {
         if (!this.structure[path.root]) {
             // must be handled by this engine, no other case
             callback(null, this, this.structure, path.parts);
@@ -1541,8 +1428,8 @@ export default class BaseFileSystem {
                             if (err) {
                                 if (err instanceof FSException) {
                                     err.path = path;
-                                    if (secondPath) {
-                                        err.secondPath = secondPath;
+                                    if (dest) {
+                                        err.secondPath = dest;
                                     }
                                     err.syscall = syscallMap[method];
                                 }
@@ -1551,7 +1438,7 @@ export default class BaseFileSystem {
                             }
 
                             if (!stat.isDirectory()) {
-                                callback(this.createError("ENOTDIR", path, syscallMap[method], secondPath));
+                                callback(this._createError("ENOTDIR", path.fullPath, dest, syscallMap[method]));
                                 return;
                             }
                             parts.splice(j, 1);
@@ -1566,16 +1453,16 @@ export default class BaseFileSystem {
                         const checkError = (err) => {
                             switch (err.code) {
                                 case "ENOENT": {
-                                    callback(this.createError("ENOENT", path, syscallMap[method], secondPath));
+                                    callback(this._createError("ENOENT", path.fullPath, dest, syscallMap[method]));
                                     break;
                                 }
                                 case "ENOTDIR": {
-                                    callback(this.createError("ENOTDIR", path, syscallMap[method], secondPath));
+                                    callback(this._createError("ENOTDIR", path.fullPath, dest, syscallMap[method]));
                                     break;
                                 }
                                 case "EINVAL": {
                                     // the previous part is not a symlink to a directory
-                                    parts = parts.slice(0, j - 1).concat(parts.slice(j + 1));
+                                    parts = parts.slice(0, j - 1).concat(parts.slice(j/* + 1*/));
                                     j -= 2;
                                     tryNext();
                                     break;
@@ -1593,7 +1480,7 @@ export default class BaseFileSystem {
 
                             if (stat.isFile()) {
                                 // this is a file, but the pattern is "subPath/.." which is applicable only for directories
-                                callback(this.createError("ENOTDIR", path, syscallMap[method], secondPath));
+                                callback(this._createError("ENOTDIR", path, dest, syscallMap[method]));
                                 return;
                             }
                             engine.readlink(subPath, (err, target) => {
@@ -1827,13 +1714,25 @@ export default class BaseFileSystem {
         }
         return null;
     }
+
+    _createError(code, path, dest, syscall) {
+        return createError(code, path, dest, syscall);
+    }
+
+    _throw(code, path, dest, syscall) {
+        throw this._createError(code, path, dest, syscall);
+    }
+
+    _resolve(path) {
+        return Path.resolve(path, this.root);
+    }
 }
 
 for (const [method, isAbstract] of fsMethods) {
     const m = `_${method}`;
     if (isAbstract && !BaseFileSystem.prototype[m]) {
         BaseFileSystem.prototype[m] = function () {
-            this.throw("ENOSYS", method);
+            this._throw("ENOSYS", method);
         };
     }
 }

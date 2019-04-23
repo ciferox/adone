@@ -20,6 +20,7 @@ const retry = () => {
 
 const patch = (fs) => {
     // Everything that references the open() function needs to be in here
+    
     // polyfills
     // (re-)implement some things that are known busted or missing.
 
@@ -487,5 +488,8 @@ base.closeSync = (function (fs$closeSync) {
         return rval;
     };
 })(fs.closeSync);
+
+base.path = require("../path");
+base.cwd = process.cwd;
 
 module.exports = base;

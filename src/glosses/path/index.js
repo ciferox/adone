@@ -1,7 +1,5 @@
-const {
-    is,
-    std: { path }
-} = adone;
+import path from "path";
+import { isFunction, isString } from "../../common";
 
 const upath = exports;
 
@@ -17,7 +15,7 @@ const toUnix = function (p) {
 
 const isValidExt = function (ext, ignoreExts, maxSize) {
     let needle;
-    if (is.nil(ignoreExts)) {
+    if (ignoreExts == null) {
         ignoreExts = [];
     }
     return ((ext) && (ext.length <= maxSize)) &&
@@ -26,11 +24,11 @@ const isValidExt = function (ext, ignoreExts, maxSize) {
 
 for (const propName in path) {
     const propValue = path[propName];
-    if (is.function(propValue)) {
+    if (isFunction(propValue)) {
         upath[propName] = ((propName) =>
             function (...args) {
                 args = args.map((p) => {
-                    if (is.string(p)) {
+                    if (isString(p)) {
                         return toUnix(p);
                     }
                     return p;
@@ -38,7 +36,7 @@ for (const propName in path) {
 
                 const result = path[propName](...Array.from(args || []));
 
-                if (is.string(result)) {
+                if (isString(result)) {
                     return toUnix(result);
                 }
                 return result;
@@ -53,7 +51,6 @@ for (const propName in path) {
 upath.sep = "/";
 
 const extraFunctions = {
-
     toUnix,
 
     normalizeSafe(p) {
@@ -66,7 +63,6 @@ const extraFunctions = {
 
         }
         return upath.normalize(p);
-
     },
 
     normalizeTrim(p) {
@@ -75,9 +71,7 @@ const extraFunctions = {
             return p.slice(0, Number(p.length - 2) + 1 || undefined);
         }
         return p;
-
     },
-
 
     joinSafe(...p) {
         let result = upath.join.apply(null, p);
@@ -95,11 +89,10 @@ const extraFunctions = {
             ext = `.${ext}`;
         }
         return file + (file.endsWith(ext) ? "" : ext);
-
     },
 
     trimExt(filename, ignoreExts, maxSize) {
-        if (is.nil(maxSize)) {
+        if (maxSize == null) {
             maxSize = 7;
         }
         const oldExt = upath.extname(filename);
@@ -107,7 +100,6 @@ const extraFunctions = {
             return filename.slice(0, Number((filename.length - oldExt.length) - 1) + 1 || undefined);
         }
         return filename;
-
     },
 
     removeExt(filename, ext) {
@@ -119,26 +111,22 @@ const extraFunctions = {
             return upath.trimExt(filename);
         }
         return filename;
-
-
     },
 
     changeExt(filename, ext, ignoreExts, maxSize) {
-        if (is.nil(maxSize)) {
+        if (maxSize == null) {
             maxSize = 7;
         }
         return upath.trimExt(filename, ignoreExts, maxSize) +
-            (!ext ?
-                ""
-                :
-                ext[0] === "." ?
-                    ext
-                    :
-                    `.${ext}`);
+            (!ext
+                ? ""
+                : ext[0] === "."
+                    ? ext
+                    : `.${ext}`);
     },
 
     defaultExt(filename, ext, ignoreExts, maxSize) {
-        if (is.nil(maxSize)) {
+        if (maxSize == null) {
             maxSize = 7;
         }
         const oldExt = upath.extname(filename);
@@ -152,7 +140,7 @@ const extraFunctions = {
 
 for (const name of Object.keys(extraFunctions || {})) {
     const extraFn = extraFunctions[name];
-    if (!is.undefined(upath[name])) {
+    if (upath[name] !== undefined) {
         throw new Error(`path.${name} already exists.`);
     } else {
         upath[name] = extraFn;

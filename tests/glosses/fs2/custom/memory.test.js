@@ -2,10 +2,10 @@ import bl from "bl";
 
 const {
     is,
-    fs2: { custom: { MemoryFileSystem } },
+    fs2: { custom: { MemoryFileSystem, createError } },
     std: { url: { URL } }
 } = adone;
-const { VirtualFSError, DEFAULT_ROOT_UID, DEFAULT_ROOT_GID, DEFAULT_FILE_PERM, DEFAULT_DIRECTORY_PERM, DEFAULT_SYMLINK_PERM } = MemoryFileSystem;
+const { DEFAULT_ROOT_UID, DEFAULT_ROOT_GID, DEFAULT_FILE_PERM, DEFAULT_DIRECTORY_PERM, DEFAULT_SYMLINK_PERM } = MemoryFileSystem;
 
 describe("fs2", "custom", "memory2", () => {
     describe("errors", () => {
@@ -2179,7 +2179,7 @@ describe("fs2", "custom", "memory2", () => {
                 return buffer.length;
             },
             write: (fd, buffer, position, extraFlags) => {
-                throw new VirtualFSError(adone.error.errno.code.ENOSPC);
+                throw createError("ENOSPC");
             }
         };
 
@@ -2256,14 +2256,14 @@ describe("fs2", "custom", "memory2", () => {
                     // $FlowFixMe: position parameter allows null
                     return fs.readSync(ttyInFd, buffer, 0, buffer.length, null);
                 }
-                throw new VirtualFSError(adone.error.errno.code.ENXIO);
+                throw createError("ENXIO");
 
             },
             write: (fd, buffer, position, extraFlags) => {
                 if (!is.null(ttyOutFd) && fs) {
                     return fs.writeSync(ttyOutFd, buffer);
                 }
-                console.log(buffer.toString());
+                // console.log(buffer.toString());
                 return buffer.length;
             }
         };
@@ -2442,8 +2442,7 @@ describe("fs2", "custom", "memory2", () => {
             bytesWritten = mfs.writeSync(consoleFd, message);
             assert.equal(bytesWritten, message.length);
             // unlike other character devices, tty does not allow seeking
-            let error;
-            error = assert.throws(() => {
+            let error = assert.throws(() => {
                 mfs.lseekSync(tty0Fd, 10);
             });
             assert.equal(error.code, "ESPIPE");

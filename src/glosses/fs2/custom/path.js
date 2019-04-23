@@ -8,7 +8,7 @@ export default class Path {
             return;
         }
 
-        this.path = normalize(path);
+        this.path = path.replace(/[\\/]/g, sep);
 
         this.absolute = false;
 
@@ -107,9 +107,7 @@ export default class Path {
     static resolve(p, root) {
         return (p instanceof Path)
             ? p
-            : (isAbsolute(p))
-                ? new Path(p, root)
-                : new Path(resolve(p), root);
+            : new Path(p, root);
     }
 
     static wrap(path, root) {

@@ -99,20 +99,34 @@ describe("fs2", "custom", "interoperability", () => {
                     });
                 }
 
-                it("constants should be defined and be superset of native one", () => {
-                    if (CFS !== BaseFileSystem) {
-                        const cfs = new CFS();
-                        assert.isObject(cfs.constants);
-                        assert.containsAllKeys(cfs.constants, adone.std.fs.constants);
-                    }
+                it("constants should be defined and be superset of native one", {
+                    skip: CFS === BaseFileSystem
+                }, () => {
+                    const cfs = new CFS();
+                    assert.isObject(cfs.constants);
+                    assert.containsAllKeys(cfs.constants, adone.std.fs.constants);
                 });
 
-                it("should define ReadStream and WriteStream", () => {
-                    if (CFS !== BaseFileSystem) {
-                        const cfs = new CFS();
-                        assert.isTrue(typeof cfs.ReadStream === "function");
-                        assert.isTrue(typeof cfs.WriteStream === "function");
-                    }
+                it("ReadStream and WriteStream should be defined", {
+                    skip: CFS === BaseFileSystem
+                }, () => {
+                    const cfs = new CFS();
+                    assert.isTrue(typeof cfs.ReadStream === "function");
+                    assert.isTrue(typeof cfs.WriteStream === "function");
+                });
+
+                it("cwd() should be defined", {
+                    skip: CFS === BaseFileSystem
+                }, () => {
+                    const cfs = new CFS();
+                    assert.isFunction(cfs.cwd);
+                });
+
+                it.todo("own 'path' object with complete native interface shoul be defined", {
+                    skip: CFS === BaseFileSystem
+                }, () => {
+                    // const cfs = new CFS();
+                    // assert.isTrue(typeof cfs.WriteStream === "cwd");
                 });
             });
         }

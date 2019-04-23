@@ -11,10 +11,13 @@ export default (fs) => {
             const fullPath = join(root, name);
             const content = struct[name];
             const contentType = adone.typeOf(content);
-            if (["Uint8Array", "string"]) {
+            if (["Uint8Array", "string"].includes(contentType)) {
                 await fs.writeFile(fullPath, content);
+            } else if (contentType === "Array") {
+                const targetPath = join(root, content[1]);
+                await fs.symlink(targetPath, fullPath);
             } else if (contentType === "Object") {
-                createFiles({
+                return createFiles({
                     fs,
                     root: fullPath,
                     struct: content
@@ -27,12 +30,10 @@ export default (fs) => {
      * Create files from JSON.
      */
     return (config) => {
-        const fs = config.fs || adone.fs2.base;
         const struct = config.structure || config.struct || {};
         const root = config.root || config.rootPath || "/";
 
         return createFiles({
-            fs,
             root,
             struct
         });

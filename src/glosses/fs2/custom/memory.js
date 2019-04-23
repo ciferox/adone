@@ -9,39 +9,7 @@ import permaProxy from "permaproxy";
 import Counter from "resource-counter";
 import { Readable, Writable } from "stream";
 import BaseFileSystem from "./base";
-import { code as errno } from "../../errors/errno";
-
-class VirtualFSError extends Error {
-    constructor(errnoObj, path, dest, syscall) {
-        let message = `${errnoObj.code}: ${errnoObj.description}`;
-        if (path != null) {
-            message += `, ${path}`;
-            if (dest != null) {
-                message += ` -> ${dest}`;
-            }
-        }
-        super(message);
-        this.errno = errnoObj.errno;
-        this.code = errnoObj.code;
-        this.errnoDescription = errnoObj.description;
-        if (syscall != null) {
-            this.syscall = syscall;
-        }
-    }
-
-    setPaths(src, dst) {
-        let message = `${this.code}: ${this.errnoDescription}, ${src}`;
-        if (dst != null) {
-            message += ` -> ${dst}`;
-        }
-        this.message = message;
-
-    }
-
-    setSyscall(syscall) {
-        this.syscall = syscall;
-    }
-}
+import { FSException, createError } from "./fs_exception";
 
 const constants = {
     ...fs.constants,
@@ -985,23 +953,23 @@ class FileDescriptor {
                         newPos = this._pos;
                 }
                 if (newPos < 0) {
-                    throw new VirtualFSError(errno.EINVAL);
+                    throw createError("EINVAL");
                 }
                 this._pos = newPos;
                 break;
             case iNode instanceof CharacterDev: {
                 const fops = iNode.getFileDesOps();
                 if (!fops) {
-                    throw new VirtualFSError(errno.ENXIO);
+                    throw createError("ENXIO");
                 } else if (!fops.setPos) {
-                    throw new VirtualFSError(errno.ESPIPE);
+                    throw createError("ESPIPE");
                 } else {
                     fops.setPos(this, pos, flags);
                 }
                 break;
             }
             default:
-                throw new VirtualFSError(errno.ESPIPE);
+                throw createError("ESPIPE");
         }
     }
 
@@ -1031,9 +999,9 @@ class FileDescriptor {
             case iNode instanceof CharacterDev: {
                 const fops = iNode.getFileDesOps();
                 if (!fops) {
-                    throw new VirtualFSError(errno.ENXIO);
+                    this._throw("ENXIO");
                 } else if (!fops.read) {
-                    throw new VirtualFSError(errno.EINVAL);
+                    this._throw("EINVAL");
                 } else {
                     bytesRead = fops.read(
                         this,
@@ -1044,7 +1012,7 @@ class FileDescriptor {
                 break;
             }
             default:
-                throw new VirtualFSError(errno.EINVAL);
+                this._throw("EINVAL");
         }
         if (position === null) {
             this._pos = currentPosition + bytesRead;
@@ -1099,9 +1067,9 @@ class FileDescriptor {
             case iNode instanceof CharacterDev: {
                 const fops = iNode.getFileDesOps();
                 if (!fops) {
-                    throw new VirtualFSError(errno.ENXIO);
+                    this._throw("ENXIO");
                 } else if (!fops.write) {
-                    throw new VirtualFSError(errno.EINVAL);
+                    this._throw("EINVAL");
                 } else {
                     bytesWritten = fops.write(
                         this,
@@ -1113,7 +1081,7 @@ class FileDescriptor {
                 break;
             }
             default:
-                throw new VirtualFSError(errno.EINVAL);
+                this._throw("EINVAL");
         }
         if (position === null) {
             this._pos = currentPosition + bytesWritten;
@@ -1145,7 +1113,7 @@ class FileDescriptorManager {
         if (iNode instanceof CharacterDev) {
             const fops = iNode.getFileDesOps();
             if (!fops) {
-                throw new VirtualFSError(errno.ENXIO);
+                this._throw("ENXIO");
             } else if (fops.open) {
                 fops.open(fd);
             }
@@ -1189,7 +1157,7 @@ class FileDescriptorManager {
             if (iNode instanceof CharacterDev) {
                 const fops = iNode.getFileDesOps();
                 if (!fops) {
-                    throw new VirtualFSError(errno.ENXIO);
+                    this._throw("ENXIO");
                 } else if (fops.close) {
                     fops.close(fd);
                 }
@@ -1387,13 +1355,13 @@ export default class MemoryFileSystem extends BaseFileSystem {
         path = this._getPath(path);
         const navigated = this._navigate(path, true);
         if (!navigated.target) {
-            throw new VirtualFSError(errno.ENOENT, path);
+            this._throw("ENOENT", path);
         }
         if (!(navigated.target instanceof Directory)) {
-            throw new VirtualFSError(errno.ENOTDIR, path);
+            this._throw("ENOTDIR", path);
         }
         if (!this._checkPermissions(constants.X_OK, navigated.target.stat())) {
-            throw new VirtualFSError(errno.EACCES, path);
+            this._throw("EACCES", path);
         }
         this._cwd.changeDir(navigated.target, navigated.pathStack);
     }
@@ -1415,13 +1383,13 @@ export default class MemoryFileSystem extends BaseFileSystem {
         path = this._getPath(path);
         const target = this._navigate(path, true).target;
         if (!target) {
-            throw new VirtualFSError(errno.ENOENT, path);
+            this._throw("ENOENT", path);
         }
         if (mode === constants.F_OK) {
             return;
         }
         if (!this._checkPermissions(mode, target.stat())) {
-            throw new VirtualFSError(errno.EACCES, path);
+            this._throw("EACCES", path);
         }
     }
 
@@ -1445,10 +1413,10 @@ export default class MemoryFileSystem extends BaseFileSystem {
             if (typeof file === "number") {
                 fd = this._fdMgr.getFd(file);
                 if (!fd) {
-                    throw new VirtualFSError(errno.EBADF, null, null, "appendFile");
+                    this._throw("EBADF", null, null, "appendFile");
                 }
                 if (!(fd.getFlags() & (constants.O_WRONLY | constants.O_RDWR))) {
-                    throw new VirtualFSError(errno.EBADF, null, null, "appendFile");
+                    this._throw("EBADF", null, null, "appendFile");
                 }
             } else {
                 [fd, fdIndex] = this._openSync(file, options.flag, options.mode);
@@ -1457,7 +1425,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
                 fd.write(data, null, constants.O_APPEND);
             } catch (e) {
                 if (e instanceof RangeError) {
-                    throw new VirtualFSError(errno.EFBIG, null, null, "appendFile");
+                    this._throw("EFBIG", null, null, "appendFile");
                 }
                 throw e;
             }
@@ -1476,14 +1444,14 @@ export default class MemoryFileSystem extends BaseFileSystem {
         path = this._getPath(path);
         const target = this._navigate(path, true).target;
         if (!target) {
-            throw new VirtualFSError(errno.ENOENT, path);
+            this._throw("ENOENT", path);
         }
         if (typeof mode !== "number") {
             throw new TypeError("mode must be an integer");
         }
         const targetMetadata = target.stat();
         if (this._uid !== DEFAULT_ROOT_UID && this._uid !== targetMetadata.uid) {
-            throw new VirtualFSError(errno.EPERM, null, null, "chmod");
+            this._throw("EPERM", null, null, "chmod");
         }
         targetMetadata.mode = (targetMetadata.mode & constants.S_IFMT) | mode;
     }
@@ -1496,17 +1464,17 @@ export default class MemoryFileSystem extends BaseFileSystem {
         path = this._getPath(path);
         const target = this._navigate(path, true).target;
         if (!target) {
-            throw new VirtualFSError(errno.ENOENT, path);
+            this._throw("ENOENT", path);
         }
         const targetMetadata = target.stat();
         if (this._uid !== DEFAULT_ROOT_UID) {
             // you don't own the file
             if (targetMetadata.uid !== this._uid) {
-                throw new VirtualFSError(errno.EPERM, null, null, "chown");
+                this._throw("EPERM", null, null, "chown");
             }
             // you cannot give files to others
             if (this._uid !== uid) {
-                throw new VirtualFSError(errno.EPERM, null, null, "chown");
+                this._throw("EPERM", null, null, "chown");
             }
             // because we don't have user group hierarchies, we allow chowning to any group
         }
@@ -1550,7 +1518,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
 
     closeSync(fdIndex) {
         if (!this._fdMgr.getFd(fdIndex)) {
-            throw new VirtualFSError(errno.EBADF, null, null, "close");
+            this._throw("EBADF", null, null, "close");
         }
         this._fdMgr.deleteFd(fdIndex);
     }
@@ -1575,7 +1543,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
             [srcFd, srcFdIndex] = this._openSync(srcPath, constants.O_RDONLY);
             const srcINode = srcFd.getINode();
             if (srcINode instanceof Directory) {
-                throw new VirtualFSError(errno.EBADF, srcPath, dstPath);
+                this._throw("EBADF", srcPath, dstPath);
             }
             let dstFlags = constants.WRONLY | constants.O_CREAT;
             if (flags & constants.COPYFILE_EXCL) {
@@ -1586,7 +1554,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
             if (dstINode instanceof File) {
                 dstINode.setData(Buffer.from(srcINode.getData()));
             } else {
-                throw new VirtualFSError(errno.EINVAL, srcPath, dstPath);
+                this._throw("EINVAL", srcPath, dstPath);
             }
         } finally {
             if (srcFdIndex !== undefined) {
@@ -1661,18 +1629,18 @@ export default class MemoryFileSystem extends BaseFileSystem {
 
     fallocateSync(fdIndex, offset, len) {
         if (offset < 0 || len <= 0) {
-            throw new VirtualFSError(errno.EINVAL, null, null, "fallocate");
+            this._throw("EINVAL", null, null, "fallocate");
         }
         const fd = this._fdMgr.getFd(fdIndex);
         if (!fd) {
-            throw new VirtualFSError(errno.EBADF, null, null, "fallocate");
+            this._throw("EBADF", null, null, "fallocate");
         }
         const iNode = fd.getINode();
         if (!(iNode instanceof File)) {
-            throw new VirtualFSError(errno.ENODEV, null, null, "fallocate");
+            this._throw("ENODEV", null, null, "fallocate");
         }
         if (!(fd.getFlags() & (constants.O_WRONLY | constants.O_RDWR))) {
-            throw new VirtualFSError(errno.EBADF, null, null, "fallocate");
+            this._throw("EBADF", null, null, "fallocate");
         }
         const data = iNode.getData();
         const metadata = iNode.stat();
@@ -1685,7 +1653,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
                 ]);
             } catch (e) {
                 if (e instanceof RangeError) {
-                    throw new VirtualFSError(errno.EFBIG, null, null, "fallocate");
+                    this._throw("EFBIG", null, null, "fallocate");
                 }
                 throw e;
             }
@@ -1704,30 +1672,30 @@ export default class MemoryFileSystem extends BaseFileSystem {
 
     mmapSync(length, flags, fdIndex, offset = 0) {
         if (length < 1 || offset < 0) {
-            throw new VirtualFSError(errno.EINVAL, null, null, "mmap");
+            this._throw("EINVAL", null, null, "mmap");
         }
         const fd = this._fdMgr.getFd(fdIndex);
         if (!fd) {
-            throw new VirtualFSError(errno.EBADF, null, null, "mmap");
+            this._throw("EBADF", null, null, "mmap");
         }
         const access = fd.getFlags() & constants.O_ACCMODE;
         if (access === constants.O_WRONLY) {
-            throw new VirtualFSError(errno.EACCES, null, null, "mmap");
+            this._throw("EACCES", null, null, "mmap");
         }
         const iNode = fd.getINode();
         if (!(iNode instanceof File)) {
-            throw new VirtualFSError(errno.ENODEV, null, null, "mmap");
+            this._throw("ENODEV", null, null, "mmap");
         }
         switch (flags) {
             case constants.MAP_PRIVATE:
                 return Buffer.from(iNode.getData().slice(offset, offset + length));
             case constants.MAP_SHARED:
                 if (access !== constants.O_RDWR) {
-                    throw new VirtualFSError(errno.EACCES, null, null, "mmap");
+                    this._throw("EACCES", null, null, "mmap");
                 }
                 return permaProxy(iNode, "_data").slice(offset, offset + length);
             default:
-                throw new VirtualFSError(errno.EINVAL, null, null, "mmap");
+                this._throw("EINVAL", null, null, "mmap");
         }
     }
 
@@ -1738,14 +1706,14 @@ export default class MemoryFileSystem extends BaseFileSystem {
     fchmodSync(fdIndex, mode) {
         const fd = this._fdMgr.getFd(fdIndex);
         if (!fd) {
-            throw new VirtualFSError(errno.EBADF, null, null, "fchmod");
+            this._throw("EBADF", null, null, "fchmod");
         }
         if (typeof mode !== "number") {
             throw new TypeError("mode must be an integer");
         }
         const fdMetadata = fd.getINode().stat();
         if (this._uid !== DEFAULT_ROOT_UID && this._uid !== fdMetadata.uid) {
-            throw new VirtualFSError(errno.EPERM, null, null, "fchmod");
+            this._throw("EPERM", null, null, "fchmod");
         }
         fdMetadata.mode = (fdMetadata.mode & constants.S_IMFT) | mode;
     }
@@ -1757,17 +1725,17 @@ export default class MemoryFileSystem extends BaseFileSystem {
     fchownSync(fdIndex, uid, gid) {
         const fd = this._fdMgr.getFd(fdIndex);
         if (!fd) {
-            throw new VirtualFSError(errno.EBADF, null, null, "fchown");
+            this._throw("EBADF", null, null, "fchown");
         }
         const fdMetadata = fd.getINode().stat();
         if (this._uid !== DEFAULT_ROOT_UID) {
             // you don't own the file
             if (fdMetadata.uid !== this._uid) {
-                throw new VirtualFSError(errno.EPERM, null, null, "fchown");
+                this._throw("EPERM", null, null, "fchown");
             }
             // you cannot give files to others
             if (this._uid !== uid) {
-                throw new VirtualFSError(errno.EPERM, null, null, "fchown");
+                this._throw("EPERM", null, null, "fchown");
             }
             // because we don't have user group hierarchies, we allow chowning to any group
         }
@@ -1785,7 +1753,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
 
     fdatasyncSync(fdIndex) {
         if (!this._fdMgr.getFd(fdIndex)) {
-            throw new VirtualFSError(errno.EBADF, null, null, "fdatasync");
+            this._throw("EBADF", null, null, "fdatasync");
         }
     }
 
@@ -1796,7 +1764,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
     fstatSync(fdIndex) {
         const fd = this._fdMgr.getFd(fdIndex);
         if (!fd) {
-            throw new VirtualFSError(errno.EBADF, null, null, "fstat");
+            this._throw("EBADF", null, null, "fstat");
         }
         return fd.getINode().stat(true);
     }
@@ -1807,7 +1775,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
 
     fsyncSync(fdIndex) {
         if (!this._fdMgr.getFd(fdIndex)) {
-            throw new VirtualFSError(errno.EBADF, null, null, "fsync");
+            this._throw("EBADF", null, null, "fsync");
         }
     }
 
@@ -1825,18 +1793,18 @@ export default class MemoryFileSystem extends BaseFileSystem {
 
     ftruncateSync(fdIndex, len = 0) {
         if (len < 0) {
-            throw new VirtualFSError(errno.EINVAL, null, null, "ftruncate");
+            this._throw("EINVAL", null, null, "ftruncate");
         }
         const fd = this._fdMgr.getFd(fdIndex);
         if (!fd) {
-            throw new VirtualFSError(errno.EBADF, null, null, "ftruncate");
+            this._throw("EBADF", null, null, "ftruncate");
         }
         const iNode = fd.getINode();
         if (!(iNode instanceof File)) {
-            throw new VirtualFSError(errno.EINVAL, null, null, "ftruncate");
+            this._throw("EINVAL", null, null, "ftruncate");
         }
         if (!(fd.getFlags() & (constants.O_WRONLY | constants.O_RDWR))) {
-            throw new VirtualFSError(errno.EINVAL, null, null, "ftruncate");
+            this._throw("EINVAL", null, null, "ftruncate");
         }
         const data = iNode.getData();
         const metadata = iNode.stat();
@@ -1855,7 +1823,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
             }
         } catch (e) {
             if (e instanceof RangeError) {
-                throw new VirtualFSError(errno.EFBIG, null, null, "ftruncate");
+                this._throw("EFBIG", null, null, "ftruncate");
             }
             throw e;
         }
@@ -1873,7 +1841,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
     futimesSync(fdIndex, atime, mtime) {
         const fd = this._fdMgr.getFd(fdIndex);
         if (!fd) {
-            throw new VirtualFSError(errno.EBADF, null, null, "futimes");
+            this._throw("EBADF", null, null, "futimes");
         }
         const metadata = fd.getINode().stat();
         let newAtime;
@@ -1909,14 +1877,14 @@ export default class MemoryFileSystem extends BaseFileSystem {
         path = this._getPath(path);
         const target = this._navigate(path, false).target;
         if (!target) {
-            throw new VirtualFSError(errno.ENOENT, path);
+            this._throw("ENOENT", path);
         }
         if (typeof mode !== "number") {
             throw new TypeError("mode must be an integer");
         }
         const targetMetadata = target.stat();
         if (this._uid !== DEFAULT_ROOT_UID && this._uid !== targetMetadata.uid) {
-            throw new VirtualFSError(errno.EPERM, null, null, "lchmod");
+            this._throw("EPERM", null, null, "lchmod");
         }
         targetMetadata.mode = (targetMetadata.mode & constants.S_IFMT) | mode;
     }
@@ -1929,17 +1897,17 @@ export default class MemoryFileSystem extends BaseFileSystem {
         path = this._getPath(path);
         const target = this._navigate(path, false).target;
         if (!target) {
-            throw new VirtualFSError(errno.ENOENT, path);
+            this._throw("ENOENT", path);
         }
         const targetMetadata = target.stat();
         if (this._uid !== DEFAULT_ROOT_UID) {
             // you don't own the file
             if (targetMetadata.uid !== this._uid) {
-                throw new VirtualFSError(errno.EPERM, null, null, "lchown");
+                this._throw("EPERM", null, null, "lchown");
             }
             // you cannot give files to others
             if (this._uid !== uid) {
-                throw new VirtualFSError(errno.EPERM, null, null, "lchown");
+                this._throw("EPERM", null, null, "lchown");
             }
             // because we don't have user group hierarchies, we allow chowning to any group
         }
@@ -1961,23 +1929,23 @@ export default class MemoryFileSystem extends BaseFileSystem {
         const navigatedExisting = this._navigate(existingPath, false);
         const navigatedNew = this._navigate(newPath, false);
         if (!navigatedExisting.target) {
-            throw new VirtualFSError(errno.ENOENT, existingPath, newPath, "link");
+            this._throw("ENOENT", existingPath, newPath, "link");
         }
         if (navigatedExisting.target instanceof Directory) {
-            throw new VirtualFSError(errno.EPERM, existingPath, newPath, "link");
+            this._throw("EPERM", existingPath, newPath, "link");
         }
         if (!navigatedNew.target) {
             if (navigatedNew.dir.stat().nlink < 2) {
-                throw new VirtualFSError(errno.ENOENT, existingPath, newPath, "link");
+                this._throw("ENOENT", existingPath, newPath, "link");
             }
             if (!this._checkPermissions(constants.W_OK, navigatedNew.dir.stat())) {
-                throw new VirtualFSError(errno.EACCES, existingPath, newPath, "link");
+                this._throw("EACCES", existingPath, newPath, "link");
             }
             const index = navigatedExisting.dir.getEntryIndex(navigatedExisting.name);
             navigatedNew.dir.addEntry(navigatedNew.name, index);
             navigatedExisting.target.stat().ctime = new Date();
         } else {
-            throw new VirtualFSError(errno.EEXIST, existingPath, newPath, "link");
+            this._throw("EEXIST", existingPath, newPath, "link");
         }
     }
 
@@ -1991,16 +1959,16 @@ export default class MemoryFileSystem extends BaseFileSystem {
     lseekSync(fdIndex, position, seekFlags = constants.SEEK_SET) {
         const fd = this._fdMgr.getFd(fdIndex);
         if (!fd) {
-            throw new VirtualFSError(errno.EBADF, null, null, "lseek");
+            this._throw("EBADF", null, null, "lseek");
         }
         if (![constants.SEEK_SET, constants.SEEK_CUR, constants.SEEK_END].includes(seekFlags)) {
-            throw new VirtualFSError(errno.EINVAL, null, null, "lseek");
+            this._throw("EINVAL", null, null, "lseek");
         }
         try {
             fd.setPos(position, seekFlags);
         } catch (e) {
-            if (e instanceof VirtualFSError) {
-                e.setSyscall("lseek");
+            if (e instanceof FSException) {
+                e.syscall = "lseek";
             }
             throw e;
         }
@@ -2016,7 +1984,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         if (target) {
             return target.stat(true);
         }
-        throw new VirtualFSError(errno.ENOENT, path);
+        this._throw("ENOENT", path);
     }
 
     mkdir(path, ...args) {
@@ -2032,18 +2000,18 @@ export default class MemoryFileSystem extends BaseFileSystem {
         path = path.replace(/(.+?)\/+$/, "$1");
         const navigated = this._navigate(path, true);
         if (navigated.target) {
-            throw new VirtualFSError(errno.EEXIST, path, null, "mkdir");
+            this._throw("EEXIST", path, null, "mkdir");
         } else if (!navigated.target && navigated.remaining) {
-            throw new VirtualFSError(errno.ENOENT, path, null, "mkdir");
+            this._throw("ENOENT", path, null, "mkdir");
         } else if (!navigated.target) {
             if (navigated.dir.stat().nlink < 2) {
-                throw new VirtualFSError(errno.ENOENT, path, null, "mkdir");
+                this._throw("ENOENT", path, null, "mkdir");
             }
             if (!this._checkPermissions(
                 constants.W_OK,
                 navigated.dir.stat()
             )) {
-                throw new VirtualFSError(errno.EACCES, path, null, "mkdir");
+                this._throw("EACCES", path, null, "mkdir");
             }
             const [, index] = this._iNodeMgr.createINode(
                 Directory,
@@ -2076,13 +2044,13 @@ export default class MemoryFileSystem extends BaseFileSystem {
         while (true) {
             if (!navigated.target) {
                 if (navigated.dir.stat().nlink < 2) {
-                    throw new VirtualFSError(errno.ENOENT, path);
+                    this._throw("ENOENT", path);
                 }
                 if (!this._checkPermissions(
                     constants.W_OK,
                     navigated.dir.stat()
                 )) {
-                    throw new VirtualFSError(errno.EACCES, path);
+                    this._throw("EACCES", path);
                 }
                 [iNode, index] = this._iNodeMgr.createINode(
                     Directory,
@@ -2101,7 +2069,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
                     break;
                 }
             } else if (!(navigated.target instanceof Directory)) {
-                throw new VirtualFSError(errno.ENOTDIR, path);
+                this._throw("ENOTDIR", path);
             } else {
                 break;
             }
@@ -2137,7 +2105,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
                 return Buffer.from(pathS).toString(options.encoding);
 
             } catch (e) {
-                if (e.code !== errno.EEXIST) {
+                if (e.code !== "EEXIST") {
                     throw e;
                 }
             }
@@ -2155,13 +2123,13 @@ export default class MemoryFileSystem extends BaseFileSystem {
         path = this._getPath(path);
         const navigated = this._navigate(path, false);
         if (navigated.target) {
-            throw new VirtualFSError(errno.EEXIST, path, null, "mknod");
+            this._throw("EEXIST", path, null, "mknod");
         }
         if (navigated.dir.stat().nlink < 2) {
-            throw new VirtualFSError(errno.ENOENT, path, null, "mknod");
+            this._throw("ENOENT", path, null, "mknod");
         }
         if (!this._checkPermissions(constants.W_OK, navigated.dir.stat())) {
-            throw new VirtualFSError(errno.EACCES, path, null, "mknod");
+            this._throw("EACCES", path, null, "mknod");
         }
         let index;
         switch (type) {
@@ -2180,7 +2148,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
                     throw new TypeError("major and minor must set as numbers when creating device nodes");
                 }
                 if (major > MAJOR_MAX || minor > MINOR_MAX || minor < MAJOR_MIN || minor < MINOR_MIN) {
-                    throw new VirtualFSError(errno.EINVAL, path, null, "mknod");
+                    this._throw("EINVAL", path, null, "mknod");
                 }
                 [, index] = this._iNodeMgr.createINode(
                     CharacterDev,
@@ -2193,7 +2161,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
                 );
                 break;
             default:
-                throw new VirtualFSError(errno.EPERM, path, null, "mknod");
+                this._throw("EPERM", path, null, "mknod");
         }
         navigated.dir.addEntry(navigated.name, index);
     }
@@ -2276,7 +2244,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         if (navigated.target instanceof Symlink) {
             // cannot be symlink if O_NOFOLLOW
             if (flags & constants.O_NOFOLLOW) {
-                throw new VirtualFSError(errno.ELOOP, path, null, "open");
+                this._throw("ELOOP", path, null, "open");
             }
             navigated = this._navigateFrom(
                 navigated.dir,
@@ -2294,13 +2262,13 @@ export default class MemoryFileSystem extends BaseFileSystem {
             if (!navigated.remaining && (flags & constants.O_CREAT)) {
                 // cannot create if the current directory has been unlinked from its parent directory
                 if (navigated.dir.stat().nlink < 2) {
-                    throw new VirtualFSError(errno.ENOENT, path, null, "open");
+                    this._throw("ENOENT", path, null, "open");
                 }
                 if (!this._checkPermissions(
                     constants.W_OK,
                     navigated.dir.stat()
                 )) {
-                    throw new VirtualFSError(errno.EACCES, path, null, "open");
+                    this._throw("EACCES", path, null, "open");
                 }
                 let index;
                 [target, index] = this._iNodeMgr.createINode(
@@ -2313,21 +2281,21 @@ export default class MemoryFileSystem extends BaseFileSystem {
                 );
                 navigated.dir.addEntry(navigated.name, index);
             } else {
-                throw new VirtualFSError(errno.ENOENT, path, null, "open");
+                this._throw("ENOENT", path, null, "open");
             }
         } else {
             // target already exists cannot be created exclusively
             if ((flags & constants.O_CREAT) && (flags & constants.O_EXCL)) {
-                throw new VirtualFSError(errno.EEXIST, path, null, "open");
+                this._throw("EEXIST", path, null, "open");
             }
             // cannot be directory if write capabilities are requested
             if ((target instanceof Directory) &&
                 (flags & (constants.O_WRONLY | flags & constants.O_RDWR))) {
-                throw new VirtualFSError(errno.EISDIR, path, null, "open");
+                this._throw("EISDIR", path, null, "open");
             }
             // must be directory if O_DIRECTORY
             if ((flags & constants.O_DIRECTORY) && !(target instanceof Directory)) {
-                throw new VirtualFSError(errno.ENOTDIR, path, null, "open");
+                this._throw("ENOTDIR", path, null, "open");
             }
             // must truncate a file if O_TRUNC
             if ((flags & constants.O_TRUNC) &&
@@ -2345,16 +2313,16 @@ export default class MemoryFileSystem extends BaseFileSystem {
                 access = constants.R_OK;
             }
             if (!this._checkPermissions(access, target.stat())) {
-                throw new VirtualFSError(errno.EACCES, path, null, "open");
+                this._throw("EACCES", path, null, "open");
             }
         }
         try {
             const fd = this._fdMgr.createFd(target, flags);
             return fd;
         } catch (e) {
-            if (e instanceof VirtualFSError) {
-                e.setPaths(path);
-                e.setSyscall("open");
+            if (e instanceof FSException) {
+                e.path = path;
+                e.syscall = "open";
             }
             throw e;
         }
@@ -2375,17 +2343,17 @@ export default class MemoryFileSystem extends BaseFileSystem {
     readSync(fdIndex, buffer, offset = 0, length = 0, position = null) {
         const fd = this._fdMgr.getFd(fdIndex);
         if (!fd) {
-            throw new VirtualFSError(errno.EBADF, null, null, "read");
+            this._throw("EBADF", null, null, "read");
         }
         if (typeof position === "number" && position < 0) {
-            throw new VirtualFSError(errno.EINVAL, null, null, "read");
+            this._throw("EINVAL", null, null, "read");
         }
         if (fd.getINode().stat().isDirectory()) {
-            throw new VirtualFSError(errno.EISDIR, null, null, "read");
+            this._throw("EISDIR", null, null, "read");
         }
         const flags = fd.getFlags();
         if (flags & constants.O_WRONLY) {
-            throw new VirtualFSError(errno.EBADF, null, null, "read");
+            this._throw("EBADF", null, null, "read");
         }
         if (offset < 0 || offset > buffer.length) {
             throw new RangeError("Offset is out of bounds");
@@ -2398,7 +2366,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         try {
             bytesRead = fd.read(buffer, position);
         } catch (e) {
-            if (e instanceof VirtualFSError) {
+            if (e instanceof FSException) {
                 e.syscall = "read";
             }
             throw e;
@@ -2418,13 +2386,13 @@ export default class MemoryFileSystem extends BaseFileSystem {
         options = this._getOptions({ encoding: "utf8" }, options);
         const navigated = this._navigate(path, true);
         if (!navigated.target) {
-            throw new VirtualFSError(errno.ENOENT, path, null, "readdir");
+            this._throw("ENOENT", path, null, "readdir");
         }
         if (!(navigated.target instanceof Directory)) {
-            throw new VirtualFSError(errno.ENOTDIR, path, null, "readdir");
+            this._throw("ENOTDIR", path, null, "readdir");
         }
         if (!this._checkPermissions(constants.R_OK, navigated.target.stat())) {
-            throw new VirtualFSError(errno.EACCES, path, null, "readdir");
+            this._throw("EACCES", path, null, "readdir");
         }
         return [...navigated.target.getEntries()]
             .filter(([name, _]) => name !== "." && name !== "..")
@@ -2485,10 +2453,10 @@ export default class MemoryFileSystem extends BaseFileSystem {
         options = this._getOptions({ encoding: "utf8" }, options);
         const target = this._navigate(path, false).target;
         if (!target) {
-            throw new VirtualFSError(errno.ENOENT, path);
+            this._throw("ENOENT", path);
         }
         if (!(target instanceof Symlink)) {
-            throw new VirtualFSError(errno.EINVAL, path);
+            this._throw("EINVAL", path);
         }
         const link = target.getLink();
         if (options.encoding === "buffer") {
@@ -2509,7 +2477,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         options = this._getOptions({ encoding: "utf8" }, options);
         const navigated = this._navigate(path, true);
         if (!navigated.target) {
-            throw new VirtualFSError(errno.ENOENT, path);
+            this._throw("ENOENT", path);
         }
         if (options.encoding === "buffer") {
             return Buffer.from(`/${navigated.pathStack.join("/")}`);
@@ -2527,30 +2495,30 @@ export default class MemoryFileSystem extends BaseFileSystem {
         const navigatedSource = this._navigate(oldPath, false);
         const navigatedTarget = this._navigate(newPath, false);
         if (!navigatedSource.target) {
-            throw new VirtualFSError(errno.ENOENT, oldPath, newPath, "rename");
+            this._throw("ENOENT", oldPath, newPath, "rename");
         }
         if (navigatedSource.target instanceof Directory) {
             // if oldPath is a directory, target must be a directory (if it exists)
             if (navigatedTarget.target &&
                 !(navigatedTarget.target instanceof Directory)) {
-                throw new VirtualFSError(errno.ENOTDIR, oldPath, newPath, "rename");
+                this._throw("ENOTDIR", oldPath, newPath, "rename");
             }
             // neither oldPath nor newPath can point to root
             if (navigatedSource.target === this._root ||
                 navigatedTarget.target === this._root) {
-                throw new VirtualFSError(errno.EBUSY, oldPath, newPath, "rename");
+                this._throw("EBUSY", oldPath, newPath, "rename");
             }
             // if the target directory contains elements this cannot be done
             // this can be done without read permissions
             if (navigatedTarget.target && ([...navigatedTarget.target.getEntries()].length - 2)) {
-                throw new VirtualFSError(errno.ENOTEMPTY, oldPath, newPath, "rename");
+                this._throw("ENOTEMPTY", oldPath, newPath, "rename");
             }
             // if any of the paths used .. or ., then `dir` is not the parent directory
             if (navigatedSource.name === "." ||
                 navigatedSource.name === ".." ||
                 navigatedTarget.name === "." ||
                 navigatedTarget.name === "..") {
-                throw new VirtualFSError(errno.EBUSY, oldPath, newPath, "rename");
+                this._throw("EBUSY", oldPath, newPath, "rename");
             }
             // cannot rename a source prefix of target
             if (navigatedSource.pathStack.length < navigatedTarget.pathStack.length) {
@@ -2562,19 +2530,19 @@ export default class MemoryFileSystem extends BaseFileSystem {
                     }
                 }
                 if (prefixOf) {
-                    throw new VirtualFSError(errno.EINVAL, oldPath, newPath, "rename");
+                    this._throw("EINVAL", oldPath, newPath, "rename");
                 }
             }
         } else {
             // if oldPath is not a directory, then newPath cannot be an existing directory
             if (navigatedTarget.target && navigatedTarget.target instanceof Directory) {
-                throw new VirtualFSError(errno.EISDIR, oldPath, newPath, "rename");
+                this._throw("EISDIR", oldPath, newPath, "rename");
             }
         }
         // both the navigatedSource.dir and navigatedTarget.dir must support write permissions
         if (!this._checkPermissions(constants.W_OK, navigatedSource.dir.stat()) ||
             !this._checkPermissions(constants.W_OK, navigatedTarget.dir.stat())) {
-            throw new VirtualFSError(errno.EACCES, oldPath, newPath, "rename");
+            this._throw("EACCES", oldPath, newPath, "rename");
         }
         // if they are in the same directory, it is simple rename
         if (navigatedSource.dir === navigatedTarget.dir) {
@@ -2588,7 +2556,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
             navigatedTarget.dir.addEntry(navigatedTarget.name, index);
         } else {
             if (navigatedTarget.dir.stat().nlink < 2) {
-                throw new VirtualFSError(errno.ENOENT, oldPath, newPath, "rename");
+                this._throw("ENOENT", oldPath, newPath, "rename");
             }
             navigatedTarget.dir.addEntry(navigatedTarget.name, index);
         }
@@ -2608,26 +2576,26 @@ export default class MemoryFileSystem extends BaseFileSystem {
         const navigated = this._navigate(path, false);
         // this is for if the path resolved to root
         if (!navigated.name) {
-            throw new VirtualFSError(errno.EBUSY, path, null, "rmdir");
+            this._throw("EBUSY", path, null, "rmdir");
         }
         // on linux, when .. is used, the parent directory becomes unknown
         // in that case, they return with ENOTEMPTY
         // but the directory may in fact be empty
         // for this edge case, we instead use EINVAL
         if (navigated.name === "." || navigated.name === "..") {
-            throw new VirtualFSError(errno.EINVAL, path, null, "rmdir");
+            this._throw("EINVAL", path, null, "rmdir");
         }
         if (!navigated.target) {
-            throw new VirtualFSError(errno.ENOENT, path, null, "rmdir");
+            this._throw("ENOENT", path, null, "rmdir");
         }
         if (!(navigated.target instanceof Directory)) {
-            throw new VirtualFSError(errno.ENOTDIR, path, null, "rmdir");
+            this._throw("ENOTDIR", path, null, "rmdir");
         }
         if ([...navigated.target.getEntries()].length - 2) {
-            throw new VirtualFSError(errno.ENOTEMPTY, path, null, "rmdir");
+            this._throw("ENOTEMPTY", path, null, "rmdir");
         }
         if (!this._checkPermissions(constants.W_OK, navigated.dir.stat())) {
-            throw new VirtualFSError(errno.EACCES, path, null, "rmdir");
+            this._throw("EACCES", path, null, "rmdir");
         }
         navigated.dir.deleteEntry(navigated.name);
     }
@@ -2642,7 +2610,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         if (target) {
             return target.stat(true);
         }
-        throw new VirtualFSError(errno.ENOENT, path);
+        this._throw("ENOENT", path);
     }
 
     symlink(dstPath, srcPath, ...args) {
@@ -2656,15 +2624,15 @@ export default class MemoryFileSystem extends BaseFileSystem {
         dstPath = this._getPath(dstPath);
         srcPath = this._getPath(srcPath);
         if (!dstPath) {
-            throw new VirtualFSError(errno.ENOENT, srcPath, dstPath, "symlink");
+            this._throw("ENOENT", srcPath, dstPath, "symlink");
         }
         const navigated = this._navigate(srcPath, false);
         if (!navigated.target) {
             if (navigated.dir.stat().nlink < 2) {
-                throw new VirtualFSError(errno.ENOENT, srcPath, dstPath, "symlink");
+                this._throw("ENOENT", srcPath, dstPath, "symlink");
             }
             if (!this._checkPermissions(constants.W_OK, navigated.dir.stat())) {
-                throw new VirtualFSError(errno.EACCES, srcPath, dstPath, "symlink");
+                this._throw("EACCES", srcPath, dstPath, "symlink");
             }
             const [, index] = this._iNodeMgr.createINode(
                 Symlink,
@@ -2678,7 +2646,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
             navigated.dir.addEntry(navigated.name, index);
             return;
         }
-        throw new VirtualFSError(errno.EEXIST, srcPath, dstPath, "symlink");
+        this._throw("EEXIST", srcPath, dstPath, "symlink");
     }
 
     truncate(file, ...args) {
@@ -2690,7 +2658,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
 
     truncateSync(file, len = 0) {
         if (len < 0) {
-            throw new VirtualFSError(errno.EINVAL, null, null, "ftruncate");
+            this._throw("EINVAL", null, null, "ftruncate");
         }
         if (typeof file === "number") {
             this.ftruncateSync(file, len);
@@ -2716,13 +2684,13 @@ export default class MemoryFileSystem extends BaseFileSystem {
         path = this._getPath(path);
         const navigated = this._navigate(path, false);
         if (!navigated.target) {
-            throw new VirtualFSError(errno.ENOENT, path);
+            this._throw("ENOENT", path);
         }
         if (!this._checkPermissions(constants.W_OK, navigated.dir.stat())) {
-            throw new VirtualFSError(errno.EACCES, path);
+            this._throw("EACCES", path);
         }
         if (navigated.target instanceof Directory) {
-            throw new VirtualFSError(errno.EISDIR, path);
+            this._throw("EISDIR", path);
         }
         navigated.target.stat().ctime = new Date();
         navigated.dir.deleteEntry(navigated.name);
@@ -2738,7 +2706,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         path = this._getPath(path);
         const target = this._navigate(path, true).target;
         if (!target) {
-            throw new VirtualFSError(errno.ENOENT, path, null, "utimes");
+            this._throw("ENOENT", path, null, "utimes");
         }
         const metadata = target.stat();
         let newAtime;
@@ -2779,14 +2747,14 @@ export default class MemoryFileSystem extends BaseFileSystem {
     writeSync(fdIndex, data, offsetOrPos, lengthOrEncoding, position = null) {
         const fd = this._fdMgr.getFd(fdIndex);
         if (!fd) {
-            throw new VirtualFSError(errno.EBADF, null, null, "write");
+            this._throw("EBADF", null, null, "write");
         }
         if (typeof position === "number" && position < 0) {
-            throw new VirtualFSError(errno.EINVAL, null, null, "write");
+            this._throw("EINVAL", null, null, "write");
         }
         const flags = fd.getFlags();
         if (!(flags & (constants.O_WRONLY | constants.O_RDWR))) {
-            throw new VirtualFSError(errno.EBADF, null, null, "write");
+            this._throw("EBADF", null, null, "write");
         }
         let buffer;
         if (typeof data === "string") {
@@ -2808,10 +2776,10 @@ export default class MemoryFileSystem extends BaseFileSystem {
             return fd.write(buffer, position);
         } catch (e) {
             if (e instanceof RangeError) {
-                throw new VirtualFSError(errno.EFBIG, null, null, "write");
+                this._throw("EFBIG", null, null, "write");
             }
-            if (e instanceof VirtualFSError) {
-                e.setSyscall("write");
+            if (e instanceof FSException) {
+                e.syscall = "write";
             }
             throw e;
         }
@@ -3039,7 +3007,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
      */
     _navigate(pathS, resolveLastLink = true, activeSymlinks = new Set(), origPathS = pathS) {
         if (!pathS) {
-            throw new VirtualFSError(errno.ENOENT, origPathS);
+            this._throw("ENOENT", origPathS);
         }
         // multiple consecutive slashes are considered to be 1 slash
         pathS = pathS.replace(/\/+/, "/");
@@ -3078,10 +3046,10 @@ export default class MemoryFileSystem extends BaseFileSystem {
      */
     _navigateFrom(curdir, pathS, resolveLastLink = true, activeSymlinks = new Set(), pathStack = [], origPathS = pathS) {
         if (!pathS) {
-            throw new VirtualFSError(errno.ENOENT, origPathS);
+            this._throw("ENOENT", origPathS);
         }
         if (!this._checkPermissions(constants.X_OK, curdir.stat())) {
-            throw new VirtualFSError(errno.EACCES, origPathS);
+            this._throw("EACCES", origPathS);
         }
         const parse = this._parsePath(pathS);
         if (parse.segment !== ".") {
@@ -3104,7 +3072,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
                     pathStack
                 };
             }
-            throw new VirtualFSError(errno.ENOTDIR, origPathS);
+            this._throw("ENOTDIR", origPathS);
         } else if (target instanceof Directory) {
             if (!parse.rest) {
                 // if parse.segment is ., dir is not the same directory as target
@@ -3130,7 +3098,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
                 };
             }
             if (activeSymlinks.has(target)) {
-                throw new VirtualFSError(errno.ELOOP, origPathS);
+                this._throw("ELOOP", origPathS);
             } else {
                 activeSymlinks.add(target);
             }
@@ -3159,4 +3127,3 @@ MemoryFileSystem.DEFAULT_ROOT_GID = DEFAULT_ROOT_GID;
 MemoryFileSystem.DEFAULT_FILE_PERM = DEFAULT_FILE_PERM;
 MemoryFileSystem.DEFAULT_DIRECTORY_PERM = DEFAULT_DIRECTORY_PERM;
 MemoryFileSystem.DEFAULT_SYMLINK_PERM = DEFAULT_SYMLINK_PERM;
-MemoryFileSystem.VirtualFSError = VirtualFSError;
