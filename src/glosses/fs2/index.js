@@ -4,6 +4,7 @@ const base = require("./base");
 
 const efs = adone.asNamespace(improve(base));
 efs.base = base;
+efs.improveFs = improve;
 
 adone.lazify({
     custom: "./custom"

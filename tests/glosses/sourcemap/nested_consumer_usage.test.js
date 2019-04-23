@@ -35,11 +35,7 @@ const BABEL_MAP = {
 };
 
 
-async function composeSourceMaps(
-    tsMap,
-    babelMap,
-    tsFileName,
-) {
+const composeSourceMaps = async function (tsMap, babelMap, tsFileName) {
     const tsConsumer = await new SourceMapConsumer(tsMap);
     const babelConsumer = await new SourceMapConsumer(babelMap);
     const map = new SourceMapGenerator();
@@ -75,7 +71,7 @@ async function composeSourceMaps(
         }
     );
     return map.toJSON();
-}
+};
 
 it("nested consumer usage", async () => {
     await composeSourceMaps(TS_MAP, BABEL_MAP, "blah.tsx");

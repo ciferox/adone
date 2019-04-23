@@ -19,8 +19,8 @@ export default () => class RunCommand extends Subsystem {
         ],
         options: [
             {
-                name: ["--sourcemaps", "-s"],
-                help: "Force enable sourcemaps support"
+                name: "--no-transpile",
+                help: "Load module as usual without transpilation"
             },
             {
                 name: ["--eval", "-e"],
@@ -35,7 +35,7 @@ export default () => class RunCommand extends Subsystem {
             {
                 name: ["--force", "-f"],
                 help: "Force create script file if file not exists"
-            },
+            }
         ]
     })
     async main(args, opts, { rest }) {
@@ -170,13 +170,13 @@ export default () => class RunCommand extends Subsystem {
         }
     }
 
-    async _runScript(path, args, { sourcemaps, force } = {}) {
+    async _runScript(path, args, { noTranspile, force } = {}) {
         if (!(await fs.exists(path)) && force) {
             await adone.util.Editor.edit({
                 path,
                 save: true
             });
-    
+
             const answers = await adone.cli.prompt().run([
                 {
                     type: "confirm",
@@ -189,13 +189,30 @@ export default () => class RunCommand extends Subsystem {
             }
         }
 
-        adone.__argv__ = [process.argv[0], path, ...args];
+        let $require;
+        if (noTranspile) {
+            $require = require;
+        } else {
+            $require = adone.require;
+            const { maps } = adone.module.transform.compiler;
 
-        if (sourcemaps) {
-            adone.sourcemap.support.install();
+            adone.sourcemap.support.install({
+                handleUncaughtExceptions: false,
+                // environment: "node",
+                hookRequire: true,
+                retrieveSourceMap(source) {
+                    const map = maps.get(source);
+                    return (map) 
+                        ? { url: null, map }
+                        : null;
+                }
+            });
         }
 
-        let result = adone.require(path);
+        // internals: necessary hack for application substitution
+        adone.__argv__ = [process.argv[0], path, ...args];
+
+        let result = $require(path);
         if (result.__esModule && (is.function(result.default) || is.class(result.default))) {
             result = result.default;
         }

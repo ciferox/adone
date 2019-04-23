@@ -73,41 +73,6 @@ class AdoneCLI extends app.Application {
     }
 
     async run() {
-        // const abstract = new adone.fs.engine.AbstractEngine()
-        //     .mount(new adone.fs.engine.MemoryEngine().add((ctx) => ({
-        //         a: ctx.file("hello")
-        //     })), "/")
-        //     .mount(new adone.fs.engine.MemoryEngine().add((ctx) => ({
-        //         c: ctx.file("hello")
-        //     })), "/b");
-        // const files = await abstract.readdir("/");
-        // expect(await abstract.readdir("/b")).to.be.deep.equal(["c"]);
-
-        const {
-            fs2
-        } = adone;
-        const { custom } = fs2;
-        const { MemoryFileSystem, BaseFileSystem } = custom;
-
-        const baseFs = new BaseFileSystem()
-            .mount(new MemoryFileSystem().add((ctx) => ({
-                a: ctx.file("hello")
-            })), "/")
-            .mount(new MemoryFileSystem().add((ctx) => ({
-                c: ctx.file("hello")
-            })), "/b");
-
-        baseFs.readdir("/", (err, files) => {
-            console.log(files);
-            // assert.notExists(err);
-            // expect(files).to.be.deep.equal(["a", "b"]).mark();
-        });
-
-        // abstract.readdir("/b", (err, files) => {
-        //     assert.notExists(err);
-        //     expect(files).to.be.deep.equal(["c"]).mark();
-        // });
-
         // print usage message by default
         console.log(`${this.helper.getHelpMessage()}\n`);
         return 0;

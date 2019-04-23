@@ -1,4 +1,6 @@
-/* eslint-disable func-style */
+/**
+ * eslint-disable func-style
+ */
 
 adone.sourcemap.support.install({
     emptyCacheBetweenOperations: true // Needed to be able to test for failure
@@ -96,7 +98,7 @@ function compareStackTrace(sourceMap, source, expected) {
 
     const resolvePath = require.resolve("./.generated");
 
-    try {    
+    try {
         delete require.cache[resolvePath];
         require("./.generated").test();
     } catch (e) {
@@ -143,14 +145,14 @@ function compareStdout(done, sourceMap, source, expected) {
     });
 }
 
-describe.todo("support", () => {
-    it("normal throw", () => {
+describe("support", () => {
+    it.only("normal throw", () => {
         compareStackTrace(createMultiLineSourceMap(), [
             'throw new Error("test");'
         ], [
-            "Error: test",
-            /^ {4}at Object\.exports\.test \((?:.*[/\\])?line1\.js:1001:101\)$/
-        ]);
+                "Error: test",
+                /^ {4}at Object\.exports\.test \((?:.*[/\\])?line1\.js:1001:101\)$/
+            ]);
     });
 
     /**
@@ -170,9 +172,9 @@ describe.todo("support", () => {
             "  fs.readFileSync = rfs;",
             "}"
         ], [
-            "Error: test",
-            /^ {4}at Object\.exports\.test \((?:.*[/\\])?line7\.js:1007:107\)$/
-        ]);
+                "Error: test",
+                /^ {4}at Object\.exports\.test \((?:.*[/\\])?line7\.js:1007:107\)$/
+            ]);
     });
 
 
@@ -183,10 +185,10 @@ describe.todo("support", () => {
             "}",
             "foo();"
         ], [
-            "Error: test",
-            /^ {4}at foo \((?:.*[/\\])?line2\.js:1002:102\)$/,
-            /^ {4}at Object\.exports\.test \((?:.*[/\\])?line4\.js:1004:104\)$/
-        ]);
+                "Error: test",
+                /^ {4}at foo \((?:.*[/\\])?line2\.js:1002:102\)$/,
+                /^ {4}at Object\.exports\.test \((?:.*[/\\])?line4\.js:1004:104\)$/
+            ]);
     });
 
     it("throw inside function inside function", () => {
@@ -199,35 +201,35 @@ describe.todo("support", () => {
             "}",
             "foo();"
         ], [
-            "Error: test",
-            /^ {4}at bar \((?:.*[/\\])?line3\.js:1003:103\)$/,
-            /^ {4}at foo \((?:.*[/\\])?line5\.js:1005:105\)$/,
-            /^ {4}at Object\.exports\.test \((?:.*[/\\])?line7\.js:1007:107\)$/
-        ]);
+                "Error: test",
+                /^ {4}at bar \((?:.*[/\\])?line3\.js:1003:103\)$/,
+                /^ {4}at foo \((?:.*[/\\])?line5\.js:1005:105\)$/,
+                /^ {4}at Object\.exports\.test \((?:.*[/\\])?line7\.js:1007:107\)$/
+            ]);
     });
 
     it("eval", () => {
         compareStackTrace(createMultiLineSourceMap(), [
             'eval("throw new Error(\'test\')");'
         ], [
-            "Error: test",
+                "Error: test",
 
-            // Before Node 4, `Object.eval`, after just `eval`.
-            /^ {4}at (?:Object\.)?eval \(eval at (<anonymous>|exports.test) \((?:.*[/\\])?line1\.js:1001:101\)/,
+                // Before Node 4, `Object.eval`, after just `eval`.
+                /^ {4}at (?:Object\.)?eval \(eval at (<anonymous>|exports.test) \((?:.*[/\\])?line1\.js:1001:101\)/,
 
-            /^ {4}at Object\.exports\.test \((?:.*[/\\])?line1\.js:1001:101\)$/
-        ]);
+                /^ {4}at Object\.exports\.test \((?:.*[/\\])?line1\.js:1001:101\)$/
+            ]);
     });
 
     it("eval inside eval", () => {
         compareStackTrace(createMultiLineSourceMap(), [
             'eval("eval(\'throw new Error(\\"test\\")\')");'
         ], [
-            "Error: test",
-            /^ {4}at (?:Object\.)?eval \(eval at (<anonymous>|exports.test) \(eval at (<anonymous>|exports.test) \((?:.*[/\\])?line1\.js:1001:101\)/,
-            /^ {4}at (?:Object\.)?eval \(eval at (<anonymous>|exports.test) \((?:.*[/\\])?line1\.js:1001:101\)/,
-            /^ {4}at Object\.exports\.test \((?:.*[/\\])?line1\.js:1001:101\)$/
-        ]);
+                "Error: test",
+                /^ {4}at (?:Object\.)?eval \(eval at (<anonymous>|exports.test) \(eval at (<anonymous>|exports.test) \((?:.*[/\\])?line1\.js:1001:101\)/,
+                /^ {4}at (?:Object\.)?eval \(eval at (<anonymous>|exports.test) \((?:.*[/\\])?line1\.js:1001:101\)/,
+                /^ {4}at Object\.exports\.test \((?:.*[/\\])?line1\.js:1001:101\)$/
+            ]);
     });
 
     it("eval inside function", () => {
@@ -237,59 +239,59 @@ describe.todo("support", () => {
             "}",
             "foo();"
         ], [
-            "Error: test",
-            /^ {4}at eval \(eval at foo \((?:.*[/\\])?line2\.js:1002:102\)/,
-            /^ {4}at foo \((?:.*[/\\])?line2\.js:1002:102\)/,
-            /^ {4}at Object\.exports\.test \((?:.*[/\\])?line4\.js:1004:104\)$/
-        ]);
+                "Error: test",
+                /^ {4}at eval \(eval at foo \((?:.*[/\\])?line2\.js:1002:102\)/,
+                /^ {4}at foo \((?:.*[/\\])?line2\.js:1002:102\)/,
+                /^ {4}at Object\.exports\.test \((?:.*[/\\])?line4\.js:1004:104\)$/
+            ]);
     });
 
     it("eval with sourceURL", () => {
         compareStackTrace(createMultiLineSourceMap(), [
             'eval("throw new Error(\'test\')//@ sourceURL=sourceURL.js");'
         ], [
-            "Error: test",
-            /^ {4}at (?:Object\.)?eval \(sourceURL\.js:1:7\)$/,
-            /^ {4}at Object\.exports\.test \((?:.*[/\\])?line1\.js:1001:101\)$/
-        ]);
+                "Error: test",
+                /^ {4}at (?:Object\.)?eval \(sourceURL\.js:1:7\)$/,
+                /^ {4}at Object\.exports\.test \((?:.*[/\\])?line1\.js:1001:101\)$/
+            ]);
     });
 
     it("eval with sourceURL inside eval", () => {
         compareStackTrace(createMultiLineSourceMap(), [
             'eval("eval(\'throw new Error(\\"test\\")//@ sourceURL=sourceURL.js\')");'
         ], [
-            "Error: test",
-            /^ {4}at (?:Object\.)?eval \(sourceURL\.js:1:7\)$/,
-            /^ {4}at (?:Object\.)?eval \(eval at (<anonymous>|exports.test) \((?:.*[/\\])?line1\.js:1001:101\)/,
-            /^ {4}at Object\.exports\.test \((?:.*[/\\])?line1\.js:1001:101\)$/
-        ]);
+                "Error: test",
+                /^ {4}at (?:Object\.)?eval \(sourceURL\.js:1:7\)$/,
+                /^ {4}at (?:Object\.)?eval \(eval at (<anonymous>|exports.test) \((?:.*[/\\])?line1\.js:1001:101\)/,
+                /^ {4}at Object\.exports\.test \((?:.*[/\\])?line1\.js:1001:101\)$/
+            ]);
     });
 
     it("native function", () => {
         compareStackTrace(createSingleLineSourceMap(), [
             "[1].map(function(x) { throw new Error(x); });"
         ], [
-            "Error: 1",
-            /[/\\].original\.js/,
-            /at Array\.map \((native|<anonymous>)\)/
-        ]);
+                "Error: 1",
+                /[/\\].original\.js/,
+                /at Array\.map \((native|<anonymous>)\)/
+            ]);
     });
 
     it("function constructor", () => {
         compareStackTrace(createMultiLineSourceMap(), [
             'throw new Function(")");'
         ], [
-            "SyntaxError: Unexpected token )"
-        ]);
+                "SyntaxError: Unexpected token )"
+            ]);
     });
 
     it("throw with empty source map", () => {
         compareStackTrace(createEmptySourceMap(), [
             'throw new Error("test");'
         ], [
-            "Error: test",
-            /^ {4}at Object\.exports\.test \((?:.*[/\\])?\.generated.js:1:34\)$/
-        ]);
+                "Error: test",
+                /^ {4}at Object\.exports\.test \((?:.*[/\\])?\.generated.js:1:34\)$/
+            ]);
     });
 
     it("throw in Timeout with empty source map", (done) => {
@@ -299,30 +301,30 @@ describe.todo("support", () => {
             '    throw new Error("this is the error")',
             "})"
         ], [
-            /[/\\].generated.js:3$/,
-            '    throw new Error("this is the error")',
-            /^ {10}\^$/,
-            "Error: this is the error",
-            /^ {4}at ((null)|(Timeout))\._onTimeout \((?:.*[/\\])?.generated\.js:3:11\)$/
-        ]);
+                /[/\\].generated.js:3$/,
+                '    throw new Error("this is the error")',
+                /^ {10}\^$/,
+                "Error: this is the error",
+                /^ {4}at ((null)|(Timeout))\._onTimeout \((?:.*[/\\])?.generated\.js:3:11\)$/
+            ]);
     });
 
     it("throw with source map with gap", () => {
         compareStackTrace(createSourceMapWithGap(), [
             'throw new Error("test");'
         ], [
-            "Error: test",
-            /^ {4}at Object\.exports\.test \((?:.*[/\\])?\.generated\.js:1:34\)$/
-        ]);
+                "Error: test",
+                /^ {4}at Object\.exports\.test \((?:.*[/\\])?\.generated\.js:1:34\)$/
+            ]);
     });
 
     it("sourcesContent with data URL", () => {
         compareStackTrace(createMultiLineSourceMapWithSourcesContent(), [
             'throw new Error("test");'
         ], [
-            "Error: test",
-            /^ {4}at Object\.exports\.test \((?:.*[/\\])?original\.js:1001:5\)$/
-        ]);
+                "Error: test",
+                /^ {4}at Object\.exports\.test \((?:.*[/\\])?original\.js:1001:5\)$/
+            ]);
     });
 
     it("finds the last sourceMappingURL", () => {
@@ -330,9 +332,9 @@ describe.todo("support", () => {
             "//# sourceMappingURL=missing.map.js", // NB: compareStackTrace adds another source mapping.
             'throw new Error("test");'
         ], [
-            "Error: test",
-            /^ {4}at Object\.exports\.test \((?:.*[/\\])?original\.js:1002:5\)$/
-        ]);
+                "Error: test",
+                /^ {4}at Object\.exports\.test \((?:.*[/\\])?original\.js:1002:5\)$/
+            ]);
     });
 
     it("maps original name from source", () => {
@@ -349,10 +351,10 @@ describe.todo("support", () => {
             "}",
             "foo();"
         ], [
-            "Error: test",
-            /^ {4}at myOriginalName \((?:.*[/\\])?\.original.js:1000:11\)$/,
-            /^ {4}at Object\.exports\.test \((?:.*[/\\])?\.generated.js:4:1\)$/
-        ]);
+                "Error: test",
+                /^ {4}at myOriginalName \((?:.*[/\\])?\.original.js:1000:11\)$/,
+                /^ {4}at Object\.exports\.test \((?:.*[/\\])?\.generated.js:4:1\)$/
+            ]);
     });
 
     it("default options", (done) => {
@@ -363,12 +365,12 @@ describe.todo("support", () => {
             "process.nextTick(foo);",
             "process.nextTick(function() { process.exit(1); });"
         ], [
-            /[/\\].original\.js:1$/,
-            "this is the original code",
-            "^",
-            "Error: this is the error",
-            /^ {4}at foo \((?:.*[/\\])?\.original\.js:1:1\)$/
-        ]);
+                /[/\\].original\.js:1$/,
+                "this is the original code",
+                "^",
+                "Error: this is the error",
+                /^ {4}at foo \((?:.*[/\\])?\.original\.js:1:1\)$/
+            ]);
     });
 
     it("handleUncaughtExceptions is true", (done) => {
@@ -378,12 +380,12 @@ describe.todo("support", () => {
             'require("./source-map-support").install({ handleUncaughtExceptions: true });',
             "process.nextTick(foo);"
         ], [
-            /[/\\].original\.js:1$/,
-            "this is the original code",
-            "^",
-            "Error: this is the error",
-            /^ {4}at foo \((?:.*[/\\])?\.original\.js:1:1\)$/
-        ]);
+                /[/\\].original\.js:1$/,
+                "this is the original code",
+                "^",
+                "Error: this is the error",
+                /^ {4}at foo \((?:.*[/\\])?\.original\.js:1:1\)$/
+            ]);
     });
 
     it("handleUncaughtExceptions is false", (done) => {
@@ -393,16 +395,16 @@ describe.todo("support", () => {
             'require("./source-map-support").install({ handleUncaughtExceptions: false });',
             "process.nextTick(foo);"
         ], [
-            /[/\\].generated.js:2$/,
-            'function foo() { throw new Error("this is the error"); }',
+                /[/\\].generated.js:2$/,
+                'function foo() { throw new Error("this is the error"); }',
 
-            // Before Node 4, the arrow points on the `new`, after on the
-            // `throw`.
-            /^ {17}(?: {6})?\^$/,
+                // Before Node 4, the arrow points on the `new`, after on the
+                // `throw`.
+                /^ {17}(?: {6})?\^$/,
 
-            "Error: this is the error",
-            /^ {4}at foo \((?:.*[/\\])?.original\.js:1:1\)$/
-        ]);
+                "Error: this is the error",
+                /^ {4}at foo \((?:.*[/\\])?.original\.js:1:1\)$/
+            ]);
     });
 
     it("default options with empty source map", (done) => {
@@ -412,12 +414,12 @@ describe.todo("support", () => {
             'require("./source-map-support").install();',
             "process.nextTick(foo);"
         ], [
-            /[/\\].generated.js:2$/,
-            'function foo() { throw new Error("this is the error"); }',
-            /^ {17}(?: {6})?\^$/,
-            "Error: this is the error",
-            /^ {4}at foo \((?:.*[/\\])?.generated.js:2:24\)$/
-        ]);
+                /[/\\].generated.js:2$/,
+                'function foo() { throw new Error("this is the error"); }',
+                /^ {17}(?: {6})?\^$/,
+                "Error: this is the error",
+                /^ {4}at foo \((?:.*[/\\])?.generated.js:2:24\)$/
+            ]);
     });
 
     it("default options with source map with gap", (done) => {
@@ -427,12 +429,12 @@ describe.todo("support", () => {
             'require("./source-map-support").install();',
             "process.nextTick(foo);"
         ], [
-            /[/\\].generated.js:2$/,
-            'function foo() { throw new Error("this is the error"); }',
-            /^ {17}(?: {6})?\^$/,
-            "Error: this is the error",
-            /^ {4}at foo \((?:.*[/\\])?.generated.js:2:24\)$/
-        ]);
+                /[/\\].generated.js:2$/,
+                'function foo() { throw new Error("this is the error"); }',
+                /^ {17}(?: {6})?\^$/,
+                "Error: this is the error",
+                /^ {4}at foo \((?:.*[/\\])?.generated.js:2:24\)$/
+            ]);
     });
 
     it("specifically requested error source", (done) => {
@@ -444,10 +446,10 @@ describe.todo("support", () => {
             'process.on("uncaughtException", function (e) { console.log("SRC:" + sms.getErrorSource(e)); });',
             "process.nextTick(foo);"
         ], [
-            /^SRC:.*[/\\]\.original\.js:1$/,
-            "this is the original code",
-            "^"
-        ]);
+                /^SRC:.*[/\\]\.original\.js:1$/,
+                "this is the original code",
+                "^"
+            ]);
     });
 
     it("sourcesContent", (done) => {
@@ -458,12 +460,12 @@ describe.todo("support", () => {
             "process.nextTick(foo);",
             "process.nextTick(function() { process.exit(1); });"
         ], [
-            /[/\\]original\.js:1002$/,
-            "    line 2",
-            "    ^",
-            "Error: this is the error",
-            /^ {4}at foo \((?:.*[/\\])?original\.js:1002:5\)$/
-        ]);
+                /[/\\]original\.js:1002$/,
+                "    line 2",
+                "    ^",
+                "Error: this is the error",
+                /^ {4}at foo \((?:.*[/\\])?original\.js:1002:5\)$/
+            ]);
     });
 
     it("missing source maps should also be cached", (done) => {
@@ -484,12 +486,12 @@ describe.todo("support", () => {
             "process.nextTick(foo);",
             "process.nextTick(function() { console.log(count); });"
         ], [
-            "Error: this is the error",
-            /^ {4}at foo \((?:.*[/\\])?.generated.js:4:15\)$/,
-            "Error: this is the error",
-            /^ {4}at foo \((?:.*[/\\])?.generated.js:4:15\)$/,
-            "1" // The retrieval should only be attempted once
-        ]);
+                "Error: this is the error",
+                /^ {4}at foo \((?:.*[/\\])?.generated.js:4:15\)$/,
+                "Error: this is the error",
+                /^ {4}at foo \((?:.*[/\\])?.generated.js:4:15\)$/,
+                "1" // The retrieval should only be attempted once
+            ]);
     });
 
     it("should consult all retrieve source map providers", (done) => {
@@ -517,12 +519,12 @@ describe.todo("support", () => {
             "process.nextTick(foo);",
             "process.nextTick(function() { console.log(count); });"
         ], [
-            "Error: this is the error",
-            /^ {4}at foo \((?:.*[/\\])?original\.js:1004:5\)$/,
-            "Error: this is the error",
-            /^ {4}at foo \((?:.*[/\\])?original\.js:1004:5\)$/,
-            "1" // The retrieval should only be attempted once
-        ]);
+                "Error: this is the error",
+                /^ {4}at foo \((?:.*[/\\])?original\.js:1004:5\)$/,
+                "Error: this is the error",
+                /^ {4}at foo \((?:.*[/\\])?original\.js:1004:5\)$/,
+                "1" // The retrieval should only be attempted once
+            ]);
     });
 
     it("should allow for runtime inline source maps", (done) => {
@@ -534,32 +536,32 @@ describe.todo("support", () => {
             fs.unlinkSync(".generated.jss");
             done(err);
         }, createSingleLineSourceMap(), [
-            'require("./source-map-support").install({',
-            "  hookRequire: true",
-            "});",
-            'require.extensions[".jss"] = function(module, filename) {',
-            "  module._compile(",
-            JSON.stringify([
-                "",
-                "var count = 0;",
-                "function foo() {",
-                '  console.log(new Error("this is the error").stack.split("\\n").slice(0, 2).join("\\n"));',
-                "}",
-                "process.nextTick(foo);",
-                "process.nextTick(foo);",
-                "process.nextTick(function() { console.log(count); });",
-                `//@ sourceMappingURL=data:application/json;charset=utf8;base64,${bufferFrom(sourceMap.toString()).toString("base64")}`
-            ].join("\n")),
-            ", filename);",
-            "};",
-            'require("./.generated.jss");'
-        ], [
-            "Error: this is the error",
-            /^ {4}at foo \(.*[/\\]original\.js:1004:5\)$/,
-            "Error: this is the error",
-            /^ {4}at foo \(.*[/\\]original\.js:1004:5\)$/,
-            "0" // The retrieval should only be attempted once
-        ]);
+                'require("./source-map-support").install({',
+                "  hookRequire: true",
+                "});",
+                'require.extensions[".jss"] = function(module, filename) {',
+                "  module._compile(",
+                JSON.stringify([
+                    "",
+                    "var count = 0;",
+                    "function foo() {",
+                    '  console.log(new Error("this is the error").stack.split("\\n").slice(0, 2).join("\\n"));',
+                    "}",
+                    "process.nextTick(foo);",
+                    "process.nextTick(foo);",
+                    "process.nextTick(function() { console.log(count); });",
+                    `//@ sourceMappingURL=data:application/json;charset=utf8;base64,${bufferFrom(sourceMap.toString()).toString("base64")}`
+                ].join("\n")),
+                ", filename);",
+                "};",
+                'require("./.generated.jss");'
+            ], [
+                "Error: this is the error",
+                /^ {4}at foo \(.*[/\\]original\.js:1004:5\)$/,
+                "Error: this is the error",
+                /^ {4}at foo \(.*[/\\]original\.js:1004:5\)$/,
+                "0" // The retrieval should only be attempted once
+            ]);
     });
 
     /**
@@ -632,5 +634,15 @@ describe.todo("support", () => {
             assert.equal((stdout + stderr).trim(), "");
             done();
         });
+    });
+
+    it("normal console.trace", (done) => {
+        compareStdout(done, createMultiLineSourceMap(), [
+            'require("./source-map-support").install();',
+            'console.trace("test");'
+        ], [
+            "Trace: test",
+            /^ {4}at Object\.<anonymous> \((?:.*[/\\])?line2\.js:1002:102\)$/
+        ]);
     });
 });

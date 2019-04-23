@@ -1,15 +1,15 @@
-const {
-    fs2,
-    path
-} = adone;
-const { base } = fs2;
-
-export default (file, data, options) => {
-    const dir = path.dirname(file);
-
-    if (!base.existsSync(dir)) {
-        fs2.mkdirpSync(dir);
-    }
-
-    fs2.writeJsonSync(file, data, options);
+export default (fs) => {
+    const {
+        path
+    } = adone;
+    
+    return (file, data, options) => {
+        const dir = path.dirname(file);
+    
+        if (!fs.existsSync(dir)) {
+            fs.mkdirpSync(dir);
+        }
+    
+        fs.writeJsonSync(file, data, options);
+    };    
 };

@@ -16,8 +16,6 @@ try {
     /* nop */
 }
 
-const bufferFrom = require("buffer-from");
-
 // Only install once if called multiple times
 let errorFormatterInstalled = false;
 let uncaughtShimInstalled = false;
@@ -43,7 +41,7 @@ let retrieveMapHandlers = [];
 
 function isInBrowser() {
     if (environment === "browser") {
-        return true; 
+        return true;
     }
     if (environment === "node") {
         return false;
@@ -177,7 +175,7 @@ retrieveMapHandlers.push((source) => {
     if (reSourceMap.test(sourceMappingURL)) {
         // Support source map URL as a data url
         const rawData = sourceMappingURL.slice(sourceMappingURL.indexOf(",") + 1);
-        sourceMapData = bufferFrom(rawData, "base64").toString();
+        sourceMapData = Buffer.from(rawData, "base64").toString();
         sourceMappingURL = source;
     } else {
         // Support source map URLs relative to the source URL
@@ -414,14 +412,18 @@ export function wrapCallSite(frame) {
 }
 
 // This function is part of the V8 stack trace API, for more info see:
-// http://code.google.com/p/v8/wiki/JavaScriptStackTraceApi
+// https://v8.dev/docs/stack-trace-api
 function prepareStackTrace(error, stack) {
     if (emptyCacheBetweenOperations) {
         fileContentsCache = {};
         sourceMapCache = {};
     }
 
-    return error + stack.map((frame) => {
+    const name = error.name || "Error";
+    const message = error.message || "";
+    const errorString = `${name}: ${message}`;
+
+    return errorString + stack.map((frame) => {
         return `\n    at ${wrapCallSite(frame)}`;
     }).join("");
 }
@@ -500,7 +502,7 @@ export const install = function (options) {
 
     if (options.environment) {
         environment = options.environment;
-        if (["node", "browser", "auto"].indexOf(environment) === -1) {
+        if (!["node", "browser", "auto"].includes(environment)) {
             throw new Error(`environment ${environment} was unknown. Available options are {auto, browser, node}`);
         }
     }

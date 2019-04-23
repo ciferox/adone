@@ -1,28 +1,28 @@
-const {
-    fs2,
-    path
-} = adone;
-const { base } = fs2;
-
-export default (srcpath, dstpath) => {
-    const destinationExists = base.existsSync(dstpath);
-    if (destinationExists) {
-        return undefined;
-    }
-
-    try {
-        base.lstatSync(srcpath);
-    } catch (err) {
-        err.message = err.message.replace("lstat", "ensureLink");
-        throw err;
-    }
-
-    const dir = path.dirname(dstpath);
-    const dirExists = base.existsSync(dir);
-    if (dirExists) {
-        return base.linkSync(srcpath, dstpath);
-    }
-    fs2.mkdirpSync(dir);
-
-    return base.linkSync(srcpath, dstpath);
+export default (fs) => {
+    const {
+        path
+    } = adone;
+    
+    return (srcpath, dstpath) => {
+        const destinationExists = fs.existsSync(dstpath);
+        if (destinationExists) {
+            return undefined;
+        }
+    
+        try {
+            fs.lstatSync(srcpath);
+        } catch (err) {
+            err.message = err.message.replace("lstat", "ensureLink");
+            throw err;
+        }
+    
+        const dir = path.dirname(dstpath);
+        const dirExists = fs.existsSync(dir);
+        if (dirExists) {
+            return fs.linkSync(srcpath, dstpath);
+        }
+        fs.mkdirpSync(dir);
+    
+        return fs.linkSync(srcpath, dstpath);
+    };    
 };
