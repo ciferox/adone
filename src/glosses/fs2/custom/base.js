@@ -10,10 +10,9 @@ import fs from "fs";
 import { isFunction, isNumber, isString, isBuffer, unique } from "../../../common";
 import { NotSupportedException } from "../../errors";
 import Path from "./path";
-import { createError, FSException } from "./fs_exception";
+import createError, { FSException } from "./errors";
 
 const { constants, _toUnixTimestamp } = fs;
-
 
 const FS_INSTANCE = Symbol("FS_INSTANCE");
 const LEVEL = Symbol("LEVEL");
@@ -98,23 +97,6 @@ const fsMethods = [
     ["watchFile", true],
     ["unwatchFile", true]
 ];
-
-const syscallMap = {
-    lstat: "lstat",
-    stat: "stat",
-    readdir: "scandir",
-    readlink: "readlink",
-    open: "open",
-    close: "close",
-    read: "read",
-    fchmod: "fchmod",
-    fchown: "fchown",
-    fdatasync: "fdatasync",
-    fstat: "fstat",
-    fsync: "fsync",
-    ftruncate: "ftruncate",
-    futimes: "futime" // node throws futime
-};
 
 export default class BaseFileSystem {
     constructor({ root = "/" } = {}) {
@@ -332,14 +314,14 @@ export default class BaseFileSystem {
         //     [engine1, node1, parts1],
         //     [engine2, node2, parts2]
         // ] = await Promise.all([
-        //     this._chooseEngine(src, "copyfile").catch((err) => {
+        //     this._chooseInstance(src, "copyfile").catch((err) => {
         //         if (err instanceof FSException) {
         //             err.path = src;
         //             err.secondPath = dest;
         //         }
         //         return Promise.reject(err);
         //     }),
-        //     this._chooseEngine(dest, "copyfile").catch((err) => {
+        //     this._chooseInstance(dest, "copyfile").catch((err) => {
         //         if (err instanceof FSException) {
         //             err.path = src;
         //             err.secondPath = dest;
@@ -609,14 +591,14 @@ export default class BaseFileSystem {
         //     [engine1, node1, parts1],
         //     [engine2, node2, parts2]
         // ] = await Promise.all([
-        //     this._chooseEngine(existingPath, "rename").catch((err) => {
+        //     this._chooseInstance(existingPath, "rename").catch((err) => {
         //         if (err instanceof FSException) {
         //             err.path = existingPath;
         //             err.secondPath = newPath;
         //         }
         //         return Promise.reject(err);
         //     }),
-        //     this._chooseEngine(newPath, "rename").catch((err) => {
+        //     this._chooseInstance(newPath, "rename").catch((err) => {
         //         if (err instanceof FSException) {
         //             err.path = existingPath;
         //             err.secondPath = newPath;
@@ -905,14 +887,14 @@ export default class BaseFileSystem {
         //     [engine1, node1, parts1],
         //     [engine2, node2, parts2]
         // ] = await Promise.all([
-        //     this._chooseEngine(oldPath, "rename").catch((err) => {
+        //     this._chooseInstance(oldPath, "rename").catch((err) => {
         //         if (err instanceof FSException) {
         //             err.path = oldPath;
         //             err.secondPath = newPath;
         //         }
         //         return Promise.reject(err);
         //     }),
-        //     this._chooseEngine(newPath, "rename").catch((err) => {
+        //     this._chooseInstance(newPath, "rename").catch((err) => {
         //         if (err instanceof FSException) {
         //             err.path = oldPath;
         //             err.secondPath = newPath;
@@ -1189,7 +1171,7 @@ export default class BaseFileSystem {
 
     _handleFdSync(method, mappedFd, args = []) {
         if (!this._fdMap.has(mappedFd)) {
-            this._throw("EBADF", syscallMap[method]);
+            this._throw("EBADF", null, null, method);
         }
         const { fd, engine } = this._fdMap.get(mappedFd);
         const res = engine === this
@@ -1204,7 +1186,7 @@ export default class BaseFileSystem {
 
     _handleFd(method, mappedFd, callback, ...args) {
         if (!this._fdMap.has(mappedFd)) {
-            callback(this._createError("EBADF", syscallMap[method]));
+            callback(this._createError("EBADF", null, null, method));
             return;
         }
         const { fd, engine } = this._fdMap.get(mappedFd);
@@ -1286,12 +1268,12 @@ export default class BaseFileSystem {
                                 if (dest) {
                                     err.secondPath = dest;
                                 }
-                                err.syscall = syscallMap[method];
+                                err.syscall = method;
                             }
                             throw err;
                         }
                         if (!stat.isDirectory()) {
-                            this._throw("ENOTDIR", path, dest, syscallMap[method]);
+                            this._throw("ENOTDIR", path, dest, method);
                         }
                         parts.splice(j, 1);
                         --j;
@@ -1303,7 +1285,7 @@ export default class BaseFileSystem {
                             const stat = engine.statSync(subPath); // eslint-disable-line
                             if (stat.isFile()) {
                                 // this is a file, but the pattern is "subPath/.." which is applicable only for directories
-                                this._throw("ENOTDIR", path, dest, syscallMap[method]);
+                                this._throw("ENOTDIR", path, dest, method);
                             }
                             const target = engine.readlinkSync(subPath); // eslint-disable-line
 
@@ -1323,11 +1305,11 @@ export default class BaseFileSystem {
                         } catch (err) {
                             switch (err.code) {
                                 case "ENOENT": {
-                                    this._throw("ENOENT", path, dest, syscallMap[method]);
+                                    this._throw("ENOENT", path, dest, method);
                                     break;
                                 }
                                 case "ENOTDIR": {
-                                    this._throw("ENOTDIR", path, dest, syscallMap[method]);
+                                    this._throw("ENOTDIR", path, dest, method);
                                     break;
                                 }
                                 case "EINVAL": {
@@ -1355,7 +1337,7 @@ export default class BaseFileSystem {
         }
     }
 
-    _chooseEngine(path, method, dest, callback) {
+    _chooseInstance(path, method, dest, callback) {
         if (!this.structure[path.root]) {
             // must be handled by this engine, no other case
             callback(null, this, this.structure, path.parts);
@@ -1427,18 +1409,18 @@ export default class BaseFileSystem {
                         engine.stat(subPath, (err, stat) => {
                             if (err) {
                                 if (err instanceof FSException) {
-                                    err.path = path;
+                                    err.path = path.fullPath;
                                     if (dest) {
                                         err.secondPath = dest;
                                     }
-                                    err.syscall = syscallMap[method];
+                                    err.syscall = method;
                                 }
                                 callback(err);
                                 return;
                             }
 
                             if (!stat.isDirectory()) {
-                                callback(this._createError("ENOTDIR", path.fullPath, dest, syscallMap[method]));
+                                callback(this._createError("ENOTDIR", path.fullPath, dest, method));
                                 return;
                             }
                             parts.splice(j, 1);
@@ -1453,11 +1435,11 @@ export default class BaseFileSystem {
                         const checkError = (err) => {
                             switch (err.code) {
                                 case "ENOENT": {
-                                    callback(this._createError("ENOENT", path.fullPath, dest, syscallMap[method]));
+                                    callback(this._createError("ENOENT", path.fullPath, dest, method));
                                     break;
                                 }
                                 case "ENOTDIR": {
-                                    callback(this._createError("ENOTDIR", path.fullPath, dest, syscallMap[method]));
+                                    callback(this._createError("ENOTDIR", path.fullPath, dest, method));
                                     break;
                                 }
                                 case "EINVAL": {
@@ -1480,7 +1462,7 @@ export default class BaseFileSystem {
 
                             if (stat.isFile()) {
                                 // this is a file, but the pattern is "subPath/.." which is applicable only for directories
-                                callback(this._createError("ENOTDIR", path, dest, syscallMap[method]));
+                                callback(this._createError("ENOTDIR", path.fullPath, dest, method));
                                 return;
                             }
                             engine.readlink(subPath, (err, target) => {
@@ -1620,7 +1602,7 @@ export default class BaseFileSystem {
             return;
         }
 
-        this._chooseEngine(path, method, null, (err, engine, node, parts) => {
+        this._chooseInstance(path, method, null, (err, fsInstance, node, parts) => {
             if (err) {
                 callback(err);
                 return;
@@ -1629,15 +1611,15 @@ export default class BaseFileSystem {
             let p;
             const level = node[LEVEL];
             let fn;
-            if (engine === this) {
-                fn = engine[`_${method}`];
+            if (fsInstance === this) {
+                fn = fsInstance[`_${method}`];
                 args.unshift(path.replaceParts(parts));
             } else {
-                fn = engine[method];
+                fn = fsInstance[method];
                 args.unshift(`/${parts.slice(level).join("/")}`);
             }
 
-            fn.call(engine, ...args, (err, result) => {
+            fn.call(fsInstance, ...args, (err, result) => {
                 if (err) {
                     callback(this._handleError(err, method, path, args));
                     return;
@@ -1665,13 +1647,13 @@ export default class BaseFileSystem {
                          * this method returns a file descriptor
                          * we must remember which engine returned it to perform reverse substitutions
                          */
-                        callback(null, this._storeFd(result, engine));
+                        callback(null, this._storeFd(result, fsInstance));
                         return;
                     }
                     case "realpath": {
-                        if (engine !== this) {
-                            if (result.startsWith(engine.root)) {
-                                p = new Path(`/${result.slice(engine.root.length)}`);
+                        if (fsInstance !== this) {
+                            if (result.startsWith(fsInstance.root)) {
+                                p = new Path(`/${result.slice(fsInstance.root.length)}`);
                             } else {
                                 p = new Path(result);
                             }

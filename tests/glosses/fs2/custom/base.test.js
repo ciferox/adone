@@ -241,119 +241,151 @@ describe("fs2", "custom", "BaseFileSystem", () => {
                 });
             });
 
-            // it.only("should throw ENOENT when smth/. does not exist", async (done) => {
-            //     const mfs = fs2.improveFs(new MemoryFileSystem());
-            //     await mfs.createFiles({
-            //         struct: {
-            //             a: "hello"
-            //         }
-            //     });
-            //     const baseFs = new BaseFileSystem().mount(mfs, "/memory");
+            it("should throw ENOENT when smth/. does not exist", async (done) => {
+                const mfs = fs2.improveFs(new MemoryFileSystem());
+                await mfs.createFiles({
+                    struct: {
+                        a: "hello"
+                    }
+                });
+                const baseFs = new BaseFileSystem().mount(mfs, "/memory");
 
-            //     baseFs.readdir("/memory/b/.", (err) => {
-            //         assert.exists(err);
-            //         assert.equal(err.message, "ENOENT: no such file or directory, scandir '/memory/b/.'");
-            //         expect(err.code).to.be.equal("ENOENT");
-            //         done();
-            //     });
-            // });
+                baseFs.readdir("/memory/b/.", (err) => {
+                    assert.exists(err);
+                    assert.equal(err.message, "ENOENT: no such file or directory, scandir '/memory/b/.'");
+                    expect(err.code).to.be.equal("ENOENT");
+                    done();
+                });
+            });
 
-            // it("should throw ENOENT when smth/ does not exist", (done) => {
-            //     const memory = new MemoryFileSystem().add((ctx) => ({
-            //         a: ctx.file("hello")
-            //     }));
-            //     const abstract = new BaseFileSystem().mount(memory, "/memory");
+            it("should throw ENOENT when smth/ does not exist", async (done) => {
+                const mfs = fs2.improveFs(new MemoryFileSystem());
+                await mfs.createFiles({
+                    struct: {
+                        a: "hello"
+                    }
+                });
+                const baseFs = new BaseFileSystem().mount(mfs, "/memory");
 
-            //     abstract.readdir("/memory/b/", (err) => {
-            //         assert.exists(err);
-            //         assert.equal(err.message, "ENOENT: no such file or directory, scandir '/memory/b/'");
-            //         expect(err.code).to.be.equal("ENOENT");
-            //         done();
-            //     });
-            // });
+                baseFs.readdir("/memory/b/", (err) => {
+                    assert.exists(err);
+                    assert.equal(err.message, "ENOENT: no such file or directory, scandir '/memory/b/'");
+                    expect(err.code).to.be.equal("ENOENT");
+                    done();
+                });
+            });
 
-            // it("should throw ENOTDIR when smth/.. is not a directory", (done) => {
-            //     const memory = new MemoryFileSystem().add((ctx) => ({
-            //         a: ctx.file("hello")
-            //     }));
-            //     const abstract = new BaseFileSystem().mount(memory, "/memory");
+            it("should throw ENOTDIR when smth/.. is not a directory", async (done) => {
+                const mfs = fs2.improveFs(new MemoryFileSystem());
+                await mfs.createFiles({
+                    struct: {
+                        a: "hello"
+                    }
+                });
+                const baseFs = new BaseFileSystem().mount(mfs, "/memory");
 
-            //     abstract.readdir("/memory/a/..", (err) => {
-            //         assert.exists(err);
-            //         assert.equal(err.message, "ENOTDIR: not a directory, scandir '/memory/a/..'");
-            //         expect(err.code).to.be.equal("ENOTDIR");
-            //         done();
-            //     });
-            // });
+                baseFs.readdir("/memory/a/..", (err) => {
+                    assert.exists(err);
+                    assert.equal(err.message, "ENOTDIR: not a directory, scandir '/memory/a/..'");
+                    expect(err.code).to.be.equal("ENOTDIR");
+                    done();
+                });
+            });
 
-            // it("should throw ENOTDIR when smth/. is not a directory", (done) => {
-            //     const memory = new MemoryFileSystem().add((ctx) => ({
-            //         a: ctx.file("hello")
-            //     }));
-            //     const abstract = new BaseFileSystem().mount(memory, "/memory");
+            it("should throw ENOTDIR when smth/. is not a directory", async (done) => {
+                const mfs = fs2.improveFs(new MemoryFileSystem());
+                await mfs.createFiles({
+                    struct: {
+                        a: "hello"
+                    }
+                });
+                const baseFs = new BaseFileSystem().mount(mfs, "/memory");
 
-            //     abstract.readdir("/memory/a/.", (err) => {
-            //         assert.exists(err);
-            //         assert.equal(err.message, "ENOTDIR: not a directory, scandir '/memory/a/.'");
-            //         expect(err.code).to.be.equal("ENOTDIR");
-            //         done();
-            //     });
-            // });
+                baseFs.readdir("/memory/a/.", (err) => {
+                    assert.exists(err);
+                    assert.equal(err.message, "ENOTDIR: not a directory, scandir '/memory/a/.'");
+                    expect(err.code).to.be.equal("ENOTDIR");
+                    done();
+                });
+            });
 
-            // it("should throw ENOTDIR when smth/ is not a directory", (done) => {
-            //     const memory = new MemoryFileSystem().add((ctx) => ({
-            //         a: ctx.file("hello")
-            //     }));
-            //     const abstract = new BaseFileSystem().mount(memory, "/memory");
+            it("should throw ENOTDIR when smth/ is not a directory", async (done) => {
+                const mfs = fs2.improveFs(new MemoryFileSystem());
+                await mfs.createFiles({
+                    struct: {
+                        a: "hello"
+                    }
+                });
+                const baseFs = new BaseFileSystem().mount(mfs, "/memory");
 
-            //     abstract.readdir("/memory/a/", (err) => {
-            //         assert.exists(err);
-            //         assert.equal(err.message, "ENOTDIR: not a directory, scandir '/memory/a/'");
-            //         expect(err.code).to.be.equal("ENOTDIR");
-            //         done();
-            //     });
-            // });
+                baseFs.readdir("/memory/a/", (err) => {
+                    assert.exists(err);
+                    assert.equal(err.message, "ENOTDIR: not a directory, scandir '/memory/a/'");
+                    expect(err.code).to.be.equal("ENOTDIR");
+                    done();
+                });
+            });
         });
 
-        // it("should allow mounting to the root", (done) => {
-        //     expect(2).checks(done);
+        it("should allow mounting to the root", async (done) => {
+            expect(2).checks(done);
 
-        //     const abstract = new BaseFileSystem()
-        //         .mount(new MemoryFileSystem().add((ctx) => ({
-        //             a: ctx.file("hello")
-        //         })), "/")
-        //         .mount(new MemoryFileSystem().add((ctx) => ({
-        //             c: ctx.file("hello")
-        //         })), "/b");
+            const baseFs = new BaseFileSystem();
+            const mfs1 = fs2.improveFs(new MemoryFileSystem());
+            await mfs1.createFiles({
+                struct: {
+                    a: "hello"
+                }
+            });
 
-        //     abstract.readdir("/", (err, files) => {
-        //         assert.notExists(err);
-        //         expect(files).to.be.deep.equal(["a", "b"]).mark();
-        //     });
+            const mfs2 = fs2.improveFs(new MemoryFileSystem());
+            await mfs2.createFiles({
+                struct: {
+                    c: "hello"
+                }
+            });
 
-        //     abstract.readdir("/b", (err, files) => {
-        //         assert.notExists(err);
-        //         expect(files).to.be.deep.equal(["c"]).mark();
-        //     });
-        // });
+            baseFs
+                .mount(mfs1, "/")
+                .mount(mfs2, "/b");
 
-        // it("should prioritize the last mount when intersects", (done) => {
-        //     const abstract = new BaseFileSystem()
-        //         .mount(new MemoryFileSystem().add((ctx) => ({
-        //             a: {
-        //                 c: ctx.file("hello")
-        //             }
-        //         })), "/memory")
-        //         .mount(new MemoryFileSystem().add((ctx) => ({
-        //             b: ctx.file("hello")
-        //         })), "/memory/a");
+            baseFs.readdir("/", (err, files) => {
+                assert.notExists(err);
+                expect(files).to.be.deep.equal(["a", "b"]).mark();
+            });
 
-        //     abstract.readdir("/memory/a", (err, files) => {
-        //         assert.notExists(err);
-        //         expect(files).to.be.deep.equal(["b"]);
-        //         done();
-        //     });
-        // });
+            baseFs.readdir("/b", (err, files) => {
+                assert.notExists(err);
+                expect(files).to.be.deep.equal(["c"]).mark();
+            });
+        });
+
+        it("should prioritize the last mount when intersects", async (done) => {
+            const baseFs = new BaseFileSystem();
+            const mfs1 = fs2.improveFs(new MemoryFileSystem());
+            await mfs1.createFiles({
+                struct: { 
+                    a: {
+                        c: "hello"
+                    }
+                }
+            });
+            const mfs2 = fs2.improveFs(new MemoryFileSystem());
+            await mfs2.createFiles({
+                struct: { 
+                    b: "hello"
+                }
+            });
+            baseFs
+                .mount(mfs1, "/memory")
+                .mount(mfs2, "/memory/a");
+
+            baseFs.readdir("/memory/a", (err, files) => {
+                assert.notExists(err);
+                expect(files).to.be.deep.equal(["b"]);
+                done();
+            });
+        });
     });
 
     describe.todo("mock", () => {

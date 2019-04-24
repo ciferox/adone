@@ -20,8 +20,7 @@ const retry = () => {
 
 const patch = (fs) => {
     // Everything that references the open() function needs to be in here
-    
-    // polyfills
+
     // (re-)implement some things that are known busted or missing.
 
     // lutimes implementation, or no-op
@@ -74,7 +73,6 @@ const patch = (fs) => {
         }
     }
 
-
     // ENOSYS means that the fs doesn't support the op. Just ignore
     // that, because it doesn't matter.
     //
@@ -111,7 +109,7 @@ const patch = (fs) => {
     // It should not fail on enosys ever, as this just indicates
     // that a fs doesn't support the intended operation.
 
-    const chownFix = (orig) => {
+    const chownFix = function (orig) {
         if (!orig) {
             return orig;
         }
@@ -273,7 +271,8 @@ const patch = (fs) => {
                             fs.stat(to, (stater, st) => {
                                 if (stater && stater.code === "ENOENT") {
                                     fs$rename(from, to, CB);
-                                } else {
+                                }
+                                else {
                                     cb(er);
                                 }
                             });
@@ -326,17 +325,13 @@ const patch = (fs) => {
         };
     })(fs.readSync);
 
-    // end polyfills
-
     const fs$readFile = fs.readFile;
-    const readFile = function (path, options, cb) {
+    fs.readFile = function readFile(path, options, cb) {
         if (isFunction(options)) {
             cb = options, options = null;
         }
 
-        return go$readFile(path, options, cb);
-
-        function go$readFile(path, options, cb) {
+        const go$readFile = function (path, options, cb) {
             return fs$readFile(path, options, function (err) {
                 if (err && (err.code === "EMFILE" || err.code === "ENFILE")) {
                     enqueue([go$readFile, [path, options, cb]]);
@@ -347,21 +342,18 @@ const patch = (fs) => {
                     retry();
                 }
             });
-        }
+        };
+
+        return go$readFile(path, options, cb);
     };
 
-    fs.readFile = readFile;
-
     const fs$writeFile = fs.writeFile;
-    fs.writeFile = writeFile;
-    function writeFile(path, data, options, cb) {
+    fs.writeFile = function writeFile(path, data, options, cb) {
         if (isFunction(options)) {
             cb = options, options = null;
         }
 
-        return go$writeFile(path, data, options, cb);
-
-        function go$writeFile(path, data, options, cb) {
+        const go$writeFile = function (path, data, options, cb) {
             return fs$writeFile(path, data, options, function (err) {
                 if (err && (err.code === "EMFILE" || err.code === "ENFILE")) {
                     enqueue([go$writeFile, [path, data, options, cb]]);
@@ -372,21 +364,18 @@ const patch = (fs) => {
                     retry();
                 }
             });
-        }
-    }
+        };
+
+        return go$writeFile(path, data, options, cb);
+    };
 
     const fs$appendFile = fs.appendFile;
-    if (fs$appendFile) {
-        fs.appendFile = appendFile;
-    }
-    function appendFile(path, data, options, cb) {
+    fs.appendFile = function appendFile(path, data, options, cb) {
         if (isFunction(options)) {
             cb = options, options = null;
         }
 
-        return go$appendFile(path, data, options, cb);
-
-        function go$appendFile(path, data, options, cb) {
+        const go$appendFile = function (path, data, options, cb) {
             return fs$appendFile(path, data, options, function (err) {
                 if (err && (err.code === "EMFILE" || err.code === "ENFILE")) {
                     enqueue([go$appendFile, [path, data, options, cb]]);
@@ -397,23 +386,23 @@ const patch = (fs) => {
                     retry();
                 }
             });
-        }
-    }
+        };
+
+        return go$appendFile(path, data, options, cb);
+    };
 
     const fs$readdir = fs.readdir;
-    fs.readdir = readdir;
-    function readdir(path, options, cb) {
+    const go$readdir = (args) => fs$readdir.apply(fs, args);
+
+    fs.readdir = function readdir(path, options, cb) {
         const args = [path];
         if (!isFunction(options)) {
             args.push(options);
         } else {
             cb = options;
         }
-        args.push(go$readdir$cb);
 
-        return go$readdir(args);
-
-        function go$readdir$cb(err, files) {
+        const go$readdir$cb = function (err, files) {
             if (files && files.sort) {
                 files.sort();
             }
@@ -426,24 +415,20 @@ const patch = (fs) => {
                 }
                 retry();
             }
-        }
-    }
+        };
+        args.push(go$readdir$cb);
 
-    function go$readdir(args) {
-        return fs$readdir.apply(fs, args);
-    }
+        return go$readdir(args);
+    };
 
     const fs$open = fs.open;
-    fs.open = open;
-    function open(path, flags, mode, cb) {
+    fs.open = function open(path, flags, mode, cb) {
         if (isFunction(mode)) {
             cb = mode, mode = null;
         }
 
-        return go$open(path, flags, mode, cb);
-
-        function go$open(path, flags, mode, cb) {
-            return fs$open(path, flags, mode, function (err, fd) {
+        const go$open = function (path, flags, mode, cb) {
+            fs$open(path, flags, mode, function (err, fd) {
                 if (err && (err.code === "EMFILE" || err.code === "ENFILE")) {
                     enqueue([go$open, [path, flags, mode, cb]]);
                 } else {
@@ -453,7 +438,71 @@ const patch = (fs) => {
                     retry();
                 }
             });
-        }
+        };
+
+        go$open(path, flags, mode, cb);
+    };
+
+    const fs$ReadStream = fs.ReadStream;
+    if (fs$ReadStream) {
+        ReadStream.prototype = Object.create(fs$ReadStream.prototype);
+        ReadStream.prototype.open = function () {
+            const that = this;
+            fs.open(that.path, that.flags, that.mode, (err, fd) => {
+                if (err) {
+                    if (that.autoClose) {
+                        that.destroy();
+                    }
+
+                    that.emit("error", err);
+                } else {
+                    that.fd = fd;
+                    that.emit("open", fd);
+                    that.read();
+                }
+            });
+        };
+    }
+
+    const fs$WriteStream = fs.WriteStream;
+    if (fs$WriteStream) {
+        WriteStream.prototype = Object.create(fs$WriteStream.prototype);
+        WriteStream.prototype.open = function () {
+            const that = this;
+            fs.open(that.path, that.flags, that.mode, (err, fd) => {
+                if (err) {
+                    that.destroy();
+                    that.emit("error", err);
+                } else {
+                    that.fd = fd;
+                    that.emit("open", fd);
+                }
+            });
+        };
+    }
+
+    function ReadStream(path, options) {
+        if (this instanceof ReadStream) {
+            return fs$ReadStream.apply(this, arguments), this;
+        };
+        return ReadStream.apply(Object.create(ReadStream.prototype), arguments);
+    }
+
+    function WriteStream(path, options) {
+        if (this instanceof WriteStream) {
+            return fs$WriteStream.apply(this, arguments), this;
+        };
+        return WriteStream.apply(Object.create(WriteStream.prototype), arguments);
+    }
+
+    fs.ReadStream = ReadStream;
+    fs.WriteStream = WriteStream;
+    fs.createReadStream = function createReadStream(path, options) {
+        return new ReadStream(path, options);
+    };
+
+    fs.createWriteStream = function createWriteStream(path, options) {
+        return new WriteStream(path, options);
     }
 
     return fs;
@@ -489,7 +538,11 @@ base.closeSync = (function (fs$closeSync) {
     };
 })(fs.closeSync);
 
+fs.closeSync = base.closeSync;
+fs.close = base.close;
+
 base.path = require("../path");
 base.cwd = process.cwd;
 
 module.exports = base;
+

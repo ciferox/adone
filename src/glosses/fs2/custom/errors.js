@@ -1,5 +1,22 @@
 import { code as errno } from "../../errors/errno";
 
+const syscallMap = {
+    lstat: "lstat",
+    stat: "stat",
+    readdir: "scandir",
+    readlink: "readlink",
+    open: "open",
+    close: "close",
+    read: "read",
+    fchmod: "fchmod",
+    fchown: "fchown",
+    fdatasync: "fdatasync",
+    fstat: "fstat",
+    fsync: "fsync",
+    ftruncate: "ftruncate",
+    futimes: "futime" // node throws futime
+};
+
 export class FSException extends Error {
     constructor(errnoObj, path, dest, syscall) {
         super();
@@ -22,7 +39,7 @@ export class FSException extends Error {
                 writable: true
             },
             _syscall: {
-                value: syscall,
+                value: syscallMap[syscall],
                 enumerable: false,
                 writable: true
             },
@@ -58,7 +75,7 @@ export class FSException extends Error {
     }
 
     set syscall(v) {
-        this._syscall = v;
+        this._syscall = syscallMap[v];
         this._updateMessage();
     }
 
@@ -89,24 +106,7 @@ export class FSException extends Error {
     }
 }
 
-const error = {
-    ENOENT: (path, dest, syscall) => new FSException(errno.ENOENT, path, dest, syscall),
-    EISDIR: (path, dest, syscall) => new FSException(errno.EISDIR, path, dest, syscall),
-    ENOTDIR: (path, dest, syscall) => new FSException(errno.ENOTDIR, path, dest, syscall),
-    ELOOP: (path, dest, syscall) => new FSException(errno.ELOOP, path, dest, syscall),
-    EINVAL: (path, dest, syscall) => new FSException(errno.EINVAL, path, dest, syscall),
-    EBADF: (path, dest, syscall) => new FSException(errno.EBADF, path, dest, syscall),
-    EEXIST: (path, dest, syscall) => new FSException(errno.EEXIST, path, dest, syscall),
-    ENOTEMPTY: (path, dest, syscall) => new FSException(errno.ENOTEMPTY, path, dest, syscall),
-    EACCES: (path, dest, syscall) => new FSException(errno.EACCES, path, dest, syscall),
-    EPERM: (path, dest, syscall) => new FSException(errno.EPERM, path, dest, syscall),
-    ENOSYS: (syscall) => new FSException(errno.ENOSYS, null, null, syscall),
-    ENXIO: () => new FSException(errno.ENXIO),
-    ESPIPE: () => new FSException(errno.ESPIPE),
-    EFBIG: (path, dest, syscall) => new FSException(errno.EFBIG, path, dest, syscall),
-    ENODEV: (path, dest, syscall) => new FSException(errno.ENODEV, path, dest, syscall),
-    EBUSY: (path, dest, syscall) => new FSException(errno.EBUSY, path, dest, syscall),
-    ENOSPC: (path, dest, syscall) => new FSException(errno.ENOSPC, path, dest, syscall)
-};
+const createError = (code, path, dest, syscall) => new FSException(errno[code], path, dest, syscall);
 
-export const createError = (code, path, dest, syscall) => error[code](path, dest, syscall);
+export default createError;
+

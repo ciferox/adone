@@ -221,9 +221,7 @@ describe("fs2", "base", () => {
     });
 
     describe("read-write-stream", () => {
-        const rimraf = require("rimraf");
-        const mkdirp = require("mkdirp");
-        const p = require("path").resolve(__dirname, "files");
+        const p = adone.path.resolve(__dirname, "files");
 
         process.chdir(__dirname);
 
@@ -233,10 +231,14 @@ describe("fs2", "base", () => {
         const num = 4097;
         const paths = new Array(num);
 
+        after(() => {
+            adone.fs2.removeSync(p);
+        });
+
         it("write files", (done) => {
             const fs = adone.fs2.base;
-            rimraf.sync(p);
-            mkdirp.sync(p);
+            adone.fs2.removeSync(p);
+            adone.fs2.mkdirpSync(p);
 
             expect(num).checks(done);
 
@@ -257,21 +259,15 @@ describe("fs2", "base", () => {
             expect(num).checks(done);
             for (let i = 0; i < num; ++i) {
                 // eslint-disable-next-line no-loop-func
-                (function (i) {
-                    const stream = fs.createReadStream(paths[i]);
-                    let data = "";
-                    stream.on("data", (c) => {
-                        data += c;
-                    });
-                    stream.on("end", () => {
-                        expect(data).to.be.equal("content").mark();
-                    });
-                })(i);
+                const stream = fs.createReadStream(paths[i]);
+                let data = "";
+                stream.on("data", (c) => {
+                    data += c;
+                });
+                stream.on("end", () => {
+                    expect(data).to.be.equal("content").mark();
+                });
             }
-        });
-
-        it("cleanup", () => {
-            rimraf.sync(p);
         });
     });
 });

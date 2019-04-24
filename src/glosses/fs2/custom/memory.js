@@ -9,7 +9,7 @@ import permaProxy from "permaproxy";
 import Counter from "resource-counter";
 import { Readable, Writable } from "stream";
 import BaseFileSystem from "./base";
-import { FSException, createError } from "./fs_exception";
+import createError, { FSException } from "./errors";
 
 const constants = {
     ...fs.constants,
