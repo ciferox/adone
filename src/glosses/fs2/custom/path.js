@@ -3,18 +3,18 @@ import { isWindows } from "../../../common";
 
 export default class Path {
     constructor(path, root = sep) {
-        if (!path) {
-            // custom initialization
-            return;
-        }
-
-        this.path = path.replace(/[\\/]/g, sep);
-
         this.absolute = false;
 
         this.rootLevel = 0;
 
-        this._split(this.path, root);
+        this.parts = [];
+
+        this.root = "";
+
+        if (path) {
+            this.path = path.replace(/[\\/]/g, sep);
+            this._split(this.path, root);
+        }
     }
 
     _split(path, root) {

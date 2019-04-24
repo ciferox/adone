@@ -8,7 +8,7 @@ import { join as pathJoin } from "../../path";
 import permaProxy from "permaproxy";
 import Counter from "resource-counter";
 import { Readable, Writable } from "stream";
-import BaseFileSystem from "./base";
+import AsyncFileSystem from "./async_fs";
 import createError, { FSException } from "./errors";
 
 const constants = {
@@ -158,6 +158,7 @@ class ReadStream extends Readable {
             this.push(null);
             return;
         }
+
         this._vfs.read(
             this.fd,
             Buffer.allocUnsafe(size),
@@ -1293,7 +1294,7 @@ const callbackUp = (err) => {
     }
 };
 
-export default class MemoryFileSystem extends BaseFileSystem {
+export default class MemoryFileSystem extends AsyncFileSystem {
     constructor(umask = 0o022, rootIndex = null) {
         super();
         let rootNode;
@@ -1317,10 +1318,6 @@ export default class MemoryFileSystem extends BaseFileSystem {
         this._root = rootNode;
         this._cwd = new CurrentDirectory(this._iNodeMgr, rootNode);
         // this._fileWatchers = new Map();
-
-        this.constants = constants;
-        this.ReadStream = ReadStream;
-        this.WriteStream = WriteStream;
     }
 
     getUmask() {
@@ -1372,14 +1369,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
 
     // fs methods
 
-    access(path, ...args) {
-        let cbIndex = args.findIndex((arg) => typeof arg === "function");
-        const callback = args[cbIndex] || callbackUp;
-        cbIndex = (cbIndex >= 0) ? cbIndex : args.length;
-        this._callAsync(this.accessSync.bind(this), [path, ...args.slice(0, cbIndex)], callback, callback);
-    }
-
-    accessSync(path, mode = constants.F_OK) {
+    _accessSync(path, mode = constants.F_OK) {
         path = this._getPath(path);
         const target = this._navigate(path, true).target;
         if (!target) {
@@ -1393,14 +1383,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         }
     }
 
-    appendFile(file, data, ...args) {
-        let cbIndex = args.findIndex((arg) => typeof arg === "function");
-        const callback = args[cbIndex] || callbackUp;
-        cbIndex = (cbIndex >= 0) ? cbIndex : args.length;
-        this._callAsync(this.appendFileSync.bind(this), [file, data, ...args.slice(0, cbIndex)], callback, callback);
-    }
-
-    appendFileSync(file, data = "undefined", options) {
+    _appendFileSync(file, data = "undefined", options) {
         options = this._getOptions({
             encoding: "utf8",
             mode: DEFAULT_FILE_PERM,
@@ -1419,7 +1402,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
                     this._throw("EBADF", null, null, "appendFile");
                 }
             } else {
-                [fd, fdIndex] = this._openSync(file, options.flag, options.mode);
+                [fd, fdIndex] = this.__openSync(file, options.flag, options.mode);
             }
             try {
                 fd.write(data, null, constants.O_APPEND);
@@ -1431,16 +1414,12 @@ export default class MemoryFileSystem extends BaseFileSystem {
             }
         } finally {
             if (fdIndex !== undefined) {
-                this.closeSync(fdIndex);
+                this._closeSync(fdIndex);
             }
         }
     }
 
-    chmod(path, mode, callback = callbackUp) {
-        this._callAsync(this.chmodSync.bind(this), [path, mode], callback, callback);
-    }
-
-    chmodSync(path, mode) {
+    _chmodSync(path, mode) {
         path = this._getPath(path);
         const target = this._navigate(path, true).target;
         if (!target) {
@@ -1456,11 +1435,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         targetMetadata.mode = (targetMetadata.mode & constants.S_IFMT) | mode;
     }
 
-    chown(path, uid, gid, callback = callbackUp) {
-        this._callAsync(this.chownSync.bind(this), [path, uid, gid], callback, callback);
-    }
-
-    chownSync(path, uid, gid) {
+    _chownSync(path, uid, gid) {
         path = this._getPath(path);
         const target = this._navigate(path, true).target;
         if (!target) {
@@ -1486,11 +1461,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         }
     }
 
-    chownr(path, uid, gid, callback = callbackUp) {
-        this._callAsync(this.chownrSync.bind(this), [path, uid, gid], callback, callback);
-    }
-
-    chownrSync(path, uid, gid) {
+    _chownrSync(path, uid, gid) {
         path = this._getPath(path);
         this.chownSync(path, uid, gid);
         let children;
@@ -1512,26 +1483,14 @@ export default class MemoryFileSystem extends BaseFileSystem {
         });
     }
 
-    close(fdIndex, callback = callbackUp) {
-        this._callAsync(this.closeSync.bind(this), [fdIndex], callback, callback);
-    }
-
-    closeSync(fdIndex) {
+    _closeSync(fdIndex) {
         if (!this._fdMgr.getFd(fdIndex)) {
             this._throw("EBADF", null, null, "close");
         }
         this._fdMgr.deleteFd(fdIndex);
     }
 
-
-    copyFile(srcPath, dstPath, ...args) {
-        let cbIndex = args.findIndex((arg) => typeof arg === "function");
-        const callback = args[cbIndex] || callbackUp;
-        cbIndex = (cbIndex >= 0) ? cbIndex : args.length;
-        this._callAsync(this.copyFileSync.bind(this), [srcPath, dstPath, ...args.slice(0, cbIndex)], callback, callback);
-    }
-
-    copyFileSync(srcPath, dstPath, flags = 0) {
+    _copyFileSync(srcPath, dstPath, flags = 0) {
         srcPath = this._getPath(srcPath);
         dstPath = this._getPath(dstPath);
         let srcFd;
@@ -1540,7 +1499,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         let dstFdIndex;
         try {
             // the only things that are copied is the data and the mode
-            [srcFd, srcFdIndex] = this._openSync(srcPath, constants.O_RDONLY);
+            [srcFd, srcFdIndex] = this.__openSync(srcPath, constants.O_RDONLY);
             const srcINode = srcFd.getINode();
             if (srcINode instanceof Directory) {
                 this._throw("EBADF", srcPath, dstPath);
@@ -1549,7 +1508,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
             if (flags & constants.COPYFILE_EXCL) {
                 dstFlags |= constants.O_EXCL;
             }
-            [dstFd, dstFdIndex] = this._openSync(dstPath, dstFlags, srcINode.stat().mode);
+            [dstFd, dstFdIndex] = this.__openSync(dstPath, dstFlags, srcINode.stat().mode);
             const dstINode = dstFd.getINode();
             if (dstINode instanceof File) {
                 dstINode.setData(Buffer.from(srcINode.getData()));
@@ -1566,7 +1525,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         }
     }
 
-    createReadStream(path, options) {
+    _createReadStream(path, options) {
         path = this._getPath(path);
         options = this._getOptions(
             {
@@ -1587,7 +1546,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         return new ReadStream(path, options, this);
     }
 
-    createWriteStream(path, options) {
+    _createWriteStream(path, options) {
         path = this._getPath(path);
         options = this._getOptions(
             {
@@ -1607,14 +1566,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         return new WriteStream(path, options, this);
     }
 
-    exists(path, callback) {
-        if (!callback) {
-            callback = () => { };
-        }
-        this._callAsync(this.existsSync.bind(this), [path], callback, callback);
-    }
-
-    existsSync(path) {
+    _existsSync(path) {
         path = this._getPath(path);
         try {
             return Boolean(this._navigate(path, true).target);
@@ -1623,11 +1575,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         }
     }
 
-    fallocate(fdIndex, offset, len, callback = callbackUp) {
-        this._callAsync(this.fallocateSync.bind(this), [fdIndex, offset, len], callback, callback);
-    }
-
-    fallocateSync(fdIndex, offset, len) {
+    _fallocateSync(fdIndex, offset, len) {
         if (offset < 0 || len <= 0) {
             this._throw("EINVAL", null, null, "fallocate");
         }
@@ -1663,14 +1611,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         metadata.ctime = new Date();
     }
 
-    mmap(length, flags, fdIndex, ...args) {
-        let cbIndex = args.findIndex((arg) => typeof arg === "function");
-        const callback = args[cbIndex] || callbackUp;
-        cbIndex = (cbIndex >= 0) ? cbIndex : args.length;
-        this._callAsync(this.mmapSync.bind(this), [length, flags, fdIndex, ...args.slice(0, cbIndex)], (buffer) => callback(null, buffer), callback);
-    }
-
-    mmapSync(length, flags, fdIndex, offset = 0) {
+    _mmapSync(fdIndex, length, flags, offset = 0) {
         if (length < 1 || offset < 0) {
             this._throw("EINVAL", null, null, "mmap");
         }
@@ -1699,11 +1640,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         }
     }
 
-    fchmod(fdIndex, mode, callback = callbackUp) {
-        this._callAsync(this.fchmodSync.bind(this), [fdIndex, mode], callback, callback);
-    }
-
-    fchmodSync(fdIndex, mode) {
+    _fchmodSync(fdIndex, mode) {
         const fd = this._fdMgr.getFd(fdIndex);
         if (!fd) {
             this._throw("EBADF", null, null, "fchmod");
@@ -1718,11 +1655,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         fdMetadata.mode = (fdMetadata.mode & constants.S_IMFT) | mode;
     }
 
-    fchown(fdIndex, uid, gid, callback = callbackUp) {
-        this._callAsync(this.fchmodSync.bind(this), [fdIndex, uid, gid], callback, callback);
-    }
-
-    fchownSync(fdIndex, uid, gid) {
+    _fchownSync(fdIndex, uid, gid) {
         const fd = this._fdMgr.getFd(fdIndex);
         if (!fd) {
             this._throw("EBADF", null, null, "fchown");
@@ -1747,21 +1680,13 @@ export default class MemoryFileSystem extends BaseFileSystem {
         }
     }
 
-    fdatasync(fdIndex, callback = callbackUp) {
-        this._callAsync(this.fchmodSync.bind(this), [fdIndex], callback, callback);
-    }
-
-    fdatasyncSync(fdIndex) {
+    _fdatasyncSync(fdIndex) {
         if (!this._fdMgr.getFd(fdIndex)) {
             this._throw("EBADF", null, null, "fdatasync");
         }
     }
 
-    fstat(fdIndex, callback = callbackUp) {
-        this._callAsync(this.fstatSync.bind(this), [fdIndex], (stat) => callback(null, stat), callback);
-    }
-
-    fstatSync(fdIndex) {
+    _fstatSync(fdIndex) {
         const fd = this._fdMgr.getFd(fdIndex);
         if (!fd) {
             this._throw("EBADF", null, null, "fstat");
@@ -1769,29 +1694,13 @@ export default class MemoryFileSystem extends BaseFileSystem {
         return fd.getINode().stat(true);
     }
 
-    fsync(fdIndex, callback = callbackUp) {
-        this._callAsync(this.fsyncSync.bind(this), [fdIndex], callback, callback);
-    }
-
-    fsyncSync(fdIndex) {
+    _fsyncSync(fdIndex) {
         if (!this._fdMgr.getFd(fdIndex)) {
             this._throw("EBADF", null, null, "fsync");
         }
     }
 
-    ftruncate(fdIndex, ...args) {
-        let cbIndex = args.findIndex((arg) => typeof arg === "function");
-        const callback = args[cbIndex] || callbackUp;
-        cbIndex = (cbIndex >= 0) ? cbIndex : args.length;
-        this._callAsync(
-            this.ftruncateSync.bind(this),
-            [fdIndex, ...args.slice(0, cbIndex)],
-            callback,
-            callback
-        );
-    }
-
-    ftruncateSync(fdIndex, len = 0) {
+    _ftruncateSync(fdIndex, len = 0) {
         if (len < 0) {
             this._throw("EINVAL", null, null, "ftruncate");
         }
@@ -1834,11 +1743,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         fd.setPos(Math.min(newData.length, fd.getPos()));
     }
 
-    futimes(fdIndex, atime, mtime, callback = callbackUp) {
-        this._callAsync(this.futimesSync.bind(this), [fdIndex, atime, mtime], callback, callback);
-    }
-
-    futimesSync(fdIndex, atime, mtime) {
+    _futimesSync(fdIndex, atime, mtime) {
         const fd = this._fdMgr.getFd(fdIndex);
         if (!fd) {
             this._throw("EBADF", null, null, "futimes");
@@ -1919,11 +1824,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         }
     }
 
-    link(existingPath, newPath, callback = callbackUp) {
-        this._callAsync(this.linkSync.bind(this), [existingPath, newPath], callback, callback);
-    }
-
-    linkSync(existingPath, newPath) {
+    _linkSync(existingPath, newPath) {
         existingPath = this._getPath(existingPath);
         newPath = this._getPath(newPath);
         const navigatedExisting = this._navigate(existingPath, false);
@@ -1949,14 +1850,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         }
     }
 
-    lseek(fdIndex, position, ...args) {
-        let cbIndex = args.findIndex((arg) => typeof arg === "function");
-        const callback = args[cbIndex] || callbackUp;
-        cbIndex = (cbIndex >= 0) ? cbIndex : args.length;
-        this._callAsync(this.lseekSync.bind(this), [fdIndex, position, ...args.slice(0, cbIndex)], callback, callback);
-    }
-
-    lseekSync(fdIndex, position, seekFlags = constants.SEEK_SET) {
+    _lseekSync(fdIndex, position, seekFlags = constants.SEEK_SET) {
         const fd = this._fdMgr.getFd(fdIndex);
         if (!fd) {
             this._throw("EBADF", null, null, "lseek");
@@ -1974,11 +1868,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         }
     }
 
-    lstat(path, callback = callbackUp) {
-        this._callAsync(this.lstatSync.bind(this), [path], (stat) => callback(null, stat), callback);
-    }
-
-    lstatSync(path) {
+    _lstatSync(path) {
         path = this._getPath(path);
         const { target } = this._navigate(path, false);
         if (target) {
@@ -1987,14 +1877,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         this._throw("ENOENT", path);
     }
 
-    mkdir(path, ...args) {
-        let cbIndex = args.findIndex((arg) => typeof arg === "function");
-        const callback = args[cbIndex] || callbackUp;
-        cbIndex = (cbIndex >= 0) ? cbIndex : args.length;
-        this._callAsync(this.mkdirSync.bind(this), [path, ...args.slice(0, cbIndex)], callback, callback);
-    }
-
-    mkdirSync(path, mode = DEFAULT_DIRECTORY_PERM) {
+    _mkdirSync(path, mode = DEFAULT_DIRECTORY_PERM) {
         path = this._getPath(path);
         // we expect a non-existent directory
         path = path.replace(/(.+?)\/+$/, "$1");
@@ -2026,55 +1909,55 @@ export default class MemoryFileSystem extends BaseFileSystem {
         }
     }
 
-    mkdirp(path, ...args) {
-        let cbIndex = args.findIndex((arg) => typeof arg === "function");
-        const callback = args[cbIndex] || callbackUp;
-        cbIndex = (cbIndex >= 0) ? cbIndex : args.length;
-        this._callAsync(this.mkdirpSync.bind(this), [path, ...args.slice(0, cbIndex)], callback, callback);
-    }
+    // mkdirp(path, ...args) {
+    //     let cbIndex = args.findIndex((arg) => typeof arg === "function");
+    //     const callback = args[cbIndex] || callbackUp;
+    //     cbIndex = (cbIndex >= 0) ? cbIndex : args.length;
+    //     this._callAsync(this.mkdirpSync.bind(this), [path, ...args.slice(0, cbIndex)], callback, callback);
+    // }
 
-    mkdirpSync(path, mode = DEFAULT_DIRECTORY_PERM) {
-        path = this._getPath(path);
-        // we expect a directory
-        path = path.replace(/(.+?)\/+$/, "$1");
-        let iNode;
-        let index;
-        let currentDir;
-        let navigated = this._navigate(path, true);
-        while (true) {
-            if (!navigated.target) {
-                if (navigated.dir.stat().nlink < 2) {
-                    this._throw("ENOENT", path);
-                }
-                if (!this._checkPermissions(
-                    constants.W_OK,
-                    navigated.dir.stat()
-                )) {
-                    this._throw("EACCES", path);
-                }
-                [iNode, index] = this._iNodeMgr.createINode(
-                    Directory,
-                    {
-                        mode: applyUmask(mode, this._umask),
-                        uid: this._uid,
-                        gid: this._gid,
-                        parent: navigated.dir.getEntryIndex(".")
-                    }
-                );
-                navigated.dir.addEntry(navigated.name, index);
-                if (navigated.remaining) {
-                    currentDir = iNode;
-                    navigated = this._navigateFrom(currentDir, navigated.remaining, true);
-                } else {
-                    break;
-                }
-            } else if (!(navigated.target instanceof Directory)) {
-                this._throw("ENOTDIR", path);
-            } else {
-                break;
-            }
-        }
-    }
+    // mkdirpSync(path, mode = DEFAULT_DIRECTORY_PERM) {
+    //     path = this._getPath(path);
+    //     // we expect a directory
+    //     path = path.replace(/(.+?)\/+$/, "$1");
+    //     let iNode;
+    //     let index;
+    //     let currentDir;
+    //     let navigated = this._navigate(path, true);
+    //     while (true) {
+    //         if (!navigated.target) {
+    //             if (navigated.dir.stat().nlink < 2) {
+    //                 this._throw("ENOENT", path);
+    //             }
+    //             if (!this._checkPermissions(
+    //                 constants.W_OK,
+    //                 navigated.dir.stat()
+    //             )) {
+    //                 this._throw("EACCES", path);
+    //             }
+    //             [iNode, index] = this._iNodeMgr.createINode(
+    //                 Directory,
+    //                 {
+    //                     mode: applyUmask(mode, this._umask),
+    //                     uid: this._uid,
+    //                     gid: this._gid,
+    //                     parent: navigated.dir.getEntryIndex(".")
+    //                 }
+    //             );
+    //             navigated.dir.addEntry(navigated.name, index);
+    //             if (navigated.remaining) {
+    //                 currentDir = iNode;
+    //                 navigated = this._navigateFrom(currentDir, navigated.remaining, true);
+    //             } else {
+    //                 break;
+    //             }
+    //         } else if (!(navigated.target instanceof Directory)) {
+    //             this._throw("ENOTDIR", path);
+    //         } else {
+    //             break;
+    //         }
+    //     }
+    // }
 
     mkdtemp(pathSPrefix, ...args) {
         let cbIndex = args.findIndex((arg) => typeof arg === "function");
@@ -2166,18 +2049,11 @@ export default class MemoryFileSystem extends BaseFileSystem {
         navigated.dir.addEntry(navigated.name, index);
     }
 
-    open(path, flags, ...args) {
-        let cbIndex = args.findIndex((arg) => typeof arg === "function");
-        const callback = args[cbIndex] || callbackUp;
-        cbIndex = (cbIndex >= 0) ? cbIndex : args.length;
-        this._callAsync(this.openSync.bind(this), [path, flags, ...args.slice(0, cbIndex)], (fdIndex) => callback(null, fdIndex), callback);
-    }
-
-    openSync(path, flags, mode = DEFAULT_FILE_PERM) {
-        return this._openSync(path, flags, mode)[1];
-    }
-
     _openSync(path, flags, mode = DEFAULT_FILE_PERM) {
+        return this.__openSync(path, flags, mode)[1];
+    }
+
+    __openSync(path, flags, mode = DEFAULT_FILE_PERM) {
         path = this._getPath(path);
         if (typeof flags === "string") {
             switch (flags) {
@@ -2328,19 +2204,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         }
     }
 
-    read(fdIndex, buffer, ...args) {
-        let cbIndex = args.findIndex((arg) => typeof arg === "function");
-        const callback = args[cbIndex] || callbackUp;
-        cbIndex = (cbIndex >= 0) ? cbIndex : args.length;
-        this._callAsync(
-            this.readSync.bind(this),
-            [fdIndex, buffer, ...args.slice(0, cbIndex)],
-            (bytesRead) => callback(null, bytesRead, buffer),
-            callback
-        );
-    }
-
-    readSync(fdIndex, buffer, offset = 0, length = 0, position = null) {
+    _readSync(fdIndex, buffer, offset = 0, length = 0, position = null) {
         const fd = this._fdMgr.getFd(fdIndex);
         if (!fd) {
             this._throw("EBADF", null, null, "read");
@@ -2374,14 +2238,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         return bytesRead;
     }
 
-    readdir(path, ...args) {
-        let cbIndex = args.findIndex((arg) => typeof arg === "function");
-        const callback = args[cbIndex] || callbackUp;
-        cbIndex = (cbIndex >= 0) ? cbIndex : args.length;
-        this._callAsync(this.readdirSync.bind(this), [path, ...args.slice(0, cbIndex)], (files) => callback(null, files), callback);
-    }
-
-    readdirSync(path, options) {
+    _readdirSync(path, options) {
         path = this._getPath(path);
         options = this._getOptions({ encoding: "utf8" }, options);
         const navigated = this._navigate(path, true);
@@ -2407,14 +2264,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
             });
     }
 
-    readFile(file, ...args) {
-        let cbIndex = args.findIndex((arg) => typeof arg === "function");
-        const callback = args[cbIndex] || callbackUp;
-        cbIndex = (cbIndex >= 0) ? cbIndex : args.length;
-        this._callAsync(this.readFileSync.bind(this), [file, ...args.slice(0, cbIndex)], (data) => callback(null, data), callback);
-    }
-
-    readFileSync(file, options) {
+    _readFileSync(file, options) {
         options = this._getOptions({ encoding: null, flag: "r" }, options);
         let fdIndex;
         try {
@@ -2423,32 +2273,25 @@ export default class MemoryFileSystem extends BaseFileSystem {
             let bytesRead = null;
             if (typeof file === "number") {
                 while (bytesRead !== 0) {
-                    bytesRead = this.readSync(file, buffer, 0, buffer.length);
+                    bytesRead = this._readSync(file, buffer, 0, buffer.length);
                     totalBuffer = Buffer.concat([totalBuffer, buffer.slice(0, bytesRead)]);
                 }
             } else {
-                fdIndex = this.openSync(file, options.flag);
+                fdIndex = this._openSync(file, options.flag);
                 while (bytesRead !== 0) {
-                    bytesRead = this.readSync(fdIndex, buffer, 0, buffer.length);
+                    bytesRead = this._readSync(fdIndex, buffer, 0, buffer.length);
                     totalBuffer = Buffer.concat([totalBuffer, buffer.slice(0, bytesRead)]);
                 }
             }
             return (options.encoding) ? totalBuffer.toString(options.encoding) : totalBuffer;
         } finally {
             if (fdIndex !== undefined) {
-                this.closeSync(fdIndex);
+                this._closeSync(fdIndex);
             }
         }
     }
 
-    readlink(path, ...args) {
-        let cbIndex = args.findIndex((arg) => typeof arg === "function");
-        const callback = args[cbIndex] || callbackUp;
-        cbIndex = (cbIndex >= 0) ? cbIndex : args.length;
-        this._callAsync(this.readlinkSync.bind(this), [path, ...args.slice(0, cbIndex)], (linkString) => callback(null, linkString), callback);
-    }
-
-    readlinkSync(path, options) {
+    _readlinkSync(path, options) {
         path = this._getPath(path);
         options = this._getOptions({ encoding: "utf8" }, options);
         const target = this._navigate(path, false).target;
@@ -2485,11 +2328,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         return Buffer.from(`/${navigated.pathStack.join("/")}`).toString(options.encoding);
     }
 
-    rename(oldPath, newPath, callback = callbackUp) {
-        this._callAsync(this.renameSync.bind(this), [oldPath, newPath], callback, callback);
-    }
-
-    renameSync(oldPath, newPath) {
+    _renameSync(oldPath, newPath) {
         oldPath = this._getPath(oldPath);
         newPath = this._getPath(newPath);
         const navigatedSource = this._navigate(oldPath, false);
@@ -2564,11 +2403,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         navigatedSource.dir.deleteEntry(navigatedSource.name);
     }
 
-    rmdir(path, callback = callbackUp) {
-        this._callAsync(this.rmdirSync.bind(this), [path], callback, callback);
-    }
-
-    rmdirSync(path) {
+    _rmdirSync(path) {
         path = this._getPath(path);
         // if the path has trailing slashes, navigation would traverse into it
         // we must trim off these trailing slashes to allow these directories to be removed
@@ -2600,11 +2435,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         navigated.dir.deleteEntry(navigated.name);
     }
 
-    stat(path, callback = callbackUp) {
-        this._callAsync(this.statSync.bind(this), [path], (stat) => callback(null, stat), callback);
-    }
-
-    statSync(path) {
+    _statSync(path, options) {
         path = this._getPath(path);
         const { target } = this._navigate(path, true);
         if (target) {
@@ -2613,14 +2444,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         this._throw("ENOENT", path);
     }
 
-    symlink(dstPath, srcPath, ...args) {
-        let cbIndex = args.findIndex((arg) => typeof arg === "function");
-        const callback = args[cbIndex] || callbackUp;
-        cbIndex = (cbIndex >= 0) ? cbIndex : args.length;
-        this._callAsync(this.symlinkSync.bind(this), [dstPath, srcPath, ...args.slice(0, cbIndex)], callback, callback);
-    }
-
-    symlinkSync(dstPath, srcPath, type = "file") {
+    _symlinkSync(dstPath, srcPath, type = "file") {
         dstPath = this._getPath(dstPath);
         srcPath = this._getPath(srcPath);
         if (!dstPath) {
@@ -2649,38 +2473,23 @@ export default class MemoryFileSystem extends BaseFileSystem {
         this._throw("EEXIST", srcPath, dstPath, "symlink");
     }
 
-    truncate(file, ...args) {
-        let cbIndex = args.findIndex((arg) => typeof arg === "function");
-        const callback = args[cbIndex] || callbackUp;
-        cbIndex = (cbIndex >= 0) ? cbIndex : args.length;
-        this._callAsync(this.truncateSync.bind(this), [file, ...args.slice(0, cbIndex)], callback, callback);
-    }
-
-    truncateSync(file, len = 0) {
+    _truncateSync(file, len = 0) {
         if (len < 0) {
             this._throw("EINVAL", null, null, "ftruncate");
         }
-        if (typeof file === "number") {
-            this.ftruncateSync(file, len);
-        } else {
-            file = this._getPath(file);
-            let fdIndex;
-            try {
-                fdIndex = this.openSync(file, constants.O_WRONLY);
-                this.ftruncateSync(fdIndex, len);
-            } finally {
-                if (fdIndex !== undefined) {
-                    this.closeSync(fdIndex);
-                }
+        file = this._getPath(file);
+        let fdIndex;
+        try {
+            fdIndex = this.openSync(file, constants.O_WRONLY);
+            this.ftruncateSync(fdIndex, len);
+        } finally {
+            if (fdIndex !== undefined) {
+                this.closeSync(fdIndex);
             }
         }
     }
 
-    unlink(path, callback = callbackUp) {
-        this._callAsync(this.unlinkSync.bind(this), [path], callback, callback);
-    }
-
-    unlinkSync(path) {
+    _unlinkSync(path) {
         path = this._getPath(path);
         const navigated = this._navigate(path, false);
         if (!navigated.target) {
@@ -2698,11 +2507,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
 
     // unwatchFile,
 
-    utimes(path, atime, mtime, callback = callbackUp) {
-        this._callAsync(this.utimesSync.bind(this), [path, atime, mtime], callback, callback);
-    }
-
-    utimesSync(path, atime, mtime) {
+    _utimesSync(path, atime, mtime) {
         path = this._getPath(path);
         const target = this._navigate(path, true).target;
         if (!target) {
@@ -2737,14 +2542,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
     // watch,
     // watchFile,
 
-    write(fdIndex, data, ...args) {
-        let cbIndex = args.findIndex((arg) => typeof arg === "function");
-        const callback = args[cbIndex] || callbackUp;
-        cbIndex = (cbIndex >= 0) ? cbIndex : args.length;
-        this._callAsync(this.writeSync.bind(this), [fdIndex, data, ...args.slice(0, cbIndex)], (bytesWritten) => callback(null, bytesWritten, data), callback);
-    }
-
-    writeSync(fdIndex, data, offsetOrPos, lengthOrEncoding, position = null) {
+    _writeSync(fdIndex, data, offsetOrPos, lengthOrEncoding, position = null) {
         const fd = this._fdMgr.getFd(fdIndex);
         if (!fd) {
             this._throw("EBADF", null, null, "write");
@@ -2785,14 +2583,7 @@ export default class MemoryFileSystem extends BaseFileSystem {
         }
     }
 
-    writeFile(file, data, ...args) {
-        let cbIndex = args.findIndex((arg) => typeof arg === "function");
-        const callback = args[cbIndex] || callbackUp;
-        cbIndex = (cbIndex >= 0) ? cbIndex : args.length;
-        this._callAsync(this.writeFileSync.bind(this), [file, data, ...args.slice(0, cbIndex)], callback, callback);
-    }
-
-    writeFileSync(file, data = "undefined", options) {
+    _writeFileSync(file, data, options) {
         options = this._getOptions({
             encoding: "utf8",
             mode: DEFAULT_FILE_PERM,
@@ -2802,14 +2593,14 @@ export default class MemoryFileSystem extends BaseFileSystem {
         try {
             const buffer = this._getBuffer(data, options.encoding);
             if (typeof file === "number") {
-                this.writeSync(file, buffer, 0, buffer.length, 0);
+                this._writeSync(file, buffer, 0, buffer.length, 0);
             } else {
-                fdIndex = this.openSync(file, options.flag, options.mode);
-                this.writeSync(fdIndex, buffer, 0, buffer.length, 0);
+                fdIndex = this._openSync(file, options.flag, options.mode);
+                this._writeSync(fdIndex, buffer, 0, buffer.length, 0);
             }
         } finally {
             if (fdIndex !== undefined) {
-                this.closeSync(fdIndex);
+                this._closeSync(fdIndex);
             }
         }
     }
@@ -2875,25 +2666,6 @@ export default class MemoryFileSystem extends BaseFileSystem {
     // }
 
     // end fs methods
-
-    /**
-     * Sets up an asynchronous call in accordance with Node behaviour.
-     * This function should be implemented with microtask semantics.
-     * Because the internal readable-stream package uses process.nextTick.
-     * This must also use process.nextTick as well to be on the same queue.
-     * It is required to polyfill the process.nextTick for browsers.
-     * @private
-     */
-    _callAsync(syncFn, args, successCall, failCall) {
-        process.nextTick(() => {
-            try {
-                const result = syncFn(...args);
-                successCall(result === undefined ? null : result);
-            } catch (e) {
-                failCall(e);
-            }
-        });
-    }
 
     /**
      * Processes path types and collapses it to a string.
@@ -3122,6 +2894,10 @@ export default class MemoryFileSystem extends BaseFileSystem {
         return this._navigateFrom(nextDir, nextPath, resolveLastLink, activeSymlinks, pathStack, origPathS);
     }
 }
+MemoryFileSystem.prototype.constants = constants;
+MemoryFileSystem.prototype.ReadStream = ReadStream;
+MemoryFileSystem.prototype.WriteStream = WriteStream;
+
 MemoryFileSystem.DEFAULT_ROOT_UID = DEFAULT_ROOT_UID;
 MemoryFileSystem.DEFAULT_ROOT_GID = DEFAULT_ROOT_GID;
 MemoryFileSystem.DEFAULT_FILE_PERM = DEFAULT_FILE_PERM;

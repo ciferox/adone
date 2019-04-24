@@ -1,14 +1,72 @@
+/* eslint-disable no-loop-func */
+import { fsCalls, cases } from "./fs";
+
 const {
     assertion,
     is,
     fs2
 } = adone;
 const { custom } = fs2;
-const { MemoryFileSystem, BaseFileSystem, StandardFileSystem } = custom;
+const { MemoryFileSystem, BaseFileSystem, StdFileSystem } = custom;
 
 assertion.use(assertion.extension.checkmark);
 
 describe("fs2", "custom", "BaseFileSystem", () => {
+    describe("correct call of main fs methods", () => {
+        const check = {
+            success(info, err, result) {
+                assert.isNull(err);
+                if (is.array(info.validArgs)) {
+                    assert.sameDeepMembers(result, info.validArgs);
+                }
+            },
+            fail(info, err, result) {
+                assert.exists(err);
+                if (is.array(info.validArgs)) {
+                    assert.sameDeepMembers(err.args, info.validArgs);
+                }
+            }
+        };
+
+        const callMethod = (type, fs, info) => {
+            const method = info.method;
+            if (method.endsWith("Sync")) {
+                if (type === "fail") {
+                    try {
+                        fs[method](...info.args);
+                    } catch (err) {
+                        check[type](info, err);
+                    }
+                } else {
+                    check[type](info, null, fs[method](...info.args));
+                }
+                return;
+            }
+            return new Promise((resolve, reject) => {
+                fs[method](...info.args, (err, result) => {
+                    try {
+                        check[type](info, err, result);
+                        resolve();
+                    } catch (err) {
+                        reject(err);
+                    }
+                });
+            });
+        };
+
+        for (const c of cases) {
+            // eslint-disable-next-line no-loop-func
+            describe(c.name, () => {
+                for (const info of fsCalls) {
+                    it(`${info.method}(${info.args.join(", ")})`, async () => {
+                        await callMethod(c.type, c.fs, info);
+                    });
+                }
+            });
+        }
+    });
+
+
     describe("readdir", () => {
         it("should return the list of mounted engines", (done) => {
             const baseFs = new BaseFileSystem();
@@ -364,7 +422,7 @@ describe("fs2", "custom", "BaseFileSystem", () => {
             const baseFs = new BaseFileSystem();
             const mfs1 = fs2.improveFs(new MemoryFileSystem());
             await mfs1.createFiles({
-                struct: { 
+                struct: {
                     a: {
                         c: "hello"
                     }
@@ -372,7 +430,7 @@ describe("fs2", "custom", "BaseFileSystem", () => {
             });
             const mfs2 = fs2.improveFs(new MemoryFileSystem());
             await mfs2.createFiles({
-                struct: { 
+                struct: {
                     b: "hello"
                 }
             });
@@ -437,7 +495,7 @@ describe("fs2", "custom", "BaseFileSystem", () => {
                     `)
                 }
             }));
-            const standard = new StandardFileSystem();
+            const standard = new StdFileSystem();
             standard.mount(memory, "/memory");
             standard.mock(adone.std.fs);
             try {

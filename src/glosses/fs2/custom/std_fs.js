@@ -1,4 +1,4 @@
-import BaseFileSystem from "./base";
+import BaseFileSystem from "./base_fs";
 import path from "../../path";
 import {
     access,
@@ -85,7 +85,7 @@ import {
 
 const DEFAULT_ROOT = path.resolve("/");
 
-export default class StandardFileSystem extends BaseFileSystem {
+export default class StdFileSystem extends BaseFileSystem {
     constructor({ root = DEFAULT_ROOT } = {}) {
         super({ root });
 
@@ -400,4 +400,4 @@ export default class StandardFileSystem extends BaseFileSystem {
         return writeFileSync(path.fullPath, data, options);
     }
 }
-StandardFileSystem.prototype.path = path;
+StdFileSystem.prototype.path = path;

@@ -9,10 +9,11 @@
 import fs from "fs";
 import { isFunction, isNumber, isString, isBuffer, unique } from "../../../common";
 import { NotSupportedException } from "../../errors";
-import Path from "./path";
 import createError, { FSException } from "./errors";
+import * as aPath from "../../path";
 
 const { constants, _toUnixTimestamp } = fs;
+
 
 const FS_INSTANCE = Symbol("FS_INSTANCE");
 const LEVEL = Symbol("LEVEL");
@@ -21,82 +22,173 @@ const PARENT = Symbol("PARENT");
 // fs methods in alphabetical order
 // [name, isAbstract]
 const fsMethods = [
-    ["access", true],
-    ["accessSync", true],
-    ["appendFile", true],
-    ["appendFileSync", true],
-    ["chmod", true],
-    ["chmodSync", true],
-    ["chown", true],
-    ["chownSync", true],
-    ["close", true],
-    ["closeSync", true],
-    ["copyFile", true],
-    ["copyFileSync", true],
-    ["createReadStream", true],
-    ["createWriteStream", true],
-    ["exists", true], // deprecated
-    ["existsSync", true],
-    ["fchmod", true],
-    ["fchmodSync", true],
-    ["fchown", true],
-    ["fchownSync", true],
-    ["fdatasync", true],
-    ["fdatasyncSync", true],
-    ["fstat", true],
-    ["fstatSync", true],
-    ["fsync", true],
-    ["fsyncSync", true],
-    ["ftruncate", true],
-    ["ftruncateSync", true],
-    ["futimes", true],
-    ["futimesSync", true],
-    ["lchmod", true],
-    ["lchmodSync", true],
-    ["lchown", true],
-    ["lchownSync", true],
-    ["link", true],
-    ["linkSync", true],
-    ["lstat", true],
-    ["lstatSync", true],
-    ["mkdir", true],
-    ["mkdirSync", true],
-    ["mkdtemp", true],
-    ["mkdtempSync", true],
-    ["open", true],
-    ["openSync", true],
-    ["read", true],
-    ["readdir", true],
-    ["readdirSync", true],
-    ["readFile", true],
-    ["readFileSync", true],
-    ["readlink", true],
-    ["readlinkSync", true],
-    ["readSync", true],
-    ["realpath", true],
-    ["realpathSync", true],
-    ["rename", true],
-    ["renameSync", true],
-    ["rmdir", true],
-    ["rmdirSync", true],
-    ["stat", true],
-    ["statSync", true],
-    ["symlink", true],
-    ["symlinkSync", true],
-    ["truncate", true],
-    ["truncateSync", true],
-    ["unlink", true],
-    ["unlinkSync", true],
-    ["utimes", true],
-    ["utimesSync", true],
-    ["write", true],
-    ["writeFile", true],
-    ["writeFileSync", true],
-    ["writeSync", true],
-    ["watch", true],
-    ["watchFile", true],
-    ["unwatchFile", true]
+    "access",
+    "accessSync",
+    "appendFile",
+    "appendFileSync",
+    "chmod",
+    "chmodSync",
+    "chown",
+    "chownSync",
+    "chownr", // extra
+    "chownrSync", // extra
+    "close",
+    "closeSync",
+    "copyFile",
+    "copyFileSync",
+    "createReadStream",
+    "createWriteStream",
+    "exists", // deprecated
+    "existsSync",
+    "fallocate", // extra
+    "fallocateSync", // extra
+    "fchmod",
+    "fchmodSync",
+    "fchown",
+    "fchownSync",
+    "fdatasync",
+    "fdatasyncSync",
+    "fstat",
+    "fstatSync",
+    "fsync",
+    "fsyncSync",
+    "ftruncate",
+    "ftruncateSync",
+    "futimes",
+    "futimesSync",
+    "lchmod",
+    "lchmodSync",
+    "lchown",
+    "lchownSync",
+    "link",
+    "linkSync",
+    "lseek", // extra
+    "lseekSync", // extra
+    "lstat",
+    "lstatSync",
+    "mkdir",
+    "mkdirSync",
+    "mkdtemp",
+    "mkdtempSync",
+    "mmap", // extra
+    "mmapSync", // extra
+    "open",
+    "openSync",
+    "read",
+    "readdir",
+    "readdirSync",
+    "readFile",
+    "readFileSync",
+    "readlink",
+    "readlinkSync",
+    "readSync",
+    "realpath",
+    "realpathSync",
+    "rename",
+    "renameSync",
+    "rmdir",
+    "rmdirSync",
+    "stat",
+    "statSync",
+    "symlink",
+    "symlinkSync",
+    "truncate",
+    "truncateSync",
+    "unlink",
+    "unlinkSync",
+    "utimes",
+    "utimesSync",
+    "write",
+    "writeFile",
+    "writeFileSync",
+    "writeSync",
+    "watch",
+    "watchFile",
+    "unwatchFile"
 ];
+
+const appenFileOptions = (opts) => {
+    let options;
+    if (typeof opts !== "object") {
+        options = { encoding: opts };
+    } else {
+        options = opts === null
+            ? { encoding: null }
+            : { ...opts };
+    }
+    options.encoding = isString(options.encoding)
+        ? options.encoding
+        : options.encoding === null
+            ? null
+            : "utf8";
+    options.mode = options.mode || 0o666;
+    options.flag = options.flag || "a";
+    return options;
+};
+
+const readFileOptions = (opts) => {
+    let options;
+    if (typeof opts !== "object") {
+        options = { encoding: opts };
+    } else {
+        options = opts === null
+            ? { encoding: null }
+            : { ...opts };
+    }
+    options.encoding = isString(options.encoding)
+        ? options.encoding
+        : null;
+    options.flag = options.flag || "r";
+    return options;
+}
+
+const readdirOptions = (opts) => {
+    // console.log(opts);
+    let options;
+    if (typeof opts !== "object") {
+        options = { encoding: opts };
+    } else {
+        options = opts === null
+            ? { encoding: null }
+            : { ...opts };
+    }
+    // console.log(adone.inspect(options.encoding));
+    options.encoding = isString(options.encoding)
+        ? options.encoding
+        : options.encoding === null
+            ? null
+            : "utf8";
+    return options;
+};
+
+const readlinkOptions = readdirOptions;
+
+const writeFileOptions = (opts) => {
+    let options;
+    if (typeof opts !== "object") {
+        options = { encoding: opts };
+    } else {
+        options = opts === null
+            ? { encoding: null }
+            : { ...opts };
+    }
+    options.encoding = isString(options.encoding)
+        ? options.encoding
+        : options.encoding === null
+            ? null
+            : "utf8";
+    options.mode = options.mode || 0o666;
+    options.flag = options.flag || "w";
+    return options;
+};
+
+
+const parsePath = (path) => {
+    const info = aPath.parse(path);
+    info.parts = [...info.dir.split(aPath.sep), info.base].filter(adone.identity);
+    info.isAbsolute = info.root.length > 0;
+    return info;
+};
 
 export default class BaseFileSystem {
     constructor({ root = "/" } = {}) {
@@ -106,7 +198,7 @@ export default class BaseFileSystem {
             [LEVEL]: 0
         };
         this._mountsNum = 0;
-        this._fd = 10; // generally, no matter which initial value we use, this is a fd counter for internal mappings
+        this._fd = 10;
         this._fdMap = new Map();
         this._initialized = false;
         this._initializing = false;
@@ -180,18 +272,18 @@ export default class BaseFileSystem {
     }
 
     mount(customFs, rawPath) {
-        const path = Path.wrap(rawPath, this.root);
+        const pathInfo = parsePath(rawPath);
 
-        if (!(path.root in this.structure)) {
-            this.structure[path.root] = {
+        if (!(pathInfo.root in this.structure)) {
+            this.structure[pathInfo.root] = {
                 [LEVEL]: 0,
                 [FS_INSTANCE]: this // use the current engine by default
             };
-            this.structure[path.root][PARENT] = this.structure[path.root];
+            this.structure[pathInfo.root][PARENT] = this.structure[pathInfo.root];
         }
-        let root = this.structure[path.root];
+        let root = this.structure[pathInfo.root];
         let level = 0;
-        for (const part of path.parts) {
+        for (const part of pathInfo.parts) {
             if (!(part in root)) {
                 root[part] = {
                     [LEVEL]: root[LEVEL],
@@ -225,12 +317,16 @@ export default class BaseFileSystem {
 
     // fs methods
 
-    access(path, mode = constants.F_OK, callback) {
-        this._handlePath("access", this._resolve(path), callback, mode);
+    access(path, mode, callback) {
+        if (isFunction(mode)) {
+            callback = mode;
+            mode = constants.F_OK;
+        }
+        this._handlePath("access", path, callback, mode);
     }
 
     accessSync(path, mode = constants.F_OK) {
-        return this._handlePathSync("access", this._resolve(path), [mode]);
+        return this._handlePathSync("accessSync", path, mode);
     }
 
     appendFile(path, data, options, callback) {
@@ -238,43 +334,42 @@ export default class BaseFileSystem {
             callback = options;
             options = {};
         }
-        if (typeof options !== "object") {
-            options = { encoding: options };
+        if (isNumber(path)) {
+            this._handleFd("appendFile", path, callback, data, appenFileOptions(options));
         } else {
-            options = { ...options };
+            this._handlePath("appendFile", path, callback, data, appenFileOptions(options));
         }
-        options.encoding = options.encoding || "utf8";
-        options.mode = options.mode || 0o666;
-        options.flag = options.flag || "a";
-        this._handlePath("appendFile", this._resolve(path), callback, data, options);
     }
 
     appendFileSync(path, data, options) {
-        if (typeof options !== "object") {
-            options = { encoding: options };
-        } else {
-            options = { ...options };
+        if (isNumber(path)) {
+            return this._handleFdSync("appendFileSync", path, data, appenFileOptions(options));
         }
-        options.encoding = options.encoding || "utf8";
-        options.mode = options.mode || 0o666;
-        options.flag = options.flag || "a";
-        return this._handlePathSync("appendFileSync", this._resolve(path), [data, options]);
+        return this._handlePathSync("appendFileSync", path, data, appenFileOptions(options));
     }
 
     chmod(path, mode, callback) {
-        this._handlePath("chmod", this._resolve(path), callback, mode);
+        this._handlePath("chmod", path, callback, mode);
     }
 
     chmodSync(path, mode) {
-        return this._handlePathSync("chmodSync", this._resolve(path), [mode]);
+        return this._handlePathSync("chmodSync", path, mode);
     }
 
     chown(path, uid, gid, callback) {
-        this._handlePath("chown", this._resolve(path), callback, uid, gid);
+        this._handlePath("chown", path, callback, uid, gid);
     }
 
     chownSync(path, uid, gid) {
-        return this._handlePathSync("chown", this._resolve(path), [uid, gid]);
+        return this._handlePathSync("chownSync", path, uid, gid);
+    }
+
+    chownr(path, uid, gid, callback) {
+        this._handlePath("chownr", path, callback, uid, gid);
+    }
+
+    chownrSync(path, uid, gid) {
+        return this._handlePathSync("chownrSync", path, uid, gid);
     }
 
     close(fd, callback) {
@@ -282,7 +377,7 @@ export default class BaseFileSystem {
     }
 
     closeSync(fd) {
-        return this._handleFdSync("close", fd, []);
+        return this._handleFdSync("closeSync", fd);
     }
 
     // TODO
@@ -291,8 +386,8 @@ export default class BaseFileSystem {
             callback = flags;
             flags = 0;
         }
-        const src = this._resolve(rawSrc);
-        const dest = this._resolve(rawDest);
+        const src = rawSrc;
+        const dest = rawDest;
 
         if (this._mountsNum === 0) {
             // only one engine can handle it, itself
@@ -314,14 +409,14 @@ export default class BaseFileSystem {
         //     [engine1, node1, parts1],
         //     [engine2, node2, parts2]
         // ] = await Promise.all([
-        //     this._chooseInstance(src, "copyfile").catch((err) => {
+        //     this._chooseFsInstance(src, "copyfile").catch((err) => {
         //         if (err instanceof FSException) {
         //             err.path = src;
         //             err.secondPath = dest;
         //         }
         //         return Promise.reject(err);
         //     }),
-        //     this._chooseInstance(dest, "copyfile").catch((err) => {
+        //     this._chooseFsInstance(dest, "copyfile").catch((err) => {
         //         if (err instanceof FSException) {
         //             err.path = src;
         //             err.secondPath = dest;
@@ -403,8 +498,8 @@ export default class BaseFileSystem {
     }
 
     copyFileSync(rawSrc, rawDest, flags = 0) {
-        const src = this._resolve(rawSrc);
-        const dest = this._resolve(rawDest);
+        const src = rawSrc;
+        const dest = rawDest;
 
         if (this._mountsNum === 0) {
             // only one engine can handle it, itself
@@ -424,7 +519,7 @@ export default class BaseFileSystem {
         let parts1;
 
         try {
-            [engine1, node1, parts1] = this._chooseEngineSync(src, "copyfile");
+            [engine1, node1, parts1] = this._chooseFsInstanceSync(src, "copyfile");
         } catch (err) {
             if (err instanceof FSException) {
                 err.path = src;
@@ -438,7 +533,7 @@ export default class BaseFileSystem {
         let parts2;
 
         try {
-            [engine2, node2, parts2] = this._chooseEngineSync(dest, "copyfile");
+            [engine2, node2, parts2] = this._chooseFsInstanceSync(dest, "copyfile");
         } catch (err) {
             if (err instanceof FSException) {
                 err.path = src;
@@ -469,19 +564,27 @@ export default class BaseFileSystem {
     }
 
     createReadStream(path, options) {
-        return this._handlePathSync("createReadStream", this._resolve(path), [options]);
+        return this._handlePathSync("createReadStream", path, options);
     }
 
     createWriteStream(path, options) {
-        return this._handlePathSync("createWriteStream", this._resolve(path), [options]);
+        return this._handlePathSync("createWriteStream", path, options);
     }
 
     exists(path, callback) {
-        this._handlePath("exists", this._resolve(path), callback);
+        this._handlePath("exists", path, callback);
     }
 
     existsSync(path) {
-        return this._handlePathSync("existsSync", this._resolve(path));
+        return this._handlePathSync("existsSync", path);
+    }
+
+    fallocate(fd, offset, length, callback) {
+        this._handleFd("fallocate", fd, callback, offset, length);
+    }
+
+    fallocateSync(fd, offset, length) {
+        return this._handleFdSync("fallocateSync", fd, offset, length);
     }
 
     fchmod(fd, mode, callback) {
@@ -489,7 +592,7 @@ export default class BaseFileSystem {
     }
 
     fchmodSync(fd, mode) {
-        return this._handleFdSync("fchmod", fd, [mode]);
+        return this._handleFdSync("fchmodSync", fd, mode);
     }
 
     fchown(fd, uid, gid, callback) {
@@ -497,7 +600,7 @@ export default class BaseFileSystem {
     }
 
     fchownSync(fd, uid, gid) {
-        return this._handleFdSync("fchown", fd, [uid, gid]);
+        return this._handleFdSync("fchownSync", fd, uid, gid);
     }
 
     fdatasync(fd, callback) {
@@ -505,7 +608,7 @@ export default class BaseFileSystem {
     }
 
     fdatasyncSync(fd) {
-        return this._handleFdSync("fdatasync", fd);
+        return this._handleFdSync("fdatasyncSync", fd);
     }
 
     fstat(fd, options, callback) {
@@ -517,7 +620,7 @@ export default class BaseFileSystem {
     }
 
     fstatSync(fd) {
-        return this._handleFdSync("fstat", fd);
+        return this._handleFdSync("fstatSync", fd);
     }
 
     fsync(fd, callback) {
@@ -525,7 +628,7 @@ export default class BaseFileSystem {
     }
 
     fsyncSync(fd) {
-        return this._handleFdSync("fsync", fd);
+        return this._handleFdSync("fsyncSync", fd);
     }
 
     ftruncate(fd, length, callback) {
@@ -537,40 +640,37 @@ export default class BaseFileSystem {
     }
 
     ftruncateSync(fd, length = 0) {
-        return this._handleFdSync("ftruncate", fd, [length]);
+        return this._handleFdSync("ftruncateSync", fd, length);
     }
 
     futimes(fd, atime, mtime, callback) {
-        this._handleFd("futimes", fd, callback, _toUnixTimestamp(atime), _toUnixTimestamp(mtime));
+        this._handleFd("futimes", fd, callback, atime, mtime);
     }
 
     futimesSync(fd, atime, mtime) {
-        return this._handleFdSync("futimes", fd, [
-            _toUnixTimestamp(atime),
-            _toUnixTimestamp(mtime)
-        ]);
+        return this._handleFdSync("futimesSync", fd, atime, mtime);
     }
 
     lchmod(path, mode, callback) {
-        this._handlePath("lchmod", this._resolve(path), callback, mode);
+        this._handlePath("lchmod", path, callback, mode);
     }
 
     lchmodSync(path, mode) {
-        return this._handlePathSync("lchmodSync", this._resolve(path), [mode]);
+        return this._handlePathSync("lchmodSync", path, mode);
     }
 
     lchown(path, uid, gid, callback) {
-        this._handlePath("lchown", this._resolve(path), callback, uid, gid);
+        this._handlePath("lchown", path, callback, uid, gid);
     }
 
     lchownSync(path, uid, gid) {
-        return this._handlePathSync("lchownSync", this._resolve(path), [uid, gid]);
+        return this._handlePathSync("lchownSync", path, uid, gid);
     }
 
     // TODO
     link(rawExistingPath, rawNewPath, callback) {
-        const existingPath = this._resolve(rawExistingPath);
-        const newPath = this._resolve(rawNewPath);
+        const existingPath = rawExistingPath;
+        const newPath = rawNewPath;
 
         if (this._mountsNum === 0) {
             this._link(existingPath, newPath, (err) => {
@@ -591,14 +691,14 @@ export default class BaseFileSystem {
         //     [engine1, node1, parts1],
         //     [engine2, node2, parts2]
         // ] = await Promise.all([
-        //     this._chooseInstance(existingPath, "rename").catch((err) => {
+        //     this._chooseFsInstance(existingPath, "rename").catch((err) => {
         //         if (err instanceof FSException) {
         //             err.path = existingPath;
         //             err.secondPath = newPath;
         //         }
         //         return Promise.reject(err);
         //     }),
-        //     this._chooseInstance(newPath, "rename").catch((err) => {
+        //     this._chooseFsInstance(newPath, "rename").catch((err) => {
         //         if (err instanceof FSException) {
         //             err.path = existingPath;
         //             err.secondPath = newPath;
@@ -623,8 +723,8 @@ export default class BaseFileSystem {
     }
 
     linkSync(rawExistingPath, rawNewPath) {
-        const existingPath = this._resolve(rawExistingPath);
-        const newPath = this._resolve(rawNewPath);
+        const existingPath = rawExistingPath;
+        const newPath = rawNewPath;
 
         if (this._mountsNum === 0) {
             // only one engine can handle it, itself
@@ -644,7 +744,7 @@ export default class BaseFileSystem {
         let parts1;
 
         try {
-            [engine1, node1, parts1] = this._chooseEngineSync(existingPath, "rename");
+            [engine1, node1, parts1] = this._chooseFsInstanceSync(existingPath, "rename");
         } catch (err) {
             if (err instanceof FSException) {
                 err.path = existingPath;
@@ -658,7 +758,7 @@ export default class BaseFileSystem {
         let parts2;
 
         try {
-            [engine2, node2, parts2] = this._chooseEngineSync(newPath, "rename");
+            [engine2, node2, parts2] = this._chooseFsInstanceSync(newPath, "rename");
         } catch (err) {
             if (err instanceof FSException) {
                 err.path = existingPath;
@@ -684,16 +784,28 @@ export default class BaseFileSystem {
         throw new NotSupportedException("Cross engine hark links are not supported");
     }
 
+    lseek(fd, position, seekFlags, callback) {
+        if (isFunction(seekFlags)) {
+            callback = seekFlags;
+            seekFlags = 0/*constants.SEEK_SET*/;
+        }
+        this._handleFd("lseek", fd, callback, position, seekFlags);
+    }
+
+    lseekSync(fd, position, seekFlags = 0/*constants.SEEK_SET*/) {
+        return this._handleFdSync("lseekSync", fd, position, seekFlags);
+    }
+
     lstat(path, options, callback) {
         if (isFunction(options)) {
             callback = options;
             options = {};
         }
-        this._handlePath("lstat", this._resolve(path), callback, options);
+        this._handlePath("lstat", path, callback, options);
     }
 
     lstatSync(path) {
-        return this._handlePathSync("lstat", this._resolve(path), []);
+        return this._handlePathSync("lstatSync", path);
     }
 
     mkdir(path, options, callback) {
@@ -701,11 +813,11 @@ export default class BaseFileSystem {
             callback = options;
             options = 0o777;
         }
-        this._handlePath("mkdir", this._resolve(path), callback, options);
+        this._handlePath("mkdir", path, callback, options);
     }
 
-    mkdirSync(path, mode = 0o775) {
-        return this._handlePathSync("mkdir", this._resolve(path), [mode]);
+    mkdirSync(path, options = 0o777) {
+        return this._handlePathSync("mkdirSync", path, options);
     }
 
     mkdtemp(prefix, options, callback) {
@@ -725,10 +837,22 @@ export default class BaseFileSystem {
             options = { encoding: options };
         }
         options.encoding = options.encoding || "utf8";
-        return this._handlePathSync("mkdtemp", prefix, [options]);
+        return this._handlePathSync("mkdtemp", prefix, options);
     }
 
-    open(path, flags, mode = 0o666, callback) {
+    mmap(fd, length, flags, offset, callback) {
+        if (isFunction(offset)) {
+            callback = offset;
+            offset = 0;
+        }
+        this._handleFd("mmap", fd, callback, length, flags, offset);
+    }
+
+    mmapSync(fd, length, flags, offset = 0) {
+        return this._handleFdSync("mmapSync", fd, length, flags, offset);
+    }
+
+    open(path, flags, mode, callback) {
         if (isFunction(flags)) {
             callback = flags;
             mode = 0o666;
@@ -737,55 +861,46 @@ export default class BaseFileSystem {
             callback = mode;
             mode = 0o666;
         }
-        this._handlePath("open", this._resolve(path), callback, flags, mode);
+        this._handlePath("open", path, callback, flags, mode);
     }
 
-    openSync(path, flags, mode = 0o666) {
-        return this._handlePathSync("open", this._resolve(path), [flags, mode]);
+    openSync(path, flags = "r", mode = 0o666) {
+        return this._handlePathSync("openSync", path, flags, mode);
     }
 
     read(fd, buffer, offset, length, position, callback) {
         this._handleFd("read", fd, callback, buffer, offset, length, position);
     }
 
+    readSync(fd, buffer, offset, length, position) {
+        return this._handleFdSync("readSync", fd, buffer, offset, length, position);
+    }
+
     readdir(rawPath, options, callback) {
         if (isFunction(options)) {
             callback = options;
             options = {};
-        } else if (typeof options !== "object") {
-            options = { encoding: options };
         }
-
-        options.encoding = options.encoding || "utf8";
-
-        this._handlePath("readdir", this._resolve(rawPath), callback, options);
+        this._handlePath("readdir", rawPath, callback, readdirOptions(options));
     }
 
     _readdir(path, options, callback) {
         const siblings = this._getSiblingMounts(path);
         if (!siblings) {
-            this._throw("ENOENT", path, undefined, "scandir");
+            this._throw("ENOENT", path, null, "scandir");
         }
         // entries must be added inside _handlePath as siblings, hm...
         callback(null, []);
     }
 
     readdirSync(rawPath, options) {
-        if (typeof options !== "object") {
-            options = { encoding: options };
-        }
-
-        options.encoding = options.encoding || "utf8";
-
-        const path = this._resolve(rawPath);
-
-        return this._handlePathSync("readdir", path, [options]);
+        return this._handlePathSync("readdirSync", rawPath, readdirOptions(options));
     }
 
     _readdirSync(path) {
         const siblings = this._getSiblingMounts(path);
         if (!siblings) {
-            this._throw("ENOENT", path, undefined, "scandir");
+            this._throw("ENOENT", path, null, "scandir");
         }
         // entries must be added inside _handlePath as siblings, hm...
         return [];
@@ -796,23 +911,18 @@ export default class BaseFileSystem {
             callback = options;
             options = {};
         }
-        if (typeof options !== "object") {
-            options = { encoding: options };
+        if (isNumber(path)) {
+            this._handleFd("readFile", path, callback, readFileOptions(options));
+        } else {
+            this._handlePath("readFile", path, callback, readFileOptions(options));
         }
-        options.flag = options.flag || "r";
-        options.encoding = options.encoding || null;
-
-        this._handlePath("readFile", this._resolve(path), callback, options);
     }
 
     readFileSync(path, options) {
-        if (typeof options !== "object") {
-            options = { encoding: options };
+        if (isNumber(path)) {
+            return this._handleFdSync("readFileSync", path, readFileOptions(options));
         }
-        options.flag = options.flag || "r";
-        options.encoding = options.encoding || null;
-
-        return this._handlePathSync("readFileSync", this._resolve(path), [options]);
+        return this._handlePathSync("readFileSync", path, readFileOptions(options));
     }
 
     readlink(path, options, callback) {
@@ -820,25 +930,11 @@ export default class BaseFileSystem {
             callback = options;
             options = {};
         }
-        if (typeof options !== "object") {
-            options = { encoding: options };
-        }
-        options.encoding = options.encoding || "utf8";
-
-        this._handlePath("readlink", this._resolve(path), callback, options);
+        this._handlePath("readlink", path, callback, readlinkOptions(options));
     }
 
     readlinkSync(path, options) {
-        if (typeof options !== "object") {
-            options = { encoding: options };
-        }
-        options.encoding = options.encoding || "utf8";
-
-        return this._handlePathSync("readlink", this._resolve(path), [options]);
-    }
-
-    readSync(fd, buffer, offset, length, position) {
-        return this._handleFdSync("read", fd, [buffer, offset, length, position]);
+        return this._handlePathSync("readlinkSync", path, readlinkOptions(options));
     }
 
     realpath(path, options, callback) {
@@ -851,7 +947,7 @@ export default class BaseFileSystem {
         }
         options.encoding = options.encoding || "utf8";
 
-        this._handlePath("realpath", this._resolve(path), callback, options);
+        this._handlePath("realpath", path, callback, options);
     }
 
     realpathSync(path, options) {
@@ -860,13 +956,13 @@ export default class BaseFileSystem {
         }
         options.encoding = options.encoding || "utf8";
 
-        return this._handlePathSync("realpath", this._resolve(path), [options]);
+        return this._handlePathSync("realpath", path, options);
     }
 
     // TODO
     rename(rawOldPath, rawNewPath, callback) {
-        const oldPath = this._resolve(rawOldPath);
-        const newPath = this._resolve(rawNewPath);
+        const oldPath = rawOldPath;
+        const newPath = rawNewPath;
 
         if (this._mountsNum === 0) {
             // only one engine can handle it, itself
@@ -887,14 +983,14 @@ export default class BaseFileSystem {
         //     [engine1, node1, parts1],
         //     [engine2, node2, parts2]
         // ] = await Promise.all([
-        //     this._chooseInstance(oldPath, "rename").catch((err) => {
+        //     this._chooseFsInstance(oldPath, "rename").catch((err) => {
         //         if (err instanceof FSException) {
         //             err.path = oldPath;
         //             err.secondPath = newPath;
         //         }
         //         return Promise.reject(err);
         //     }),
-        //     this._chooseInstance(newPath, "rename").catch((err) => {
+        //     this._chooseFsInstance(newPath, "rename").catch((err) => {
         //         if (err instanceof FSException) {
         //             err.path = oldPath;
         //             err.secondPath = newPath;
@@ -920,8 +1016,8 @@ export default class BaseFileSystem {
     }
 
     renameSync(rawOldPath, rawNewPath) {
-        const oldPath = this._resolve(rawOldPath);
-        const newPath = this._resolve(rawNewPath);
+        const oldPath = rawOldPath;
+        const newPath = rawNewPath;
 
         if (this._mountsNum === 0) {
             // only one engine can handle it, itself
@@ -941,7 +1037,7 @@ export default class BaseFileSystem {
         let parts1;
 
         try {
-            [engine1, node1, parts1] = this._chooseEngineSync(oldPath, "rename");
+            [engine1, node1, parts1] = this._chooseFsInstanceSync(oldPath, "rename");
         } catch (err) {
             if (err instanceof FSException) {
                 err.path = oldPath;
@@ -955,7 +1051,7 @@ export default class BaseFileSystem {
         let parts2;
 
         try {
-            [engine2, node2, parts2] = this._chooseEngineSync(newPath, "rename");
+            [engine2, node2, parts2] = this._chooseFsInstanceSync(newPath, "rename");
         } catch (err) {
             if (err instanceof FSException) {
                 err.path = oldPath;
@@ -983,11 +1079,11 @@ export default class BaseFileSystem {
     }
 
     rmdir(path, callback) {
-        this._handlePath("rmdir", this._resolve(path), callback);
+        this._handlePath("rmdir", path, callback);
     }
 
     rmdirSync(path) {
-        return this._handlePathSync("rmdir", this._resolve(path), []);
+        return this._handlePathSync("rmdirSync", path);
     }
 
     stat(path, options, callback) {
@@ -995,11 +1091,11 @@ export default class BaseFileSystem {
             callback = options;
             options = {};
         }
-        this._handlePath("stat", this._resolve(path), callback, options);
+        this._handlePath("stat", path, callback, options);
     }
 
     statSync(path) {
-        return this._handlePathSync("stat", this._resolve(path), []);
+        return this._handlePathSync("statSync", path);
     }
 
     symlink(target, path, type, callback) {
@@ -1010,11 +1106,11 @@ export default class BaseFileSystem {
 
         // omg, here we have to swap them...
         // and i think we must resolve the target using the engine that will handle the request
-        this._handlePath("symlink", this._resolve(path), callback, new Path(target, this.root), type);
+        this._handlePath("symlink", target, callback, path, type);
     }
 
     symlinkSync(target, path, type) {
-        return this._handlePathSync("symlink", this._resolve(path), [new Path(target, this.root), type]);
+        return this._handlePathSync("symlinkSync", target, path, type);
     }
 
     truncate(path, length, callback) {
@@ -1022,30 +1118,27 @@ export default class BaseFileSystem {
             callback = length;
             length = 0;
         }
-        this._handlePath("truncate", this._resolve(path), callback, length);
+        this._handlePath("truncate", path, callback, length);
     }
 
     truncateSync(path, length = 0) {
-        return this._handlePathSync("truncateSync", this._resolve(path), [length]);
+        return this._handlePathSync("truncateSync", path, length);
     }
 
     unlink(path, callback) {
-        this._handlePath("unlink", this._resolve(path), callback);
+        this._handlePath("unlink", path, callback);
     }
 
     unlinkSync(path) {
-        return this._handlePathSync("unlink", this._resolve(path), []);
+        return this._handlePathSync("unlinkSync", path);
     }
 
     utimes(path, atime, mtime, callback) {
-        this._handlePath("utimes", this._resolve(path), callback, _toUnixTimestamp(atime), _toUnixTimestamp(mtime));
+        this._handlePath("utimes", path, callback, atime, mtime);
     }
 
     utimesSync(path, atime, mtime) {
-        return this._handlePathSync("utimes", this._resolve(path), [
-            _toUnixTimestamp(atime),
-            _toUnixTimestamp(mtime)
-        ]);
+        return this._handlePathSync("utimesSync", path, atime, mtime);
     }
 
     watch(filename, options = {}, listener) {
@@ -1059,7 +1152,7 @@ export default class BaseFileSystem {
         options.persistent = "persistent" in options ? Boolean(options.persistent) : true;
         options.recursive = Boolean(options.recursive);
 
-        return this._handlePathSync("watch", this._resolve(filename), options, listener);
+        return this._handlePathSync("watch", filename, options, listener);
     }
 
     watchFile(filename, options = {}, listener) {
@@ -1069,11 +1162,11 @@ export default class BaseFileSystem {
         options.persistent = "persistent" in options ? Boolean(options.persistent) : true;
         options.interval = options.interval || 5007;
 
-        return this._handlePathSync("watchFile", this._resolve(filename), options, listener);
+        return this._handlePathSync("watchFile", filename, options, listener);
     }
 
     unwatchFile(filename, listener) {
-        return this._handlePathSync("unwatchFile", this._resolve(filename), listener);
+        return this._handlePathSync("unwatchFile", filename, listener);
     }
 
     write(fd, buffer, offset, length, position, callback) {
@@ -1087,55 +1180,11 @@ export default class BaseFileSystem {
             callback = position;
             position = undefined;
         }
-
-        if (isBuffer(buffer)) {
-            if (!isNumber(offset)) {
-                offset = 0;
-            }
-            if (!isNumber(length)) {
-                length = buffer.length - offset;
-            }
-            if (!isNumber(position) || position < 0) {
-                position = null;
-            }
-            this._handleFd("write", fd, callback, buffer, offset, length, position);
-            return;
-        }
-        if (!isString(buffer)) {
-            buffer = String(buffer);
-        }
-        if (!isNumber(offset)) {
-            offset = null;
-        }
-        if (!isString(length)) {
-            length = "utf8";
-        }
-        this._handleFd("write", fd, callback, buffer, offset, length);
+        this._handleFd("write", fd, callback, buffer, offset, length, position);
     }
 
     writeSync(fd, buffer, offset, length, position) {
-        if (isBuffer(buffer)) {
-            if (!isNumber(offset)) {
-                offset = 0;
-            }
-            if (!isNumber(length)) {
-                length = buffer.length - offset;
-            }
-            if (!isNumber(position) || position < 0) {
-                position = null;
-            }
-            return this._handleFdSync("write", fd, [buffer, offset, length, position]);
-        }
-        if (!isString(buffer)) {
-            buffer = String(buffer);
-        }
-        if (!isNumber(offset)) {
-            offset = null;
-        }
-        if (!isString(length)) {
-            length = "utf8";
-        }
-        return this._handleFdSync("write", fd, [buffer, offset, length]);
+        return this._handleFdSync("writeSync", fd, buffer, offset, length, position);
     }
 
     writeFile(path, data, options, callback) {
@@ -1143,40 +1192,29 @@ export default class BaseFileSystem {
             callback = options;
             options = {};
         }
-        if (typeof options !== "object") {
-            options = { encoding: options };
+        if (isNumber(path)) {
+            this._handleFd("writeFile", path, callback, data, writeFileOptions(options));
         } else {
-            options = { ...options };
+            this._handlePath("writeFile", path, callback, data, writeFileOptions(options));
         }
-        options.encoding = options.encoding || "utf8";
-        options.mode = options.mode || 0o666;
-        options.flag = options.flag || "w";
-        this._handlePath("writeFile", this._resolve(path), callback, data, options);
     }
 
     writeFileSync(path, data, options) {
-        if (typeof options !== "object") {
-            options = { encoding: options };
-        } else {
-            options = { ...options };
+        if (isNumber(path)) {
+            return this._handleFdSync("writeFileSync", path, data, writeFileOptions(options));
         }
-        options.encoding = options.encoding || "utf8";
-        options.mode = options.mode || 0o666;
-        options.flag = options.flag || "w";
-        return this._handlePathSync("writeFileSync", this._resolve(path), [data, options]);
+        return this._handlePathSync("writeFileSync", path, data, writeFileOptions(options));
     }
 
     // end fs methods
 
 
-    _handleFdSync(method, mappedFd, args = []) {
+    _handleFdSync(method, mappedFd, ...args) {
         if (!this._fdMap.has(mappedFd)) {
             this._throw("EBADF", null, null, method);
         }
-        const { fd, engine } = this._fdMap.get(mappedFd);
-        const res = engine === this
-            ? engine[`_${method}Sync`](fd, ...args)
-            : engine[`${method}Sync`](fd, ...args);
+        const { fd, fs } = this._fdMap.get(mappedFd);
+        const res = fs[fs === this ? `_${method}` : method](fd, ...args);
         if (method === "close") {
             // fd has been closed, we can delete the key
             this._fdMap.delete(mappedFd);
@@ -1189,8 +1227,8 @@ export default class BaseFileSystem {
             callback(this._createError("EBADF", null, null, method));
             return;
         }
-        const { fd, engine } = this._fdMap.get(mappedFd);
-        engine[(engine === this) ? `_${method}` : method](engine, fd, ...args, (err, res) => {
+        const { fd, fs } = this._fdMap.get(mappedFd);
+        fs[fs === this ? `_${method}` : method](fd, ...args, (err, ...args) => {
             if (err) {
                 callback(err);
                 return;
@@ -1199,17 +1237,17 @@ export default class BaseFileSystem {
                 // fd has been closed, we can delete the key
                 this._fdMap.delete(mappedFd);
             }
-            callback(null, res);
+            callback(null, ...args);
         });
     }
 
-    _storeFd(fd, engine) {
+    _storeFd(fd, fsInstance) {
         const mapped = this._fd++;
-        this._fdMap.set(mapped, { fd, engine });
+        this._fdMap.set(mapped, { fd, fs: fsInstance });
         return mapped;
     }
 
-    _chooseEngineSync(path, method, dest) {
+    _chooseFsInstanceSync(path, method, dest) {
         if (!this.structure[path.root]) {
             // must be handled by this engine, no other case
             return [this, this.structure, path.parts];
@@ -1252,7 +1290,7 @@ export default class BaseFileSystem {
                 }
                 node = node[part];
             }
-            const engine = node[FS_INSTANCE];
+            const fsInstance = node[FS_INSTANCE];
 
             for (let j = i + 1; j < parts.length; ++j) {
                 switch (parts[j]) {
@@ -1261,7 +1299,7 @@ export default class BaseFileSystem {
                         const subPath = `/${parts.slice(i, j).join("/")}`;
                         let stat;
                         try {
-                            stat = engine.statSync(subPath); // eslint-disable-line
+                            stat = fsInstance.statSync(subPath); // eslint-disable-line
                         } catch (err) {
                             if (err instanceof FSException) {
                                 err.path = path;
@@ -1282,24 +1320,25 @@ export default class BaseFileSystem {
                     case "..": {
                         const subPath = `/${parts.slice(i, j).join("/")}`;
                         try {
-                            const stat = engine.statSync(subPath); // eslint-disable-line
+                            const stat = fsInstance.statSync(subPath); // eslint-disable-line
                             if (stat.isFile()) {
                                 // this is a file, but the pattern is "subPath/.." which is applicable only for directories
                                 this._throw("ENOTDIR", path, dest, method);
                             }
-                            const target = engine.readlinkSync(subPath); // eslint-disable-line
+                            const target = fsInstance.readlinkSync(subPath); // eslint-disable-line
 
                             // it subPath is not a symlink, readlink will throw EINVAL
                             // so here we have a symlink to a directory
 
-                            const targetPath = new Path(target, engine.root);
+                            const pathInfo = aPath.parse(target);
+                            // const targetPath = new Path(target, fsInstance.root);
 
-                            if (targetPath.absolute) {
+                            if (pathInfo.isAbsolute) {
                                 // assume all absolute links to be relative to the using engine
-                                parts = parts.slice(0, i).concat(targetPath.parts).concat(parts.slice(j)); // do not cut ".."
+                                parts = parts.slice(0, i).concat(pathInfo.parts).concat(parts.slice(j)); // do not cut ".."
                                 j = i + 1;
                             } else {
-                                parts = parts.slice(0, j - 1).concat(targetPath.parts).concat(parts.slice(j)); // also do not cut ".."
+                                parts = parts.slice(0, j - 1).concat(pathInfo.parts).concat(parts.slice(j)); // also do not cut ".."
                                 j -= 2;
                             }
                         } catch (err) {
@@ -1332,26 +1371,27 @@ export default class BaseFileSystem {
                 }
             }
             if (parts.length >= i) {
-                return [engine, node, parts];
+                return [fsInstance, node, parts];
             }
         }
     }
 
-    _chooseInstance(path, method, dest, callback) {
-        if (!this.structure[path.root]) {
+    _chooseFsInstance(path, method, dest, callback) {
+        const pathInfo = parsePath(path);
+        if (!this.structure[pathInfo.root]) {
             // must be handled by this engine, no other case
-            callback(null, this, this.structure, path.parts);
+            callback(null, this, this.structure, pathInfo.parts);
             return;
         }
 
-        let parts = path.parts.slice();
+        let parts = pathInfo.parts.slice();
 
         // resolve .. that can refer to different engines,
         // but we do not handle cases where symlinks can refer to different engines
         // as i understand if we want to handle it we must stat each part of each path - huge overhead?
 
         const chooseEngine = () => {
-            let node = this.structure[path.root];
+            let node = this.structure[pathInfo.root];
 
             let i;
             for (i = 0; i < parts.length; ++i) {
@@ -1409,7 +1449,7 @@ export default class BaseFileSystem {
                         engine.stat(subPath, (err, stat) => {
                             if (err) {
                                 if (err instanceof FSException) {
-                                    err.path = path.fullPath;
+                                    err.path = path;
                                     if (dest) {
                                         err.secondPath = dest;
                                     }
@@ -1420,7 +1460,7 @@ export default class BaseFileSystem {
                             }
 
                             if (!stat.isDirectory()) {
-                                callback(this._createError("ENOTDIR", path.fullPath, dest, method));
+                                callback(this._createError("ENOTDIR", path, dest, method));
                                 return;
                             }
                             parts.splice(j, 1);
@@ -1435,11 +1475,11 @@ export default class BaseFileSystem {
                         const checkError = (err) => {
                             switch (err.code) {
                                 case "ENOENT": {
-                                    callback(this._createError("ENOENT", path.fullPath, dest, method));
+                                    callback(this._createError("ENOENT", path, dest, method));
                                     break;
                                 }
                                 case "ENOTDIR": {
-                                    callback(this._createError("ENOTDIR", path.fullPath, dest, method));
+                                    callback(this._createError("ENOTDIR", path, dest, method));
                                     break;
                                 }
                                 case "EINVAL": {
@@ -1462,7 +1502,7 @@ export default class BaseFileSystem {
 
                             if (stat.isFile()) {
                                 // this is a file, but the pattern is "subPath/.." which is applicable only for directories
-                                callback(this._createError("ENOTDIR", path.fullPath, dest, method));
+                                callback(this._createError("ENOTDIR", path, dest, method));
                                 return;
                             }
                             engine.readlink(subPath, (err, target) => {
@@ -1473,14 +1513,14 @@ export default class BaseFileSystem {
                                 // it subPath is not a symlink, readlink will throw EINVAL
                                 // so here we have a symlink to a directory
 
-                                const targetPath = new Path(target, engine.root);
+                                const targetInfo = parsePath(target);
 
-                                if (targetPath.absolute) {
+                                if (targetInfo.isAbsolute) {
                                     // assume all absolute links to be relative to the using engine
-                                    parts = parts.slice(0, i).concat(targetPath.parts).concat(parts.slice(j)); // do not cut ".."
+                                    parts = parts.slice(0, i).concat(targetInfo.parts).concat(parts.slice(j)); // do not cut ".."
                                     j = i + 1;
                                 } else {
-                                    parts = parts.slice(0, j - 1).concat(targetPath.parts).concat(parts.slice(j)); // also do not cut ".."
+                                    parts = parts.slice(0, j - 1).concat(targetInfo.parts).concat(parts.slice(j)); // also do not cut ".."
                                     j -= 2;
                                 }
                                 tryNext();
@@ -1502,7 +1542,7 @@ export default class BaseFileSystem {
             switch (method) {
                 case "symlink": {
                     err.path = args[0];
-                    err.secondPath = path;
+                    err.dest = path;
                     break;
                 }
                 default: {
@@ -1513,27 +1553,27 @@ export default class BaseFileSystem {
         return err;
     }
 
-    _handlePathSync(method, path, args) {
+    _handlePathSync(method, path, ...args) {
         if (this._mountsNum === 0) {
             // only one engine can handle it, itself
             try {
-                const res = this[`_${method}Sync`](path, ...args);
-                if (method === "open") {
+                const res = this[`_${method}`](path, ...args);
+                if (method === "openSync") {
                     return this._storeFd(res, this);
                 }
                 return res;
             } catch (err) {
-                this._handleError(err, method, path, args);
+                throw this._handleError(err, method, path, args);
             }
         }
-        const [engine, node, parts] = this._chooseEngineSync(path, method);
+        const [fsInstance, node, parts] = this._chooseFsInstanceSync(path, method);
 
         const level = node[LEVEL];
 
         try {
-            const res = engine === this
-                ? engine[`_${method}Sync`](path.replaceParts(parts), ...args)
-                : engine[`${method}Sync`](`/${parts.slice(level).join("/")}`, ...args);
+            const res = fsInstance === this
+                ? fsInstance[`_${method}`](path.replaceParts(parts), ...args)
+                : fsInstance[method](`/${parts.slice(level).join("/")}`, ...args);
             switch (method) {
                 case "readdir": {
                     if (level === 0) {
@@ -1555,23 +1595,23 @@ export default class BaseFileSystem {
                      * this method returns a file descriptor
                      * we must remember which engine returned it to perform reverse substitutions
                      */
-                    return this._storeFd(res, engine);
+                    return this._storeFd(res, fsInstance);
                 }
                 case "realpath": {
-                    if (engine === this) {
+                    if (fsInstance === this) {
                         return res;
                     }
 
                     // ...
-                    let p;
+                    let pathInfo;
 
-                    if (res.startsWith(engine.root)) {
-                        p = new Path(`/${res.slice(engine.root.length)}`);
+                    if (res.startsWith(fsInstance.root)) {
+                        pathInfo = parsePath(`/${res.slice(fsInstance.root.length)}`);
                     } else {
-                        p = new Path(res);
+                        pathInfo = parsePath(res);
                     }
 
-                    return this._resolve(`/${parts.slice(0, level).concat(p.parts).join("/")}`).fullPath;
+                    return `/${parts.slice(0, level).concat(pathInfo.parts).join("/")}`;
                 }
             }
             return res;
@@ -1602,18 +1642,17 @@ export default class BaseFileSystem {
             return;
         }
 
-        this._chooseInstance(path, method, null, (err, fsInstance, node, parts) => {
+        this._chooseFsInstance(path, method, null, (err, fsInstance, node, parts) => {
             if (err) {
                 callback(err);
                 return;
             }
 
-            let p;
             const level = node[LEVEL];
             let fn;
             if (fsInstance === this) {
                 fn = fsInstance[`_${method}`];
-                args.unshift(path.replaceParts(parts));
+                args.unshift(`/${parts.join("/")}`);
             } else {
                 fn = fsInstance[method];
                 args.unshift(`/${parts.slice(level).join("/")}`);
@@ -1629,7 +1668,7 @@ export default class BaseFileSystem {
                     case "readdir": {
                         if (level === 0) {
                             const [, options] = args;
-                            const siblings = this._getSiblingMounts(path.replaceParts(parts));
+                            const siblings = this._getSiblingMounts(`/${parts.join("/")}`);
 
                             const files = siblings
                                 ? unique(result.concat(siblings)).sort()
@@ -1652,12 +1691,13 @@ export default class BaseFileSystem {
                     }
                     case "realpath": {
                         if (fsInstance !== this) {
+                            let pathInfo;
                             if (result.startsWith(fsInstance.root)) {
-                                p = new Path(`/${result.slice(fsInstance.root.length)}`);
+                                pathInfo = parsePath(`/${result.slice(fsInstance.root.length)}`);
                             } else {
-                                p = new Path(result);
+                                pathInfo = parsePath(result);
                             }
-                            callback(null, this._resolve(`/${parts.slice(0, level).concat(p.parts).join("/")}`).fullPath);
+                            callback(null, `/${parts.slice(0, level).concat(pathInfo.parts).join("/")}`);
                             return;
                         }
                     }
@@ -1668,13 +1708,14 @@ export default class BaseFileSystem {
     }
 
     _getSiblingMounts(path) {
+        const pathInfo = parsePath(path);
         let node = this.structure;
-        if (!node[path.root]) {
+        if (!node[pathInfo.root]) {
             // no mounts - no siblings
             return null;
         }
-        node = node[path.root];
-        for (const part of path.parts) {
+        node = node[pathInfo.root];
+        for (const part of pathInfo.parts) {
             switch (part) {
                 case "":
                 case ".": {
@@ -1705,16 +1746,16 @@ export default class BaseFileSystem {
         throw this._createError(code, path, dest, syscall);
     }
 
-    _resolve(path) {
-        return Path.resolve(path, this.root);
-    }
+    // _resolve(path) {
+    //     return Path.resolve(path, this.root);
+    // }
 }
 
-for (const [method, isAbstract] of fsMethods) {
+for (const method of fsMethods) {
     const m = `_${method}`;
-    if (isAbstract && !BaseFileSystem.prototype[m]) {
+    if (!BaseFileSystem.prototype[m]) {
         BaseFileSystem.prototype[m] = function () {
-            this._throw("ENOSYS", method);
+            this._throw("ENOSYS", null, null, method);
         };
     }
 }

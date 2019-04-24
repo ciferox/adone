@@ -1,5 +1,5 @@
 const {
-    fs2: { custom: { BaseFileSystem, StandardFileSystem, MemoryFileSystem } }
+    fs2: { custom: { BaseFileSystem, StdFileSystem, MemoryFileSystem } }
 } = adone;
 
 describe("fs2", "custom", "interoperability", () => {
@@ -87,7 +87,7 @@ describe("fs2", "custom", "interoperability", () => {
 
         const customFses = [
             BaseFileSystem,
-            StandardFileSystem,
+            StdFileSystem,
             MemoryFileSystem
         ];
 
