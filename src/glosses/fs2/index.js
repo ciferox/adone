@@ -1,6 +1,6 @@
 import { improve } from "./extra";
 
-const base = require("./base");
+import base from "./base";
 
 const efs = adone.asNamespace(improve(base));
 efs.base = base;

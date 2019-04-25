@@ -1,5 +1,7 @@
 import BaseFileSystem from "./base_fs";
-const path = require("../../path");
+import path from "../../path";
+import base from "../base";
+
 const {
     access,
     accessSync,
@@ -81,7 +83,7 @@ const {
     constants,
     ReadStream,
     WriteStream
-} = require("../base");
+} = base;
 
 const DEFAULT_ROOT = path.resolve("/");
 
@@ -188,12 +190,12 @@ export default class StdFileSystem extends BaseFileSystem {
         return fdatasyncSync(fd);
     }
 
-    _fstat(fd, callback) {
-        fstat(fd, callback);
+    _fstat(fd, options, callback) {
+        fstat(fd, options, callback);
     }
 
-    _fstatSync(fd) {
-        return fstatSync(fd);
+    _fstatSync(fd, options) {
+        return fstatSync(fd, options);
     }
 
     _fsync(fd, callback) {
@@ -244,12 +246,12 @@ export default class StdFileSystem extends BaseFileSystem {
         return linkSync(existingPath, newPath);
     }
 
-    _lstat(path, callback) {
-        lstat(path, callback);
+    _lstat(path, options, callback) {
+        lstat(path, options, callback);
     }
 
-    _lstatSync(path) {
-        return lstatSync(path);
+    _lstatSync(path, options) {
+        return lstatSync(path, options);
     }
 
     _mkdir(path, mode, callback) {
@@ -332,12 +334,12 @@ export default class StdFileSystem extends BaseFileSystem {
         return rmdirSync(path);
     }
 
-    _stat(path, callback) {
-        stat(path, callback);
+    _stat(path, options, callback) {
+        stat(path, options, callback);
     }
 
-    _statSync(path) {
-        return statSync(path);
+    _statSync(path, options) {
+        return statSync(path, options);
     }
 
     _symlink(path, target, type, callback) {

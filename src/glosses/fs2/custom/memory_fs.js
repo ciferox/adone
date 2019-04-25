@@ -4,7 +4,7 @@
 /* eslint-disable adone/no-null-comp */
 
 import fs from "fs";
-const { join: pathJoin } = require("../../path");
+import aPath from "../../path";
 import { Readable, Writable } from "stream";
 import AsyncFileSystem from "./async_fs";
 import createError, { FSException } from "./errors";
@@ -1645,7 +1645,7 @@ export default class MemoryFileSystem extends AsyncFileSystem {
         }
         children.forEach((child) => {
             // $FlowFixMe: path is string
-            const pathChild = pathJoin(path, child);
+            const pathChild = aPath.join(path, child);
             // don't traverse symlinks
             if (!this.lstatSync(pathChild).isSymbolicLink()) {
                 this.chownrSync(pathChild, uid, gid);
@@ -3023,7 +3023,7 @@ export default class MemoryFileSystem extends AsyncFileSystem {
                 activeSymlinks.add(target);
             }
             // although symlinks should not have an empty links, it's still handled correctly here
-            nextPath = pathJoin(target.getLink(), parse.rest);
+            nextPath = aPath.join(target.getLink(), parse.rest);
             if (nextPath[0] === "/") {
                 return this._navigate(nextPath, resolveLastLink, activeSymlinks, origPathS);
             }

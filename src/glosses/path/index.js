@@ -1,7 +1,7 @@
 import path from "path";
 import { isFunction, isString } from "../../common";
 
-const upath = exports;
+const upath = {};
 
 const toUnix = function (p) {
     p = p.replace(/\\/g, "/");
@@ -146,3 +146,5 @@ for (const name of Object.keys(extraFunctions || {})) {
         upath[name] = extraFn;
     }
 }
+
+export default upath;

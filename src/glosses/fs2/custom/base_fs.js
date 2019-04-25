@@ -7,9 +7,9 @@
 // in which there should not be any third-party dependencies and the size of the codebase should be minimal.
 
 import fs from "fs";
-import { isFunction, isNumber, isString, unique } from "../../../common";
+import { identity, isFunction, isNumber, isString, unique } from "../../../common";
 import createError, { FSException } from "./errors";
-const aPath = require("../../path");
+import aPath from "../../path";
 
 const { constants } = fs;
 
@@ -184,9 +184,9 @@ const writeFileOptions = (opts) => {
 
 const parsePath = (path) => {
     const info = aPath.parse(path);
-    info.full = path.replace(/[\\/]/g, aPath.sep);
-    info.parts = [...info.dir.split(aPath.sep), info.base].filter(adone.identity);
-    if (info.full.endsWith(aPath.sep)) {
+    info.full = path.replace(/[\\/]/g, "/");
+    info.parts = [...info.dir.split("/"), info.base].filter(identity);
+    if (info.full.endsWith("/")) {
         info.parts.push("");
     }
     info.isAbsolute = info.root.length > 0;
@@ -624,8 +624,8 @@ export default class BaseFileSystem {
         return this._handleFd("fstat", fd, callback, options);
     }
 
-    fstatSync(fd) {
-        return this._handleFdSync("fstatSync", fd);
+    fstatSync(fd, options) {
+        return this._handleFdSync("fstatSync", fd, options);
     }
 
     fsync(fd, callback) {
@@ -809,8 +809,8 @@ export default class BaseFileSystem {
         this._handlePath("lstat", path, callback, options);
     }
 
-    lstatSync(path) {
-        return this._handlePathSync("lstatSync", path);
+    lstatSync(path, options) {
+        return this._handlePathSync("lstatSync", path, options);
     }
 
     mkdir(path, options, callback) {
@@ -1081,8 +1081,8 @@ export default class BaseFileSystem {
         this._handlePath("stat", path, callback, options);
     }
 
-    statSync(path) {
-        return this._handlePathSync("statSync", path);
+    statSync(path, options) {
+        return this._handlePathSync("statSync", path, options);
     }
 
     symlink(target, path, type, callback) {
@@ -1247,7 +1247,7 @@ export default class BaseFileSystem {
         // but we do not handle cases where symlinks can refer to different engines
         // as i understand if we want to handle it we must stat each part of each path - huge overhead?
 
-        chooseEngine: for (; ;) {
+        nextInstance: for (; ;) {
             let node = this.structure[pathInfo.root];
 
             let i;
@@ -1298,6 +1298,7 @@ export default class BaseFileSystem {
                             }
                             throw err;
                         }
+                        console.log("stat", stat);
                         if (!stat.isDirectory()) {
                             this._throw("ENOTDIR", path, dest, method);
                         }
@@ -1354,7 +1355,7 @@ export default class BaseFileSystem {
                 }
                 if (j < i) {
                     // moving to another engine
-                    continue chooseEngine;
+                    continue nextInstance;
                 }
             }
             if (parts.length >= i) {
@@ -1445,7 +1446,7 @@ export default class BaseFileSystem {
                                 callback(err);
                                 return;
                             }
-
+                            console.log("stat", stat);
                             if (!stat.isDirectory()) {
                                 callback(this._createError("ENOTDIR", path, dest, method));
                                 return;
@@ -1560,13 +1561,13 @@ export default class BaseFileSystem {
 
         try {
             const res = fsInstance === this
-                ? fsInstance[`_${method}`](`${pathInfo.root}${parts.join(aPath.sep)}`, ...args)
+                ? fsInstance[`_${method}`](`${pathInfo.root}${parts.join("/")}`, ...args)
                 : fsInstance[method](`${pathInfo.root}${parts.slice(level).join("/")}`, ...args);
             switch (method) {
                 case "readdirSync": {
                     if (level === 0) {
                         const [options] = args;
-                        const siblings = this._getSiblingMounts(`${pathInfo.root}${parts.join(aPath.sep)}`);
+                        const siblings = this._getSiblingMounts(`${pathInfo.root}${parts.join("/")}`);
 
                         const files = siblings
                             ? unique(res.concat(siblings)).sort()
@@ -1604,7 +1605,7 @@ export default class BaseFileSystem {
             }
             return res;
         } catch (err) {
-            this._handleError(err, method, pathInfo.full, args);
+            throw this._handleError(err, method, pathInfo.full, args);
         }
     }
 

@@ -2,6 +2,7 @@
 import fs from "fs";
 import clone from "./clone";
 import { isFunction } from "../../common";
+import * as aPath from "../path";
 
 const constants = require("constants");
 const platform = process.env.GRACEFUL_FS_PLATFORM || process.platform;
@@ -189,8 +190,12 @@ const patch = (fs) => {
         }
         // Older versions of Node erroneously returned signed integers for
         // uid + gid.
-        return function (target, cb) {
-            return orig.call(fs, target, function (er, stats) {
+        return function (target, options, cb) {
+            if (isFunction(options)) {
+                cb = options;
+                options = {};
+            }
+            return orig.call(fs, target, options, function (er, stats) {
                 if (!stats) {
                     return cb.apply(this, arguments);
                 }
@@ -541,7 +546,7 @@ base.closeSync = (function (fs$closeSync) {
 fs.closeSync = base.closeSync;
 fs.close = base.close;
 
-base.path = require("../path");
+base.path = aPath;
 base.cwd = process.cwd;
 
-module.exports = base;
+export default base;
