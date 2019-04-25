@@ -1314,7 +1314,7 @@ describe("fs2", "custom", "memory2", () => {
             assert.equal(error.code, "EINVAL");
         });
 
-        it.only("cannot rename the current or parent directory to a subdirectory", () => {
+        it("cannot rename the current or parent directory to a subdirectory", () => {
             const fs = new MemoryFileSystem();
             fs.mkdirSync("/cwd");
             fs.chdir("/cwd");

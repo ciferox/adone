@@ -7,13 +7,12 @@
 // in which there should not be any third-party dependencies and the size of the codebase should be minimal.
 
 import fs from "fs";
-import { isFunction, isNumber, isString, isBuffer, unique } from "../../../common";
+import { isFunction, isNumber, isString, unique } from "../../../common";
 import { NotSupportedException } from "../../errors";
 import createError, { FSException } from "./errors";
 import * as aPath from "../../path";
 
-const { constants, _toUnixTimestamp } = fs;
-
+const { constants } = fs;
 
 const FS_INSTANCE = Symbol("FS_INSTANCE");
 const LEVEL = Symbol("LEVEL");
@@ -185,7 +184,11 @@ const writeFileOptions = (opts) => {
 
 const parsePath = (path) => {
     const info = aPath.parse(path);
+    info.full = path.replace(/[\\/]/g, aPath.sep);
     info.parts = [...info.dir.split(aPath.sep), info.base].filter(adone.identity);
+    if (info.full.endsWith(aPath.sep)) {
+        info.parts.push("");
+    }
     info.isAbsolute = info.root.length > 0;
     return info;
 };
@@ -284,15 +287,17 @@ export default class BaseFileSystem {
         let root = this.structure[pathInfo.root];
         let level = 0;
         for (const part of pathInfo.parts) {
-            if (!(part in root)) {
-                root[part] = {
-                    [LEVEL]: root[LEVEL],
-                    [PARENT]: root,
-                    [FS_INSTANCE]: root[FS_INSTANCE]
-                };
+            if (part.length > 0) { // skip empty parts
+                if (!(part in root)) {
+                    root[part] = {
+                        [LEVEL]: root[LEVEL],
+                        [PARENT]: root,
+                        [FS_INSTANCE]: root[FS_INSTANCE]
+                    };
+                }
+                root = root[part];
+                ++level;
             }
-            root = root[part];
-            ++level;
         }
         root[LEVEL] = level;
         root[FS_INSTANCE] = customFs;
@@ -1390,7 +1395,7 @@ export default class BaseFileSystem {
         // but we do not handle cases where symlinks can refer to different engines
         // as i understand if we want to handle it we must stat each part of each path - huge overhead?
 
-        const chooseEngine = () => {
+        const nextInstance = () => {
             let node = this.structure[pathInfo.root];
 
             let i;
@@ -1421,22 +1426,22 @@ export default class BaseFileSystem {
                 }
                 node = node[part];
             }
-            const engine = node[FS_INSTANCE];
+            const fsInstance = node[FS_INSTANCE];
 
             const iterateParts = (j) => {
                 if (j >= parts.length) {
                     if (parts.length >= i) {
-                        callback(null, engine, node, parts);
+                        callback(null, fsInstance, node, parts);
                         return;
                     }
-                    chooseEngine();
+                    nextInstance();
                     return;
                 }
 
                 const tryNext = () => {
                     if (j < i) {
                         // moving to another engine
-                        chooseEngine();
+                        nextInstance();
                         return;
                     }
                     iterateParts(j + 1);
@@ -1446,7 +1451,7 @@ export default class BaseFileSystem {
                     case "":
                     case ".": {
                         const subPath = `/${parts.slice(i, j).join("/")}`;
-                        engine.stat(subPath, (err, stat) => {
+                        fsInstance.stat(subPath, (err, stat) => {
                             if (err) {
                                 if (err instanceof FSException) {
                                     err.path = path;
@@ -1494,7 +1499,7 @@ export default class BaseFileSystem {
                                 }
                             }
                         };
-                        engine.stat(subPath, (err, stat) => {
+                        fsInstance.stat(subPath, (err, stat) => {
                             if (err) {
                                 checkError(err);
                                 return;
@@ -1505,7 +1510,7 @@ export default class BaseFileSystem {
                                 callback(this._createError("ENOTDIR", path, dest, method));
                                 return;
                             }
-                            engine.readlink(subPath, (err, target) => {
+                            fsInstance.readlink(subPath, (err, target) => {
                                 if (err) {
                                     checkError(err);
                                     return;
@@ -1534,7 +1539,7 @@ export default class BaseFileSystem {
             };
             iterateParts(i + 1);
         };
-        chooseEngine();
+        nextInstance();
     }
 
     _handleError(err, method, path, args) {
@@ -1554,31 +1559,32 @@ export default class BaseFileSystem {
     }
 
     _handlePathSync(method, path, ...args) {
+        const pathInfo = parsePath(path);
         if (this._mountsNum === 0) {
             // only one engine can handle it, itself
             try {
-                const res = this[`_${method}`](path, ...args);
+                const res = this[`_${method}`](pathInfo.full, ...args);
                 if (method === "openSync") {
                     return this._storeFd(res, this);
                 }
                 return res;
             } catch (err) {
-                throw this._handleError(err, method, path, args);
+                throw this._handleError(err, method, pathInfo.full, args);
             }
         }
-        const [fsInstance, node, parts] = this._chooseFsInstanceSync(path, method);
+        const [fsInstance, node, parts] = this._chooseFsInstanceSync(pathInfo.full, method);
 
         const level = node[LEVEL];
 
         try {
             const res = fsInstance === this
-                ? fsInstance[`_${method}`](path.replaceParts(parts), ...args)
-                : fsInstance[method](`/${parts.slice(level).join("/")}`, ...args);
+                ? fsInstance[`_${method}`](`${pathInfo.root}${parts.join(aPath.sep)}`, ...args)
+                : fsInstance[method](`${pathInfo.root}${parts.slice(level).join("/")}`, ...args);
             switch (method) {
                 case "readdir": {
                     if (level === 0) {
                         const [options] = args;
-                        const siblings = this._getSiblingMounts(path.replaceParts(parts));
+                        const siblings = this._getSiblingMounts(`${pathInfo.root}${parts.join(aPath.sep)}`);
 
                         const files = siblings
                             ? unique(res.concat(siblings)).sort()
@@ -1616,7 +1622,7 @@ export default class BaseFileSystem {
             }
             return res;
         } catch (err) {
-            this._handleError(err, method, path, args);
+            this._handleError(err, method, pathInfo.full, args);
         }
     }
 
@@ -1626,10 +1632,11 @@ export default class BaseFileSystem {
      * @param {any[]} args
      */
     _handlePath(method, path, callback, ...args) {
+        const pathInfo = parsePath(path);
         if (this._mountsNum === 0) {
-            this[`_${method}`](path, ...args, (err, result) => {
+            this[`_${method}`](pathInfo.full, ...args, (err, result) => {
                 if (err) {
-                    callback(this._handleError(err, method, path, args));
+                    callback(this._handleError(err, method, pathInfo.full, args));
                     return;
                 }
                 if (method === "open") {
@@ -1642,7 +1649,7 @@ export default class BaseFileSystem {
             return;
         }
 
-        this._chooseFsInstance(path, method, null, (err, fsInstance, node, parts) => {
+        this._chooseFsInstance(pathInfo.full, method, null, (err, fsInstance, node, parts) => {
             if (err) {
                 callback(err);
                 return;
