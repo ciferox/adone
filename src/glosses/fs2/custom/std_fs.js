@@ -1,6 +1,6 @@
 import BaseFileSystem from "./base_fs";
-import path from "../../path";
-import {
+const path = require("../../path");
+const {
     access,
     accessSync,
     appendFile,
@@ -81,7 +81,7 @@ import {
     constants,
     ReadStream,
     WriteStream
-} from "fs";
+} = require("../base");
 
 const DEFAULT_ROOT = path.resolve("/");
 
@@ -101,35 +101,35 @@ export default class StdFileSystem extends BaseFileSystem {
     // fs common methods
 
     _access(path, mode, callback) {
-        access(path.fullPath, mode, callback);
+        access(path, mode, callback);
     }
 
     _accessSync(path, mode) {
-        return accessSync(path.fullPath, mode);
+        return accessSync(path, mode);
     }
 
     _appendFile(path, data, options, callback) {
-        appendFile(path.fullPath, data, options, callback);
+        appendFile(path, data, options, callback);
     }
 
     _appendFileSync(path, data, options) {
-        return appendFileSync(path.fullPath, data, options);
+        return appendFileSync(path, data, options);
     }
 
     _chmod(path, mode, callback) {
-        chmod(path.fullPath, mode, callback);
+        chmod(path, mode, callback);
     }
 
     _chmodSync(path, mode) {
-        return chmodSync(path.fullPath, mode);
+        return chmodSync(path, mode);
     }
 
     _chown(path, uid, gid, callback) {
-        chown(path.fullPath, uid, gid, callback);
+        chown(path, uid, gid, callback);
     }
 
     _chownSync(path, uid, gid) {
-        return chownSync(path.fullPath, uid, gid);
+        return chownSync(path, uid, gid);
     }
 
     _close(fd, callback) {
@@ -141,27 +141,27 @@ export default class StdFileSystem extends BaseFileSystem {
     }
 
     _copyFile(src, dest, flags, callback) {
-        copyFile(src.fullPath, dest.fullPath, flags, callback);
+        copyFile(src, dest, flags, callback);
     }
 
     _copyFileSync(src, dest, flags) {
-        return copyFileSync(src.fullPath, dest.fullPath, flags);
+        return copyFileSync(src, dest, flags);
     }
 
     _createReadStream(path, options) {
-        return createReadStream(path.fullPath, options);
+        return createReadStream(path, options);
     }
 
     _createWriteStream(path, options) {
-        return createWriteStream(path.fullPath, options);
+        return createWriteStream(path, options);
     }
 
     _exists(path, callback) {
-        return exists(path.fullPath, callback);
+        return exists(path, callback);
     }
 
     _existsSync(path) {
-        return existsSync(path.fullPath);
+        return existsSync(path);
     }
 
     _fchmod(fd, mode, callback) {
@@ -221,43 +221,43 @@ export default class StdFileSystem extends BaseFileSystem {
     }
 
     _lchmod(path, mode, callback) {
-        lchmod(path.fullPath, mode, callback);
+        lchmod(path, mode, callback);
     }
 
     _lchmodSync(path, mode) {
-        return lchmodSync(path.fullPath, mode);
+        return lchmodSync(path, mode);
     }
 
     _lchown(path, uid, gid, callback) {
-        lchown(path.fullPath, uid, gid, callback);
+        lchown(path, uid, gid, callback);
     }
 
     _lchownSync(path, uid, gid) {
-        return lchownSync(path.fullPath, uid, gid);
+        return lchownSync(path, uid, gid);
     }
 
     _link(existingPath, newPath, callback) {
-        link(existingPath.fullPath, newPath.fullPath, callback);
+        link(existingPath, newPath, callback);
     }
 
     _linkSync(existingPath, newPath) {
-        return linkSync(existingPath.fullPath, newPath.fullPath);
+        return linkSync(existingPath, newPath);
     }
 
     _lstat(path, callback) {
-        lstat(path.fullPath, callback);
+        lstat(path, callback);
     }
 
     _lstatSync(path) {
-        return lstatSync(path.fullPath);
+        return lstatSync(path);
     }
 
     _mkdir(path, mode, callback) {
-        mkdir(path.fullPath, mode, callback);
+        mkdir(path, mode, callback);
     }
 
     _mkdirSync(path, mode) {
-        return mkdirSync(path.fullPath, mode);
+        return mkdirSync(path, mode);
     }
 
     _mkdtemp(prefix, options, callback) {
@@ -269,11 +269,11 @@ export default class StdFileSystem extends BaseFileSystem {
     }
 
     _open(path, flags, mode, callback) {
-        open(path.fullPath, flags, mode, callback);
+        open(path, flags, mode, callback);
     }
 
     _openSync(path, flags, mode) {
-        return openSync(path.fullPath, flags, mode);
+        return openSync(path, flags, mode);
     }
 
     _read(fd, buffer, offset, length, position, callback) {
@@ -285,103 +285,103 @@ export default class StdFileSystem extends BaseFileSystem {
     }
 
     _readdir(path, options, callback) {
-        readdir(path.fullPath, options, callback);
+        readdir(path, options, callback);
     }
 
     _readdirSync(path, options) {
-        return readdirSync(path.fullPath, options);
+        return readdirSync(path, options);
     }
 
     _readFile(path, options, callback) {
-        readFile(path.fullPath, options, callback);
+        readFile(path, options, callback);
     }
 
     _readFileSync(path, options) {
-        return readFileSync(path.fullPath, options);
+        return readFileSync(path, options);
     }
 
     _readlink(path, options, callback) {
-        readlink(path.fullPath, options, callback);
+        readlink(path, options, callback);
     }
 
     _readlinkSync(path, options) {
-        return readlinkSync(path.fullPath, options);
+        return readlinkSync(path, options);
     }
 
     _realpath(path, options, callback) {
-        realpath(path.fullPath, options, callback);
+        realpath(path, options, callback);
     }
 
     _realpathSync(path, options) {
-        return realpathSync(path.fullPath, options);
+        return realpathSync(path, options);
     }
 
     _rename(oldPath, newPath, callback) {
-        rename(oldPath.fullPath, newPath.fullPath, callback);
+        rename(oldPath, newPath, callback);
     }
 
     _renameSync(oldPath, newPath) {
-        return renameSync(oldPath.fullPath, newPath.fullPath);
+        return renameSync(oldPath, newPath);
     }
 
     _rmdir(path, callback) {
-        rmdir(path.fullPath, callback);
+        rmdir(path, callback);
     }
 
     _rmdirSync(path) {
-        return rmdirSync(path.fullPath);
+        return rmdirSync(path);
     }
 
     _stat(path, callback) {
-        stat(path.fullPath, callback);
+        stat(path, callback);
     }
 
     _statSync(path) {
-        return statSync(path.fullPath);
+        return statSync(path);
     }
 
     _symlink(path, target, type, callback) {
-        symlink(target.fullPath, path.fullPath, type, callback);
+        symlink(target, path, type, callback);
     }
 
     _symlinkSync(path, target, type) {
-        return symlinkSync(target.fullPath, path.fullPath, type);
+        return symlinkSync(target, path, type);
     }
 
     _truncate(path, length, callback) {
-        truncate(path.fullPath, length, callback);
+        truncate(path, length, callback);
     }
 
     _truncateSync(path, length) {
-        return truncateSync(path.fullPath, length);
+        return truncateSync(path, length);
     }
 
     _unlink(path, callback) {
-        unlink(path.fullPath, callback);
+        unlink(path, callback);
     }
 
     _unlinkSync(path) {
-        return unlinkSync(path.fullPath);
+        return unlinkSync(path);
     }
 
     _utimes(path, atime, mtime, callback) {
-        utimes(path.fullPath, atime, mtime, callback);
+        utimes(path, atime, mtime, callback);
     }
 
     _utimesSync(path, atime, mtime) {
-        return utimesSync(path.fullPath, atime, mtime);
+        return utimesSync(path, atime, mtime);
     }
 
     _watch(filename, options, listener) {
-        return watch(filename.fullPath, options, listener);
+        return watch(filename, options, listener);
     }
 
     _watchFile(filename, options, listener) {
-        return watchFile(filename.fullPath, options, listener);
+        return watchFile(filename, options, listener);
     }
 
     _unwatchFile(filename, listener) {
-        return unwatchFile(filename.fullPath, listener);
+        return unwatchFile(filename, listener);
     }
 
     _write(fd, buffer, offset, length, position, callback) {
@@ -393,11 +393,11 @@ export default class StdFileSystem extends BaseFileSystem {
     }
 
     _writeFile(path, data, options, callback) {
-        writeFile(path.fullPath, data, options, callback);
+        writeFile(path, data, options, callback);
     }
 
     _writeFileSync(path, data, options) {
-        return writeFileSync(path.fullPath, data, options);
+        return writeFileSync(path, data, options);
     }
 }
 StdFileSystem.prototype.path = path;

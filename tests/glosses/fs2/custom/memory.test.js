@@ -1440,7 +1440,7 @@ describe("fs2", "custom", "memory2", () => {
 
         it("umask is correctly applied", () => {
             const umask = 0o127;
-            const fs = new MemoryFileSystem(umask);
+            const fs = new MemoryFileSystem({ umask });
             fs.writeFileSync("/file", "hello world");
             fs.mkdirSync("/dir");
             fs.symlinkSync("/file", "/symlink");

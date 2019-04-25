@@ -1,16 +1,12 @@
 const {
     is,
-    fs2: { base }
+    fs2: { base },
+    std: { path, childProcess: { exec } }
 } = adone;
 
 const glob = require("glob");
 const log = require("npmlog");
 const which = require("which");
-
-const {
-    is,
-    std: { path, childProcess: { exec } }
-} = adone;
 
 const build = function (gyp, argv) {
     return new Promise((resolve, reject) => {

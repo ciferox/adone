@@ -5,7 +5,7 @@ const common = require("./common");
 const { lazify } = common;
 
 const adone = Object.create({
-    common,
+    common: common.asNamespace(common),
     // expose some useful commons
     null: common.null,
     undefined: common.undefined,

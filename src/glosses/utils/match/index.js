@@ -45,7 +45,7 @@ export default function match(list, patterns, options) {
 
     const matches = util.arrayDiff(keep, omit);
     if (!options || options.nodupes !== false) {
-        return util.unique(matches);
+        return adone.common.unique(matches);
     }
 
     return matches;
@@ -107,7 +107,7 @@ match.match = (list, pattern, options) => {
 
     // if no options were passed, uniquify results and return
     if (is.undefined(options)) {
-        return util.unique(matches);
+        return adone.common.unique(matches);
     }
 
     if (matches.length === 0) {
@@ -124,7 +124,7 @@ match.match = (list, pattern, options) => {
         matches = match.not(matches, options.ignore, options);
     }
 
-    return options.nodupes !== false ? util.unique(matches) : matches;
+    return options.nodupes !== false ? adone.common.unique(matches) : matches;
 };
 
 /**
@@ -269,7 +269,7 @@ match.not = (list, patterns, options) => {
         matches = util.arrayDiff(matches, match(list, ignore));
     }
 
-    return opts.nodupes !== false ? util.unique(matches) : matches;
+    return opts.nodupes !== false ? adone.common.unique(matches) : matches;
 };
 
 /**

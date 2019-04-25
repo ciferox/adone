@@ -4,12 +4,160 @@
 /* eslint-disable adone/no-null-comp */
 
 import fs from "fs";
-import { join as pathJoin } from "../../path";
-import permaProxy from "permaproxy";
-import Counter from "resource-counter";
+const { join: pathJoin } = require("../../path");
 import { Readable, Writable } from "stream";
 import AsyncFileSystem from "./async_fs";
 import createError, { FSException } from "./errors";
+
+// resource counter
+
+import { Leaf } from "./bitmap_tree.js";
+
+const allocate = (tree, counter, snapshot) => {
+    let changed;
+    let treeNew;
+    tree.allocate(
+        counter,
+        ({ counter: counter_, changed: changed_, tree: tree_ }) => {
+            counter = counter_;
+            changed = changed_;
+            treeNew = tree_;
+        },
+        snapshot
+    );
+    // $FlowFixMe: changed is initialised
+    return [counter, changed, treeNew];
+};
+
+const deallocate = (tree, counter, snapshot) => {
+    let changed;
+    let treeNew;
+    tree.deallocate(
+        counter,
+        ({ changed: changed_, tree: tree_ }) => {
+            changed = changed_;
+            treeNew = tree_;
+        },
+        snapshot
+    );
+    // $FlowFixMe: changed is initialised
+    return [changed, treeNew];
+};
+
+const check = (tree, counter) => {
+    let set;
+    tree.check(
+        counter,
+        (set_) => {
+            set = set_;
+        }
+    );
+    return Boolean(set);
+};
+
+/**
+ * Class representing allocatable and deallocatable counters.
+ * Counters are allocated in sequential manner, this applies to deallocated counters.
+ * Once a counter is deallocated, it will be reused on the next allocation.
+ * This is a mutable counter, which doesn't use snapshots.
+ */
+class Counter {
+    /**
+     * Creates a counter instance.
+     * @throws {RangeError} - If blockSize is not a multiple of 32.
+     */
+    constructor(begin = 0, blockSize = 32, shrink = true, tree) {
+        if (blockSize % 32 !== 0) {
+            throw new RangeError("Blocksize for Counter must be a multiple of 32");
+        }
+        this._begin = begin;
+        this._tree = tree || new Leaf(blockSize, shrink, 0);
+    }
+
+    /**
+     * Allocates a counter sequentially.
+     * If a counter is specified, it will allocate it explicitly and return a
+     * changed boolean.
+     * @throws {RangeError} - If the explicitly allocated counter is out of bounds.
+     */
+    allocate(counter) {
+        if (counter != null) {
+            if (counter < this._begin) {
+                throw new RangeError("Counter needs to be greater or equal to the beginning offset");
+            }
+            counter = counter - this._begin;
+        }
+        const [counterAssigned, changed, treeNew] = allocate(this._tree, counter);
+        this._tree = treeNew;
+        if (counter == null) {
+            return counterAssigned + this._begin;
+        }
+        return changed;
+    }
+
+    /**
+     * Deallocates a number, it makes it available for reuse.
+     */
+    deallocate(counter) {
+        const [changed, treeNew] = deallocate(this._tree, counter - this._begin);
+        this._tree = treeNew;
+        return changed;
+    }
+
+    /**
+     * Checks if a number has been allocated or not.
+     */
+    check(counter) {
+        return check(this._tree, counter - this._begin);
+    }
+}
+
+const permaProxy = (container, name) => new Proxy({}, {
+    getPrototypeOf: (_) => {
+        return Reflect.getPrototypeOf(container[name]);
+    },
+    setPrototypeOf: (_, prototype) => {
+        return Reflect.setPrototypeOf(container[name], prototype);
+    },
+    isExtensible: (_) => {
+        return Reflect.isExtensible(container[name]);
+    },
+    preventExtensions: (_) => {
+        return Reflect.preventExtensions(container[name]);
+    },
+    getOwnPropertyDescriptor: (_, property) => {
+        return Reflect.getOwnPropertyDescriptor(container[name], property);
+    },
+    defineProperty: (_, property, descriptor) => {
+        return Reflect.defineProperty(container[name], property, descriptor);
+    },
+    get: (_, property) => {
+        let value = Reflect.get(container[name], property);
+        if (typeof value === "function") {
+            value = value.bind(container[name]);
+        }
+        return value;
+    },
+    set: (_, property, value) => {
+        return Reflect.set(container[name], property, value);
+    },
+    has: (_, property) => {
+        return Reflect.has(container[name], property);
+    },
+    deleteProperty: (_, property) => {
+        return Reflect.delete(container[name], property);
+    },
+    ownKeys: (_) => {
+        return Reflect.ownKeys(container[name]);
+    },
+    apply: (_, that, args) => {
+        return Reflect.apply(container[name], that, args);
+    },
+    construct: (_, args, newTarget) => {
+        return Reflect.construct(container[name], args, newTarget);
+    }
+});
+
 
 const constants = {
     ...fs.constants,
@@ -523,14 +671,14 @@ class INode {
             metadata.uid,
             metadata.gid,
             metadata.rdev || 0,
-            undefined, // in-memory doesn't have blocks
+            undefined, // blksize: in-memory doesn't have blocks
             metadata.ino,
             metadata.size,
-            undefined, // in-memory doesn't have blocks
-            now,
-            now,
-            now,
-            now
+            undefined, // blocks: in-memory doesn't have blocks
+            metadata.atimeMs || now,
+            metadata.mtimeMs || now,
+            metadata.ctimeMs || now,
+            metadata.birthtimeMs || now
         );
         this._iNodeMgr = iNodeMgr;
     }
@@ -575,7 +723,35 @@ class File extends INode {
             },
             iNodeMgr
         );
-        this._data = (props.data) ? props.data : Buffer.allocUnsafe(0);
+        if (typeof props.data === "function") {
+            let realData;
+            const that = this;
+            Object.defineProperty(that, "_data", {
+                enumerable: true,
+                configurable: true,
+                get() {
+                    realData = props.data();
+                    Object.defineProperty(that, "_data", {
+                        enumerable: true,
+                        writable: true,
+                        value: realData
+                    });
+                    return realData;
+                },
+                set(newData) {
+                    realData = newData;
+                    Object.defineProperty(that, "_data", {
+                        enumerable: true,
+                        writable: true,
+                        value: realData
+                    });
+                }
+            });
+        } else {
+            this._data = props.data
+                ? props.data
+                : Buffer.allocUnsafe(0);
+        }
     }
 
     getData() {
@@ -1295,23 +1471,17 @@ const callbackUp = (err) => {
 };
 
 export default class MemoryFileSystem extends AsyncFileSystem {
-    constructor(umask = 0o022, rootIndex = null) {
-        super();
-        let rootNode;
+    constructor({ umask = 0o022, root = "/" } = {}) {
+        super({ root });
         this._devMgr = new DeviceManager();
         this._iNodeMgr = new INodeManager(this._devMgr);
         this._fdMgr = new FileDescriptorManager(this._iNodeMgr);
 
-        if (typeof rootIndex === "number") {
-            rootNode = this._iNodeMgr.getINode(rootIndex);
-            if (!(rootNode instanceof Directory)) {
-                throw new TypeError("rootIndex must point to a root directory");
-            }
-        } else {
-            [rootNode] = this._iNodeMgr.createINode(
-                Directory, { mode: DEFAULT_ROOT_PERM, uid: DEFAULT_ROOT_UID, gid: DEFAULT_ROOT_GID }
-            );
-        }
+        const [rootNode] = this._iNodeMgr.createINode(Directory, {
+            mode: DEFAULT_ROOT_PERM,
+            uid: DEFAULT_ROOT_UID,
+            gid: DEFAULT_ROOT_GID
+        });
         this._uid = DEFAULT_ROOT_UID;
         this._gid = DEFAULT_ROOT_GID;
         this._umask = umask;
@@ -1774,11 +1944,7 @@ export default class MemoryFileSystem extends AsyncFileSystem {
         metadata.ctime = new Date();
     }
 
-    lchmod(path, mode, callback = callbackUp) {
-        this._callAsync(this.lchmodSync.bind(this), [path, mode], callback, callback);
-    }
-
-    lchmodSync(path, mode) {
+    _lchmodSync(path, mode) {
         path = this._getPath(path);
         const target = this._navigate(path, false).target;
         if (!target) {
@@ -1794,11 +1960,7 @@ export default class MemoryFileSystem extends AsyncFileSystem {
         targetMetadata.mode = (targetMetadata.mode & constants.S_IFMT) | mode;
     }
 
-    lchown(path, uid, gid, callback = callbackUp) {
-        this._callAsync(this.lchownSync.bind(this), [path, uid, gid], callback, callback);
-    }
-
-    lchownSync(path, uid, gid) {
+    _lchownSync(path, uid, gid) {
         path = this._getPath(path);
         const target = this._navigate(path, false).target;
         if (!target) {
@@ -1959,14 +2121,7 @@ export default class MemoryFileSystem extends AsyncFileSystem {
     //     }
     // }
 
-    mkdtemp(pathSPrefix, ...args) {
-        let cbIndex = args.findIndex((arg) => typeof arg === "function");
-        const callback = args[cbIndex] || callbackUp;
-        cbIndex = (cbIndex >= 0) ? cbIndex : args.length;
-        this._callAsync(this.mkdtempSync.bind(this), [pathSPrefix, ...args.slice(0, cbIndex)], (pathS) => callback(null, pathS), callback);
-    }
-
-    mkdtempSync(pathSPrefix, options) {
+    _mkdtempSync(pathSPrefix, options) {
         options = this._getOptions({ encoding: "utf8" }, options);
         if (!pathSPrefix || typeof pathSPrefix !== "string") {
             throw new TypeError("filename prefix is required");
@@ -2308,14 +2463,7 @@ export default class MemoryFileSystem extends AsyncFileSystem {
         return Buffer.from(link).toString(options.encoding);
     }
 
-    realpath(path, ...args) {
-        let cbIndex = args.findIndex((arg) => typeof arg === "function");
-        const callback = args[cbIndex] || callbackUp;
-        cbIndex = (cbIndex >= 0) ? cbIndex : args.length;
-        this._callAsync(this.realpathSync.bind(this), [path, ...args.slice(0, cbIndex)], (path) => callback(null, path), callback);
-    }
-
-    realpathSync(path, options) {
+    _realpathSync(path, options) {
         path = this._getPath(path);
         options = this._getOptions({ encoding: "utf8" }, options);
         const navigated = this._navigate(path, true);
@@ -2903,3 +3051,7 @@ MemoryFileSystem.DEFAULT_ROOT_GID = DEFAULT_ROOT_GID;
 MemoryFileSystem.DEFAULT_FILE_PERM = DEFAULT_FILE_PERM;
 MemoryFileSystem.DEFAULT_DIRECTORY_PERM = DEFAULT_DIRECTORY_PERM;
 MemoryFileSystem.DEFAULT_SYMLINK_PERM = DEFAULT_SYMLINK_PERM;
+MemoryFileSystem.File = File;
+MemoryFileSystem.Directory = Directory;
+MemoryFileSystem.Symlink = Symlink;
+MemoryFileSystem.applyUmask = applyUmask;

@@ -73,7 +73,7 @@ extglob.match = (list, pattern, options) => {
 
     // if no options were passed, uniquify results and return
     if (is.undefined(options)) {
-        return util.unique(matches);
+        return adone.common.unique(matches);
     }
 
     if (matches.length === 0) {
@@ -85,7 +85,7 @@ extglob.match = (list, pattern, options) => {
         }
     }
 
-    return options.nodupes !== false ? util.unique(matches) : matches;
+    return options.nodupes !== false ? adone.common.unique(matches) : matches;
 };
 
 /**

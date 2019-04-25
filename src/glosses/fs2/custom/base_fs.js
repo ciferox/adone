@@ -8,9 +8,8 @@
 
 import fs from "fs";
 import { isFunction, isNumber, isString, unique } from "../../../common";
-import { NotSupportedException } from "../../errors";
 import createError, { FSException } from "./errors";
-import * as aPath from "../../path";
+const aPath = require("../../path");
 
 const { constants } = fs;
 
@@ -139,10 +138,9 @@ const readFileOptions = (opts) => {
         : null;
     options.flag = options.flag || "r";
     return options;
-}
+};
 
 const readdirOptions = (opts) => {
-    // console.log(opts);
     let options;
     if (typeof opts !== "object") {
         options = { encoding: opts };
@@ -161,6 +159,8 @@ const readdirOptions = (opts) => {
 };
 
 const readlinkOptions = readdirOptions;
+const realpathOptions = readdirOptions;
+const mkdtempOptions = readdirOptions;
 
 const writeFileOptions = (opts) => {
     let options;
@@ -407,7 +407,7 @@ export default class BaseFileSystem {
                 }
                 callback(null);
             });
-            return;
+            
         }
 
         // const [
@@ -565,7 +565,7 @@ export default class BaseFileSystem {
 
         // implement sync stream ?
 
-        throw new NotSupportedException();
+        throw new Error("not supported");
     }
 
     createReadStream(path, options) {
@@ -689,7 +689,7 @@ export default class BaseFileSystem {
                 }
                 callback(null);
             });
-            return;
+            
         }
 
         // const [
@@ -786,7 +786,7 @@ export default class BaseFileSystem {
                 throw err;
             }
         }
-        throw new NotSupportedException("Cross engine hark links are not supported");
+        throw new Error("Cross fs hark links are not supported");
     }
 
     lseek(fd, position, seekFlags, callback) {
@@ -830,19 +830,11 @@ export default class BaseFileSystem {
             callback = options;
             options = {};
         }
-        if (typeof options !== "object") {
-            options = { encoding: options };
-        }
-        options.encoding = options.encoding || "utf8";
-        this._handlePath("mkdtemp", prefix, callback, options);
+        this._handlePath("mkdtemp", prefix, callback, mkdtempOptions(options));
     }
 
     mkdtempSync(prefix, options = {}) {
-        if (typeof options !== "object") {
-            options = { encoding: options };
-        }
-        options.encoding = options.encoding || "utf8";
-        return this._handlePathSync("mkdtemp", prefix, options);
+        return this._handlePathSync("mkdtempSync", prefix, mkdtempOptions(options));
     }
 
     mmap(fd, length, flags, offset, callback) {
@@ -947,21 +939,11 @@ export default class BaseFileSystem {
             callback = options;
             options = {};
         }
-        if (typeof options !== "object") {
-            options = { encoding: options };
-        }
-        options.encoding = options.encoding || "utf8";
-
-        this._handlePath("realpath", path, callback, options);
+        this._handlePath("realpath", path, callback, realpathOptions(options));
     }
 
     realpathSync(path, options) {
-        if (typeof options !== "object") {
-            options = { encoding: options };
-        }
-        options.encoding = options.encoding || "utf8";
-
-        return this._handlePathSync("realpath", path, options);
+        return this._handlePathSync("realpathSync", path, realpathOptions(options));
     }
 
     // TODO
@@ -1080,7 +1062,7 @@ export default class BaseFileSystem {
             }
         }
         // TODO: copy from one location to another and then delete the source?
-        throw new NotSupportedException("for now cross engine renamings are not supported");
+        throw new Error("For now cross engine renamings are not supported");
     }
 
     rmdir(path, callback) {
@@ -1253,19 +1235,20 @@ export default class BaseFileSystem {
     }
 
     _chooseFsInstanceSync(path, method, dest) {
-        if (!this.structure[path.root]) {
+        const pathInfo = parsePath(path);
+        if (!this.structure[pathInfo.root]) {
             // must be handled by this engine, no other case
-            return [this, this.structure, path.parts];
+            return [this, this.structure, pathInfo.parts];
         }
 
-        let parts = path.parts.slice();
+        let parts = pathInfo.parts.slice();
 
         // resolve .. that can refer to different engines,
         // but we do not handle cases where symlinks can refer to different engines
         // as i understand if we want to handle it we must stat each part of each path - huge overhead?
 
         chooseEngine: for (; ;) {
-            let node = this.structure[path.root];
+            let node = this.structure[pathInfo.root];
 
             let i;
             for (i = 0; i < parts.length; ++i) {
@@ -1336,7 +1319,6 @@ export default class BaseFileSystem {
                             // so here we have a symlink to a directory
 
                             const pathInfo = aPath.parse(target);
-                            // const targetPath = new Path(target, fsInstance.root);
 
                             if (pathInfo.isAbsolute) {
                                 // assume all absolute links to be relative to the using engine
@@ -1581,7 +1563,7 @@ export default class BaseFileSystem {
                 ? fsInstance[`_${method}`](`${pathInfo.root}${parts.join(aPath.sep)}`, ...args)
                 : fsInstance[method](`${pathInfo.root}${parts.slice(level).join("/")}`, ...args);
             switch (method) {
-                case "readdir": {
+                case "readdirSync": {
                     if (level === 0) {
                         const [options] = args;
                         const siblings = this._getSiblingMounts(`${pathInfo.root}${parts.join(aPath.sep)}`);
@@ -1596,14 +1578,14 @@ export default class BaseFileSystem {
                     }
                     break;
                 }
-                case "open": {
+                case "openSync": {
                     /**
                      * this method returns a file descriptor
                      * we must remember which engine returned it to perform reverse substitutions
                      */
                     return this._storeFd(res, fsInstance);
                 }
-                case "realpath": {
+                case "realpathSync": {
                     if (fsInstance === this) {
                         return res;
                     }

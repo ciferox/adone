@@ -17,7 +17,7 @@ const _braces = (pattern, options) => {
     }
 
     if (options && options.nodupes === true) {
-        arr = util.unique(arr);
+        arr = adone.common.unique(arr);
     }
     return arr;
 };
@@ -120,7 +120,7 @@ braces.create = function (pattern, options) {
 
         // filter out duplicates if specified
         if (options && options.nodupes === true) {
-            arr = util.unique(arr);
+            arr = adone.common.unique(arr);
         }
 
         Object.defineProperty(arr, "result", {

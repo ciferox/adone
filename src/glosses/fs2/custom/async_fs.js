@@ -1,6 +1,6 @@
 import BaseFileSystem from "./base_fs";
 
-const callbackUp = (err) => {
+const defaultCb = (err) => {
     if (err) {
         throw err;
     }
@@ -10,17 +10,6 @@ const callbackUp = (err) => {
  * This class should be derived by synchronous-only file systems to provide asynchronous methods as well.
  */
 export default class AsyncFileSystem extends BaseFileSystem {
-    _callAsync(method, args, successCb = callbackUp, failCb = callbackUp) {
-        process.nextTick(() => {
-            try {
-                const result = this[method](...args);
-                successCb(null, result);
-            } catch (err) {
-                failCb(err);
-            }
-        });
-    }
-    
     _access(path, mode, callback) {
         this._callAsync("_accessSync", [path, mode], callback, callback);
     }
@@ -53,7 +42,7 @@ export default class AsyncFileSystem extends BaseFileSystem {
         this._callAsync("_existsSync", [path], callback, callback);
     }
 
-    _fallocate(fd, offset, len, callback = callbackUp) {
+    _fallocate(fd, offset, len, callback) {
         this._callAsync("_fallocateSync", [fd, offset, len], callback, callback);
     }
 
@@ -86,19 +75,11 @@ export default class AsyncFileSystem extends BaseFileSystem {
     }
 
     _lchmod(path, mode, callback) {
-        try {
-            callback(null, this._lchmodSync(path, mode));
-        } catch (err) {
-            callack(err);
-        }
+        this._callAsync("_lchmodSync", [path, mode], callback, callback);
     }
 
     _lchown(path, uid, gid, callback) {
-        try {
-            callback(null, this._lchownSync(path, uid, gid));
-        } catch (err) {
-            callback(err);
-        }
+        this._callAsync("_lchownSync", [path, uid, gid], callback, callback);
     }
 
     _link(existingPath, newPath, callback) {
@@ -118,11 +99,7 @@ export default class AsyncFileSystem extends BaseFileSystem {
     }
 
     _mkdtemp(prefix, options, callback) {
-        try {
-            callback(null, this._mkdtempSync(prefix, options));
-        } catch (err) {
-            callback(err);
-        }
+        this._callAsync("_mkdtempSync", [prefix, options], callback, callback);
     }
 
     _mmap(fd, length, flags, offset, callback) {
@@ -150,11 +127,7 @@ export default class AsyncFileSystem extends BaseFileSystem {
     }
 
     _realpath(path, options, callback) {
-        try {
-            callback(null, this._realpathSync(path, options));
-        } catch (err) {
-            callback(err);
-        }
+        this._callAsync("_realpathSync", [path, options], callback, callback);
     }
 
     _rename(oldPath, newPath, callback) {
@@ -168,7 +141,6 @@ export default class AsyncFileSystem extends BaseFileSystem {
     _stat(path, options, callback) {
         this._callAsync("_statSync", [path, options], callback, callback);
     }
-
 
     _symlink(path, target, type, callback) {
         this._callAsync("_symlinkSync", [path, target, type], callback, callback);
@@ -194,4 +166,14 @@ export default class AsyncFileSystem extends BaseFileSystem {
         this._callAsync("_writeFileSync", [path, data, options], callback, callback);
     }
 
+    _callAsync(method, args, successCb = defaultCb, failCb = defaultCb) {
+        process.nextTick(() => {
+            try {
+                const result = this[method](...args);
+                successCb(null, result);
+            } catch (err) {
+                failCb(err);
+            }
+        });
+    }
 }

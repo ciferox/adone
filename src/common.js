@@ -215,7 +215,3 @@ export const unique = (array, projection = null) => {
     }
     return result;
 };
-
-
-
-asNamespace(exports);

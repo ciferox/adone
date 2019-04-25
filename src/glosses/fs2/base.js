@@ -484,14 +484,14 @@ const patch = (fs) => {
     function ReadStream(path, options) {
         if (this instanceof ReadStream) {
             return fs$ReadStream.apply(this, arguments), this;
-        };
+        }
         return ReadStream.apply(Object.create(ReadStream.prototype), arguments);
     }
 
     function WriteStream(path, options) {
         if (this instanceof WriteStream) {
             return fs$WriteStream.apply(this, arguments), this;
-        };
+        }
         return WriteStream.apply(Object.create(WriteStream.prototype), arguments);
     }
 
@@ -503,7 +503,7 @@ const patch = (fs) => {
 
     fs.createWriteStream = function createWriteStream(path, options) {
         return new WriteStream(path, options);
-    }
+    };
 
     return fs;
 };
@@ -545,4 +545,3 @@ base.path = require("../path");
 base.cwd = process.cwd;
 
 module.exports = base;
-

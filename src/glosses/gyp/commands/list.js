@@ -5,10 +5,6 @@ const {
 
 const log = require("npmlog");
 
-const {
-    is
-} = adone;
-
 const list = function (gyp, args, callback) {
     const devDir = gyp.devDir;
     log.verbose("list", "using node-gyp dir:", devDir);
