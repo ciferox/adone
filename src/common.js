@@ -62,6 +62,18 @@ export const setLazifyErrorHandler = (handler) => {
     lazifyErrorhandler = handler;
 };
 
+const requireSafe = (_require, value) => {
+    try {
+        return _require(value);
+    } catch (err) {
+        // console.log(require("util").inspect(err));
+        if (err.code !== "MODULE_NOT_FOUND") {
+            throw err;
+        }
+        lazifyErrorhandler(err);
+    }
+};
+
 export const lazify = (modules, _obj, _require = require, {
     asNamespace = false,
     configurable = false,
@@ -77,37 +89,38 @@ export const lazify = (modules, _obj, _require = require, {
             get() {
                 const value = modules[key];
 
-                let mod;
-                if (typeof value === "function") {
-                    mod = value(key);
-                } else if (typeof value === "string") {
-                    try {
-                        mod = _require(value);
-                    } catch (err) {
-                        // console.log(require("util").inspect(err));
-                        if (err.code !== "MODULE_NOT_FOUND") {
-                            throw err;
+                let modExports;
+                const valueType = typeof value;
+                if (valueType === "function") {
+                    modExports = value(key);
+                } else if (valueType === "string") {
+                    modExports = requireSafe(_require, value);
+                } else if (Array.isArray(value) && value.length >= 2 && typeof value[0] === "string") {
+                    modExports = requireSafe(_require, value[0]);
+
+                    const keepMapper = value[2] === true;
+
+                    if (!keepMapper) {
+                        const selector = value[1];
+                        const selectorType = typeof selector;
+                        if (selectorType !== "function" && selectorType !== "string") {
+                            throw new TypeError(`Invalid export selector type: ${selectorType}`);
                         }
-                        lazifyErrorhandler(err);
+                        const prevMapper = mapper;
+                        mapper = (mod, key) => {
+                            const mappedExports = prevMapper(mod, key);
+                            mapper = prevMapper; // restore
+                            return (selectorType === "function")
+                                ? selector(mappedExports)
+                                : mappedExports[selector];
+                        };
                     }
-                } else if (Array.isArray(value) && value.length >= 1 && typeof value[0] === "string") {
-                    mod = value.reduce((mod, entry, i) => {
-                        if (typeof entry === "function") {
-                            return entry(mod);
-                        } else if (typeof entry === "string") {
-                            if (!(entry in mod)) {
-                                throw new Error(`Invalid parameter name in ${key}[${i + 1}]`);
-                            }
-                            return mod[entry];
-                        }
-                        throw new TypeError(`Invalid type at ${key}[${i + 1}]`);
-                    }, _require(value.shift()));
                 } else {
                     throw new TypeError(`Invalid module type of ${key}`);
                 }
 
                 try {
-                    mod = mapper(mod, key);
+                    modExports = mapper(modExports, key);
                 } catch (err) {
                     lazifyErrorhandler(err);
                 }
@@ -116,15 +129,15 @@ export const lazify = (modules, _obj, _require = require, {
                     configurable,
                     enumerable,
                     writable,
-                    value: mod
+                    value: modExports
                 });
 
                 try {
                     return asNamespace
-                        ? asNamespace(mod)
-                        : mod;
+                        ? asNamespace(modExports)
+                        : modExports;
                 } catch (err) {
-                    return mod;
+                    return modExports;
                 }
             }
         });

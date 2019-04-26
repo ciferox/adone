@@ -1,6 +1,6 @@
 const {
     is,
-    fs2: { base },
+    fs: { base },
     std: { path, childProcess: { exec } }
 } = adone;
 

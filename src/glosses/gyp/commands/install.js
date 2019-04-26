@@ -1,6 +1,5 @@
 const {
-    is,
-    fs2: { base: fs }
+    fs
 } = adone;
 
 const osenv = require("osenv");

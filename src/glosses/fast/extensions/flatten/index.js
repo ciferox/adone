@@ -1,4 +1,7 @@
-const { is, std: { path } } = adone;
+const {
+    is,
+    path
+} = adone;
 
 const includeParents = (dirs, options) => {
     let topLevels;

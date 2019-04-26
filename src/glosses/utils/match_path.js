@@ -29,7 +29,7 @@ export default function matchPath(criteria, value = null, { index = false, start
 
     // firstly check the negative
     for (const [, n] of neg) {
-        if (adone.util.match.isMatch(string, n, { dot }) || (altString && adone.util.match.isMatch(altString, n, { dot }))) {
+        if (adone.glob.match.isMatch(string, n, { dot }) || (altString && adone.glob.match.isMatch(altString, n, { dot }))) {
             return index ? -1 : false;
         }
     }
@@ -51,10 +51,10 @@ export default function matchPath(criteria, value = null, { index = false, start
                 return index ? idx : true;
             }
             const normalizedP = adone.util.normalizePath(p);
-            if (adone.util.match.isMatch(string, normalizedP, { dot })) {
+            if (adone.glob.match.isMatch(string, normalizedP, { dot })) {
                 return index ? idx : true;
             }
-            if (altString && adone.util.match.isMatch(altString, normalizedP, { dot })) {
+            if (altString && adone.glob.match.isMatch(altString, normalizedP, { dot })) {
                 return index ? idx : true;
             }
         }

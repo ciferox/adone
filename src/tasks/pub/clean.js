@@ -25,7 +25,7 @@ const clean = async function (manager, entry) {
             srcGlob = entry.src;
         }
 
-        dstGlob = std.path.join(entry.dst, std.path.relative(util.globParent(srcGlob), srcGlob));
+        dstGlob = std.path.join(entry.dst, std.path.relative(adone.glob.parent(srcGlob), srcGlob));
     }
 
     await fs.rm(dstGlob, {
@@ -35,7 +35,7 @@ const clean = async function (manager, entry) {
         }
     });
 
-    await fs.rmEmpty(util.globParent(dstGlob), {
+    await fs.rmEmpty(adone.glob.parent(dstGlob), {
         cwd: manager.cwd
     });
 };

@@ -6,7 +6,7 @@ export default class LinuxFS extends adone.metrics.FileSystem {
         const uuidMap = new Map();
         const isDir = await adone.fs.isDirectory("/dev/disk/by-uuid");
         if (isDir) {
-            const files = await adone.fs.glob("/dev/disk/by-uuid/*");
+            const files = await adone.glob("/dev/disk/by-uuid/*");
             for (const file of files) {
                 let realPath = await adone.fs.realpath(file);
                 realPath = adone.std.path.normalize(realPath);

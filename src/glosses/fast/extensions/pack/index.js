@@ -1,7 +1,7 @@
 export default function plugin() {
     const {
         is,
-        std,
+        path: aPath,
         fs,
         error
     } = adone;
@@ -70,7 +70,7 @@ export default function plugin() {
                     }
                 }, function flush() {
                     stream.finalize();
-                    resultFile.path = std.path.resolve(resultFile.base, filename);
+                    resultFile.path = aPath.resolve(resultFile.base, filename);
                     if (resultFile.stat) {
                         resultFile.stat.mode = mode | fs.constants.S_IFREG;
                     }
@@ -111,7 +111,7 @@ export default function plugin() {
                     }
                 }, async function flush() {
                     await zipfile.end();
-                    resultFile.path = std.path.resolve(resultFile.base, filename);
+                    resultFile.path = aPath.resolve(resultFile.base, filename);
                     if (resultFile.stat) {
                         resultFile.stat.mode = mode | fs.constants.S_IFREG;
                     }

@@ -14,7 +14,7 @@ const clean = async function (manager, entry) {
             }
         });
 
-        await fs.rmEmpty(adone.util.globParent(entry.native.dst), {
+        await fs.rmEmpty(adone.glob.parent(entry.native.dst), {
             cwd: manager.cwd
         });
     } else {
@@ -37,7 +37,7 @@ const clean = async function (manager, entry) {
             }
         });
 
-        await fs.rmEmpty(adone.util.globParent(entry.native.dst), {
+        await fs.rmEmpty(adone.glob.parent(entry.native.dst), {
             cwd: manager.cwd
         });
     }

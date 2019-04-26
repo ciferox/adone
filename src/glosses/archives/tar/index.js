@@ -1,8 +1,9 @@
 const {
     is,
-    std: { path, fs },
+    std: { fs },
     error,
-    noop
+    noop,
+    path
 } = adone;
 
 const normalize = !is.windows ? adone.identity : (name) => name.replace(/\\/g, "/").replace(/[:?<>|]/g, "_");

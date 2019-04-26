@@ -6,7 +6,7 @@ const {
 @adone.task.task("adoneDotCompiler")
 export default class AdoneDotCompilerTask extends adone.realm.TransformTask {
     async initialize(params) {
-        this.defs = (await fast.src(std.path.join(adone.util.globParent(params.src), "*.def"), {
+        this.defs = (await fast.src(std.path.join(adone.glob.parent(params.src), "*.def"), {
             cwd: this.manager.path
         })).reduce((defs, file) => {
             const name = std.path.basename(file.path, ".def");

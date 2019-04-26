@@ -7,6 +7,7 @@ const {
         getSubsystemMeta,
         STATE
     },
+    path: aPath,
     util
 } = adone;
 
@@ -376,13 +377,13 @@ export default class Subsystem extends adone.fsm.StateMachine {
 
         if (is.string(subsystem) && useFilename) {
             if (is.string(_basePath)) {
-                const relPath = std.path.normalize(std.path.relative(_basePath, subsystem));
-                const dirName = std.path.dirname(relPath);
+                const relPath = aPath.normalize(aPath.relative(_basePath, subsystem));
+                const dirName = aPath.dirname(relPath);
                 name = dirName !== "."
                     ? dirName
-                    : std.path.basename(relPath, ".js");
+                    : aPath.basename(relPath, ".js");
             } else {
-                name = std.path.basename(subsystem, ".js");
+                name = aPath.basename(subsystem, ".js");
             }
         }
 
@@ -433,7 +434,7 @@ export default class Subsystem extends adone.fsm.StateMachine {
      * @returns {Promise<void>}
      */
     async addSubsystemsFrom(path, { filter, ...options } = {}) {
-        if (!std.path.isAbsolute(path)) {
+        if (!aPath.isAbsolute(path)) {
             throw new error.NotValidException("Path should be absolute");
         }
 
@@ -447,10 +448,10 @@ export default class Subsystem extends adone.fsm.StateMachine {
         }
 
         for (const file of files) {
-            let fullPath = std.path.join(path, file);
+            let fullPath = aPath.join(path, file);
             const st = await fs.lstat(fullPath); // eslint-disable-line
             if (st.isDirectory()) {
-                fullPath = std.path.join(fullPath, "index.js");
+                fullPath = aPath.join(fullPath, "index.js");
                 // eslint-disable-next-line
                 if (!(await fs.exists(fullPath))) {
                     continue;
@@ -486,7 +487,7 @@ export default class Subsystem extends adone.fsm.StateMachine {
         let instance;
 
         if (is.string(subsystem)) {
-            if (!std.path.isAbsolute(subsystem)) {
+            if (!aPath.isAbsolute(subsystem)) {
                 throw new error.NotValidException("Path must be absolute");
             }
             let SubsystemClass = adone.require(subsystem, { transpile });

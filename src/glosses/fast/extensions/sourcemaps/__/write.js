@@ -1,8 +1,14 @@
 import __ from ".";
+const {
+    is,
+    path,
+    util,
+    std: { fs },
+    text
+} = adone;
+
 
 export default function writeInternals(destPath, options) {
-    const { is, util, std: { path, fs }, text } = adone;
-
     const setSourceRoot = (file) => {
         const { sourceMap } = file;
         if (is.function(options.sourceRoot)) {

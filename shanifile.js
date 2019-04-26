@@ -25,18 +25,18 @@ export default {
         compact: false
     },
     mapping: async (p) => {
-        if (await fs.exists(p)) {
+        if (await fs.pathExists(p)) {
             return p;
         }
 
         const parts = p.split(".");
         const prefix = path.resolve(__dirname, "tests", ...parts);
 
-        if (await fs.exists(`${prefix}.test.js`)) {
+        if (await fs.pathExists(`${prefix}.test.js`)) {
             return `${prefix}.test.js`;
         }
 
-        if (await fs.exists(prefix)) {
+        if (await fs.pathExists(prefix)) {
             return path.join(prefix, "**", "*.test.js");
         }
 

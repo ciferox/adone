@@ -1,6 +1,6 @@
 const {
     is,
-    fs2: { base: fs }
+    fs
 } = adone;
 
 const log = require("npmlog");

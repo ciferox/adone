@@ -1,13 +1,13 @@
 adone.lazify({
     core: "./core",
     codeFrame: "./code_frame",
-    codeFrameColumns: ["./code_frame", (x) => x.codeFrameColumns],
+    codeFrameColumns: ["./code_frame", (x) => x.codeFrameColumns, true],
     types: "./types",
     helper: "./helpers",
     traverse: "./traverse",
     Printer: "./generator/printer",
     generate: "./generator",
-    CodeGenerator: ["./generator", (x) => x.CodeGenerator],
+    CodeGenerator: ["./generator", (x) => x.CodeGenerator, true],
     template: "./template",
     
     plugin: "./plugins",

@@ -74,10 +74,10 @@ describe("fast", "transform", "pack", () => {
             skip: is.windows
         }, async () => {
             const input = await tmpdir.addDirectory("input");
-            await input.addDirectory("a", { mode: 0o775 });
-            await input.addDirectory("a", "b", { mode: 0o770 });
-            await input.addDirectory("a", "b", "c", { mode: 0o700 });
-            await input.addDirectory("a", "d", { mode: 0o711 });
+            await input.addDirectory("a", { mode: 0o755 & (~process.umask()) });
+            await input.addDirectory("a", "b", { mode: 0o770 & (~process.umask()) });
+            await input.addDirectory("a", "b", "c", { mode: 0o700 & (~process.umask()) });
+            await input.addDirectory("a", "d", { mode: 0o711 & (~process.umask()) });
             const output = await tmpdir.addDirectory("output");
 
             await fast
@@ -96,10 +96,10 @@ describe("fast", "transform", "pack", () => {
             expect(await extracted.getDirectory("a", "b", "c").exists()).to.be.true();
             expect(await extracted.getDirectory("a", "d").exists()).to.be.true();
 
-            expect(await extracted.getDirectory("a").mode() & 0o777).to.be.equal(0o775);
-            expect(await extracted.getDirectory("a", "b").mode() & 0o777).to.be.equal(0o770);
-            expect(await extracted.getDirectory("a", "b", "c").mode() & 0o777).to.be.equal(0o700);
-            expect(await extracted.getDirectory("a", "d").mode() & 0o777).to.be.equal(0o711);
+            expect(await extracted.getDirectory("a").mode() & 0o777).to.be.equal(0o775 & (~process.umask()));
+            expect(await extracted.getDirectory("a", "b").mode() & 0o777).to.be.equal(0o770 & (~process.umask()));
+            expect(await extracted.getDirectory("a", "b", "c").mode() & 0o777).to.be.equal(0o700 & (~process.umask()));
+            expect(await extracted.getDirectory("a", "d").mode() & 0o777).to.be.equal(0o711 & (~process.umask()));
         });
 
         // TODO: test nested directories mtime?

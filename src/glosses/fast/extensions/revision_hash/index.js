@@ -1,8 +1,9 @@
 const {
     error,
-    std: { crypto, path },
+    std: { crypto },
     is,
-    fast: { File }
+    fast: { File },
+    path
 } = adone;
 
 const transformFilename = (file) => {

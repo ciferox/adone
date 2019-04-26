@@ -1,6 +1,10 @@
-export default function plugin() {
-    const { std: { path }, is, error } = adone;
+const {
+    is,
+    error,
+    path
+} = adone;
 
+export default function plugin() {
     return function rename(handler) {
         return this.throughSync(function (file) {
             const obj = {

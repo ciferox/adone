@@ -1,8 +1,13 @@
 import __ from ".";
+const {
+    path,
+    text,
+    sourcemap,
+    std: { fs },
+    util
+} = adone;
 
 export default function initInternals(options, file, fileContent) {
-    const { util, text, sourcemap, std: { path, fs } } = adone;
-
     const fixSources = (sources) => {
         // fix source paths and sourceContent for imported source map
         if (sources.map) {

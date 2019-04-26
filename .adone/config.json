@@ -434,29 +434,10 @@
                     "dst": "lib/glosses/fast"
                 },
                 "fs": {
-                    "description": "Filesystem utilites",
-                    "task": "transpile",
-                    "src": "src/glosses/fs/**/*.js",
-                    "dst": "lib/glosses/fs",
-                    "scheme": {
-                        "fuse": {
-                            "description": "FUSE binding",
-                            "task": "transpile",
-                            "src": "src/glosses/fs/fuse/**/*.js",
-                            "dst": "lib/glosses/fs/fuse",
-                            "native": {
-                                "src": "src/glosses/fs/fuse/native",
-                                "dst": "lib/glosses/fs/fuse/native",
-                                "type": "gyp"
-                            }
-                        }
-                    }
-                },
-                "fs2": {
                     "description": "Replacement of native fs with promises and extras",
                     "task": "transpile",
-                    "src": "src/glosses/fs2/**/*.js",
-                    "dst": "lib/glosses/fs2"
+                    "src": "src/glosses/fs/**/*.js",
+                    "dst": "lib/glosses/fs"
                 },
                 "fsm": {
                     "description": "Finite State Machine implementation",
@@ -475,6 +456,12 @@
                     "task": "transpile",
                     "src": "src/glosses/git/**/*.js",
                     "dst": "lib/glosses/git"
+                },
+                "glob": {
+                    "description": "GLOB/matchers imlementation",
+                    "task": "transpile",
+                    "src": "src/glosses/glob/**/*.js",
+                    "dst": "lib/glosses/glob"
                 },
                 "globals": {
                     "description": "Global identifiers from different JavaScript environments",

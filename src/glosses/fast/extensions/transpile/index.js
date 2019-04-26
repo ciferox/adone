@@ -1,6 +1,6 @@
 const {
     is,
-    std: { path },
+    path,
     util
 } = adone;
 

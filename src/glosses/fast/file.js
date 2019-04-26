@@ -2,19 +2,16 @@ const {
     is,
     fs,
     error,
-    std,
+    path: aPath,
     util
 } = adone;
-const {
-    path
-} = std;
 
 const removeTrailingSep = (str) => {
     let i = str.length - 1;
     if (i < 2) {
         return str;
     }
-    const sep = std.path.sep;
+    const sep = aPath.sep;
     while (i > 0 && str[i] === sep) {
         i--;
     }
@@ -22,7 +19,7 @@ const removeTrailingSep = (str) => {
 };
 
 const cloneStat = (stat) => {
-    const stub = new std.fs.Stats();
+    const stub = new fs.Stats();
     for (const key of util.keys(stat)) {
         stub[key] = stat[key];
     }
@@ -128,7 +125,7 @@ export default class File {
         if (!value || !is.string(value)) {
             throw new error.Exception("Invalid value");
         }
-        this._.set("cwd", removeTrailingSep(path.normalize(value)));
+        this._.set("cwd", removeTrailingSep(aPath.normalize(value)));
     }
 
     get base() {
@@ -143,7 +140,7 @@ export default class File {
         if (!is.string(value) || !value) {
             throw new error.Exception("Invalid value");
         }
-        const base = removeTrailingSep(path.normalize(value));
+        const base = removeTrailingSep(aPath.normalize(value));
         if (base !== this.cwd) {
             this._.set("base", base);
         } else {
@@ -156,7 +153,7 @@ export default class File {
     }
 
     set path(value) {
-        value = removeTrailingSep(path.normalize(value));
+        value = removeTrailingSep(aPath.normalize(value));
         if (value && value !== this.path) {
             this.history.push(value);
         }
@@ -167,11 +164,11 @@ export default class File {
         if (!path) {
             throw new error.Exception("No path - no relative path");
         }
-        return std.path.relative(this.base, path);
+        return aPath.relative(this.base, path);
     }
 
     set relative(newRelative) {
-        this.path = std.path.join(this.base, newRelative);
+        this.path = aPath.join(this.base, newRelative);
     }
 
     get dirname() {
@@ -179,11 +176,11 @@ export default class File {
         if (!path) {
             throw new error.Exception("No path - no dirname");
         }
-        return std.path.dirname(path);
+        return aPath.dirname(path);
     }
 
     set dirname(dirname) {
-        this.path = path.join(dirname, this.basename);
+        this.path = aPath.join(dirname, this.basename);
     }
 
     get basename() {
@@ -191,7 +188,7 @@ export default class File {
         if (!path) {
             throw new error.Exception("No path - no basename");
         }
-        return std.path.basename(path);
+        return aPath.basename(path);
     }
 
     set basename(value) {
@@ -199,7 +196,7 @@ export default class File {
         if (!path) {
             throw new error.Exception("No path - no ability to set the basename");
         }
-        this.path = std.path.join(this.dirname, value);
+        this.path = aPath.join(this.dirname, value);
     }
 
     get extname() {
@@ -207,7 +204,7 @@ export default class File {
         if (!path) {
             throw new error.Exception("No path - no extname");
         }
-        return std.path.extname(path);
+        return aPath.extname(path);
     }
 
     set extname(value) {
@@ -215,8 +212,8 @@ export default class File {
         if (!path) {
             throw new error.Exception("No path - no ability to set the extname");
         }
-        const t = std.path.basename(path, std.path.extname(path)) + value;
-        this.path = std.path.join(this.dirname, t);
+        const t = aPath.basename(path, aPath.extname(path)) + value;
+        this.path = aPath.join(this.dirname, t);
     }
 
     get stem() {
@@ -224,7 +221,7 @@ export default class File {
         if (!path) {
             throw new error.Exception("No path - no stem");
         }
-        return std.path.basename(this.path, this.extname);
+        return aPath.basename(this.path, this.extname);
     }
 
     set stem(value) {
@@ -232,7 +229,7 @@ export default class File {
         if (!path) {
             throw new error.Exception("No path - no ability to set the stem");
         }
-        this.path = std.path.join(this.dirname, value + this.extname);
+        this.path = aPath.join(this.dirname, value + this.extname);
     }
 
     get symlink() {

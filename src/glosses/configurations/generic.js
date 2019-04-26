@@ -1,9 +1,9 @@
 const {
     error,
     is,
-    std,
     fs,
-    module: { Module }
+    module: { Module },
+    path: aPath
 } = adone;
 
 const compileModule = (path, content, transpile) => {
@@ -22,7 +22,7 @@ export default class GenericConfig extends adone.configuration.BaseConfig {
 
     constructor({ cwd = process.cwd() } = {}) {
         super();
-        this.cwd = std.path.resolve(cwd);
+        this.cwd = aPath.resolve(cwd);
         this.#serializer = adone.lazify({
             ".js": () => ({
                 encode: null,
@@ -101,16 +101,16 @@ export default class GenericConfig extends adone.configuration.BaseConfig {
         if (!is.function(info.serializer.encode)) {
             throw new error.NotSupportedException(`Unsupported operation for '${info.serializer.ext}'`);
         }
-        await fs.mkdirp(std.path.dirname(info.path));
+        await fs.mkdirp(aPath.dirname(info.path));
         await fs.writeFile(info.path, await info.serializer.encode(this.raw, options));
     }
 
     _checkPath(confPath, checkExists) {
-        const path = (std.path.isAbsolute(confPath))
+        const path = (aPath.isAbsolute(confPath))
             ? confPath
-            : std.path.resolve(this.cwd, confPath);
+            : aPath.resolve(this.cwd, confPath);
 
-        const ext = std.path.extname(path);
+        const ext = aPath.extname(path);
         let serializer = null;
 
         if (ext.length > 0) {

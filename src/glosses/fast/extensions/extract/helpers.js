@@ -1,5 +1,5 @@
 const {
-    std: { path: { basename, dirname, join, normalize, sep, posix: { isAbsolute: posixIsAbsolute }, win32: { isAbsolute: win32IsAbsolute } } }
+    path: { basename, dirname, join, normalize, sep, posix: { isAbsolute: posixIsAbsolute }, win32: { isAbsolute: win32IsAbsolute } }
 } = adone;
 
 export const stripDir = function (path, strip) {

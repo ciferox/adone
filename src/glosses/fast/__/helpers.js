@@ -1,7 +1,6 @@
 const {
     is,
-    sourcemap,
-    util
+    sourcemap
 } = adone;
 
 export const applySourceMap = (file, sourceMap) => {
@@ -170,9 +169,9 @@ export const resolveGlob = (glob, cwd) => {
 export const globSource = (globs, { cwd = process.cwd(), base = null, dot = true, links = false } = {}) => {
     let globsParents;
     if (!base) {
-        globsParents = globs.filter((glob) => !glob.startsWith("!")).map((x) => util.globParent(x));
+        globsParents = globs.filter((glob) => !glob.startsWith("!")).map((x) => adone.glob.parent(x));
     }
-    return adone.fs.glob(globs, { dot, index: true })
+    return adone.glob(globs, { dot, index: true })
         .through(async function fileWrapper({ path, index }) {
             const stat = await (links ? adone.fs.lstat : adone.fs.stat)(path);
             const _base = base || globsParents[index];

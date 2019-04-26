@@ -104,7 +104,7 @@ export default class Configuration extends adone.configuration.GenericConfig {
                 const src = normalizeValue(dirName, null, val, "src");
                 if (src) {
                     if (is.string(src) && (src.endsWith("/") || src.endsWith("\\"))) {
-                        unit.src = adone.util.globize(src, { recursive: true });
+                        unit.src = adone.glob.globize(src, { recursive: true });
                     } else {
                         unit.src = src;
                     }
@@ -122,7 +122,7 @@ export default class Configuration extends adone.configuration.GenericConfig {
                 }
 
                 if (is.exist(val.native)) {
-                    const nativeGlob = adone.util.globize(val.native.src, { recursive: true });
+                    const nativeGlob = adone.glob.globize(val.native.src, { recursive: true });
                     addIfNotIncluded(srcs, nativeGlob);
 
                     if (is.string(unit.src)) {
@@ -168,7 +168,7 @@ export default class Configuration extends adone.configuration.GenericConfig {
                                 }
                             }
 
-                            const parents = excludes.map((x) => adone.util.globParent(x));
+                            const parents = excludes.map((x) => adone.glob.parent(x));
                             const prefix = adone.text.longestCommonPrefix(parents);
                             if (prefix === "") {
                                 throw new adone.error.NotValidException(`No common glob prefix in '${fullKey}' block`);
