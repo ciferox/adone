@@ -107,6 +107,6 @@ export default class extends realm.BaseTask {
             status: false
         });
 
-        is.string(this.cwd) && await fs.rm(this.cwd);
+        is.string(this.cwd) && await fs.remove(this.cwd);
     }
 }

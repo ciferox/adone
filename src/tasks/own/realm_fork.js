@@ -130,6 +130,6 @@ export default class extends BaseTask {
             status: false
         });
 
-        is.string(this.destCwd) && await fs.rm(this.destCwd);
+        is.string(this.destCwd) && await fs.remove(this.destCwd);
     }
 }

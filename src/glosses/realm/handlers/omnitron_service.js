@@ -16,7 +16,7 @@ export default class OmnitronServiceHandler extends realm.TypeHandler {
 
         const servicePath = std.path.join(this.manager.config.omnitron.SERVICES_PATH, adoneConf.raw.name);
         if (await fs.exists(servicePath)) {
-            await fs.rm(servicePath);
+            await fs.remove(servicePath);
         }
 
         await fs.symlink(destPath, servicePath, is.windows ? "junction" : undefined);
@@ -26,7 +26,7 @@ export default class OmnitronServiceHandler extends realm.TypeHandler {
 
     async unregister(adoneConf) {
         await omnitron.dispatcher.unregisterService(adoneConf.raw.name);
-        return fs.rm(std.path.join(this.manager.config.omnitron.SERVICES_PATH, adoneConf.raw.name));
+        return fs.remove(std.path.join(this.manager.config.omnitron.SERVICES_PATH, adoneConf.raw.name));
     }
 
     list() {

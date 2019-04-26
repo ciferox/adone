@@ -139,7 +139,7 @@ export default () => class RunCommand extends Subsystem {
                 return 1;
             }
         } finally {
-            is.string(tmpPath) && await fs.rm(tmpPath);
+            is.string(tmpPath) && await fs.remove(tmpPath);
         }
         return 0;
     }

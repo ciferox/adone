@@ -150,6 +150,7 @@ lazify({
     multiformat: "./glosses/multiformats",
     net: "./glosses/net",
     netron: "./glosses/netron",
+    nodejs: "./glosses/nodejs",
     notifier: "./glosses/notifier",
     p2p: "./glosses/p2p",
     path: "./glosses/path",

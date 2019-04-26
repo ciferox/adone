@@ -107,7 +107,8 @@ export const improve = (fs) => {
         writeJson: "./write_json",
         outputFile: "./output_file",
         outputJson: "./output_json",
-        remove: "./remove"
+        remove: "./remove",
+        which: "./which"
     }, improvedFs, require, {
         mapper: (mod) => {
             const extension = lazify.mapper(mod);
@@ -129,6 +130,7 @@ export const improve = (fs) => {
         outputFileSync: "./output_file/sync",
         outputJsonSync: "./output_json/sync",
         removeSync: "./remove/sync",
+        whichSync: "./which/sync",
 
         readdirp: "./readdirp", // only promisified
         util: "./utils",

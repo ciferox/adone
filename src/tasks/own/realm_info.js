@@ -122,6 +122,6 @@ export default class extends realm.BaseTask {
             status: false
         });
 
-        is.realm(this.destRealm) && await fs.rm(this.destRealm.cwd);
+        is.realm(this.destRealm) && await fs.remove(this.destRealm.cwd);
     }
 }

@@ -7,7 +7,7 @@ const {
 
 const clean = async function (manager, entry) {
     if (is.string(entry.native.type) && entry.native.type === "gyp") {
-        await fs.rm(entry.native.dst, {
+        await fs.remove(entry.native.dst, {
             cwd: manager.cwd,
             glob: {
                 nodir: true
@@ -30,7 +30,7 @@ const clean = async function (manager, entry) {
         }
 
         // Remove dst
-        await fs.rm(entry.native.dst, {
+        await fs.remove(entry.native.dst, {
             cwd: manager.cwd,
             glob: {
                 nodir: true

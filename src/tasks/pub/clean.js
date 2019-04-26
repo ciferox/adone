@@ -28,7 +28,7 @@ const clean = async function (manager, entry) {
         dstGlob = std.path.join(entry.dst, std.path.relative(adone.glob.parent(srcGlob), srcGlob));
     }
 
-    await fs.rm(dstGlob, {
+    await fs.remove(dstGlob, {
         cwd: manager.cwd,
         glob: {
             nodir: true

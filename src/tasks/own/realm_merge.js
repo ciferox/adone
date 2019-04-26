@@ -55,7 +55,7 @@ export default class extends realm.BaseTask {
             if (!stat.isSymbolicLink()) {
                 throw new error.ExistsException(`Realm ${style.primary(this.subRealm.name)} already merged`);
             }
-            await fs.rm(this.optRealmPath);
+            await fs.remove(this.optRealmPath);
         }
 
         await fs.symlink(this.subRealm.cwd, this.optRealmPath, is.windows ? "junction" : undefined);
@@ -63,7 +63,7 @@ export default class extends realm.BaseTask {
 
     async #copyFiles() {
         // Remove old files
-        await fs.rm(this.optRealmPath);
+        await fs.remove(this.optRealmPath);
 
         // Copy all files
         return fast.src("**/*", {

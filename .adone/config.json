@@ -710,6 +710,12 @@
                     "src": "src/glosses/netron/**/*.js",
                     "dst": "lib/glosses/netron"
                 },
+                "nodejs": {
+                    "description": "Node.js toolkit",
+                    "task": "transpile",
+                    "src": "src/glosses/nodejs/**/*.js",
+                    "dst": "lib/glosses/nodejs"
+                },
                 "notifier": {
                     "description": "Implementation of system notifier",
                     "task": "transpile",

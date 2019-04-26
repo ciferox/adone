@@ -1,14 +1,20 @@
 import check from "./check";
 
-export default (fs) => (path, options = {}) => new Promise((resolve, reject) => {
-    fs.stat(path, (err, stat) => {
+export default (fs) => (path, options = {}, callback) => {
+    if (adone.is.function(options)) {
+        callback = options;
+        options = {};
+    }
+
+    fs.stat(path, (err, stats) => {
         if (err) {
             if (err.code === "EACCES" || options.ignoreErrors) {
-                resolve(false);
+                callback(null, false);
                 return;
             }
-            reject(err);
+            callback(err);
+            return;
         }
-        resolve(check(stat, path, options));
+        callback(null, check(stats, path, options));
     });
-});
+};
