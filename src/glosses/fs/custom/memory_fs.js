@@ -1687,10 +1687,10 @@ export default class MemoryFileSystem extends AsyncFileSystem {
             }
         } finally {
             if (srcFdIndex !== undefined) {
-                this.closeSync(srcFdIndex);
+                this._closeSync(srcFdIndex);
             }
             if (dstFdIndex !== undefined) {
-                this.closeSync(dstFdIndex);
+                this._closeSync(dstFdIndex);
             }
         }
     }

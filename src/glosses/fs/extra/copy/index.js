@@ -4,11 +4,11 @@ export default (fs) => {
         is,
         path
     } = adone;
-    
+
     const utimes = fs.util.utimesMillis;
-    
+
     const notExist = Symbol("notExist");
-    
+
     function checkParentDir(destStat, src, dest, opts, cb) {
         const destParent = path.dirname(dest);
         fs.pathExists(destParent, (err, dirExists) => {
@@ -26,7 +26,7 @@ export default (fs) => {
             });
         });
     }
-    
+
     function handleFilter(onInclude, destStat, src, dest, opts, cb) {
         Promise.resolve(opts.filter(src, dest)).then((include) => {
             if (include) {
@@ -38,21 +38,21 @@ export default (fs) => {
             return cb();
         }, (error) => cb(error));
     }
-    
+
     function startCopy(destStat, src, dest, opts, cb) {
         if (opts.filter) {
             return handleFilter(getStats, destStat, src, dest, opts, cb);
         }
         return getStats(destStat, src, dest, opts, cb);
     }
-    
+
     function getStats(destStat, src, dest, opts, cb) {
         const stat = opts.dereference ? fs.stat : fs.lstat;
         stat(src, (err, srcStat) => {
             if (err) {
                 return cb(err);
             }
-    
+
             if (srcStat.isDirectory()) {
                 return onDir(srcStat, destStat, src, dest, opts, cb);
             } else if (srcStat.isFile() ||
@@ -64,14 +64,14 @@ export default (fs) => {
             }
         });
     }
-    
+
     function onFile(srcStat, destStat, src, dest, opts, cb) {
         if (destStat === notExist) {
             return copyFile(srcStat, src, dest, opts, cb);
         }
         return mayCopyFile(srcStat, src, dest, opts, cb);
     }
-    
+
     function mayCopyFile(srcStat, src, dest, opts, cb) {
         if (opts.overwrite) {
             fs.unlink(dest, (err) => {
@@ -86,29 +86,16 @@ export default (fs) => {
             return cb();
         }
     }
-    
+
     function copyFile(srcStat, src, dest, opts, cb) {
-        if (is.function(fs.copyFile)) {
-            return fs.copyFile(src, dest, (err) => {
-                if (err) {
-                    return cb(err);
-                }
-                return setDestModeAndTimestamps(srcStat, dest, opts, cb);
-            });
-        }
-        return copyFileFallback(srcStat, src, dest, opts, cb);
-    }
-    
-    function copyFileFallback(srcStat, src, dest, opts, cb) {
-        const rs = fs.createReadStream(src);
-        rs.on("error", (err) => cb(err)).once("open", () => {
-            const ws = fs.createWriteStream(dest, { mode: srcStat.mode });
-            ws.on("error", (err) => cb(err))
-                .on("open", () => rs.pipe(ws))
-                .once("close", () => setDestModeAndTimestamps(srcStat, dest, opts, cb));
+        return fs.copyFile(src, dest, (err) => {
+            if (err) {
+                return cb(err);
+            }
+            return setDestModeAndTimestamps(srcStat, dest, opts, cb);
         });
     }
-    
+
     function setDestModeAndTimestamps(srcStat, dest, opts, cb) {
         fs.chmod(dest, srcStat.mode, (err) => {
             if (err) {
@@ -120,7 +107,7 @@ export default (fs) => {
             return cb();
         });
     }
-    
+
     function onDir(srcStat, destStat, src, dest, opts, cb) {
         if (destStat === notExist) {
             return mkDirAndCopy(srcStat, src, dest, opts, cb);
@@ -130,7 +117,7 @@ export default (fs) => {
         }
         return copyDir(src, dest, opts, cb);
     }
-    
+
     function mkDirAndCopy(srcStat, src, dest, opts, cb) {
         fs.mkdir(dest, (err) => {
             if (err) {
@@ -144,7 +131,7 @@ export default (fs) => {
             });
         });
     }
-    
+
     function copyDir(src, dest, opts, cb) {
         fs.readdir(src, (err, items) => {
             if (err) {
@@ -153,7 +140,7 @@ export default (fs) => {
             return copyDirItems(items, src, dest, opts, cb);
         });
     }
-    
+
     function copyDirItems(items, src, dest, opts, cb) {
         const item = items.pop();
         if (!item) {
@@ -161,7 +148,7 @@ export default (fs) => {
         }
         return copyDirItem(items, item, src, dest, opts, cb);
     }
-    
+
     function copyDirItem(items, item, src, dest, opts, cb) {
         const srcItem = path.join(src, item);
         const destItem = path.join(dest, item);
@@ -177,17 +164,17 @@ export default (fs) => {
             });
         });
     }
-    
+
     function onLink(destStat, src, dest, opts, cb) {
         fs.readlink(src, (err, resolvedSrc) => {
             if (err) {
                 return cb(err);
             }
-    
+
             if (opts.dereference) {
                 resolvedSrc = path.resolve(process.cwd(), resolvedSrc);
             }
-    
+
             if (destStat === notExist) {
                 return fs.symlink(resolvedSrc, dest, cb);
             }
@@ -207,7 +194,7 @@ export default (fs) => {
                 if (isSrcSubdir(resolvedSrc, resolvedDest)) {
                     return cb(new Error(`Cannot copy '${resolvedSrc}' to a subdirectory of itself, '${resolvedDest}'.`));
                 }
-    
+
                 // do not copy if src is a subdir of dest since unlinking
                 // dest in this case would result in removing src contents
                 // and therefore a broken symlink would be created.
@@ -216,10 +203,10 @@ export default (fs) => {
                 }
                 return copyLink(resolvedSrc, dest, cb);
             });
-    
+
         });
     }
-    
+
     function copyLink(resolvedSrc, dest, cb) {
         fs.unlink(dest, (err) => {
             if (err) {
@@ -228,14 +215,14 @@ export default (fs) => {
             return fs.symlink(resolvedSrc, dest, cb);
         });
     }
-    
+
     // return true if dest is a subdir of src, otherwise false.
     function isSrcSubdir(src, dest) {
         const srcArray = path.resolve(src).split(path.sep);
         const destArray = path.resolve(dest).split(path.sep);
         return srcArray.reduce((acc, current, i) => acc && destArray[i] === current, true);
     }
-    
+
     function checkStats(src, dest, cb) {
         fs.stat(src, (err, srcStat) => {
             if (err) {
@@ -252,7 +239,7 @@ export default (fs) => {
             });
         });
     }
-    
+
     function checkPaths(src, dest, cb) {
         checkStats(src, dest, (err, stats) => {
             if (err) {
@@ -268,7 +255,7 @@ export default (fs) => {
             return cb(null, destStat);
         });
     }
-    
+
     return (src, dest, opts, cb) => {
         if (is.function(opts) && !cb) {
             cb = opts;
@@ -276,19 +263,19 @@ export default (fs) => {
         } else if (is.function(opts)) {
             opts = { filter: opts };
         }
-    
+
         cb = cb || function () { };
         opts = opts || {};
-    
+
         opts.clobber = "clobber" in opts ? Boolean(opts.clobber) : true; // default to true for now
         opts.overwrite = "overwrite" in opts ? Boolean(opts.overwrite) : opts.clobber; // overwrite falls back to clobber
-    
+
         // Warn about using preserveTimestamps on 32-bit node
         if (opts.preserveTimestamps && process.arch === "ia32") {
             console.warn(`Using the preserveTimestamps option in 32-bit node is not recommended;\n
         see https://github.com/jprichardson/node-fs-extra/issues/269`);
         }
-    
+
         checkPaths(src, dest, (err, destStat) => {
             if (err) {
                 return cb(err);
@@ -298,5 +285,5 @@ export default (fs) => {
             }
             return checkParentDir(destStat, src, dest, opts, cb);
         });
-    };    
+    };
 };

@@ -4,9 +4,9 @@ import { fsCalls, cases } from "./fs";
 const {
     assertion,
     is,
-    fs2
+    fs
 } = adone;
-const { custom } = fs2;
+const { custom } = fs;
 const { MemoryFileSystem, BaseFileSystem, StdFileSystem } = custom;
 
 assertion.use(assertion.extension.checkmark);
@@ -103,10 +103,137 @@ describe("fs", "custom", "BaseFileSystem", () => {
         });
     });
 
+    describe("copyFile", () => {
+        describe("async", () => {
+            it("copy existent file to existent destination inside within the same file system", (done) => {
+                const baseFs = new BaseFileSystem();
+                const mfs1 = fs.improveFs(new MemoryFileSystem());
+                // const mfs2 = fs.improveFs(new MemoryFileSystem());
+
+                baseFs
+                    .mount(mfs1, "/mount1");
+
+                mfs1.mkdirSync("/dir1");
+                mfs1.mkdirSync("/dir1/dir2");
+                mfs1.writeFileSync("/file1", "abra cadabra", "utf8");
+
+                baseFs.copyFile("/mount1/file1", "/mount1/dir1/dir2/copied", (err) => {
+                    assert.notExists(err);
+
+                    assert.isTrue(mfs1.existsSync("/dir1/dir2/copied"));
+                    try {
+                        assert.equal(mfs1.readFileSync("/file1", "utf8"), mfs1.readFileSync("/dir1/dir2/copied", "utf8"));
+                    } catch (err) {
+                        done(err);
+                    }
+                    done();
+                });
+            });
+
+            it("copy existent file to existent destination", (done) => {
+                const baseFs = new BaseFileSystem();
+                const mfs1 = new MemoryFileSystem();
+                const mfs2 = new MemoryFileSystem();
+
+                baseFs
+                    .mount(mfs1, "/mount1")
+                    .mount(mfs2, "/mount2");
+
+                mfs1.writeFileSync("/file1", "abra cadabra", "utf8");
+
+                baseFs.copyFile("/mount1/file1", "/mount2/copied", (err) => {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+
+                    assert.isTrue(mfs2.existsSync("/copied"));
+                    try {
+                        assert.equal(mfs1.readFileSync("/file1", "utf8"), mfs2.readFileSync("copied", "utf8"));
+                    } catch (err) {
+                        done(err);
+                    }
+                    done();
+                });
+            });
+
+            it("copy with 'COPYFILE_EXCL' flag", (done) => {
+                const baseFs = new BaseFileSystem();
+                const mfs1 = new MemoryFileSystem();
+                const mfs2 = new MemoryFileSystem();
+
+                baseFs
+                    .mount(mfs1, "/mount1")
+                    .mount(mfs2, "/mount2");
+
+                mfs1.writeFileSync("/file1", "abra", "utf8");
+                mfs2.writeFileSync("/copied", "cadabra", "utf8");
+
+                baseFs.copyFile("/mount1/file1", "/mount2/copied", fs.constants.COPYFILE_EXCL, (err) => {
+                    if (err) {
+                        done();
+                        return;
+                    }
+                    done(new Error("should copy with error"));
+                });
+            });
+        });
+
+        describe("sync", () => {
+            it("copy existent file to existent destination inside within the same file system", () => {
+                const baseFs = new BaseFileSystem();
+                const mfs1 = fs.improveFs(new MemoryFileSystem());
+
+                baseFs
+                    .mount(mfs1, "/mount1");
+
+                mfs1.mkdirSync("/dir1");
+                mfs1.mkdirSync("/dir1/dir2");
+                mfs1.writeFileSync("/file1", "abra cadabra", "utf8");
+
+                baseFs.copyFileSync("/mount1/file1", "/mount1/dir1/dir2/copied");
+                assert.isTrue(mfs1.existsSync("/dir1/dir2/copied"));
+                assert.equal(mfs1.readFileSync("/file1", "utf8"), mfs1.readFileSync("/dir1/dir2/copied", "utf8"));
+            });
+
+            it("copy existent file to existent destination", () => {
+                const baseFs = new BaseFileSystem();
+                const mfs1 = new MemoryFileSystem();
+                const mfs2 = new MemoryFileSystem();
+
+                baseFs
+                    .mount(mfs1, "/mount1")
+                    .mount(mfs2, "/mount2");
+
+                mfs1.writeFileSync("/file1", "abra cadabra", "utf8");
+
+                baseFs.copyFileSync("/mount1/file1", "/mount2/copied");
+                assert.isTrue(mfs2.existsSync("/copied"));
+                assert.equal(mfs1.readFileSync("/file1", "utf8"), mfs2.readFileSync("copied", "utf8"));
+            });
+
+            it("copy with 'COPYFILE_EXCL' flag", () => {
+                const baseFs = new BaseFileSystem();
+                const mfs1 = new MemoryFileSystem();
+                const mfs2 = new MemoryFileSystem();
+
+                baseFs
+                    .mount(mfs1, "/mount1")
+                    .mount(mfs2, "/mount2");
+
+                mfs1.writeFileSync("/file1", "abra", "utf8");
+                mfs2.writeFileSync("/copied", "cadabra", "utf8");
+
+                const err = assert.throws(() => baseFs.copyFileSync("/mount1/file1", "/mount2/copied", fs.constants.COPYFILE_EXCL));
+                assert.equal(err.code, "EEXIST");
+            });
+        });
+    });
+
     describe("mount", () => {
         it("should handle requests to a mounted engine", async (done) => {
             const baseFs = new BaseFileSystem();
-            const mfs = fs2.improveFs(new MemoryFileSystem());
+            const mfs = fs.improveFs(new MemoryFileSystem());
             baseFs.mount(mfs, "/memory");
 
             await mfs.createFiles({
@@ -126,7 +253,7 @@ describe("fs", "custom", "BaseFileSystem", () => {
 
         it("should handle requests to different engines", async (done) => {
             expect(4).checks(done);
-            const mfs1 = fs2.improveFs(new MemoryFileSystem());
+            const mfs1 = fs.improveFs(new MemoryFileSystem());
             await mfs1.createFiles({
                 struct: {
                     a: "hello",
@@ -135,7 +262,7 @@ describe("fs", "custom", "BaseFileSystem", () => {
                     }
                 }
             });
-            const mfs2 = fs2.improveFs(new MemoryFileSystem());
+            const mfs2 = fs.improveFs(new MemoryFileSystem());
             await mfs2.createFiles({
                 struct: {
                     b: "hello",
@@ -173,7 +300,7 @@ describe("fs", "custom", "BaseFileSystem", () => {
             it("should correctly route non-normalized requests", async (done) => {
                 expect(5).checks(done);
 
-                const mfs1 = fs2.improveFs(new MemoryFileSystem());
+                const mfs1 = fs.improveFs(new MemoryFileSystem());
                 await mfs1.createFiles({
                     struct: {
                         a: "hello",
@@ -182,7 +309,7 @@ describe("fs", "custom", "BaseFileSystem", () => {
                         }
                     }
                 });
-                const mfs2 = fs2.improveFs(new MemoryFileSystem());
+                const mfs2 = fs.improveFs(new MemoryFileSystem());
                 await mfs2.createFiles({
                     struct: {
                         b: "hello",
@@ -225,7 +352,7 @@ describe("fs", "custom", "BaseFileSystem", () => {
             it("should correctly handle non-normalized requests with symlinks", async (done) => {
                 expect(6).checks(done);
 
-                const mfs1 = fs2.improveFs(new MemoryFileSystem());
+                const mfs1 = fs.improveFs(new MemoryFileSystem());
                 await mfs1.createFiles({
                     struct: {
                         a: "hello",
@@ -234,7 +361,7 @@ describe("fs", "custom", "BaseFileSystem", () => {
                         }
                     }
                 });
-                const mfs2 = fs2.improveFs(new MemoryFileSystem());
+                const mfs2 = fs.improveFs(new MemoryFileSystem());
                 await mfs2.createFiles({
                     struct: {
                         b: "hello",
@@ -283,7 +410,7 @@ describe("fs", "custom", "BaseFileSystem", () => {
             });
 
             it("should throw ENOENT when smth/.. does not exist", async (done) => {
-                const mfs = fs2.improveFs(new MemoryFileSystem());
+                const mfs = fs.improveFs(new MemoryFileSystem());
                 await mfs.createFiles({
                     struct: {
                         a: "hello"
@@ -300,7 +427,7 @@ describe("fs", "custom", "BaseFileSystem", () => {
             });
 
             it("should throw ENOENT when smth/. does not exist", async (done) => {
-                const mfs = fs2.improveFs(new MemoryFileSystem());
+                const mfs = fs.improveFs(new MemoryFileSystem());
                 await mfs.createFiles({
                     struct: {
                         a: "hello"
@@ -317,7 +444,7 @@ describe("fs", "custom", "BaseFileSystem", () => {
             });
 
             it("should throw ENOENT when smth/ does not exist", async (done) => {
-                const mfs = fs2.improveFs(new MemoryFileSystem());
+                const mfs = fs.improveFs(new MemoryFileSystem());
                 await mfs.createFiles({
                     struct: {
                         a: "hello"
@@ -334,7 +461,7 @@ describe("fs", "custom", "BaseFileSystem", () => {
             });
 
             it("should throw ENOTDIR when smth/.. is not a directory", async (done) => {
-                const mfs = fs2.improveFs(new MemoryFileSystem());
+                const mfs = fs.improveFs(new MemoryFileSystem());
                 await mfs.createFiles({
                     struct: {
                         a: "hello"
@@ -351,7 +478,7 @@ describe("fs", "custom", "BaseFileSystem", () => {
             });
 
             it("should throw ENOTDIR when smth/. is not a directory", async (done) => {
-                const mfs = fs2.improveFs(new MemoryFileSystem());
+                const mfs = fs.improveFs(new MemoryFileSystem());
                 await mfs.createFiles({
                     struct: {
                         a: "hello"
@@ -368,7 +495,7 @@ describe("fs", "custom", "BaseFileSystem", () => {
             });
 
             it("should throw ENOTDIR when smth/ is not a directory", async (done) => {
-                const mfs = fs2.improveFs(new MemoryFileSystem());
+                const mfs = fs.improveFs(new MemoryFileSystem());
                 await mfs.createFiles({
                     struct: {
                         a: "hello"
@@ -389,14 +516,14 @@ describe("fs", "custom", "BaseFileSystem", () => {
             expect(2).checks(done);
 
             const baseFs = new BaseFileSystem();
-            const mfs1 = fs2.improveFs(new MemoryFileSystem());
+            const mfs1 = fs.improveFs(new MemoryFileSystem());
             await mfs1.createFiles({
                 struct: {
                     a: "hello"
                 }
             });
 
-            const mfs2 = fs2.improveFs(new MemoryFileSystem());
+            const mfs2 = fs.improveFs(new MemoryFileSystem());
             await mfs2.createFiles({
                 struct: {
                     c: "hello"
@@ -420,7 +547,7 @@ describe("fs", "custom", "BaseFileSystem", () => {
 
         it("should prioritize the last mount when intersects", async (done) => {
             const baseFs = new BaseFileSystem();
-            const mfs1 = fs2.improveFs(new MemoryFileSystem());
+            const mfs1 = fs.improveFs(new MemoryFileSystem());
             await mfs1.createFiles({
                 struct: {
                     a: {
@@ -428,7 +555,7 @@ describe("fs", "custom", "BaseFileSystem", () => {
                     }
                 }
             });
-            const mfs2 = fs2.improveFs(new MemoryFileSystem());
+            const mfs2 = fs.improveFs(new MemoryFileSystem());
             await mfs2.createFiles({
                 struct: {
                     b: "hello"

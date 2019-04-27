@@ -90,8 +90,8 @@ export default class AsyncFileSystem extends BaseFileSystem {
         this._callAsync("_lseekSync", [fd, position, seekFlags], callback, callback);
     }
     
-    _lstat(path, callback) {
-        this._callAsync("_lstatSync", [path], callback, callback);
+    _lstat(path, options, callback) {
+        this._callAsync("_lstatSync", [path, options], callback, callback);
     }
 
     _mkdir(path, options, callback) {

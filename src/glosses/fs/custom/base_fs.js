@@ -219,21 +219,6 @@ export default class BaseFileSystem {
         return this;
     }
 
-    // mock(obj) {
-    //     const origMethods = {};
-    //     for (const method of fsMethods) {
-    //         origMethods[method] = obj[method];
-    //         obj[method] = (...args) => this[method](...args);
-    //     }
-    //     obj.restore = () => {
-    //         for (const method of fsMethods) {
-    //             obj[method] = origMethods[method];
-    //         }
-    //         delete obj.restore;
-    //     };
-    //     return obj;
-    // }
-
     // fs methods
 
     access(path, mode, callback) {
@@ -299,17 +284,13 @@ export default class BaseFileSystem {
         return this._handleFdSync("closeSync", fd);
     }
 
-    // TODO
-    copyFile(rawSrc, rawDest, flags, callback) {
+    copyFile(src, dest, flags, callback) {
         if (isFunction(flags)) {
             callback = flags;
             flags = 0;
         }
-        const src = rawSrc;
-        const dest = rawDest;
 
         if (this._mountsNum === 0) {
-            // only one engine can handle it, itself
             this._copyFile(src, dest, flags, (err) => {
                 if (err) {
                     if (err instanceof FSException) {
@@ -321,105 +302,94 @@ export default class BaseFileSystem {
                 }
                 callback(null);
             });
-
         }
 
-        // const [
-        //     [engine1, node1, parts1],
-        //     [engine2, node2, parts2]
-        // ] = await Promise.all([
-        //     this._chooseFsInstance(src, "copyfile").catch((err) => {
-        //         if (err instanceof FSException) {
-        //             err.path = src;
-        //             err.secondPath = dest;
-        //         }
-        //         return Promise.reject(err);
-        //     }),
-        //     this._chooseFsInstance(dest, "copyfile").catch((err) => {
-        //         if (err instanceof FSException) {
-        //             err.path = src;
-        //             err.secondPath = dest;
-        //         }
-        //         return Promise.reject(err);
-        //     })
-        // ]);
+        this._chooseFsInstance(src, "copyFile", null, (err, srcFsInstance, srcNode, srcParts) => {
+            if (err) {
+                callback(err);
+                return;
+            }
 
-        // const src2 = Path.fromParts(parts1.slice(node1[LEVEL]), engine1.root);
-        // const dest2 = Path.fromParts(parts2.slice(node2[LEVEL]), engine2.root);
+            this._chooseFsInstance(dest, "copyFile", null, (err, destFsInstance, destNode, destParts) => {
+                if (err) {
+                    callback(err);
+                    return;
+                }
 
-        // // efficient
-        // if (engine1 === engine2) {
-        //     return engine1.copyFile(src2, dest2).catch((err) => {
-        //         if (err instanceof FSException) {
-        //             err.path = src;
-        //             err.secondPath = dest;
-        //         }
-        //         return Promise.reject(err);
-        //     });
-        // }
+                const src2 = aPath.join(srcFsInstance.root, ...srcParts.slice(srcNode[LEVEL]));
+                const dest2 = aPath.join(destFsInstance.root, ...destParts.slice(destNode[LEVEL]));
 
-        // // cross engine copying...
-        // // not so efficient...any other way?
-        // // stream one file to another
+                const done = (err, unlink = false) => {
+                    if (err) {
+                        if (unlink) {
+                            destFsInstance._unlink(dest2, adone.noop);
+                        }
+                        if (err instanceof FSException) {
+                            err.path = src;
+                            err.dest = dest;
+                        }
 
-        // if (flags === constants.COPYFILE_EXECL) {
-        //     // have to throw if the dest exists
-        //     const destStat = await engine2.lstat(dest2).catch((err) => {
-        //         if (err.code === "ENOENT") { // does not exist
-        //             return null;
-        //         }
-        //         return err; // does it mean that the file exists?
-        //     });
-        //     if (destStat) {
-        //         this._throw("EEXIST", src, "copyfile", dest);
-        //     }
-        // }
+                        callback(err);
+                        return;
+                    }
 
-        // const srcStream = engine1.createReadStream(src2);
-        // const destStream = engine2.createWriteStream(dest2);
-        // const err = await new Promise((resolve) => {
-        //     let err;
+                    callback(null);
+                };
 
-        //     srcStream.once("error", (_err) => {
-        //         if (err) {
-        //             return; // the destroying has started
-        //         }
-        //         err = _err;
-        //         srcStream.destroy();
-        //         destStream.end();
-        //     });
+                if (srcFsInstance === destFsInstance) {
+                    srcFsInstance._copyFile(src2, dest2, flags, done);
+                    return;
+                }
 
-        //     destStream.once("error", (_err) => {
-        //         if (err) {
-        //             return; // the destroying has started
-        //         }
-        //         err = _err;
-        //         srcStream.destroy();
-        //         destStream.end();
-        //     });
+                const crossCopy = () => {
+                    const srcStream = srcFsInstance.createReadStream(src2);
+                    const destStream = destFsInstance.createWriteStream(dest2);
+                    let err;
 
-        //     destStream.once("close", () => {
-        //         resolve(err);
-        //     });
+                    srcStream.once("error", (_err) => {
+                        if (err) {
+                            return; // the destroying has started
+                        }
+                        err = _err;
+                        srcStream.destroy();
+                        destStream.end();
+                    });
 
-        //     srcStream.pipe(destStream);
-        // });
+                    destStream.once("error", (_err) => {
+                        if (err) {
+                            return; // the destroying has started
+                        }
+                        err = _err;
+                        srcStream.destroy();
+                        destStream.end();
+                    });
 
-        // if (err) {
-        //     // try to remove the dest if an error was thrown
-        //     await engine2.unlink(dest2).catch(noop);
-        //     if (err instanceof FSException) {
-        //         err.path = src;
-        //         err.secondPath = dest;
-        //     }
-        //     throw err;
-        // }
+                    destStream.once("close", () => {
+                        done(err, true);
+                    });
+
+                    srcStream.pipe(destStream);
+                };
+
+                if (flags === constants.COPYFILE_EXCL) {
+                    destFsInstance.lstat(dest2, (err) => {
+                        if (err) {
+                            if (err.code === "ENOENT") {
+                                crossCopy();
+                                return;
+                            }
+                        }
+                        callback(this._createError("EEXIST", src, dest, "copyfile"));
+                    });
+                    return;
+                }
+
+                crossCopy();
+            });
+        });
     }
 
-    copyFileSync(rawSrc, rawDest, flags = 0) {
-        const src = rawSrc;
-        const dest = rawDest;
-
+    copyFileSync(src, dest, flags = 0) {
         if (this._mountsNum === 0) {
             // only one engine can handle it, itself
             try {
@@ -433,12 +403,12 @@ export default class BaseFileSystem {
             }
         }
 
-        let engine1;
-        let node1;
-        let parts1;
+        let srcFsInstance;
+        let srcNode;
+        let srcParts;
 
         try {
-            [engine1, node1, parts1] = this._chooseFsInstanceSync(src, "copyfile");
+            [srcFsInstance, srcNode, srcParts] = this._chooseFsInstanceSync(src, "copyfile");
         } catch (err) {
             if (err instanceof FSException) {
                 err.path = src;
@@ -447,12 +417,12 @@ export default class BaseFileSystem {
             throw err;
         }
 
-        let engine2;
-        let node2;
-        let parts2;
+        let destFsInstance;
+        let destNode;
+        let destParts;
 
         try {
-            [engine2, node2, parts2] = this._chooseFsInstanceSync(dest, "copyfile");
+            [destFsInstance, destNode, destParts] = this._chooseFsInstanceSync(dest, "copyfile");
         } catch (err) {
             if (err instanceof FSException) {
                 err.path = src;
@@ -461,13 +431,12 @@ export default class BaseFileSystem {
             throw err;
         }
 
-        const src2 = Path.fromParts(parts1.slice(node1[LEVEL]), engine1.root);
-        const dest2 = Path.fromParts(parts2.slice(node2[LEVEL]), engine2.root);
+        const src2 = aPath.join(srcFsInstance.root, ...srcParts.slice(srcNode[LEVEL]));
+        const dest2 = aPath.join(destFsInstance.root, ...destParts.slice(destNode[LEVEL]));
 
-        // efficient
-        if (engine1 === engine2) {
+        if (srcFsInstance === destFsInstance) {
             try {
-                return engine1.copyFile(src2, dest2);
+                return srcFsInstance._copyFileSync(src2, dest2, flags);
             } catch (err) {
                 if (err instanceof FSException) {
                     err.path = src;
@@ -477,9 +446,39 @@ export default class BaseFileSystem {
             }
         }
 
-        // implement sync stream ?
+        const SIZE = 65536;
+        const COPYFILE_EXCL = 1;
 
-        throw new Error("not supported");
+        const {
+            size,
+            mode
+        } = srcFsInstance.statSync(src2);
+
+        const fdSrc = srcFsInstance.openSync(src2, "r");
+        const fdDest = destFsInstance.openSync(dest2, (flags & COPYFILE_EXCL) ? "wx" : "w", mode);
+
+        const length = size < SIZE ? size : SIZE;
+
+        let position = 0;
+        const peaceSize = size < SIZE ? 0 : size % SIZE;
+        const offset = 0;
+
+        let buffer = Buffer.allocUnsafe(length);
+        for (let i = 0; length + position + peaceSize <= size; i++ , position = length * i) {
+            srcFsInstance.readSync(fdSrc, buffer, offset, length, position);
+            destFsInstance.writeSync(fdDest, buffer, offset, length, position);
+        }
+
+        if (peaceSize) {
+            const length = peaceSize;
+            buffer = Buffer.allocUnsafe(length);
+
+            srcFsInstance.readSync(fdSrc, buffer, offset, length, position);
+            destFsInstance.writeSync(fdDest, buffer, offset, length, position);
+        }
+
+        srcFsInstance.closeSync(fdSrc);
+        destFsInstance.closeSync(fdDest);
     }
 
     createReadStream(path, options) {
@@ -772,9 +771,7 @@ export default class BaseFileSystem {
             callback = mode;
             mode = 0o666;
         }
-        this._handlePath("open", path, (err, fd) => {
-            callback(err, fd);
-        }, flags, mode);
+        this._handlePath("open", path, callback, flags, mode);
     }
 
     openSync(path, flags = "r", mode = 0o666) {
@@ -1650,10 +1647,6 @@ export default class BaseFileSystem {
     _throw(code, path, dest, syscall) {
         throw this._createError(code, path, dest, syscall);
     }
-
-    // _resolve(path) {
-    //     return Path.resolve(path, this.root);
-    // }
 }
 
 for (const method of fsMethods) {

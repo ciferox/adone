@@ -80,7 +80,7 @@ export default class NodejsManager {
             path: fullPath,
             downloaded: false
         };
-
+        
         if (outPath === downloadPath && !force && await fs.exists(fullPath)) {
             result.downloaded = false;
             return result;
