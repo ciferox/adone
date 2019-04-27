@@ -22,10 +22,6 @@ export default class extends Subsystem {
     })
     async devCommand(args, opts) {
         try {
-            adone.app.runtime.logger.watching({
-                message: `${args.has("path") ? args.get("path") : "whole project"}`
-            });
-
             const path = this.parent.resolvePath(args, opts);
             const manager = await this.parent.connectRealm({
                 cwd: process.cwd(),
