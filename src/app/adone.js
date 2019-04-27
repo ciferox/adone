@@ -5,7 +5,7 @@ import Configuration from "../lib/app/configuration";
 
 const {
     is,
-    std,
+    path,
     app
 } = adone;
 
@@ -13,7 +13,7 @@ const {
     subsystem
 } = app;
 
-const command = (name) => std.path.join(__dirname, "..", "lib", "commands", name);
+const command = (name) => path.join(__dirname, "..", "lib", "commands", name);
 
 @subsystem({
     subsystems: [
@@ -43,12 +43,12 @@ const command = (name) => std.path.join(__dirname, "..", "lib", "commands", name
         }
     ]
 })
-class AdoneCLI extends app.Application {
+class ADONEApp extends app.Application {
     async onConfigure() {
         !is.windows && this.exitOnSignal("SIGINT");
 
         this.config = await Configuration.load({
-            cwd: std.path.join(adone.ETC_PATH, "adone")
+            cwd: path.join(adone.ETC_PATH, "adone")
         });
 
         this._configureLogger();
@@ -122,7 +122,7 @@ class AdoneCLI extends app.Application {
     }
 }
 
-app.run(AdoneCLI, {
+app.run(ADONEApp, {
     useArgs: true,
     version: adone.package.version
 });

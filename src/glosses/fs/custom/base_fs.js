@@ -10,6 +10,7 @@ import fs from "fs";
 import { identity, isFunction, isNumber, isString, unique } from "../../../common";
 import createError, { FSException } from "./errors";
 import aPath from "../../path";
+import fsMethods from "./fs_methods";
 
 const { constants } = fs;
 
@@ -17,93 +18,7 @@ const FS_INSTANCE = Symbol("FS_INSTANCE");
 const LEVEL = Symbol("LEVEL");
 const PARENT = Symbol("PARENT");
 
-// fs methods in alphabetical order
-// [name, isAbstract]
-const fsMethods = [
-    "access",
-    "accessSync",
-    "appendFile",
-    "appendFileSync",
-    "chmod",
-    "chmodSync",
-    "chown",
-    "chownSync",
-    "chownr", // extra
-    "chownrSync", // extra
-    "close",
-    "closeSync",
-    "copyFile",
-    "copyFileSync",
-    "createReadStream",
-    "createWriteStream",
-    "exists", // deprecated
-    "existsSync",
-    "fallocate", // extra
-    "fallocateSync", // extra
-    "fchmod",
-    "fchmodSync",
-    "fchown",
-    "fchownSync",
-    "fdatasync",
-    "fdatasyncSync",
-    "fstat",
-    "fstatSync",
-    "fsync",
-    "fsyncSync",
-    "ftruncate",
-    "ftruncateSync",
-    "futimes",
-    "futimesSync",
-    "lchmod",
-    "lchmodSync",
-    "lchown",
-    "lchownSync",
-    "link",
-    "linkSync",
-    "lseek", // extra
-    "lseekSync", // extra
-    "lstat",
-    "lstatSync",
-    "mkdir",
-    "mkdirSync",
-    "mkdtemp",
-    "mkdtempSync",
-    "mmap", // extra
-    "mmapSync", // extra
-    "open",
-    "openSync",
-    "read",
-    "readdir",
-    "readdirSync",
-    "readFile",
-    "readFileSync",
-    "readlink",
-    "readlinkSync",
-    "readSync",
-    "realpath",
-    "realpathSync",
-    "rename",
-    "renameSync",
-    "rmdir",
-    "rmdirSync",
-    "stat",
-    "statSync",
-    "symlink",
-    "symlinkSync",
-    "truncate",
-    "truncateSync",
-    "unlink",
-    "unlinkSync",
-    "utimes",
-    "utimesSync",
-    "write",
-    "writeFile",
-    "writeFileSync",
-    "writeSync",
-    "watch",
-    "watchFile",
-    "unwatchFile"
-];
+
 
 const appenFileOptions = (opts) => {
     let options;
@@ -149,7 +64,6 @@ const readdirOptions = (opts) => {
             ? { encoding: null }
             : { ...opts };
     }
-    // console.log(adone.inspect(options.encoding));
     options.encoding = isString(options.encoding)
         ? options.encoding
         : options.encoding === null
@@ -305,20 +219,20 @@ export default class BaseFileSystem {
         return this;
     }
 
-    mock(obj) {
-        const origMethods = {};
-        for (const method of fsMethods) {
-            origMethods[method] = obj[method];
-            obj[method] = (...args) => this[method](...args);
-        }
-        obj.restore = () => {
-            for (const method of fsMethods) {
-                obj[method] = origMethods[method];
-            }
-            delete obj.restore;
-        };
-        return obj;
-    }
+    // mock(obj) {
+    //     const origMethods = {};
+    //     for (const method of fsMethods) {
+    //         origMethods[method] = obj[method];
+    //         obj[method] = (...args) => this[method](...args);
+    //     }
+    //     obj.restore = () => {
+    //         for (const method of fsMethods) {
+    //             obj[method] = origMethods[method];
+    //         }
+    //         delete obj.restore;
+    //     };
+    //     return obj;
+    // }
 
     // fs methods
 
@@ -378,7 +292,6 @@ export default class BaseFileSystem {
     }
 
     close(fd, callback) {
-        console.log("close", fd);
         this._handleFd("close", fd, callback);
     }
 
@@ -860,14 +773,12 @@ export default class BaseFileSystem {
             mode = 0o666;
         }
         this._handlePath("open", path, (err, fd) => {
-            console.log("open", fd);
             callback(err, fd);
         }, flags, mode);
     }
 
     openSync(path, flags = "r", mode = 0o666) {
         const fd = this._handlePathSync("openSync", path, flags, mode);
-        console.log("openSync", fd);
         return fd;
     }
 
@@ -1173,7 +1084,6 @@ export default class BaseFileSystem {
             callback = position;
             position = undefined;
         }
-        console.log("write", fd);
         this._handleFd("write", fd, callback, buffer, offset, length, position);
     }
 
@@ -1209,7 +1119,7 @@ export default class BaseFileSystem {
         }
         const { fd, fs } = this._fdMap.get(mappedFd);
         const res = fs[fs === this ? `_${method}` : method](fd, ...args);
-        if (method === "close") {
+        if (method === "closeSync") {
             // fd has been closed, we can delete the key
             this._fdMap.delete(mappedFd);
         }
@@ -1217,13 +1127,11 @@ export default class BaseFileSystem {
     }
 
     _handleFd(method, mappedFd, callback, ...args) {
-        console.log(method, mappedFd);
         if (!this._fdMap.has(mappedFd)) {
             callback(this._createError("EBADF", null, null, method));
             return;
         }
         const { fd, fs } = this._fdMap.get(mappedFd);
-        console.log(method, mappedFd, "->", fd);
         fs[fs === this ? `_${method}` : method](fd, ...args, (err, ...args) => {
             if (err) {
                 callback(err);
@@ -1307,7 +1215,6 @@ export default class BaseFileSystem {
                             }
                             throw err;
                         }
-                        console.log("stat", stat);
                         if (!stat.isDirectory()) {
                             this._throw("ENOTDIR", path, dest, method);
                         }
@@ -1455,7 +1362,6 @@ export default class BaseFileSystem {
                                 callback(err);
                                 return;
                             }
-                            console.log("stat", stat);
                             if (!stat.isDirectory()) {
                                 callback(this._createError("ENOTDIR", path, dest, method));
                                 return;
@@ -1685,7 +1591,6 @@ export default class BaseFileSystem {
                          * this method returns a file descriptor
                          * we must remember which engine returned it to perform reverse substitutions
                          */
-                        console.log("_handlePath", method, result);
                         callback(null, this._storeFd(result, fsInstance));
                         return;
                     }

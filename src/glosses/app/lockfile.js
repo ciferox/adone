@@ -55,7 +55,7 @@ const acquireLock = async (file, options) => {
 
         // If it's stale, remove it and try again!
         // Skip stale check to avoid recursiveness
-        await options.fs.rm(getLockFile(file, options));
+        await options.fs.remove(getLockFile(file, options));
 
         return acquireLock(file, Object.assign({}, options, { stale: 0 }));
     }
@@ -158,7 +158,7 @@ export const release = async (file, options) => {
     lock.released = true; // Signal the lock has been released
     delete lockFiles[realFile]; // Delete from locks
 
-    return options.fs.rm(getLockFile(realFile, options));
+    return options.fs.remove(getLockFile(realFile, options));
 };
 
 export const create = async (file, options, compromised = (err) => {

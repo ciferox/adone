@@ -4,7 +4,7 @@ const {
     is,
     fs,
     std,
-    realm: { BaseTask, RealmManager, }
+    realm: { BaseTask, RealmManager }
 } = adone;
 
 @adone.task.task("realmFork")
@@ -100,7 +100,7 @@ export default class extends BaseTask {
             const toPath = std.path.join(this.destCwd, dir);
 
             if (await fs.isDirectory(fromPath)) {
-                await fs.copy(fromPath, toPath, {
+                await fs.copyEx(fromPath, toPath, {
                     base: realm.cwd,
                     results: false,
                     dot: true,
@@ -108,7 +108,7 @@ export default class extends BaseTask {
                     filter
                 });
             } else {
-                await fs.copyFile(fromPath, toPath, { overwrite: false });
+                await fs.copyFile(fromPath, toPath, fs.constants.COPYFILE_EXCL);
             }
         }
 

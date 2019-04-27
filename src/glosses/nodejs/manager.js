@@ -119,6 +119,7 @@ export default class NodejsManager {
             result.downloaded = true;
         } catch (err) {
             progressBar.destroy();
+            console.error(err.stack);
             throw err;
             // throw new error.Exception(`Could not get ${url}: ${err.message}`);
         }

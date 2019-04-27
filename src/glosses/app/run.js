@@ -52,7 +52,7 @@ const _bootstrapApp = async (app, {
             for (const file of lockFiles) {
                 try {
                     const options = locks[file].options;
-                    await locks[file].options.fs.rm(app.lockfile.getLockFile(file, options)); // eslint-disable-line
+                    await locks[file].options.fs.remove(app.lockfile.getLockFile(file, options)); // eslint-disable-line
                 } catch (e) {
                     //
                 }

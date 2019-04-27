@@ -448,12 +448,36 @@ const patch = (fs) => {
         go$open(path, flags, mode, cb);
     };
 
+    // Streams
+
+    const closeFsStream = function (stream, cb, err) {
+        adone.fs.close(stream.fd, (er) => {
+            er = er || err;
+            cb(er);
+            stream.closed = true;
+            if (!er) {
+                stream.emit("close");
+            }
+        });
+    };
+
+    const _destroy = function (err, cb) {
+        if (typeof this.fd !== "number") {
+            this.once("open", closeFsStream.bind(null, this, cb, err));
+            return;
+        }
+
+        closeFsStream(this, cb, err);
+        this.fd = null;
+    };
+
     const fs$ReadStream = fs.ReadStream;
     if (fs$ReadStream) {
         ReadStream.prototype = Object.create(fs$ReadStream.prototype);
         ReadStream.prototype.open = function () {
             const that = this;
-            fs.open(that.path, that.flags, that.mode, (err, fd) => {
+            // use adone fs here, because we can substitute it by custom fs
+            adone.fs.open(that.path, that.flags, that.mode, (err, fd) => {
                 if (err) {
                     if (that.autoClose) {
                         that.destroy();
@@ -463,10 +487,98 @@ const patch = (fs) => {
                 } else {
                     that.fd = fd;
                     that.emit("open", fd);
+                    that.emit("ready");
                     that.read();
                 }
             });
         };
+
+        const kMinPoolSpace = 128;  
+        
+        let pool;
+        // It can happen that we expect to read a large chunk of data, and reserve
+        // a large chunk of the pool accordingly, but the read() call only filled
+        // a portion of it. If a concurrently executing read() then uses the same pool,
+        // the "reserved" portion cannot be used, so we allow it to be re-used as a
+        // new pool later.
+        const poolFragments = [];
+
+        const allocNewPool = function (poolSize) {
+            if (poolFragments.length > 0) {
+                pool = poolFragments.pop();
+            } else {
+                pool = Buffer.allocUnsafe(poolSize);
+            }
+            pool.used = 0;
+        };
+
+        ReadStream.prototype._read = function (n) {
+            if (typeof this.fd !== "number") {
+                return this.once("open", function () {
+                    this._read(n);
+                });
+            }
+
+            if (this.destroyed) {
+                return;
+            }
+
+            if (!pool || pool.length - pool.used < kMinPoolSpace) {
+                // Discard the old pool.
+                allocNewPool(this.readableHighWaterMark);
+            }
+
+            // Grab another reference to the pool in the case that while we're
+            // in the thread pool another read() finishes up the pool, and
+            // allocates a new one.
+            const thisPool = pool;
+            let toRead = Math.min(pool.length - pool.used, n);
+            const start = pool.used;
+
+            if (this.pos !== undefined) {
+                toRead = Math.min(this.end - this.pos + 1, toRead);
+            } else {
+                toRead = Math.min(this.end - this.bytesRead + 1, toRead);
+            }
+
+            // Already read everything we were supposed to read!
+            // treat as EOF.
+            if (toRead <= 0) {
+                return this.push(null);
+            }
+
+            // the actual read.
+            adone.fs.read(this.fd, pool, pool.used, toRead, this.pos, (er, bytesRead) => {
+                if (er) {
+                    if (this.autoClose) {
+                        this.destroy();
+                    }
+                    this.emit("error", er);
+                } else {
+                    let b = null;
+                    // Now that we know how much data we have actually read, re-wind the
+                    // 'used' field if we can, and otherwise allow the remainder of our
+                    // reservation to be used as a new pool later.
+                    if (start + toRead === thisPool.used && thisPool === pool) { thisPool.used += bytesRead - toRead; }
+                    else if (toRead - bytesRead > kMinPoolSpace) { poolFragments.push(thisPool.slice(start + bytesRead, start + toRead)); }
+
+                    if (bytesRead > 0) {
+                        this.bytesRead += bytesRead;
+                        b = thisPool.slice(start, start + bytesRead);
+                    }
+
+                    this.push(b);
+                }
+            });
+
+            // Move the pool positions, and internal position for reading.
+            if (this.pos !== undefined) {
+                this.pos += toRead;
+            }
+            pool.used += toRead;
+        };
+
+        ReadStream.prototype._destroy = _destroy;
     }
 
     const fs$WriteStream = fs.WriteStream;
@@ -474,16 +586,50 @@ const patch = (fs) => {
         WriteStream.prototype = Object.create(fs$WriteStream.prototype);
         WriteStream.prototype.open = function () {
             const that = this;
-            fs.open(that.path, that.flags, that.mode, (err, fd) => {
+            // use adone fs here, because we can substitute it by custom fs
+            adone.fs.open(that.path, that.flags, that.mode, (err, fd) => {
                 if (err) {
-                    that.destroy();
+                    if (that.autoClose) {
+                        that.destroy();
+                    }
                     that.emit("error", err);
                 } else {
                     that.fd = fd;
                     that.emit("open", fd);
+                    that.emit("ready");
                 }
             });
         };
+
+        const _wsWrite = WriteStream.prototype._write;
+        WriteStream.prototype._write = function (data, encoding, cb) {
+            if (!(data instanceof Buffer)) {
+                return _wsWrite.apply(this, data, encoding, cb);
+            }
+
+            if (typeof this.fd !== "number") {
+                return this.once("open", function () {
+                    this._write(data, encoding, cb);
+                });
+            }
+
+            adone.fs.write(this.fd, data, 0, data.length, this.pos, (er, bytes) => {
+                if (er) {
+                    if (this.autoClose) {
+                        this.destroy();
+                    }
+                    return cb(er);
+                }
+                this.bytesWritten += bytes;
+                cb();
+            });
+
+            if (this.pos !== undefined) {
+                this.pos += data.length;
+            }
+        };
+
+        WriteStream.prototype._destroy = _destroy;
     }
 
     function ReadStream(path, options) {

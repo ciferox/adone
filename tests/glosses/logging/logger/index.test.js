@@ -255,7 +255,7 @@ describe("logger", () => {
             // Remove all log fixtures
             //
             const removeFixtures = async () => {
-                await adone.fs.rm(path.join(__dirname, "fixtures", "logs", "testtailrollingfiles*"));
+                await adone.fs.remove(path.join(__dirname, "fixtures", "logs", "testtailrollingfiles*"));
             };
 
             let tailrollTransport = null;
@@ -340,7 +340,7 @@ describe("logger", () => {
             // Remove all log fixtures
             //
             const removeFixtures = async () => {
-                await adone.fs.rm(path.join(__dirname, "fixtures", "logs", "testmaxsize*"));
+                await adone.fs.remove(path.join(__dirname, "fixtures", "logs", "testmaxsize*"));
             };
 
             let testDone = false;
@@ -444,7 +444,7 @@ describe("logger", () => {
 
         describe("logger.transport.File zippedArchive", () => {
             const removeFixtures = async () => {
-                await adone.fs.rm(path.join(__dirname, "fixtures", "logs", "testarchive*"));
+                await adone.fs.remove(path.join(__dirname, "fixtures", "logs", "testarchive*"));
             };
 
             let archiveTransport = null;

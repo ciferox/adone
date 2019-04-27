@@ -4,7 +4,7 @@ const {
     configuration,
     is,
     fs,
-    std,
+    path,
     realm
 } = adone;
 
@@ -15,19 +15,19 @@ const __ = adone.lazify({
 @adone.task.task("realmCreate")
 export default class extends realm.BaseTask {
     async main(info = {}) {
-        if (!is.string(info.basePath)) {
-            throw new error.InvalidArgumentException("Invalid base path");
-        }
-
         if (!is.string(info.name)) {
             throw new error.InvalidArgumentException("Invalid name of realm");
+        }
+
+        if (!is.string(info.basePath)) {
+            throw new error.InvalidArgumentException("Invalid base path");
         }
 
         if (!(await fs.exists(info.basePath))) {
             await fs.mkdirp(info.basePath);
         }
 
-        const cwd = std.path.join(info.basePath, info.dir || info.name);
+        const cwd = path.join(info.basePath, info.dir || info.name);
         if (await fs.exists(cwd)) {
             throw new error.ExistsException(`Path '${cwd}' already exists`);
         }
@@ -38,7 +38,7 @@ export default class extends realm.BaseTask {
             message: "initializing"
         });
 
-        await fs.mkdirp(std.path.join(cwd, ".adone"));
+        await fs.mkdirp(path.join(cwd, ".adone"));
 
         this.manager.notify(this, "progress", {
             message: `creating ${style.primary(configuration.NpmConfig.configName)}`

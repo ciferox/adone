@@ -78,7 +78,7 @@ export const lazify = (modules, _obj, _require = require, {
     asNamespace = false,
     configurable = false,
     enumerable = true,
-    writable = false,
+    writable = true, // allow substitute namespaces by default
     mapper = defaultMapper
 } = {}) => {
     const obj = _obj || {};

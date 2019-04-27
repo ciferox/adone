@@ -46,7 +46,7 @@ export const suiteRunner = (suite) => {
             });
         },
         async after() {
-            await fs.rm(tmpPath);
+            await fs.remove(tmpPath);
         },
         run() {
             for (const { descr, realName, fileName, testName, content, check, load } of __.tests) {

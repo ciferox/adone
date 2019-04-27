@@ -170,7 +170,7 @@ describe("net", "http", "server", "request", "parsers", () => {
 
         after("clean", async () => {
             await Promise.all(_files.map(({ path }) => {
-                return fs.rm(path).catch(noop);
+                return fs.remove(path).catch(noop);
             }));
         });
 

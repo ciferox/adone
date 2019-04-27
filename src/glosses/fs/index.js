@@ -1,6 +1,13 @@
 import { improve } from "./extra";
 
-import base from "./base";
+const ct = typeof (global.__custom_adone_fs__);
+const customFs = (ct === "object")
+    ? global.__custom_adone_fs__
+    : ct === "function"
+        ? global.__custom_adone_fs__()
+        : null;
+
+const base = customFs || require("./base").default;
 
 const efs = adone.asNamespace(improve(base));
 efs.base = base;

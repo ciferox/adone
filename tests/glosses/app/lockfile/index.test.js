@@ -49,17 +49,17 @@ describe("lock file", () => {
             }
         }
 
-        await fs.rm(tmpFile);
-        await fs.rm(tmpFileLock);
-        await fs.rm(tmpFileSymlink);
-        await fs.rm(tmpFileSymlinkLock);
+        await fs.remove(tmpFile);
+        await fs.remove(tmpFileLock);
+        await fs.remove(tmpFileSymlink);
+        await fs.remove(tmpFileSymlinkLock);
     };
 
     describe("create()", () => {
         beforeEach(async () => {
             await fs.writeFile(tmpFile, "");
             try {
-                await fs.rm(tmpFileSymlink);
+                await fs.remove(tmpFileSymlink);
             } catch (err) { }
         });
 
@@ -92,7 +92,7 @@ describe("lock file", () => {
             try {
                 await fs.mkdir(lockPath);
             } catch (err) {
-                await fs.rm(lockPath);
+                await fs.remove(lockPath);
                 await fs.mkdir(lockPath);
             }
             const lockfilePath = adone.std.path.join(lockPath, "dir.lock");
@@ -106,7 +106,7 @@ describe("lock file", () => {
             assert.isTrue(await fs.exists(lockfilePath));
             lockfile.release(lockPath, options);
 
-            await fs.rm(lockPath);
+            await fs.remove(lockPath);
         });
 
         it("should fail if already locked", async () => {
@@ -195,7 +195,7 @@ describe("lock file", () => {
             const customFs = Object.assign({}, fs);
 
             customFs.stat = async (path, callback) => {
-                await fs.rm(tmpFileLock);
+                await fs.remove(tmpFileLock);
                 const result = await fs.stat(path, callback);
                 customFs.stat = fs.stat;
                 return result;
@@ -344,7 +344,7 @@ describe("lock file", () => {
                 await lockfile.create(tmpFile);
                 done();
             });
-            await fs.rm(tmpFileLock);
+            await fs.remove(tmpFileLock);
         });
 
         it("should call the compromised function if failed to update the lockfile mtime too many times", async (done) => {
@@ -434,7 +434,7 @@ describe("lock file", () => {
                 update: 1000
             });
 
-            await fs.rm(tmpFileLock);
+            await fs.remove(tmpFileLock);
         });
 
         it("should set update to a minimum of 1000", async (done) => {
@@ -491,7 +491,7 @@ describe("lock file", () => {
     describe("release()", () => {
         beforeEach(async () => {
             await fs.writeFile(tmpFile, "");
-            await fs.rm(tmpFileSymlink);
+            await fs.remove(tmpFileSymlink);
         });
 
         afterEach(clearLocks);
@@ -547,7 +547,7 @@ describe("lock file", () => {
 
             customFs.rm = async (path) => {
                 called = true;
-                await fs.rm(path);
+                await fs.remove(path);
             };
 
             await lockfile.create(tmpFile);
@@ -636,7 +636,7 @@ describe("lock file", () => {
     describe("check()", () => {
         beforeEach(async () => {
             await fs.writeFile(tmpFile, "");
-            await fs.rm(tmpFileSymlink);
+            await fs.remove(tmpFileSymlink);
         });
 
         afterEach(clearLocks);

@@ -6,7 +6,7 @@ const {
     error,
     fs,
     realm,
-    std
+    path: aPath
 } = adone;
 
 describe("realm", "common tasks", () => {
@@ -17,7 +17,7 @@ describe("realm", "common tasks", () => {
 
     before(async () => {
         tmpTestPath = await getTmpPath();
-        newRealmsPath = std.path.join(tmpTestPath, "new_realms");
+        newRealmsPath = aPath.join(tmpTestPath, "new_realms");
         await rootRealm.connect();
     });
 
@@ -27,7 +27,7 @@ describe("realm", "common tasks", () => {
         });
 
         after(async () => {
-            await fs.rm(tmpTestPath);
+            await fs.remove(tmpTestPath);
         });
 
         it("create realm without 'name' should be thrown", async () => {
@@ -64,14 +64,14 @@ describe("realm", "common tasks", () => {
 
             await rootRealm.runAndWait("realmCreate", info);
 
-            assert.equal(info.cwd, std.path.join(newRealmsPath, info.name));
+            assert.equal(info.cwd, aPath.join(newRealmsPath, info.name));
             assert.isTrue(await fs.exists(info.cwd));
-            assert.isTrue(await fs.isFile(std.path.join(info.cwd, realm.Configuration.configName)));
-            assert.isTrue(await fs.isFile(std.path.join(info.cwd, configuration.NpmConfig.configName)));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".gitignore")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".git")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".eslintrc.js")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, "jsconfig.json")));
+            assert.isTrue(await fs.isFile(aPath.join(info.cwd, realm.Configuration.configName)));
+            assert.isTrue(await fs.isFile(aPath.join(info.cwd, configuration.NpmConfig.configName)));
+            assert.isFalse(await fs.exists(aPath.join(info.cwd, ".gitignore")));
+            assert.isFalse(await fs.exists(aPath.join(info.cwd, ".git")));
+            assert.isFalse(await fs.exists(aPath.join(info.cwd, ".eslintrc.js")));
+            assert.isFalse(await fs.exists(aPath.join(info.cwd, "jsconfig.json")));
 
             const packageConfig = await configuration.NpmConfig.load({
                 cwd: info.cwd
@@ -79,7 +79,7 @@ describe("realm", "common tasks", () => {
 
             assert.equal(packageConfig.raw.name, name);
             assert.equal(packageConfig.raw.description, "Sample project");
-            assert.equal(std.path.basename(info.cwd), name);
+            assert.equal(aPath.basename(info.cwd), name);
         });
 
         it("create realm with specified 'dir'", async () => {
@@ -94,21 +94,21 @@ describe("realm", "common tasks", () => {
 
             await rootRealm.runAndWait("realmCreate", info);
 
-            assert.equal(info.cwd, std.path.join(newRealmsPath, info.dir));
+            assert.equal(info.cwd, aPath.join(newRealmsPath, info.dir));
             assert.isTrue(await fs.exists(info.cwd));
-            assert.isTrue(await fs.isFile(std.path.join(info.cwd, realm.Configuration.configName)));
-            assert.isTrue(await fs.isFile(std.path.join(info.cwd, configuration.NpmConfig.configName)));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".gitignore")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".git")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".eslintrc.js")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, "jsconfig.json")));
+            assert.isTrue(await fs.isFile(aPath.join(info.cwd, realm.Configuration.configName)));
+            assert.isTrue(await fs.isFile(aPath.join(info.cwd, configuration.NpmConfig.configName)));
+            assert.isFalse(await fs.exists(aPath.join(info.cwd, ".gitignore")));
+            assert.isFalse(await fs.exists(aPath.join(info.cwd, ".git")));
+            assert.isFalse(await fs.exists(aPath.join(info.cwd, ".eslintrc.js")));
+            assert.isFalse(await fs.exists(aPath.join(info.cwd, "jsconfig.json")));
 
             const packageConfig = await configuration.NpmConfig.load({
                 cwd: info.cwd
             });
 
             assert.equal(packageConfig.raw.name, name);
-            assert.equal(std.path.basename(info.cwd), dir);
+            assert.equal(aPath.basename(info.cwd), dir);
         });
 
         it("create realm with git initialization", async () => {
@@ -122,10 +122,10 @@ describe("realm", "common tasks", () => {
 
             await rootRealm.runAndWait("realmCreate", info);
 
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".eslintrc.js")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, "jsconfig.json")));
-            assert.isTrue(await fs.isFile(std.path.join(info.cwd, ".gitignore")));
-            assert.isTrue(await fs.isDirectory(std.path.join(info.cwd, ".git")));
+            assert.isFalse(await fs.exists(aPath.join(info.cwd, ".eslintrc.js")));
+            assert.isFalse(await fs.exists(aPath.join(info.cwd, "jsconfig.json")));
+            assert.isTrue(await fs.isFile(aPath.join(info.cwd, ".gitignore")));
+            assert.isTrue(await fs.isDirectory(aPath.join(info.cwd, ".git")));
         });
 
         it("create realm with 'eslintrc.js' config", async () => {
@@ -139,10 +139,10 @@ describe("realm", "common tasks", () => {
 
             await rootRealm.runAndWait("realmCreate", info);
 
-            assert.isTrue(await fs.isFile(std.path.join(info.cwd, ".eslintrc.js")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, "jsconfig.json")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".gitignore")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".git")));
+            assert.isTrue(await fs.isFile(aPath.join(info.cwd, ".eslintrc.js")));
+            assert.isFalse(await fs.exists(aPath.join(info.cwd, "jsconfig.json")));
+            assert.isFalse(await fs.exists(aPath.join(info.cwd, ".gitignore")));
+            assert.isFalse(await fs.exists(aPath.join(info.cwd, ".git")));
         });
 
         it("create realm with 'jsconfig.json' config", async () => {
@@ -156,10 +156,10 @@ describe("realm", "common tasks", () => {
 
             await rootRealm.runAndWait("realmCreate", info);
 
-            assert.isTrue(await fs.isFile(std.path.join(info.cwd, "jsconfig.json")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".eslintrc.js")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".gitignore")));
-            assert.isFalse(await fs.exists(std.path.join(info.cwd, ".git")));
+            assert.isTrue(await fs.isFile(aPath.join(info.cwd, "jsconfig.json")));
+            assert.isFalse(await fs.exists(aPath.join(info.cwd, ".eslintrc.js")));
+            assert.isFalse(await fs.exists(aPath.join(info.cwd, ".gitignore")));
+            assert.isFalse(await fs.exists(aPath.join(info.cwd, ".git")));
         });
     });
 
@@ -171,9 +171,9 @@ describe("realm", "common tasks", () => {
         });
 
         afterEach(async () => {
-            await fs.rm(tmpTestPath);
+            await fs.remove(tmpTestPath);
             if (is.string(tmpPath) && await fs.exists(tmpPath)) {
-                await fs.rm(tmpPath);
+                await fs.remove(tmpPath);
             }
         });
 
@@ -238,7 +238,7 @@ describe("realm", "common tasks", () => {
                 path: newRealmsPath
             });
 
-            const destPath = std.path.join(newRealmsPath, "1");
+            const destPath = aPath.join(newRealmsPath, "1");
             assert.equal(destRealm.cwd, destPath);
             assert.sameMembers(await fs.readdir(getRealmPathFor("no_tasks")), await fs.readdir(destRealm.cwd));
         });
@@ -250,10 +250,10 @@ describe("realm", "common tasks", () => {
                 path: newRealmsPath
             });
 
-            const destPath = std.path.join(newRealmsPath, "2");
+            const destPath = aPath.join(newRealmsPath, "2");
             assert.equal(destRealm.cwd, destPath);
             assert.sameMembers(await fs.readdir(getRealmPathFor("realm3")), await fs.readdir(destRealm.cwd));
-            assert.sameMembers(await fs.readdir(std.path.join(getRealmPathFor("realm3"), "lib", "tasks")), await fs.readdir(std.path.join(destRealm.cwd, "lib", "tasks")));
+            assert.sameMembers(await fs.readdir(aPath.join(getRealmPathFor("realm3"), "lib", "tasks")), await fs.readdir(aPath.join(destRealm.cwd, "lib", "tasks")));
         });
 
         it("fork whole realm when 'artifactTags=[]'", async () => {
@@ -264,7 +264,7 @@ describe("realm", "common tasks", () => {
                 artifactTags: []
             });
 
-            const destPath = std.path.join(newRealmsPath, "1");
+            const destPath = aPath.join(newRealmsPath, "1");
             assert.equal(destRealm.cwd, destPath);
             assert.sameMembers(await fs.readdir(getRealmPathFor("realm1")), await fs.readdir(destRealm.cwd));
         });
@@ -276,7 +276,7 @@ describe("realm", "common tasks", () => {
                 name: ".adone",
                 path: await fs.tmpName()
             });
-            tmpPath = std.path.dirname(destRealm.cwd);
+            tmpPath = aPath.dirname(destRealm.cwd);
 
             const srcRootFiles = (await fs.readdir(rootRealm.cwd));
             const dstRootFiles = (await fs.readdir(destRealm.cwd));
@@ -290,7 +290,7 @@ describe("realm", "common tasks", () => {
                 path: await fs.tmpName(),
                 artifactTags: ["share", "info"]
             });
-            tmpPath = std.path.dirname(destRealm.cwd);
+            tmpPath = aPath.dirname(destRealm.cwd);
 
             const dstRootFiles = (await fs.readdir(destRealm.cwd));
             assert.sameMembers(dstRootFiles, [".adone", "package.json", "share", "LICENSE", "README.md"]);
@@ -307,11 +307,11 @@ describe("realm", "common tasks", () => {
                 name: "adone",
                 path: await getTmpPath()
             });
-            tmpPath = std.path.dirname(superRealm.cwd);
+            tmpPath = aPath.dirname(superRealm.cwd);
         });
 
         after(async () => {
-            await fs.rm(tmpPath);
+            await fs.remove(tmpPath);
         });
 
         it("merge realm without superRealm should be thrown", async () => {
@@ -337,12 +337,12 @@ describe("realm", "common tasks", () => {
                 subRealm
             });
 
-            const origList = (await fs.readdirp(subRealm)).map((entry) => std.path.relative(subRealm, entry.fullPath));
-            const mergedList = (await fs.readdirp(mergedPath)).map((entry) => std.path.relative(mergedPath, entry.fullPath));
+            const origList = (await fs.readdirp(subRealm)).map((entry) => aPath.relative(subRealm, entry.fullPath));
+            const mergedList = (await fs.readdirp(mergedPath)).map((entry) => aPath.relative(mergedPath, entry.fullPath));
             assert.sameDeepMembers(origList, mergedList);
-            assert.isFalse(mergedList.includes(std.path.join(".adone", "dev.json")));
+            assert.isFalse(mergedList.includes(aPath.join(".adone", "dev.json")));
 
-            await fs.rm(mergedPath);
+            await fs.remove(mergedPath);
         });
 
         it("merge realm with symlink=true", async () => {
@@ -357,8 +357,8 @@ describe("realm", "common tasks", () => {
 
             const st = await fs.lstat(mergedPath);
             assert.isTrue(st.isSymbolicLink());
-            const mergedList = (await fs.readdirp(mergedPath)).map((entry) => std.path.relative(subRealm, entry.fullPath));
-            assert.isTrue(mergedList.includes(std.path.join(".adone", "dev.json")));
+            const mergedList = (await fs.readdirp(mergedPath)).map((entry) => aPath.relative(subRealm, entry.fullPath));
+            assert.isTrue(mergedList.includes(aPath.join(".adone", "dev.json")));
             const mergedRealm = new realm.RealmManager({
                 cwd: mergedPath
             });

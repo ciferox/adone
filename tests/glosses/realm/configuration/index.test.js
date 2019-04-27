@@ -104,7 +104,7 @@ describe("realm", "Configuration", () => {
             ]);
         });
 
-        it("project entries", async () => {
+        it.todo("project entries", async () => {
             assert.includeDeepMembers(config.getEntries(), [
                 {
                     id: "assets",
@@ -145,11 +145,14 @@ describe("realm", "Configuration", () => {
                     index: "index.js"
                 },
                 {
-                    id: "index",
-                    description: "ADONE index file",
-                    src: "src/index.js",
+                    id: "common",
+                    description: "ADONE common",
+                    src: [
+                        "src/index.js",
+                        "src/common.js",
+                        "src/reflect.js"
+                    ],
                     dst: "lib",
-                    index: "index.js",
                     task: "transpile"
                 }
             ]);

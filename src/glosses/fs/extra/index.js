@@ -1,7 +1,7 @@
 import clone from "../clone";
 const {
     is,
-    promise: { universalify, universalifyFromPromise },
+    promise: { universalify },
     lazify
 } = adone;
 
@@ -132,6 +132,7 @@ export const improve = (fs) => {
         removeSync: "./remove/sync",
         whichSync: "./which/sync",
 
+        copyEx: "./copy_ex",
         readdirp: "./readdirp", // only promisified
         util: "./utils",
         createFiles: "./create_files",
@@ -145,6 +146,7 @@ export const improve = (fs) => {
         RandomAccessBufferReader: ["./random_access", "RandomAccessBufferReader"],
         tmpName: "./tmp_name",
         Watcher: "./watcher", 
+        replaceInFile: "./replace_in_file"
     }, improvedFs, require, {
         mapper: (mod) => {
             // console.log(adone.typeOf(lazify.mapper(mod)))
@@ -155,6 +157,7 @@ export const improve = (fs) => {
 
     lazify({
         Mode: "./mode",
+        junk: "./junk"
         // watch: () => (paths, options) => new improvedFs.Watcher(options || {}).add(paths),
     }, improvedFs, require);
 

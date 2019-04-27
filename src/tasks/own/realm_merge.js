@@ -6,7 +6,7 @@ const {
     is,
     fast,
     fs,
-    std,
+    path,
     realm
 } = adone;
 
@@ -26,7 +26,7 @@ export default class extends realm.BaseTask {
 
         await adone.fs.mkdirp(this.superRealm.cwd);
 
-        this.optRealmPath = std.path.join(this.superRealm.cwd, this.subRealm.name);
+        this.optRealmPath = path.join(this.superRealm.cwd, this.subRealm.name);
 
         if (symlink) {
             await this.#createSymlink();

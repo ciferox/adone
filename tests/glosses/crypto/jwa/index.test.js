@@ -66,7 +66,7 @@ describe("crypto", "jwa", () => {
     });
 
     after(async () => {
-        await fs.rm(FIXTURES_PATH);
+        await fs.remove(FIXTURES_PATH);
     });
 
     const BIT_DEPTHS = ["256", "384", "512"];

@@ -2,12 +2,11 @@ const {
     error,
     is,
     fs,
-    module: { Module },
     path: aPath
 } = adone;
 
 const compileModule = (path, content, transpile) => {
-    const m = new Module(path, {
+    const m = new adone.module.Module(path, {
         transforms: transpile ? [adone.module.transform.compiler()] : []
     });
     m._compile(content.toString(), path);

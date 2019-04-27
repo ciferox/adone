@@ -32,7 +32,7 @@ describe("Vault", () => {
         list = list.filter((f) => (/^_vault_/).test(f));
 
         for (const f of list) {
-            await adone.fs.rm(adone.std.path.join(__dirname, f)); //eslint-disable-line
+            await adone.fs.remove(adone.std.path.join(__dirname, f)); //eslint-disable-line
         }
     });
 
