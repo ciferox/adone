@@ -5,7 +5,9 @@ const notifier = lazify({
     Notification: () => {
         const { __ } = notifier;
 
-        switch (os.type()) {
+        const osType = __.util.isWSL() ? "WSL" : os.type();
+
+        switch (osType) {
             case "Linux": {
                 return __.notifiers.NotifySend;
             }
@@ -19,6 +21,8 @@ const notifier = lazify({
                 return __.notifiers.WindowsToaster;
 
             }
+            case "WSL":
+                return __.notifiers.WindowsToaster;
             default: {
                 if (os.type().match(/BSD$/)) {
                     return __.notifiers.NotifySend;

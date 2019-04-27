@@ -142,7 +142,7 @@ lazify({
     ipfs: "./glosses/ipfs",
     is: "./glosses/is",
     js: "./glosses/js",
-    logging: "./glosses/logging",
+    logger: "./glosses/logger",
     math: "./glosses/math",
     metrics: "./glosses/metrics",
     model: "./glosses/models",

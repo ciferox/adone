@@ -33,6 +33,7 @@ describe("notifier", "utils", () => {
                 title: "Foo",
                 message: "Bar",
                 appIcon: "foobar",
+                timeout: 10,
                 json: true
             };
 

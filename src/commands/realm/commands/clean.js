@@ -1,5 +1,6 @@
 const {
-    app: { Subsystem, mainCommand, runtime: { logger } }
+    app: { Subsystem, mainCommand },
+    cli
 } = adone;
 
 export default class extends Subsystem {
@@ -20,8 +21,8 @@ export default class extends Subsystem {
     })
     async clean(args, opts) {
         try {
-            logger.start({
-                message: `Clean ${args.has("path") ? args.get("path") : "whole project"}`
+            cli.updateProgress({
+                message: `cleaning ${cli.style.primary(args.has("path") ? args.get("path") : "whole project")}`
             });
 
             const path = this.parent.resolvePath(args, opts);
@@ -29,13 +30,19 @@ export default class extends Subsystem {
             // await adone.cli.kit.observe("logInfo", r);
             await r.runAndWait("clean", { path });
 
-            logger.success({
-                message: "Successfully cleaned"
+            cli.updateProgress({
+                message: "done",
+                // clean: true,
+                status: true
             });
-
             return 0;
         } catch (err) {
-            console.error(err);
+            cli.updateProgress({
+                message: err.message,
+                status: false,
+                // clean: true
+            });
+            // console.error(adone.pretty.error(err));
             return 1;
         }
     }

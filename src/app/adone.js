@@ -50,19 +50,7 @@ class ADONEApp extends app.Application {
         this.config = await Configuration.load({
             cwd: path.join(adone.ETC_PATH, "adone")
         });
-
-        this._configureLogger();
-
-        // Expose cli interface for subsystems.
-        // this.exposeCliInterface();
-
-        // Add cli kit as a subsystem
-        // this.addSubsystem({
-        //     name: "kit",
-        //     bind: true,
-        //     subsystem: adone.cli.kit
-        // });
-
+        
         // Define command groups.
         const groups = this.config.getGroups();
         for (const group of groups) {
@@ -76,37 +64,6 @@ class ADONEApp extends app.Application {
         // print usage message by default
         console.log(`${this.helper.getHelpMessage()}\n`);
         return 0;
-    }
-
-    _configureLogger() {
-        const {
-            logging: { logger: { format } },
-            cli: { chalk }
-        } = adone;
-
-        adone.app.runtime.logger.configure({
-            level: "verbose",
-            format: format.combine(
-                format.colorize({
-                    config: adone.logging.logger.config.adone
-                }),
-                format.padLevels(),
-                format.printf((info) => {
-                    let result = "";
-                    if (is.string(info.prefix)) {
-                        result += `[${info.prefix}] `;
-                    }
-                    if (is.string(info.icon)) {
-                        result += `${info.icon}  `;
-                    }
-                    result += `${chalk.underline(info.level)}${info.message}`;
-                    return result;
-                })
-            ),
-            transports: [
-                new adone.logging.logger.transport.Console()
-            ]
-        });
     }
 
     async _addInstalledSubsystems() {

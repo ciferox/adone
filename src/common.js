@@ -44,6 +44,26 @@ export const getTag = (value) => {
     return result;
 };
 
+// common predicators
+export const isWindows = process.platform === "win32";
+export const isArray = Array.isArray;
+export const isFunction = (value) => typeof value === "function";
+export const isString = (value) => typeof value === "string" || value instanceof String;
+export const isNumber = (value) => typeof value === "number";
+export const isBuffer = (obj) => obj != null && ((Boolean(obj.constructor) && typeof obj.constructor.isBuffer === "function" && obj.constructor.isBuffer(obj)) || Boolean(obj._isBuffer));
+export const isPlainObject = (value) => {
+    if (!(value != null && typeof value === "object") || getTag(value) !== "[object Object]") {
+        return false;
+    }
+    const proto = Object.getPrototypeOf(value);
+    if (proto === null) {
+        return true;
+    }
+    const Ctor = hasOwnProperty.call(proto, "constructor") && proto.constructor;
+    return typeof Ctor === "function" && Ctor instanceof Ctor && funcToString.call(Ctor) === objectCtorString;
+};
+
+// Common stuff
 
 export const asNamespace = (obj) => {
     obj[NAMESPACE_SYMBOL] = true;
@@ -191,25 +211,6 @@ export const setInterval = global.setInterval;
 export const clearInterval = global.clearInterval;
 export const setImmediate = global.setImmediate;
 export const clearImmediate = global.clearImmediate;
-
-// common predicators
-export const isWindows = process.platform === "win32";
-export const isArray = Array.isArray;
-export const isFunction = (value) => typeof value === "function";
-export const isString = (value) => typeof value === "string" || value instanceof String;
-export const isNumber = (value) => typeof value === "number";
-export const isBuffer = (obj) => obj != null && ((Boolean(obj.constructor) && typeof obj.constructor.isBuffer === "function" && obj.constructor.isBuffer(obj)) || Boolean(obj._isBuffer));
-export const isPlainObject = (value) => {
-    if (!(value != null && typeof value === "object") || getTag(value) !== "[object Object]") {
-        return false;
-    }
-    const proto = Object.getPrototypeOf(value);
-    if (proto === null) {
-        return true;
-    }
-    const Ctor = hasOwnProperty.call(proto, "constructor") && proto.constructor;
-    return typeof Ctor === "function" && Ctor instanceof Ctor && funcToString.call(Ctor) === objectCtorString;
-};
 
 
 // common utils

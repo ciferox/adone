@@ -134,6 +134,8 @@ describe("notifier", () => {
                     '"body"',
                     "-tullball",
                     '"notValid"',
+                    "-timeout",
+                    '"10"',
                     "-json",
                     '"true"'
                 ];
@@ -175,6 +177,8 @@ describe("notifier", () => {
                     '"body \\"message\\""',
                     "-actions",
                     'foo,bar,baz "foo" bar',
+                    "-timeout",
+                    '"10"',
                     "-json",
                     '"true"'
                 ];
@@ -253,6 +257,8 @@ describe("notifier", () => {
                     '"body \\"message\\""',
                     "-tullball",
                     '"notValid"',
+                    "-timeout",
+                    '"10"',
                     "-json",
                     '"true"'
                 ];

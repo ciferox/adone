@@ -24,7 +24,7 @@ export default class extends Subsystem {
             await this.cleanCommand(args, opts);
             return this.buildCommand(args, opts);
         } catch (err) {
-            console.err(adone.pretty.error(err));
+            console.error(adone.pretty.error(err));
             return 1;
         }
     }

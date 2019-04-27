@@ -1,7 +1,9 @@
 const {
     is,
     error,
-    std: { childProcess, path, url, os, fs, net }
+    fs,
+    path,
+    std: { childProcess, url, os, net }
 } = adone;
 
 const escapeQuotes = function (str) {
@@ -17,6 +19,7 @@ const notifySendFlags = {
     urgency: "urgency",
     t: "expire-time",
     time: "expire-time",
+    timeout: "expire-time",
     e: "expire-time",
     expire: "expire-time",
     "expire-time": "expire-time",
@@ -219,6 +222,10 @@ export const mapToMac = (options) => {
         delete options.wait;
     }
 
+    if (!options.wait && !options.timeout) {
+        options.timeout = 10;
+    }
+
     options.json = true;
     return options;
 };
@@ -342,9 +349,8 @@ export const mapToWin8 = (options) => {
     if (options.icon) {
         if (/^file:\/+/.test(options.icon)) {
             // should parse file protocol URL to path
-            options.p = url
-                .parse(options.icon)
-                .pathname.replace(/^\/(\w:\/)/, "$1")
+            options.p = new url.URL(options.icon).pathname
+                .replace(/^\/(\w:\/)/, "$1")
                 .replace(/\//g, "\\");
         } else {
             options.p = options.icon;
@@ -529,4 +535,20 @@ export const checkGrowl = async (growlConfig = {}) => {
             resolve(false);
         });
     });
+};
+
+export const isWsl = () => {
+    if (process.platform !== "linux") {
+        return false;
+    }
+
+    if (os.release().includes("Microsoft")) {
+        return true;
+    }
+
+    try {
+        return adone.fs.readFileSync("/proc/version", "utf8").includes("Microsoft");
+    } catch (_) {
+        return false;
+    }
 };

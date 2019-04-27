@@ -34,7 +34,7 @@ export default class WindowsToaster extends event.Emitter {
             throw new Error("Message or ID to close is required.");
         }
 
-        if (!__.util.isWin8() && Boolean(this.options.withFallback)) {
+        if (!__.util.isWin8() && !__.utils.isWSL() && Boolean(this.options.withFallback)) {
             return this.fallback.notify(options);
         }
 

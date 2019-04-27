@@ -82,8 +82,5 @@ export const command = (commandInfo = {}) => (target, key, descriptor) => {
 // application runtime
 export const runtime = {
     app: null,
-    lockFiles: {},
-    logger: adone.logging.logger.create({
-        level: "info"
-    })
+    lockFiles: {}
 };

@@ -550,24 +550,11 @@
                     "dst": "lib/glosses/lodash",
                     "original": "https://github.com/lodash/lodash"
                 },
-                "logging": {
-                    "src": "src/glosses/logging/index.js",
-                    "dst": "lib/glosses/logging",
-                    "task": "transpile",
-                    "scheme": {
-                        "logger": {
-                            "description": "Application logger",
-                            "src": "src/glosses/logging/logger/**/*.js",
-                            "dst": "lib/glosses/logging/logger",
-                            "task": "transpile"
-                        },
-                        "fastLogger": {
-                            "description": "Application logger",
-                            "src": "src/glosses/logging/fast_logger/**/*.js",
-                            "dst": "lib/glosses/logging/fast_logger",
-                            "task": "transpile"
-                        }
-                    }
+                "logger": {
+                    "description": "Application logger",
+                    "src": "src/glosses/logger/**/*.js",
+                    "dst": "lib/glosses/logger",
+                    "task": "transpile"
                 },
                 "math": {
                     "description": "Implementation of common math classes and primitives",

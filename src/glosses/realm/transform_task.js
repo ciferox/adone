@@ -41,15 +41,15 @@ export default class TransformTask extends BaseTask {
     }
 
     notify(stream, params) {
-        if (is.fastLocalStream(stream)) {
-            stream.notify({
-                gui: false,
-                onLast: true,
-                title: params.task,
-                filter: null,
-                message: `${this.manager.package.name}.${params.id}`
-            });
-        }
+        // if (is.fastLocalStream(stream)) {
+        //     stream.notify({
+        //         gui: false,
+        //         onLast: true,
+        //         title: params.task,
+        //         filter: null,
+        //         message: `${this.manager.package.name}.${params.id}`
+        //     });
+        // }
     }
 
     notifyError(stream, params) {

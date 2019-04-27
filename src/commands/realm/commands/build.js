@@ -1,5 +1,6 @@
 const {
-    app: { Subsystem, mainCommand, runtime: { logger } }
+    app: { Subsystem, mainCommand },
+    cli
 } = adone;
 
 export default class extends Subsystem {
@@ -20,8 +21,8 @@ export default class extends Subsystem {
     })
     async build(args, opts) {
         try {
-            logger.start({
-                message: `Build ${args.has("path") ? args.get("path") : "whole project"}`
+            cli.updateProgress({
+                message: `building ${cli.style.primary(args.has("path") ? args.get("path") : "whole project")}`
             });
 
             const path = this.parent.resolvePath(args, opts);
@@ -31,13 +32,19 @@ export default class extends Subsystem {
             });
             await r.runAndWait("build", { path });
 
-            logger.success({
-                message: "Successfully builded"
+            cli.updateProgress({
+                message: "done",
+                // clean: true,
+                status: true
             });
-
             return 0;
         } catch (err) {
-            logger.error(err);
+            cli.updateProgress({
+                message: err.message,
+                status: false,
+                // clean: true
+            });
+            // console.error(adone.pretty.error(err));
             return 1;
         }
     }
