@@ -105,18 +105,23 @@ export default class GenericConfig extends adone.configuration.BaseConfig {
     }
 
     _checkPath(confPath, checkExists) {
-        const path = (aPath.isAbsolute(confPath))
+        let path = (aPath.isAbsolute(confPath))
             ? confPath
             : aPath.resolve(this.cwd, confPath);
 
-        const ext = aPath.extname(path);
+        let ext = aPath.extname(path);
         let serializer = null;
 
-        if (ext.length > 0) {
-            serializer = this.#serializer[ext];
-            if (!serializer) {
-                throw new error.NotSupportedException(`Unsupported format: ${ext}`);
-            }
+        if (ext.length === 0) {
+            path = adone.module.resolve(path, {
+                basedir: aPath.dirname(path)
+            });
+            ext = aPath.extname(path);
+        }
+
+        serializer = this.#serializer[ext];
+        if (!serializer) {
+            throw new error.NotSupportedException(`Unsupported format: ${ext}`);
         }
 
         let st;

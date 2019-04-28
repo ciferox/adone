@@ -457,6 +457,12 @@
                     "src": "src/glosses/git/**/*.js",
                     "dst": "lib/glosses/git"
                 },
+                "github": {
+                    "description": "GitHub API",
+                    "task": "transpile",
+                    "src": "src/glosses/github/**/*.js",
+                    "dst": "lib/glosses/github"
+                },
                 "glob": {
                     "description": "GLOB/matchers imlementation",
                     "task": "transpile",
@@ -468,24 +474,6 @@
                     "task": "transpile",
                     "src": "src/glosses/globals/index.js",
                     "dst": "lib/glosses/globals"
-                },
-                "gyp": {
-                    "description": "Node.js native addon build tool baed",
-                    "index": "js:index.js",
-                    "scheme": {
-                        "js": {
-                            "task": "transpile",
-                            "src": [
-                                "src/glosses/gyp/**/*.js",
-                                "!src/glosses/gyp/gyp/**/*"
-                            ],
-                            "dst": "lib/glosses/gyp"
-                        },
-                        "native-gyp": {
-                            "src": "src/glosses/gyp/gyp/**/*",
-                            "dst": "lib/glosses/gyp/gyp"
-                        }
-                    }
                 },
                 "http": {
                     "description": "All around of HTTP",
@@ -701,7 +689,27 @@
                     "description": "Node.js toolkit",
                     "task": "transpile",
                     "src": "src/glosses/nodejs/**/*.js",
-                    "dst": "lib/glosses/nodejs"
+                    "dst": "lib/glosses/nodejs",
+                    "scheme": {
+                        "gyp": {
+                            "description": "Node.js native addon build tool baed",
+                            "index": "js:index.js",
+                            "scheme": {
+                                "js": {
+                                    "task": "transpile",
+                                    "src": [
+                                        "src/glosses/gyp/**/*.js",
+                                        "!src/glosses/gyp/gyp/**/*"
+                                    ],
+                                    "dst": "lib/glosses/gyp"
+                                },
+                                "native-gyp": {
+                                    "src": "src/glosses/gyp/gyp/**/*",
+                                    "dst": "lib/glosses/gyp/gyp"
+                                }
+                            }
+                        }
+                    }
                 },
                 "notifier": {
                     "description": "Implementation of system notifier",

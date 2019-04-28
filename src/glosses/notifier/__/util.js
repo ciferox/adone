@@ -537,7 +537,7 @@ export const checkGrowl = async (growlConfig = {}) => {
     });
 };
 
-export const isWsl = () => {
+export const isWSL = () => {
     if (process.platform !== "linux") {
         return false;
     }

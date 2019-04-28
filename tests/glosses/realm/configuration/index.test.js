@@ -15,26 +15,10 @@ describe("realm", "Configuration", () => {
         await fixtureDir.unlink();
     });
 
-    it("minimum possible configuration", async () => {
-        await FS.createStructure(fixtureDir, [
-            ["realm", [
-                [".adone", [
-                    ["config.json", "{}"]
-                ]]
-            ]]
-        ]);
-
-        const conf = await Configuration.load({
-            cwd: fixturePath("realm")
-        });
-
-        assert.deepEqual(conf.raw, {});
-    });
-
     describe("scheme", () => {
         for (const s of schemes) {
             // eslint-disable-next-line no-loop-func
-            it(s.name, () => {
+            it.only(s.name, () => {
                 const conf = new Configuration();
                 conf.raw = s.config;
 

@@ -14,7 +14,7 @@ const build = async function (manager, entry) {
         }));
         await tmp.create();
 
-        const gyp = new adone.gyp.Gyp();
+        const gyp = new adone.nodejs.gyp.Gyp();
         await gyp.run(["configure", "build"], {
             directory: tmp.path(),
             binding: std.path.join(manager.cwd, entry.native.src)

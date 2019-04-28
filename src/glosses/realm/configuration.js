@@ -1,21 +1,24 @@
 const {
     is,
-    std
+    path: aPath,
+    util: { omit, arrify }
 } = adone;
 
 const normalizeValue = (dirName, parent, item, name) => {
     const val = item[name];
     if (is.array(val)) {
-        const vals = [];
-        for (let i = 0; i < val.length; i++) {
-            vals.push(val[i].startsWith("!") ? `!${std.path.join(dirName, val[i].substr(1))}` : std.path.join(dirName, val[i]));
+        const result = [];
+        for (const v of val) {
+            result.push(v.startsWith("!")
+                ? `!${aPath.join(dirName, v.slice(1))}`
+                : aPath.join(dirName, v)
+            );
         }
-        return vals;
+        return result;
     } else if (is.string(val)) {
-        if (is.string(dirName)) {
-            return std.path.join(dirName, val);
-        }
-        return val;
+        return (is.string(dirName))
+            ? aPath.join(dirName, val)
+            : val;
     }
 
     if (is.plainObject(parent)) {
@@ -25,12 +28,10 @@ const normalizeValue = (dirName, parent, item, name) => {
 };
 
 const addIfNotIncluded = (arr, item) => {
-    if (is.array(item)) {
-        for (const i of item) {
-            addIfNotIncluded(arr, i);
+    for (const i of arrify(item)) {
+        if (!arr.includes(i)) {
+            arr.push(i);
         }
-    } else if (!arr.includes(item)) {
-        arr.push(item);
     }
 };
 
@@ -39,7 +40,7 @@ export default class Configuration extends adone.configuration.GenericConfig {
      * Returns absolute path of configuration.
      */
     getPath() {
-        return std.path.join(this.cwd, Configuration.configName);
+        return aPath.join(this.cwd, Configuration.configName);
     }
 
     /**
@@ -59,7 +60,7 @@ export default class Configuration extends adone.configuration.GenericConfig {
      * @param {*} cwd path where config should be saved
      */
     async save({ cwd = this.cwd } = {}) {
-        return super.save(is.string(cwd) ? std.path.join(cwd, Configuration.configName) : Configuration.configName, {
+        return super.save(is.string(cwd) ? aPath.join(cwd, Configuration.configName) : Configuration.configName, {
             space: "    "
         });
     }
@@ -95,19 +96,20 @@ export default class Configuration extends adone.configuration.GenericConfig {
         const srcs = [];
         for (const [key, val] of Object.entries(scheme)) {
             if (is.plainObject(val)) {
-                const fullKey = prefix.length > 0 ? `${prefix}.${key}` : key;
+                const fullKey = prefix.length > 0
+                    ? `${prefix}.${key}`
+                    : key;
 
                 const unit = units[fullKey] = {
-                    ...adone.util.omit(val, ["scheme", "src", "dst", "task"])
+                    ...omit(val, ["scheme", "src", "dst", "task"])
                 };
 
                 const src = normalizeValue(dirName, null, val, "src");
                 if (src) {
-                    if (is.string(src) && (src.endsWith("/") || src.endsWith("\\"))) {
-                        unit.src = adone.glob.globize(src, { recursive: true });
-                    } else {
-                        unit.src = src;
-                    }
+                    unit.src = (is.string(src) && src.endsWith("/"))
+                        ? aPath.join(src, "**", "*")
+                        : src;
+
                     addIfNotIncluded(srcs, src);
                 }
 
@@ -116,7 +118,7 @@ export default class Configuration extends adone.configuration.GenericConfig {
                     unit.dst = dst;
                 }
 
-                const task = normalizeValue(null, parent, val, "task");
+                const task = normalizeValue(null, null, val, "task");
                 if (task) {
                     unit.task = task;
                 }
@@ -174,7 +176,7 @@ export default class Configuration extends adone.configuration.GenericConfig {
                                 throw new adone.error.NotValidException(`No common glob prefix in '${fullKey}' block`);
                             }
 
-                            unit.src = adone.util.arrify(unit.src);
+                            unit.src = arrify(unit.src);
                             addIfNotIncluded(unit.src, excludes.map((x) => `!${x}`));
                         }
                     }
@@ -215,7 +217,7 @@ export default class Configuration extends adone.configuration.GenericConfig {
         return config;
     }
 
-    static configName = std.path.join(".adone", "config.json");
+    static configName = aPath.join(".adone", "config.json");
 
     static default = {};
 }
