@@ -138,6 +138,46 @@ describe("realm", "dev configuration", () => {
             ]);
         });
 
+        it("unit without 'src' should be ignored (with default task)", () => {
+            const cfg = new DevConfiguration();
+            cfg.raw.defaultTask = "default";
+            cfg.raw.units = {
+                1: {
+                    description: "ok",
+                    src: "src/**/*",
+                    dst: "lib",
+                    task: "task1"
+                },
+                2: {
+                    description: "some nested units",
+                    units: {
+                        3: {
+                            src: "src/2/**/*.js",
+                            dst: "dst/2",
+                            task: "task2"
+                        }
+                    }
+                }
+            };
+
+            const units = cfg.getUnits();
+            assert.sameDeepMembers(units, [
+                {
+                    id: "1",
+                    description: "ok",
+                    src: "src/**/*",
+                    dst: "lib",
+                    task: "task1"
+                },
+                {
+                    id: "2.3",
+                    src: "src/2/**/*.js",
+                    dst: "dst/2",
+                    task: "task2"
+                }
+            ]);
+        });
+
         it("should globize child exclusions", () => {
             const cfg = new DevConfiguration();
             cfg.raw.units = {

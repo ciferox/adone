@@ -35,6 +35,13 @@ describe("process", "exec", () => {
         assert.equal(stdout, "Hello World");
     });
 
+    it("exec() - run cmd command", {
+        skip: !is.windows
+    }, async () => {
+        const { stdout } = await exec("cmd", ["/c", "hello.cmd"]);
+        assert.equal(stdout, "Hello World");
+    });
+
     it("buffer", async () => {
         const { stdout } = await exec(fixture("noop"), ["foo"], { encoding: null });
         assert.isTrue(is.buffer(stdout));
@@ -81,7 +88,7 @@ describe("process", "exec", () => {
     });
 
     it("do not include `stderr` and `stdout` in errors when `stdio` is set to `inherit`", async () => {
-        const err = await assert.throws(async () => exec(fixture("error-message.js"), { stdio: [null, "inherit", "inherit"] }));
+        const err = await assert.throws(async () => exec(fixture("error-message.js"), { stdio: [undefined, "inherit", "inherit"] }));
         expect(err.message).to.match(NO_NEWLINES_REGEXP);
     });
 
@@ -225,7 +232,7 @@ describe("process", "exec", () => {
     it("opts.stdout:ignore - stdout will not collect data", async () => {
         const { stdout } = await exec(fixture("stdin"), {
             input: "hello",
-            stdio: [null, "ignore", null]
+            stdio: [undefined, "ignore", undefined]
         });
         assert.equal(stdout, undefined);
     });
@@ -388,13 +395,10 @@ describe("process", "exec", () => {
         assert.equal(error.signal, "SIGTERM");
     });
 
-    it.todo("custom error.signal", {
+    it("custom error.signal", {
         skip: is.windows
     }, async () => {
-        const error = await assert.throws(async () => exec(fixture("delay"), ["3000", "0"]));
-        assert.equal(error.killSignal, "SIGHUP");
-        assert.equal(error.timeout, 1500);
-        assert.match(error.message, TIMEOUT_REGEXP);
+        const error = await assert.throws(async () => exec(fixture("delay"), ["3000", "0"], { killSignal: "SIGHUP", timeout: 1500, message: TIMEOUT_REGEXP }));
         assert.equal(error.signal, "SIGHUP");
     });
 
@@ -408,27 +412,37 @@ describe("process", "exec", () => {
         assert.equal(error.signal, undefined);
     });
 
-    const code = async function (t, num) {
+    const code = async function (num) {
         const error = await assert.throws(async () => exec(fixture("exit"), [`${num}`]));
         assert.equal(error.code, num);
-        assert.match(error.messagem, getExitRegExp(num));
+        assert.match(error.message, getExitRegExp(num));
         assert.equal(error.exitCode, num);
     };
 
-    it.todo("error.code is 2", code, 2);
-    it.todo("error.code is 3", code, 3);
-    it.todo("error.code is 4", code, 4);
+    it("error.code is 2", () => code(2));
+    it("error.code is 3", () => code(3));
+    it("error.code is 4", () => code(4));
 
-    it.todo("timeout will kill the process early", async () => {
-        const error = await assert.throws(async () => exec(fixture("delay"), ["60000", "0"]));
-        assert.match(error.message, TIMEOUT_REGEXP);
-        assert.equal(error.timeout, 1500);
+    it("timeout will kill the process early", async () => {
+        const time = Date.now();
+        const error = await assert.throws(async () => exec("delay", ["60000", "0"], { timeout: 500, message: TIMEOUT_REGEXP }));
+        const diff = Date.now() - time;
         assert.isTrue(error.timedOut);
         assert.notEqual(error.exitCode, 22);
+        assert.isTrue(diff < 4000);
+    });
+
+    it("timeout will kill the process early (sleep)", async () => {
+        const time = Date.now();
+        const error = await assert.throws(async () => exec("sleeper", [], { timeout: 500, message: TIMEOUT_REGEXP }));
+        const diff = Date.now() - time;
+        assert.isTrue(error.timedOut);
+        assert.notEqual(error.stdout, "ok");
+        assert.isTrue(diff < 4000);
     });
 
     it("timeout will not kill the process early", async () => {
-        const error = await assert.throws(async () => exec(fixture("delay"), ["3000", "22"], { timeout: 30000 }));
+        const error = await assert.throws(async () => exec(fixture("delay"), ["2000", "22"], { timeout: 30000 }));
         assert.match(error.message, getExitRegExp("22"));
         assert.equal(error.code, 22);
         assert.isFalse(error.timedOut);
@@ -746,7 +760,6 @@ describe("process", "exec", () => {
 
         const cases = [
             [undefined, undefined],
-            [null, undefined],
 
             [{ stdio: "inherit" }, "inherit"],
             [{ stdio: "pipe" }, "pipe"],
@@ -771,7 +784,7 @@ describe("process", "exec", () => {
 
             [{ stdin: "inherit", stdio: "pipe" }, new Error("It's not possible to provide `stdio` in combination with one of `stdin`, `stdout`, `stderr`")],
             [{ stdin: "inherit", stdio: ["pipe"] }, new Error("It's not possible to provide `stdio` in combination with one of `stdin`, `stdout`, `stderr`")],
-            [{ stdin: "inherit", stdio: [undefined, "pipe"] }, new Error("It's not possible to provide `stdio` in combination with one of `stdin`, `stdout`, `stderr`")],
+            [{ stdin: "inherit", stdio: [undefined, "pipe"] }, new Error("It's not possible to provide `stdio` in combination with one of `stdin`, `stdout`, `stderr`")]
         ];
 
         for (const args of cases) {

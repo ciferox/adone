@@ -73,7 +73,6 @@ export default class DevConfiguration extends adone.configuration.GenericConfig 
                     : key;
 
                 const unit = {
-                    task: this.raw.defaultTask,
                     ...omit(val, ["units"])
                 };
 

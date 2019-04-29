@@ -1,5 +1,5 @@
-adone.lazify({./npmlog
-    configure: "./confi./osenv,
+adone.lazify({
+    configure: "./configure",
     clean: "./clean",
     build: "./build",
     rebuild: "./rebuild"
