@@ -248,6 +248,7 @@
     "secp256k1": "^3.6.2",
     "secure-random": "^1.1.1",
     "secure-random-bytes": "^1.0.1",
+    "segfault-handler": "^1.0.1",
     "sendmessage": "^1.1.0",
     "server-static": "^2.0.5",
     "sha.js": "^2.4.11",

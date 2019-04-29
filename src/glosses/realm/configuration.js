@@ -4,7 +4,7 @@ const {
     util: { omit, arrify }
 } = adone;
 
-const normalizeValue = (dirName, parent, item, name) => {
+const normalizeValue = (dirName, item, name) => {
     const val = item[name];
     if (is.array(val)) {
         const result = [];
@@ -21,9 +21,6 @@ const normalizeValue = (dirName, parent, item, name) => {
             : val;
     }
 
-    if (is.plainObject(parent)) {
-        return normalizeValue(dirName, null, parent, name);
-    }
     return val;
 };
 
@@ -101,10 +98,10 @@ export default class Configuration extends adone.configuration.GenericConfig {
                     : key;
 
                 const unit = units[fullKey] = {
-                    ...omit(val, ["scheme", "src", "dst", "task"])
+                    ...omit(val, ["description", "scheme", "src", "dst", "task"])
                 };
 
-                const src = normalizeValue(dirName, null, val, "src");
+                const src = normalizeValue(dirName, val, "src");
                 if (src) {
                     unit.src = (is.string(src) && src.endsWith("/"))
                         ? aPath.join(src, "**", "*")
@@ -113,12 +110,12 @@ export default class Configuration extends adone.configuration.GenericConfig {
                     addIfNotIncluded(srcs, src);
                 }
 
-                const dst = normalizeValue(dirName, parent, val, "dst");
+                const dst = normalizeValue(dirName, val, "dst");
                 if (dst) {
                     unit.dst = dst;
                 }
 
-                const task = normalizeValue(null, null, val, "task");
+                const task = normalizeValue(null, val, "task");
                 if (task) {
                     unit.task = task;
                 }
@@ -190,10 +187,6 @@ export default class Configuration extends adone.configuration.GenericConfig {
                     if (!is.exist(unit.dst)) {
                         unit.dst = ".";
                     }
-                }
-
-                if (!is.string(unit.index) && (is.exist(unit.src) || is.plainObject(val.scheme))) {
-                    unit.index = "index.js";
                 }
             }
         }

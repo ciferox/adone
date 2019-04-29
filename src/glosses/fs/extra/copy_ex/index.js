@@ -405,9 +405,9 @@ export default (fs) => {
                 return batch(operations, (operation) => {
                     return _copy(operation.src, operation.dest, hasFinishedGetter, emitEvent, options);
                 }, {
-                        results: options.results !== false,
-                        concurrency: options.concurrency || 255
-                    });
+                    results: options.results !== false,
+                    concurrency: options.concurrency || 255
+                });
             })
             .catch((error) => {
                 if (error instanceof CopyException) {

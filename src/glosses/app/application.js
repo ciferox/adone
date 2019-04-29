@@ -21,7 +21,9 @@ const ERROR_SCOPE = Symbol.for("adone.app.Application#errorScope");
 
 export default class Application extends app.Subsystem {
     #exiting = false;
+
     #handlers = null;
+
     #exitSignals = null;
 
     constructor({ name = std.path.basename(process.argv[1], std.path.extname(process.argv[1])) } = {}) {
@@ -81,6 +83,7 @@ export default class Application extends app.Subsystem {
             await this.emitParallel("exit:main");
             process.exit(code);
         }
+        this.#exiting = false;
     }
 
     removeProcessHandlers() {

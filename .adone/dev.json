@@ -1,0 +1,116 @@
+{
+    "defaultTask": "copy",
+    "basedir": "..",
+    "units": {
+        "tasks": {
+            "description": "Realm tasks",
+            "src": "src/tasks/**/*.js",
+            "dst": "lib/tasks",
+            "task": "transpile"
+        },
+        "app": {
+            "description": "ADONE CLI application",
+            "src": "src/app/adone.js",
+            "dst": "bin",
+            "task": "transpileExe",
+            "units": {
+                "internals": {
+                    "description": "ADONE CLI internals",
+                    "src": [
+                        "!src/app/adone.js",
+                        "src/app/**/*.js"
+                    ],
+                    "dst": "lib/app",
+                    "task": "transpile"
+                }
+            }
+        },
+        "commands": {
+            "description": "ADONE CLI commands",
+            "src": "src/commands/**/*.js",
+            "dst": "lib/commands",
+            "task": "transpile"
+        },
+        "common": {
+            "description": "ADONE common",
+            "src": [
+                "src/index.js",
+                "src/common.js",
+                "src/reflect.js"
+            ],
+            "dst": "lib",
+            "task": "transpile"
+        },
+        "glosses": {
+            "description": "Glosses",
+            "units": {
+                "compressor": {
+                    "description": "Compressors",
+                    "task": "transpile",
+                    "src": "src/glosses/compressors/index.js",
+                    "dst": "lib/glosses/compressors",
+                    "units": {
+                        "brotli": {
+                            "description": "Brotli compression format",
+                            "src": "src/glosses/compressors/brotli/**/*.js",
+                            "dst": "lib/glosses/compressors/brotli",
+                            "task": "transpile",
+                            "units": {
+                                "native": {
+                                    "task": "cmake",
+                                    "src": "src/glosses/compressors/brotli/native",
+                                    "dst": "lib/glosses/compressors/brotli/native"
+                                }
+                            }
+                        },
+                        "deflate": {
+                            "description": "Deflate compressor/decompressor",
+                            "task": "transpile",
+                            "src": "src/glosses/compressors/deflate.js",
+                            "dst": "lib/glosses/compressors"
+                        },
+                        "gz": {
+                            "description": "Gzip compressor/decompressor",
+                            "task": "transpile",
+                            "src": "src/glosses/compressors/gzip.js",
+                            "dst": "lib/glosses/compressors"
+                        },
+                        "lzma": {
+                            "description": "LZMA compressor/decompressor",
+                            "task": "transpile",
+                            "src": "src/glosses/compressors/lzma.js",
+                            "dst": "lib/glosses/compressors"
+                        },
+                        "snappy": {
+                            "description": "Snappy, a fast compressor/decompressor",
+                            "task": "transpile",
+                            "src": "src/glosses/compressors/snappy/**/*.js",
+                            "dst": "lib/glosses/compressors/snappy",
+                            "units": {
+                                "native": {
+                                    "task": "cmake",
+                                    "src": "src/glosses/compressors/snappy/native",
+                                    "dst": "lib/glosses/compressors/snappy/native"
+                                }
+                            }
+                        },
+                        "xz": {
+                            "description": "XZ compressor/decompressor",
+                            "task": "transpile",
+                            "src": "src/glosses/compressors/xz/**/*.js",
+                            "dst": "lib/glosses/compressors/xz",
+                            "units": {
+                                "native": {
+                                    "task": "gyp",
+                                    "src": "src/glosses/compressors/xz/native",
+                                    "dst": "lib/glosses/compressors/xz/native",
+                                    "files": "lzma.node"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

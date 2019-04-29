@@ -1,7 +1,7 @@
 const {
     is,
     fs,
-    std: { path: { join } },
+    path: { join },
     util
 } = adone;
 
@@ -90,7 +90,7 @@ export default class RealmArtifacts {
                         attrs: new Set()
                     };
                     // console.log(fullPath);
-                    if (await fs.exists(fullPath)) {
+                    if (await fs.pathExists(fullPath)) {
                         artifact.attrs.add(await fs.isDirectory(fullPath)
                             ? "dir"
                             : "file");

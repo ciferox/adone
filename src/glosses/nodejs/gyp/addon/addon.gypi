@@ -73,7 +73,7 @@
           [ 'OS=="win"', {
             'defines': [ 'HOST_BINARY=\"<(node_host_binary)<(EXECUTABLE_SUFFIX)\"', ],
             'sources': [
-              '<(node_gyp_dir)/src/win_delay_load_hook.cc',
+              '<(node_gyp_addon_dir)/win_delay_load_hook.cc',
             ],
             'msvs_settings': {
               'VCLinkerTool': {

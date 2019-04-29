@@ -3,99 +3,99 @@ const {
     is
 } = adone;
 
-export default (fs) => {    
+export default (fs) => {
     return class Directory {
         constructor(...path) {
             this._path = aPath.resolve(...path);
         }
-    
+
         dirname() {
             return aPath.dirname(this._path);
         }
-    
+
         filename() {
             return aPath.basename(this._path);
         }
-    
+
         path() {
             return this._path;
         }
-    
+
         normalizedPath() {
             return is.windows ? adone.util.normalizePath(this._path) : this._path;
         }
-    
+
         relativePath(path) {
             if (path instanceof Directory) {
                 path = path.path();
             }
             return aPath.relative(path, this._path);
         }
-    
+
         stat() {
             return fs.stat(this._path);
         }
-    
+
         statSync() {
             return fs.statSync(this._path);
         }
-    
+
         lstat() {
             return fs.lstat(this._path);
         }
-    
+
         async isSymbolicLink() {
             return (await this.lstat()).isSymbolicLink();
         }
-    
+
         exists() {
             return fs.exists(this._path);
         }
-    
+
         async utimes(atime, mtime) {
             await fs.utimes(this._path, atime, mtime);
         }
-    
+
         utimesSync(atime, mtime) {
             fs.utimesSync(this._path, atime, mtime);
         }
-    
-        async create({ mode = 0o777 & (~process.umask()), mtime = null, atime = null } = {}) {
+
+        async create({ mode = 0o777, mtime = null, atime = null } = {}) {
             if (!(await this.exists())) {
-                await fs.mkdirp(this._path, mode);
+                await fs.mkdirp(this._path, mode & (~process.umask()));
             }
             if (!is.null(atime) || !is.null(mtime)) {
                 // TODO: -1 will be converted to now, ok?
                 await this.utimes(is.null(atime) ? -1 : atime, is.null(mtime) ? -1 : mtime);
             }
         }
-    
+
         resolve(...paths) {
             return aPath.resolve(this._path, ...paths);
         }
-    
+
         getFile(...paths) {
             return new fs.File(this.resolve(...paths));
         }
-    
+
         getDirectory(...paths) {
             return new Directory(this.resolve(...paths));
         }
-    
+
         getSymbolicLinkFile(...paths) {
             return new fs.SymbolicLinkFile(this.resolve(...paths));
         }
-    
+
         getSymbolicLinkDirectory(...paths) {
             return new fs.SymbolicLinkDirectory(this.resolve(...paths));
         }
-    
+
         async get(...path) {
             path = this.resolve(...path);
             const stat = await fs.lstat(path);
             return stat.isDirectory() ? new Directory(path) : new fs.File(path);
         }
-    
+
         async _ensurePath(path) {
             let root = this;
             for (const part of path) {
@@ -108,7 +108,7 @@ export default (fs) => {
             }
             return root;
         }
-    
+
         async addFile(...filename) {
             const opts = { contents: "", mode: 0o666, mtime: null, atime: null };
             if (is.object(filename[filename.length - 1])) {
@@ -123,7 +123,7 @@ export default (fs) => {
             await file.create(opts);
             return file;
         }
-    
+
         async addDirectory(...filename) {
             const opts = {
                 mode: 0o777 & (~process.umask()),
@@ -142,7 +142,7 @@ export default (fs) => {
             await dir.create(opts);
             return dir;
         }
-    
+
         async files() {
             const paths = await fs.readdir(this._path);
             const files = await Promise.all(paths.map(async (x) => {
@@ -161,10 +161,10 @@ export default (fs) => {
                 }
                 return stat.isDirectory() ? new Directory(path) : new fs.File(path);
             }));
-    
+
             return files.filter((x) => x);
         }
-    
+
         filesSync() {
             const paths = fs.readdirSync(this._path);
             return paths.map((x) => {
@@ -187,21 +187,21 @@ export default (fs) => {
                 return stat.isDirectory() ? new Directory(path) : new fs.File(path);
             }).filter((x) => x);
         }
-    
+
         async clean() {
             const items = await this.find({ files: true, dirs: true });
             for (const item of items) {
                 await item.unlink(); // eslint-disable-line
             }
         }
-    
+
         unlink({ relPath/*, retries = 10, delay = 100*/ } = {}) {
             if (is.string(relPath) && !aPath.isAbsolute(relPath)) {
                 return fs.remove(aPath.join(this._path, relPath)/*, { maxBusyTries: retries, emfileWait: delay }*/);
             }
             return fs.remove(this._path/*, { maxBusyTries: retries, emfileWait: delay }*/);
         }
-    
+
         async find({ files = true, dirs = false } = {}) {
             const nested = [];
             for (const file of await this.files()) {
@@ -218,7 +218,7 @@ export default (fs) => {
             }
             return nested;
         }
-    
+
         findSync({ files = true, dirs = false } = {}) {
             const nested = [];
             for (const file of this.filesSync()) {
@@ -235,7 +235,7 @@ export default (fs) => {
             }
             return nested;
         }
-    
+
         async rename(name) {
             if (name instanceof Directory) {
                 name = name.filename();
@@ -244,40 +244,40 @@ export default (fs) => {
             await fs.rename(this._path, newPath);
             this._path = newPath;
         }
-    
+
         symbolicLink(path) {
             if (path instanceof Directory) {
                 path = path.path();
             }
             return fs.symlink(this._path, path).then(() => new fs.SymbolicLinkDirectory(path));
         }
-    
+
         // TODO: need review
         copyTo(destPath, options) {
             return fs.copyTo(this._path, destPath, options);
         }
-    
+
         // TODO: need review
         copyFrom(srcPath, options) {
             return fs.copyTo(srcPath, this._path, options);
         }
-    
+
         toString() {
             return this._path;
         }
-    
+
         mode() {
             return this.stat().then((stat) => new fs.Mode(stat));
         }
-    
+
         static async create(...path) {
             const dir = new Directory(...path);
             await dir.create();
             return dir;
         }
-    
+
         static async createTmp(options) {
             return Directory.create(await fs.tmpName(options));
         }
-    }    
+    }
 };

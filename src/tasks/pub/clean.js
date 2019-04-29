@@ -42,10 +42,10 @@ const clean = async function (manager, entry) {
 
 @adone.task.task("clean")
 export default class extends BaseTask {
-    async main({ path } = {}) {
-        const observer = await adone.task.runParallel(this.manager, this.manager.getEntries({ path }).map((entry) => ({
+    async main({ path, realm } = {}) {
+        const observer = await adone.task.runParallel(this.manager, this.manager.devConfig.getUnits(path).map((unit) => ({
             task: clean,
-            args: [this.manager, entry]
+            args: [this.manager, unit]
         })));
         return observer.result;
     }

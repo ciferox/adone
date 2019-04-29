@@ -114,7 +114,8 @@ export default class GenericConfig extends adone.configuration.BaseConfig {
 
         if (ext.length === 0) {
             path = adone.module.resolve(path, {
-                basedir: aPath.dirname(path)
+                basedir: aPath.dirname(path),
+                extensions: Object.keys(this.#serializer)
             });
             ext = aPath.extname(path);
         }

@@ -1,11 +1,8 @@
 const {
-    error,
     is,
     fs,
     nodejs,
     path: aPath,
-    std,
-    system,
     util
 } = adone;
 
@@ -24,7 +21,7 @@ export default class NodejsManager {
     constructor({ cache } = {}) {
         this.cache = cache || {};
         if (!this.cache.basePath) {
-            this.cache.basePath = aPath.join(adone.VAR_PATH, "nodejs_cache");
+            this.cache.basePath = aPath.join(adone.VAR_PATH, "nodejs");
         }
         this.cache.download = this.cache.download || "download";
         this.cache.release = this.cache.release || "release";
@@ -81,8 +78,8 @@ export default class NodejsManager {
             downloaded: false
         };
         
-        if (outPath === downloadPath && !force && await fs.exists(fullPath)) {
-            result.downloaded = false;
+        if (outPath === downloadPath && !force && await fs.pathExists(fullPath)) {
+            result.downloaded = true;
             return result;
         }
 

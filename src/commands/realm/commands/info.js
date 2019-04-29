@@ -1,4 +1,5 @@
 const {
+    cli: { chalk },
     app: { Subsystem, mainCommand },
     pretty
 } = adone;
@@ -9,15 +10,15 @@ export default class extends Subsystem {
         options: [
             {
                 name: "--common",
-                help: "Display common information"
+                help: "Show common information"
             },
             {
-                name: "--struct",
-                help: "Display project structure"
+                name: "--units",
+                help: "Show realm dev units"
             },
             {
                 name: "--tasks",
-                help: "Display project tasks"
+                help: "Show realm tasks"
             }
         ]
     })
@@ -30,6 +31,8 @@ export default class extends Subsystem {
             });
 
             if (result.common) {
+                console.log();
+                console.log(chalk.bold("Common:"));
                 console.log();
                 console.log(pretty.table(result.common, {
                     width: "100%",
@@ -54,7 +57,11 @@ export default class extends Subsystem {
 
             if (result.tasks) {
                 console.log();
-                console.log(pretty.table(result.tasks, {
+                console.log(chalk.bold("Tasks:"));
+                console.log();
+                console.log(pretty.table(result.tasks.map((t) => ({
+                    name: t
+                })), {
                     width: "100%",
                     borderless: true,
                     noHeader: true,
@@ -64,11 +71,30 @@ export default class extends Subsystem {
                     },
                     model: [
                         {
-                            id: "key",
-                            width: 16
+                            id: "name"
+                        }
+                    ]
+                }));
+            }
+
+            if (result.units) {
+                console.log();
+                console.log(chalk.bold("Dev units:"));
+                console.log();
+                console.log(pretty.table(result.units, {
+                    width: "100%",
+                    borderless: true,
+                    noHeader: true,
+                    style: {
+                        head: null,
+                        compact: true
+                    },
+                    model: [
+                        {
+                            id: "id"
                         },
                         {
-                            id: "value",
+                            id: "description",
                             style: "{green-fg}",
                             wordWrap: true
                         }
@@ -76,15 +102,9 @@ export default class extends Subsystem {
                 }));
             }
 
-            if (result.struct) {
-                console.log();
-                console.log("Namespaces:");
-                console.log(pretty.json(result.struct));
-            }
-
             return 0;
         } catch (err) {
-            // console.error(pretty.error(err));
+            console.error(pretty.error(err));
             return 1;
         }
     }

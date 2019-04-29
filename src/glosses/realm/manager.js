@@ -144,25 +144,6 @@ export default class RealmManager extends task.TaskManager {
         return std.path.join(this.cwd, ...args);
     }
 
-    getEntries({ path, onlyNative = false, excludeVirtual = true } = {}) {
-        let entries = this.config.getEntries(path);
-
-        if (onlyNative) {
-            const result = [];
-            for (const entry of entries) {
-                if (is.plainObject(entry.native)) {
-                    result.push(entry);
-                }
-            }
-
-            entries = result;
-        }
-
-        return excludeVirtual
-            ? entries.filter(checkEntry)
-            : entries;
-    }
-
     async run(name, ...args) {
         let result;
         try {

@@ -13,6 +13,7 @@ const {
     subsystem
 } = app;
 
+
 const command = (name) => path.join(__dirname, "..", "lib", "commands", name);
 
 @subsystem({
@@ -50,7 +51,7 @@ class ADONEApp extends app.Application {
         this.config = await Configuration.load({
             cwd: path.join(adone.ETC_PATH, "adone")
         });
-        
+
         // Define command groups.
         const groups = this.config.getGroups();
         for (const group of groups) {

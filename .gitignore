@@ -58,9 +58,6 @@ yarn-error.log*
 package-lock.json
 yarn.lock
 
-# realm specific
-/.adone/dev.json
-
 test-fixtures/
 _fixtures/
 test-resources/

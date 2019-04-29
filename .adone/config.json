@@ -256,6 +256,13 @@
                             "task": "transpile",
                             "src": "src/glosses/compressors/xz/**/*.js",
                             "dst": "lib/glosses/compressors/xz",
+                            "scheme": {
+                                "native": {
+                                    "task": "gyp",
+                                    "src": "src/glosses/compressors/xz/native",
+                                    "dst": "lib/glosses/compressors/xz/native"
+                                }
+                            },
                             "native": {
                                 "src": "src/glosses/compressors/xz/native",
                                 "dst": "lib/glosses/compressors/xz/native",
@@ -315,7 +322,6 @@
                     "scheme": {
                         "base64": {
                             "description": "Implementation of BASE64 serializer",
-                            "index": "glosses/data/base64",
                             "src": "src/glosses/data/base64.js"
                         },
                         "bson": {
@@ -330,12 +336,10 @@
                         },
                         "json5": {
                             "description": "Implementation of JSON5 serializer",
-                            "index": "glosses/data/json5",
                             "src": "src/glosses/data/json5.js"
                         },
                         "mpak": {
                             "description": "Implementation of MessagePack serializer",
-                            "index": "glosses/data/mpak",
                             "src": "src/glosses/data/mpak.js"
                         },
                         "yaml": {
@@ -345,17 +349,14 @@
                         },
                         "base58": {
                             "description": "Implementation of Base58 serializer",
-                            "index": "glosses/data/base58",
                             "src": "src/glosses/data/base58.js"
                         },
                         "varint": {
                             "description": "Implementation of Protobuf varint",
-                            "index": "glosses/data/varint",
                             "src": "src/glosses/data/varint.js"
                         },
                         "varintSigned": {
                             "description": "Implementation of Protobuf signed varint",
-                            "index": "glosses/data/varint_signed",
                             "src": "src/glosses/data/varint_signed.js"
                         },
                         "protobuf": {
@@ -692,20 +693,20 @@
                     "dst": "lib/glosses/nodejs",
                     "scheme": {
                         "gyp": {
+                            "task": "transpile",
+                            "src": "src/glosses/nodejs/gyp/**/*.js",
+                            "dst": "lib/glosses/nodejs/gyp",
                             "description": "Node.js native addon build tool baed",
-                            "index": "js:index.js",
                             "scheme": {
-                                "js": {
-                                    "task": "transpile",
-                                    "src": [
-                                        "src/glosses/gyp/**/*.js",
-                                        "!src/glosses/gyp/gyp/**/*"
-                                    ],
-                                    "dst": "lib/glosses/gyp"
+                                "gyp": {
+                                    "task": "copy",
+                                    "src": "src/glosses/nodejs/gyp/gyp/**/*",
+                                    "dst": "lib/glosses/nodejs/gyp/gyp"
                                 },
-                                "native-gyp": {
-                                    "src": "src/glosses/gyp/gyp/**/*",
-                                    "dst": "lib/glosses/gyp/gyp"
+                                "addon": {
+                                    "task": "copy",
+                                    "src": "src/glosses/nodejs/gyp/addon/**/*",
+                                    "dst": "lib/glosses/nodejs/gyp/addon"
                                 }
                             }
                         }

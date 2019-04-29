@@ -23,7 +23,7 @@ export default class extends realm.BaseTask {
         }
     }
 
-    async main({ cwd, common = false, struct = false, tasks = false, onlyNative = false, structFull = false } = {}) {
+    async main({ cwd, common = false, units = false, tasks = false/*, structFull = false*/ } = {}) {
         if (!is.string(cwd)) {
             throw new error.NotValidException(`Invalid type of cwd: ${adone.typeOf(cwd)}`);
         }
@@ -32,7 +32,7 @@ export default class extends realm.BaseTask {
             message: "collecting to realm"
         });
 
-        const all = (common && struct && tasks) || (!common && !struct && !tasks);
+        const all = (common && units && tasks) || (!common && !units && !tasks);
 
         const r = new realm.RealmManager({ cwd });
         await r.connect();
@@ -48,31 +48,11 @@ export default class extends realm.BaseTask {
         }
 
         if (tasks || all) {
-            result.tasks = [
-                {
-                    key: "Tasks:",
-                    value: r.getTaskNames().sort().join(", ")
-                }
-            ];
+            result.tasks = r.getTaskNames().sort();
         }
 
-        if (struct || all) {
-            const entries = r.getEntries({
-                path: null,
-                onlyNative,
-                excludeVirtual: false // TODO: make it configurable
-            });
-            const structure = {};
-            if (structFull) {
-                for (const entry of entries) {
-                    structure[entry.id] = adone.util.omit(entry, "id");
-                }
-            } else {
-                for (const entry of entries) {
-                    structure[entry.id] = entry.description || "";
-                }
-            }
-            result.struct = structure;
+        if (units || all) {
+            result.units = r.devConfig.getUnits();
         }
 
         this.manager.notify(this, "progress", {

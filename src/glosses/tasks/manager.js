@@ -100,7 +100,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
         ignore = util.arrify(ignore);
 
         for (const p of paths) {
-            if (!(await fs.exists(p))) {
+            if (!(await fs.pathExists(p))) {
                 continue;
             }
 

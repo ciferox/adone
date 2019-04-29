@@ -30,7 +30,10 @@ export default class extends Subsystem {
                 cwd: process.cwd(),
                 progress: false
             });
-            await r.runAndWait("build", { path });
+            await r.runAndWait("build", {
+                path,
+                realm: r
+            });
 
             cli.updateProgress({
                 message: "done",

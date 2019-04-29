@@ -18,15 +18,15 @@
       "dependencies" : [ "liblzma" ],
       "conditions" : [
         [ 'OS!="win"' , {
-          "include_dirs" : [ "<(module_root_dir)/build/liblzma/build/include" ],
-          "libraries" : [ "<(module_root_dir)/build/liblzma/build/lib/liblzma.a" ],
+          "include_dirs" : [ "<(node_build_dir)/liblzma/build/include" ],
+          "libraries" : [ "<(node_build_dir)/liblzma/build/lib/liblzma.a" ],
         }, {
           "include_dirs" : [ "<(addon_root_dir)\\src\\deps\\win\\include" ],
           "link_settings": {
             "libraries" : [ "-lliblzma" ],
             "conditions": [
               [ 'target_arch=="x64"', {
-                "library_dirs" : [ "<(module_root_dir)\\build\\Release" ]
+                "library_dirs" : [ "<(node_build_dir)\\Release" ]
               }, {
                 "library_dirs" : [ "<(addon_root_dir)\\src\\deps\\win\\bin_i686" ]
               } ]
@@ -43,10 +43,10 @@
           "actions" : [
             {
               "action_name" : "build",
-              'inputs': ['<!@(sh <(addon_root_dir)/src/deps/unix/config.sh "<(module_root_dir)/build" "<(addon_root_dir)/src/deps/unix/xz-5.2.3.tar.bz2")'],
+              'inputs': ['<!@(sh <(addon_root_dir)/src/deps/unix/config.sh "<(node_build_dir)" "<(addon_root_dir)/src/deps/unix/xz-5.2.3.tar.bz2")'],
               'outputs': [''],
               'action': [
-                'sh', '<(addon_root_dir)/src/deps/unix/build.sh', '<(module_root_dir)/build'
+                'sh', '<(addon_root_dir)/src/deps/unix/build.sh', '<(node_build_dir)'
               ]
             }
           ]
@@ -70,14 +70,14 @@
               "action_name" : "build",
               'inputs': ['src/deps/win/liblzma.def'],
               'outputs': [''],
-              'action': ['mkdir <(module_root_dir)/build/Release > nul 2>&1 & lib -def:"<(addon_root_dir)/src/deps/win/liblzma.def" -out:"<(module_root_dir)/build/Release/liblzma.lib" -machine:<(arch_lib_code)']
+              'action': ['mkdir <(node_build_dir)/liblzma/Release > nul 2>&1 & lib -def:"<(addon_root_dir)/src/deps/win/liblzma.def" -out:"<(node_build_dir)/liblzma/Release/liblzma.lib" -machine:<(arch_lib_code)']
             },
             {
               "msvs_quote_cmd": 0,
               "action_name" : "deploy",
               'inputs': ['src/deps/win/<(arch_lib_path)/liblzma.dll'],
               'outputs': ['build/Release/liblzma.dll'],
-              'action': ['copy "<(addon_root_dir)/src/deps/win/<(arch_lib_path)/liblzma.dll" "<(module_root_dir)/build/Release/liblzma.dll"']
+              'action': ['copy "<(addon_root_dir)/src/deps/win/<(arch_lib_path)/liblzma.dll" "<(node_build_dir)/liblzma/Release/liblzma.dll"']
             }
           ]
         } ],
@@ -98,7 +98,7 @@
                   }
                 ]
               ],
-              "destination": "<(module_root_dir)/lib/native"
+              "destination": "<(node_build_dir)/lib/native"
             }
           ]
         }]
