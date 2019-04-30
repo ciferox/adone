@@ -95,8 +95,8 @@ export default class GenericConfig extends adone.configuration.BaseConfig {
         });
     }
 
-    async save(confPath, options) {
-        const info = this._checkPath(confPath, false);
+    async save(confPath, { ext, ...options } = {}) {
+        const info = this._checkPath(confPath, false, ext);
         if (!is.function(info.serializer.encode)) {
             throw new error.NotSupportedException(`Unsupported operation for '${info.serializer.ext}'`);
         }
@@ -104,20 +104,27 @@ export default class GenericConfig extends adone.configuration.BaseConfig {
         await fs.writeFile(info.path, await info.serializer.encode(this.raw, options));
     }
 
-    _checkPath(confPath, checkExists) {
+    _checkPath(confPath, checkExists, ext) {
         let path = (aPath.isAbsolute(confPath))
             ? confPath
             : aPath.resolve(this.cwd, confPath);
 
-        let ext = aPath.extname(path);
+        let origExt = aPath.extname(path);
         let serializer = null;
 
-        if (ext.length === 0) {
+        if (checkExists && origExt.length === 0) {
             path = adone.module.resolve(path, {
                 basedir: aPath.dirname(path),
                 extensions: Object.keys(this.#serializer)
             });
-            ext = aPath.extname(path);
+            origExt = aPath.extname(path);
+        }
+
+        if (ext && ext !== origExt) {
+            const basename = aPath.basename(path, origExt);
+            path = `${aPath.join(aPath.dirname(path), basename)}${ext}`;
+        } else {
+            ext = origExt;
         }
 
         serializer = this.#serializer[ext];

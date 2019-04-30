@@ -301,7 +301,7 @@ const configure = async ({ realm, path: addonPath, nodePath, python: pythonPath,
         process.env.PYTHONPATH = pypath.join(is.windows ? ";" : ":");
 
         return adone.process.exec(python, argv, {
-            cwd: addonPath
+            cwd: addonFullPath
         });
     };
 
@@ -310,7 +310,7 @@ const configure = async ({ realm, path: addonPath, nodePath, python: pythonPath,
         if (!name) {
             return runGyp();
         }
-        const fullPath = path.resolve(addonPath, name);
+        const fullPath = path.resolve(addonFullPath, name);
         try {
             await fs.stat(fullPath);
             configs.push(fullPath);
