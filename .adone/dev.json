@@ -50,23 +50,6 @@
             "dst": "lib/mount_points",
             "task": "transpile"
         },
-        "assets": {
-            "description": "All assets",
-            "src": [
-                "src/**/*",
-                "!src/**/*.js",
-                "!src/**/*.wat",
-                "!src/glosses/schema/__/dot/*",
-                "!src/**/native/**/*"
-            ],
-            "dst": "lib",
-            "dstClean": [
-                "lib/**/*",
-                "!lib/**/*.js",
-                "!lib/**/*.map",
-                "!lib/**/*.node"
-            ]
-        },
         "native": {
             "description": "Everything to build Node.js addons",
             "src": "src/native/**/*",
@@ -807,11 +790,13 @@
                     "units": {
                         "dot": {
                             "description": "Implementation of DoT template engine",
+                            "task": "transpile",
                             "src": "src/glosses/templating/dot/**/*.js",
                             "dst": "lib/glosses/templating/dot"
                         },
                         "nunjucks": {
                             "description": "Implementation of Nunjucks template engine",
+                            "task": "transpile",
                             "src": "src/glosses/templating/nunjucks/**/*.js",
                             "dst": "lib/glosses/templating/nunjucks"
                         }

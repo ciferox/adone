@@ -83,9 +83,10 @@ export default class NodejsManager {
         }
 
         const url = `https://nodejs.org/download/release/${version}/${archName}`;
+        const tmpFullPath = aPath.join(tmpPath, archName);
         const downloader = new adone.http.Downloader({
             url,
-            dest: aPath.join(tmpPath, archName)
+            dest: tmpFullPath
         });
 
         if (progressBar instanceof adone.cli.Progress) {
@@ -123,11 +124,8 @@ export default class NodejsManager {
             // throw new error.Exception(`Could not get ${url}: ${err.message}`);
         }
 
-        if (await fs.exists(fullPath)) {
-            await fs.unlink(fullPath);
-        }
-
-        await fs.copy(tmpPath, outPath);
+        await fs.mkdirp(outPath);
+        await fs.copyFile(tmpFullPath, fullPath);
         await fs.remove(tmpPath);
 
         return result;

@@ -259,7 +259,8 @@ export default class BuildSystem {
             path.join(this.options.nodePath, "include/node"),
             path.join(adone.ROOT_PATH, "lib", "native", "nan"), // nan
             path.join(adone.ROOT_PATH, "lib", "native", "napi", "external-napi"), // napi
-            path.join(adone.ROOT_PATH, "lib", "native", "napi-macros") // napi-macros
+            path.join(adone.ROOT_PATH, "lib", "native", "napi-macros"), // napi-macros
+            path.join(adone.ROOT_PATH, "lib", "native", "adone")
         ];
 
         // Includes:

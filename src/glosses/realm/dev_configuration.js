@@ -54,9 +54,12 @@ export default class DevConfiguration extends adone.configuration.GenericConfig 
         if (is.regexp(path)) {
             validator = (unit) => path.test(unit.id);
         } else if (is.string(path)) {
-            validator = path.endsWith(".")
-                ? (unit) => unit.id.startsWith(path)
-                : (unit) => unit.id === path;
+            if (path.endsWith(".")) {
+                path = path.slice(0, -1);
+                validator = (unit) => unit.id.startsWith(path);
+            } else {
+                validator = (unit) => unit.id === path;
+            }
         } else {
             return units;
         }

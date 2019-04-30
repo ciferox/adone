@@ -22,13 +22,13 @@ export default class extends BaseTask {
         });
 
         await nodejs.cmake.configure({
-            realm: adone.realm.rootRealm,
+            realm,
             path: src,
             nodePath
         });
 
         await nodejs.cmake.build({
-            realm: adone.realm.rootRealm,
+            realm,
             path: src
         });
         
