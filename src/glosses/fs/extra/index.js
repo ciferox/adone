@@ -140,7 +140,6 @@ export const improve = (fs) => {
         Directory: "./directory",
         SymbolicLinkFile: "./symlink_file",
         SymbolicLinkDirectory: "./symlink_directory",
-        RandomAccessFile: ["./random_access", "RandomAccessFile"],
         AbstractRandomAccessReader: ["./random_access", "AbstractRandomAccessReader"],
         RandomAccessFdReader: ["./random_access", "RandomAccessFdReader"],
         RandomAccessBufferReader: ["./random_access", "RandomAccessBufferReader"],

@@ -525,19 +525,6 @@
                         }
                     }
                 },
-                "metrics": {
-                    "description": "Different metrics",
-                    "task": "transpile",
-                    "src": "src/glosses/metrics/**/*.js",
-                    "dst": "lib/glosses/metrics",
-                    "units": {
-                        "native": {
-                            "task": "gyp",
-                            "src": "src/glosses/metrics/native",
-                            "dst": "lib/glosses/metrics/native"
-                        }
-                    }
-                },
                 "model": {
                     "description": "Model definition and validation",
                     "task": "transpile",
