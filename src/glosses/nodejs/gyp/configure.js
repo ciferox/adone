@@ -156,7 +156,7 @@ PythonFinder.prototype.semverRange = ">=2.6.0 <3.0.0";
 PythonFinder.prototype.pyLauncher = "py.exe";
 PythonFinder.prototype.defaultLocation = path.join(process.env.SystemDrive || "C:", "Python27", "python.exe");
 
-const configure = async ({ realm, path: addonPath, python: pythonPath, debug = false, arch, thin, nodeDir, msvsVersion, nodeEngine, options = {} } = {}) => {
+const configure = async ({ realm, path: addonPath, nodePath, python: pythonPath, debug = false, arch, thin, msvsVersion, nodeEngine, options = {} } = {}) => {
     const configNames = ["config.gypi", "common.gypi"];
     const configs = [];
     const buildDir = adone.nodejs.gyp.getBuildPath(realm, addonPath); // may be expose to options...
@@ -251,23 +251,23 @@ const configure = async ({ realm, path: addonPath, python: pythonPath, debug = f
         // this logic ported from the old `gyp_addon` python file
         const gypScript = path.resolve(__dirname, "gyp", "gyp_main.py");
         const addonGypi = path.resolve(__dirname, "addon", "addon.gypi");
-        let commonGypi = path.resolve(nodeDir, "include/node/common.gypi");
+        let commonGypi = path.resolve(nodePath, "include/node/common.gypi");
         try {
             await fs.stat(commonGypi);
         } catch (err) {
-            commonGypi = path.resolve(nodeDir, "common.gypi");
+            commonGypi = path.resolve(nodePath, "common.gypi");
         }
 
         const outputDir = buildDir;
         const nodeGypAddonDir = path.resolve(__dirname, "addon");
-        const nodeLibFile = path.join(nodeDir, "$(Configuration)", "node.lib");
+        const nodeLibFile = path.join(nodePath, "$(Configuration)", "node.lib");
 
         argv.push("-I", addonGypi);
         argv.push("-I", commonGypi);
         argv.push("-Dlibrary=shared_library");
         argv.push("-Dvisibility=default");
-        argv.push(`-Dnode_root_dir=${nodeDir}`);
-        argv.push(`-Dadone_native_dir=${path.join(adone.ROOT_PATH, "src", "native")}`);
+        argv.push(`-Dnode_root_dir=${nodePath}`);
+        argv.push(`-Dadone_native_dir=${path.join(adone.ROOT_PATH, "lib", "native")}`);
         argv.push(`-Dadone_root_dir=${adone.ROOT_PATH}`);
         if (process.platform === "aix" || process.platform === "os390") {
             argv.push(`-Dnode_exp_file=${nodeExpFile}`);
@@ -357,7 +357,7 @@ const configure = async ({ realm, path: addonPath, python: pythonPath, debug = f
         variables.target_arch = arch || process.arch || "ia32";
 
         // set the node development directory
-        variables.nodedir = nodeDir;
+        variables.nodedir = nodePath;
 
         // disable -T "thin" static archives by default
         variables.standalone_static_library = thin ? 0 : 1;

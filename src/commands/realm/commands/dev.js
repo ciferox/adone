@@ -23,11 +23,14 @@ export default class extends Subsystem {
     async devCommand(args, opts) {
         try {
             const path = this.parent.resolvePath(args, opts);
-            const manager = await this.parent.connectRealm({
+            const r = await this.parent.connectRealm({
                 cwd: process.cwd(),
                 progress: false
             });
-            await manager.runAndWait("watch", path);
+            await r.runAndWait("watch", {
+                realm: r,
+                path
+            });
         } catch (err) {
             console.error(adone.pretty.error(err));
             return 1;

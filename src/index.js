@@ -115,7 +115,6 @@ lazify({
     archive: "./glosses/archives",
     assertion: "./glosses/assertion",
     cli: "./glosses/cli",
-    cmake: "./glosses/cmake",
     collection: "./glosses/collections",
     compressor: "./glosses/compressors",
     configuration: "./glosses/configurations",

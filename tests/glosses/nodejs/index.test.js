@@ -1,4 +1,5 @@
 const {
+    is,
     error,
     fs,
     nodejs,
@@ -24,7 +25,6 @@ describe("nodejs", () => {
             await assert.throws(async () => nodejs.getArchiveName({ version: "" }), error.NotvalidException);
             await assert.throws(async () => nodejs.getArchiveName({ version: "10" }), error.NotvalidException);
             await assert.throws(async () => nodejs.getArchiveName({ version: "11.1" }), error.NotvalidException);
-            await assert.throws(async () => nodejs.getArchiveName({ version: "11.13.0" }), error.NotvalidException);
             await assert.throws(async () => nodejs.getArchiveName({ version: "v11" }), error.NotvalidException);
             await assert.throws(async () => nodejs.getArchiveName({ version: "v10.1" }), error.NotvalidException);
             await assert.throws(async () => nodejs.getArchiveName({ version: "v12.12." }), error.NotvalidException);
@@ -70,6 +70,64 @@ describe("nodejs", () => {
         it("get archive name without ext", async () => {
             assert.equal(await nodejs.getArchiveName({ version: "v11.13.0", ext: "" }), `node-v11.13.0-${platform}-${arch}`);
         });
+
+        it("get archive name without platform", async () => {
+            assert.equal(await nodejs.getArchiveName({ version: "v11.13.0", ext: ".tar.gz", platform: "" }), `node-v11.13.0-${arch}.tar.gz`);
+            assert.equal(await nodejs.getArchiveName({ version: "v11.13.0", ext: "", platform: "" }), `node-v11.13.0-${arch}`);
+            assert.equal(await nodejs.getArchiveName({ version: "v11.13.0", platform: "" }), `node-v11.13.0-${arch}${defaultExt}`);
+        });
+
+        it("get archive name without arch", async () => {
+            assert.equal(await nodejs.getArchiveName({ version: "v11.13.0", ext: ".tar.gz", arch: "" }), `node-v11.13.0-${platform}.tar.gz`);
+            assert.equal(await nodejs.getArchiveName({ version: "v11.13.0", ext: "", arch: "", platform: "" }), "node-v11.13.0");
+            assert.equal(await nodejs.getArchiveName({ version: "v11.13.0", arch: "" }), `node-v11.13.0-${platform}${defaultExt}`);
+            assert.equal(await nodejs.getArchiveName({ version: "v11.13.0", ext: "", arch: "" }), `node-v11.13.0-${platform}`);
+        });
+    });
+
+    describe("getSHASUMS()", () => {
+        it("throw if version is not valid", async () => {
+            await assert.throws(async () => nodejs.getSHASUMS(), error.NotvalidException);
+            await assert.throws(async () => nodejs.getSHASUMS({}), error.NotvalidException);
+            await assert.throws(async () => nodejs.getSHASUMS({ version: undefined }), error.NotvalidException);
+            await assert.throws(async () => nodejs.getSHASUMS({ version: null }), error.NotvalidException);
+            await assert.throws(async () => nodejs.getSHASUMS({ version: "" }), error.NotvalidException);
+            await assert.throws(async () => nodejs.getSHASUMS({ version: "10" }), error.NotvalidException);
+            await assert.throws(async () => nodejs.getSHASUMS({ version: "11.1" }), error.NotvalidException);
+            await assert.throws(async () => nodejs.getSHASUMS({ version: "v11" }), error.NotvalidException);
+            await assert.throws(async () => nodejs.getSHASUMS({ version: "v10.1" }), error.NotvalidException);
+            await assert.throws(async () => nodejs.getSHASUMS({ version: "v12.12." }), error.NotvalidException);
+        });
+
+        it("get sha sums as utf8-string", async () => {
+            const version = "12.0.0";
+            const sums = await nodejs.getSHASUMS({ version });
+            assert.isString(sums);
+            assert.isTrue(sums.includes(await nodejs.getArchiveName({ version })));
+        });
+
+        it("get sha sums as object", async () => {
+            const version = "11.0.0";
+            const sums = await nodejs.getSHASUMS({ version, type: "object" });
+            // console.log(adone.inspect(sums));
+            assert.isTrue(is.plainObject(sums));
+            assert.isTrue((await nodejs.getArchiveName({ version })) in sums);
+        });
+
+        it("get sha sums as array", async () => {
+            const version = "11.0.0";
+            const sums = await nodejs.getSHASUMS({ version, type: "array" });
+            assert.isTrue(is.array(sums));
+            const name = await nodejs.getArchiveName({ version });
+            assert.isTrue(sums.findIndex((i) => i.name === name) > 0);
+        });
+
+        it("get sha sums as buffer", async () => {
+            const version = "11.0.0";
+            const sums = await nodejs.getSHASUMS({ version, type: "buffer" });
+            assert.isTrue(is.buffer(sums));
+            assert.isTrue(sums.includes(await nodejs.getArchiveName({ version })));
+        });
     });
 
     describe("NodejsManager", () => {
@@ -99,9 +157,9 @@ describe("nodejs", () => {
             const nm = new nodejs.NodejsManager();
 
             assert.deepEqual(nm.cache, {
-                basePath: path.join(adone.VAR_PATH, "nodejs_cache"),
-                download: "download",
-                release: "release",
+                basePath: path.join(adone.VAR_PATH, "nodejs"),
+                download: "downloads",
+                release: "releases",
                 sources: "sources",
                 headers: "headers"
             });
@@ -113,8 +171,8 @@ describe("nodejs", () => {
 
             assert.deepEqual(nm.cache, {
                 basePath,
-                download: "download",
-                release: "release",
+                download: "downloads",
+                release: "releases",
                 sources: "sources",
                 headers: "headers"
             });
@@ -172,7 +230,7 @@ describe("nodejs", () => {
                 const result = await nm.download();
 
                 assert.equal(result.downloaded, true);
-                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version }));
+                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version, ext: "", platform: "", arch: "" }), await nodejs.getArchiveName({ version }));
                 assert.equal(result.path, archivePath);
                 assert.isTrue(await fs.isFile(archivePath));
             });
@@ -184,7 +242,7 @@ describe("nodejs", () => {
                 const result = await nm.download({ version });
 
                 assert.equal(result.downloaded, true);
-                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version }));
+                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version, ext: "", platform: "", arch: "" }), await nodejs.getArchiveName({ version }));
                 assert.equal(result.path, archivePath);
                 assert.isTrue(await fs.isFile(archivePath));
             });
@@ -198,7 +256,7 @@ describe("nodejs", () => {
                 const result = await nm.download({ platform, ext });
 
                 assert.equal(result.downloaded, true);
-                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version, platform, ext }));
+                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version, ext: "", platform: "", arch: "" }), await nodejs.getArchiveName({ version, platform, ext }));
                 assert.equal(result.path, archivePath);
                 assert.isTrue(await fs.isFile(archivePath));
             });
@@ -213,7 +271,7 @@ describe("nodejs", () => {
                 const result = await nm.download({ platform, arch, ext });
 
                 assert.equal(result.downloaded, true);
-                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version, platform, arch, ext }));
+                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version, ext: "", platform: "", arch: "" }), await nodejs.getArchiveName({ version, platform, arch, ext }));
                 assert.equal(result.path, archivePath);
                 assert.isTrue(await fs.isFile(archivePath));
             });
@@ -226,7 +284,7 @@ describe("nodejs", () => {
                 const result = await nm.download({ version, type });
 
                 assert.equal(result.downloaded, true);
-                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version, type }));
+                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version, ext: "", platform: "", arch: "" }), await nodejs.getArchiveName({ version, type }));
                 assert.equal(result.path, archivePath);
                 assert.isTrue(await fs.isFile(archivePath));
             });
@@ -240,9 +298,22 @@ describe("nodejs", () => {
                 const result = await nm.download({ version, type, ext });
 
                 assert.equal(result.downloaded, true);
-                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version, type, ext }));
+                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version, ext: "", platform: "", arch: "" }), await nodejs.getArchiveName({ version, type, ext }));
                 assert.equal(result.path, archivePath);
                 assert.isTrue(await fs.isFile(archivePath));
+            });
+
+            it.only("download with hashsum calculating", async () => {
+                const nm = await createManager();
+
+                const version = await nodejs.checkVersion("latest");
+                const type = "headers";
+                const ext = ".tar.gz";
+                const result = await nm.download({ version, type, ext, hash: "sha256" });
+
+                const sums = await nodejs.getSHASUMS({ version, type: "object" });
+
+                assert.equal(sums[await nodejs.getArchiveName({ version, type, ext })], result.hashsum);
             });
         });
 

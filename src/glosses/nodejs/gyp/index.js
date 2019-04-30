@@ -2,6 +2,7 @@ adone.lazify({
     configure: "./configure",
     clean: "./clean",
     build: "./build",
+    reconfigure: "./reconfigure",
     rebuild: "./rebuild"
 }, exports, require);
 

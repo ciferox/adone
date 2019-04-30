@@ -2,7 +2,6 @@ const {
     is,
     fs,
     path: aPath,
-    std,
     util,
     stream: { core }
 } = adone;

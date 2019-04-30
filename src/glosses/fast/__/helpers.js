@@ -1,5 +1,7 @@
 const {
     is,
+    fs,
+    path: aPath,
     sourcemap
 } = adone;
 
@@ -129,7 +131,7 @@ export const updateMetadata = async (fd, file, { originMode, originTimes, origin
         return;
     }
 
-    const stat = await adone.fs.fstat(fd);
+    const stat = await fs.fstat(fd);
     const modeDiff = getModeDiff(stat.mode, file.stat.mode);
     const timesDiff = getTimesDiff(stat, file.stat);
     const ownerDiff = getOwnerDiff(stat, file.stat);
@@ -142,17 +144,17 @@ export const updateMetadata = async (fd, file, { originMode, originTimes, origin
     }
     if (originMode && modeDiff) {
         const mode = stat.mode ^ modeDiff;
-        await adone.fs.fchmod(fd, mode);
+        await fs.fchmod(fd, mode);
         file.stat.mode = mode;
 
     }
     if (originTimes && timesDiff) {
-        await adone.fs.futimes(fd, timesDiff.atime, timesDiff.mtime);
+        await fs.futimes(fd, timesDiff.atime, timesDiff.mtime);
         file.stat.atime = timesDiff.atime;
         file.stat.mtime = timesDiff.mtime;
     }
     if (originOwner && ownerDiff) {
-        await adone.fs.fchown(fd, ownerDiff.uid, ownerDiff.gid);
+        await fs.fchown(fd, ownerDiff.uid, ownerDiff.gid);
         file.stat.uid = ownerDiff.uid;
         file.stat.gid = ownerDiff.gid;
     }
@@ -161,9 +163,9 @@ export const updateMetadata = async (fd, file, { originMode, originTimes, origin
 
 export const resolveGlob = (glob, cwd) => {
     if (glob[0] === "!") {
-        return `!${adone.std.path.resolve(cwd, glob.slice(1))}`;
+        return `!${aPath.resolve(cwd, glob.slice(1))}`;
     }
-    return adone.std.path.resolve(cwd, glob);
+    return aPath.resolve(cwd, glob);
 };
 
 export const globSource = (globs, { cwd = process.cwd(), base = null, dot = true, links = false } = {}) => {
@@ -171,17 +173,16 @@ export const globSource = (globs, { cwd = process.cwd(), base = null, dot = true
     if (!base) {
         globsParents = globs.filter((glob) => !glob.startsWith("!")).map((x) => adone.glob.parent(x));
     }
-    return adone.glob(globs, { dot, index: true })
-        .through(async function fileWrapper({ path, index }) {
-            const stat = await (links ? adone.fs.lstat : adone.fs.stat)(path);
-            const _base = base || globsParents[index];
-            this.push(new adone.fast.File({
-                cwd,
-                base: _base,
-                path,
-                contents: null,
-                stat, // TODO, it should be handled by the glob
-                symlink: stat.isSymbolicLink() ? await adone.fs.readlink(path) : null
-            }));
-        });
+    return adone.glob(globs, { dot, index: true }).through(async function fileWrapper({ path, index }) {
+        const stat = await (links ? fs.lstat : fs.stat)(path);
+        const _base = base || globsParents[index];
+        this.push(new adone.fast.File({
+            cwd,
+            base: _base,
+            path,
+            contents: null,
+            stat, // TODO, it should be handled by the glob
+            symlink: stat.isSymbolicLink() ? await fs.readlink(path) : null
+        }));
+    });
 };

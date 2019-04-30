@@ -5,7 +5,7 @@ const {
     realm: { BaseTask }
 } = adone;
 
-@adone.task.task("gyp")
+@adone.task.task("cmake")
 export default class extends BaseTask {
     async main({ src, dst, files, realm } = {}) {
         const version = process.version;
@@ -21,19 +21,19 @@ export default class extends BaseTask {
             type: "headers"
         });
 
-        await nodejs.gyp.configure({
-            realm,
+        await nodejs.cmake.configure({
+            realm: adone.realm.rootRealm,
             path: src,
             nodePath
         });
 
-        await nodejs.gyp.build({
-            realm,
+        await nodejs.cmake.build({
+            realm: adone.realm.rootRealm,
             path: src
         });
-
+        
         const realmRootPath = realm.getPath();
-        const buildPath = nodejs.gyp.getBuildPath(realm, src);
+        const buildPath = nodejs.cmake.getBuildPath(realm, src);
 
         let srcGlob;
         if (files) {

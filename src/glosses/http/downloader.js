@@ -57,7 +57,7 @@ export default class Downlader extends adone.event.Emitter {
         });
     }
 
-    async download() {
+    async download(hash) {
         const res = await http.client.request(this.url, {
             responseType: "stream"
         });
@@ -69,10 +69,21 @@ export default class Downlader extends adone.event.Emitter {
         const counter = this._createCounterStream(totalLength);
 
         // TODO: close streams if errors?
-        await new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
+            let hashsum;
+            if (hash) {
+                hashsum = adone.std.crypto.createHash(hash);
+                res.data.on("data", (chunk) => {
+                    hashsum.update(chunk);
+                });
+            }
             res.data.pipe(counter).pipe(destStream);
             res.data.once("error", reject);
-            destStream.once("error", reject).once("finish", resolve);
+            destStream
+                .once("error", reject)
+                .once("finish", () => {
+                    resolve(hash ? hashsum.digest("hex") : undefined);
+                });
         });
     }
 

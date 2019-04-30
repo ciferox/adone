@@ -6,13 +6,13 @@ const {
 const fast = lazify({
     File: "./file",
     Stream: "./stream",
-    LocalStream: ["./local_stream", (mod) => mod.FastLocalStream],
-    src: ["./local_stream", (mod) => mod.src],
-    watchSource: ["./local_stream", (mod) => mod.watchSource],
-    watch: ["./local_stream", (mod) => mod.watch],
-    LocalMapStream: ["./local_map_stream", (mod) => mod.FastLocalMapStream],
-    map: ["./local_map_stream", (mod) => mod.map],
-    watchMap: ["./local_map_stream", (mod) => mod.watchMap]
+    LocalStream: ["./local_stream", "FastLocalStream"],
+    src: ["./local_stream", "src"],
+    watchSource: ["./local_stream", "watchSource"],
+    watch: ["./local_stream", "watch"],
+    LocalMapStream: ["./local_map_stream", "FastLocalMapStream"],
+    map: ["./local_map_stream", "map"],
+    watchMap: ["./local_map_stream", "watchMap"]
 }, asNamespace(exports), require);
 
 adone.lazifyp({

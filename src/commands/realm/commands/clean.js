@@ -27,7 +27,8 @@ export default class extends Subsystem {
 
             const path = this.parent.resolvePath(args, opts);
             const r = await this.parent.connectRealm({
-                cwd: process.cwd()
+                cwd: process.cwd(),
+                progress: false
             });
 
             await r.runAndWait("clean", {

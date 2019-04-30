@@ -67,12 +67,20 @@ class WatchTask extends TransformTask {
 
 @adone.task.task("watch")
 export default class extends BaseTask {
-    async main(path) {
-        const observer = await adone.task.runParallel(this.manager, this.manager.getEntries({ path }).map((entry) => ({
-            task: WatchTask,
-            args: entry
-        })));
-        
+    async main({ realm, path } = {}) {
+        const devConfig = this.manager.devConfig;
+        const nonWatchbaleTasks = adone.util.arrify(devConfig.get("nonWatchableTasks"));
+        const observer = await adone.task.runParallel(this.manager, devConfig.getUnits(path)
+            .filter((unit) => !nonWatchbaleTasks.includes(unit.task))
+            .map((unit) => ({
+                task: WatchTask,
+                args: {
+                    ...unit,
+                    realm
+
+                }
+            })));
+
         observer.taskInfo.cancelable = true; // Big hack!
 
         return observer.result;

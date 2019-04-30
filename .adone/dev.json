@@ -1,5 +1,9 @@
 {
     "defaultTask": "copy",
+    "nonWatchableTasks": [
+        "gyp",
+        "cmake"
+    ],
     "units": {
         "tasks": {
             "description": "Realm tasks",
@@ -62,6 +66,11 @@
                 "!lib/**/*.map",
                 "!lib/**/*.node"
             ]
+        },
+        "native": {
+            "description": "Everything to build Node.js addons",
+            "src": "src/native/**/*",
+            "dst": "lib/native"
         },
         "glosses": {
             "description": "Glosses",
@@ -133,12 +142,6 @@
                     "description": "CLI components and utilities",
                     "src": "src/glosses/cli/**/*.js",
                     "dst": "lib/glosses/cli",
-                    "task": "transpile"
-                },
-                "cmake": {
-                    "description": "Node.js native addon build tool based on cmake",
-                    "src": "src/glosses/cmake/**/*.js",
-                    "dst": "lib/glosses/cmake",
                     "task": "transpile"
                 },
                 "collections": {
@@ -328,7 +331,7 @@
                         }
                     }
                 },
-                "database": {
+                "databases": {
                     "description": "Databases",
                     "src": "src/glosses/databases/**/*.js",
                     "dst": "lib/glosses/databases",
@@ -635,7 +638,7 @@
                             "task": "transpile",
                             "src": "src/glosses/nodejs/gyp/**/*.js",
                             "dst": "lib/glosses/nodejs/gyp",
-                            "description": "Node.js native addon build tool baed",
+                            "description": "Node.js native addon build tool based on gyp",
                             "units": {
                                 "gyp": {
                                     "task": "copy",
@@ -648,7 +651,20 @@
                                     "dst": "lib/glosses/nodejs/gyp/addon"
                                 }
                             }
-                        }
+                        },
+                        "cmake": {
+                            "description": "Node.js native addon build tool based on cmake",
+                            "src": "src/glosses/nodejs/cmake/**/*.js",
+                            "dst": "lib/glosses/nodejs/cmake",
+                            "task": "transpile",
+                            "units": {
+                                "addon": {
+                                    "task": "copy",
+                                    "src": "src/glosses/nodejs/cmake/addon/**/*",
+                                    "dst": "lib/glosses/nodejs/cmake/addon"
+                                }
+                            }
+                        }        
                     }
                 },
                 "notifier": {

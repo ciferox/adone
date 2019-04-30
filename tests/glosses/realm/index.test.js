@@ -27,9 +27,7 @@ describe("realm", () => {
         "adoneTranspileExe",
         "adoneDotCompiler",
         "watch",
-        "increaseVersion",
-        "nbuild",
-        "nclean"
+        "increaseVersion"
     ];
 
     // const randomName = (prefix = "test") => `${prefix}${text.random(4)}_${text.random(5)}_${text.random(6)}`;

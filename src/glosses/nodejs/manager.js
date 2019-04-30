@@ -23,8 +23,8 @@ export default class NodejsManager {
         if (!this.cache.basePath) {
             this.cache.basePath = aPath.join(adone.VAR_PATH, "nodejs");
         }
-        this.cache.download = this.cache.download || "download";
-        this.cache.release = this.cache.release || "release";
+        this.cache.download = this.cache.download || "downloads";
+        this.cache.release = this.cache.release || "releases";
         this.cache.sources = this.cache.sources || "sources";
         this.cache.headers = this.cache.headers || "headers";
     }
@@ -55,7 +55,7 @@ export default class NodejsManager {
      * @param {*} param0 
      * @returns {Object { path, downloaded }} 
      */
-    async download({ version, outPath, force = false, progressBar = false, platform, arch, ext, type } = {}) {
+    async download({ version, outPath, force = false, progressBar = false, platform, arch, ext, type, hash } = {}) {
         if (!version) {
             version = await nodejs.checkVersion("latest");
         }
@@ -64,20 +64,19 @@ export default class NodejsManager {
 
         const tmpPath = await fs.tmpName();
 
-        const downloadPath = await this.getCachePath(this.cache.download);
-        let fullPath = await this.getCachePathFor(this.cache.download, { version, type, ext, platform, arch });
+        const downloadPath = aPath.join(await this.getCachePath(this.cache.download), await nodejs.getArchiveName({ version, ext: "", platform: "", arch: "" }));
 
         if (!is.string(outPath) || outPath.length === 0) {
             outPath = downloadPath;
         }
 
-        fullPath = aPath.join(outPath, archName);
+        const fullPath = aPath.join(outPath, archName);
 
         const result = {
             path: fullPath,
             downloaded: false
         };
-        
+
         if (outPath === downloadPath && !force && await fs.pathExists(fullPath)) {
             result.downloaded = true;
             return result;
@@ -111,9 +110,12 @@ export default class NodejsManager {
         }
 
         try {
-            await downloader.download();
+            const hashsum = await downloader.download(hash);
             await adone.promise.delay(500);
             result.downloaded = true;
+            if (hash) {
+                result.hashsum = hashsum;
+            }
         } catch (err) {
             progressBar.destroy();
             console.error(err.stack);
@@ -132,9 +134,13 @@ export default class NodejsManager {
     }
 
     // TODO: force disable 'strip' mode when extracting to default cache
-    async extract({ outPath, version, platform, arch, type, ext, strip = false } = {}) {
-        const destPath = outPath || await this.getCachePath(this.cache[type || "release"]);
-        const fullPath = await this.getCachePathFor(this.cache.download, { version, type, ext, platform, arch });
+    async extract({ outPath, version, platform, arch, type = "release", ext, strip = false } = {}) {
+        const destPath = outPath || await this.getCachePath(this.cache[type]);
+
+        const archName = await nodejs.getArchiveName({ version, type, ext, platform, arch });
+        const downloadPath = aPath.join(await this.getCachePath(this.cache.download), await nodejs.getArchiveName({ version, ext: "", platform: "", arch: "" }));
+
+        const fullPath = aPath.join(downloadPath, archName);
 
         await adone.fast.src(fullPath)
             .extract({
