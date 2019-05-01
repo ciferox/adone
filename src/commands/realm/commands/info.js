@@ -59,22 +59,26 @@ export default class extends Subsystem {
                 console.log();
                 console.log(chalk.bold("Tasks:"));
                 console.log();
-                console.log(pretty.table(result.tasks.map((t) => ({
-                    name: t
-                })), {
-                    width: "100%",
-                    borderless: true,
-                    noHeader: true,
-                    style: {
-                        head: null,
-                        compact: true
-                    },
-                    model: [
-                        {
-                            id: "name"
-                        }
-                    ]
-                }));
+                if (result.tasks.length > 0) {
+                    console.log(pretty.table(result.tasks.map((t) => ({
+                        name: t
+                    })), {
+                        width: "100%",
+                        borderless: true,
+                        noHeader: true,
+                        style: {
+                            head: null,
+                            compact: true
+                        },
+                        model: [
+                            {
+                                id: "name"
+                            }
+                        ]
+                    }));
+                } else {
+                    console.log(chalk.grey.italic("no tasks"));
+                }
             }
 
             if (result.units) {

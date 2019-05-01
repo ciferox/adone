@@ -41,20 +41,20 @@ class ArrayPrompt extends Prompt {
         }
 
         if (isObject(initial)) {
-            initial = Object.keys(initial); 
+            initial = Object.keys(initial);
         }
         if (is.array(initial)) {
             if (!is.nil(autofocus)) {
-                this.index = this.findIndex(autofocus); 
+                this.index = this.findIndex(autofocus);
             }
             initial.forEach((v) => this.enable(this.find(v)));
             await this.render();
         } else {
             if (!is.nil(autofocus)) {
-                initial = autofocus; 
+                initial = autofocus;
             }
             if (is.string(initial)) {
-                initial = this.findIndex(initial); 
+                initial = this.findIndex(initial);
             }
             if (is.number(initial) && initial > -1) {
                 this.index = Math.max(0, Math.min(initial, this.choices.length));
@@ -74,10 +74,10 @@ class ArrayPrompt extends Prompt {
 
         const toChoices = async (items, parent) => {
             if (is.function(items)) {
-                items = await items.call(this); 
+                items = await items.call(this);
             }
             if (items instanceof Promise) {
-                items = await items; 
+                items = await items;
             }
 
             for (let i = 0; i < items.length; i++) {
@@ -100,17 +100,17 @@ class ArrayPrompt extends Prompt {
 
     async toChoice(ele, i, parent) {
         if (is.function(ele)) {
-            ele = await ele.call(this, this); 
+            ele = await ele.call(this, this);
         }
         if (ele instanceof Promise) {
-            ele = await ele; 
+            ele = await ele;
         }
         if (is.string(ele)) {
-            ele = { name: ele }; 
+            ele = { name: ele };
         }
 
         if (ele.normalized) {
-            return ele; 
+            return ele;
         }
         ele.normalized = true;
 
@@ -129,7 +129,7 @@ class ArrayPrompt extends Prompt {
 
         // if the choice was already normalized, return it
         if (!is.nil(ele.index)) {
-            return ele; 
+            return ele;
         }
         ele.name = ele.name || ele.key || ele.title || ele.value || ele.message;
         ele.message = ele.message || ele.name || "";
@@ -158,7 +158,7 @@ class ArrayPrompt extends Prompt {
         // then allow the choice to be reset using the "original" values
         ele.reset = (input = choice.input, value = choice.value) => {
             for (const key of Object.keys(choice)) {
-                ele[key] = choice[key]; 
+                ele[key] = choice[key];
             }
             ele.input = input;
             ele.value = value;
@@ -210,14 +210,14 @@ class ArrayPrompt extends Prompt {
 
     dispatch(s, key) {
         if (this.multiple && this[key.name]) {
-            return this[key.name](); 
+            return this[key.name]();
         }
         this.alert();
     }
 
     focus(choice, enabled) {
         if (!is.boolean(enabled)) {
-            enabled = choice.enabled; 
+            enabled = choice.enabled;
         }
         if (enabled && !choice.enabled && this.selected.length >= this.maxSelected) {
             return this.alert();
@@ -229,7 +229,7 @@ class ArrayPrompt extends Prompt {
 
     space() {
         if (!this.multiple) {
-            return this.alert(); 
+            return this.alert();
         }
         this.toggle(this.focused);
         return this.render();
@@ -237,7 +237,7 @@ class ArrayPrompt extends Prompt {
 
     a() {
         if (this.maxSelected < this.choices.length) {
-            return this.alert(); 
+            return this.alert();
         }
         const enabled = this.selectable.every((ch) => ch.enabled);
         this.choices.forEach((ch) => (ch.enabled = !enabled));
@@ -245,8 +245,8 @@ class ArrayPrompt extends Prompt {
     }
 
     i() {
-    // don't allow choices to be inverted if it will result in
-    // more than the maximum number of allowed selected items.
+        // don't allow choices to be inverted if it will result in
+        // more than the maximum number of allowed selected items.
         if (this.choices.length - this.selected.length > this.maxSelected) {
             return this.alert();
         }
@@ -256,7 +256,7 @@ class ArrayPrompt extends Prompt {
 
     g(choice = this.focused) {
         if (!this.choices.some((ch) => Boolean(ch.parent))) {
-            return this.a(); 
+            return this.a();
         }
         this.toggle((choice.parent && !choice.choices) ? choice.parent : choice);
         return this.render();
@@ -268,7 +268,7 @@ class ArrayPrompt extends Prompt {
         }
 
         if (!is.boolean(enabled)) {
-            enabled = !choice.enabled; 
+            enabled = !choice.enabled;
         }
         choice.enabled = enabled;
 
@@ -290,7 +290,7 @@ class ArrayPrompt extends Prompt {
 
     enable(choice) {
         if (this.selected.length >= this.maxSelected) {
-            return this.alert(); 
+            return this.alert();
         }
         choice.enabled = !this.isDisabled(choice);
         choice.choices && choice.choices.forEach(this.enable.bind(this));
@@ -309,7 +309,7 @@ class ArrayPrompt extends Prompt {
         const number = (num) => {
             const i = Number(num);
             if (i > this.choices.length - 1) {
-                return this.alert(); 
+                return this.alert();
             }
 
             const focused = this.focused;
@@ -347,7 +347,7 @@ class ArrayPrompt extends Prompt {
             const handle = (val = false, res) => {
                 clearTimeout(this.numberTimeout);
                 if (val) {
-                    number(num); 
+                    number(num);
                 }
                 this.num = "";
                 resolve(res);
@@ -391,21 +391,21 @@ class ArrayPrompt extends Prompt {
 
     prev() {
         if (this.visible.length <= 1) {
-            return this.alert(); 
+            return this.alert();
         }
         return this.up();
     }
 
     next() {
         if (this.visible.length <= 1) {
-            return this.alert(); 
+            return this.alert();
         }
         return this.down();
     }
 
     right() {
         if (this.cursor >= this.input.length) {
-            return this.alert(); 
+            return this.alert();
         }
         this.cursor++;
         return this.render();
@@ -413,7 +413,7 @@ class ArrayPrompt extends Prompt {
 
     left() {
         if (this.cursor <= 0) {
-            return this.alert(); 
+            return this.alert();
         }
         this.cursor--;
         return this.render();
@@ -495,7 +495,7 @@ class ArrayPrompt extends Prompt {
 
     pageUp() {
         if (this.visible.length <= 1) {
-            return this.alert(); 
+            return this.alert();
         }
         this.limit = Math.max(this.limit - 1, 0);
         this.index = Math.min(this.limit - 1, this.index);
@@ -508,7 +508,7 @@ class ArrayPrompt extends Prompt {
 
     pageDown() {
         if (this.visible.length >= this.choices.length) {
-            return this.alert(); 
+            return this.alert();
         }
         this.index = Math.max(0, this.index);
         this.limit = Math.min(this.limit + 1, this.choices.length);
@@ -533,7 +533,7 @@ class ArrayPrompt extends Prompt {
 
     isEnabled(choice = this.focused) {
         if (is.array(choice)) {
-            return choice.every((ch) => this.isEnabled(ch)); 
+            return choice.every((ch) => this.isEnabled(ch));
         }
         if (choice.choices) {
             const choices = choice.choices.filter((ch) => !this.isDisabled(ch));
@@ -563,7 +563,8 @@ class ArrayPrompt extends Prompt {
     filter(value, prop) {
         const isChoice = (ele, i) => [ele.name, i].includes(value);
         const fn = is.function(value) ? value : isChoice;
-        const result = this.choices.filter(fn);
+        const choices = this.options.multiple ? this.state._choices : this.choices;
+        const result = choices.filter(fn);
         if (prop) {
             return result.map((ch) => ch[prop]);
         }
@@ -572,7 +573,7 @@ class ArrayPrompt extends Prompt {
 
     find(value, prop) {
         if (isObject(value)) {
-            return prop ? value[prop] : value; 
+            return prop ? value[prop] : value;
         }
         const isChoice = (ele, i) => [ele.name, i].includes(value);
         const fn = is.function(value) ? value : isChoice;
@@ -589,12 +590,12 @@ class ArrayPrompt extends Prompt {
     async submit() {
         const choice = this.focused;
         if (!choice) {
-            return this.alert(); 
+            return this.alert();
         }
 
         if (choice.newChoice) {
             if (!choice.input) {
-                return this.alert(); 
+                return this.alert();
             }
             choice.updateChoice();
             return this.render();
@@ -707,11 +708,11 @@ class ArrayPrompt extends Prompt {
 
 function reset(prompt, choices) {
     if (choices instanceof Promise) {
-        return choices; 
+        return choices;
     }
     if (is.function(choices)) {
         if (utils.isAsyncFn(choices)) {
-            return choices; 
+            return choices;
         }
         choices = choices.call(prompt, prompt);
     }

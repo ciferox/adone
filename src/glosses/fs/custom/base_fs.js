@@ -107,6 +107,18 @@ const parsePath = (path) => {
     return info;
 };
 
+const redirectPath = (path, redirects) => {
+    for (const redir of Object.keys(redirects)) {
+        if (path.startsWith(redir)) {
+            return aPath.join(redirects[redir], path.slice(redir.length));
+        } else if (path.length === (redir.length - 1) && path === redir.slice(0, -1)) {
+            return redirects[redir];
+        }
+    }
+
+    return path;
+}
+
 export default class BaseFileSystem {
     constructor({ root = "/" } = {}) {
         this.structure = {
@@ -122,71 +134,72 @@ export default class BaseFileSystem {
         this._uninitializing = false;
         this._uninitialized = false;
         this.root = root;
+        this._redirects = {};
     }
 
-    /**
-     * Starts the initialization process of the mounted engines and itself
-     */
-    async initialize() {
-        if (this._initialized || this._initializing) {
-            return;
-        }
-        this._initializing = true;
+    // /**
+    //  * Starts the initialization process of the mounted engines and itself
+    //  */
+    // async initialize() {
+    //     if (this._initialized || this._initializing) {
+    //         return;
+    //     }
+    //     this._initializing = true;
 
-        const visit = async (obj) => {
-            for (const v of Object.values(obj)) {
-                if (v instanceof BaseFileSystem) {
-                    await v.initialize();
-                } else {
-                    await visit(v);
-                }
-            }
-        };
-        await visit(this.structure);
+    //     const visit = async (obj) => {
+    //         for (const v of Object.values(obj)) {
+    //             if (v instanceof BaseFileSystem) {
+    //                 await v.initialize();
+    //             } else {
+    //                 await visit(v);
+    //             }
+    //         }
+    //     };
+    //     await visit(this.structure);
 
-        await this._initialize();
+    //     await this._initialize();
 
-        this._initializing = false;
-        this._initialized = true;
-    }
+    //     this._initializing = false;
+    //     this._initialized = true;
+    // }
 
-    /**
-     * Direved fs should do custom initialization in this method.
-     */
-    _initialize() {
-    }
+    // /**
+    //  * Direved fs should do custom initialization in this method.
+    //  */
+    // _initialize() {
+    // }
 
-    /**
-     * Starts the uninitialization process of the mounted engines and itself
-     */
-    async uninitialize() {
-        if (this._uninitialized || this._uninitializing) {
-            return;
-        }
-        this._uninitializing = true;
+    // /**
+    //  * Starts the uninitialization process of the mounted engines and itself
+    //  */
+    // async uninitialize() {
+    //     if (this._uninitialized || this._uninitializing) {
+    //         return;
+    //     }
+    //     this._uninitializing = true;
 
-        const visit = async (obj) => {
-            for (const v of Object.values(obj)) {
-                if (v instanceof BaseFileSystem) {
-                    await v.uninitialize();
-                } else {
-                    await visit(v);
-                }
-            }
-        };
-        await visit(this.structure);
+    //     const visit = async (obj) => {
+    //         for (const v of Object.values(obj)) {
+    //             if (v instanceof BaseFileSystem) {
+    //                 await v.uninitialize();
+    //             } else {
+    //                 await visit(v);
+    //             }
+    //         }
+    //     };
+    //     await visit(this.structure);
 
-        await this._uninitialize();
+    //     await this._uninitialize();
 
-        this._uninitializing = false;
-        this._uninitialized = true;
-    }
+    //     this._uninitializing = false;
+    //     this._uninitialized = true;
+    // }
 
-    /**
-     * Derived fs should do custom uninitialization in this method.
-     */
-    _uninitialize() {
-    }
+    // /**
+    //  * Derived fs should do custom uninitialization in this method.
+    //  */
+    // _uninitialize() {
+    // }
 
     mount(customFs, rawPath) {
         const pathInfo = parsePath(rawPath);
@@ -217,6 +230,25 @@ export default class BaseFileSystem {
         root[FS_INSTANCE] = customFs;
         ++this._mountsNum;
         return this;
+    }
+
+    addRedirect(from, to) {
+        if (!aPath.isAbsolute(from)) {
+            throw this._throw("EINVAL", from, null, null);
+        }
+
+        if (!aPath.isAbsolute(to)) {
+            throw this._throw("EINVAL", to, null, null);
+        }
+
+        from = aPath.normalize(from).split("/").filter((x) => x).join("/");
+        to = aPath.normalize(to).split("/").filter((x) => x).join("/");
+
+        if (from === to) {
+            throw this._throw("EPERM", from, to, null);
+        }
+
+        this._redirects[`/${from}/`] = `/${to}`;
     }
 
     // fs methods
@@ -285,6 +317,9 @@ export default class BaseFileSystem {
     }
 
     copyFile(src, dest, flags, callback) {
+        src = redirectPath(src, this._redirects);
+        dest = redirectPath(dest, this._redirects);
+
         if (isFunction(flags)) {
             callback = flags;
             flags = 0;
@@ -322,7 +357,7 @@ export default class BaseFileSystem {
                 const done = (err, unlink = false) => {
                     if (err) {
                         if (unlink) {
-                            destFsInstance._unlink(dest2, adone.noop);
+                            destFsInstance._unlink(dest2, () => { });
                         }
                         if (err instanceof FSException) {
                             err.path = src;
@@ -390,6 +425,9 @@ export default class BaseFileSystem {
     }
 
     copyFileSync(src, dest, flags = 0) {
+        src = redirectPath(src, this._redirects);
+        dest = redirectPath(dest, this._redirects);
+
         if (this._mountsNum === 0) {
             // only one engine can handle it, itself
             try {
@@ -587,8 +625,8 @@ export default class BaseFileSystem {
 
     // TODO
     link(rawExistingPath, rawNewPath, callback) {
-        const existingPath = rawExistingPath;
-        const newPath = rawNewPath;
+        const existingPath = redirectPath(rawExistingPath, this._redirects);
+        const newPath = redirectPath(rawNewPath, this._redirects);
 
         if (this._mountsNum === 0) {
             this._link(existingPath, newPath, (err) => {
@@ -641,8 +679,8 @@ export default class BaseFileSystem {
     }
 
     linkSync(rawExistingPath, rawNewPath) {
-        const existingPath = rawExistingPath;
-        const newPath = rawNewPath;
+        const existingPath = redirectPath(rawExistingPath, this._redirects);
+        const newPath = redirectPath(rawNewPath, this._redirects);
 
         if (this._mountsNum === 0) {
             // only one engine can handle it, itself
@@ -862,8 +900,8 @@ export default class BaseFileSystem {
 
     // TODO
     rename(rawOldPath, rawNewPath, callback) {
-        const oldPath = rawOldPath;
-        const newPath = rawNewPath;
+        const oldPath = redirectPath(rawOldPath, this._redirects);
+        const newPath = redirectPath(rawNewPath, this._redirects);
 
         if (this._mountsNum === 0) {
             // only one engine can handle it, itself
@@ -917,8 +955,8 @@ export default class BaseFileSystem {
     }
 
     renameSync(rawOldPath, rawNewPath) {
-        const oldPath = rawOldPath;
-        const newPath = rawNewPath;
+        const oldPath = redirectPath(rawOldPath, this._redirects);
+        const newPath = redirectPath(rawNewPath, this._redirects);
 
         if (this._mountsNum === 0) {
             // only one engine can handle it, itself
@@ -1454,7 +1492,7 @@ export default class BaseFileSystem {
     }
 
     _handlePathSync(method, path, ...args) {
-        const pathInfo = parsePath(path);
+        const pathInfo = parsePath(this._redirectPaths(method, path, args));
         if (this._mountsNum === 0) {
             // only one engine can handle it, itself
             try {
@@ -1527,7 +1565,7 @@ export default class BaseFileSystem {
      * @param {any[]} args
      */
     _handlePath(method, path, callback, ...args) {
-        const pathInfo = parsePath(path);
+        const pathInfo = parsePath(this._redirectPaths(method, path, args));
         if (this._mountsNum === 0) {
             this[`_${method}`](pathInfo.full, ...args, (err, result) => {
                 if (err) {
@@ -1562,7 +1600,7 @@ export default class BaseFileSystem {
 
             fn.call(fsInstance, ...args, (err, result) => {
                 if (err) {
-                    callback(this._handleError(err, method, path, args));
+                    callback(this._handleError(err, method, pathInfo.full, args));
                     return;
                 }
 
@@ -1607,6 +1645,13 @@ export default class BaseFileSystem {
                 callback(null, result);
             });
         });
+    }
+
+    _redirectPaths(method, path, args) {
+        if (["symlink", "symlinkSync"].includes(method)) {
+            args[0] = redirectPath(args[0], this._redirects);
+        }
+        return redirectPath(path, this._redirects);
     }
 
     _getSiblingMounts(path) {

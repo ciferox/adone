@@ -3,6 +3,7 @@ const {
     error,
     is,
     fs,
+    path: aPath, 
     realm,
     task,
     std,
@@ -22,21 +23,22 @@ const checkEntry = (entry) => {
 };
 
 const trySuperRealmAt = (cwd) => {
-    let superRealm = new realm.RealmManager({
-        cwd
-    });
     try {
         // Validation...
 
         // try to require realm config
-        require(std.path.join(superRealm.cwd, ".adone", "config.json"));
+        require(aPath.join(cwd, ".adone", "config.json"));
 
         // try to require package.json
-        require(std.path.join(superRealm.cwd, "package.json"));
+        require(aPath.join(cwd, "package.json"));
+
+        return new realm.RealmManager({
+            cwd
+        });
     } catch (err) {
-        superRealm = null;
+        //
     }
-    return superRealm;
+    return null;
 };
 
 export default class RealmManager extends task.TaskManager {
@@ -74,7 +76,7 @@ export default class RealmManager extends task.TaskManager {
             }
         }, this)
 
-        this.package = require(std.path.join(cwd, "package.json"));
+        this.package = require(aPath.join(cwd, "package.json"));
 
         this.#checkSuperRealm();
     }
@@ -106,7 +108,7 @@ export default class RealmManager extends task.TaskManager {
                 if (fs.existsSync(tasksBasePath)) {
                     if (is.object(tasksConfig.tags)) {
                         for (const [tag, path] of Object.entries(tasksConfig.tags)) {
-                            await this.loadTasksFrom(std.path.join(tasksBasePath, path), {
+                            await this.loadTasksFrom(aPath.join(tasksBasePath, path), {
                                 transpile: options.transpile,
                                 tag
                             });
@@ -141,7 +143,7 @@ export default class RealmManager extends task.TaskManager {
     }
 
     getPath(...args) {
-        return std.path.join(this.cwd, ...args);
+        return aPath.join(this.cwd, ...args);
     }
 
     async run(name, ...args) {
@@ -208,24 +210,33 @@ export default class RealmManager extends task.TaskManager {
     #checkSuperRealm() {
         if (is.null(this.superRealm)) {
             // Scan for super realm
-            const parentPath = std.path.dirname(this.cwd);
-            const baseName = std.path.basename(parentPath);
+            const parentPath = aPath.dirname(this.cwd);
+            const baseName = aPath.basename(parentPath);
+
+            // Nested realms are always in the 'opt' directory of the parent realm.
+            // So, we can check parent/super if detect such directory name
             if (baseName === "opt") {
-                this.#superRealm = trySuperRealmAt(std.path.dirname(parentPath));
+                this.#superRealm = trySuperRealmAt(aPath.dirname(parentPath));
             }
-            // check 'dev' section for merge information
+            // check 'superRealm' property in configuration
             if (is.null(this.#superRealm)) {
-                try {
-                    const devConfig = adone.realm.DevConfiguration.loadSync({
-                        cwd: this.cwd
-                    });
-
-                    if (is.string(devConfig.raw.superRealm)) {
-                        this.#superRealm = trySuperRealmAt(devConfig.raw.superRealm);
+                if (is.string(this.config.raw.superRealm)) {
+                    // Here we have two cases
+                    // 1. relative path: name of the globally installed realm
+                    // 2. absolute path to realm root
+                    if (aPath.isAbsolute(this.config.raw.superRealm)) {
+                        this.#superRealm = trySuperRealmAt(this.config.raw.superRealm);
+                    } else {
+                        try {
+                            const resolvedPath = adone.require.resolve(this.config.raw.superRealm);
+                            this.#superRealm = trySuperRealmAt(resolvedPath);
+                        } catch (err) {
+                            // nothing to do
+                        }
                     }
-                } catch (err) {
-                    //
-
+                } else if (adone.ROOT_PATH !== this.cwd) {
+                    // default super-realm is ADONE
+                    this.#superRealm = trySuperRealmAt(adone.ROOT_PATH);
                 }
             }
             return is.null(this.#superRealm) ? 0 : 1;

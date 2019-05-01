@@ -573,64 +573,64 @@ describe("fs", "custom", "BaseFileSystem", () => {
         });
     });
 
-    describe.todo("mock", () => {
-        it("should replace the target's methods with its own and add a restore method", async () => {
-            const lstat = spy();
-            const readdir = spy();
-            const obj = { lstat, readdir };
+    describe("redirects", () => {
+        it("not allow redirect to self", () => {
+            const baseFs = new BaseFileSystem();
 
-            const engine = new MemoryFileSystem().add((ctx) => ({
-                a: ctx.file("hello"),
-                b: {
-                    c: ctx.file("hello")
-                }
-            }));
-            engine.mock(obj);
-
-            expect((await obj.lstat("/a")).isFile()).to.be.true();
-            expect(await obj.readdir("/b")).to.be.deep.equal(["c"]);
-            expect(lstat).to.have.not.been.called();
-            expect(readdir).to.have.not.been.called();
-            obj.restore();
-            obj.lstat();
-            obj.readdir();
-            expect(lstat).to.have.been.calledOnce();
-            expect(readdir).to.have.been.calledOnce();
+            assert.throws(() => baseFs.addRedirect("/", "/"));
+            assert.throws(() => baseFs.addRedirect("/tmp", "/tmp"));
+            assert.throws(() => baseFs.addRedirect("/home/user", "/home/user/"));
         });
 
-        it("should support require from memory with std.fs mock", {
-            skip: is.windows // TODO: figure out how to handle namespaced paths on windows
-        }, () => {
-            const memory = new MemoryFileSystem().add((ctx) => ({
-                "script.js": ctx.file(`
-                    const a = require("./a");
+        it("redirect using relative paths is not allowed", () => {
+            const baseFs = new BaseFileSystem();
 
-                    export default () => a.process();
-                `),
-                "a.js": ctx.file(`
-                    import Module from "./lib/module";
+            assert.throws(() => baseFs.addRedirect("/", "some/path/"));
+            assert.throws(() => baseFs.addRedirect("tmp", "/tmp"));
+            assert.throws(() => baseFs.addRedirect("home/user", "a/"));
+        });
 
-                    export const process = () => {
-                        return Module() + 21;
-                    };
-                `),
-                lib: {
-                    "module.js": ctx.file(`
-                        export default function f() {
-                            return 21;
-                        }
-                    `)
-                }
-            }));
-            const standard = new StdFileSystem();
-            standard.mount(memory, "/memory");
-            standard.mock(adone.std.fs);
-            try {
-                const m = adone.require("/memory/script").default;
-                expect(m()).to.be.equal(42);
-            } finally {
-                adone.std.fs.restore();
-            }
+        it("added redirect should be ended with '/'", () => {
+            const baseFs = new BaseFileSystem();
+
+            baseFs.addRedirect("/a/a/b/c", "/");
+            baseFs.addRedirect("/tmp", "/othertmp");
+            baseFs.addRedirect("/home/user/", "/var/");
+
+            assert.isTrue("/a/a/b/c/" in baseFs._redirects);
+            assert.isTrue("/tmp/" in baseFs._redirects);
+            assert.isTrue("/home/user/" in baseFs._redirects);
+        });
+
+        it("redirect from non-existent path to existent", () => {
+            const memFs = new MemoryFileSystem();
+            memFs.mkdirSync("/a");
+            memFs.mkdirSync("/a/b");
+            memFs.mkdirSync("/a/b/c");
+            // memFs.mkdirp("/d/e");
+            memFs.addRedirect("/d/e", "/a/b");
+
+            memFs.writeFileSync("/d/e/file1", "adone");
+            assert.isTrue(memFs.existsSync("/a/b/file1"));
+            assert.equal(memFs.readFileSync("/a/b/file1", "utf8"), "adone");
+        });
+
+        it("redirect both paths in copyFile()", () => {
+            const memFs = new MemoryFileSystem();
+            memFs.mkdirSync("/a");
+            memFs.mkdirSync("/a/b");
+            memFs.mkdirSync("/a/b/c");
+            memFs.mkdirSync("/d");
+            // memFs.mkdirp("/d/e");
+
+            memFs.writeFileSync("/a/b/file1", "adone");
+
+            memFs.addRedirect("/f", "/a/b");
+            memFs.addRedirect("/g/h/", "/d");
+
+            memFs.copyFileSync("/f/file1", "/g/h/file1copy");
+            assert.isTrue(memFs.existsSync("/f/file1"));
+            assert.equal(memFs.readFileSync("/d/file1copy", "utf8"), "adone");
         });
     });
 });
