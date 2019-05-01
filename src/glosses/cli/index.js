@@ -3139,14 +3139,6 @@ class Terminal extends adone.event.Emitter {
         }
     }
 
-    async prompt(questions, customTerminal) {
-        const p = new __.prompt.Manager(customTerminal || this);
-        this[ACTIVE_PROMPT] = p;
-        const result = await p.run(questions);
-        this[ACTIVE_PROMPT] = null;
-        return result;
-    }
-
     separator(value) {
         return new __.prompt.Separdownloadator(value);
     }
@@ -3163,21 +3155,13 @@ adone.lazify({
     chalk: () => __.Chalk(),
     chalkify: "./chalkify",
     gradient: "./gradient",
-    ui: "./ui"
+    ui: "./ui",
+    Enquirer: "./enquirer"
 }, __, require);
 
 __.Terminal = Terminal;
 __.Terminfo = Terminfo;
 
 adone.util.mockInstance(terminal, __);
-
-adone.lazify({
-    BasePrompt: "./prompt/base_prompt",
-    Manager: "./prompt/manager",
-    Separator: "./prompt/separator",
-    Paginator: "./prompt/paginator",
-    Choices: "./prompt/choices",
-    type: "./prompt/types"
-}, adone.asNamespace(__.prompt), require);
 
 export default adone.asNamespace(__);

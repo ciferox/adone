@@ -49,7 +49,7 @@ class ADONEApp extends app.Application {
         !is.windows && this.exitOnSignal("SIGINT");
 
         this.config = await Configuration.load({
-            cwd: path.join(adone.ETC_PATH, "adone")
+            cwd: path.join(adone.realm.rootRealm.getPath("etc"))
         });
 
         // Define command groups.

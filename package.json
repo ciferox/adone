@@ -28,6 +28,7 @@
     "abstract-logging": "^1.0.0",
     "acorn": "^6.1.0",
     "agentkeepalive": "^4.0.0",
+    "ansi-colors": "^3.2.4",
     "ansi-to-html": "^0.6.10",
     "array-to-stream": "^1.0.2",
     "async": "^2.6.1",

@@ -7,10 +7,10 @@ const {
 
 @adone.task.task("cmake")
 export default class extends BaseTask {
-    async main({ src, dst, files, realm } = {}) {
+    async main({ realm, src, dst, files } = {}) {
         const version = process.version;
 
-        const nodeManager = new nodejs.NodejsManager();
+        const nodeManager = new nodejs.NodejsManager({ realm });
         await nodeManager.download({
             version,
             type: "headers"
@@ -31,7 +31,7 @@ export default class extends BaseTask {
             realm,
             path: src
         });
-        
+
         const realmRootPath = realm.getPath();
         const buildPath = nodejs.cmake.getBuildPath(realm, src);
 

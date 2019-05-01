@@ -634,7 +634,7 @@
                                     "dst": "lib/glosses/nodejs/cmake/addon"
                                 }
                             }
-                        }        
+                        }
                     }
                 },
                 "notifier": {
@@ -732,7 +732,15 @@
                     "description": "Sourcemaps",
                     "task": "transpile",
                     "src": "src/glosses/sourcemap/**/*.js",
-                    "dst": "lib/glosses/sourcemap"
+                    "dst": "lib/glosses/sourcemap",
+                    "units": {
+                        "wasm": {
+                            "description": "mappings.wasm",
+                            "task": "copy",
+                            "src": "src/glosses/sourcemap/mappings.wasm",
+                            "dst": "lib/glosses/sourcemap"
+                        }
+                    }
                 },
                 "stream": {
                     "description": "Different streams and stream utilites",

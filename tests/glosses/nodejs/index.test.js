@@ -158,8 +158,8 @@ describe("nodejs", () => {
 
             assert.deepEqual(nm.cache, {
                 basePath: path.join(adone.VAR_PATH, "nodejs"),
-                download: "downloads",
-                release: "releases",
+                downloads: "downloads",
+                releases: "releases",
                 sources: "sources",
                 headers: "headers"
             });
@@ -171,8 +171,8 @@ describe("nodejs", () => {
 
             assert.deepEqual(nm.cache, {
                 basePath,
-                download: "downloads",
-                release: "releases",
+                downloads: "downloads",
+                releases: "releases",
                 sources: "sources",
                 headers: "headers"
             });
@@ -180,14 +180,14 @@ describe("nodejs", () => {
 
         it("custom cache dirs", async () => {
             const nm = await createManager({
-                download: "archives",
-                release: "rel",
+                downloads: "archives",
+                releases: "rel",
                 sources: "srcs",
                 headers: "hdrs"
             });
 
-            assert.equal(nm.cache.download, "archives");
-            assert.equal(nm.cache.release, "rel");
+            assert.equal(nm.cache.downloads, "archives");
+            assert.equal(nm.cache.releases, "rel");
             assert.equal(nm.cache.sources, "srcs");
             assert.equal(nm.cache.headers, "hdrs");
         });
@@ -201,8 +201,8 @@ describe("nodejs", () => {
         it("getCachePath() should create all sub directories", async () => {
             const nm = await createManager();
 
-            let p = await nm.getCachePath(nm.cache.download);
-            assert.equal(p, path.join(nm.cache.basePath, nm.cache.download));
+            let p = await nm.getCachePath(nm.cache.downloads);
+            assert.equal(p, path.join(nm.cache.basePath, nm.cache.downloads));
             assert.isTrue(await fs.isDirectory(p));
 
             p = await nm.getCachePath("some", "nested", "dir");
@@ -212,16 +212,16 @@ describe("nodejs", () => {
 
         it("getCachePath() should create all sub directories", async () => {
             const nm = await createManager();
-            let p = await nm.getCachePath(nm.cache.download);
-            assert.equal(p, path.join(nm.cache.basePath, nm.cache.download));
+            let p = await nm.getCachePath(nm.cache.downloads);
+            assert.equal(p, path.join(nm.cache.basePath, nm.cache.downloads));
             assert.isTrue(await fs.isDirectory(p));
 
-            p = await nm.getCachePath(nm.cache.release);
-            assert.equal(p, path.join(nm.cache.basePath, nm.cache.release));
+            p = await nm.getCachePath(nm.cache.releases);
+            assert.equal(p, path.join(nm.cache.basePath, nm.cache.releases));
             assert.isTrue(await fs.isDirectory(p));
         });
 
-        describe("donwload", function () {
+        describe("download", function () {
             this.timeout(100 * 1000);
             it("by default should download latest release for current system", async () => {
                 const nm = await createManager();
@@ -230,7 +230,7 @@ describe("nodejs", () => {
                 const result = await nm.download();
 
                 assert.equal(result.downloaded, true);
-                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version, ext: "", platform: "", arch: "" }), await nodejs.getArchiveName({ version }));
+                const archivePath = path.join(await nm.getCachePathFor(nm.cache.downloads, { version, ext: "", platform: "", arch: "" }), await nodejs.getArchiveName({ version }));
                 assert.equal(result.path, archivePath);
                 assert.isTrue(await fs.isFile(archivePath));
             });
@@ -242,7 +242,7 @@ describe("nodejs", () => {
                 const result = await nm.download({ version });
 
                 assert.equal(result.downloaded, true);
-                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version, ext: "", platform: "", arch: "" }), await nodejs.getArchiveName({ version }));
+                const archivePath = path.join(await nm.getCachePathFor(nm.cache.downloads, { version, ext: "", platform: "", arch: "" }), await nodejs.getArchiveName({ version }));
                 assert.equal(result.path, archivePath);
                 assert.isTrue(await fs.isFile(archivePath));
             });
@@ -256,7 +256,7 @@ describe("nodejs", () => {
                 const result = await nm.download({ platform, ext });
 
                 assert.equal(result.downloaded, true);
-                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version, ext: "", platform: "", arch: "" }), await nodejs.getArchiveName({ version, platform, ext }));
+                const archivePath = path.join(await nm.getCachePathFor(nm.cache.downloads, { version, ext: "", platform: "", arch: "" }), await nodejs.getArchiveName({ version, platform, ext }));
                 assert.equal(result.path, archivePath);
                 assert.isTrue(await fs.isFile(archivePath));
             });
@@ -271,7 +271,7 @@ describe("nodejs", () => {
                 const result = await nm.download({ platform, arch, ext });
 
                 assert.equal(result.downloaded, true);
-                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version, ext: "", platform: "", arch: "" }), await nodejs.getArchiveName({ version, platform, arch, ext }));
+                const archivePath = path.join(await nm.getCachePathFor(nm.cache.downloads, { version, ext: "", platform: "", arch: "" }), await nodejs.getArchiveName({ version, platform, arch, ext }));
                 assert.equal(result.path, archivePath);
                 assert.isTrue(await fs.isFile(archivePath));
             });
@@ -284,7 +284,7 @@ describe("nodejs", () => {
                 const result = await nm.download({ version, type });
 
                 assert.equal(result.downloaded, true);
-                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version, ext: "", platform: "", arch: "" }), await nodejs.getArchiveName({ version, type }));
+                const archivePath = path.join(await nm.getCachePathFor(nm.cache.downloads, { version, ext: "", platform: "", arch: "" }), await nodejs.getArchiveName({ version, type }));
                 assert.equal(result.path, archivePath);
                 assert.isTrue(await fs.isFile(archivePath));
             });
@@ -298,12 +298,12 @@ describe("nodejs", () => {
                 const result = await nm.download({ version, type, ext });
 
                 assert.equal(result.downloaded, true);
-                const archivePath = path.join(await nm.getCachePathFor(nm.cache.download, { version, ext: "", platform: "", arch: "" }), await nodejs.getArchiveName({ version, type, ext }));
+                const archivePath = path.join(await nm.getCachePathFor(nm.cache.downloads, { version, ext: "", platform: "", arch: "" }), await nodejs.getArchiveName({ version, type, ext }));
                 assert.equal(result.path, archivePath);
                 assert.isTrue(await fs.isFile(archivePath));
             });
 
-            it.only("download with hashsum calculating", async () => {
+            it("download with hashsum calculating", async () => {
                 const nm = await createManager();
 
                 const version = await nodejs.checkVersion("latest");

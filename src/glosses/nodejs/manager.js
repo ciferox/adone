@@ -18,13 +18,18 @@ const NODEJS_PATHS = [
 ];
 
 export default class NodejsManager {
-    constructor({ cache } = {}) {
+    constructor({ realm, cache } = {}) {
+        if (is.realm(realm)) {
+            this.realm = realm;
+        } else {
+            this.realm = adone.realm.rootRealm;
+        }
         this.cache = cache || {};
         if (!this.cache.basePath) {
-            this.cache.basePath = aPath.join(adone.VAR_PATH, "nodejs");
+            this.cache.basePath = aPath.join(this.realm.getPath("var"), "nodejs");
         }
-        this.cache.download = this.cache.download || "downloads";
-        this.cache.release = this.cache.release || "releases";
+        this.cache.downloads = this.cache.downloads || "downloads";
+        this.cache.releases = this.cache.releases || "releases";
         this.cache.sources = this.cache.sources || "sources";
         this.cache.headers = this.cache.headers || "headers";
     }
@@ -39,14 +44,22 @@ export default class NodejsManager {
         return aPath.join(await this.getCachePath(dirName), await nodejs.getArchiveName(options));
     }
 
-    async getDownloadedVersions() {
-        const files = await fs.readdir(await this.getCachePath(this.cache.download));
-        return files.map((f) => {
-            const result = /^node-(v\d+\.\d+\.\d+)-.+/.exec(f);
-            return !is.null(result)
-                ? result[[1]]
-                : "";
-        }).filter(adone.identity);
+    async getDownloadedVersions({ type } = {}) {
+        const cachePath = await this.getCachePath(this.cache.downloads);
+        const files = await fs.readdir(cachePath);
+
+        const result = [];
+
+        for (const file of files) {
+            // eslint-disable-next-line no-await-in-loop
+            const name = await nodejs.getArchiveName({ type, version: file.slice(5) });
+            // eslint-disable-next-line no-await-in-loop
+            if (await fs.pathExists(aPath.join(cachePath, file, name))) {
+                result.push(/^node-(v\d+\.\d+\.\d+)-.+/.exec(name)[[1]]);
+            }
+        }
+
+        return result;
     }
 
     /**
@@ -64,7 +77,7 @@ export default class NodejsManager {
 
         const tmpPath = await fs.tmpName();
 
-        const downloadPath = aPath.join(await this.getCachePath(this.cache.download), await nodejs.getArchiveName({ version, ext: "", platform: "", arch: "" }));
+        const downloadPath = aPath.join(await this.getCachePath(this.cache.downloads), await nodejs.getArchiveName({ version, ext: "", platform: "", arch: "" }));
 
         if (!is.string(outPath) || outPath.length === 0) {
             outPath = downloadPath;
@@ -136,7 +149,7 @@ export default class NodejsManager {
         const destPath = outPath || await this.getCachePath(this.cache[type]);
 
         const archName = await nodejs.getArchiveName({ version, type, ext, platform, arch });
-        const downloadPath = aPath.join(await this.getCachePath(this.cache.download), await nodejs.getArchiveName({ version, ext: "", platform: "", arch: "" }));
+        const downloadPath = aPath.join(await this.getCachePath(this.cache.downloads), await nodejs.getArchiveName({ version, ext: "", platform: "", arch: "" }));
 
         const fullPath = aPath.join(downloadPath, archName);
 
