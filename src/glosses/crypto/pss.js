@@ -1,11 +1,20 @@
-const {
-    is,
-    crypto
-} = adone;
-
 /**
  * Javascript implementation of PKCS#1 PSS signature padding.
+ *
+ * @author Stefan Siegl
+ *
+ * Copyright (c) 2012 Stefan Siegl <stesie@brokenpipe.de>
  */
+const forge = require("./forge");
+require("./random");
+require("./util");
+
+const {
+    is
+} = adone;
+
+// shortcut for PSS API
+const pss = module.exports = forge.pss = forge.pss || {};
 
 /**
  * Creates a PSS signature scheme object.
@@ -26,7 +35,7 @@ const {
  *
  * @return a signature scheme object.
  */
-export const create = function (options) {
+pss.create = function (options) {
     // backwards compatibility w/legacy args: hash, mgf, sLen
     if (arguments.length === 3) {
         options = {
@@ -36,36 +45,30 @@ export const create = function (options) {
         };
     }
 
-    const hMeta = adone.crypto.hash.meta(options.md);
-
-    if (is.null(hMeta)) {
-        throw new adone.error.NotSupportedException(`"${options.md} hash algorithm is not supported`);
-    }
-
-    const hLen = hMeta.digestLength;
-    const hash = adone.crypto.hash[options.md];
+    const hash = options.md;
     const mgf = options.mgf;
+    const hLen = hash.digestLength;
 
     let salt_ = options.salt || null;
     if (is.string(salt_)) {
-        // assume binary-encoded string
-        salt_ = Buffer.from(salt_, "binary");
+    // assume binary-encoded string
+        salt_ = forge.util.createBuffer(salt_);
     }
 
     let sLen;
     if ("saltLength" in options) {
         sLen = options.saltLength;
     } else if (!is.null(salt_)) {
-        sLen = salt_.length;
+        sLen = salt_.length();
     } else {
         throw new Error("Salt length not specified or specific salt not given.");
     }
 
-    if (!is.null(salt_) && salt_.length !== sLen) {
+    if (!is.null(salt_) && salt_.length() !== sLen) {
         throw new Error("Given salt length does not match length of given salt.");
     }
 
-    const prng = options.prng || crypto.random;
+    const prng = options.prng || forge.random;
 
     const pssobj = {};
 
@@ -88,11 +91,9 @@ export const create = function (options) {
         /**
          * 2. Let mHash = Hash(M), an octet string of length hLen.
          */
-        const mHash = md.digest();
+        const mHash = md.digest().getBytes();
 
-        /**
-         * 3. If emLen < hLen + sLen + 2, output "encoding error" and stop.
-         */
+        /* 3. If emLen < hLen + sLen + 2, output "encoding error" and stop. */
         if (emLen < hLen + sLen + 2) {
             throw new Error("Message is too long to encrypt.");
         }
@@ -104,36 +105,36 @@ export const create = function (options) {
         if (is.null(salt_)) {
             salt = prng.getBytesSync(sLen);
         } else {
-            salt = salt_;
+            salt = salt_.bytes();
         }
 
         /**
          * 5. Let M' = (0x)00 00 00 00 00 00 00 00 || mHash || salt;
          */
-        const m_ = Buffer.concat([
-            Buffer.alloc(8, 0),
-            mHash,
-            salt
-        ]);
+        const m_ = new forge.util.ByteBuffer();
+        m_.fillWithByte(0, 8);
+        m_.putBytes(mHash);
+        m_.putBytes(salt);
 
         /**
          * 6. Let H = Hash(M'), an octet string of length hLen.
          */
-        const h = hash(m_);
+        hash.start();
+        hash.update(m_.getBytes());
+        const h = hash.digest().getBytes();
 
         /**
          * 7. Generate an octet string PS consisting of emLen - sLen - hLen - 2
          */
-        const ps = Buffer.alloc(emLen - sLen - hLen - 2, 0);
+        const ps = new forge.util.ByteBuffer();
+        ps.fillWithByte(0, emLen - sLen - hLen - 2);
 
         /**
          * 8. Let DB = PS || 0x01 || salt; DB is an octet string of length
          */
-        const db = Buffer.concat([
-            ps,
-            Buffer.from([0x01]),
-            salt
-        ]);
+        ps.putByte(0x01);
+        ps.putBytes(salt);
+        const db = ps.getBytes();
 
         /**
          * 9. Let dbMask = MGF(H, emLen - hLen - 1).
@@ -144,25 +145,21 @@ export const create = function (options) {
         /**
          * 10. Let maskedDB = DB \xor dbMask.
          */
-        const maskedDB = Buffer.alloc(maskLen);
+        let maskedDB = "";
         for (i = 0; i < maskLen; i++) {
-            maskedDB.writeUInt8(db[i] ^ dbMask[i], i);
+            maskedDB += String.fromCharCode(db.charCodeAt(i) ^ dbMask.charCodeAt(i));
         }
 
         /**
          * 11. Set the leftmost 8emLen - emBits bits of the leftmost octet in
          */
         const mask = (0xFF00 >> (8 * emLen - emBits)) & 0xFF;
-        maskedDB.writeUInt8(maskedDB[0] & ~mask, 0);
+        maskedDB = String.fromCharCode(maskedDB.charCodeAt(0) & ~mask) +
+      maskedDB.substr(1);
 
-        /**
-         * 12. Let EM = maskedDB || H || 0xbc.
-         */
-        return Buffer.concat([
-            maskedDB,
-            h,
-            Buffer.from([0xBC])
-        ]);
+        /* 12. Let EM = maskedDB || H || 0xbc.
+     * 13. Output EM. */
+        return maskedDB + h + String.fromCharCode(0xbc);
     };
 
     /**
@@ -170,9 +167,9 @@ export const create = function (options) {
      *
      * This function implements EMSA-PSS-VERIFY as per RFC 3447, section 9.1.2.
      *
-     * @param {Buffer} mHash the message digest hash, as a binary-encoded string, to
+     * @param mHash the message digest hash, as a binary-encoded string, to
      *         compare against the signature.
-     * @param {Buffer} em the encoded message, as a binary-encoded string
+     * @param em the encoded message, as a binary-encoded string
      *          (RSA decryption result).
      * @param modsBits the length of the RSA modulus in bits.
      *
@@ -187,19 +184,16 @@ export const create = function (options) {
          * c. Convert the message representative m to an encoded message EM
          *    of length emLen = ceil((modBits - 1) / 8) octets, where modBits
          */
-        em = em.slice(-emLen);
+        em = em.substr(-emLen);
 
-        /**
-         *  3. If emLen < hLen + sLen + 2, output "inconsistent" and stop.
-         */
+        /* 3. If emLen < hLen + sLen + 2, output "inconsistent" and stop. */
         if (emLen < hLen + sLen + 2) {
             throw new Error("Inconsistent parameters to PSS signature verification.");
         }
 
-        /**
-         * 4. If the rightmost octet of EM does not have hexadecimal value 0xbc, output "inconsistent" and stop.
-         */
-        if (em[emLen - 1] !== 0xbc) {
+        /* 4. If the rightmost octet of EM does not have hexadecimal value
+     *    0xbc, output "inconsistent" and stop. */
+        if (em.charCodeAt(emLen - 1) !== 0xbc) {
             throw new Error("Encoded message does not end in 0xBC.");
         }
 
@@ -207,14 +201,14 @@ export const create = function (options) {
          * 5. Let maskedDB be the leftmost emLen - hLen - 1 octets of EM, and
          */
         const maskLen = emLen - hLen - 1;
-        const maskedDB = em.slice(0, maskLen);
-        const h = em.slice(maskLen, maskLen + hLen);
+        const maskedDB = em.substr(0, maskLen);
+        const h = em.substr(maskLen, hLen);
 
         /**
          * 6. If the leftmost 8emLen - emBits bits of the leftmost octet in
          */
         const mask = (0xFF00 >> (8 * emLen - emBits)) & 0xFF;
-        if ((maskedDB[0] & mask) !== 0) {
+        if ((maskedDB.charCodeAt(0) & mask) !== 0) {
             throw new Error("Bits beyond keysize not zero as expected.");
         }
 
@@ -226,15 +220,15 @@ export const create = function (options) {
         /**
          * 8. Let DB = maskedDB \xor dbMask.
          */
-        const db = Buffer.alloc(maskLen, 0);
+        let db = "";
         for (i = 0; i < maskLen; i++) {
-            db.writeUInt8(maskedDB[i] ^ dbMask[i], i);
+            db += String.fromCharCode(maskedDB.charCodeAt(i) ^ dbMask.charCodeAt(i));
         }
 
         /**
          * 9. Set the leftmost 8emLen - emBits bits of the leftmost octet
          */
-        db.writeUInt8(db[0] & ~mask, 0);
+        db = String.fromCharCode(db.charCodeAt(0) & ~mask) + db.substr(1);
 
         /**
          * 10. If the emLen - hLen - sLen - 2 leftmost octets of DB are not zero
@@ -243,38 +237,37 @@ export const create = function (options) {
          */
         const checkLen = emLen - hLen - sLen - 2;
         for (i = 0; i < checkLen; i++) {
-            if (db[i] !== 0x00) {
+            if (db.charCodeAt(i) !== 0x00) {
                 throw new Error("Leftmost octets not zero as expected");
             }
         }
 
-        if (db[checkLen] !== 0x01) {
+        if (db.charCodeAt(checkLen) !== 0x01) {
             throw new Error("Inconsistent PSS signature, 0x01 marker not found");
         }
 
         /**
          * 11. Let salt be the last sLen octets of DB.
          */
-        const salt = db.slice(-sLen);
+        const salt = db.substr(-sLen);
 
         /**
          * 12.  Let M' = (0x)00 00 00 00 00 00 00 00 || mHash || salt
          */
-        const m_ = Buffer.concat([
-            Buffer.alloc(8, 0),
-            mHash,
-            salt
-        ]);
+        const m_ = new forge.util.ByteBuffer();
+        m_.fillWithByte(0, 8);
+        m_.putBytes(mHash);
+        m_.putBytes(salt);
 
         /**
          * 13. Let H' = Hash(M'), an octet string of length hLen.
          */
-        const h_ = hash(m_);
+        hash.start();
+        hash.update(m_.getBytes());
+        const h_ = hash.digest().getBytes();
 
-        /**
-         * 14. If H = H', output "consistent." Otherwise, output "inconsistent."
-         */
-        return is.equalArrays(h, h_);
+        /* 14. If H = H', output "consistent." Otherwise, output "inconsistent." */
+        return h === h_;
     };
 
     return pssobj;

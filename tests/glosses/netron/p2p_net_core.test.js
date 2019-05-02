@@ -27,7 +27,7 @@ describe("netron", "P2PNetCore", () => {
 
         for (const addr of peerInfo.multiaddrs.toArray()) {
             // eslint-disable-next-line no-await-in-loop
-            assert.isFalse(await adone.net.util.isFreePort(addr.nodeAddress()));
+            assert.isFalse(await adone.net.checkPort(addr.nodeAddress()));
         }
 
         await core.stop();
@@ -45,7 +45,7 @@ describe("netron", "P2PNetCore", () => {
 
         for (const addr of peerInfo.multiaddrs.toArray()) {
             // eslint-disable-next-line no-await-in-loop
-            assert.isFalse(await adone.net.util.isFreePort(addr.nodeAddress()));
+            assert.isFalse(await adone.net.checkPort(addr.nodeAddress()));
         }
 
         await core.stop();
@@ -62,7 +62,7 @@ describe("netron", "P2PNetCore", () => {
 
         for (const addr of peerInfo.multiaddrs.toArray()) {
             // eslint-disable-next-line no-await-in-loop
-            assert.isFalse(await adone.net.util.isFreePort(addr.nodeAddress()));
+            assert.isFalse(await adone.net.checkPort(addr.nodeAddress()));
         }
 
         await core.stop();

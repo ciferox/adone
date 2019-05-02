@@ -244,7 +244,7 @@ export default class Netron extends adone.event.AsyncEmitter {
     // //     }
     // // }
 
-    addTask(name, task, options) {
+    addTask({ name, task, ...options } = {}) {
         if (is.class(task)) {
             if (!(task.prototype instanceof adone.task.IsomorphicTask)) {
                 throw new error.NotValidException("Invalid task class. Task class should be inherited from adone.task.IsomorphicTask");

@@ -206,43 +206,9 @@
                     "task": "transpile"
                 },
                 "crypto": {
-                    "description": "Common cryptographic utilites",
+                    "description": "Implementation of TLS and various other cryptographic tools",
                     "src": "src/glosses/crypto/**/*.js",
                     "dst": "lib/glosses/crypto",
-                    "task": "transpile",
-                    "units": {
-                        "ed25519": {
-                            "description": "Implementation of ed25519 signatures",
-                            "src": "src/glosses/crypto/ed25519/**/*.js",
-                            "dst": "lib/glosses/crypto/ed25519",
-                            "task": "transpile",
-                            "units": {
-                                "native": {
-                                    "task": "gyp",
-                                    "src": "src/glosses/crypto/ed25519/native",
-                                    "dst": "lib/glosses/crypto/ed25519/native"
-                                }
-                            }
-                        },
-                        "secp256k1": {
-                            "description": "Optimized implementation for EC operations on curve secp256k1",
-                            "src": "src/glosses/crypto/secp256k1/**/*.js",
-                            "dst": "lib/glosses/crypto/secp256k1",
-                            "task": "transpile",
-                            "units": {
-                                "native": {
-                                    "task": "cmake",
-                                    "src": "src/glosses/crypto/secp256k1/native",
-                                    "dst": "lib/glosses/crypto/secp256k1/native"
-                                }
-                            }
-                        }
-                    }
-                },
-                "crypto2": {
-                    "description": "Implementation of TLS and various other cryptographic tools",
-                    "src": "src/glosses/crypto2/**/*.js",
-                    "dst": "lib/glosses/crypto2",
                     "task": "transpile",
                     "predecessor": "https://github.com/digitalbazaar/forge"
                 },
@@ -365,12 +331,6 @@
                     "task": "transpile",
                     "src": "src/glosses/events/**/*.js",
                     "dst": "lib/glosses/events"
-                },
-                "fake": {
-                    "description": "Fake data generators and appropriate stuff",
-                    "task": "transpile",
-                    "src": "src/glosses/fake/**/*.js",
-                    "dst": "lib/glosses/fake"
                 },
                 "fast": {
                     "description": "File automation streaming templates/transforms",
@@ -527,70 +487,10 @@
                     "dst": "lib/glosses/multiformats"
                 },
                 "net": {
-                    "description": "Implementation of different network abstractions, protocols and associated stuff",
+                    "description": "All about networking",
                     "task": "transpile",
                     "src": "src/glosses/net/**/*.js",
-                    "dst": "lib/glosses/net",
-                    "units": {
-                        "dns": {
-                            "description": "DNS utilites",
-                            "task": "transpile",
-                            "src": "src/glosses/net/dns/**/*.js",
-                            "dst": "lib/glosses/net/dns",
-                            "units": {
-                                "packet": {
-                                    "description": "DNS packet implementation",
-                                    "task": "transpile",
-                                    "src": "src/glosses/net/dns/packet.js",
-                                    "dst": "lib/glosses/net/dns"
-                                }
-                            }
-                        },
-                        "ip": {
-                            "description": "IP4/IP6 utilites",
-                            "task": "transpile",
-                            "src": "src/glosses/net/ip/**/*.js",
-                            "dst": "lib/glosses/net/ip"
-                        },
-                        "mimes": {
-                            "description": "Media Type Database",
-                            "task": "transpile",
-                            "src": "src/glosses/net/mimes/index.js",
-                            "dst": "lib/glosses/net/mimes"
-                        },
-                        "p2p": {
-                            "description": "Multipurpose P2P implementation",
-                            "task": "transpile",
-                            "src": "src/glosses/net/p2p/**/*.js",
-                            "dst": "lib/glosses/net/p2p"
-                        },
-                        "utp": {
-                            "description": "UTP protocol/transport",
-                            "task": "transpile",
-                            "src": "src/glosses/net/utp/**/*.js",
-                            "dst": "lib/glosses/net/utp",
-                            "units": {
-                                "native": {
-                                    "task": "gyp",
-                                    "src": "src/glosses/net/utp/native",
-                                    "dst": "lib/glosses/net/utp/native"
-                                }
-                            }
-                        },
-                        "ws": {
-                            "description": "WebSocket client/server implementation",
-                            "task": "transpile",
-                            "src": "src/glosses/net/ws/**/*.js",
-                            "dst": "lib/glosses/net/ws",
-                            "units": {
-                                "native": {
-                                    "task": "cmake",
-                                    "src": "src/glosses/net/ws/native",
-                                    "dst": "lib/glosses/net/ws/native"
-                                }
-                            }
-                        }
-                    }
+                    "dst": "lib/glosses/net"
                 },
                 "netron": {
                     "description": "Implementation of Netron",

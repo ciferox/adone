@@ -2,11 +2,11 @@ const protobuf = require("protons");
 const bs58 = require("bs58");
 const nextTick = require("async/nextTick");
 
-const crypto = require("./rsa");
+const rsa = require("./rsa");
 const pbm = protobuf(require("./keys.proto"));
 
 const {
-    crypto2,
+    crypto,
     is,
     multiformat: { multihashingAsync }
 } = adone;
@@ -18,11 +18,11 @@ class RsaPublicKey {
 
     verify(data, sig, callback) {
         ensure(callback);
-        crypto.hashAndVerify(this._key, sig, data, callback);
+        rsa.hashAndVerify(this._key, sig, data, callback);
     }
 
     marshal() {
-        return crypto.utils.jwkToPkix(this._key);
+        return rsa.utils.jwkToPkix(this._key);
     }
 
     get bytes() {
@@ -55,12 +55,12 @@ class RsaPrivateKey {
     }
 
     genSecret() {
-        return crypto.getRandomValues(16);
+        return rsa.getRandomValues(16);
     }
 
     sign(message, callback) {
         ensure(callback);
-        crypto.hashAndSign(this._key, message, callback);
+        rsa.hashAndSign(this._key, message, callback);
     }
 
     get public() {
@@ -72,11 +72,11 @@ class RsaPrivateKey {
     }
 
     decrypt(msg, callback) {
-        crypto.decrypt(this._key, msg, callback);
+        rsa.decrypt(this._key, msg, callback);
     }
 
     marshal() {
-        return crypto.utils.jwkToPkcs1(this._key);
+        return rsa.utils.jwkToPkcs1(this._key);
     }
 
     get bytes() {
@@ -135,9 +135,9 @@ class RsaPrivateKey {
             let err = null;
             let pem = null;
             try {
-                const buffer = new crypto2.util.ByteBuffer(this.marshal());
-                const asn1 = crypto2.asn1.fromDer(buffer);
-                const privateKey = crypto2.pki.privateKeyFromAsn1(asn1);
+                const buffer = new crypto.util.ByteBuffer(this.marshal());
+                const asn1 = crypto.asn1.fromDer(buffer);
+                const privateKey = crypto.pki.privateKeyFromAsn1(asn1);
                 if (format === "pkcs-8") {
                     const options = {
                         algorithm: "aes256",
@@ -145,7 +145,7 @@ class RsaPrivateKey {
                         saltSize: 128 / 8,
                         prfAlgorithm: "sha512"
                     };
-                    pem = crypto2.pki.encryptRsaPrivateKey(privateKey, password, options);
+                    pem = crypto.pki.encryptRsaPrivateKey(privateKey, password, options);
                 } else {
                     err = new Error(`Unknown export format '${format}'`);
                 }
@@ -159,9 +159,9 @@ class RsaPrivateKey {
 }
 
 function unmarshalRsaPrivateKey(bytes, callback) {
-    const jwk = crypto.utils.pkcs1ToJwk(bytes);
+    const jwk = rsa.utils.pkcs1ToJwk(bytes);
 
-    crypto.unmarshalPrivateKey(jwk, (err, keys) => {
+    rsa.unmarshalPrivateKey(jwk, (err, keys) => {
         if (err) {
             return callback(err);
         }
@@ -171,13 +171,13 @@ function unmarshalRsaPrivateKey(bytes, callback) {
 }
 
 function unmarshalRsaPublicKey(bytes) {
-    const jwk = crypto.utils.pkixToJwk(bytes);
+    const jwk = rsa.utils.pkixToJwk(bytes);
 
     return new RsaPublicKey(jwk);
 }
 
 function fromJwk(jwk, callback) {
-    crypto.unmarshalPrivateKey(jwk, (err, keys) => {
+    rsa.unmarshalPrivateKey(jwk, (err, keys) => {
         if (err) {
             return callback(err);
         }
@@ -187,7 +187,7 @@ function fromJwk(jwk, callback) {
 }
 
 function generateKeyPair(bits, callback) {
-    crypto.generateKey(bits, (err, keys) => {
+    rsa.generateKey(bits, (err, keys) => {
         if (err) {
             return callback(err);
         }

@@ -10,7 +10,7 @@ describe("adapters", () => {
         let PORT = null;
 
         beforeEach(async () => {
-            PORT = await adone.net.util.getPort();
+            PORT = await adone.net.getPort();
         });
 
         afterEach(() => {
@@ -322,7 +322,7 @@ describe("adapters", () => {
                 res.setHeader("Content-Type", "text/html; charset=UTF-8");
                 res.end("12345");
             }).listen(PORT, async () => {
-                const anotherPort = await adone.net.util.getPort();
+                const anotherPort = await adone.net.getPort();
 
                 proxy = http.createServer((request, response) => {
                     const parsed = url.parse(request.url);
@@ -379,7 +379,7 @@ describe("adapters", () => {
                 res.setHeader("Content-Type", "text/html; charset=UTF-8");
                 res.end("4567");
             }).listen(PORT, async () => {
-                const anotherPort = await adone.net.util.getPort();
+                const anotherPort = await adone.net.getPort();
 
                 proxy = http.createServer((request, response) => {
                     const parsed = url.parse(request.url);
@@ -416,7 +416,7 @@ describe("adapters", () => {
             server = http.createServer((req, res) => {
                 res.end();
             }).listen(PORT, async () => {
-                const anotherPort = await adone.net.util.getPort();
+                const anotherPort = await adone.net.getPort();
 
                 proxy = http.createServer((request, response) => {
                     const parsed = url.parse(request.url);
@@ -457,7 +457,7 @@ describe("adapters", () => {
             server = http.createServer((req, res) => {
                 res.end();
             }).listen(PORT, async () => {
-                const anotherPort = await adone.net.util.getPort();
+                const anotherPort = await adone.net.getPort();
                 proxy = http.createServer((request, response) => {
                     const parsed = url.parse(request.url);
                     const opts = {
@@ -564,7 +564,7 @@ describe("adapters", () => {
             server = http.createServer((req, res) => {
                 res.end();
             }).listen(PORT, async () => {
-                const anotherPort = await adone.net.util.getPort();
+                const anotherPort = await adone.net.getPort();
                 proxy = http.createServer((request, response) => {
                     const parsed = url.parse(request.url);
                     const opts = {

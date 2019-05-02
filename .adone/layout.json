@@ -87,12 +87,6 @@
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
-            "crypto2": {
-                "namespace": true,
-                "base": "src/glosses/crypto2",
-                "entry": "index.js",
-                "glob": "**/*.js"
-            },
             "data": {
                 "namespace": true,
                 "base": "src/glosses/data",
@@ -132,12 +126,6 @@
             "event": {
                 "namespace": true,
                 "base": "src/glosses/events",
-                "entry": "index.js",
-                "glob": "**/*.js"
-            },
-            "fake": {
-                "namespace": true,
-                "base": "src/glosses/fake",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
@@ -182,21 +170,15 @@
                 "base": "src/glosses/lodash",
                 "entry": "index.js"
             },
-            "logging": {
+            "logger": {
                 "namespace": true,
-                "base": "src/glosses/logging",
+                "base": "src/glosses/logger",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },
             "math": {
                 "namespace": true,
                 "base": "src/glosses/math",
-                "entry": "index.js",
-                "glob": "**/*.js"
-            },
-            "metrics": {
-                "namespace": true,
-                "base": "src/glosses/metrics",
                 "entry": "index.js",
                 "glob": "**/*.js"
             },

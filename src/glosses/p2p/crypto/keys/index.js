@@ -2,7 +2,7 @@ const protobuf = require("protons");
 const keysPBM = protobuf(require("./keys.proto"));
 
 const {
-    crypto2,
+    crypto,
     is
 } = adone;
 
@@ -121,11 +121,11 @@ exports.marshalPrivateKey = (key, type) => {
 
 exports.import = (pem, password, callback) => {
     try {
-        const key = crypto2.pki.decryptRsaPrivateKey(pem, password);
+        const key = crypto.pki.decryptRsaPrivateKey(pem, password);
         if (is.null(key)) {
             throw new Error("Cannot read the key, most likely the password is wrong or not a RSA key");
         }
-        let der = crypto2.asn1.toDer(crypto2.pki.privateKeyToAsn1(key));
+        let der = crypto.asn1.toDer(crypto.pki.privateKeyToAsn1(key));
         der = Buffer.from(der.getBytes(), "binary");
         return supportedKeys.rsa.unmarshalRsaPrivateKey(der, callback);
     } catch (err) {

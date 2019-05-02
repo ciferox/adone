@@ -1,28 +1,35 @@
-adone.lazify({
-    stringCompare: "./string_compare",
-    Keygrip: "./keygrip",
-    password: "./password",
-    asn1: "./asn1",
-    crc32: "./crc32",
-    EVPBytesToKey: "./evp_bytes_to_key",
-    formatEcdsa: "./ecdsa_format",
-    jwa: "./jwa",
-    jws: "./jws",
-    jwt: "./jwt",
-    secp256k1: "./secp256k1",
-    hash: "./hashes",
-    pki: "./pki",
-    random: "./random",
-    md: "./md",
-    pkcs1: "./pkcs1",
-    pkcs5: "./pkcs5",
-    pem: "./pem",
-    pss: "./pss",
-    ed25519: "./ed25519",
-    mgf: "./mgf",
-    hmac: "./hmac",
-    aes: "./aes",
-    keys: "./keys",
-    pbkdf2: "./pbkdf2",
-    Identity: "./identity"
-}, adone.asNamespace(exports), require);
+/**
+ * Node.js module for Forge.
+ *
+ * @author Dave Longley
+ *
+ * Copyright 2011-2016 Digital Bazaar, Inc.
+ */
+module.exports = require("./forge");
+require("./aes");
+require("./aesCipherSuites");
+require("./asn1");
+require("./cipher");
+require("./debug");
+require("./des");
+require("./ed25519");
+require("./hmac");
+require("./kem");
+require("./log");
+require("./md.all");
+require("./mgf1");
+require("./pbkdf2");
+require("./pem");
+require("./pkcs1");
+require("./pkcs12");
+require("./pkcs7");
+require("./pki");
+require("./prime");
+require("./prng");
+require("./pss");
+require("./random");
+require("./rc2");
+require("./ssh");
+require("./task");
+require("./tls");
+require("./util");

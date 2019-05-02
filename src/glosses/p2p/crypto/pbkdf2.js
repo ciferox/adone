@@ -1,5 +1,5 @@
 const {
-    crypto2: { pbkdf2, util }
+    crypto: { pbkdf2, util }
 } = adone;
 
 /**

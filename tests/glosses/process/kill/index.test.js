@@ -161,11 +161,11 @@ describe("process", "kill", () => {
     });
 
     it("by port", async () => {
-        const port = await adone.net.util.getPort();
+        const port = await adone.net.getPort();
         const pid = childProcess.spawn("node", [fixture("pid_by_port.js"), port]).pid;
         await kill(pid, { force: true });
         await noopProcessKilled(pid);
-        assert.equal(await adone.net.util.getPort({ port }), port);
+        assert.equal(await adone.net.getPort({ port }), port);
     });
 
     it("error when process is not found", async () => {

@@ -3,7 +3,7 @@
 exports = module.exports;
 
 const {
-    crypto2: { pki }
+    crypto: { pki }
 } = adone;
 
 /**
