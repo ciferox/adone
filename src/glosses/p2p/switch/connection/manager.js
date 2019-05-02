@@ -182,12 +182,7 @@ class ConnectionManager {
                             });
                         }
 
-                        const { peerInfo, observedAddrs } = results;
-
-                        for (let i = 0; i < observedAddrs.length; i++) {
-                            const addr = observedAddrs[i];
-                            this.switch._peerInfo.multiaddrs.addSafe(addr);
-                        }
+                        const { peerInfo } = results;
 
                         if (peerInfo) {
                             conn.setPeerInfo(peerInfo);

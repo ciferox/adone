@@ -1,4 +1,4 @@
-const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "floodsub", ...args);
+const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "pubsub", ...args);
 const utils = require(srcPath("utils"));
 
 describe("utils", () => {

@@ -5,6 +5,21 @@ const {
     stream: { pull }
 } = adone;
 
+// const destroy = function (stream, cb) {
+//     function onClose() {
+//         cleanup(); cb();
+//     }
+//     function onError(err) {
+//         cleanup(); cb(err);
+//     }
+//     function cleanup() {
+//         stream.removeListener("close", onClose);
+//         stream.removeListener("error", onError);
+//     }
+//     stream.on("close", onClose);
+//     stream.on("error", onError);
+// };
+
 const destroy = function (stream) {
     if (!stream.destroy) {
         console.error(

@@ -1,9 +1,9 @@
-const bs58 = require("bs58");
-
 const {
     is,
     p2p: { crypto }
 } = adone;
+
+const bs58 = require("bs58");
 
 exports = module.exports;
 

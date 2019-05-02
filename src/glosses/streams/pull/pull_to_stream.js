@@ -4,6 +4,7 @@ class PullDuplexStream extends Duplex {
     constructor(source, sink, options) {
         super(options);
         this.source = source;
+        this.drainingSource = false;
         this.sink = sink;
         this.input = [];
         this.writeCallbacks = [];
@@ -16,6 +17,7 @@ class PullDuplexStream extends Duplex {
     drainPull() {
         const self = this;
 
+        this.drainingSource = true;
         this.source(null, function next(end, data) {
             if (end instanceof Error) {
                 return self.emit("error", end);
@@ -27,12 +29,14 @@ class PullDuplexStream extends Duplex {
 
             if (self.push(data)) {
                 self.source(null, next);
+            } else {
+                self.drainingSource = false;
             }
         });
     }
 
     _read() {
-        if (this.source) {
+        if (this.source && !this.drainingSource) {
             this.drainPull();
         }
     }

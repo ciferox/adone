@@ -1,7 +1,5 @@
-const TimeCache = require("time-cache");
 const assert = require("assert");
 
-const utils = require("./utils");
 const config = require("./config");
 
 const {
@@ -10,7 +8,7 @@ const {
 } = adone;
 const { lengthPrefixed: lp } = pull;
 
-const { message } = PubsubBaseProtocol;
+const { message, utils } = PubsubBaseProtocol;
 
 const multicodec = config.multicodec;
 const ensureArray = utils.ensureArray;
@@ -28,13 +26,6 @@ class FloodSub extends PubsubBaseProtocol {
      */
     constructor(libp2p) {
         super("libp2p:floodsub", multicodec, libp2p);
-
-        /**
-         * Time based cache for sequence numbers.
-         *
-         * @type {TimeCache}
-         */
-        this.cache = new TimeCache();
 
         /**
          * List of our subscriptions
@@ -113,11 +104,11 @@ class FloodSub extends PubsubBaseProtocol {
         msgs.forEach((msg) => {
             const seqno = utils.msgId(msg.from, msg.seqno);
             // 1. check if I've seen the message, if yes, ignore
-            if (this.cache.has(seqno)) {
+            if (this.seenCache.has(seqno)) {
                 return;
             }
 
-            this.cache.put(seqno);
+            this.seenCache.put(seqno);
 
             // 2. emit to self
             this._emitMessages(msg.topicIDs, [msg]);
@@ -188,7 +179,7 @@ class FloodSub extends PubsubBaseProtocol {
 
         const buildMessage = (msg) => {
             const seqno = utils.randomSeqno();
-            this.cache.put(utils.msgId(from, seqno));
+            this.seenCache.put(utils.msgId(from, seqno));
 
             return {
                 from,

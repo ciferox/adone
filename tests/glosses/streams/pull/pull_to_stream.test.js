@@ -67,6 +67,35 @@ describe("stream", "pull", "pullToStream", () => {
         readable.on("end", () => done());
     });
 
+    it("source ensure drain not called while drain in progress", (done) => {
+        const values = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+        const readable = pullToStream.readable(pull(
+            pull.values(values),
+            pull.asyncMap((value, cb) => {
+                setTimeout(() => {
+                    // pass through value with delay
+                    cb(null, value);
+                }, 10);
+            })
+        ));
+
+        const timer = setInterval(() => {
+            readable.resume();
+        }, 5);
+
+        const output = [];
+
+        readable.on("data", (c) => {
+            output.push(c);
+        });
+
+        readable.once("end", () => {
+            clearInterval(timer);
+            assert.deepEqual(output, values, "End called after all values emitted");
+            done();
+        });
+    });
+
     it("sink basic", (done) => {
         const writeable = pullToStream.writeable(
             pull(
@@ -115,7 +144,7 @@ describe("stream", "pull", "pullToStream", () => {
             { writableHighWaterMark: 1 }
         );
 
-        const first = writeable.write(Buffer.from("1"), () => {});
+        const first = writeable.write(Buffer.from("1"), () => { });
 
         assert.isFalse(first, "wait");
 

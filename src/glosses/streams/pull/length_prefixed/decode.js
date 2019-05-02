@@ -5,11 +5,12 @@ const {
     stream: { pull: { reader: Reader, pushable } }
 } = adone;
 
+
 const MSB = 0x80;
 const isEndByte = (byte) => !(byte & MSB);
 const MAX_LENGTH = ((1024 * 1024) * 4);
 
-const readMessage = function (reader, size, cb) {
+const readMessage = (reader, size, cb) => {
     reader.read(size, (err, msg) => {
         if (err) {
             return cb(err);
@@ -19,26 +20,11 @@ const readMessage = function (reader, size, cb) {
     });
 };
 
-const readFixedMessage = function (reader, maxLength, cb) {
-    reader.read(4, (err, bytes) => {
-        if (err) {
-            return cb(err);
-        }
-
-        const msgSize = bytes.readInt32BE(0); // reads exactly 4 bytes
-        if (msgSize > maxLength) {
-            return cb(new Error(`size longer than max permitted length of ${maxLength}!`));
-        }
-
-        readMessage(reader, msgSize, cb);
-    });
-};
-
 const readVarintMessage = function (reader, maxLength, cb) {
     let rawMsgSize = [];
 
     // 1. Read the varint
-    const readByte = function () {
+    const readByte = () => {
         reader.read(1, (err, byte) => {
             if (err) {
                 return cb(err);
@@ -55,6 +41,11 @@ const readVarintMessage = function (reader, maxLength, cb) {
             if (msgSize > maxLength) {
                 return cb(new Error(`size longer than max permitted length of ${maxLength}!`));
             }
+
+            if (msgSize <= 0) {
+                return cb(true); // eslint-disable-line standard/no-callback-literal
+            }
+
             readMessage(reader, msgSize, (err, msg) => {
                 if (err) {
                     return cb(err);
@@ -75,7 +66,22 @@ const readVarintMessage = function (reader, maxLength, cb) {
     }
 };
 
-const _decodeFromReader = function (reader, opts, cb) {
+const readFixedMessage = function (reader, maxLength, cb) {
+    reader.read(4, (err, bytes) => {
+        if (err) {
+            return cb(err);
+        }
+
+        const msgSize = bytes.readInt32BE(0); // reads exactly 4 bytes
+        if (msgSize > maxLength) {
+            return cb(new Error(`size longer than max permitted length of ${maxLength}!`));
+        }
+
+        readMessage(reader, msgSize, cb);
+    });
+};
+
+const _decodeFromReader = (reader, opts, cb) => {
     opts = Object.assign({
         fixed: false,
         maxLength: MAX_LENGTH
@@ -89,7 +95,7 @@ const _decodeFromReader = function (reader, opts, cb) {
 };
 
 // wrapper to detect sudden pull-stream disconnects
-const decodeFromReader = function (reader, opts, cb) {
+const decodeFromReader = (reader, opts, cb) => {
     if (is.function(opts)) {
         cb = opts;
         opts = {};
@@ -106,7 +112,8 @@ const decodeFromReader = function (reader, opts, cb) {
     });
 };
 
-const decode = function (opts) {
+
+const decode = (opts) => {
     const reader = new Reader();
     const p = pushable((err) => {
         reader.abort(err);
@@ -114,18 +121,37 @@ const decode = function (opts) {
 
     return (read) => {
         reader(read);
-        const next = function () {
-            _decodeFromReader(reader, opts, (err, msg) => {
-                if (err) {
-                    return p.end(err);
-                }
 
-                p.push(msg);
-                next();
-            });
+        // this function has to be written without recursion
+        // or it blows the stack in case of sync stream
+        const next = () => {
+            let doNext = true;
+            let decoded = false;
+
+            const decodeCb = (err, msg) => {
+                decoded = true;
+                if (err) {
+                    p.end(err);
+                    doNext = false;
+                } else {
+                    p.push(msg);
+                    if (!doNext) {
+                        next();
+                    }
+                }
+            };
+
+            while (doNext) {
+                decoded = false;
+                _decodeFromReader(reader, opts, decodeCb);
+                if (!decoded) {
+                    doNext = false;
+                }
+            }
         };
 
         next();
+
         return p;
     };
 };

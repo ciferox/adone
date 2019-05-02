@@ -4,14 +4,20 @@ const {
 } = adone;
 const { abortable, defer, pushable, through2, lengthPrefixed, pair } = pull;
 
+const sinon = require("sinon");
 const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "muxers", "pull_mplex", ...args);
 
 const coder = require(srcPath("coder"));
 const Plex = require(srcPath("mplex"));
+const { Types } = require(srcPath("consts"));
 
 const noop = () => { };
 
 describe("p2p", "muxer", "pullMplex", () => {
+    afterEach(() => {
+        sinon.restore();
+    });
+
     it("destroy should close both ends", (done) => {
         const p = pair.duplex();
 
@@ -37,6 +43,19 @@ describe("p2p", "muxer", "pullMplex", () => {
             expect().mark();
         });
         plex1.destroy();
+    });
+
+    it("create stream should create channel with name", () => {
+        const plex1 = new Plex();
+        sinon.spy(plex1, "push");
+        plex1.createStream();
+    
+        expect(plex1.push.callCount).to.eql(1);
+        expect(plex1.push.getCall(0).args[0]).to.eql([
+            0, Types.NEW, "0"
+        ]);
+    
+        plex1.close();
     });
 
     it("closing stream should close all channels", (done) => {

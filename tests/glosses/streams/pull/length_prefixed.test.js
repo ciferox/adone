@@ -104,6 +104,39 @@ describe("stream", "pull", "lengthPrefixed", () => {
         );
     });
 
+    it("zero length", (done) => {
+        pull(
+            pull.values(),
+            lp.encode(),
+            pull.collect((err, encoded) => {
+                if (err) {
+                    throw err;
+                }
+
+                expect(
+                    encoded
+                ).to.be.eql([Buffer.alloc(1, 0)]);
+
+                pull(
+                    pull.values(),
+                    lp.encode(),
+                    lp.decode(),
+                    pull.collect((err, decoded) => {
+                        if (err) {
+                            throw err;
+                        }
+
+                        expect(
+                            decoded
+                        ).to.be.eql([]);
+
+                        done();
+                    })
+                );
+            })
+        );
+    });
+
     it("push time based", (done) => {
         const p = new Pushable();
         const input = [];
@@ -395,5 +428,47 @@ describe("stream", "pull", "lengthPrefixed", () => {
                 });
             });
         });
+    });
+
+
+    it("sync stream", (done) => {
+        const input = [...Array(500).keys()].map(() => Buffer.from("payload"));
+
+        pull(
+            pull.values(input),
+            lp.encode(),
+            pull.collect((err, encoded) => {
+                if (err) {
+                    throw err;
+                }
+
+                expect(
+                    encoded
+                ).to.be.eql(
+                    input.map((data) => {
+                        const len = varint.encode(data.length);
+                        return Buffer.concat([
+                            Buffer.alloc(len.length, len, "utf8"),
+                            Buffer.alloc(data.length, data, "utf8")
+                        ]);
+                    }));
+
+                pull(
+                    pull.values(encoded),
+                    lp.decode(),
+                    pull.collect((err, output) => {
+                        if (err) {
+                            throw err;
+                        }
+                        expect(
+                            input
+                        ).to.be.eql(
+                            output
+                        );
+                        done();
+                    })
+                );
+            })
+        );
     });
 });

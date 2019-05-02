@@ -65,7 +65,7 @@ const connect = function (a, b, callback) {
 
 const bootstrap = function (dhts) {
     dhts.forEach((dht) => {
-        dht.randomWalk._walk(1, 1000, () => { });
+        dht.randomWalk._walk(1, 10000, () => { });
     });
 };
 
@@ -566,17 +566,13 @@ describe("common", () => {
     });
 
     it("random-walk", function (done) {
-        this.timeout(10 * 1000);
+        this.timeout(20 * 1000);
 
         const nDHTs = 20;
         const tdht = new TestDHT();
 
         // random walk disabled for a manual usage
-        tdht.spawn(nDHTs, {
-            randomWalk: {
-                enabled: false
-            }
-        }, (err, dhts) => {
+        tdht.spawn(nDHTs, (err, dhts) => {
             expect(err).to.not.exist();
 
             series([

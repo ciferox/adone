@@ -120,7 +120,8 @@ adone.lazify({
     many: "./many",
     pullToStream: "./pull_to_stream",
     bufferStream: "./buffer_stream",
-    zip: "./zip"
+    zip: "./zip",
+    pipe: "./pipe"
 }, core, require);
 
 export default adone.asNamespace(core);

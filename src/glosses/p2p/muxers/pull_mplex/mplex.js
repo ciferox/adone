@@ -119,6 +119,9 @@ class Mplex extends EE {
      * @param {Buffer|string} data Logged with the metadata. Must be `.toString` capable. Default: `''`
      */
     _log(name, data) {
+        if (!log.enabled) {
+            return;
+        }
         log({
             op: name,
             initiator: this._initiator,
@@ -201,7 +204,7 @@ class Mplex extends EE {
         }
         const chan = this._newStream(null, true, false, name, this._outChannels);
         if (!this._lazy) {
-            chan.openChan(name);
+            chan.openChan(chan.name);
         }
         return chan;
     }
@@ -242,7 +245,7 @@ class Mplex extends EE {
         }
         const chan = new Channel({
             id,
-            name,
+            name: String(name || id),
             plex: this,
             initiator,
             open: open || false
