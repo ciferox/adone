@@ -17,7 +17,7 @@ describe("fast", "transform", "deleteLines", () => {
     beforeEach(async () => {
         fromdir = await root.addDirectory("from");
         todir = await root.addDirectory("to");
-        srcPath = adone.std.path.join(fromdir.path(), "**", "*");
+        srcPath = adone.path.join(fromdir.path(), "**", "*");
     });
 
     afterEach(async () => {

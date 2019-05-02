@@ -1,5 +1,5 @@
 const timers = require("timers");
-const utp = adone.requireAddon(adone.std.path.join(__dirname, "native", "utp.node"));
+const utp = adone.requireAddon(adone.path.join(__dirname, "native", "utp.node"));
 
 const {
     is,

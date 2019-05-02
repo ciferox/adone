@@ -759,7 +759,7 @@ describe("fs", "watcher", function watcherTests() {
                     ]]
                 ]);
                 const fix = await fixtures.get("inner", "one_more");
-                const watchPath = adone.std.path.join(
+                const watchPath = adone.path.join(
                     fixtures.path(), "inner", "one_more", "..", "..", "inn*", "*more", "**", "a*.txt"
                 );
                 const subdir = await fix.addDirectory("subdir");
@@ -996,7 +996,7 @@ describe("fs", "watcher", function watcherTests() {
                 ]);
                 const fix = fixtures.getDirectory("inner", "one_more");
                 const deepFile = await fix.addFile("sibdir", "subsub", "subsubsub", "a.txt", { contents: "b" });
-                const watchPath = adone.std.path.join(fix.path(), "..", "..", "in*er", "one*more", "**", "subsubsub", "*.txt");
+                const watchPath = adone.path.join(fix.path(), "..", "..", "in*er", "one*more", "**", "subsubsub", "*.txt");
                 const all = spy();
                 const ready = spy();
                 watcher = watch(watchPath, options)
@@ -1259,16 +1259,16 @@ describe("fs", "watcher", function watcherTests() {
                 const ready = spy();
                 // test with relative path to ensure proper resolution
                 const watchDir = adone.std.path.relative(process.cwd(), linkedDir.path());
-                watcher = watch(adone.std.path.join(watchDir, "**/*"), options)
+                watcher = watch(adone.path.join(watchDir, "**/*"), options)
                     .on("addDir", addDir)
                     .on("add", add)
                     .on("ready", ready);
                 await ready.waitForCall();
                 await sleep();
                 // only the children are matched by the glob pattern, not the link itself
-                expect(add).to.have.been.calledWith(adone.std.path.join(watchDir, "change.txt"));
+                expect(add).to.have.been.calledWith(adone.path.join(watchDir, "change.txt"));
                 expect(add.callCount).to.be.equal(3); // also unlink.txt & subdir/add.txt
-                expect(addDir).to.have.been.calledWith(adone.std.path.join(watchDir, "subdir"));
+                expect(addDir).to.have.been.calledWith(adone.path.join(watchDir, "subdir"));
                 const addFile = linkedDir.getFile("add.txt");
                 await Promise.all([
                     addFile.write(Date.now()),
@@ -1756,10 +1756,10 @@ describe("fs", "watcher", function watcherTests() {
                     ]);
                     expect(all1).to.have.been.calledWith("change", "change.txt");
                     expect(all1).to.have.been.calledWith("unlink", "unlink.txt");
-                    expect(all2).to.have.been.calledWith("add", adone.std.path.join("..", "change.txt"));
-                    expect(all2).to.have.been.calledWith("add", adone.std.path.join("..", "unlink.txt"));
-                    expect(all2).to.have.been.calledWith("change", adone.std.path.join("..", "change.txt"));
-                    expect(all2).to.have.been.calledWith("unlink", adone.std.path.join("..", "unlink.txt"));
+                    expect(all2).to.have.been.calledWith("add", adone.path.join("..", "change.txt"));
+                    expect(all2).to.have.been.calledWith("add", adone.path.join("..", "unlink.txt"));
+                    expect(all2).to.have.been.calledWith("change", adone.path.join("..", "change.txt"));
+                    expect(all2).to.have.been.calledWith("unlink", adone.path.join("..", "unlink.txt"));
                 });
 
                 it("should ignore files even with cwd", async () => {

@@ -10,7 +10,7 @@ const df = ipfsdCtl.create({ type: "js" });
 const ipfsExec = require("../utils/ipfs_exec");
 
 const daemonOpts = {
-    exec: adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/bin.js"),
+    exec: adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/bin.js"),
     config: {
         Bootstrap: [],
         Discovery: {
@@ -105,7 +105,7 @@ describe("dht", () => {
         this.timeout(60 * 1000);
         let cidAdded;
 
-        return ipfsA(`add ${adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/main/init-files/init-docs/readme")}`)
+        return ipfsA(`add ${adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/init-files/init-docs/readme")}`)
             .then((res) => {
                 expect(res).to.exist();
                 cidAdded = res.split(" ")[1];

@@ -1655,7 +1655,7 @@ describe("task", () => {
 
     describe("loadTasksFrom()", () => {
         it("single location", async () => {
-            await manager.loadTasksFrom(adone.std.path.join(__dirname, "fixtures"), { transpile: true });
+            await manager.loadTasksFrom(adone.path.join(__dirname, "fixtures"), { transpile: true });
 
             assert.isTrue(manager.hasTask("1"));
             assert.isTrue(manager.hasTask("2"));
@@ -1663,10 +1663,10 @@ describe("task", () => {
         });
 
         it("multiple location", async () => {
-            const basePath = adone.std.path.join(__dirname, "fixtures");
+            const basePath = adone.path.join(__dirname, "fixtures");
             await manager.loadTasksFrom([
                 basePath,
-                adone.std.path.join(basePath, "other")
+                adone.path.join(basePath, "other")
             ], { transpile: true });
 
             assert.isTrue(manager.hasTask("1"));

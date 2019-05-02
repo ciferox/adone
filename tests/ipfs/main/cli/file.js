@@ -2,7 +2,7 @@ const runOnAndOff = require("../utils/on_and_off");
 const file = "QmR56UJmAaZLXLdTT1ALrE9vVqV8soUEekm9BMd4FnuYqV";
 const dir = "Qmaj2NmcyAXT8dFmZRRytE12wpcaHADzbChKToMEjBsj5Z";
 
-const fixturePath = (...args) => adone.std.path.join(__dirname, "..", "fixtures", ...args);
+const fixturePath = (...args) => adone.path.join(__dirname, "..", "fixtures", ...args);
 
 describe("file ls", () => runOnAndOff((thing) => {
     let ipfs;

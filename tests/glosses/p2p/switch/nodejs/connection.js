@@ -12,7 +12,7 @@ const generatePSK = Protector.generate;
 const psk = Buffer.alloc(95);
 generatePSK(psk);
 
-const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "switch", ...args);
+const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "switch", ...args);
 
 const ConnectionFSM = require(srcPath("connection"));
 const createInfos = require("../utils").createInfos;

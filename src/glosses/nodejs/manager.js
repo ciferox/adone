@@ -29,7 +29,7 @@ export default class NodejsManager {
             this.cache.basePath = aPath.join(this.realm.getPath("var"), "nodejs");
         }
         this.cache.downloads = this.cache.downloads || "downloads";
-        this.cache.releases = this.cache.releases || "releases";
+        this.cache.release = this.cache.release || "releases";
         this.cache.sources = this.cache.sources || "sources";
         this.cache.headers = this.cache.headers || "headers";
     }

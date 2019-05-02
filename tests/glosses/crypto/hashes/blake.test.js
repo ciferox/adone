@@ -3,7 +3,7 @@ const {
     std: { fs }
 } = adone;
 
-const fixture = (name) => adone.std.path.join(__dirname, "fixtures", name);
+const fixture = (name) => adone.path.join(__dirname, "fixtures", name);
 
 const hexToBytes = function (hex) {
     const ret = new Uint8Array(hex.length / 2);

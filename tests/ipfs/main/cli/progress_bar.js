@@ -1,4 +1,4 @@
-const createProgressBar = require(adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/utils")).createProgressBar;
+const createProgressBar = require(adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/utils")).createProgressBar;
 
 describe("progress bar", () => {
     it("created with the correct properties", () => {

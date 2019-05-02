@@ -597,9 +597,9 @@ describe("fs", "custom", "BaseFileSystem", () => {
             baseFs.addRedirect("/tmp", "/othertmp");
             baseFs.addRedirect("/home/user/", "/var/");
 
-            assert.isTrue("/a/a/b/c/" in baseFs._redirects);
-            assert.isTrue("/tmp/" in baseFs._redirects);
-            assert.isTrue("/home/user/" in baseFs._redirects);
+            assert.isTrue(baseFs._redirects.has("/a/a/b/c/"));
+            assert.isTrue(baseFs._redirects.has("/tmp/"));
+            assert.isTrue(baseFs._redirects.has("/home/user/"));
         });
 
         it("redirect from non-existent path to existent", () => {

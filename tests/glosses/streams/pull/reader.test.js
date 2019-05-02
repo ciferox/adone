@@ -326,7 +326,7 @@ describe("stream", "pull", "reader", () => {
     });
 
     describe("state", () => {
-        const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "streams", "pull", ...args);
+        const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "streams", "pull", ...args);
         const State = require(srcPath("reader", "state"));
 
         it("read everything", (done) => {

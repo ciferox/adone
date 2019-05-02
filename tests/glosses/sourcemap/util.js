@@ -1,4 +1,4 @@
-const util = require(adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "sourcemap", "util"));
+const util = require(adone.path.join(adone.ROOT_PATH, "lib", "glosses", "sourcemap", "util"));
 
 // This is a test mapping which maps functions from two different files
 // (one.js and two.js) to a minified generated source.

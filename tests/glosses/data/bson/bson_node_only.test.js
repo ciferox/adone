@@ -6,7 +6,7 @@ const {
 const { Binary } = bson;
 const assertBuffersEqual = require("./tools/utils").assertBuffersEqual;
 
-const fixture = (name) => adone.std.path.join(__dirname, "data", name);
+const fixture = (name) => adone.path.join(__dirname, "data", name);
 
 describe("BSON - Node only", () => {
     it("Should Correctly Serialize and Deserialize a big Binary object", (done) => {

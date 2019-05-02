@@ -40,7 +40,7 @@ export const getCurrentArch = () => {
 
 export const DEFAULT_EXT = is.windows
     ? ".zip"
-    : ".tar.xz";
+    : ".tar.gz";
 
 const UNIX_EXTS = ["", ".tar.gz", ".tar.xz"];
 const WIN_EXTS = ["", ".7z", ".zip"];

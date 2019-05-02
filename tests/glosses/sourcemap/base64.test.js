@@ -1,4 +1,4 @@
-const base64 = require(adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "sourcemap", "base64"));
+const base64 = require(adone.path.join(adone.ROOT_PATH, "lib", "glosses", "sourcemap", "base64"));
 
 describe("base64", () => {
     it("test out of range encoding", () => {

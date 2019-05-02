@@ -187,7 +187,7 @@ describe("nodejs", () => {
             });
 
             assert.equal(nm.cache.downloads, "archives");
-            assert.equal(nm.cache.releases, "rel");
+            assert.equal(nm.cache.release, "rel");
             assert.equal(nm.cache.sources, "srcs");
             assert.equal(nm.cache.headers, "hdrs");
         });
@@ -216,8 +216,8 @@ describe("nodejs", () => {
             assert.equal(p, path.join(nm.cache.basePath, nm.cache.downloads));
             assert.isTrue(await fs.isDirectory(p));
 
-            p = await nm.getCachePath(nm.cache.releases);
-            assert.equal(p, path.join(nm.cache.basePath, nm.cache.releases));
+            p = await nm.getCachePath(nm.cache.release);
+            assert.equal(p, path.join(nm.cache.basePath, nm.cache.release));
             assert.isTrue(await fs.isDirectory(p));
         });
 

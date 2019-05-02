@@ -2027,7 +2027,7 @@ describe.todo("glob", () => {
             await fixtures.unlink();
         });
 
-        const cases = JSON.parse(fs.readFileSync(adone.std.path.join(__dirname, "bash_results.json")));
+        const cases = JSON.parse(fs.readFileSync(adone.path.join(__dirname, "bash_results.json")));
 
         for (const [pattern, expected] of Object.entries(cases)) {
             it(pattern, async function () { // eslint-disable-line

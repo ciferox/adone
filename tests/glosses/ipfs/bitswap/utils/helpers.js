@@ -30,4 +30,4 @@ exports.countToFinish = (n, callback) => {
     };
 };
 
-exports.srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "ipfs", "bitswap", ...args);
+exports.srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "ipfs", "bitswap", ...args);

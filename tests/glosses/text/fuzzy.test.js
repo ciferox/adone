@@ -27,7 +27,7 @@ describe("Fuzzy", () => {
     });
 
     describe('List of books - searching "title" and "author"', () => {
-        const books = require(adone.std.path.join(__dirname, "fixtures", "books.json"));
+        const books = require(adone.path.join(__dirname, "fixtures", "books.json"));
         const options = {
             keys: ["title", "author"],
             tokenize: true
@@ -455,7 +455,7 @@ describe("Fuzzy", () => {
     });
 
     describe("List of books - searching for long pattern length > 32", () => {
-        const books = require(adone.std.path.join(__dirname, "fixtures", "books.json"));
+        const books = require(adone.path.join(__dirname, "fixtures", "books.json"));
         const options = {
             keys: ["title"]
         };

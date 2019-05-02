@@ -1,6 +1,5 @@
 const {
     is,
-    std,
     error,
     util: { detectFileType }
 } = adone;

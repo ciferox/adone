@@ -3,7 +3,7 @@ const {
 } = adone;
 const { protocolBuffers } = pull;
 
-const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "streams", "pull", ...args);
+const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "streams", "pull", ...args);
 const protostream_pull = require(srcPath("protocol_buffers", "pull"));
 
 const pb = require("protocol-buffers");

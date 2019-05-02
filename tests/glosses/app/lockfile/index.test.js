@@ -95,7 +95,7 @@ describe("lock file", () => {
                 await fs.remove(lockPath);
                 await fs.mkdir(lockPath);
             }
-            const lockfilePath = adone.std.path.join(lockPath, "dir.lock");
+            const lockfilePath = adone.path.join(lockPath, "dir.lock");
 
             const options = {
                 lockfilePath

@@ -1,6 +1,6 @@
 const { is, std: { fs, stream }, stream: { as } } = adone;
 
-const fixture = (name) => adone.std.path.join(__dirname, "fixtures", name);
+const fixture = (name) => adone.path.join(__dirname, "fixtures", name);
 
 class Through extends stream.PassThrough {
     constructor(data, readableObjectMode = false) {

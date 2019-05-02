@@ -9,7 +9,7 @@ const chunker = require(srcPath("chunker/fixed-size"));
 
 const loadFixture = require("../aegir/fixtures");
 const isNode = require("detect-node");
-const rawFile = loadFixture(adone.std.path.join(__dirname, "fixtures/1MiB.txt"));
+const rawFile = loadFixture(adone.path.join(__dirname, "fixtures/1MiB.txt"));
 
 describe("chunker: fixed size", function () {
     this.timeout(30000);

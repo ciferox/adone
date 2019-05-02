@@ -6,7 +6,7 @@ const {
 const protons = require("protons");
 const map = require("async/map");
 const loadFixture = require("../../aegir/fixtures");
-const testDataPath = adone.std.path.join(__dirname, "..", "fixtures/serialized-from-go");
+const testDataPath = adone.path.join(__dirname, "..", "fixtures/serialized-from-go");
 const rawMessageFullWantlist = loadFixture(`${testDataPath}/bitswap110-message-full-wantlist`);
 const rawMessageOneBlock = loadFixture(`${testDataPath}/bitswap110-message-one-block`);
 

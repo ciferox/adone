@@ -1,7 +1,7 @@
 const {
     ipfs: { IPFS, ipfsdCtl }
 } = adone;
-const bootstrapList = require(adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/main/core/runtime/config-browser.js"))().Bootstrap;
+const bootstrapList = require(adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/core/runtime/config-browser.js"))().Bootstrap;
 const waitFor = require("./utils/wait_for");
 
 /**

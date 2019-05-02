@@ -1,4 +1,4 @@
-const config = require(adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/main/core/config"));
+const config = require(adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/core/config"));
 
 describe("config", () => {
     it("should allow empty config", () => {

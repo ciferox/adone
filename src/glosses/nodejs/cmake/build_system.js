@@ -359,7 +359,7 @@ export default class BuildSystem {
         if (this.options.target) {
             command += ` --target ${this.options.target}`;
         }
-        return Promise.resolve(command);
+        return command;
     }
 
     async build() {
@@ -367,7 +367,7 @@ export default class BuildSystem {
         this.verifyIfAvailable();
 
         await this.ensureConfigured();
-        const buildCommand = await this.getBuildCommand();
+        const buildCommand = this.getBuildCommand();
         await this._run(buildCommand);
     }
 

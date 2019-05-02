@@ -13,7 +13,7 @@ const {
 
 const bufferFrom = require("buffer-from");
 
-const fixturePath = (...args) => adone.std.path.join(__dirname, ...args);
+const fixturePath = (...args) => adone.path.join(__dirname, ...args);
 
 function compareLines(actual, expected) {
     assert(actual.length >= expected.length, `got ${actual.length} lines but expected at least ${expected.length} lines`);

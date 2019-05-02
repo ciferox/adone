@@ -107,18 +107,6 @@ const parsePath = (path) => {
     return info;
 };
 
-const redirectPath = (path, redirects) => {
-    for (const redir of Object.keys(redirects)) {
-        if (path.startsWith(redir)) {
-            return aPath.join(redirects[redir], path.slice(redir.length));
-        } else if (path.length === (redir.length - 1) && path === redir.slice(0, -1)) {
-            return redirects[redir];
-        }
-    }
-
-    return path;
-}
-
 export default class BaseFileSystem {
     constructor({ root = "/" } = {}) {
         this.structure = {
@@ -134,7 +122,7 @@ export default class BaseFileSystem {
         this._uninitializing = false;
         this._uninitialized = false;
         this.root = root;
-        this._redirects = {};
+        this._redirects = new Map();
     }
 
     // /**
@@ -248,7 +236,7 @@ export default class BaseFileSystem {
             throw this._throw("EPERM", from, to, null);
         }
 
-        this._redirects[`/${from}/`] = `/${to}`;
+        this._redirects.set(`/${from}/`, `/${to}`);
     }
 
     // fs methods
@@ -317,8 +305,8 @@ export default class BaseFileSystem {
     }
 
     copyFile(src, dest, flags, callback) {
-        src = redirectPath(src, this._redirects);
-        dest = redirectPath(dest, this._redirects);
+        src = this._redirectPath(src);
+        dest = this._redirectPath(dest);
 
         if (isFunction(flags)) {
             callback = flags;
@@ -425,8 +413,8 @@ export default class BaseFileSystem {
     }
 
     copyFileSync(src, dest, flags = 0) {
-        src = redirectPath(src, this._redirects);
-        dest = redirectPath(dest, this._redirects);
+        src = this._redirectPath(src);
+        dest = this._redirectPath(dest);
 
         if (this._mountsNum === 0) {
             // only one engine can handle it, itself
@@ -502,7 +490,7 @@ export default class BaseFileSystem {
         const offset = 0;
 
         let buffer = Buffer.allocUnsafe(length);
-        for (let i = 0; length + position + peaceSize <= size; i++ , position = length * i) {
+        for (let i = 0; length + position + peaceSize <= size; i++, position = length * i) {
             srcFsInstance.readSync(fdSrc, buffer, offset, length, position);
             destFsInstance.writeSync(fdDest, buffer, offset, length, position);
         }
@@ -625,8 +613,8 @@ export default class BaseFileSystem {
 
     // TODO
     link(rawExistingPath, rawNewPath, callback) {
-        const existingPath = redirectPath(rawExistingPath, this._redirects);
-        const newPath = redirectPath(rawNewPath, this._redirects);
+        const existingPath = this._redirectPath(rawExistingPath);
+        const newPath = this._redirectPath(rawNewPath);
 
         if (this._mountsNum === 0) {
             this._link(existingPath, newPath, (err) => {
@@ -679,8 +667,8 @@ export default class BaseFileSystem {
     }
 
     linkSync(rawExistingPath, rawNewPath) {
-        const existingPath = redirectPath(rawExistingPath, this._redirects);
-        const newPath = redirectPath(rawNewPath, this._redirects);
+        const existingPath = this._redirectPath(rawExistingPath);
+        const newPath = this._rredirectPath(rawNewPath);
 
         if (this._mountsNum === 0) {
             // only one engine can handle it, itself
@@ -900,8 +888,8 @@ export default class BaseFileSystem {
 
     // TODO
     rename(rawOldPath, rawNewPath, callback) {
-        const oldPath = redirectPath(rawOldPath, this._redirects);
-        const newPath = redirectPath(rawNewPath, this._redirects);
+        const oldPath = this._redirectPath(rawOldPath);
+        const newPath = this._redirectPath(rawNewPath);
 
         if (this._mountsNum === 0) {
             // only one engine can handle it, itself
@@ -955,8 +943,8 @@ export default class BaseFileSystem {
     }
 
     renameSync(rawOldPath, rawNewPath) {
-        const oldPath = redirectPath(rawOldPath, this._redirects);
-        const newPath = redirectPath(rawNewPath, this._redirects);
+        const oldPath = this._redirectPath(rawOldPath);
+        const newPath = this._redirectPath(rawNewPath);
 
         if (this._mountsNum === 0) {
             // only one engine can handle it, itself
@@ -1045,11 +1033,11 @@ export default class BaseFileSystem {
 
         // omg, here we have to swap them...
         // and i think we must resolve the target using the engine that will handle the request
-        this._handlePath("symlink", target, callback, path, type);
+        this._handlePath("symlink", target, callback, this._redirectPath(path), type);
     }
 
     symlinkSync(target, path, type) {
-        return this._handlePathSync("symlinkSync", target, path, type);
+        return this._handlePathSync("symlinkSync", target, this._redirectPath(path), type);
     }
 
     truncate(path, length, callback) {
@@ -1492,7 +1480,7 @@ export default class BaseFileSystem {
     }
 
     _handlePathSync(method, path, ...args) {
-        const pathInfo = parsePath(this._redirectPaths(method, path, args));
+        const pathInfo = parsePath(this._redirectPath(path));
         if (this._mountsNum === 0) {
             // only one engine can handle it, itself
             try {
@@ -1565,7 +1553,7 @@ export default class BaseFileSystem {
      * @param {any[]} args
      */
     _handlePath(method, path, callback, ...args) {
-        const pathInfo = parsePath(this._redirectPaths(method, path, args));
+        const pathInfo = parsePath(this._redirectPath(path));
         if (this._mountsNum === 0) {
             this[`_${method}`](pathInfo.full, ...args, (err, result) => {
                 if (err) {
@@ -1647,11 +1635,18 @@ export default class BaseFileSystem {
         });
     }
 
-    _redirectPaths(method, path, args) {
-        if (["symlink", "symlinkSync"].includes(method)) {
-            args[0] = redirectPath(args[0], this._redirects);
+    _redirectPath(path) {
+        if (this._redirects.size > 0) {
+            for (const redir of this._redirects.keys()) {
+                if (path.startsWith(redir)) {
+                    return aPath.join(this._redirects.get(redir), path.slice(redir.length));
+                } else if (path.length === (redir.length - 1) && path === redir.slice(0, -1)) {
+                    return this._redirects.get(redir);
+                }
+            }
         }
-        return redirectPath(path, this._redirects);
+    
+        return path;
     }
 
     _getSiblingMounts(path) {

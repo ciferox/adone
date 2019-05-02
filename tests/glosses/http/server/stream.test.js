@@ -129,7 +129,7 @@ describe("stream", () => {
     
             reply.header("Content-Encoding", "gzip");
             pump(
-                fs.createReadStream(resolve(adone.std.path.join(__dirname, "stream.test.js")), "utf8"),
+                fs.createReadStream(resolve(adone.path.join(__dirname, "stream.test.js")), "utf8"),
                 gzStream,
                 (err) => {
                     assert.notExists(err);
@@ -145,7 +145,7 @@ describe("stream", () => {
         }, (err, res) => {
             assert.notExists(err);
             assert.strictEqual(res.headers["content-encoding"], "gzip");
-            const file = fs.readFileSync(resolve(adone.std.path.join(__dirname, "stream.test.js")), "utf8");
+            const file = fs.readFileSync(resolve(adone.path.join(__dirname, "stream.test.js")), "utf8");
             const payload = zlib.gunzipSync(res.rawPayload);
             assert.strictEqual(payload.toString("utf-8"), file);
             fastify.close();

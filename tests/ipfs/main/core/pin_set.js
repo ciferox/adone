@@ -2,7 +2,7 @@ const parallelLimit = require("async/parallelLimit");
 const series = require("async/series");
 const CID = require("cids");
 
-const createPinSet = require(adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/main/core/components/pin-set"));
+const createPinSet = require(adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/core/components/pin-set"));
 const createTempRepo = require("../utils/create_repo_nodejs");
 
 const {

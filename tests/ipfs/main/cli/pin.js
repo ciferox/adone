@@ -6,7 +6,7 @@ const runOnAndOff = require("../utils/on_and_off");
 //   solar-system.md
 //   mercury/
 //    wiki.md
-const fixturePath = adone.std.path.join(__dirname, "..", "fixtures", "planets");
+const fixturePath = adone.path.join(__dirname, "..", "fixtures", "planets");
 const pins = {
     root: "QmTAMavb995EHErSrKo7mB8dYkpaSJxu6ys1a6XJyB2sys",
     solarWiki: "QmTMbkDfvHwq3Aup6Nxqn3KKw9YnoKzcZvuArAfQ9GF3QG",

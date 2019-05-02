@@ -117,7 +117,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
                 }
                 let fullPath;
                 try {
-                    fullPath = adone.module.resolve(adone.std.path.join(p, f));
+                    fullPath = adone.module.resolve(adone.path.join(p, f));
                 } catch (err) {
                     continue;
                 }

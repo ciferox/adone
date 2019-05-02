@@ -1,1 +1,1 @@
-export default adone.asNamespace(adone.requireAddon(adone.std.path.join(__dirname, "native", "memcpy.node")));
+export default adone.requireAddon(adone.path.join(__dirname, "native", "memcpy.node"));

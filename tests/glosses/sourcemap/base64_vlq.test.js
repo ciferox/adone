@@ -1,4 +1,4 @@
-const base64VLQ = require(adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "sourcemap", "base64_vlq"));
+const base64VLQ = require(adone.path.join(adone.ROOT_PATH, "lib", "glosses", "sourcemap", "base64_vlq"));
 
 const vlqs = [
     { number: -255, encoded: "/P" },

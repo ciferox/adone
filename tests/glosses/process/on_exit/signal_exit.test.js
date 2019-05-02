@@ -6,7 +6,7 @@ const {
 const shell = is.windows ? null : { shell: "/bin/bash" };
 const node = is.windows ? `"${process.execPath}"` : process.execPath;
 
-const fixture = (...args) => adone.std.path.join(__dirname, "fixtures", ...args);
+const fixture = (...args) => adone.path.join(__dirname, "fixtures", ...args);
 
 describe("process", "onExit", "signal-exit", () => {
     it("receives an exit event when a process exits normally", (done) => {

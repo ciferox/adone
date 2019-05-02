@@ -1,5 +1,5 @@
 const { is } = adone;
-const native = adone.requireAddon(adone.std.path.join(__dirname, "native", "snappy.node"));
+const native = adone.requireAddon(adone.path.join(__dirname, "native", "snappy.node"));
 
 adone.asNamespace(exports);
 

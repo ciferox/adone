@@ -1,6 +1,6 @@
 const runOnAndOff = require("../utils/on_and_off");
 
-const fixturePath = (...args) => adone.std.path.join(__dirname, "..", "fixtures", ...args);
+const fixturePath = (...args) => adone.path.join(__dirname, "..", "fixtures", ...args);
 
 describe("dag", () => runOnAndOff.off((thing) => {
     let ipfs;

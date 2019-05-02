@@ -2,7 +2,7 @@ const { regex } = adone;
 
 describe("regex", () => {
     describe("ansi", () => {
-        const ansiCodes = require(adone.std.path.join(__dirname, "fixtures/ansi-codes"));
+        const ansiCodes = require(adone.path.join(__dirname, "fixtures/ansi-codes"));
         const consumptionChars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+1234567890-=[]{};\':"./>?,<\\|';
 
         // testing against codes found at: http://ascii-table.com/ansi-escape-sequences-vt-100.php

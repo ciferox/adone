@@ -99,7 +99,7 @@ describe("mosca.cli", () => {
 
     it("should support a config option", (done) => {
         args.push("--config");
-        args.push(adone.std.path.join(__dirname, "sample_config.js"));
+        args.push(adone.path.join(__dirname, "sample_config.js"));
         startServer(done, (server) => {
             expect(server.opts).to.have.property("port", 2883);
             assert.nestedPropertyVal(server.opts, "backend.port", 3833);
@@ -108,7 +108,7 @@ describe("mosca.cli", () => {
 
     it("should support a config option with an absolute path", (done) => {
         args.push("-c");
-        args.push(adone.std.path.join(__dirname, "sample_config.js"));
+        args.push(adone.path.join(__dirname, "sample_config.js"));
         startServer(done, (server) => {
             expect(server.opts).to.have.property("port", 2883);
             assert.nestedPropertyVal(server.opts, "backend.port", 3833);
@@ -210,7 +210,7 @@ describe("mosca.cli", () => {
 
     it("should support authorizing an authorized client", (done) => {
         args.push("--credentials");
-        args.push(adone.std.path.join(__dirname, "credentials.json"));
+        args.push(adone.path.join(__dirname, "credentials.json"));
         steed.waterfall([
             function (cb) {
                 adone.net.mqtt.server.cli(args, cb);
@@ -240,7 +240,7 @@ describe("mosca.cli", () => {
 
     it("should support negating an unauthorized client", (done) => {
         args.push("--credentials");
-        args.push(adone.std.path.join(__dirname, "credentials.json"));
+        args.push(adone.path.join(__dirname, "credentials.json"));
         steed.waterfall([
             function (cb) {
                 adone.net.mqtt.server.cli(args, cb);

@@ -5,12 +5,12 @@ describe("fs", "readdirp", () => {
     const totalFiles = 12;
     const ext1Files = 4;
     const ext3Files = 2;
-    const fixtures = adone.std.path.join(__dirname, "fixtures");
-    const root = adone.std.path.join(fixtures, "readdir");
-    const getPath = (...p) => adone.std.path.join(root, ...p);
+    const fixtures = adone.path.join(__dirname, "fixtures");
+    const root = adone.path.join(fixtures, "readdir");
+    const getPath = (...p) => adone.path.join(root, ...p);
 
     before(async () => {
-        await fs.remove(adone.std.path.join(root));
+        await fs.remove(adone.path.join(root));
         try {
             adone.std.fs.mkdirSync(fixtures);
         } catch (err) {
@@ -40,7 +40,7 @@ describe("fs", "readdirp", () => {
     });
 
     after(async () => {
-        await fs.remove(adone.std.path.join(root));
+        await fs.remove(adone.path.join(root));
     });
 
     it("reading root without filter", async () => {
@@ -114,16 +114,16 @@ describe("fs", "readdirp", () => {
             this.skip();
             return;
         }
-        adone.std.fs.symlinkSync(adone.std.path.join(root, "root_dir1"), adone.std.path.join(root, "dirlink"));
-        adone.std.fs.symlinkSync(adone.std.path.join(root, "root_file1.ext1"), adone.std.path.join(root, "link.ext1"));
+        adone.std.fs.symlinkSync(adone.path.join(root, "root_dir1"), adone.path.join(root, "dirlink"));
+        adone.std.fs.symlinkSync(adone.path.join(root, "root_file1.ext1"), adone.path.join(root, "link.ext1"));
         const result = await fs.readdirp(root, {
             lstat: true
         });
         try {
             expect(result).to.have.lengthOf(totalDirs + totalFiles + 2);
         } finally {
-            adone.std.fs.unlinkSync(adone.std.path.join(root, "dirlink"));
-            adone.std.fs.unlinkSync(adone.std.path.join(root, "link.ext1"));
+            adone.std.fs.unlinkSync(adone.path.join(root, "dirlink"));
+            adone.std.fs.unlinkSync(adone.path.join(root, "link.ext1"));
         }
     });
 });

@@ -13,7 +13,7 @@
 //     );
 // }
 
-const mod = new adone.module.Module(require.main ? require.main.filename : adone.std.path.join(process.cwd(), "index.js"), {
+const mod = new adone.module.Module(require.main ? require.main.filename : adone.path.join(process.cwd(), "index.js"), {
     transforms: [
         adone.module.transform.compiler()
     ]

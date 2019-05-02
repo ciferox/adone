@@ -1,4 +1,4 @@
-const native = adone.requireAddon(adone.std.path.join(__dirname, "native", "utils.node"));
+const native = adone.requireAddon(adone.path.join(__dirname, "native", "utils.node"));
 
 /**
  * Merges an array of buffers into a new buffer.

@@ -21,4 +21,4 @@ export const randomBytes = (num) => {
     return bytes;
 };
 
-export const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "ipfs", "unixfs_exporter", ...args);
+export const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "ipfs", "unixfs_exporter", ...args);

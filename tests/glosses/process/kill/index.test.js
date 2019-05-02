@@ -59,7 +59,7 @@ describe("process", "kill", () => {
         });
     };
 
-    const fixture = (name = "") => adone.std.path.join(__dirname, "fixtures", name);
+    const fixture = (name = "") => adone.path.join(__dirname, "fixtures", name);
 
     after(() => {
         killAll(exitPids);

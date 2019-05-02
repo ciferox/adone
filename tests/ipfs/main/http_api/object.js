@@ -8,7 +8,7 @@ const { DAGLink } = dagPb;
 const {
     ipfs: { ipfsdCtl }
 } = adone;
-const df = ipfsdCtl.create({ exec: adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/bin.js") });
+const df = ipfsdCtl.create({ exec: adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/bin.js") });
 
 const fixturePath = (...args) => path.join(__dirname, "..", "fixtures", ...args);
 

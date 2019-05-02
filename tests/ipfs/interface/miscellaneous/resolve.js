@@ -10,7 +10,7 @@ const { spawnNodeWithId } = require("../utils/spawn");
 const { connect } = require("../utils/swarm");
 const { getDescribe, getIt } = require("../utils/shani");
 
-const fixturePath = (...args) => adone.std.path.join(__dirname, "..", "fixtures", ...args);
+const fixturePath = (...args) => adone.path.join(__dirname, "..", "fixtures", ...args);
 
 module.exports = (createCommon, options) => {
     const describe = getDescribe(options);

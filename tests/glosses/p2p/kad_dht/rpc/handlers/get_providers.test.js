@@ -1,7 +1,7 @@
 const parallel = require("async/parallel");
 const waterfall = require("async/waterfall");
 
-const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "kad_dht", ...args);
+const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "kad_dht", ...args);
 
 const Message = require(srcPath("message"));
 const utils = require(srcPath("utils"));

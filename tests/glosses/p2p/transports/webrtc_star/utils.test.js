@@ -2,7 +2,7 @@ const {
     multiformat: { multiaddr }
 } = adone;
 
-const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "transports", "webrtc_star", ...args);
+const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "transports", "webrtc_star", ...args);
 
 const { cleanUrlSIO, cleanMultiaddr } = require(srcPath("utils"));
 

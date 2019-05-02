@@ -19,7 +19,7 @@ const TIMEOUT_REGEXP = /timed out after/;
 
 const getExitRegExp = (exitMessage) => new RegExp(`failed with exit code ${exitMessage}`);
 
-const fixture = (name = "") => adone.std.path.join(__dirname, "fixtures", name);
+const fixture = (name = "") => adone.path.join(__dirname, "fixtures", name);
 
 
 describe("process", "exec", () => {

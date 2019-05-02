@@ -2,7 +2,7 @@ const loadFixture = require("../../aegir/fixtures");
 const into = require("into-stream");
 const { getDescribe, getIt } = require("../utils/shani");
 
-const fixturePath = (...args) => adone.std.path.join(__dirname, "..", "fixtures", ...args);
+const fixturePath = (...args) => adone.path.join(__dirname, "..", "fixtures", ...args);
 
 module.exports = (createCommon, options) => {
     const describe = getDescribe(options);

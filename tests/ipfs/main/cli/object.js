@@ -9,7 +9,7 @@ const {
     ipfs: { UnixFs }
 } = adone;
 
-const fixturePath = (...args) => adone.std.path.join(__dirname, "..", "fixtures", ...args);
+const fixturePath = (...args) => adone.path.join(__dirname, "..", "fixtures", ...args);
 
 
 describe("object", () => runOnAndOff((thing) => {

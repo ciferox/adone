@@ -5,7 +5,7 @@ const parallel = require("async/parallel");
 const series = require("async/series");
 
 const isNode = require("detect-node");
-const ipnsPath = require(adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/main/core/ipns/path"));
+const ipnsPath = require(adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/core/ipns/path"));
 const { Key } = require("interface-datastore");
 
 const {
@@ -451,7 +451,7 @@ describe("name", () => {
     });
 
     describe("ipns.path", () => {
-        const path = adone.std.path.join(__dirname, "../fixtures/planets/solar-system.md");
+        const path = adone.path.join(__dirname, "../fixtures/planets/solar-system.md");
         const fixture = {
             path,
             content: fs.readFileSync(path)

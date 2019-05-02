@@ -1,6 +1,6 @@
 // const IPFSFactory = require("ipfsd-ctl");
 // const parallel = require("async/parallel");
-const MockPreloadNode = require(adone.std.path.join(__dirname, "./utils/mock_preload_node"));
+const MockPreloadNode = require(adone.path.join(__dirname, "./utils/mock_preload_node"));
 
 // const ipfsdServer = IPFSFactory.createServer();
 const preloadNode = MockPreloadNode.createNode();

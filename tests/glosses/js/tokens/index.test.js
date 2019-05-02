@@ -4,7 +4,7 @@ const {
     js: { tokens: { regex, matchToToken } }
 } = adone;
 
-const fixture = (name) => adone.std.path.join(__dirname, "fixtures", name);
+const fixture = (name) => adone.path.join(__dirname, "fixtures", name);
 
 describe("js", "tokens", () => {
     describe("regex", () => {

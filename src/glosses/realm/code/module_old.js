@@ -355,7 +355,7 @@ export default class XModule extends realm.code.Base {
             ImportDeclaration(path) {
                 const { node } = path;
                 imports.push({
-                    path: adone.std.path.join(basePath, node.source.value),
+                    path: adone.path.join(basePath, node.source.value),
                     names: node.specifiers.map((x) => {
                         if (x.type === "ImportDefaultSpecifier") {
                             return {
@@ -459,7 +459,7 @@ export default class XModule extends realm.code.Base {
                                 const { namespace, objectName } = this.codeLayout.parseName(fullName);
                                 if (namespace === this.nsName) {
                                     if (prop.value.type === "StringLiteral") {
-                                        lazies.push({ name: objectName, path: adone.std.path.join(basePath, prop.value.value) });
+                                        lazies.push({ name: objectName, path: adone.path.join(basePath, prop.value.value) });
                                     } else if (prop.value.type === "ArrowFunctionExpression") {
                                         const lazyPath = this.getPathFor(path, prop.value);
                                         this.lazies.set(objectName, new realm.code.LazyFunction({

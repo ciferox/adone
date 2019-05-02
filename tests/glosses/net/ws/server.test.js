@@ -5,7 +5,7 @@ const {
 
 
 describe("net", "ws", "Server", () => {
-    const fixture = (name) => adone.std.path.join(__dirname, "fixtures", name);
+    const fixture = (name) => adone.path.join(__dirname, "fixtures", name);
 
     describe("#ctor", () => {
         it("throws an error if no option object is passed", () => {

@@ -5,8 +5,8 @@ const hat = require("hat");
 const ipfsExec = require("../utils/ipfs_exec");
 const os = require("os");
 
-const initFilesPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/main/init-files", ...args);
-const fixturePath = (...args) => adone.std.path.join(__dirname, "..", "fixtures", ...args);
+const initFilesPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/init-files", ...args);
+const fixturePath = (...args) => adone.path.join(__dirname, "..", "fixtures", ...args);
 
 
 describe("init", function () {

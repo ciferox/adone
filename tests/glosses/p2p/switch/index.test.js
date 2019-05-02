@@ -96,7 +96,7 @@ describe("p2p", "switch", () => {
     });
 
     describe("Get peer info", () => {
-        const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "switch", ...args);
+        const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "switch", ...args);
         const getPeerInfo = require(srcPath("get-peer-info"));
 
         let peerBook;

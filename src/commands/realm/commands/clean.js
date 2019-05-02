@@ -32,7 +32,6 @@ export default class extends Subsystem {
             });
 
             await r.runAndWait("clean", {
-                realm: r,
                 path
             });
 

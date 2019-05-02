@@ -3,7 +3,7 @@ const {
     fs: { remove, mkdir, which, whichSync }
 } = adone;
 
-const fixture = adone.std.path.join(__dirname, "which_fixture");
+const fixture = adone.path.join(__dirname, "which_fixture");
 const isWindows = is.windows || process.env.OSTYPE === "cygwin" || process.env.OSTYPE === "msys";
 const skip = isWindows ? "not relevant on windows" : false;
 
@@ -120,13 +120,13 @@ describe("fs", "which", () => {
 
             before(() => {
                 rel = adone.std.path.relative(process.cwd(), fixture);
-                expect = adone.std.path.join(adone.std.path.relative(process.cwd(), fixture), "foo.sh");
+                expect = adone.path.join(adone.std.path.relative(process.cwd(), fixture), "foo.sh");
             });
 
             it("no ./", async () => {
-                let actual = whichSync(adone.std.path.join(rel, "foo.sh"), opt);
+                let actual = whichSync(adone.path.join(rel, "foo.sh"), opt);
                 assert.equal(actual, expect);
-                actual = await which(adone.std.path.join(rel, "foo.sh"), opt);
+                actual = await which(adone.path.join(rel, "foo.sh"), opt);
                 assert.equal(actual, expect);
             });
 
@@ -140,7 +140,7 @@ describe("fs", "which", () => {
 
             it("with ../", async () => {
                 const dir = adone.std.path.basename(process.cwd());
-                expect = adone.std.path.join("..", dir, expect);
+                expect = adone.path.join("..", dir, expect);
                 let actual = whichSync(expect, opt);
                 assert.equal(actual, expect);
                 actual = await which(expect, opt);

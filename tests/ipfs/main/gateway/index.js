@@ -9,8 +9,8 @@ const {
 const HttpApi = require(path.join(adone.ROOT_PATH, "lib/ipfs/main/http"));
 
 
-const interfaceFixturePath = (...args) => adone.std.path.join(__dirname, "..", "..", "interface", "fixtures", ...args);
-const fixturePath = (...args) => adone.std.path.join(__dirname, "test_folder", ...args);
+const interfaceFixturePath = (...args) => adone.path.join(__dirname, "..", "..", "interface", "fixtures", ...args);
+const fixturePath = (...args) => adone.path.join(__dirname, "test_folder", ...args);
 
 const bigFile = loadFixture(interfaceFixturePath("15mb.random"));
 const directoryContent = {

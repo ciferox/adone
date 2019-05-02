@@ -9,7 +9,7 @@ const {
 const { pair } = pull;
 const { Listener, Dialer } = multistream;
 
-const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", ...args);
+const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", ...args);
 
 const State = require(srcPath("p2p", "secio", "state"));
 const handshake = require(srcPath("p2p", "secio", "handshake"));

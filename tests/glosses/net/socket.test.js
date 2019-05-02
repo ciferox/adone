@@ -6,7 +6,7 @@ const {
 let SERVER_PORT = null;
 const UNIX_SOCKET = adone.std.path.resolve("tmp.sock");
 
-const fixture = (name) => adone.std.path.join(__dirname, "fixtures", name);
+const fixture = (name) => adone.path.join(__dirname, "fixtures", name);
 
 class ServerSocket extends adone.net.Server {
     defaults() {

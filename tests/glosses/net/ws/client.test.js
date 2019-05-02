@@ -10,7 +10,7 @@ class CustomAgent extends http.Agent {
 }
 
 describe("net", "ws", "Client", () => {
-    const fixture = (name) => adone.std.path.join(__dirname, "fixtures", name);
+    const fixture = (name) => adone.path.join(__dirname, "fixtures", name);
 
     describe("#ctor", () => {
         it("throws an error when using an invalid url", () => {

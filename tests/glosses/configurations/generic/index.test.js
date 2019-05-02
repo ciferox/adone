@@ -99,6 +99,6 @@ describe("configuration", "GenericConfig", () => {
         const conf = new GenericConfig(options);
         await conf.load("a.json");
         await conf.save(std.path.join(options.cwd, "1", "2", "3", "a.json"));
-        await adone.fs.remove(adone.std.path.join(options.cwd, "1"));
+        await adone.fs.remove(adone.path.join(options.cwd, "1"));
     });
 });

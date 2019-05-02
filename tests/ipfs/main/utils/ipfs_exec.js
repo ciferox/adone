@@ -24,8 +24,8 @@ module.exports = (repoPath, opts) => {
         timeout: 60 * 1000
     }, opts);
 
-    const exec = (args) => execa(adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/bin.js"), args, config);
-    const execRaw = (args) => execa(adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/bin.js"), args, Object.assign({}, config, {
+    const exec = (args) => execa(adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/bin.js"), args, config);
+    const execRaw = (args) => execa(adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/bin.js"), args, Object.assign({}, config, {
         encoding: null
     }));
 

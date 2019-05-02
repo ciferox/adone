@@ -734,7 +734,7 @@ describe("middleware", () => {
         });
 
         instance.use((req, res, next) => {
-            const stream = fs.createReadStream(adone.std.path.join(__dirname, "middleware.test.js"), "utf8");
+            const stream = fs.createReadStream(adone.path.join(__dirname, "middleware.test.js"), "utf8");
             stream.pipe(res);
             res.once("finish", next);
         });

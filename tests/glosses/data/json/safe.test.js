@@ -30,7 +30,7 @@ describe("data", "json", () => {
         assert.equal(str, stringified);
     };
 
-    const requireFixture = (name) => require(adone.std.path.join(__dirname, "fixtures", name));
+    const requireFixture = (name) => require(adone.path.join(__dirname, "fixtures", name));
 
     describe("basic tests", () => {
         const basicObjects = requireFixture("basic");

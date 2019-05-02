@@ -1,5 +1,5 @@
 const qs = require("qs");
-const defaultList = require(adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/main/core/runtime/config-nodejs.js"))().Bootstrap;
+const defaultList = require(adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/core/runtime/config-nodejs.js"))().Bootstrap;
 
 module.exports = (http) => {
     describe("/bootstrap", () => {

@@ -55,7 +55,7 @@ CompressionMethod[CompressionMethod.WAVPACK = 97] = "WAVPACK";
 CompressionMethod[CompressionMethod.PPMD = 98] = "PPMD"; // PPMd version I, Rev 1
 
 const uint8Array2Buffer = (u8) => {
-    return (u8 instanceof Buffer) 
+    return (u8 instanceof Buffer)
         ? u8
         : (u8.byteOffset === 0 && u8.byteLength === u8.buffer.byteLength)
             ? Buffer.from(u8.buffer)
@@ -736,7 +736,8 @@ export default class ZipFileSystem extends MemoryFileSystem {
                     {
                         ...commonStat,
                         mode: MemoryFileSystem.applyUmask(MemoryFileSystem.DEFAULT_FILE_PERM, this._umask),
-                        data: () => cd.getData() // lazy
+                        data: () => cd.getData(), // lazy,
+                        size: cd.uncompressedSize()
                     }
                 );
             }

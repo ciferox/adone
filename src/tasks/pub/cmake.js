@@ -7,19 +7,29 @@ const {
 
 @adone.task.task("cmake")
 export default class extends BaseTask {
-    async main({ realm, src, dst, files } = {}) {
+    async main({ src, dst, files } = {}) {
         const version = process.version;
+        const realm = this.manager;
 
-        const nodeManager = new nodejs.NodejsManager({ realm });
-        await nodeManager.download({
-            version,
-            type: "headers"
+        const nodeManager = new nodejs.NodejsManager({
+            realm
         });
+        let nodePath = path.join(
+            await nodeManager.getCachePath(nodeManager.cache.headers),
+            await adone.nodejs.getArchiveName({ version, ext: "", arch: "", platform: "" })
+        );
 
-        const nodePath = await nodeManager.extract({
-            version,
-            type: "headers"
-        });
+        if (!(await adone.fs.pathExists(nodePath))) {
+            await nodeManager.download({
+                version,
+                type: "headers"
+            });
+
+            nodePath = await nodeManager.extract({
+                version,
+                type: "headers"
+            });
+        }
 
         await nodejs.cmake.configure({
             realm,

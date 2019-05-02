@@ -6,7 +6,7 @@ const MESSAGE = adone.net.ssh.c.MESSAGE;
 
 const fs = adone.std.fs;
 
-const SERVER_KEY = fs.readFileSync(adone.std.path.join(__dirname, "fixtures", "ssh_host_rsa_key"));
+const SERVER_KEY = fs.readFileSync(adone.path.join(__dirname, "fixtures", "ssh_host_rsa_key"));
 const SERVER_KEY_PRV = parseKey(SERVER_KEY);
 const SERVER_KEY_PUB = genPubKey(SERVER_KEY_PRV);
 

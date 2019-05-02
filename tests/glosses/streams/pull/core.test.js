@@ -456,7 +456,7 @@ describe("stream", "pull", "core", () => {
     });
 
     describe("continuable", () => {
-        const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "streams", "pull", ...args);
+        const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "streams", "pull", ...args);
         const count = require(srcPath("sources/count"));
         const error = require(srcPath("sources/error"));
         const map = require(srcPath("throughs/map"));

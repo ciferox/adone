@@ -9,7 +9,7 @@ const {
     p2p: { record: { Record } }
 } = adone;
 
-const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "datastores", "backends", "pubsub", ...args);
+const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "datastores", "backends", "pubsub", ...args);
 
 const { keyToTopic } = require(srcPath("utils"));
 const { connect, waitFor, waitForPeerToSubscribe, spawnDaemon, stopDaemon } = require("./utils");

@@ -1,6 +1,6 @@
 const loadFixture = require("../../aegir/fixtures");
 
-const fixturePath = (...args) => adone.std.path.join(__dirname, "..", "fixtures", ...args);
+const fixturePath = (...args) => adone.path.join(__dirname, "..", "fixtures", ...args);
 
 exports.fixture = Object.freeze({
     data: loadFixture(fixturePath("testfile.txt")),

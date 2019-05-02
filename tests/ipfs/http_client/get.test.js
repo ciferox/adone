@@ -11,7 +11,7 @@ describe(".get (specific go-ipfs features)", function () {
     this.timeout(20 * 1000);
 
     const fixture = function (path) {
-        return loadFixture(adone.std.path.join(__dirname, path));
+        return loadFixture(adone.path.join(__dirname, path));
     };
 
     const smallFile = {

@@ -1,4 +1,4 @@
-const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "kad_dht", ...args);
+const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "kad_dht", ...args);
 const PeerList = require(srcPath("peer-list"));
 
 const createPeerInfo = require("./utils/create_peer_info");

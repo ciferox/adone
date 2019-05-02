@@ -4,7 +4,7 @@ const {
     stream: { pull }
 } = adone;
 
-const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "transports", "tcp", ...args);
+const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "transports", "tcp", ...args);
 
 describe("p2p", "transport", "TCP", () => {
     describe("Constructor", () => {

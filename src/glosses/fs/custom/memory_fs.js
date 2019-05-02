@@ -713,13 +713,22 @@ class INode {
 
 class File extends INode {
     constructor(props, iNodeMgr) {
+        const dataType = typeof props.data;
+        let size;
+        if (dataType !== "undefined" && dataType !== "function") {
+            size = props.data.byteLength;
+        } else if (typeof props.size === "number") {
+            size = props.size;
+        } else {
+            size = 0;
+        }
         super(
             {
                 ino: props.ino,
                 uid: props.uid,
                 gid: props.gid,
                 mode: constants.S_IFREG | (props.mode & (~constants.S_IFMT)),
-                size: (props.data) ? props.data.byteLength : 0
+                size
             },
             iNodeMgr
         );

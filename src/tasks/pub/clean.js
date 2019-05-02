@@ -5,13 +5,13 @@ const {
     realm: { BaseTask }
 } = adone;
 
-const clean = async function ({ realm, manager, ...unit } = {}) {
+const clean = async function ({ manager, ...unit } = {}) {
     let srcGlob;
 
     if (unit.task === "gyp") {
-        return adone.nodejs.gyp.clean({ realm, path: unit.src });
+        return adone.nodejs.gyp.clean({ realm: manager, path: unit.src });
     } else if (unit.task === "cmake") {
-        return adone.nodejs.cmake.clean({ realm, path: unit.src });
+        return adone.nodejs.cmake.clean({ realm: manager, path: unit.src });
     }
 
     let dstGlob;
@@ -47,11 +47,10 @@ const clean = async function ({ realm, manager, ...unit } = {}) {
 
 @adone.task.task("clean")
 export default class extends BaseTask {
-    async main({ path, realm } = {}) {
+    async main({ path } = {}) {
         const observer = await adone.task.runParallel(this.manager, this.manager.devConfig.getUnits(path).map((unit) => ({
             task: clean,
             args: {
-                realm,
                 manager: this.manager,
                 ...unit
             }

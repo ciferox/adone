@@ -105,7 +105,7 @@ export default class XAdoneModule extends realm.code.Module {
                             const { namespace, objectName } = adone.meta.parseName(fullName);
                             if (namespace === "adone") {
                                 if (node.value.type === "StringLiteral") {
-                                    lazies.push({ name: objectName, path: adone.std.path.join(basePath, node.value.value) });
+                                    lazies.push({ name: objectName, path: adone.path.join(basePath, node.value.value) });
                                 } else if (node.value.type === "ArrowFunctionExpression") {
                                     let arrowFuncPath;
                                     path.traverse({

@@ -3,7 +3,7 @@ const FormData = require("form-data");
 const streamToPromise = require("stream-to-promise");
 const multibase = require("multibase");
 
-const fixturePath = (...args) => adone.std.path.join(__dirname, "..", "..", "fixtures", ...args);
+const fixturePath = (...args) => adone.path.join(__dirname, "..", "..", "fixtures", ...args);
 
 module.exports = (http) => {
     describe("/block", () => {

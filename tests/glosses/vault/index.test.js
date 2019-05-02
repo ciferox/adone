@@ -15,7 +15,7 @@ describe("Vault", () => {
     let location;
 
     const openVault = async (loc, options = {}) => {
-        location = loc || adone.std.path.join(__dirname, `_vault_${vaultIndex++}`);
+        location = loc || adone.path.join(__dirname, `_vault_${vaultIndex++}`);
         vInstance = await vault.open(adone.lodash.defaults(options, {
             location
         }));
@@ -32,7 +32,7 @@ describe("Vault", () => {
         list = list.filter((f) => (/^_vault_/).test(f));
 
         for (const f of list) {
-            await adone.fs.remove(adone.std.path.join(__dirname, f)); //eslint-disable-line
+            await adone.fs.remove(adone.path.join(__dirname, f)); //eslint-disable-line
         }
     });
 

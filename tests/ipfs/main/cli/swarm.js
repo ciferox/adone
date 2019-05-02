@@ -32,7 +32,7 @@ describe("swarm", () => {
         series([
             (cb) => {
                 df.spawn({
-                    exec: adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/bin.js"),
+                    exec: adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/bin.js"),
                     config,
                     initOptions: { bits: 512 }
                 }, (err, node) => {
@@ -44,7 +44,7 @@ describe("swarm", () => {
             },
             (cb) => {
                 df.spawn({
-                    exec: adone.std.path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/bin.js"),
+                    exec: adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/bin.js"),
                     config,
                     initOptions: { bits: 512 }
                 }, (err, node) => {

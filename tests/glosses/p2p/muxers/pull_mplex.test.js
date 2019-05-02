@@ -4,7 +4,7 @@ const {
 } = adone;
 const { abortable, defer, pushable, through2, lengthPrefixed, pair } = pull;
 
-const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "muxers", "pull_mplex", ...args);
+const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "muxers", "pull_mplex", ...args);
 
 const coder = require(srcPath("coder"));
 const Plex = require(srcPath("mplex"));

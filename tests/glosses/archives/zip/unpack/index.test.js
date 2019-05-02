@@ -303,7 +303,7 @@ describe("archive", "zip", "unpack", () => {
 
     specify("abort open read stream", async () => {
         const prefix = "abort open read stream: ";
-        const zipfile = await zip.unpack.open(adone.std.path.join(__dirname, "big-compression.zip"), { lazyEntries: true });
+        const zipfile = await zip.unpack.open(adone.path.join(__dirname, "big-compression.zip"), { lazyEntries: true });
 
         await new Promise((resolve, reject) => {
             let doneWithStream = false;

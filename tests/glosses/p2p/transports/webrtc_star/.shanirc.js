@@ -1,5 +1,5 @@
 export default (ctx) => {
-    const srcPath = (...args) => adone.std.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "transports", "webrtc_star", ...args);
+    const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "transports", "webrtc_star", ...args);
     const sigServer = require(srcPath("sig-server"));
     let firstRun = true;
     let sigS;

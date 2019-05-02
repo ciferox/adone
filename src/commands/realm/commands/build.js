@@ -31,8 +31,7 @@ export default class extends Subsystem {
                 progress: false
             });
             await r.runAndWait("build", {
-                path,
-                realm: r
+                path
             });
 
             cli.updateProgress({
@@ -45,9 +44,9 @@ export default class extends Subsystem {
             cli.updateProgress({
                 message: err.message,
                 status: false,
-                // clean: true
+                clean: true
             });
-            // console.error(adone.pretty.error(err));
+            console.error(adone.pretty.error(err));
             return 1;
         }
     }
