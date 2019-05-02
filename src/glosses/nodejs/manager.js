@@ -14,7 +14,7 @@ const NODEJS_PATHS = [
     ["lib", "node_modules", "npm"],
     ["share", "doc", "node"],
     ["share", "man", "man1", "node.1"],
-    ["systemtap", "tapset", "node.stp"]
+    ["share", "systemtap", "tapset", "node.stp"]
 ];
 
 export default class NodejsManager {
@@ -152,23 +152,31 @@ export default class NodejsManager {
         const downloadPath = aPath.join(await this.getCachePath(this.cache.downloads), await nodejs.getArchiveName({ version, ext: "", platform: "", arch: "" }));
 
         const fullPath = aPath.join(downloadPath, archName);
+        const fullDestPath = aPath.join(destPath, await nodejs.getArchiveName({ version, platform, arch, type, omitSuffix: true, ext: "" }));
 
-        await adone.fast.src(fullPath)
-            .extract({
-                strip: strip ? 1 : 0
-            })
-            .dest(destPath);
+        if (!(await fs.pathExists(fullDestPath))) {
+            await adone.fast.src(fullPath)
+                .extract({
+                    strip: strip ? 1 : 0
+                })
+                .dest(destPath);
+        }
 
         return strip
             ? destPath
-            : aPath.join(destPath, await nodejs.getArchiveName({ version, platform, arch, type, omitSuffix: true, ext: "" }));
+            : fullDestPath;
     }
 
-    async deleteCurrent() {
-        const basePath = await nodejs.getPrefixPath();
-        for (const dirs of NODEJS_PATHS) {
-            // eslint-disable-next-line no-await-in-loop
-            await fs.remove(aPath.join(basePath, ...dirs));
+    async removeActive() {
+        try {
+            const basePath = await nodejs.getPrefixPath();
+            
+            for (const dirs of NODEJS_PATHS) {
+                // eslint-disable-next-line no-await-in-loop
+                await fs.remove(aPath.join(basePath, ...dirs));
+            }
+        } catch (err) {
+            // Node.js is not installed
         }
     }
 }

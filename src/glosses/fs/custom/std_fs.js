@@ -342,11 +342,11 @@ export default class StdFileSystem extends BaseFileSystem {
         return statSync(path, options);
     }
 
-    _symlink(path, target, type, callback) {
+    _symlink(target, path, type, callback) {
         symlink(target, path, type, callback);
     }
 
-    _symlinkSync(path, target, type) {
+    _symlinkSync(target, path, type) {
         return symlinkSync(target, path, type);
     }
 

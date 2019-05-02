@@ -142,8 +142,8 @@ export default class AsyncFileSystem extends BaseFileSystem {
         this._callAsync("_statSync", [path, options], callback, callback);
     }
 
-    _symlink(path, target, type, callback) {
-        this._callAsync("_symlinkSync", [path, target, type], callback, callback);
+    _symlink(target, path, type, callback) {
+        this._callAsync("_symlinkSync", [target, path, type], callback, callback);
     }
 
     _truncate(path, length, callback) {

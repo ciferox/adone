@@ -573,6 +573,59 @@ describe("fs", "custom", "BaseFileSystem", () => {
         });
     });
 
+    describe("symlinks", () => {
+        it("create symlink to file using relative path - sync", () => {
+            const stdFs = new StdFileSystem();
+            adone.fs.removeSync("/tmp/test_symlink_dir");
+            stdFs.mkdirSync("/tmp/test_symlink_dir");
+            stdFs.mkdirSync("/tmp/test_symlink_dir/lib");
+            stdFs.mkdirSync("/tmp/test_symlink_dir/bin");
+            stdFs.writeFileSync("/tmp/test_symlink_dir/lib/exe", "#!/usr/bin/env node");
+
+            assert.isFalse(stdFs.existsSync("/tmp/test_symlink_dir/bin/exe"));
+            stdFs.symlinkSync("../lib/exe", "/tmp/test_symlink_dir/bin/exe");
+            const stats = adone.std.fs.lstatSync("/tmp/test_symlink_dir/bin/exe");
+            assert.isTrue(stats.isSymbolicLink());
+
+            adone.fs.removeSync("/tmp/test_symlink_dir");
+        });
+
+        it("create symlink to file using relative path - async", (done) => {
+            const stdFs = new StdFileSystem();
+            adone.fs.removeSync("/tmp/test_symlink_dir");
+            stdFs.mkdirSync("/tmp/test_symlink_dir");
+            stdFs.mkdirSync("/tmp/test_symlink_dir/lib");
+            stdFs.mkdirSync("/tmp/test_symlink_dir/bin");
+            stdFs.writeFileSync("/tmp/test_symlink_dir/lib/exe", "#!/usr/bin/env node");
+
+            assert.isFalse(stdFs.existsSync("/tmp/test_symlink_dir/bin/exe"));
+            stdFs.symlink("../lib/exe", "/tmp/test_symlink_dir/bin/exe", (err) => {
+                if (err) {
+                    done(err);
+                } else {
+                    const stats = adone.std.fs.lstatSync("/tmp/test_symlink_dir/bin/exe");
+                    assert.isTrue(stats.isSymbolicLink());
+                    done();
+                }
+                adone.fs.removeSync("/tmp/test_symlink_dir");    
+            });
+        });
+
+        it("create symlink to file using relative path - memory sync", () => {
+            const memFs = new MemoryFileSystem();
+            memFs.mkdirSync("/tmp");
+            memFs.mkdirSync("/tmp/test_symlink_dir");
+            memFs.mkdirSync("/tmp/test_symlink_dir/lib");
+            memFs.mkdirSync("/tmp/test_symlink_dir/bin");
+            memFs.writeFileSync("/tmp/test_symlink_dir/lib/exe", "#!/usr/bin/env node");
+
+            assert.isFalse(memFs.existsSync("/tmp/test_symlink_dir/bin/exe"));
+            memFs.symlinkSync("../lib/exe", "/tmp/test_symlink_dir/bin/exe");
+            const stats = memFs.lstatSync("/tmp/test_symlink_dir/bin/exe");
+            assert.isTrue(stats.isSymbolicLink());
+        });
+    });
+
     describe("redirects", () => {
         it("not allow redirect to self", () => {
             const baseFs = new BaseFileSystem();

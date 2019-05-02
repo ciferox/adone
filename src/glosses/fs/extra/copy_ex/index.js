@@ -4,8 +4,7 @@ const {
     is,
     glob,
     fs: { junk, createReadStream, createWriteStream, stat, lstat, readlink, readdir, symlink, mkdirp, remove, utimes },
-    path,
-    util
+    path
 } = adone;
 
 const emitterMixin = (obj) => {

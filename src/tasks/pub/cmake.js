@@ -14,22 +14,16 @@ export default class extends BaseTask {
         const nodeManager = new nodejs.NodejsManager({
             realm
         });
-        let nodePath = path.join(
-            await nodeManager.getCachePath(nodeManager.cache.headers),
-            await adone.nodejs.getArchiveName({ version, ext: "", arch: "", platform: "" })
-        );
 
-        if (!(await adone.fs.pathExists(nodePath))) {
-            await nodeManager.download({
-                version,
-                type: "headers"
-            });
+        await nodeManager.download({
+            version,
+            type: "headers"
+        });
 
-            nodePath = await nodeManager.extract({
-                version,
-                type: "headers"
-            });
-        }
+        const nodePath = await nodeManager.extract({
+            version,
+            type: "headers"
+        });
 
         await nodejs.cmake.configure({
             realm,

@@ -490,7 +490,7 @@ export default class BaseFileSystem {
         const offset = 0;
 
         let buffer = Buffer.allocUnsafe(length);
-        for (let i = 0; length + position + peaceSize <= size; i++, position = length * i) {
+        for (let i = 0; length + position + peaceSize <= size; i++ , position = length * i) {
             srcFsInstance.readSync(fdSrc, buffer, offset, length, position);
             destFsInstance.writeSync(fdDest, buffer, offset, length, position);
         }
@@ -1580,10 +1580,10 @@ export default class BaseFileSystem {
             let fn;
             if (fsInstance === this) {
                 fn = fsInstance[`_${method}`];
-                args.unshift(`/${parts.join("/")}`);
+                args.unshift(`${pathInfo.root}${parts.join("/")}`);
             } else {
                 fn = fsInstance[method];
-                args.unshift(`/${parts.slice(level).join("/")}`);
+                args.unshift(`${pathInfo.root}${parts.slice(level).join("/")}`);
             }
 
             fn.call(fsInstance, ...args, (err, result) => {
@@ -1596,7 +1596,7 @@ export default class BaseFileSystem {
                     case "readdir": {
                         if (level === 0) {
                             const [, options] = args;
-                            const siblings = this._getSiblingMounts(`/${parts.join("/")}`);
+                            const siblings = this._getSiblingMounts(`${pathInfo.root}${parts.join("/")}`);
 
                             const files = siblings
                                 ? unique(result.concat(siblings)).sort()
@@ -1645,7 +1645,7 @@ export default class BaseFileSystem {
                 }
             }
         }
-    
+
         return path;
     }
 

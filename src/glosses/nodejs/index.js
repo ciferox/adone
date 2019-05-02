@@ -99,7 +99,16 @@ export const getReleases = async () => (await adone.http.client.request("https:/
 
 export const getExePath = () => fs.which("node");
 
-export const getPrefixPath = async () => aPath.dirname(aPath.dirname(await getExePath()));
+export const getPrefixPath = async () => {
+    try {
+        const exePath = await getExePath();
+        return aPath.dirname(aPath.dirname(exePath));
+    } catch (err) {
+        return is.windows
+            ? ""
+            : "/usr/local";
+    }
+};
 
 export const getCurrentVersion = async () => {
     try {

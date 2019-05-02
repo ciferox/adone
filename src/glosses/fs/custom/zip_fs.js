@@ -2,11 +2,7 @@ import MemoryFileSystem from "./memory_fs";
 import { isBuffer } from "../../../common";
 import { inflateRawSync } from "zlib";
 
-/**
- * Maps CompressionMethod => function that decompresses.
- */
 const decompressionMethods = {};
-
 
 /**
  * 4.4.2.2: Indicates the compatibiltiy of a file's external attributes.
@@ -121,50 +117,7 @@ const safeToString = (buff, start, length) => (length === 0)
     ? ""
     : buff.toString("utf8", start, start + length);
 
-/**
- * 4.3.6 Overall .ZIP file format:
- *
- * [local file header 1]
- * [encryption header 1]
- * [file data 1]
- * [data descriptor 1]
- * .
- * .
- * .
- * [local file header n]
- * [encryption header n]
- * [file data n]
- * [data descriptor n]
- * [archive decryption header]
- * [archive extra data record]
- * [central directory header 1]
- * .
- * .
- * .
- * [central directory header n]
- * [zip64 end of central directory record]
- * [zip64 end of central directory locator]
- * [end of central directory record]
- */
 
-/**
- * 4.3.7  Local file header:
- *
- *     local file header signature     4 bytes  (0x04034b50)
- *     version needed to extract       2 bytes
- *     general purpose bit flag        2 bytes
- *     compression method              2 bytes
- *    last mod file time              2 bytes
- *    last mod file date              2 bytes
- *    crc-32                          4 bytes
- *    compressed size                 4 bytes
- *    uncompressed size               4 bytes
- *    file name length                2 bytes
- *    extra field length              2 bytes
- *
- *    file name (variable size)
- *    extra field (variable size)
- */
 export class FileHeader {
     constructor(data) {
         this.data = data;
@@ -233,20 +186,6 @@ export class FileHeader {
     }
 }
 
-/**
- * 4.3.8  File data
- *
- *   Immediately following the local header for a file
- *   SHOULD be placed the compressed or stored data for the file.
- *   If the file is encrypted, the encryption header for the file
- *   SHOULD be placed after the local header and before the file
- *   data. The series of [local file header][encryption header]
- *   [file data][data descriptor] repeats for each file in the
- *   .ZIP archive.
- *
- *   Zero-byte files, directories, and other file types that
- *   contain no content MUST not include file data.
- */
 export class FileData {
     constructor(header, record, data) {
         this.header = header;
@@ -281,13 +220,6 @@ export class FileData {
     }
 }
 
-/**
- * 4.3.9  Data descriptor:
- *
- *    crc-32                          4 bytes
- *    compressed size                 4 bytes
- *    uncompressed size               4 bytes
- */
 export class DataDescriptor {
     constructor(data) {
         this.data = data;
@@ -305,31 +237,7 @@ export class DataDescriptor {
         return this.data.readUInt32LE(8);
     }
 }
-/**
- * ` 4.3.10  Archive decryption header:
- *
- * 4.3.10.1 The Archive Decryption Header is introduced in version 6.2
- * of the ZIP format specification.  This record exists in support
- * of the Central Directory Encryption Feature implemented as part of
- * the Strong Encryption Specification as described in this document.
- * When the Central Directory Structure is encrypted, this decryption
- * header MUST precede the encrypted data segment.
- */
 
-/**
- * 4.3.11  Archive extra data record:
- *
- *      archive extra data signature    4 bytes  (0x08064b50)
- *      extra field length              4 bytes
- *      extra field data                (variable size)
- *
- *    4.3.11.1 The Archive Extra Data Record is introduced in version 6.2
- *    of the ZIP format specification.  This record MAY be used in support
- *    of the Central Directory Encryption Feature implemented as part of
- *    the Strong Encryption Specification as described in this document.
- *    When present, this record MUST immediately precede the central
- *    directory data structure.
- */
 export class ArchiveExtraDataRecord {
     constructor(data) {
         this.data = data;
@@ -347,23 +255,6 @@ export class ArchiveExtraDataRecord {
     }
 }
 
-/**
- * 4.3.13 Digital signature:
- *
- *      header signature                4 bytes  (0x05054b50)
- *      size of data                    2 bytes
- *      signature data (variable size)
- *
- *    With the introduction of the Central Directory Encryption
- *    feature in version 6.2 of this specification, the Central
- *    Directory Structure MAY be stored both compressed and encrypted.
- *    Although not required, it is assumed when encrypting the
- *    Central Directory Structure, that it will be compressed
- *    for greater storage efficiency.  Information on the
- *    Central Directory Encryption feature can be found in the section
- *    describing the Strong Encryption Specification. The Digital
- *    Signature record will be neither compressed nor encrypted.
- */
 export class DigitalSignature {
     constructor(data) {
         this.data = data;
@@ -381,31 +272,6 @@ export class DigitalSignature {
     }
 }
 
-/**
- * 4.3.12  Central directory structure:
- *
- *  central file header signature   4 bytes  (0x02014b50)
- *  version made by                 2 bytes
- *  version needed to extract       2 bytes
- *  general purpose bit flag        2 bytes
- *  compression method              2 bytes
- *  last mod file time              2 bytes
- *  last mod file date              2 bytes
- *  crc-32                          4 bytes
- *  compressed size                 4 bytes
- *  uncompressed size               4 bytes
- *  file name length                2 bytes
- *  extra field length              2 bytes
- *  file comment length             2 bytes
- *  disk number start               2 bytes
- *  internal file attributes        2 bytes
- *  external file attributes        4 bytes
- *  relative offset of local header 4 bytes
- *
- *  file name (variable size)
- *  extra field (variable size)
- *  file comment (variable size)
- */
 export class CentralDirectory {
     constructor(zipData, data) {
         this.zipData = zipData;
@@ -569,23 +435,6 @@ export class CentralDirectory {
     }
 }
 
-/**
- * 4.3.16: end of central directory record
- *  end of central dir signature    4 bytes  (0x06054b50)
- *  number of this disk             2 bytes
- *  number of the disk with the
- *  start of the central directory  2 bytes
- *  total number of entries in the
- *  central directory on this disk  2 bytes
- *  total number of entries in
- *  the central directory           2 bytes
- *  size of the central directory   4 bytes
- *  offset of start of central
- *  directory with respect to
- *  the starting disk number        4 bytes
- *  .ZIP file comment length        2 bytes
- *  .ZIP file comment       (variable size)
- */
 class EndOfCentralDirectory {
     constructor(data) {
         this.data = data;
