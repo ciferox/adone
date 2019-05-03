@@ -18,7 +18,7 @@ const {
     p2p: { KadDHT, PeerId, PeerBook, PeerInfo, Switch, transport: { TCP }, muxer: { mplex }, record: { Record } }
 } = adone;
 
-const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "kad_dht", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", ...args);
 
 const kadUtils = require(srcPath("utils"));
 const c = require(srcPath("constants"));

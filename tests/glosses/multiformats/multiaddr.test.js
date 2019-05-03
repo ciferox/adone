@@ -2,7 +2,7 @@ const {
     multiformat: { multiaddr }
 } = adone;
 
-const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "multiformats", "multiaddr", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", "multiformats", "multiaddr", ...args);
 
 describe("multiformat", "multiaddr", () => {
     describe("construction", () => {

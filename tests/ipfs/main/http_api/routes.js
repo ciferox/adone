@@ -1,6 +1,6 @@
 const fs = require("fs");
 const hat = require("hat");
-const API = require(adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/http"));
+const API = require(adone.getPath("lib/ipfs/main/http"));
 const promisify = require("promisify-es6");
 const ncp = promisify(require("ncp").ncp);
 const path = require("path");

@@ -9,10 +9,10 @@ const {
 
 const defaults = {
     error: {
-        icon: path.join(adone.SHARE_PATH, "media", "logo-err.png")
+        icon: adone.getPath("share", "media", "logo-err.png")
     },
     regular: {
-        icon: path.join(adone.SHARE_PATH, "media", "logo-norm.png")
+        icon: adone.getPath("share", "media", "logo-norm.png")
     }
 };
 

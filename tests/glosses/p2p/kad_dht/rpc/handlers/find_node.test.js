@@ -1,6 +1,6 @@
 const waterfall = require("async/waterfall");
 
-const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "kad_dht", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", ...args);
 
 const Message = require(srcPath("message"));
 const handler = require(srcPath("rpc/handlers/find-node"));

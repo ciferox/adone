@@ -4,7 +4,7 @@ const {
 } = adone;
 
 export default class Inspector {
-    constructor(cwd = adone.ROOT_PATH) {
+    constructor(cwd = adone.cwd) {
         this.cwd = cwd;
         this.namespaces = new Map();
     }

@@ -1,5 +1,6 @@
-const { diff: { _: { Diff } } } = adone;
+import Diff from "./base";
 
 export const characterDiff = new Diff();
-
-export const diffChars = (oldStr, newStr, options) => characterDiff.diff(oldStr, newStr, options);
+export function diffChars(oldStr, newStr, options) {
+    return characterDiff.diff(oldStr, newStr, options); 
+}

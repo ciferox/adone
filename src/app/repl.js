@@ -53,7 +53,7 @@ export class REPL {
                     return;
                 }
 
-                code = transform(code.trim(), filename);
+                code = transform(`${code}\n`, filename);
                 if (!code) {
                     callback(null);
                     return;

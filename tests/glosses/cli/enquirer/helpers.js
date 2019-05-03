@@ -1,1 +1,1 @@
-export const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "cli", "enquirer", ...args);
+export const srcPath = (...args) => adone.getPath("lib", "glosses", "cli", "enquirer", ...args);

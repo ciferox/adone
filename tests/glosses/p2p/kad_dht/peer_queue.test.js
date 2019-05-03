@@ -3,7 +3,7 @@ const series = require("async/series");
 const {
     p2p: { PeerId }
 } = adone;
-const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "kad_dht", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", ...args);
 
 const PeerQueue = require(srcPath("peer-queue"));
 

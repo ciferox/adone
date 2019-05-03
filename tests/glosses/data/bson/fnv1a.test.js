@@ -2,7 +2,7 @@ const {
     is
 } = adone;
 
-const fnv1a = require(adone.path.join(adone.ROOT_PATH, "lib", "glosses", "data", "bson", "fnv1a"));
+const fnv1a = require(adone.getPath("lib", "glosses", "data", "bson", "fnv1a"));
 const fnv1a24 = fnv1a.fnv1a24;
 
 describe("fnv1a", () => {

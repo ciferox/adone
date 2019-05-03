@@ -3,7 +3,7 @@ const {
     multiformat: { CID, multihash, multihashingAsync }
 } = adone;
 
-const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "multiformats", "cid", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", "multiformats", "cid", ...args);
 
 describe("multiformat", "CID", () => {
     let hash;

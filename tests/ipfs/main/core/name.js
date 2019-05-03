@@ -5,7 +5,7 @@ const parallel = require("async/parallel");
 const series = require("async/series");
 
 const isNode = require("detect-node");
-const ipnsPath = require(adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/core/ipns/path"));
+const ipnsPath = require(adone.getPath("lib/ipfs/main/core/ipns/path"));
 const { Key } = require("interface-datastore");
 
 const {

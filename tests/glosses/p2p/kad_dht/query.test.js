@@ -1,7 +1,7 @@
 const {
     p2p: { KadDHT, PeerBook, Switch, transport: { TCP }, muxer: { mplex } }
 } = adone;
-const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "kad_dht", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", ...args);
 
 const setImmediate = require("async/setImmediate");
 

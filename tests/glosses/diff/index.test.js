@@ -1,26 +1,31 @@
-describe("diff", () => {
+const {
+    diff
+} = adone;
+
+describe("root exports", () => {
     it("should export APIs", () => {
-        expect(adone.diff.chars).to.exist();
-        expect(adone.diff.words).to.exist();
-        expect(adone.diff.wordsWithSpace).to.exist();
-        expect(adone.diff.lines).to.exist();
-        expect(adone.diff.trimmedLines).to.exist();
-        expect(adone.diff.sentences).to.exist();
+        expect(diff.Diff).to.exist;
 
-        expect(adone.diff.css).to.exist();
-        expect(adone.diff.json).to.exist();
+        expect(diff.diffChars).to.exist;
+        expect(diff.diffWords).to.exist;
+        expect(diff.diffWordsWithSpace).to.exist;
+        expect(diff.diffLines).to.exist;
+        expect(diff.diffTrimmedLines).to.exist;
+        expect(diff.diffSentences).to.exist;
 
-        expect(adone.diff.arrays).to.exist();
+        expect(diff.diffCss).to.exist;
+        expect(diff.diffJson).to.exist;
 
-        expect(adone.diff.util.structuredPatch).to.exist();
-        expect(adone.diff.util.createTwoFilesPatch).to.exist();
-        expect(adone.diff.util.createPatch).to.exist();
-        expect(adone.diff.util.applyPatch).to.exist();
-        expect(adone.diff.util.applyPatches).to.exist();
-        expect(adone.diff.util.parsePatch).to.exist();
-        expect(adone.diff.util.mergePatches).to.exist();
-        expect(adone.diff.util.convertChangesToDMP).to.exist();
-        expect(adone.diff.util.convertChangesToXML).to.exist();
-        expect(adone.diff.util.canonicalizeObject).to.exist();
+        expect(diff.diffArrays).to.exist;
+
+        expect(diff.structuredPatch).to.exist;
+        expect(diff.createTwoFilesPatch).to.exist;
+        expect(diff.createPatch).to.exist;
+        expect(diff.applyPatch).to.exist;
+        expect(diff.applyPatches).to.exist;
+        expect(diff.parsePatch).to.exist;
+        expect(diff.convertChangesToDMP).to.exist;
+        expect(diff.convertChangesToXML).to.exist;
+        expect(diff.canonicalize).to.exist;
     });
 });

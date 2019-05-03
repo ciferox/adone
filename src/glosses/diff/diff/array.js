@@ -1,11 +1,13 @@
-const { identity, diff: { _: { Diff } } } = adone;
+import Diff from "./base";
 
 export const arrayDiff = new Diff();
-
 arrayDiff.tokenize = function (value) {
     return value.slice();
 };
+arrayDiff.join = arrayDiff.removeEmpty = function (value) {
+    return value;
+};
 
-arrayDiff.join = arrayDiff.removeEmpty = identity;
-
-export const diffArrays = (oldArr, newArr, callback) => arrayDiff.diff(oldArr, newArr, callback);
+export function diffArrays(oldArr, newArr, callback) {
+    return arrayDiff.diff(oldArr, newArr, callback); 
+}

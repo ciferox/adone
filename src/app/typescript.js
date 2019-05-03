@@ -1,3 +1,5 @@
+// Adapted from https://github.com/TypeStrong/ts-node
+
 const {
     is,
     path: aPath,
@@ -136,11 +138,29 @@ class MemoryCache {
     }
 }
 
+// const lineCount = (value) => {
+//     let count = 0;
+
+//     for (const char of value) {
+//         if (char === "\n") {
+//             count++;
+//         }
+//     }
+
+//     return count;
+// };
+
 export class TypeScriptManager {
     constructor(options) {
         this.options = options;
         this.filename = "[eval].ts";
         this.filepath = adone.path.join(this.options.cwd, this.filename);
+        this.evalInstance = {
+            input: "",
+            output: "",
+            version: 0,
+            lines: 0
+        };
     }
 
     register() {
@@ -339,6 +359,29 @@ export class TypeScriptManager {
         return service;
     }
 
+    appendEval(input) {
+        const undoInput = this.evalInstance.input;
+        const undoVersion = this.evalInstance.version;
+        const undoOutput = this.evalInstance.output;
+        // const undoLines = this.evalInstance.lines;
+
+        // Handle ASI issues with TypeScript re-evaluation.
+        if (undoInput.charAt(undoInput.length - 1) === "\n" && /^\s*[\[\(\`]/.test(input) && !/;\s*$/.test(undoInput)) {
+            this.evalInstance.input = `${this.evalInstance.input.slice(0, -1)};\n`;
+        }
+
+        this.evalInstance.input += input;
+        // this.evalInstance.lines += lineCount(input);
+        this.evalInstance.version++;
+
+        return () => {
+            this.evalInstance.input = undoInput;
+            this.evalInstance.output = undoOutput;
+            this.evalInstance.version = undoVersion;
+            // this.evalInstance.lines = undoLines;
+        };
+    }
+
     evalCode(code, print) {
         const module = new Module(this.filename);
         module.filename = this.filename;
@@ -350,7 +393,9 @@ export class TypeScriptManager {
         global.require = module.require.bind(module);
         let result;
         try {
-            result = this._eval(code);
+            const output = this.service.compile(code, this.filepath);
+            const script = new adone.std.vm.Script(output, { filename: this.filename });
+            result = script.runInThisContext();
         } catch (error) {
             if (error instanceof TSException) {
                 console.error(error.diagnosticText);
@@ -372,7 +417,12 @@ export class TypeScriptManager {
                     repl.displayPrompt();
                     return;
                 }
-                const { name, comment } = that.service.getTypeInfo(identifier, that.filepath, identifier);
+
+                const undo = that.appendEval(identifier);
+                const { name, comment } = that.service.getTypeInfo(that.evalInstance.input, that.filepath, that.evalInstance.input.length);
+
+                undo();
+
                 repl.outputStream.write(`${name}\n${comment ? `${comment}\n` : ""}`);
                 repl.displayPrompt();
             }
@@ -393,20 +443,43 @@ export class TypeScriptManager {
          */
         const isRecoverable = (error) => error.diagnosticCodes.every((code) => RECOVERY_CODES.has(code));
 
-        this.code = "";
+        // Bookmark the point where we should reset the REPL state.
+        const resetEval = this.appendEval("");
+
+        const reset = function () {
+            resetEval();
+
+            // Hard fix for TypeScript forcing `Object.defineProperty(exports, ...)`.
+            // exec("exports = module.exports", EVAL_FILENAME);
+        };
+
+        reset();
+        repl.on("reset", reset);
 
         return (code, filename) => {
-            const prevCode = this.code;
             try {
-                // Handle ASI issues with TypeScript re-evaluation.
-                if (this.code.charAt(this.code.length - 1) === "\n" && /^\s*[\[\(\`]/.test(code) && !/;\s*$/.test(this.code)) {
-                    this.code = `${this.code.slice(0, -1)};\n`;
-                }
-                this.code += `${code}\n`;
+                const isCompletion = !/\n$/.test(code);
+                const undo = this.appendEval(code);
+                let output;
 
-                return this.service.compile(this.code, this.filename);
+                try {
+                    output = this.service.compile(this.evalInstance.input, this.filepath);
+                } catch (err) {
+                    undo();
+                    throw err;
+                }
+
+                // Use `diff` to check for new JavaScript to execute.
+                const changes = adone.diff.diffLines(this.evalInstance.output, output);
+
+                if (isCompletion) {
+                    undo();
+                } else {
+                    this.evalInstance.output = output;
+                }
+
+                return changes.reduce((result, change) => change.added ? `${result}\n${change.value}` : result, "");
             } catch (err) {
-                this.code = prevCode;
                 if (err instanceof TSException) {
                     // Support recoverable compilations using >= node 6.
                     if (adone.std.repl.Recoverable && isRecoverable(err)) {
@@ -419,15 +492,6 @@ export class TypeScriptManager {
                 throw err;
             }
         };
-    }
-
-    _eval(input) {
-        try {
-            const output = this.service.compile(input, this.filepath);
-            return exec(output, this.filename);
-        } catch (err) {
-            throw err;
-        }
     }
 }
 

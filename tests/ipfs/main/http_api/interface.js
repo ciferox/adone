@@ -7,7 +7,7 @@ const {
 
 describe("interface-ipfs-core over ipfs-http-client tests", () => {
     const defaultCommonFactory = CommonFactory.create({
-        factoryOptions: { exec: adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/bin.js") }
+        factoryOptions: { exec: adone.getPath("lib/ipfs/main/cli/bin.js") }
     });
 
     tests.bitswap(defaultCommonFactory);

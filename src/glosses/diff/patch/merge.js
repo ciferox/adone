@@ -1,263 +1,13 @@
+import { structuredPatch } from "./create";
+import { parsePatch } from "./parse";
+
+import { arrayEqual, arrayStartsWith } from "../util/array";
+
 const {
-    is,
-    error,
-    diff: { util: { structuredPatch, parsePatch } }
+    is
 } = adone;
 
-const loadPatch = (param, base = adone.null) => {
-    if (is.string(param)) {
-        if (/^@@/m.test(param) || /^Index:/m.test(param)) {
-            return parsePatch(param)[0];
-        }
-
-        if (base === adone.null) {
-            throw new error.InvalidArgumentException("Must provide a base reference or pass in a patch");
-        }
-        return structuredPatch(undefined, undefined, base, param);
-    }
-
-    return param;
-};
-
-const fileNameChanged = (patch) => patch.newFileName && patch.newFileName !== patch.oldFileName;
-
-const selectField = (index, mine, theirs) => {
-    if (mine === theirs) {
-        return mine;
-    }
-    index.conflict = true;
-    return { mine, theirs };
-};
-
-const hunkBefore = (test, check) => {
-    return test.oldStart < check.oldStart && test.oldStart + test.oldLines < check.oldStart;
-};
-
-const cloneHunk = (hunk, offset) => ({
-    oldStart: hunk.oldStart,
-    oldLines: hunk.oldLines,
-    newStart: hunk.newStart + offset,
-    newLines: hunk.newLines,
-    lines: hunk.lines
-});
-
-const conflict = (hunk, mine, their) => {
-    hunk.conflict = true;
-    hunk.lines.push({
-        conflict: true,
-        mine,
-        theirs: their
-    });
-};
-
-const insertLeading = (hunk, insert, their) => {
-    while (insert.offset < their.offset && insert.index < insert.lines.length) {
-        const line = insert.lines[insert.index++];
-        hunk.lines.push(line);
-        insert.offset++;
-    }
-};
-
-const insertTrailing = (hunk, insert) => {
-    while (insert.index < insert.lines.length) {
-        const line = insert.lines[insert.index++];
-        hunk.lines.push(line);
-    }
-};
-
-const collectChange = (state) => {
-    const ret = [];
-    let operation = state.lines[state.index][0];
-
-    while (state.index < state.lines.length) {
-        const line = state.lines[state.index];
-
-        // Group additions that are immediately after subtractions and treat them as one "atomic" modify change.
-        if (operation === "-" && line[0] === "+") {
-            operation = "+";
-        }
-
-        if (operation === line[0]) {
-            ret.push(line);
-            state.index++;
-        } else {
-            break;
-        }
-    }
-
-    return ret;
-};
-
-const collectContext = (state, matchChanges) => {
-    const changes = [];
-    const merged = [];
-    let matchIndex = 0;
-    let contextChanges = false;
-    let conflicted = false;
-
-    while (matchIndex < matchChanges.length && state.index < state.lines.length) {
-        let change = state.lines[state.index];
-        const match = matchChanges[matchIndex];
-
-        // Once we've hit our add, then we are done
-        if (match[0] === "+") {
-            break;
-        }
-
-        contextChanges = contextChanges || change[0] !== " ";
-
-        merged.push(match);
-        matchIndex++;
-
-        // Consume any additions in the other block as a conflict to attempt
-        // to pull in the remaining context after this
-        if (change[0] === "+") {
-            conflicted = true;
-
-            while (change[0] === "+") {
-                changes.push(change);
-                change = state.lines[++state.index];
-            }
-        }
-
-        if (match.substr(1) === change.substr(1)) {
-            changes.push(change);
-            state.index++;
-        } else {
-            conflicted = true;
-        }
-    }
-
-    if ((matchChanges[matchIndex] || "")[0] === "+" && contextChanges) {
-        conflicted = true;
-    }
-
-    if (conflicted) {
-        return changes;
-    }
-
-    while (matchIndex < matchChanges.length) {
-        merged.push(matchChanges[matchIndex++]);
-    }
-
-    return {
-        merged,
-        changes
-    };
-};
-
-const removal = (hunk, mine, their, swap) => {
-    const myChanges = collectChange(mine);
-    const theirChanges = collectContext(their, myChanges);
-
-    if (theirChanges.merged) {
-        hunk.lines.push(...theirChanges.merged);
-    } else {
-        conflict(hunk, swap ? theirChanges : myChanges, swap ? myChanges : theirChanges);
-    }
-};
-
-const allRemoves = (changes) => changes.reduce((prev, change) => prev && change[0] === "-", true);
-
-const skipRemoveSuperset = (state, removeChanges, delta) => {
-    for (let i = 0; i < delta; i++) {
-        const changeContent = removeChanges[removeChanges.length - delta + i].substr(1);
-        if (state.lines[state.index + i] !== ` ${changeContent}`) {
-            return false;
-        }
-    }
-
-    state.index += delta;
-    return true;
-};
-
-const arrayStartsWith = (array, start) => {
-    if (start.length > array.length) {
-        return false;
-    }
-
-    for (let i = 0; i < start.length; i++) {
-        if (start[i] !== array[i]) {
-            return false;
-        }
-    }
-
-    return true;
-};
-
-const arrayEqual = (a, b) => {
-    if (a.length !== b.length) {
-        return false;
-    }
-
-    return arrayStartsWith(a, b);
-};
-
-const mutualChange = (hunk, mine, their) => {
-    const myChanges = collectChange(mine);
-    const theirChanges = collectChange(their);
-
-    if (allRemoves(myChanges) && allRemoves(theirChanges)) {
-        // Special case for remove changes that are supersets of one another
-        if (
-            arrayStartsWith(myChanges, theirChanges) &&
-            skipRemoveSuperset(their, myChanges, myChanges.length - theirChanges.length)
-        ) {
-            hunk.lines.push(...myChanges);
-            return;
-        } else if (
-            arrayStartsWith(theirChanges, myChanges) &&
-            skipRemoveSuperset(mine, theirChanges, theirChanges.length - myChanges.length)
-        ) {
-            hunk.lines.push(...theirChanges);
-            return;
-        }
-    } else if (arrayEqual(myChanges, theirChanges)) {
-        hunk.lines.push(...myChanges);
-        return;
-    }
-
-    conflict(hunk, myChanges, theirChanges);
-};
-
-const calcOldNewLineCount = (lines) => {
-    let oldLines = 0;
-    let newLines = 0;
-
-    lines.forEach((line) => {
-        if (!is.string(line)) {
-            const myCount = calcOldNewLineCount(line.mine);
-            const theirCount = calcOldNewLineCount(line.theirs);
-
-            if (!is.undefined(oldLines)) {
-                if (myCount.oldLines === theirCount.oldLines) {
-                    oldLines += myCount.oldLines;
-                } else {
-                    oldLines = undefined;
-                }
-            }
-
-            if (!is.undefined(newLines)) {
-                if (myCount.newLines === theirCount.newLines) {
-                    newLines += myCount.newLines;
-                } else {
-                    newLines = undefined;
-                }
-            }
-        } else {
-            if (!is.undefined(newLines) && (line[0] === "+" || line[0] === " ")) {
-                newLines++;
-            }
-            if (!is.undefined(oldLines) && (line[0] === "-" || line[0] === " ")) {
-                oldLines++;
-            }
-        }
-    });
-
-    return { oldLines, newLines };
-};
-
-const calcLineCount = (hunk) => {
+export function calcLineCount(hunk) {
     const { oldLines, newLines } = calcOldNewLineCount(hunk.lines);
 
     if (!is.undefined(oldLines)) {
@@ -271,57 +21,9 @@ const calcLineCount = (hunk) => {
     } else {
         delete hunk.newLines;
     }
-};
+}
 
-const mergeLines = (hunk, mineOffset, mineLines, theirOffset, theirLines) => {
-    const mine = { offset: mineOffset, lines: mineLines, index: 0 };
-    const their = { offset: theirOffset, lines: theirLines, index: 0 };
-    // This will generally result in a conflicted hunk, but there are cases where the context
-    // is the only overlap where we can successfully merge the content here.
-
-    // Handle any leading content
-    insertLeading(hunk, mine, their);
-    insertLeading(hunk, their, mine);
-
-    // Now in the overlap content. Scan through and select the best changes from each.
-    while (mine.index < mine.lines.length && their.index < their.lines.length) {
-        const mineCurrent = mine.lines[mine.index];
-        const theirCurrent = their.lines[their.index];
-
-        if ((mineCurrent[0] === "-" || mineCurrent[0] === "+") && (theirCurrent[0] === "-" || theirCurrent[0] === "+")) {
-            // Both modified ...
-            mutualChange(hunk, mine, their);
-        } else if (mineCurrent[0] === "+" && theirCurrent[0] === " ") {
-            // Mine inserted
-            hunk.lines.push(...collectChange(mine));
-        } else if (theirCurrent[0] === "+" && mineCurrent[0] === " ") {
-            // Theirs inserted
-            hunk.lines.push(...collectChange(their));
-        } else if (mineCurrent[0] === "-" && theirCurrent[0] === " ") {
-            // Mine removed or edited
-            removal(hunk, mine, their);
-        } else if (theirCurrent[0] === "-" && mineCurrent[0] === " ") {
-            // Their removed or edited
-            removal(hunk, their, mine, true);
-        } else if (mineCurrent === theirCurrent) {
-            // Context identity
-            hunk.lines.push(mineCurrent);
-            mine.index++;
-            their.index++;
-        } else {
-            // Context mismatch
-            conflict(hunk, collectChange(mine), collectChange(their));
-        }
-    }
-
-    // Now push anything that may be remaining
-    insertTrailing(hunk, mine);
-    insertTrailing(hunk, their);
-
-    calcLineCount(hunk);
-};
-
-export const mergePatches = (mine, theirs, base) => {
+export function merge(mine, theirs, base) {
     mine = loadPatch(mine, base);
     theirs = loadPatch(theirs, base);
 
@@ -386,11 +88,7 @@ export const mergePatches = (mine, theirs, base) => {
                 newLines: 0,
                 lines: []
             };
-            mergeLines(
-                mergedHunk,
-                mineCurrent.oldStart, mineCurrent.lines,
-                theirsCurrent.oldStart, theirsCurrent.lines
-            );
+            mergeLines(mergedHunk, mineCurrent.oldStart, mineCurrent.lines, theirsCurrent.oldStart, theirsCurrent.lines);
             theirsIndex++;
             mineIndex++;
 
@@ -399,4 +97,284 @@ export const mergePatches = (mine, theirs, base) => {
     }
 
     return ret;
-};
+}
+
+function loadPatch(param, base) {
+    if (is.string(param)) {
+        if ((/^@@/m).test(param) || ((/^Index:/m).test(param))) {
+            return parsePatch(param)[0];
+        }
+
+        if (!base) {
+            throw new Error("Must provide a base reference or pass in a patch");
+        }
+        return structuredPatch(undefined, undefined, base, param);
+    }
+
+    return param;
+}
+
+function fileNameChanged(patch) {
+    return patch.newFileName && patch.newFileName !== patch.oldFileName;
+}
+
+function selectField(index, mine, theirs) {
+    if (mine === theirs) {
+        return mine;
+    }
+    index.conflict = true;
+    return { mine, theirs };
+
+}
+
+function hunkBefore(test, check) {
+    return test.oldStart < check.oldStart
+        && (test.oldStart + test.oldLines) < check.oldStart;
+}
+
+function cloneHunk(hunk, offset) {
+    return {
+        oldStart: hunk.oldStart, oldLines: hunk.oldLines,
+        newStart: hunk.newStart + offset, newLines: hunk.newLines,
+        lines: hunk.lines
+    };
+}
+
+function mergeLines(hunk, mineOffset, mineLines, theirOffset, theirLines) {
+    // This will generally result in a conflicted hunk, but there are cases where the context
+    // is the only overlap where we can successfully merge the content here.
+    const mine = { offset: mineOffset, lines: mineLines, index: 0 };
+    const their = { offset: theirOffset, lines: theirLines, index: 0 };
+
+    // Handle any leading content
+    insertLeading(hunk, mine, their);
+    insertLeading(hunk, their, mine);
+
+    // Now in the overlap content. Scan through and select the best changes from each.
+    while (mine.index < mine.lines.length && their.index < their.lines.length) {
+        const mineCurrent = mine.lines[mine.index];
+        const theirCurrent = their.lines[their.index];
+
+        if ((mineCurrent[0] === "-" || mineCurrent[0] === "+")
+            && (theirCurrent[0] === "-" || theirCurrent[0] === "+")) {
+            // Both modified ...
+            mutualChange(hunk, mine, their);
+        } else if (mineCurrent[0] === "+" && theirCurrent[0] === " ") {
+            // Mine inserted
+            hunk.lines.push(...collectChange(mine));
+        } else if (theirCurrent[0] === "+" && mineCurrent[0] === " ") {
+            // Theirs inserted
+            hunk.lines.push(...collectChange(their));
+        } else if (mineCurrent[0] === "-" && theirCurrent[0] === " ") {
+            // Mine removed or edited
+            removal(hunk, mine, their);
+        } else if (theirCurrent[0] === "-" && mineCurrent[0] === " ") {
+            // Their removed or edited
+            removal(hunk, their, mine, true);
+        } else if (mineCurrent === theirCurrent) {
+            // Context identity
+            hunk.lines.push(mineCurrent);
+            mine.index++;
+            their.index++;
+        } else {
+            // Context mismatch
+            conflict(hunk, collectChange(mine), collectChange(their));
+        }
+    }
+
+    // Now push anything that may be remaining
+    insertTrailing(hunk, mine);
+    insertTrailing(hunk, their);
+
+    calcLineCount(hunk);
+}
+
+function mutualChange(hunk, mine, their) {
+    const myChanges = collectChange(mine);
+    const theirChanges = collectChange(their);
+
+    if (allRemoves(myChanges) && allRemoves(theirChanges)) {
+        // Special case for remove changes that are supersets of one another
+        if (arrayStartsWith(myChanges, theirChanges)
+            && skipRemoveSuperset(their, myChanges, myChanges.length - theirChanges.length)) {
+            hunk.lines.push(...myChanges);
+            return;
+        } else if (arrayStartsWith(theirChanges, myChanges)
+            && skipRemoveSuperset(mine, theirChanges, theirChanges.length - myChanges.length)) {
+            hunk.lines.push(...theirChanges);
+            return;
+        }
+    } else if (arrayEqual(myChanges, theirChanges)) {
+        hunk.lines.push(...myChanges);
+        return;
+    }
+
+    conflict(hunk, myChanges, theirChanges);
+}
+
+function removal(hunk, mine, their, swap) {
+    const myChanges = collectChange(mine);
+    const theirChanges = collectContext(their, myChanges);
+    if (theirChanges.merged) {
+        hunk.lines.push(...theirChanges.merged);
+    } else {
+        conflict(hunk, swap ? theirChanges : myChanges, swap ? myChanges : theirChanges);
+    }
+}
+
+function conflict(hunk, mine, their) {
+    hunk.conflict = true;
+    hunk.lines.push({
+        conflict: true,
+        mine,
+        theirs: their
+    });
+}
+
+function insertLeading(hunk, insert, their) {
+    while (insert.offset < their.offset && insert.index < insert.lines.length) {
+        const line = insert.lines[insert.index++];
+        hunk.lines.push(line);
+        insert.offset++;
+    }
+}
+function insertTrailing(hunk, insert) {
+    while (insert.index < insert.lines.length) {
+        const line = insert.lines[insert.index++];
+        hunk.lines.push(line);
+    }
+}
+
+function collectChange(state) {
+    const ret = [];
+    let operation = state.lines[state.index][0];
+    while (state.index < state.lines.length) {
+        const line = state.lines[state.index];
+
+        // Group additions that are immediately after subtractions and treat them as one "atomic" modify change.
+        if (operation === "-" && line[0] === "+") {
+            operation = "+";
+        }
+
+        if (operation === line[0]) {
+            ret.push(line);
+            state.index++;
+        } else {
+            break;
+        }
+    }
+
+    return ret;
+}
+function collectContext(state, matchChanges) {
+    const changes = [];
+    const merged = [];
+    let matchIndex = 0;
+    let contextChanges = false;
+    let conflicted = false;
+    while (matchIndex < matchChanges.length
+        && state.index < state.lines.length) {
+        let change = state.lines[state.index];
+        const match = matchChanges[matchIndex];
+
+        // Once we've hit our add, then we are done
+        if (match[0] === "+") {
+            break;
+        }
+
+        contextChanges = contextChanges || change[0] !== " ";
+
+        merged.push(match);
+        matchIndex++;
+
+        // Consume any additions in the other block as a conflict to attempt
+        // to pull in the remaining context after this
+        if (change[0] === "+") {
+            conflicted = true;
+
+            while (change[0] === "+") {
+                changes.push(change);
+                change = state.lines[++state.index];
+            }
+        }
+
+        if (match.substr(1) === change.substr(1)) {
+            changes.push(change);
+            state.index++;
+        } else {
+            conflicted = true;
+        }
+    }
+
+    if ((matchChanges[matchIndex] || "")[0] === "+"
+        && contextChanges) {
+        conflicted = true;
+    }
+
+    if (conflicted) {
+        return changes;
+    }
+
+    while (matchIndex < matchChanges.length) {
+        merged.push(matchChanges[matchIndex++]);
+    }
+
+    return {
+        merged,
+        changes
+    };
+}
+
+function allRemoves(changes) {
+    return changes.reduce((prev, change) => {
+        return prev && change[0] === "-";
+    }, true);
+}
+function skipRemoveSuperset(state, removeChanges, delta) {
+    for (let i = 0; i < delta; i++) {
+        const changeContent = removeChanges[removeChanges.length - delta + i].substr(1);
+        if (state.lines[state.index + i] !== ` ${changeContent}`) {
+            return false;
+        }
+    }
+
+    state.index += delta;
+    return true;
+}
+
+function calcOldNewLineCount(lines) {
+    let oldLines = 0;
+    let newLines = 0;
+
+    lines.forEach((line) => {
+        if (!is.string(line)) {
+            const myCount = calcOldNewLineCount(line.mine);
+            const theirCount = calcOldNewLineCount(line.theirs);
+
+            if (!is.undefined(oldLines)) {
+                if (myCount.oldLines === theirCount.oldLines) {
+                    oldLines += myCount.oldLines;
+                } else {
+                    oldLines = undefined;
+                }
+            }
+
+            if (!is.undefined(newLines)) {
+                if (myCount.newLines === theirCount.newLines) {
+                    newLines += myCount.newLines;
+                } else {
+                    newLines = undefined;
+                }
+            }
+        } else {
+            if (!is.undefined(newLines) && (line[0] === "+" || line[0] === " ")) {
+                newLines++;
+            }
+            if (!is.undefined(oldLines) && (line[0] === "-" || line[0] === " ")) {
+                oldLines++;
+            }
+        }
+    });
+
+    return { oldLines, newLines };
+}

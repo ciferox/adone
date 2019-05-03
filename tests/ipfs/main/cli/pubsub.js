@@ -61,7 +61,7 @@ describe("pubsub", function () {
         df.spawn({
             initOptions: { bits: 512 },
             args: ["--enable-pubsub-experiment"],
-            exec: adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/bin.js"),
+            exec: adone.getPath("lib/ipfs/main/cli/bin.js"),
             config
         }, (err, _ipfsd) => {
             expect(err).to.not.exist();

@@ -2,7 +2,7 @@ const {
     ipfs: { ipfsdCtl }
 } = adone;
 
-const df = ipfsdCtl.create({ exec: adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/bin.js") });
+const df = ipfsdCtl.create({ exec: adone.getPath("lib/ipfs/main/cli/bin.js") });
 
 describe("version endpoint", () => {
     let ipfs = null;

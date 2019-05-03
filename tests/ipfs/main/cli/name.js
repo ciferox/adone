@@ -8,7 +8,7 @@ const df = ipfsdCtl.create({ type: "js" });
 
 const checkAll = (bits) => (string) => bits.every((bit) => string.includes(bit));
 
-const initFilesPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/init-files", ...args);
+const initFilesPath = (...args) => adone.getPath("lib/ipfs/main/init-files", ...args);
 
 
 describe("name", () => {
@@ -28,7 +28,7 @@ describe("name", () => {
             this.timeout(80 * 1000);
 
             df.spawn({
-                exec: adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/bin.js"),
+                exec: adone.getPath("lib/ipfs/main/cli/bin.js"),
                 config: {
                     Bootstrap: []
                 },
@@ -193,7 +193,7 @@ describe("name", () => {
             this.timeout(80 * 1000);
 
             df.spawn({
-                exec: adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/bin.js"),
+                exec: adone.getPath("lib/ipfs/main/cli/bin.js"),
                 config: {
                     Bootstrap: [],
                     Discovery: {

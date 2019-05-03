@@ -5,7 +5,7 @@ const {
     multiformat: { multihash: mh }
 } = adone;
 
-const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "multiformats", "multihash", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", "multiformats", "multihash", ...args);
 
 const constants = require(srcPath("constants"));
 const validCases = require("./fixtures/valid");

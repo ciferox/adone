@@ -407,7 +407,7 @@ describe("Application", () => {
         before(() => {
             // define env var to require correct adone inside fixture apps
             prevRoot = process.env.ADONE_ROOT_PATH; // ?
-            process.env.ADONE_ROOT_PATH = adone.ROOT_PATH;
+            process.env.ADONE_ROOT_PATH = adone.cwd;
         });
     
         after(() => {

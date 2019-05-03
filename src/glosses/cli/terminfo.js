@@ -487,21 +487,21 @@ export default class Terminfo {
     }
 
     _useXtermCap() {
-        return this.injectTermcap(path.join(adone.SHARE_PATH, "term", "xterm.termcap"));
+        return this.injectTermcap(adone.getPath("share", "term", "xterm.termcap"));
     }
 
     _useXtermInfo() {
-        return this.injectTerminfo(path.join(adone.SHARE_PATH, "term", "xterm"));
+        return this.injectTerminfo(adone.getPath("share", "term", "xterm"));
     }
 
     _useInternalInfo(name) {
         name = path.basename(name);
-        return this.injectTerminfo(path.join(adone.SHARE_PATH, "term", name));
+        return this.injectTerminfo(adone.getPath("share", "term", name));
     }
 
     _useInternalCap(name) {
         name = path.basename(name);
-        return this.injectTermcap(path.join(adone.SHARE_PATH, "term", `${name}.termcap`));
+        return this.injectTermcap(adone.getPath("share", "term", `${name}.termcap`));
     }
 
     readTerminfo(term) {

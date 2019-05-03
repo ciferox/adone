@@ -4,7 +4,7 @@ const {
 
 const sinon = require("sinon");
 
-const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "switch", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "switch", ...args);
 
 const Queue = require(srcPath("dialer/queue"));
 const QueueManager = require(srcPath("dialer/queueManager"));

@@ -8,7 +8,7 @@ const endpoint = `${require("./helpers/wsurl")}/echo`;
 
 const server = require("./server")();
 
-const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "streams", "pull", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", "streams", "pull", ...args);
 
 describe("stream", "pull", "ws", () => {
     describe("closeonend", () => {

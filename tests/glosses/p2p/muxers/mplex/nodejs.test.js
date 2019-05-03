@@ -4,7 +4,7 @@ const net = require("net");
 const chunky = require("chunky");
 const pump = require("pump");
 
-const MplexCore = require(adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "muxers", "mplex", "internals"));
+const MplexCore = require(adone.getPath("lib", "glosses", "p2p", "muxers", "mplex", "internals"));
 
 describe("p2p", "muxer", "mplex", "internals", () => {
     it("one way piping work with 2 sub-streams", (done) => {

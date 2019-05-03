@@ -5,7 +5,7 @@ const {
 const keysPBM = p2p.crypto.keys.keysPBM;
 const randomBytes = p2p.crypto.randomBytes;
 
-const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "crypto_secp256k1", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "crypto_secp256k1", ...args);
 
 const { cryptoSecp256k1 } = p2p;
 const crypto = require(srcPath("crypto"))(randomBytes);

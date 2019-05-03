@@ -11,7 +11,7 @@ const {
     std: { os, path },
     multiformat: { CID, multihashingAsync: multihashing }
 } = adone;
-const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "kad_dht", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", ...args);
 
 const Providers = require(srcPath("providers"));
 

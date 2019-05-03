@@ -3,7 +3,7 @@ const {
     p2p: { PeerId, crypto }
 } = adone;
 
-const cryptoSrcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "crypto", ...args);
+const cryptoSrcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "crypto", ...args);
 const rsaUtils = require(cryptoSrcPath("keys/rsa-utils"));
 const rsaClass = require(cryptoSrcPath("keys/rsa-class"));
 

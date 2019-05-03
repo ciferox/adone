@@ -1,4 +1,4 @@
-const binarySearch = require(adone.path.join(adone.ROOT_PATH, "lib", "glosses", "sourcemap", "binary_search"));
+const binarySearch = require(adone.getPath("lib", "glosses", "sourcemap", "binary_search"));
 
 const numberCompare = (a, b) => a - b;
 

@@ -1,4 +1,5 @@
-const { diff: { _: { Diff, helper: { generateOptions } } } } = adone;
+import Diff from "./base";
+import { generateOptions } from "../util/params";
 
 // Based on https://en.wikipedia.org/wiki/Latin_script_in_Unicode
 //
@@ -28,34 +29,31 @@ wordDiff.equals = function (left, right) {
         left = left.toLowerCase();
         right = right.toLowerCase();
     }
-    return left === right || this.options.ignoreWhitespace && !reWhitespace.test(left) && !reWhitespace.test(right);
+    return left === right || (this.options.ignoreWhitespace && !reWhitespace.test(left) && !reWhitespace.test(right));
 };
 wordDiff.tokenize = function (value) {
-    const tokens = value.split(/(\s+|\b)/);
+    const tokens = value.split(/(\s+|[()[\]{}'"]|\b)/);
 
     // Join the boundary splits that we do not consider to be boundaries. This is primarily the extended Latin character set.
     for (let i = 0; i < tokens.length - 1; i++) {
-        // If we have an empty string in the next field and we have only word chars before and after, merge
-        if (
-            !tokens[i + 1] &&
-            tokens[i + 2] &&
-            extendedWordChars.test(tokens[i]) &&
-            extendedWordChars.test(tokens[i + 2]
-        )) {
+    // If we have an empty string in the next field and we have only word chars before and after, merge
+        if (!tokens[i + 1] && tokens[i + 2]
+          && extendedWordChars.test(tokens[i])
+          && extendedWordChars.test(tokens[i + 2])) {
             tokens[i] += tokens[i + 2];
             tokens.splice(i + 1, 2);
-            --i;
+            i--;
         }
     }
 
     return tokens;
 };
 
-export const diffWords = (oldStr, newStr, options) => {
+export function diffWords(oldStr, newStr, options) {
     options = generateOptions(options, { ignoreWhitespace: true });
     return wordDiff.diff(oldStr, newStr, options);
-};
+}
 
-export const diffWordsWithSpace = (oldStr, newStr, options) => {
+export function diffWordsWithSpace(oldStr, newStr, options) {
     return wordDiff.diff(oldStr, newStr, options);
-};
+}

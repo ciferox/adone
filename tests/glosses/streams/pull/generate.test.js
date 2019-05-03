@@ -5,7 +5,7 @@ const {
 } = adone;
 const { generate } = pull;
 
-// const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "streams", "pull", ...args);
+// const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "streams", "pull", ...args);
 
 // const sources = require("pull-stream/sources");
 // const sinks = require("pull-stream/sinks");

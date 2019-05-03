@@ -1,6 +1,6 @@
 require("adone");
 
-const onExitPath = adone.path.join(adone.ROOT_PATH, "lib", "glosses", "process", "on_exit.js");
+const onExitPath = adone.getPath("lib", "glosses", "process", "on_exit.js");
 
 // simulate cases where the module could be loaded from multiple places
 

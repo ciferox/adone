@@ -1,4 +1,4 @@
-const libUtil = require(adone.path.join(adone.ROOT_PATH, "lib", "glosses", "sourcemap", "util"));
+const libUtil = require(adone.getPath("lib", "glosses", "sourcemap", "util"));
 
 describe("util", () => {
     it("test normalize()", () => {

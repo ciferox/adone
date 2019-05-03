@@ -267,8 +267,8 @@ const configure = async ({ realm, path: addonPath, nodePath, python: pythonPath,
         argv.push("-Dlibrary=shared_library");
         argv.push("-Dvisibility=default");
         argv.push(`-Dnode_root_dir=${nodePath}`);
-        argv.push(`-Dadone_native_dir=${path.join(adone.ROOT_PATH, "lib", "native")}`);
-        argv.push(`-Dadone_root_dir=${adone.ROOT_PATH}`);
+        argv.push(`-Dadone_native_dir=${adone.getPath("lib", "native")}`);
+        argv.push(`-Dadone_root_dir=${adone.cwd}`);
         if (process.platform === "aix" || process.platform === "os390") {
             argv.push(`-Dnode_exp_file=${nodeExpFile}`);
         }

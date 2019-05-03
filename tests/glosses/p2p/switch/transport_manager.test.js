@@ -5,7 +5,7 @@ const {
     p2p: { PeerInfo }
 } = adone;
 
-const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "switch", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "switch", ...args);
 
 const TransportManager = require(srcPath("transport"));
 

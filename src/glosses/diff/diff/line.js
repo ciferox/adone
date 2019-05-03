@@ -1,7 +1,7 @@
-const { diff: { _: { Diff, helper: { generateOptions } } } } = adone;
+import Diff from "./base";
+import { generateOptions } from "../util/params";
 
 export const lineDiff = new Diff();
-
 lineDiff.tokenize = function (value) {
     const retLines = [];
     const linesAndNewlines = value.split(/(\n|\r\n)/);
@@ -28,9 +28,10 @@ lineDiff.tokenize = function (value) {
     return retLines;
 };
 
-export const diffLines = (oldStr, newStr, callback) => lineDiff.diff(oldStr, newStr, callback);
-
-export const diffTrimmedLines = (oldStr, newStr, callback) => {
+export function diffLines(oldStr, newStr, callback) {
+    return lineDiff.diff(oldStr, newStr, callback); 
+}
+export function diffTrimmedLines(oldStr, newStr, callback) {
     const options = generateOptions(callback, { ignoreWhitespace: true });
     return lineDiff.diff(oldStr, newStr, options);
-};
+}

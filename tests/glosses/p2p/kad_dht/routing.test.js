@@ -6,7 +6,7 @@ const {
     lodash: { range, random },
     p2p: { PeerId }
 } = adone;
-const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "kad_dht", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", ...args);
 
 const RoutingTable = require(srcPath("routing"));
 const kadUtils = require(srcPath("utils"));

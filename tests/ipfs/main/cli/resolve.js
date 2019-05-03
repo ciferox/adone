@@ -7,7 +7,7 @@ const {
 
 const runOnAndOff = require("../utils/on_and_off");
 
-const initFilesPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/init-files", ...args);
+const initFilesPath = (...args) => adone.getPath("lib/ipfs/main/init-files", ...args);
 
 
 describe("resolve", () => runOnAndOff((thing) => {

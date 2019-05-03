@@ -21,7 +21,7 @@ const HASH_ALGS = [
     "keccak-512"
 ];
 
-const initFilesPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/init-files", ...args);
+const initFilesPath = (...args) => adone.getPath("lib/ipfs/main/init-files", ...args);
 const fixturePath = (...args) => adone.path.join(__dirname, "..", "fixtures", ...args);
 
 describe("files", () => runOnAndOff((thing) => {

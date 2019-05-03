@@ -1,1 +1,1 @@
-export const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "ipfs", "unixfs_importer", ...args);
+export const srcPath = (...args) => adone.getPath("lib", "glosses", "ipfs", "unixfs_importer", ...args);

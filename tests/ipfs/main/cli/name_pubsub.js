@@ -8,7 +8,7 @@ const {
 
 const df = ipfsdCtl.create({ type: "js" });
 
-const initFilesPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/init-files", ...args);
+const initFilesPath = (...args) => adone.getPath("lib/ipfs/main/init-files", ...args);
 
 
 const checkAll = (bits) => (string) => bits.every((bit) => string.includes(bit));
@@ -16,7 +16,7 @@ const emptyDirCid = "QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn";
 
 const spawnDaemon = (callback) => {
     df.spawn({
-        exec: adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/bin.js"),
+        exec: adone.getPath("lib/ipfs/main/cli/bin.js"),
         args: ["--enable-namesys-pubsub"],
         initOptions: { bits: 512 },
         config: {
@@ -222,7 +222,7 @@ describe("name-pubsub", () => {
             this.timeout(80 * 1000);
 
             df.spawn({
-                exec: adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/bin.js"),
+                exec: adone.getPath("lib/ipfs/main/cli/bin.js"),
                 config: {},
                 initOptions: { bits: 512 }
             }, (err, node) => {

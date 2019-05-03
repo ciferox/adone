@@ -1,20 +1,21 @@
+import { parsePatch } from "./parse";
+import distanceIterator from "../util/distance-iterator";
+
 const {
-    is,
-    error,
-    diff: { util: { parsePatch }, _: { helper: { distanceIterator } } }
+    is
 } = adone;
 
-export const applyPatch = (source, uniDiff, options = {}) => {
+export function applyPatch(source, uniDiff, options = {}) {
     if (is.string(uniDiff)) {
         uniDiff = parsePatch(uniDiff);
     }
 
     if (is.array(uniDiff)) {
         if (uniDiff.length > 1) {
-            throw new error.InvalidArgumentException("applyPatch only works with a single input.");
+            throw new Error("applyPatch only works with a single input.");
         }
 
-        [uniDiff] = uniDiff;
+        uniDiff = uniDiff[0];
     }
 
     // Apply the diff to the input
@@ -23,21 +24,22 @@ export const applyPatch = (source, uniDiff, options = {}) => {
     const hunks = uniDiff.hunks;
 
     const compareLine = options.compareLine || ((lineNumber, line, operation, patchContent) => line === patchContent);
-
     let errorCount = 0;
     const fuzzFactor = options.fuzzFactor || 0;
     let minLine = 0;
     let offset = 0;
+
     let removeEOFNL;
     let addEOFNL;
 
     /**
      * Checks if the hunk exactly fits on the provided location
      */
-    const hunkFits = (hunk, toPos) => {
-        for (const line of hunk.lines) {
-            const operation = line.length > 0 ? line[0] : " ";
-            const content = line.length > 0 ? line.substr(1) : line;
+    function hunkFits(hunk, toPos) {
+        for (let j = 0; j < hunk.lines.length; j++) {
+            const line = hunk.lines[j];
+            const operation = (line.length > 0 ? line[0] : " ");
+            const content = (line.length > 0 ? line.substr(1) : line);
 
             if (operation === " " || operation === "-") {
                 // Context sanity check
@@ -53,10 +55,11 @@ export const applyPatch = (source, uniDiff, options = {}) => {
         }
 
         return true;
-    };
+    }
 
     // Search best fit offsets for each hunk based on the previous ones
-    for (const hunk of hunks) {
+    for (let i = 0; i < hunks.length; i++) {
+        const hunk = hunks[i];
         const maxLine = lines.length - hunk.oldLines;
         let localOffset = 0;
         const toPos = offset + hunk.oldStart - 1;
@@ -81,7 +84,8 @@ export const applyPatch = (source, uniDiff, options = {}) => {
 
     // Apply patch hunks
     let diffOffset = 0;
-    for (const hunk of hunks) {
+    for (let i = 0; i < hunks.length; i++) {
+        const hunk = hunks[i];
         let toPos = hunk.oldStart + hunk.offset + diffOffset - 1;
         diffOffset += hunk.newLines - hunk.oldLines;
 
@@ -91,8 +95,8 @@ export const applyPatch = (source, uniDiff, options = {}) => {
 
         for (let j = 0; j < hunk.lines.length; j++) {
             const line = hunk.lines[j];
-            const operation = line.length > 0 ? line[0] : " ";
-            const content = line.length > 0 ? line.substr(1) : line;
+            const operation = (line.length > 0 ? line[0] : " ");
+            const content = (line.length > 0 ? line.substr(1) : line);
             const delimiter = hunk.linedelimiters[j];
 
             if (operation === " ") {
@@ -130,17 +134,16 @@ export const applyPatch = (source, uniDiff, options = {}) => {
         lines[_k] = lines[_k] + delimiters[_k];
     }
     return lines.join("");
-};
+}
 
 // Wrapper that supports multiple file patches via callbacks.
-export const applyPatches = (uniDiff, options) => {
+export function applyPatches(uniDiff, options) {
     if (is.string(uniDiff)) {
         uniDiff = parsePatch(uniDiff);
     }
 
     let currentIndex = 0;
-
-    const processIndex = () => {
+    function processIndex() {
         const index = uniDiff[currentIndex++];
         if (!index) {
             return options.complete();
@@ -160,6 +163,6 @@ export const applyPatches = (uniDiff, options) => {
                 processIndex();
             });
         });
-    };
+    }
     processIndex();
-};
+}

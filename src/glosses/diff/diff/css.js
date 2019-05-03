@@ -1,7 +1,10 @@
-const { diff: { _: { Diff } } } = adone;
+import Diff from "./base";
 
 export const cssDiff = new Diff();
+cssDiff.tokenize = function (value) {
+    return value.split(/([{}:;,]|\s+)/);
+};
 
-cssDiff.tokenize = (value) => value.split(/([{}:;,]|\s+)/);
-
-export const diffCSS = (oldStr, newStr, callback) => cssDiff.diff(oldStr, newStr, callback);
+export function diffCss(oldStr, newStr, callback) {
+    return cssDiff.diff(oldStr, newStr, callback); 
+}

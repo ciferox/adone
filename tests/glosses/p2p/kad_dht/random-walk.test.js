@@ -1,7 +1,7 @@
 
 const sinon = require("sinon");
 
-const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "kad_dht", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", ...args);
 
 const RandomWalk = require(srcPath("random-walk"));
 const { defaultRandomWalk } = require(srcPath("constants"));

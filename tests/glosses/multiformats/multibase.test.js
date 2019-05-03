@@ -3,7 +3,7 @@ const {
     multiformat: { multibase }
 } = adone;
 
-const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "multiformats", "multibase", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", "multiformats", "multibase", ...args);
 
 const constants = require(srcPath("constants.js"));
 

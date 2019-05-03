@@ -51,19 +51,9 @@ Object.defineProperty(adone, "adone", {
 lazify({
     package: "../package.json",
 
-    ROOT_PATH: () => adone.path.join(__dirname, ".."),
-    BIN_PATH: () => adone.path.join(adone.ROOT_PATH, "bin"),
-    RUNTIME_PATH: () => adone.path.join(adone.ROOT_PATH, "run"),
-    ETC_PATH: () => adone.path.join(adone.ROOT_PATH, "etc"),
-    OPT_PATH: () => adone.path.join(adone.ROOT_PATH, "opt"),
-    VAR_PATH: () => adone.path.join(adone.ROOT_PATH, "var"),
-    MODULES_PATH: () => adone.path.join(adone.ROOT_PATH, "node_modules"),
-    SHARE_PATH: () => adone.path.join(adone.ROOT_PATH, "share"),
-    LIB_PATH: () => adone.path.join(adone.ROOT_PATH, "lib"),
-    LOGS_PATH: () => adone.path.join(adone.VAR_PATH, "logs"),
-    SPECIAL_PATH: () => adone.path.join(adone.ROOT_PATH, ".adone"),
-    SRC_PATH: () => adone.path.join(adone.ROOT_PATH, "src"),
-    LOGO: () => adone.fs.readFileSync(adone.path.join(adone.SHARE_PATH, "media", "adone.txt"), { encoding: "utf8" }),
+    cwd: () => adone.path.join(__dirname, ".."),
+    getPath: () => (...args) => adone.path.join(adone.cwd, ...args),
+    LOGO: () => adone.fs.readFileSync(adone.getPath("share", "media", "adone.txt"), { encoding: "utf8" }),
 
     assert: () => adone.assertion.assert,
 

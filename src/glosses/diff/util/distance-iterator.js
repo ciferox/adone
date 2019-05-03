@@ -1,9 +1,7 @@
-const { is } = adone;
-
 // Iterator that traverses in the range of [min, max], stepping
 // by distance from a given start position. I.e. for [0, 4], with
 // start of 2, this will iterate 2, 3, 1, 4, 0.
-export const distanceIterator = (start, minLine, maxLine) => {
+export default function (start, minLine, maxLine) {
     let wantForward = true;
     let backwardExhausted = false;
     let forwardExhausted = false;
@@ -41,21 +39,7 @@ export const distanceIterator = (start, minLine, maxLine) => {
             return iterator();
         }
 
-        // We tried to fit hunk before text beginning and beyond text length, then
-        // hunk can't fit on the text. Return undefined
+    // We tried to fit hunk before text beginning and beyond text length, then
+    // hunk can't fit on the text. Return undefined
     };
-};
-
-export const generateOptions = (options, defaults) => {
-    if (is.function(options)) {
-        defaults.callback = options;
-    } else if (options) {
-        for (const name in options) {
-            /* istanbul ignore else */
-            if (options.hasOwnProperty(name)) {
-                defaults[name] = options[name];
-            }
-        }
-    }
-    return defaults;
-};
+}

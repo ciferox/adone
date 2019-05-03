@@ -5,7 +5,7 @@ const {
 } = adone;
 const { collect, pair, values, lengthPrefixed: lp } = pull;
 
-const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", ...args);
 
 const msg = require(srcPath("p2p", "identify", "message"));
 

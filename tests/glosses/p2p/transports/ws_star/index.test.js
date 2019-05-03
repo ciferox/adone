@@ -510,7 +510,7 @@ describe("p2p", "transport", "WSStar", () => {
     });
 
     describe("utils", () => {
-        const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "transports", "ws_star", ...args);
+        const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "transports", "ws_star", ...args);
         const cleanUrlSIO = require(srcPath("utils")).cleanUrlSIO;
 
         const modernMultiaddrStringDNS = "/dns4/star-signal.cloud.ipfs.team/tcp/443/wss/p2p-websocket-star/ipfs/QmWxLfixekyv6GAzvDEtXfXjj7gb1z3G8i5aQNHLhw1zA1";

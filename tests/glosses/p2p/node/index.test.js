@@ -8,7 +8,7 @@ const {
     p2p: { Bootstrap, DelegatedPeerRouter, DelegatedContentRouter, PeerId, PeerInfo, KadDHT, transport: { WS } }
 } = adone;
 
-const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "node", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "node", ...args);
 
 describe("creation", () => {
     it("should be able to start and stop successfully", (done) => {

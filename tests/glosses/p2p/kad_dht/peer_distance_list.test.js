@@ -4,7 +4,7 @@ const {
 
 const series = require("async/series");
 
-const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "kad_dht", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", ...args);
 
 const kadUtils = require(srcPath("utils"));
 const PeerDistanceList = require(srcPath("peer-distance-list"));

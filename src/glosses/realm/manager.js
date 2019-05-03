@@ -234,9 +234,9 @@ export default class RealmManager extends task.TaskManager {
                             // nothing to do
                         }
                     }
-                } else if (adone.ROOT_PATH !== this.cwd) {
+                } else if (adone.cwd !== this.cwd) {
                     // default super-realm is ADONE
-                    this.#superRealm = trySuperRealmAt(adone.ROOT_PATH);
+                    this.#superRealm = trySuperRealmAt(adone.cwd);
                 }
             }
             return is.null(this.#superRealm) ? 0 : 1;

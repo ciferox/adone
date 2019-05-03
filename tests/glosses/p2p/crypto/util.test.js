@@ -1,4 +1,4 @@
-const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "crypto", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "crypto", ...args);
 const util = require(srcPath("util"));
 const BN = require("bn.js");
 

@@ -30,7 +30,7 @@ describe("ping", function () {
         series([
             (cb) => {
                 df.spawn({
-                    exec: adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/bin.js"),
+                    exec: adone.getPath("lib/ipfs/main/cli/bin.js"),
                     config,
                     initOptions: { bits: 512 }
                 }, (err, _ipfsd) => {
@@ -54,7 +54,7 @@ describe("ping", function () {
         this.timeout(60 * 1000);
 
         df.spawn({
-            exec: adone.path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/bin.js"),
+            exec: adone.getPath("lib/ipfs/main/cli/bin.js"),
             config,
             initoptions: { bits: 512 }
         }, (err, _ipfsd) => {

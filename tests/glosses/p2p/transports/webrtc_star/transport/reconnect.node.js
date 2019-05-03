@@ -2,7 +2,7 @@ const {
     multiformat: { multiaddr }
 } = adone;
 
-const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "transports", "webrtc_star", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "transports", "webrtc_star", ...args);
 const sigServer = require(srcPath("sig-server"));
 
 const SERVER_PORT = 13580;

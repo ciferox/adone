@@ -1,5 +1,5 @@
 const {
-    std: { path },
+    path,
     fs
 } = adone;
 

@@ -1,4 +1,4 @@
-const srcPath = (...args) => adone.path.join(adone.ROOT_PATH, "lib", "glosses", "js", "parser", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", "js", "parser", ...args);
 const {
     isKeyword,
     keywordRelationalOperator,
