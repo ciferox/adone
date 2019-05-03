@@ -148,6 +148,7 @@ lazify({
     netron: "./glosses/netron",
     nodejs: "./glosses/nodejs",
     notifier: "./glosses/notifier",
+    omnitron: "./glosses/omnitron",
     p2p: "./glosses/p2p",
     path: "./glosses/path",
     pretty: "./glosses/pretty",
@@ -166,6 +167,7 @@ lazify({
     templating: "./glosses/templating",
     text: "./glosses/text",
     typeOf: "./glosses/typeof",
+    typescript: "./glosses/typescript",
     uri: "./glosses/uri",
     util: "./glosses/utils",
     vault: "./glosses/vault"

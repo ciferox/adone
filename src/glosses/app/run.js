@@ -37,7 +37,7 @@ const _bootstrapApp = async (app, {
         process.on("rejectionHandled", rejectionHandled);
         process.on("beforeExit", beforeExit);
 
-        if (adone.is.nodejs && adone.cli.output.isTTY) {
+        if (adone.is.nodejs && process.stdout.isTTY && process.stdin.isTTY) {
             // Track cursor if tty mode is enabled
             await new Promise((resolve) => adone.cli.trackCursor(resolve));
         }

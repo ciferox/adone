@@ -49,12 +49,13 @@ const plugins = {
         // regenerator: "./transform/regenerator",
         // runtime: "./transform/runtime",
         numericSeparator: "./transform/numeric_separator",
-        privateMethods: "./transform/private_methods"
+        privateMethods: "./transform/private_methods",
         // exponentiationOperator: "./transform/exponentiation_operator",
         // exportNamespaceFrom: "./transform/export_namespace_from"
         // templateLiterals: "./transform/template_literals",
         // reactJsx: "./transform/react_jsx",
         // reactDisplayName: "./transform/react_display_name",
+        implicitReturn: "./transform/implicit_return"
     }, null, require)
 };
 

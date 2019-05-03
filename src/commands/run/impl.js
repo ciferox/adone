@@ -91,7 +91,7 @@ export default () => class RunCommand extends Subsystem {
                 }
 
                 const { code/*, map*/ } = adone.js.compiler.core.transform(content, {
-                    ...adone.module.transform.compiler.options,
+                    ...adone.module.transform.babel.options,
                     filename: std.path.resolve(process.cwd(), path)
                 });
 
@@ -146,7 +146,7 @@ export default () => class RunCommand extends Subsystem {
 
     async _runCode(code) {
         const m = new adone.module.Module(process.cwd(), {
-            transforms: [adone.module.transform.compiler()]
+            transforms: [adone.module.transform.babel()]
         });
 
         m._compile(code, "index.js");
@@ -194,7 +194,7 @@ export default () => class RunCommand extends Subsystem {
             $require = require;
         } else {
             $require = adone.require;
-            const { maps } = adone.module.transform.compiler;
+            const { maps } = adone.module.transform.babel;
 
             adone.sourcemap.support.install({
                 handleUncaughtExceptions: false,

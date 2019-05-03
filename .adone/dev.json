@@ -543,6 +543,12 @@
                     "src": "src/glosses/notifier/**/*.js",
                     "dst": "lib/glosses/notifier"
                 },
+                "omnitron": {
+                    "description": "Multi-purpose service oriented application framework",
+                    "task": "transpile",
+                    "src": "src/glosses/omnitron/**/*.js",
+                    "dst": "lib/glosses/omnitron"
+                },
                 "p2p": {
                     "description": "Multipurpose P2P implementation (forked from libp2p)",
                     "task": "transpile",
@@ -721,6 +727,17 @@
                     "task": "transpile",
                     "src": "src/glosses/typeof/**/*.js",
                     "dst": "lib/glosses/typeof"
+                },
+                "typescript": {
+                    "description": "TypeScript compiler",
+                    "task": "copy",
+                    "src": [
+                        "src/glosses/typescript/index.js",
+                        "!src/glosses/typescript/LICENSE.txt",
+                        "!src/glosses/typescript/README.md"
+                    ],
+                    "dst": "lib/glosses/typescript",
+                    "original": "https://github.com/Microsoft/TypeScript"
                 },
                 "uri": {
                     "description": "URI manipulation",

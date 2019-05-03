@@ -7,7 +7,7 @@ const {
 
 const compileModule = (path, content, transpile) => {
     const m = new adone.module.Module(path, {
-        transforms: transpile ? [adone.module.transform.compiler()] : []
+        transforms: transpile ? [adone.module.transform.babel()] : []
     });
     m._compile(content.toString(), path);
     const conf = m.exports;

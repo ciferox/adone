@@ -15,7 +15,7 @@
 
 const mod = new adone.module.Module(require.main ? require.main.filename : adone.path.join(process.cwd(), "index.js"), {
     transforms: [
-        adone.module.transform.compiler()
+        adone.module.transform.babel()
     ]
 });
 const $require = (path) => mod.require(path);

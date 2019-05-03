@@ -1,3 +1,3 @@
 adone.lazify({
-    compiler: "./compiler"
+    babel: "./babel"
 }, exports, require);

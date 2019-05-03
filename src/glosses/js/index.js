@@ -12,3 +12,5 @@ adone.lazify({
     recast: "./recast",
     codeshift: "./codeshift"
 }, adone.asNamespace(exports), require);
+
+export const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
