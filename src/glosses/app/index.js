@@ -6,7 +6,6 @@ adone.lazify({
     Subsystem: "./subsystem",
     Application: "./application",
     AppHelper: "./app_helper",
-    lockfile: "./lockfile",
     run: "./run"
 }, adone.asNamespace(exports), require);
 
@@ -77,10 +76,4 @@ export const command = (commandInfo = {}) => (target, key, descriptor) => {
             sysMeta.commands.push(commandInfo);
         }
     }
-};
-
-// application runtime
-export const runtime = {
-    app: null,
-    lockFiles: {}
 };

@@ -1,11 +1,7 @@
-#!/usr/bin/env node
-
-import "..";
-
 const __ = adone.lazify({
-    Configuration: "../lib/app/configuration",
-    repl: "../lib/app/repl",
-    ts: "../lib/app/typescript"
+    Configuration: "./configuration",
+    repl: "./repl",
+    ts: "./typescript"
 }, null, require);
 
 const {
@@ -20,7 +16,7 @@ const {
 } = app;
 
 
-const command = (name) => path.join(__dirname, "..", "lib", "commands", name);
+const command = (name) => path.join(__dirname, "..", "commands", name);
 
 @subsystem({
     subsystems: [
@@ -38,7 +34,7 @@ const command = (name) => path.join(__dirname, "..", "lib", "commands", name);
         }
     ]
 })
-class ADONEApp extends app.Application {
+export default class ADONEApp extends app.Application {
     async onConfigure() {
         !is.windows && this.exitOnSignal("SIGINT");
 
@@ -53,6 +49,10 @@ class ADONEApp extends app.Application {
         }
 
         await this._addInstalledSubsystems();
+
+        if (!this.replBanner) {
+            this.replBanner = `${adone.cli.chalk.bold.hex("ab47bc")("ADONE")} v${adone.package.version}, ${adone.cli.chalk.bold.hex("689f63")("Node.JS")} ${process.version}`
+        }
     }
 
     @mainCommand({
@@ -114,7 +114,7 @@ class ADONEApp extends app.Application {
                 type: String,
                 help: "Override the path patterns to skip compilation",
                 holder: "pattern"
-            },
+            }
         ]
     })
     async run(args, opts, { rest } = {}) {
@@ -145,7 +145,7 @@ class ADONEApp extends app.Application {
                 // Piping of execution _only_ occurs when no other script is specified.
                 if (process.stdin.isTTY) {
                     __.repl.start({
-                        banner: `${adone.cli.chalk.bold.hex("ab47bc")("ADONE")} v${adone.package.version}, ${adone.cli.chalk.bold.hex("689f63")("Node.JS")} ${process.version}`,
+                        banner: this.replBanner,
                         ...opts.getAll(),
                         // force type checking
                         tsTypeCheck: true,
@@ -240,8 +240,3 @@ class ADONEApp extends app.Application {
         }
     }
 }
-
-app.run(ADONEApp, {
-    useArgs: true,
-    version: adone.package.version
-});

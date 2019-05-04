@@ -5,6 +5,7 @@ const common = require("./common");
 const { lazify } = common;
 
 const adone = Object.create({
+    __app__: null, // root application instance
     common: common.asNamespace(common),
     // expose some useful commons
     null: common.null,
@@ -129,6 +130,7 @@ lazify({
     ipfs: "./glosses/ipfs",
     is: "./glosses/is",
     js: "./glosses/js",
+    lockfile: "./glosses/lockfile",
     logger: "./glosses/logger",
     math: "./glosses/math",
     model: "./glosses/models",
@@ -183,7 +185,7 @@ lazify({
     asNamespace: true
 });
 
-common.setLazifyErrorHandler((err) => adone.app.runtime.app.fireException(err));
+common.setLazifyErrorHandler((err) => adone.__app__.fireException(err));
 
 Object.defineProperty(exports, "__esModule", {
     value: true

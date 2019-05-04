@@ -1,0 +1,9 @@
+#!/usr/bin/env node
+
+import "..";
+import ADONEApp from "../lib/app/adone";
+
+adone.app.run(ADONEApp, {
+    useArgs: true,
+    version: adone.package.version
+});

@@ -79,7 +79,7 @@ export default class Application extends app.Subsystem {
         await this.emitParallel("exit", code);
 
         // Only main application instance can exit process.
-        if (this === adone.app.runtime.app) {
+        if (this === adone.__app__) {
             await this.emitParallel("exit:main");
             process.exit(code);
         }

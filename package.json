@@ -12,7 +12,7 @@
   "engines": {
     "node": ">=10.15.3"
   },
-  "bin": "./bin/adone.js",
+  "bin": "./bin/adone",
   "main": "lib",
   "devDependencies": {
     "@babel/core": "^7.3.4",
@@ -23,6 +23,7 @@
     "@babel/preset-env": "^7.4.3",
     "@iarna/toml": "^2.2.3",
     "@nodeutils/defaults-deep": "^1.1.0",
+    "@segment/clear-timeouts": "^2.0.0",
     "@types/adone": "^0.6.23",
     "@types/node": "^10.12.0",
     "abort-controller": "^3.0.0",
@@ -285,6 +286,7 @@
     "tempy": "^0.2.1",
     "terser": "^3.17.0",
     "test-console": "^1.1.0",
+    "thread-sleep": "^2.2.0",
     "through2": "^2.0.3",
     "time-cache": "^0.3.0",
     "timestamp-nano": "^1.0.0",

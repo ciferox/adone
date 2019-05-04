@@ -13,14 +13,14 @@
         },
         "app": {
             "description": "ADONE CLI application",
-            "src": "src/app/adone.js",
+            "src": "src/app/adone",
             "dst": "bin",
             "task": "transpileExe",
             "units": {
                 "internals": {
                     "description": "ADONE CLI internals",
                     "src": [
-                        "!src/app/adone.js",
+                        "!src/app/adone",
                         "src/app/**/*.js"
                     ],
                     "dst": "lib/app",
@@ -437,6 +437,13 @@
                             "dst": "lib/glosses/js/parser"
                         }
                     }
+                },
+                "lockfile": {
+                    "description": "An inter-process and inter-machine lockfile",
+                    "src": "src/glosses/lockfile/**/*.js",
+                    "dst": "lib/glosses/lockfile",
+                    "task": "transpile",
+                    "predecessor": "https://github.com/moxystudio/node-proper-lockfile"
                 },
                 "lodash": {
                     "description": "A modern JavaScript utility library delivering modularity, performance & extras",

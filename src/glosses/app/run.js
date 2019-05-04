@@ -1,6 +1,6 @@
 const {
     is,
-    app: { runtime, getSubsystemMeta },
+    app: { getSubsystemMeta },
     util
 } = adone;
 
@@ -10,8 +10,8 @@ const _bootstrapApp = async (app, {
     useArgs,
     version
 }) => {
-    if (is.null(runtime.app)) {
-        runtime.app = app;
+    if (is.null(adone.__app__)) {
+        adone.__app__ = app;
 
         // From Node.js docs: SIGTERM and SIGINT have default handlers on non-Windows platforms that resets
         // the terminal mode before exiting with code 128 + signal number. If one of these signals has a
@@ -42,21 +42,8 @@ const _bootstrapApp = async (app, {
             await new Promise((resolve) => adone.cli.trackCursor(resolve));
         }
 
-
         app.on("exit:main", async () => {
             adone.cli.destroy();
-
-            // Remove acquired locks on exit
-            const locks = runtime.lockFiles;
-            const lockFiles = Object.keys(locks);
-            for (const file of lockFiles) {
-                try {
-                    const options = locks[file].options;
-                    await locks[file].options.fs.remove(app.lockfile.getLockFile(file, options)); // eslint-disable-line
-                } catch (e) {
-                    //
-                }
-            }
         });
     }
 
@@ -165,7 +152,7 @@ export default async (App, {
     useArgs = false,
     version
 } = {}) => {
-    if (is.null(runtime.app) && is.class(App)) {
+    if (is.null(adone.__app__) && is.class(App)) {
         const app = new App();
         if (useArgs) {
             // mark the default main as internal to be able to distinguish internal from user-defined handlers
@@ -187,10 +174,10 @@ export default async (App, {
     const _App = is.class(App) ? App.prototype : App;
     const allProps = util.entries(_App, { enumOnly: false });
 
-    if (!is.null(runtime.app)) {
-        await runtime.app.uninitialize();
-        runtime.app.removeProcessHandlers();
-        runtime.app = null;
+    if (!is.null(adone.__app__)) {
+        await adone.__app__.uninitialize();
+        adone.__app__.removeProcessHandlers();
+        adone.__app__ = null;
     }
 
     // redefine argv

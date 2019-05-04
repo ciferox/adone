@@ -436,4 +436,26 @@ describe("Application", () => {
             });
         });
     });
+
+    describe.only("decorators", () => {
+        const {
+            app: { subsystem, getSubsystemMeta }
+        } = adone;
+
+        it("decorate application class", () => {
+            const meta = {
+                name: "app",
+                data: {
+                    a: 1,
+                    b: true
+                }
+            };
+            @subsystem(meta)
+            class TestApp extends Application {
+
+            }
+            assert.deepEqual(getSubsystemMeta(TestApp), getSubsystemMeta(new TestApp().constructor));
+            assert.deepEqual(getSubsystemMeta(TestApp), meta);
+        });
+    });
 });
