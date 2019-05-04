@@ -9,23 +9,17 @@
  *
  * Copyright (c) 2010-2014 Digital Bazaar, Inc.
  */
-const forge = require("./forge");
-require("./util");
 
 const {
-    is
+    is,
+    crypto
 } = adone;
 
 let _crypto = null;
-if (forge.util.isNodejs && !forge.options.usePureJavaScript &&
+if (is.nodejs && !crypto.options.usePureJavaScript &&
   !process.versions["node-webkit"]) {
     _crypto = require("crypto");
 }
-
-/**
- * PRNG API
- */
-const prng = module.exports = forge.prng = forge.prng || {};
 
 /**
  * Creates a new PRNG context.
@@ -45,7 +39,7 @@ const prng = module.exports = forge.prng = forge.prng || {};
  *
  * @param plugin the PRNG plugin to use.
  */
-prng.create = function (plugin) {
+export const create = function (plugin) {
     const ctx = {
         plugin,
         key: null,
@@ -91,7 +85,7 @@ prng.create = function (plugin) {
         const increment = ctx.plugin.increment;
         const formatKey = ctx.plugin.formatKey;
         const formatSeed = ctx.plugin.formatSeed;
-        const b = forge.util.createBuffer();
+        const b = crypto.util.createBuffer();
 
         // paranoid deviation from Fortuna:
         // reset key for every request to protect previously
@@ -119,7 +113,7 @@ prng.create = function (plugin) {
 
             if (is.null(ctx.key)) {
                 // prevent stack overflow
-                return forge.util.nextTick(() => {
+                return crypto.util.nextTick(() => {
                     _reseed(generate);
                 });
             }
@@ -133,7 +127,7 @@ prng.create = function (plugin) {
             ctx.key = formatKey(cipher(ctx.key, increment(ctx.seed)));
             ctx.seed = formatSeed(cipher(ctx.key, ctx.seed));
 
-            forge.util.setImmediate(generate);
+            crypto.util.setImmediate(generate);
         }
     };
 
@@ -158,7 +152,7 @@ prng.create = function (plugin) {
         // forced reseed for every `generateSync` call
         ctx.key = null;
 
-        const b = forge.util.createBuffer();
+        const b = crypto.util.createBuffer();
         while (b.length() < count) {
             // if amount of data generated is greater than 1 MiB, trigger reseed
             if (ctx.generated > 0xfffff) {
@@ -273,7 +267,7 @@ prng.create = function (plugin) {
     function defaultSeedFile(needed) {
     // use window.crypto.getRandomValues strong source of entropy if available
         let getRandomValues = null;
-        const globalScope = forge.util.globalScope;
+        const globalScope = crypto.util.globalScope;
         const _crypto = globalScope.crypto || globalScope.msCrypto;
         if (_crypto && _crypto.getRandomValues) {
             getRandomValues = function (arr) {
@@ -281,7 +275,7 @@ prng.create = function (plugin) {
             };
         }
 
-        const b = forge.util.createBuffer();
+        const b = crypto.util.createBuffer();
         if (getRandomValues) {
             while (b.length() < needed) {
                 // max byte length is 65536 before QuotaExceededError is thrown

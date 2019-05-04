@@ -5,7 +5,7 @@ export default class CountingStream extends adone.std.stream.Transform {
     }
 
     _transform(chunk, encoding, cb) {
-        this.count += chunk.length;
+        this.count += Buffer.byteLength(chunk);
         this.push(chunk);
         cb();
     }

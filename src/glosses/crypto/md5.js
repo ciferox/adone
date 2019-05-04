@@ -5,19 +5,20 @@
  *
  * Copyright (c) 2010-2014 Digital Bazaar, Inc.
  */
-const forge = require("./forge");
-require("./md");
-require("./util");
 
-const md5 = module.exports = forge.md5 = forge.md5 || {};
-forge.md.md5 = forge.md.algorithms.md5 = md5;
+const {
+    crypto
+} = adone;
+
+// const md5 = module.exports = forge.md5 = forge.md5 || {};
+// forge.md.md5 = forge.md.algorithms.md5 = md5;
 
 /**
  * Creates an MD5 message digest object.
  *
  * @return a message digest object.
  */
-md5.create = function () {
+export const create = function () {
     // do initialization as necessary
     if (!_initialized) {
         _init();
@@ -27,7 +28,7 @@ md5.create = function () {
     let _state = null;
 
     // input buffer
-    let _input = forge.util.createBuffer();
+    let _input = crypto.util.createBuffer();
 
     // used for word storage
     const _w = new Array(16);
@@ -51,7 +52,7 @@ md5.create = function () {
      * @return this digest object.
      */
     md.start = function () {
-    // up to 56-bit message length for convenience
+        // up to 56-bit message length for convenience
         md.messageLength = 0;
 
         // full message length (set md.messageLength64 for backwards-compatibility)
@@ -60,7 +61,7 @@ md5.create = function () {
         for (let i = 0; i < int32s; ++i) {
             md.fullMessageLength.push(0);
         }
-        _input = forge.util.createBuffer();
+        _input = crypto.util.createBuffer();
         _state = {
             h0: 0x67452301,
             h1: 0xEFCDAB89,
@@ -84,7 +85,7 @@ md5.create = function () {
      */
     md.update = function (msg, encoding) {
         if (encoding === "utf8") {
-            msg = forge.util.encodeUtf8(msg);
+            msg = crypto.util.encodeUtf8(msg);
         }
 
         // update message length
@@ -118,11 +119,11 @@ md5.create = function () {
      * @return a byte buffer containing the digest value.
      */
     md.digest = function () {
-    /**
-     * Note: Here we copy the remaining bytes in the input buffer and
-     * add the appropriate MD5 padding. Then we do the final update
-     * on a copy of the state so that if the user wants to get
-     */
+        /**
+         * Note: Here we copy the remaining bytes in the input buffer and
+         * add the appropriate MD5 padding. Then we do the final update
+         * on a copy of the state so that if the user wants to get
+         */
 
         /**
          * Determine the number of bytes that must be added to the message
@@ -140,13 +141,13 @@ md5.create = function () {
          * must *always* be present, so if the message length is already
          */
 
-        const finalBlock = forge.util.createBuffer();
+        const finalBlock = crypto.util.createBuffer();
         finalBlock.putBytes(_input.bytes());
 
         // compute remaining size to be digested (include message length size)
         const remaining = (
             md.fullMessageLength[md.fullMessageLength.length - 1] +
-      md.messageLengthSize);
+            md.messageLengthSize);
 
         // add padding for overflow blockSize - overflow
         // _padding starts with 1 byte with first bit is set (byte value 128), then
@@ -170,7 +171,7 @@ md5.create = function () {
             h3: _state.h3
         };
         _update(s2, _w, finalBlock);
-        const rval = forge.util.createBuffer();
+        const rval = crypto.util.createBuffer();
         rval.putInt32Le(s2.h0);
         rval.putInt32Le(s2.h1);
         rval.putInt32Le(s2.h2);
@@ -194,7 +195,7 @@ var _initialized = false;
 function _init() {
     // create padding
     _padding = String.fromCharCode(128);
-    _padding += forge.util.fillString(String.fromCharCode(0x00), 64);
+    _padding += crypto.util.fillString(String.fromCharCode(0x00), 64);
 
     // g values
     _g = [
@@ -232,7 +233,7 @@ function _update(s, w, bytes) {
     let t; let a; let b; let c; let d; let f; let r; let i;
     let len = bytes.length();
     while (len >= 64) {
-    // initialize hash value for this chunk
+        // initialize hash value for this chunk
         a = s.h0;
         b = s.h1;
         c = s.h2;

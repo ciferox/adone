@@ -854,7 +854,7 @@ describe("x509", () => {
         PKI.verifyCertificateChain(caStore, [cert], {
             validityCheckDate: verifyDate,
             verify(vfd, depth, chain) {
-                assert.equal(vfd, "forge.pki.CertificateExpired");
+                assert.equal(vfd, "crypto.pki.CertificateExpired");
                 return true;
             }
         });
@@ -864,7 +864,7 @@ describe("x509", () => {
         PKI.verifyCertificateChain(caStore, [cert], {
             validityCheckDate: verifyDate,
             verify(vfd, depth, chain) {
-                assert.equal(vfd, "forge.pki.CertificateExpired");
+                assert.equal(vfd, "crypto.pki.CertificateExpired");
                 return true;
             }
         });
@@ -920,7 +920,7 @@ describe("x509", () => {
 
         PKI.verifyCertificateChain(caStore, [cert], {
             verify(vfd, depth, chain) {
-                assert.equal(vfd, "forge.pki.CertificateExpired");
+                assert.equal(vfd, "crypto.pki.CertificateExpired");
                 return true;
             }
         });

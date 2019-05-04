@@ -230,18 +230,10 @@
  * due to the large block size of existing MACs and the small size of the
  * timing signal.
  */
-const forge = require("./forge");
-require("./asn1");
-require("./hmac");
-require("./md5");
-require("./pem");
-require("./pki");
-require("./random");
-require("./sha1");
-require("./util");
 
 const {
-    is
+    is,
+    crypto
 } = adone;
 
 /**
@@ -292,7 +284,7 @@ const {
  * @return the pseudo random bytes in a byte buffer.
  */
 const prf_TLS1 = function (secret, label, seed, length) {
-    const rval = forge.util.createBuffer();
+    const rval = crypto.util.createBuffer();
 
     /**
      * For TLS 1.0, the secret is split in half, into two secrets of equal
@@ -303,8 +295,8 @@ const prf_TLS1 = function (secret, label, seed, length) {
     const slen = idx + (secret.length & 1);
     const s1 = secret.substr(0, slen);
     const s2 = secret.substr(idx, slen);
-    const ai = forge.util.createBuffer();
-    const hmac = forge.hmac.create();
+    const ai = crypto.util.createBuffer();
+    const hmac = crypto.hmac.create();
     seed = label + seed;
 
     // determine the number of iterations that must be performed to generate
@@ -314,7 +306,7 @@ const prf_TLS1 = function (secret, label, seed, length) {
 
     // do md5 iterations
     hmac.start("MD5", s1);
-    const md5bytes = forge.util.createBuffer();
+    const md5bytes = crypto.util.createBuffer();
     ai.putBytes(seed);
     for (var i = 0; i < md5itr; ++i) {
     // HMAC_hash(secret, A(i-1))
@@ -330,7 +322,7 @@ const prf_TLS1 = function (secret, label, seed, length) {
 
     // do sha1 iterations
     hmac.start("SHA1", s2);
-    const sha1bytes = forge.util.createBuffer();
+    const sha1bytes = crypto.util.createBuffer();
     ai.clear();
     ai.putBytes(seed);
     for (var i = 0; i < sha1itr; ++i) {
@@ -346,7 +338,7 @@ const prf_TLS1 = function (secret, label, seed, length) {
     }
 
     // XOR the md5 bytes with the sha1 bytes
-    rval.putBytes(forge.util.xorBytes(
+    rval.putBytes(crypto.util.xorBytes(
         md5bytes.getBytes(), sha1bytes.getBytes(), length));
 
     return rval;
@@ -385,9 +377,9 @@ const hmac_sha1 = function (key, seqNum, record) {
      * TLSCompressed.length +
      * TLSCompressed.fragment)
      */
-    const hmac = forge.hmac.create();
+    const hmac = crypto.hmac.create();
     hmac.start("SHA1", key);
-    const b = forge.util.createBuffer();
+    const b = crypto.util.createBuffer();
     b.putInt32(seqNum[0]);
     b.putInt32(seqNum[1]);
     b.putByte(record.type);
@@ -414,7 +406,7 @@ const deflate = function (c, record, s) {
 
     try {
         const bytes = c.deflate(record.fragment.getBytes());
-        record.fragment = forge.util.createBuffer(bytes);
+        record.fragment = crypto.util.createBuffer(bytes);
         record.length = bytes.length;
         rval = true;
     } catch (ex) {
@@ -439,7 +431,7 @@ const inflate = function (c, record, s) {
 
     try {
         const bytes = c.inflate(record.fragment.getBytes());
-        record.fragment = forge.util.createBuffer(bytes);
+        record.fragment = crypto.util.createBuffer(bytes);
         record.length = bytes.length;
         rval = true;
     } catch (ex) {
@@ -483,7 +475,7 @@ const readVector = function (b, lenBytes) {
     }
 
     // read vector bytes into a new buffer
-    return forge.util.createBuffer(b.getBytes(len));
+    return crypto.util.createBuffer(b.getBytes(len));
 };
 
 /**
@@ -811,7 +803,7 @@ tls.parseHelloMessage = function (c, record, length) {
                 major: b.getByte(),
                 minor: b.getByte()
             },
-            random: forge.util.createBuffer(b.getBytes(32)),
+            random: crypto.util.createBuffer(b.getBytes(32)),
             session_id: readVector(b, 1),
             extensions: []
         };
@@ -885,7 +877,7 @@ tls.parseHelloMessage = function (c, record, length) {
         } else {
             // get a supported preferred (ClientHello) cipher suite
             // choose the first supported cipher suite
-            const tmp = forge.util.createBuffer(msg.cipher_suites.bytes());
+            const tmp = crypto.util.createBuffer(msg.cipher_suites.bytes());
             while (tmp.length() > 0) {
                 // FIXME: should be checking configured acceptable suites
                 // cipher suites take up 2 bytes
@@ -905,7 +897,7 @@ tls.parseHelloMessage = function (c, record, length) {
                     level: tls.Alert.Level.fatal,
                     description: tls.Alert.Description.handshake_failure
                 },
-                cipherSuite: forge.util.bytesToHex(msg.cipher_suite)
+                cipherSuite: crypto.util.bytesToHex(msg.cipher_suite)
             });
         }
 
@@ -1080,7 +1072,7 @@ tls.handleClientHello = function (c, record, length) {
 
     // no session found to resume, generate a new session ID
     if (sessionId.length === 0) {
-        sessionId = forge.random.getBytes(32);
+        sessionId = crypto.random.getBytes(32);
     }
 
     // update session
@@ -1240,8 +1232,8 @@ tls.handleCertificate = function (c, record, length) {
         while (msg.certificate_list.length() > 0) {
             // each entry in msg.certificate_list is a vector with 3 len bytes
             cert = readVector(msg.certificate_list, 3);
-            asn1 = forge.asn1.fromDer(cert);
-            cert = forge.pki.certificateFromAsn1(asn1, true);
+            asn1 = crypto.asn1.fromDer(cert);
+            cert = crypto.pki.certificateFromAsn1(asn1, true);
             certs.push(cert);
         }
     } catch (ex) {
@@ -1398,7 +1390,7 @@ tls.handleClientKeyExchange = function (c, record, length) {
     if (c.getPrivateKey) {
         try {
             privateKey = c.getPrivateKey(c, c.session.serverCertificate);
-            privateKey = forge.pki.privateKeyFromPem(privateKey);
+            privateKey = crypto.pki.privateKeyFromPem(privateKey);
         } catch (ex) {
             c.error(c, {
                 message: "Could not get private key.",
@@ -1441,7 +1433,7 @@ tls.handleClientKeyExchange = function (c, record, length) {
      * TLS server which is using PKCS#1 encoded RSA, so instead of
      * failing here, we generate 48 random bytes and use that as
      */
-        sp.pre_master_secret = forge.random.getBytes(48);
+        sp.pre_master_secret = crypto.random.getBytes(48);
     }
 
     // expect a CertificateVerify message if a Certificate was received that
@@ -1550,14 +1542,14 @@ tls.handleCertificateVerify = function (c, record, length) {
     // TODO: add support for DSA
 
     // generate data to verify
-    let verify = forge.util.createBuffer();
+    let verify = crypto.util.createBuffer();
     verify.putBuffer(c.session.md5.digest());
     verify.putBuffer(c.session.sha1.digest());
     verify = verify.getBytes();
 
     try {
         const cert = c.session.clientCertificate;
-        /*b = forge.pki.rsa.decrypt(
+        /*b = crypto.pki.rsa.decrypt(
       msg.signature, cert.publicKey, true, verify.length);
     if(b !== verify) {*/
         if (!cert.publicKey.verify(verify, msg.signature, "NONE")) {
@@ -1639,7 +1631,7 @@ tls.handleServerHelloDone = function (c, record, length) {
             // check for custom alert info
             if (ret || ret === 0) {
                 // set custom message and alert description
-                if (typeof ret === "object" && !forge.util.isArray(ret)) {
+                if (typeof ret === "object" && !crypto.util.isArray(ret)) {
                     if (ret.message) {
                         error.message = ret.message;
                     }
@@ -1821,7 +1813,7 @@ tls.handleFinished = function (c, record, length) {
     const vd = record.fragment.getBytes();
 
     // ensure verify data is correct
-    b = forge.util.createBuffer();
+    b = crypto.util.createBuffer();
     b.putBuffer(c.session.md5.digest());
     b.putBuffer(c.session.sha1.digest());
 
@@ -2017,7 +2009,7 @@ tls.handleHandshake = function (c, record) {
     // cache the record, clear its fragment, and reset the buffer read
     // pointer before the type and length were read
         c.fragmented = record;
-        record.fragment = forge.util.createBuffer();
+        record.fragment = crypto.util.createBuffer();
         b.read -= 4;
 
         // continue
@@ -2052,8 +2044,8 @@ tls.handleHandshake = function (c, record) {
                 compressionMethod: null,
                 serverCertificate: null,
                 clientCertificate: null,
-                md5: forge.md.md5.create(),
-                sha1: forge.md.sha1.create()
+                md5: crypto.md.md5.create(),
+                sha1: crypto.md.sha1.create()
             };
         }
 
@@ -2127,7 +2119,7 @@ tls.handleHeartbeat = function (c, record) {
 
         // notify that a valid heartbeat was received
         if (c.heartbeatReceived) {
-            c.heartbeatReceived(c, forge.util.createBuffer(payload));
+            c.heartbeatReceived(c, crypto.util.createBuffer(payload));
         }
     }
 
@@ -2599,9 +2591,9 @@ tls.createRandom = function () {
     // get UTC milliseconds
     const d = new Date();
     const utc = Number(d) + d.getTimezoneOffset() * 60000;
-    const rval = forge.util.createBuffer();
+    const rval = crypto.util.createBuffer();
     rval.putInt32(utc);
-    rval.putBytes(forge.random.getBytes(28));
+    rval.putBytes(crypto.random.getBytes(28));
     return rval;
 };
 
@@ -2642,7 +2634,7 @@ tls.createRecord = function (c, options) {
  * @return the created alert record.
  */
 tls.createAlert = function (c, alert) {
-    const b = forge.util.createBuffer();
+    const b = crypto.util.createBuffer();
     b.putByte(alert.level);
     b.putByte(alert.description);
     return tls.createRecord(c, {
@@ -2726,7 +2718,7 @@ tls.createClientHello = function (c) {
     };
 
     // create supported cipher suites
-    const cipherSuites = forge.util.createBuffer();
+    const cipherSuites = crypto.util.createBuffer();
     for (let i = 0; i < c.cipherSuites.length; ++i) {
         const cs = c.cipherSuites[i];
         cipherSuites.putByte(cs.id[0]);
@@ -2736,7 +2728,7 @@ tls.createClientHello = function (c) {
 
     // create supported compression methods, null always supported, but
     // also support deflate if connection has inflate and deflate methods
-    const compressionMethods = forge.util.createBuffer();
+    const compressionMethods = crypto.util.createBuffer();
     compressionMethods.putByte(tls.CompressionMethod.none);
     // FIXME: deflate support disabled until issues with raw deflate data
     // without zlib headers are resolved
@@ -2749,10 +2741,10 @@ tls.createClientHello = function (c) {
 
     // create TLS SNI (server name indication) extension if virtual host
     // has been specified, see RFC 3546
-    const extensions = forge.util.createBuffer();
+    const extensions = crypto.util.createBuffer();
     if (c.virtualHost) {
     // create extension struct
-        const ext = forge.util.createBuffer();
+        const ext = crypto.util.createBuffer();
         ext.putByte(0x00); // type server_name (ExtensionType is 2 bytes)
         ext.putByte(0x00);
 
@@ -2779,12 +2771,12 @@ tls.createClientHello = function (c) {
          *   ServerName server_name_list<1..2^16-1>
          * } ServerNameList;
          */
-        const serverName = forge.util.createBuffer();
+        const serverName = crypto.util.createBuffer();
         serverName.putByte(0x00); // type host_name
-        writeVector(serverName, 2, forge.util.createBuffer(c.virtualHost));
+        writeVector(serverName, 2, crypto.util.createBuffer(c.virtualHost));
 
         // ServerNameList is in extension_data
-        const snList = forge.util.createBuffer();
+        const snList = crypto.util.createBuffer();
         writeVector(snList, 2, serverName);
         writeVector(ext, 2, snList);
         extensions.putBuffer(ext);
@@ -2808,13 +2800,13 @@ tls.createClientHello = function (c) {
     extLength; // extensions vector
 
     // build record fragment
-    const rval = forge.util.createBuffer();
+    const rval = crypto.util.createBuffer();
     rval.putByte(tls.HandshakeType.client_hello);
     rval.putInt24(length); // handshake length
     rval.putByte(c.version.major); // major version
     rval.putByte(c.version.minor); // minor version
     rval.putBytes(c.session.sp.client_random); // random time + bytes
-    writeVector(rval, 1, forge.util.createBuffer(sessionId));
+    writeVector(rval, 1, crypto.util.createBuffer(sessionId));
     writeVector(rval, 2, cipherSuites);
     writeVector(rval, 1, compressionMethods);
     if (extLength > 0) {
@@ -2841,13 +2833,13 @@ tls.createServerHello = function (c) {
     1; // chosen compression method
 
     // build record fragment
-    const rval = forge.util.createBuffer();
+    const rval = crypto.util.createBuffer();
     rval.putByte(tls.HandshakeType.server_hello);
     rval.putInt24(length); // handshake length
     rval.putByte(c.version.major); // major version
     rval.putByte(c.version.minor); // minor version
     rval.putBytes(c.session.sp.server_random); // random time + bytes
-    writeVector(rval, 1, forge.util.createBuffer(sessionId));
+    writeVector(rval, 1, crypto.util.createBuffer(sessionId));
     rval.putByte(c.session.cipherSuite.id[0]);
     rval.putByte(c.session.cipherSuite.id[1]);
     rval.putByte(c.session.compressionMethod);
@@ -2893,16 +2885,16 @@ tls.createCertificate = function (c) {
     }
 
     // buffer to hold certificate list
-    const certList = forge.util.createBuffer();
+    const certList = crypto.util.createBuffer();
     if (!is.null(cert)) {
         try {
             // normalize cert to a chain of certificates
-            if (!forge.util.isArray(cert)) {
+            if (!crypto.util.isArray(cert)) {
                 cert = [cert];
             }
             let asn1 = null;
             for (let i = 0; i < cert.length; ++i) {
-                const msg = forge.pem.decode(cert[i])[0];
+                const msg = crypto.pem.decode(cert[i])[0];
                 if (msg.type !== "CERTIFICATE" &&
           msg.type !== "X509 CERTIFICATE" &&
           msg.type !== "TRUSTED CERTIFICATE") {
@@ -2916,13 +2908,13 @@ tls.createCertificate = function (c) {
                     throw new Error("Could not convert certificate from PEM; PEM is encrypted.");
                 }
 
-                const der = forge.util.createBuffer(msg.body);
+                const der = crypto.util.createBuffer(msg.body);
                 if (is.null(asn1)) {
-                    asn1 = forge.asn1.fromDer(der.bytes(), false);
+                    asn1 = crypto.asn1.fromDer(der.bytes(), false);
                 }
 
                 // certificate entry is itself a vector with 3 length bytes
-                const certBuffer = forge.util.createBuffer();
+                const certBuffer = crypto.util.createBuffer();
                 writeVector(certBuffer, 3, der);
 
                 // add cert vector to cert list vector
@@ -2930,7 +2922,7 @@ tls.createCertificate = function (c) {
             }
 
             // save certificate
-            cert = forge.pki.certificateFromAsn1(asn1);
+            cert = crypto.pki.certificateFromAsn1(asn1);
             if (client) {
                 c.session.clientCertificate = cert;
             } else {
@@ -2953,7 +2945,7 @@ tls.createCertificate = function (c) {
     const length = 3 + certList.length(); // cert list vector
 
     // build record fragment
-    const rval = forge.util.createBuffer();
+    const rval = crypto.util.createBuffer();
     rval.putByte(tls.HandshakeType.certificate);
     rval.putInt24(length);
     writeVector(rval, 3, certList);
@@ -3011,7 +3003,7 @@ tls.createCertificate = function (c) {
  */
 tls.createClientKeyExchange = function (c) {
     // create buffer to encrypt
-    let b = forge.util.createBuffer();
+    let b = crypto.util.createBuffer();
 
     // add highest client-supported protocol to help server avoid version
     // rollback attacks
@@ -3019,7 +3011,7 @@ tls.createClientKeyExchange = function (c) {
     b.putByte(c.session.clientHelloVersion.minor);
 
     // generate and add 46 random bytes
-    b.putBytes(forge.random.getBytes(46));
+    b.putBytes(crypto.random.getBytes(46));
 
     // save pre-master secret
     const sp = c.session.sp;
@@ -3039,7 +3031,7 @@ tls.createClientKeyExchange = function (c) {
     const length = b.length + 2;
 
     // build record fragment
-    const rval = forge.util.createBuffer();
+    const rval = crypto.util.createBuffer();
     rval.putByte(tls.HandshakeType.client_key_exchange);
     rval.putInt24(length);
     // add vector length bytes
@@ -3063,7 +3055,7 @@ tls.createServerKeyExchange = function (c) {
     const length = 0;
 
     // build record fragment
-    const rval = forge.util.createBuffer();
+    const rval = crypto.util.createBuffer();
     if (length > 0) {
         rval.putByte(tls.HandshakeType.server_key_exchange);
         rval.putInt24(length);
@@ -3080,7 +3072,7 @@ tls.createServerKeyExchange = function (c) {
  */
 tls.getClientSignature = function (c, callback) {
     // generate data to RSA encrypt
-    let b = forge.util.createBuffer();
+    let b = crypto.util.createBuffer();
     b.putBuffer(c.session.md5.digest());
     b.putBuffer(c.session.sha1.digest());
     b = b.getBytes();
@@ -3092,7 +3084,7 @@ tls.getClientSignature = function (c, callback) {
         if (c.getPrivateKey) {
             try {
                 privateKey = c.getPrivateKey(c, c.session.clientCertificate);
-                privateKey = forge.pki.privateKeyFromPem(privateKey);
+                privateKey = crypto.pki.privateKeyFromPem(privateKey);
             } catch (ex) {
                 c.error(c, {
                     message: "Could not get private key.",
@@ -3197,7 +3189,7 @@ tls.createCertificateVerify = function (c, signature) {
     const length = signature.length + 2;
 
     // build record fragment
-    const rval = forge.util.createBuffer();
+    const rval = crypto.util.createBuffer();
     rval.putByte(tls.HandshakeType.certificate_verify);
     rval.putInt24(length);
     // add vector length bytes
@@ -3215,17 +3207,17 @@ tls.createCertificateVerify = function (c, signature) {
  */
 tls.createCertificateRequest = function (c) {
     // TODO: support other certificate types
-    const certTypes = forge.util.createBuffer();
+    const certTypes = crypto.util.createBuffer();
 
     // common RSA certificate type
     certTypes.putByte(0x01);
 
     // add distinguished names from CA store
-    const cAs = forge.util.createBuffer();
+    const cAs = crypto.util.createBuffer();
     for (const key in c.caStore.certs) {
         const cert = c.caStore.certs[key];
-        const dn = forge.pki.distinguishedNameToAsn1(cert.subject);
-        const byteBuffer = forge.asn1.toDer(dn);
+        const dn = crypto.pki.distinguishedNameToAsn1(cert.subject);
+        const byteBuffer = crypto.asn1.toDer(dn);
         cAs.putInt16(byteBuffer.length());
         cAs.putBuffer(byteBuffer);
     }
@@ -3238,7 +3230,7 @@ tls.createCertificateRequest = function (c) {
     2 + cAs.length();
 
     // build record fragment
-    const rval = forge.util.createBuffer();
+    const rval = crypto.util.createBuffer();
     rval.putByte(tls.HandshakeType.certificate_request);
     rval.putInt24(length);
     writeVector(rval, 1, certTypes);
@@ -3255,7 +3247,7 @@ tls.createCertificateRequest = function (c) {
  */
 tls.createServerHelloDone = function (c) {
     // build record fragment
-    const rval = forge.util.createBuffer();
+    const rval = crypto.util.createBuffer();
     rval.putByte(tls.HandshakeType.server_hello_done);
     rval.putInt24(0);
     return rval;
@@ -3276,7 +3268,7 @@ tls.createServerHelloDone = function (c) {
  * @return the ChangeCipherSpec byte buffer.
  */
 tls.createChangeCipherSpec = function () {
-    const rval = forge.util.createBuffer();
+    const rval = crypto.util.createBuffer();
     rval.putByte(0x01);
     return rval;
 };
@@ -3310,7 +3302,7 @@ tls.createChangeCipherSpec = function () {
  */
 tls.createFinished = function (c) {
     // generate verify_data
-    let b = forge.util.createBuffer();
+    let b = crypto.util.createBuffer();
     b.putBuffer(c.session.md5.digest());
     b.putBuffer(c.session.sha1.digest());
 
@@ -3323,7 +3315,7 @@ tls.createFinished = function (c) {
     b = prf(sp.master_secret, label, b.getBytes(), vdl);
 
     // build record fragment
-    const rval = forge.util.createBuffer();
+    const rval = crypto.util.createBuffer();
     rval.putByte(tls.HandshakeType.finished);
     rval.putInt24(b.length());
     rval.putBuffer(b);
@@ -3378,14 +3370,14 @@ tls.createHeartbeat = function (type, payload, payloadLength) {
         payloadLength = payload.length;
     }
     // build record fragment
-    const rval = forge.util.createBuffer();
+    const rval = crypto.util.createBuffer();
     rval.putByte(type); // heartbeat message type
     rval.putInt16(payloadLength); // payload length
     rval.putBytes(payload); // payload
     // padding
     const plaintextLength = rval.length();
     const paddingLength = Math.max(16, plaintextLength - payloadLength - 3);
-    rval.putBytes(forge.random.getBytes(paddingLength));
+    rval.putBytes(crypto.random.getBytes(paddingLength));
     return rval;
 };
 
@@ -3429,7 +3421,7 @@ tls.queue = function (c, record) {
         while (data.length > tls.MaxFragment) {
             records.push(tls.createRecord(c, {
                 type: record.type,
-                data: forge.util.createBuffer(data.slice(0, tls.MaxFragment))
+                data: crypto.util.createBuffer(data.slice(0, tls.MaxFragment))
             }));
             data = data.slice(tls.MaxFragment);
         }
@@ -3437,7 +3429,7 @@ tls.queue = function (c, record) {
         if (data.length > 0) {
             records.push(tls.createRecord(c, {
                 type: record.type,
-                data: forge.util.createBuffer(data)
+                data: crypto.util.createBuffer(data)
             }));
         }
     }
@@ -3488,17 +3480,17 @@ const _certErrorToAlertDesc = function (error) {
     switch (error) {
         case true:
             return true;
-        case forge.pki.certificateError.bad_certificate:
+        case crypto.pki.certificateError.bad_certificate:
             return tls.Alert.Description.bad_certificate;
-        case forge.pki.certificateError.unsupported_certificate:
+        case crypto.pki.certificateError.unsupported_certificate:
             return tls.Alert.Description.unsupported_certificate;
-        case forge.pki.certificateError.certificate_revoked:
+        case crypto.pki.certificateError.certificate_revoked:
             return tls.Alert.Description.certificate_revoked;
-        case forge.pki.certificateError.certificate_expired:
+        case crypto.pki.certificateError.certificate_expired:
             return tls.Alert.Description.certificate_expired;
-        case forge.pki.certificateError.certificate_unknown:
+        case crypto.pki.certificateError.certificate_unknown:
             return tls.Alert.Description.certificate_unknown;
-        case forge.pki.certificateError.unknown_ca:
+        case crypto.pki.certificateError.unknown_ca:
             return tls.Alert.Description.unknown_ca;
         default:
             return tls.Alert.Description.bad_certificate;
@@ -3517,19 +3509,19 @@ const _alertDescToCertError = function (desc) {
         case true:
             return true;
         case tls.Alert.Description.bad_certificate:
-            return forge.pki.certificateError.bad_certificate;
+            return crypto.pki.certificateError.bad_certificate;
         case tls.Alert.Description.unsupported_certificate:
-            return forge.pki.certificateError.unsupported_certificate;
+            return crypto.pki.certificateError.unsupported_certificate;
         case tls.Alert.Description.certificate_revoked:
-            return forge.pki.certificateError.certificate_revoked;
+            return crypto.pki.certificateError.certificate_revoked;
         case tls.Alert.Description.certificate_expired:
-            return forge.pki.certificateError.certificate_expired;
+            return crypto.pki.certificateError.certificate_expired;
         case tls.Alert.Description.certificate_unknown:
-            return forge.pki.certificateError.certificate_unknown;
+            return crypto.pki.certificateError.certificate_unknown;
         case tls.Alert.Description.unknown_ca:
-            return forge.pki.certificateError.unknown_ca;
+            return crypto.pki.certificateError.unknown_ca;
         default:
-            return forge.pki.certificateError.bad_certificate;
+            return crypto.pki.certificateError.bad_certificate;
     }
 };
 
@@ -3559,7 +3551,7 @@ tls.verifyCertificateChain = function (c, chain) {
             // call application callback
             let ret = c.verify(c, vfd, depth, chain);
             if (ret !== true) {
-                if (typeof ret === "object" && !forge.util.isArray(ret)) {
+                if (typeof ret === "object" && !crypto.util.isArray(ret)) {
                     // throw custom error
                     const error = new Error("The application rejected the certificate.");
                     error.send = true;
@@ -3586,11 +3578,11 @@ tls.verifyCertificateChain = function (c, chain) {
         };
 
         // verify chain
-        forge.pki.verifyCertificateChain(c.caStore, chain, options);
+        crypto.pki.verifyCertificateChain(c.caStore, chain, options);
     } catch (ex) {
     // build tls error if not already customized
         let err = ex;
-        if (typeof err !== "object" || forge.util.isArray(err)) {
+        if (typeof err !== "object" || crypto.util.isArray(err)) {
             err = {
                 send: true,
                 alert: {
@@ -3653,7 +3645,7 @@ tls.createSessionCache = function (cache, capacity) {
 
             // if session ID provided, use it
             if (sessionId) {
-                key = forge.util.bytesToHex(sessionId);
+                key = crypto.util.bytesToHex(sessionId);
             } else if (rval.order.length > 0) {
                 // get first session from cache
                 key = rval.order[0];
@@ -3682,7 +3674,7 @@ tls.createSessionCache = function (cache, capacity) {
                 delete rval.cache[key];
             }
             // add session to cache
-            var key = forge.util.bytesToHex(sessionId);
+            var key = crypto.util.bytesToHex(sessionId);
             rval.order.push(key);
             rval.cache[key] = session;
         };
@@ -3704,14 +3696,14 @@ tls.createConnection = function (options) {
     let caStore = null;
     if (options.caStore) {
     // if CA store is an array, convert it to a CA store object
-        if (forge.util.isArray(options.caStore)) {
-            caStore = forge.pki.createCaStore(options.caStore);
+        if (crypto.util.isArray(options.caStore)) {
+            caStore = crypto.pki.createCaStore(options.caStore);
         } else {
             caStore = options.caStore;
         }
     } else {
     // create empty CA store
-        caStore = forge.pki.createCaStore();
+        caStore = crypto.pki.createCaStore();
     }
 
     // setup default cipher suites
@@ -3749,9 +3741,9 @@ tls.createConnection = function (options) {
         getCertificate: options.getCertificate || null,
         getPrivateKey: options.getPrivateKey || null,
         getSignature: options.getSignature || null,
-        input: forge.util.createBuffer(),
-        tlsData: forge.util.createBuffer(),
-        data: forge.util.createBuffer(),
+        input: crypto.util.createBuffer(),
+        tlsData: crypto.util.createBuffer(),
+        data: crypto.util.createBuffer(),
         tlsDataReady: options.tlsDataReady,
         dataReady: options.dataReady,
         heartbeatReceived: options.heartbeatReceived,
@@ -3864,7 +3856,7 @@ tls.createConnection = function (options) {
                     minor: b.getByte()
                 },
                 length: b.getInt16(),
-                fragment: forge.util.createBuffer(),
+                fragment: crypto.util.createBuffer(),
                 ready: false
             };
 
@@ -4011,8 +4003,8 @@ tls.createConnection = function (options) {
                 certificateRequest: null,
                 clientCertificate: null,
                 sp: {},
-                md5: forge.md.md5.create(),
-                sha1: forge.md.sha1.create()
+                md5: crypto.md.md5.create(),
+                sha1: crypto.md.sha1.create()
             };
 
             // use existing session information
@@ -4096,7 +4088,7 @@ tls.createConnection = function (options) {
     c.prepare = function (data) {
         tls.queue(c, tls.createRecord(c, {
             type: tls.ContentType.application_data,
-            data: forge.util.createBuffer(data)
+            data: crypto.util.createBuffer(data)
         }));
         return tls.flush(c);
     };
@@ -4117,7 +4109,7 @@ tls.createConnection = function (options) {
      * @return true on success, false on failure.
      */
     c.prepareHeartbeatRequest = function (payload, payloadLength) {
-        if (payload instanceof forge.util.ByteBuffer) {
+        if (payload instanceof crypto.util.ByteBuffer) {
             payload = payload.bytes();
         }
         if (is.undefined(payloadLength)) {
@@ -4178,26 +4170,304 @@ tls.createConnection = function (options) {
     return c;
 };
 
+
+// aes cipher suites
+
 /**
- * TLS API
+ * A Javascript implementation of AES Cipher Suites for TLS.
+ *
+ * @author Dave Longley
+ *
+ * Copyright (c) 2009-2015 Digital Bazaar, Inc.
+ *
  */
-module.exports = forge.tls = forge.tls || {};
+
+/**
+ * Supported cipher suites.
+ */
+tls.CipherSuites.TLS_RSA_WITH_AES_128_CBC_SHA = {
+    id: [0x00, 0x2f],
+    name: "TLS_RSA_WITH_AES_128_CBC_SHA",
+    initSecurityParameters(sp) {
+        sp.bulk_cipher_algorithm = tls.BulkCipherAlgorithm.aes;
+        sp.cipher_type = tls.CipherType.block;
+        sp.enc_key_length = 16;
+        sp.block_length = 16;
+        sp.fixed_iv_length = 16;
+        sp.record_iv_length = 16;
+        sp.mac_algorithm = tls.MACAlgorithm.hmac_sha1;
+        sp.mac_length = 20;
+        sp.mac_key_length = 20;
+    },
+    initConnectionState
+};
+tls.CipherSuites.TLS_RSA_WITH_AES_256_CBC_SHA = {
+    id: [0x00, 0x35],
+    name: "TLS_RSA_WITH_AES_256_CBC_SHA",
+    initSecurityParameters(sp) {
+        sp.bulk_cipher_algorithm = tls.BulkCipherAlgorithm.aes;
+        sp.cipher_type = tls.CipherType.block;
+        sp.enc_key_length = 32;
+        sp.block_length = 16;
+        sp.fixed_iv_length = 16;
+        sp.record_iv_length = 16;
+        sp.mac_algorithm = tls.MACAlgorithm.hmac_sha1;
+        sp.mac_length = 20;
+        sp.mac_key_length = 20;
+    },
+    initConnectionState
+};
+
+function initConnectionState(state, c, sp) {
+    const client = (c.entity === crypto.tls.ConnectionEnd.client);
+
+    // cipher setup
+    state.read.cipherState = {
+        init: false,
+        cipher: crypto.cipher.createDecipher("AES-CBC", client ?
+            sp.keys.server_write_key : sp.keys.client_write_key),
+        iv: client ? sp.keys.server_write_IV : sp.keys.client_write_IV
+    };
+    state.write.cipherState = {
+        init: false,
+        cipher: crypto.cipher.createCipher("AES-CBC", client ?
+            sp.keys.client_write_key : sp.keys.server_write_key),
+        iv: client ? sp.keys.client_write_IV : sp.keys.server_write_IV
+    };
+    state.read.cipherFunction = decrypt_aes_cbc_sha1;
+    state.write.cipherFunction = encrypt_aes_cbc_sha1;
+
+    // MAC setup
+    state.read.macLength = state.write.macLength = sp.mac_length;
+    state.read.macFunction = state.write.macFunction = hmac_sha1;
+}
+
+/**
+ * Encrypts the TLSCompressed record into a TLSCipherText record using AES
+ * in CBC mode.
+ *
+ * @param record the TLSCompressed record to encrypt.
+ * @param s the ConnectionState to use.
+ *
+ * @return true on success, false on failure.
+ */
+function encrypt_aes_cbc_sha1(record, s) {
+    let rval = false;
+
+    // append MAC to fragment, update sequence number
+    const mac = s.macFunction(s.macKey, s.sequenceNumber, record);
+    record.fragment.putBytes(mac);
+    s.updateSequenceNumber();
+
+    // TLS 1.1+ use an explicit IV every time to protect against CBC attacks
+    let iv;
+    if (record.version.minor === tls.Versions.TLS_1_0.minor) {
+    // use the pre-generated IV when initializing for TLS 1.0, otherwise use
+    // the residue from the previous encryption
+        iv = s.cipherState.init ? null : s.cipherState.iv;
+    } else {
+        iv = crypto.random.getBytesSync(16);
+    }
+
+    s.cipherState.init = true;
+
+    // start cipher
+    const cipher = s.cipherState.cipher;
+    cipher.start({ iv });
+
+    // TLS 1.1+ write IV into output
+    if (record.version.minor >= tls.Versions.TLS_1_1.minor) {
+        cipher.output.putBytes(iv);
+    }
+
+    // do encryption (default padding is appropriate)
+    cipher.update(record.fragment);
+    if (cipher.finish(encrypt_aes_cbc_sha1_padding)) {
+    // set record fragment to encrypted output
+        record.fragment = cipher.output;
+        record.length = record.fragment.length();
+        rval = true;
+    }
+
+    return rval;
+}
+
+/**
+ * Handles padding for aes_cbc_sha1 in encrypt mode.
+ *
+ * @param blockSize the block size.
+ * @param input the input buffer.
+ * @param decrypt true in decrypt mode, false in encrypt mode.
+ *
+ * @return true on success, false on failure.
+ */
+function encrypt_aes_cbc_sha1_padding(blockSize, input, decrypt) {
+    /* The encrypted data length (TLSCiphertext.length) is one more than the sum
+   of SecurityParameters.block_length, TLSCompressed.length,
+   SecurityParameters.mac_length, and padding_length.
+
+   The padding may be any length up to 255 bytes long, as long as it results in
+   the TLSCiphertext.length being an integral multiple of the block length.
+   Lengths longer than necessary might be desirable to frustrate attacks on a
+   protocol based on analysis of the lengths of exchanged messages. Each uint8
+   in the padding data vector must be filled with the padding length value.
+
+   The padding length should be such that the total size of the
+   GenericBlockCipher structure is a multiple of the cipher's block length.
+   Legal values range from zero to 255, inclusive. This length specifies the
+   length of the padding field exclusive of the padding_length field itself.
+
+   This is slightly different from PKCS#7 because the padding value is 1
+   less than the actual number of padding bytes if you include the
+   padding_length uint8 itself as a padding byte. */
+    if (!decrypt) {
+    // get the number of padding bytes required to reach the blockSize and
+    // subtract 1 for the padding value (to make room for the padding_length
+    // uint8)
+        const padding = blockSize - (input.length() % blockSize);
+        input.fillWithByte(padding - 1, padding);
+    }
+    return true;
+}
+
+/**
+ * Handles padding for aes_cbc_sha1 in decrypt mode.
+ *
+ * @param blockSize the block size.
+ * @param output the output buffer.
+ * @param decrypt true in decrypt mode, false in encrypt mode.
+ *
+ * @return true on success, false on failure.
+ */
+function decrypt_aes_cbc_sha1_padding(blockSize, output, decrypt) {
+    let rval = true;
+    if (decrypt) {
+    /**
+     * The last byte in the output specifies the number of padding bytes not
+     * including itself. Each of the padding bytes has the same value as that
+     * last byte (known as the padding_length). Here we check all padding
+     * bytes to ensure they have the value of padding_length even if one of
+     */
+        const len = output.length();
+        const paddingLength = output.last();
+        for (let i = len - 1 - paddingLength; i < len - 1; ++i) {
+            rval = rval && (output.at(i) == paddingLength);
+        }
+        if (rval) {
+            // trim off padding bytes and last padding length byte
+            output.truncate(paddingLength + 1);
+        }
+    }
+    return rval;
+}
+
+/**
+ * Decrypts a TLSCipherText record into a TLSCompressed record using
+ * AES in CBC mode.
+ *
+ * @param record the TLSCipherText record to decrypt.
+ * @param s the ConnectionState to use.
+ *
+ * @return true on success, false on failure.
+ */
+function decrypt_aes_cbc_sha1(record, s) {
+    let rval = false;
+
+    let iv;
+    if (record.version.minor === tls.Versions.TLS_1_0.minor) {
+    // use pre-generated IV when initializing for TLS 1.0, otherwise use the
+    // residue from the previous decryption
+        iv = s.cipherState.init ? null : s.cipherState.iv;
+    } else {
+    // TLS 1.1+ use an explicit IV every time to protect against CBC attacks
+    // that is appended to the record fragment
+        iv = record.fragment.getBytes(16);
+    }
+
+    s.cipherState.init = true;
+
+    // start cipher
+    const cipher = s.cipherState.cipher;
+    cipher.start({ iv });
+
+    // do decryption
+    cipher.update(record.fragment);
+    rval = cipher.finish(decrypt_aes_cbc_sha1_padding);
+
+    // even if decryption fails, keep going to minimize timing attacks
+
+    // decrypted data:
+    // first (len - 20) bytes = application data
+    // last 20 bytes          = MAC
+    const macLen = s.macLength;
+
+    // create a random MAC to check against should the mac length check fail
+    // Note: do this regardless of the failure to keep timing consistent
+    let mac = crypto.random.getBytesSync(macLen);
+
+    // get fragment and mac
+    const len = cipher.output.length();
+    if (len >= macLen) {
+        record.fragment = cipher.output.getBytes(len - macLen);
+        mac = cipher.output.getBytes(macLen);
+    } else {
+    // bad data, but get bytes anyway to try to keep timing consistent
+        record.fragment = cipher.output.getBytes();
+    }
+    record.fragment = crypto.util.createBuffer(record.fragment);
+    record.length = record.fragment.length();
+
+    // see if data integrity checks out, update sequence number
+    const mac2 = s.macFunction(s.macKey, s.sequenceNumber, record);
+    s.updateSequenceNumber();
+    rval = compareMacs(s.macKey, mac, mac2) && rval;
+    return rval;
+}
+
+/**
+ * Safely compare two MACs. This function will compare two MACs in a way
+ * that protects against timing attacks.
+ *
+ * TODO: Expose elsewhere as a utility API.
+ *
+ * See: https://www.nccgroup.trust/us/about-us/newsroom-and-events/blog/2011/february/double-hmac-verification/
+ *
+ * @param key the MAC key to use.
+ * @param mac1 as a binary-encoded string of bytes.
+ * @param mac2 as a binary-encoded string of bytes.
+ *
+ * @return true if the MACs are the same, false if not.
+ */
+function compareMacs(key, mac1, mac2) {
+    const hmac = crypto.hmac.create();
+
+    hmac.start("SHA1", key);
+    hmac.update(mac1);
+    mac1 = hmac.digest().getBytes();
+
+    hmac.start(null, null);
+    hmac.update(mac2);
+    mac2 = hmac.digest().getBytes();
+
+    return mac1 === mac2;
+}
+
 
 // expose non-functions
 for (const key in tls) {
     if (!is.function(tls[key])) {
-        forge.tls[key] = tls[key];
+        exports[key] = tls[key];
     }
 }
 
 // expose prf_tls1 for testing
-forge.tls.prf_tls1 = prf_TLS1;
+exports.prf_tls1 = prf_TLS1;
 
 // expose sha1 hmac method
-forge.tls.hmac_sha1 = hmac_sha1;
+exports.hmac_sha1 = hmac_sha1;
 
 // expose session cache creation
-forge.tls.createSessionCache = tls.createSessionCache;
+exports.createSessionCache = tls.createSessionCache;
 
 /**
  * Creates a new TLS connection. This does not make any assumptions about the
@@ -4250,7 +4520,7 @@ forge.tls.createSessionCache = tls.createSessionCache;
  *   that constitute a certificate chain, with the first in the array/chain
  *   being the client's certificate.
  * getPrivateKey(conn, certificate)
- *   The second parameter is an forge.pki X.509 certificate object that
+ *   The second parameter is an crypto.pki X.509 certificate object that
  *   is associated with the requested private key. The return value must
  *   be a PEM-formatted private key.
  * getSignature(conn, bytes, callback)
@@ -4300,4 +4570,4 @@ forge.tls.createSessionCache = tls.createSessionCache;
  *
  * @return the new TLS connection.
  */
-forge.tls.createConnection = tls.createConnection;
+exports.createConnection = tls.createConnection;

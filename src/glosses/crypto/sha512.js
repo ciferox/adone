@@ -10,43 +10,33 @@
  *
  * Copyright (c) 2014-2015 Digital Bazaar, Inc.
  */
-const forge = require("./forge");
-require("./md");
-require("./util");
 
 const {
-    is
+    is,
+    crypto
 } = adone;
 
-const sha512 = module.exports = forge.sha512 = forge.sha512 || {};
-
-// SHA-512
-forge.md.sha512 = forge.md.algorithms.sha512 = sha512;
 
 // SHA-384
-const sha384 = forge.sha384 = forge.sha512.sha384 = forge.sha512.sha384 || {};
+export const sha384 = {};
+
 sha384.create = function () {
-    return sha512.create("SHA-384");
+    return create("SHA-384");
 };
-forge.md.sha384 = forge.md.algorithms.sha384 = sha384;
 
 // SHA-512/256
-forge.sha512.sha256 = forge.sha512.sha256 || {
+export const sha256 = {
     create() {
-        return sha512.create("SHA-512/256");
+        return create("SHA-512/256");
     }
 };
-forge.md["sha512/256"] = forge.md.algorithms["sha512/256"] =
-  forge.sha512.sha256;
 
 // SHA-512/224
-forge.sha512.sha224 = forge.sha512.sha224 || {
+export const sha224 = {
     create() {
-        return sha512.create("SHA-512/224");
+        return create("SHA-512/224");
     }
 };
-forge.md["sha512/224"] = forge.md.algorithms["sha512/224"] =
-  forge.sha512.sha224;
 
 /**
  * Creates a SHA-2 message digest object.
@@ -56,7 +46,7 @@ forge.md["sha512/224"] = forge.md.algorithms["sha512/224"] =
  *
  * @return a message digest object.
  */
-sha512.create = function (algorithm) {
+export const create = function (algorithm) {
     // do initialization as necessary
     if (!_initialized) {
         _init();
@@ -75,7 +65,7 @@ sha512.create = function (algorithm) {
     let _h = null;
 
     // input buffer
-    let _input = forge.util.createBuffer();
+    let _input = crypto.util.createBuffer();
 
     // used for 64-bit word storage
     const _w = new Array(80);
@@ -126,7 +116,7 @@ sha512.create = function (algorithm) {
         for (var i = 0; i < int32s; ++i) {
             md.fullMessageLength.push(0);
         }
-        _input = forge.util.createBuffer();
+        _input = crypto.util.createBuffer();
         _h = new Array(_state.length);
         for (var i = 0; i < _state.length; ++i) {
             _h[i] = _state[i].slice(0);
@@ -148,7 +138,7 @@ sha512.create = function (algorithm) {
      */
     md.update = function (msg, encoding) {
         if (encoding === "utf8") {
-            msg = forge.util.encodeUtf8(msg);
+            msg = crypto.util.encodeUtf8(msg);
         }
 
         // update message length
@@ -204,7 +194,7 @@ sha512.create = function (algorithm) {
          * must *always* be present, so if the message length is already
          */
 
-        const finalBlock = forge.util.createBuffer();
+        const finalBlock = crypto.util.createBuffer();
         finalBlock.putBytes(_input.bytes());
 
         // compute remaining size to be digested (include message length size)
@@ -236,7 +226,7 @@ sha512.create = function (algorithm) {
             h[i] = _h[i].slice(0);
         }
         _update(h, _w, finalBlock);
-        const rval = forge.util.createBuffer();
+        const rval = crypto.util.createBuffer();
         let hlen;
         if (algorithm === "SHA-512") {
             hlen = h.length;
@@ -273,7 +263,7 @@ var _states = null;
 function _init() {
     // create padding
     _padding = String.fromCharCode(128);
-    _padding += forge.util.fillString(String.fromCharCode(0x00), 128);
+    _padding += crypto.util.fillString(String.fromCharCode(0x00), 128);
 
     // create K table for SHA-512
     _k = [

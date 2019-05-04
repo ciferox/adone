@@ -107,19 +107,15 @@
  *
  * EncryptedKey ::= OCTET STRING
  */
-const forge = require("./forge");
-require("./asn1");
-require("./util");
+
+const {
+    crypto
+} = adone;
 
 // shortcut for ASN.1 API
-const asn1 = forge.asn1;
+const { asn1 } = crypto;
 
-// shortcut for PKCS#7 API
-const p7v = module.exports = forge.pkcs7asn1 = forge.pkcs7asn1 || {};
-forge.pkcs7 = forge.pkcs7 || {};
-forge.pkcs7.asn1 = p7v;
-
-const contentInfoValidator = {
+export const contentInfoValidator = {
     name: "ContentInfo",
     tagClass: asn1.Class.UNIVERSAL,
     type: asn1.Type.SEQUENCE,
@@ -139,7 +135,6 @@ const contentInfoValidator = {
         captureAsn1: "content"
     }]
 };
-p7v.contentInfoValidator = contentInfoValidator;
 
 const encryptedContentInfoValidator = {
     name: "EncryptedContentInfo",
@@ -203,7 +198,7 @@ const encryptedContentInfoValidator = {
     }]
 };
 
-p7v.envelopedDataValidator = {
+export const envelopedDataValidator = {
     name: "EnvelopedData",
     tagClass: asn1.Class.UNIVERSAL,
     type: asn1.Type.SEQUENCE,
@@ -223,7 +218,7 @@ p7v.envelopedDataValidator = {
     }].concat(encryptedContentInfoValidator)
 };
 
-p7v.encryptedDataValidator = {
+export const encryptedDataValidator = {
     name: "EncryptedData",
     tagClass: asn1.Class.UNIVERSAL,
     type: asn1.Type.SEQUENCE,
@@ -312,7 +307,7 @@ const signerValidator = {
     }]
 };
 
-p7v.signedDataValidator = {
+export const signedDataValidator = {
     name: "SignedData",
     tagClass: asn1.Class.UNIVERSAL,
     type: asn1.Type.SEQUENCE,
@@ -330,7 +325,7 @@ p7v.signedDataValidator = {
         constructed: true,
         captureAsn1: "digestAlgorithms"
     },
-    contentInfoValidator,
+        contentInfoValidator,
     {
         name: "SignedData.Certificates",
         tagClass: asn1.Class.CONTEXT_SPECIFIC,
@@ -353,7 +348,7 @@ p7v.signedDataValidator = {
     }]
 };
 
-p7v.recipientInfoValidator = {
+export const recipientInfoValidator = {
     name: "RecipientInfo",
     tagClass: asn1.Class.UNIVERSAL,
     type: asn1.Type.SEQUENCE,

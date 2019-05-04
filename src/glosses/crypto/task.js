@@ -7,13 +7,14 @@
  *
  * Copyright (c) 2009-2013 Digital Bazaar, Inc.
  */
-const forge = require("./forge");
-require("./debug");
-require("./log");
-require("./util");
+
+const {
+    is,
+    crypto
+} = adone;
 
 // logging category
-const cat = "forge.task";
+const cat = "crypto.task";
 
 // verbose level
 // 0: off, 1: a little, 2: a whole lot
@@ -21,19 +22,19 @@ const cat = "forge.task";
 // performance issues with even calling the logging code regardless if it
 // is actually logged.  For performance reasons this should not be set to 2
 // for production use.
-// ex: if(sVL >= 2) forge.log.verbose(....)
+// ex: if(sVL >= 2) crypto.log.verbose(....)
 const sVL = 0;
 
 // track tasks for debugging
 const sTasks = {};
 let sNextTaskId = 0;
 // debug access
-forge.debug.set(cat, "tasks", sTasks);
+crypto.debug.set(cat, "tasks", sTasks);
 
 // a map of task type to task queue
 const sTaskQueues = {};
 // debug access
-forge.debug.set(cat, "queues", sTaskQueues);
+crypto.debug.set(cat, "queues", sTaskQueues);
 
 // name for unnamed tasks
 const sNoTaskName = "?";
@@ -197,7 +198,7 @@ const Task = function (options) {
     this.id = sNextTaskId++;
     sTasks[this.id] = this;
     if (sVL >= 1) {
-        forge.log.verbose(cat, "[%s][%s] init", this.id, this.name, this);
+        crypto.log.verbose(cat, "[%s][%s] init", this.id, this.name, this);
     }
 };
 
@@ -206,7 +207,7 @@ const Task = function (options) {
  */
 Task.prototype.debug = function (msg) {
     msg = msg || "";
-    forge.log.debug(cat, msg,
+    crypto.log.debug(cat, msg,
         "[%s][%s] task:", this.id, this.name, this,
         "subtasks:", this.subtasks.length,
         "queue:", sTaskQueues);
@@ -259,7 +260,7 @@ Task.prototype.next = function (name, subrun) {
  */
 Task.prototype.parallel = function (name, subrun) {
     // juggle parameters if it looks like no name is given
-    if (forge.util.isArray(name)) {
+    if (crypto.util.isArray(name)) {
         subrun = name;
 
         // inherit parent's name
@@ -268,7 +269,7 @@ Task.prototype.parallel = function (name, subrun) {
     // Wrap parallel tasks in a regular task so they are started at the
     // proper time.
     return this.next(name, (task) => {
-    // block waiting for subtasks
+        // block waiting for subtasks
         const ptask = task;
         ptask.block(subrun.length);
 
@@ -277,7 +278,7 @@ Task.prototype.parallel = function (name, subrun) {
         // closure and changes as the loop changes -- causing i
         // to always be set to its highest value
         const startParallelTask = function (pname, pi) {
-            forge.task.start({
+            crypto.task.start({
                 type: pname,
                 run(task) {
                     subrun[pi](task);
@@ -442,7 +443,7 @@ Task.prototype.fail = function (next) {
     finish(this, true);
 
     if (next) {
-    // propagate task info
+        // propagate task info
         next.error = this.error;
         next.swapTime = this.swapTime;
         next.userData = this.userData;
@@ -498,8 +499,8 @@ var runNext = function (task, recurse) {
     // swap to true to indicate that doNext was performed asynchronously
     // also, if recurse is too high do asynchronously
     const swap =
-    (recurse > sMaxRecursions) ||
-    (Number(new Date()) - task.swapTime) > sTimeSlice;
+        (recurse > sMaxRecursions) ||
+        (Number(new Date()) - task.swapTime) > sTimeSlice;
 
     const doNext = function (recurse) {
         recurse++;
@@ -539,10 +540,10 @@ var runNext = function (task, recurse) {
     };
 
     if (swap) {
-    // we're swapping, so run asynchronously
+        // we're swapping, so run asynchronously
         setTimeout(doNext, 0);
     } else {
-    // not swapping, so run synchronously
+        // not swapping, so run synchronously
         doNext(recurse);
     }
 };
@@ -559,25 +560,25 @@ var finish = function (task, suppressCallbacks) {
 
     delete sTasks[task.id];
     if (sVL >= 1) {
-        forge.log.verbose(cat, "[%s][%s] finish",
+        crypto.log.verbose(cat, "[%s][%s] finish",
             task.id, task.name, task);
     }
 
     // only do queue processing for root tasks
     if (is.null(task.parent)) {
-    // report error if queue is missing
+        // report error if queue is missing
         if (!(task.type in sTaskQueues)) {
-            forge.log.error(cat,
+            crypto.log.error(cat,
                 "[%s][%s] task queue missing [%s]",
                 task.id, task.name, task.type);
         } else if (sTaskQueues[task.type].length === 0) {
             // report error if queue is empty
-            forge.log.error(cat,
+            crypto.log.error(cat,
                 "[%s][%s] task queue empty [%s]",
                 task.id, task.name, task.type);
         } else if (sTaskQueues[task.type][0] !== task) {
             // report error if this task isn't the first in the queue
-            forge.log.error(cat,
+            crypto.log.error(cat,
                 "[%s][%s] task not first in queue [%s]",
                 task.id, task.name, task.type);
         } else {
@@ -586,7 +587,7 @@ var finish = function (task, suppressCallbacks) {
             // clean up queue if it is empty
             if (sTaskQueues[task.type].length === 0) {
                 if (sVL >= 1) {
-                    forge.log.verbose(cat, "[%s][%s] delete queue [%s]",
+                    crypto.log.verbose(cat, "[%s][%s] delete queue [%s]",
                         task.id, task.name, task.type);
                 }
                 /**
@@ -598,7 +599,7 @@ var finish = function (task, suppressCallbacks) {
             } else {
                 // dequeue the next task and start it
                 if (sVL >= 1) {
-                    forge.log.verbose(cat,
+                    crypto.log.verbose(cat,
                         "[%s][%s] queue start next [%s] remain:%s",
                         task.id, task.name, task.type,
                         sTaskQueues[task.type].length);
@@ -617,11 +618,6 @@ var finish = function (task, suppressCallbacks) {
         }
     }
 };
-
-/**
- * Tasks API
- */
-module.exports = forge.task = forge.task || {};
 
 /**
  * Starts a new task that will run the passed function asynchronously.
@@ -645,7 +641,7 @@ module.exports = forge.task = forge.task || {};
  *
  * @param options the object as described above.
  */
-forge.task.start = function (options) {
+module.exports.start = function (options) {
     // create a new task
     const task = new Task({
         run: options.run,
@@ -658,15 +654,15 @@ forge.task.start = function (options) {
     // append the task onto the appropriate queue
     if (!(task.type in sTaskQueues)) {
         if (sVL >= 1) {
-            forge.log.verbose(cat, "[%s][%s] create queue [%s]",
+            crypto.log.verbose(cat, "[%s][%s] create queue [%s]",
                 task.id, task.name, task.type);
         }
         // create the queue with the new task
         sTaskQueues[task.type] = [task];
         start(task);
     } else {
-    // push the task onto the queue, it will be run after a task
-    // with the same type completes
+        // push the task onto the queue, it will be run after a task
+        // with the same type completes
         sTaskQueues[options.type].push(task);
     }
 };
@@ -676,10 +672,10 @@ forge.task.start = function (options) {
  *
  * @param type the type of task to cancel.
  */
-forge.task.cancel = function (type) {
+module.exports.cancel = function (type) {
     // find the task queue
     if (type in sTaskQueues) {
-    // empty all but the current task from the queue
+        // empty all but the current task from the queue
         sTaskQueues[type] = [sTaskQueues[type][0]];
     }
 };
@@ -691,9 +687,9 @@ forge.task.cancel = function (type) {
  *
  * @return the condition variable.
  */
-forge.task.createCondition = function () {
+module.exports.createCondition = function () {
     const cond = {
-    // all tasks that are blocked
+        // all tasks that are blocked
         tasks: {}
     };
 
@@ -704,7 +700,7 @@ forge.task.createCondition = function () {
      * @param task the task to cause to wait.
      */
     cond.wait = function (task) {
-    // only block once
+        // only block once
         if (!(task.id in cond.tasks)) {
             task.block();
             cond.tasks[task.id] = task;
@@ -715,8 +711,8 @@ forge.task.createCondition = function () {
      * Notifies all waiting tasks to wake up.
      */
     cond.notify = function () {
-    // since unblock() will run the next task from here, make sure to
-    // clear the condition's blocked task list before unblocking
+        // since unblock() will run the next task from here, make sure to
+        // clear the condition's blocked task list before unblocking
         const tmp = cond.tasks;
         cond.tasks = {};
         for (const id in tmp) {

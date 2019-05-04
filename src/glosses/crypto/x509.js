@@ -107,30 +107,19 @@
  *   signature          BIT STRING
  * }
  */
-const forge = require("./forge");
-require("./aes");
-require("./asn1");
-require("./des");
-require("./md");
-require("./mgf");
-require("./oids");
-require("./pem");
-require("./pss");
-require("./rsa");
-require("./util");
 
 const {
-    is
+    is,
+    crypto
 } = adone;
 
 // shortcut for asn.1 API
-const asn1 = forge.asn1;
+const { asn1 } = crypto;
 
 /**
  * Public Key Infrastructure (PKI) implementation.
  */
-const pki = module.exports = forge.pki = forge.pki || {};
-const oids = pki.oids;
+const oids = crypto.oids;
 
 // short name OID mappings
 const _shortNames = {};
@@ -151,7 +140,7 @@ _shortNames.emailAddress = "E";
 
 // validator for an SubjectPublicKeyInfo structure
 // Note: Currently only works with an RSA public key
-const publicKeyValidator = forge.pki.rsa.publicKeyValidator;
+const publicKeyValidator = crypto.pki.rsa.publicKeyValidator;
 
 // validator for an X.509v3 certificate
 const x509CertificateValidator = {
@@ -257,8 +246,8 @@ const x509CertificateValidator = {
             constructed: true,
             captureAsn1: "certSubject"
         },
-        // SubjectPublicKeyInfo
-        publicKeyValidator,
+            // SubjectPublicKeyInfo
+            publicKeyValidator,
         {
             // issuerUniqueID (optional)
             name: "Certificate.TBSCertificate.issuerUniqueID",
@@ -299,7 +288,7 @@ const x509CertificateValidator = {
             optional: true
         }]
     }, {
-    // AlgorithmIdentifier (signature algorithm)
+        // AlgorithmIdentifier (signature algorithm)
         name: "Certificate.signatureAlgorithm",
         tagClass: asn1.Class.UNIVERSAL,
         type: asn1.Type.SEQUENCE,
@@ -318,7 +307,7 @@ const x509CertificateValidator = {
             captureAsn1: "certSignatureParams"
         }]
     }, {
-    // SignatureValue
+        // SignatureValue
         name: "Certificate.signatureValue",
         tagClass: asn1.Class.UNIVERSAL,
         type: asn1.Type.BITSTRING,
@@ -425,15 +414,15 @@ const certificationRequestInfoValidator = {
         constructed: false,
         capture: "certificationRequestInfoVersion"
     }, {
-    // Name (subject) (RDNSequence)
+        // Name (subject) (RDNSequence)
         name: "CertificationRequestInfo.subject",
         tagClass: asn1.Class.UNIVERSAL,
         type: asn1.Type.SEQUENCE,
         constructed: true,
         captureAsn1: "certificationRequestInfoSubject"
     },
-    // SubjectPublicKeyInfo
-    publicKeyValidator,
+        // SubjectPublicKeyInfo
+        publicKeyValidator,
     {
         name: "CertificationRequestInfo.attributes",
         tagClass: asn1.Class.CONTEXT_SPECIFIC,
@@ -506,13 +495,13 @@ const certificationRequestValidator = {
  * @param rdn the RDNSequence to convert.
  * @param md a message digest to append type and value to if provided.
  */
-pki.RDNAttributesAsArray = function (rdn, md) {
+export const RDNAttributesAsArray = function (rdn, md) {
     const rval = [];
 
     // each value in 'rdn' in is a SET of RelativeDistinguishedName
     let set; let attr; let obj;
     for (let si = 0; si < rdn.value.length; ++si) {
-    // get the RelativeDistinguishedName set
+        // get the RelativeDistinguishedName set
         set = rdn.value[si];
 
         // each value in the SET is an AttributeTypeAndValue sequence
@@ -548,12 +537,12 @@ pki.RDNAttributesAsArray = function (rdn, md) {
  *
  * @param attributes the CRIAttributes to convert.
  */
-pki.CRIAttributesAsArray = function (attributes) {
+export const CRIAttributesAsArray = function (attributes) {
     const rval = [];
 
     // each value in 'attributes' in is a SEQUENCE with an OID and a SET
     for (let si = 0; si < attributes.length; ++si) {
-    // get the attribute sequence
+        // get the attribute sequence
         const seq = attributes[si];
 
         // each value in the SEQUENCE containing first a type (an OID) and
@@ -576,7 +565,7 @@ pki.CRIAttributesAsArray = function (attributes) {
             if (obj.type === oids.extensionRequest) {
                 obj.extensions = [];
                 for (let ei = 0; ei < obj.value.length; ++ei) {
-                    obj.extensions.push(pki.certificateExtensionFromAsn1(obj.value[ei]));
+                    obj.extensions.push(crypto.pki.certificateExtensionFromAsn1(obj.value[ei]));
                 }
             }
             rval.push(obj);
@@ -710,15 +699,15 @@ const _readSignatureParameters = function (oid, obj, fillDefaults) {
  *
  * @return the certificate.
  */
-pki.certificateFromPem = function (pem, computeHash, strict) {
-    const msg = forge.pem.decode(pem)[0];
+export const certificateFromPem = function (pem, computeHash, strict) {
+    const msg = crypto.pem.decode(pem)[0];
 
     if (msg.type !== "CERTIFICATE" &&
-    msg.type !== "X509 CERTIFICATE" &&
-    msg.type !== "TRUSTED CERTIFICATE") {
+        msg.type !== "X509 CERTIFICATE" &&
+        msg.type !== "TRUSTED CERTIFICATE") {
         const error = new Error(
             "Could not convert certificate from PEM; PEM header type " +
-      'is not "CERTIFICATE", "X509 CERTIFICATE", or "TRUSTED CERTIFICATE".');
+            'is not "CERTIFICATE", "X509 CERTIFICATE", or "TRUSTED CERTIFICATE".');
         error.headerType = msg.type;
         throw error;
     }
@@ -730,7 +719,7 @@ pki.certificateFromPem = function (pem, computeHash, strict) {
     // convert DER to ASN.1 object
     const obj = asn1.fromDer(msg.body, strict);
 
-    return pki.certificateFromAsn1(obj, computeHash);
+    return crypto.pki.certificateFromAsn1(obj, computeHash);
 };
 
 /**
@@ -741,13 +730,13 @@ pki.certificateFromPem = function (pem, computeHash, strict) {
  *
  * @return the PEM-formatted certificate.
  */
-pki.certificateToPem = function (cert, maxline) {
+export const certificateToPem = function (cert, maxline) {
     // convert to ASN.1, then DER, then PEM-encode
     const msg = {
         type: "CERTIFICATE",
-        body: asn1.toDer(pki.certificateToAsn1(cert)).getBytes()
+        body: asn1.toDer(crypto.pki.certificateToAsn1(cert)).getBytes()
     };
-    return forge.pem.encode(msg, { maxline });
+    return crypto.pem.encode(msg, { maxline });
 };
 
 /**
@@ -757,12 +746,12 @@ pki.certificateToPem = function (cert, maxline) {
  *
  * @return the public key.
  */
-pki.publicKeyFromPem = function (pem) {
-    const msg = forge.pem.decode(pem)[0];
+export const publicKeyFromPem = function (pem) {
+    const msg = crypto.pem.decode(pem)[0];
 
     if (msg.type !== "PUBLIC KEY" && msg.type !== "RSA PUBLIC KEY") {
         const error = new Error("Could not convert public key from PEM; PEM header " +
-      'type is not "PUBLIC KEY" or "RSA PUBLIC KEY".');
+            'type is not "PUBLIC KEY" or "RSA PUBLIC KEY".');
         error.headerType = msg.type;
         throw error;
     }
@@ -773,7 +762,7 @@ pki.publicKeyFromPem = function (pem) {
     // convert DER to ASN.1 object
     const obj = asn1.fromDer(msg.body);
 
-    return pki.publicKeyFromAsn1(obj);
+    return crypto.pki.publicKeyFromAsn1(obj);
 };
 
 /**
@@ -784,13 +773,13 @@ pki.publicKeyFromPem = function (pem) {
  *
  * @return the PEM-formatted public key.
  */
-pki.publicKeyToPem = function (key, maxline) {
+export const publicKeyToPem = function (key, maxline) {
     // convert to ASN.1, then DER, then PEM-encode
     const msg = {
         type: "PUBLIC KEY",
-        body: asn1.toDer(pki.publicKeyToAsn1(key)).getBytes()
+        body: asn1.toDer(crypto.pki.publicKeyToAsn1(key)).getBytes()
     };
-    return forge.pem.encode(msg, { maxline });
+    return crypto.pem.encode(msg, { maxline });
 };
 
 /**
@@ -801,20 +790,20 @@ pki.publicKeyToPem = function (key, maxline) {
  *
  * @return the PEM-formatted public key.
  */
-pki.publicKeyToRSAPublicKeyPem = function (key, maxline) {
+export const publicKeyToRSAPublicKeyPem = function (key, maxline) {
     // convert to ASN.1, then DER, then PEM-encode
     const msg = {
         type: "RSA PUBLIC KEY",
-        body: asn1.toDer(pki.publicKeyToRSAPublicKey(key)).getBytes()
+        body: asn1.toDer(crypto.pki.publicKeyToRSAPublicKey(key)).getBytes()
     };
-    return forge.pem.encode(msg, { maxline });
+    return crypto.pem.encode(msg, { maxline });
 };
 
 /**
  * Gets a fingerprint for the given public key.
  *
  * @param options the options to use.
- *          [md] the message digest object to use (defaults to forge.md.sha1).
+ *          [md] the message digest object to use (defaults to crypto.md.sha1).
  *          [type] the type of fingerprint, such as 'RSAPublicKey',
  *            'SubjectPublicKeyInfo' (defaults to 'RSAPublicKey').
  *          [encoding] an alternative output encoding, such as 'hex'
@@ -824,18 +813,18 @@ pki.publicKeyToRSAPublicKeyPem = function (key, maxline) {
  *
  * @return the fingerprint as a byte buffer or other encoding based on options.
  */
-pki.getPublicKeyFingerprint = function (key, options) {
+export const getPublicKeyFingerprint = function (key, options) {
     options = options || {};
-    const md = options.md || forge.md.sha1.create();
+    const md = options.md || crypto.md.sha1.create();
     const type = options.type || "RSAPublicKey";
 
     let bytes;
     switch (type) {
         case "RSAPublicKey":
-            bytes = asn1.toDer(pki.publicKeyToRSAPublicKey(key)).getBytes();
+            bytes = asn1.toDer(crypto.pki.publicKeyToRSAPublicKey(key)).getBytes();
             break;
         case "SubjectPublicKeyInfo":
-            bytes = asn1.toDer(pki.publicKeyToAsn1(key)).getBytes();
+            bytes = asn1.toDer(crypto.pki.publicKeyToAsn1(key)).getBytes();
             break;
         default:
             throw new Error(`Unknown fingerprint type "${options.type}".`);
@@ -874,24 +863,24 @@ pki.getPublicKeyFingerprint = function (key, options) {
  *
  * @return the certification request (CSR).
  */
-pki.certificationRequestFromPem = function (pem, computeHash, strict) {
-    const msg = forge.pem.decode(pem)[0];
+export const certificationRequestFromPem = function (pem, computeHash, strict) {
+    const msg = crypto.pem.decode(pem)[0];
 
     if (msg.type !== "CERTIFICATE REQUEST") {
         const error = new Error("Could not convert certification request from PEM; " +
-      'PEM header type is not "CERTIFICATE REQUEST".');
+            'PEM header type is not "CERTIFICATE REQUEST".');
         error.headerType = msg.type;
         throw error;
     }
     if (msg.procType && msg.procType.type === "ENCRYPTED") {
         throw new Error("Could not convert certification request from PEM; " +
-      "PEM is encrypted.");
+            "PEM is encrypted.");
     }
 
     // convert DER to ASN.1 object
     const obj = asn1.fromDer(msg.body, strict);
 
-    return pki.certificationRequestFromAsn1(obj, computeHash);
+    return crypto.pki.certificationRequestFromAsn1(obj, computeHash);
 };
 
 /**
@@ -902,13 +891,13 @@ pki.certificationRequestFromPem = function (pem, computeHash, strict) {
  *
  * @return the PEM-formatted certification request.
  */
-pki.certificationRequestToPem = function (csr, maxline) {
+export const certificationRequestToPem = function (csr, maxline) {
     // convert to ASN.1, then DER, then PEM-encode
     const msg = {
         type: "CERTIFICATE REQUEST",
-        body: asn1.toDer(pki.certificationRequestToAsn1(csr)).getBytes()
+        body: asn1.toDer(crypto.pki.certificationRequestToAsn1(csr)).getBytes()
     };
-    return forge.pem.encode(msg, { maxline });
+    return crypto.pem.encode(msg, { maxline });
 };
 
 /**
@@ -916,7 +905,7 @@ pki.certificationRequestToPem = function (csr, maxline) {
  *
  * @return the certificate.
  */
-pki.createCertificate = function () {
+export const createCertificate = function () {
     const cert = {};
     cert.version = 0x02;
     cert.serialNumber = "00";
@@ -961,7 +950,7 @@ pki.createCertificate = function () {
      * @param uniqueId an optional a unique ID to use.
      */
     cert.setSubject = function (attrs, uniqueId) {
-    // set new attributes, clear hash
+        // set new attributes, clear hash
         _fillMissingFields(attrs);
         cert.subject.attributes = attrs;
         delete cert.subject.uniqueId;
@@ -979,7 +968,7 @@ pki.createCertificate = function () {
      * @param uniqueId an optional a unique ID to use.
      */
     cert.setIssuer = function (attrs, uniqueId) {
-    // set new attributes, clear hash
+        // set new attributes, clear hash
         _fillMissingFields(attrs);
         cert.issuer.attributes = attrs;
         delete cert.issuer.uniqueId;
@@ -1034,22 +1023,22 @@ pki.createCertificate = function () {
      * Signs this certificate using the given private key.
      *
      * @param key the private key to sign with.
-     * @param md the message digest object to use (defaults to forge.md.sha1).
+     * @param md the message digest object to use (defaults to crypto.md.sha1).
      */
     cert.sign = function (key, md) {
-    // TODO: get signature OID from private key
-        cert.md = md || forge.md.sha1.create();
+        // TODO: get signature OID from private key
+        cert.md = md || crypto.md.sha1.create();
         const algorithmOid = oids[`${cert.md.algorithm}WithRSAEncryption`];
         if (!algorithmOid) {
             const error = new Error("Could not compute certificate digest. " +
-        "Unknown message digest algorithm OID.");
+                "Unknown message digest algorithm OID.");
             error.algorithm = cert.md.algorithm;
             throw error;
         }
         cert.signatureOid = cert.siginfo.algorithmOid = algorithmOid;
 
         // get TBSCertificate, convert to DER
-        cert.tbsCertificate = pki.getTBSCertificate(cert);
+        cert.tbsCertificate = crypto.pki.getTBSCertificate(cert);
         const bytes = asn1.toDer(cert.tbsCertificate);
 
         // digest and sign
@@ -1073,8 +1062,8 @@ pki.createCertificate = function () {
             const subject = cert.subject;
             var error = new Error(
                 "The parent certificate did not issue the given child " +
-        "certificate; the child certificate's issuer does not match the " +
-        "parent's subject.");
+                "certificate; the child certificate's issuer does not match the " +
+                "parent's subject.");
             error.expectedIssuer = issuer.attributes;
             error.actualIssuer = subject.attributes;
             throw error;
@@ -1087,34 +1076,34 @@ pki.createCertificate = function () {
                 const oid = oids[child.signatureOid];
                 switch (oid) {
                     case "sha1WithRSAEncryption":
-                        md = forge.md.sha1.create();
+                        md = crypto.md.sha1.create();
                         break;
                     case "md5WithRSAEncryption":
-                        md = forge.md.md5.create();
+                        md = crypto.md.md5.create();
                         break;
                     case "sha256WithRSAEncryption":
-                        md = forge.md.sha256.create();
+                        md = crypto.md.sha256.create();
                         break;
                     case "sha384WithRSAEncryption":
-                        md = forge.md.sha384.create();
+                        md = crypto.md.sha384.create();
                         break;
                     case "sha512WithRSAEncryption":
-                        md = forge.md.sha512.create();
+                        md = crypto.md.sha512.create();
                         break;
                     case "RSASSA-PSS":
-                        md = forge.md.sha256.create();
+                        md = crypto.md.sha256.create();
                         break;
                 }
             }
             if (is.null(md)) {
                 var error = new Error("Could not compute certificate digest. " +
-          "Unknown signature OID.");
+                    "Unknown signature OID.");
                 error.signatureOid = child.signatureOid;
                 throw error;
             }
 
             // produce DER formatted TBSCertificate and digest it
-            const tbsCertificate = child.tbsCertificate || pki.getTBSCertificate(child);
+            const tbsCertificate = child.tbsCertificate || crypto.pki.getTBSCertificate(child);
             const bytes = asn1.toDer(tbsCertificate);
             md.update(bytes.getBytes());
         }
@@ -1133,7 +1122,7 @@ pki.createCertificate = function () {
                      * initialize mgf
                      */
                     hash = oids[child.signatureParameters.mgf.hash.algorithmOid];
-                    if (is.undefined(hash) || is.undefined(forge.md[hash])) {
+                    if (is.undefined(hash) || is.undefined(crypto.md[hash])) {
                         var error = new Error("Unsupported MGF hash function.");
                         error.oid = child.signatureParameters.mgf.hash.algorithmOid;
                         error.name = hash;
@@ -1141,20 +1130,20 @@ pki.createCertificate = function () {
                     }
 
                     mgf = oids[child.signatureParameters.mgf.algorithmOid];
-                    if (is.undefined(mgf) || is.undefined(forge.mgf[mgf])) {
+                    if (is.undefined(mgf) || is.undefined(crypto.mgf[mgf])) {
                         var error = new Error("Unsupported MGF function.");
                         error.oid = child.signatureParameters.mgf.algorithmOid;
                         error.name = mgf;
                         throw error;
                     }
 
-                    mgf = forge.mgf[mgf].create(forge.md[hash].create());
+                    mgf = crypto.mgf[mgf].create(crypto.md[hash].create());
 
                     /**
                      * initialize hash function
                      */
                     hash = oids[child.signatureParameters.hash.algorithmOid];
-                    if (is.undefined(hash) || is.undefined(forge.md[hash])) {
+                    if (is.undefined(hash) || is.undefined(crypto.md[hash])) {
                         throw {
                             message: "Unsupported RSASSA-PSS hash function.",
                             oid: child.signatureParameters.hash.algorithmOid,
@@ -1162,7 +1151,7 @@ pki.createCertificate = function () {
                         };
                     }
 
-                    scheme = forge.pss.create(forge.md[hash].create(), mgf,
+                    scheme = crypto.pss.create(crypto.md[hash].create(), mgf,
                         child.signatureParameters.saltLength);
                     break;
             }
@@ -1229,22 +1218,22 @@ pki.createCertificate = function () {
      * @return the subjectKeyIdentifier for this certificate as byte buffer.
      */
     cert.generateSubjectKeyIdentifier = function () {
-    /* See: 4.2.1.2 section of the the RFC3280, keyIdentifier is either:
-
-      (1) The keyIdentifier is composed of the 160-bit SHA-1 hash of the
-        value of the BIT STRING subjectPublicKey (excluding the tag,
-        length, and number of unused bits).
-
-      (2) The keyIdentifier is composed of a four bit type field with
-        the value 0100 followed by the least significant 60 bits of the
-        SHA-1 hash of the value of the BIT STRING subjectPublicKey
-        (excluding the tag, length, and number of unused bit string bits).
-    */
+        /* See: 4.2.1.2 section of the the RFC3280, keyIdentifier is either:
+    
+          (1) The keyIdentifier is composed of the 160-bit SHA-1 hash of the
+            value of the BIT STRING subjectPublicKey (excluding the tag,
+            length, and number of unused bits).
+    
+          (2) The keyIdentifier is composed of a four bit type field with
+            the value 0100 followed by the least significant 60 bits of the
+            SHA-1 hash of the value of the BIT STRING subjectPublicKey
+            (excluding the tag, length, and number of unused bit string bits).
+        */
 
         // skipping the tag, length, and number of unused bits is the same
         // as just using the RSAPublicKey (for RSA keys, which are the
         // only ones supported)
-        return pki.getPublicKeyFingerprint(cert.publicKey, { type: "RSAPublicKey" });
+        return crypto.pki.getPublicKeyFingerprint(cert.publicKey, { type: "RSAPublicKey" });
     };
 
     /**
@@ -1260,7 +1249,7 @@ pki.createCertificate = function () {
             const ext = cert.extensions[i];
             if (ext.id === oid) {
                 const ski = cert.generateSubjectKeyIdentifier().getBytes();
-                return (forge.util.hexToBytes(ext.subjectKeyIdentifier) === ski);
+                return (crypto.util.hexToBytes(ext.subjectKeyIdentifier) === ski);
             }
         }
         return false;
@@ -1282,33 +1271,33 @@ pki.createCertificate = function () {
  *
  * @return the certificate.
  */
-pki.certificateFromAsn1 = function (obj, computeHash) {
+export const certificateFromAsn1 = function (obj, computeHash) {
     // validate certificate and capture data
     const capture = {};
     const errors = [];
     if (!asn1.validate(obj, x509CertificateValidator, capture, errors)) {
         var error = new Error("Cannot read X.509 certificate. " +
-      "ASN.1 object is not an X509v3 Certificate.");
+            "ASN.1 object is not an X509v3 Certificate.");
         error.errors = errors;
         throw error;
     }
 
     // get oid
     var oid = asn1.derToOid(capture.publicKeyOid);
-    if (oid !== pki.oids.rsaEncryption) {
+    if (oid !== crypto.oids.rsaEncryption) {
         throw new Error("Cannot read public key. OID is not RSA.");
     }
 
     // create certificate
-    const cert = pki.createCertificate();
+    const cert = crypto.pki.createCertificate();
     cert.version = capture.certVersion ?
         capture.certVersion.charCodeAt(0) : 0;
-    const serial = forge.util.createBuffer(capture.certSerialNumber);
+    const serial = crypto.util.createBuffer(capture.certSerialNumber);
     cert.serialNumber = serial.toHex();
-    cert.signatureOid = forge.asn1.derToOid(capture.certSignatureOid);
+    cert.signatureOid = crypto.asn1.derToOid(capture.certSignatureOid);
     cert.signatureParameters = _readSignatureParameters(
         cert.signatureOid, capture.certSignatureParams, true);
-    cert.siginfo.algorithmOid = forge.asn1.derToOid(capture.certinfoSignatureOid);
+    cert.siginfo.algorithmOid = crypto.asn1.derToOid(capture.certinfoSignatureOid);
     cert.siginfo.parameters = _readSignatureParameters(cert.siginfo.algorithmOid,
         capture.certinfoSignatureParams, false);
     cert.signature = capture.certSignature;
@@ -1330,11 +1319,11 @@ pki.certificateFromAsn1 = function (obj, computeHash) {
     }
     if (validity.length > 2) {
         throw new Error("Cannot read notBefore/notAfter validity times; more " +
-      "than two times were provided in the certificate.");
+            "than two times were provided in the certificate.");
     }
     if (validity.length < 2) {
         throw new Error("Cannot read notBefore/notAfter validity times; they " +
-      "were not provided as either UTCTime or GeneralizedTime.");
+            "were not provided as either UTCTime or GeneralizedTime.");
     }
     cert.validity.notBefore = validity[0];
     cert.validity.notAfter = validity[1];
@@ -1343,34 +1332,34 @@ pki.certificateFromAsn1 = function (obj, computeHash) {
     cert.tbsCertificate = capture.tbsCertificate;
 
     if (computeHash) {
-    // check signature OID for supported signature types
+        // check signature OID for supported signature types
         cert.md = null;
         if (cert.signatureOid in oids) {
             var oid = oids[cert.signatureOid];
             switch (oid) {
                 case "sha1WithRSAEncryption":
-                    cert.md = forge.md.sha1.create();
+                    cert.md = crypto.md.sha1.create();
                     break;
                 case "md5WithRSAEncryption":
-                    cert.md = forge.md.md5.create();
+                    cert.md = crypto.md.md5.create();
                     break;
                 case "sha256WithRSAEncryption":
-                    cert.md = forge.md.sha256.create();
+                    cert.md = crypto.md.sha256.create();
                     break;
                 case "sha384WithRSAEncryption":
-                    cert.md = forge.md.sha384.create();
+                    cert.md = crypto.md.sha384.create();
                     break;
                 case "sha512WithRSAEncryption":
-                    cert.md = forge.md.sha512.create();
+                    cert.md = crypto.md.sha512.create();
                     break;
                 case "RSASSA-PSS":
-                    cert.md = forge.md.sha256.create();
+                    cert.md = crypto.md.sha256.create();
                     break;
             }
         }
         if (is.null(cert.md)) {
             var error = new Error("Could not compute certificate digest. " +
-        "Unknown signature OID.");
+                "Unknown signature OID.");
             error.signatureOid = cert.signatureOid;
             throw error;
         }
@@ -1381,7 +1370,7 @@ pki.certificateFromAsn1 = function (obj, computeHash) {
     }
 
     // handle issuer, build issuer message digest
-    const imd = forge.md.sha1.create();
+    const imd = crypto.md.sha1.create();
     cert.issuer.getField = function (sn) {
         return _getAttribute(cert.issuer, sn);
     };
@@ -1389,14 +1378,14 @@ pki.certificateFromAsn1 = function (obj, computeHash) {
         _fillMissingFields([attr]);
         cert.issuer.attributes.push(attr);
     };
-    cert.issuer.attributes = pki.RDNAttributesAsArray(capture.certIssuer, imd);
+    cert.issuer.attributes = crypto.pki.RDNAttributesAsArray(capture.certIssuer, imd);
     if (capture.certIssuerUniqueId) {
         cert.issuer.uniqueId = capture.certIssuerUniqueId;
     }
     cert.issuer.hash = imd.digest().toHex();
 
     // handle subject, build subject message digest
-    const smd = forge.md.sha1.create();
+    const smd = crypto.md.sha1.create();
     cert.subject.getField = function (sn) {
         return _getAttribute(cert.subject, sn);
     };
@@ -1404,7 +1393,7 @@ pki.certificateFromAsn1 = function (obj, computeHash) {
         _fillMissingFields([attr]);
         cert.subject.attributes.push(attr);
     };
-    cert.subject.attributes = pki.RDNAttributesAsArray(capture.certSubject, smd);
+    cert.subject.attributes = crypto.pki.RDNAttributesAsArray(capture.certSubject, smd);
     if (capture.certSubjectUniqueId) {
         cert.subject.uniqueId = capture.certSubjectUniqueId;
     }
@@ -1412,13 +1401,13 @@ pki.certificateFromAsn1 = function (obj, computeHash) {
 
     // handle extensions
     if (capture.certExtensions) {
-        cert.extensions = pki.certificateExtensionsFromAsn1(capture.certExtensions);
+        cert.extensions = crypto.pki.certificateExtensionsFromAsn1(capture.certExtensions);
     } else {
         cert.extensions = [];
     }
 
     // convert RSA public key from ASN.1
-    cert.publicKey = pki.publicKeyFromAsn1(capture.subjectPublicKeyInfo);
+    cert.publicKey = crypto.pki.publicKeyFromAsn1(capture.subjectPublicKeyInfo);
 
     return cert;
 };
@@ -1478,13 +1467,13 @@ pki.certificateFromAsn1 = function (obj, computeHash) {
  *
  * @return the array.
  */
-pki.certificateExtensionsFromAsn1 = function (exts) {
+export const certificateExtensionsFromAsn1 = function (exts) {
     const rval = [];
     for (let i = 0; i < exts.value.length; ++i) {
-    // get extension sequence
+        // get extension sequence
         const extseq = exts.value[i];
         for (let ei = 0; ei < extseq.value.length; ++ei) {
-            rval.push(pki.certificateExtensionFromAsn1(extseq.value[ei]));
+            rval.push(crypto.pki.certificateExtensionFromAsn1(extseq.value[ei]));
         }
     }
 
@@ -1498,7 +1487,7 @@ pki.certificateExtensionsFromAsn1 = function (exts) {
  *
  * @return the parsed extension as an object.
  */
-pki.certificateExtensionFromAsn1 = function (ext) {
+export const certificateExtensionFromAsn1 = function (ext) {
     // an extension has:
     // [0] extnID      OBJECT IDENTIFIER
     // [1] critical    BOOLEAN DEFAULT FALSE
@@ -1593,7 +1582,7 @@ pki.certificateExtensionFromAsn1 = function (ext) {
             e.objCA = (b2 & 0x01) === 0x01;
         } else if (
             e.name === "subjectAltName" ||
-      e.name === "issuerAltName") {
+            e.name === "issuerAltName") {
             // handle subjectAltName/issuerAltName
             e.altNames = [];
 
@@ -1614,29 +1603,29 @@ pki.certificateExtensionFromAsn1 = function (ext) {
                 switch (gn.type) {
                     // rfc822Name
                     case 1:
-                        // dNSName
+                    // dNSName
                     case 2:
-                        // uniformResourceIdentifier (URI)
+                    // uniformResourceIdentifier (URI)
                     case 6:
                         break;
-                        // IPAddress
+                    // IPAddress
                     case 7:
                         // convert to IPv4/IPv6 string representation
-                        altName.ip = forge.util.bytesToIP(gn.value);
+                        altName.ip = crypto.util.bytesToIP(gn.value);
                         break;
-                        // registeredID
+                    // registeredID
                     case 8:
                         altName.oid = asn1.derToOid(gn.value);
                         break;
                     default:
-            // unsupported
+                    // unsupported
                 }
             }
         } else if (e.name === "subjectKeyIdentifier") {
             // value is an OCTETSTRING w/the hash of the key-type specific
             // public key structure (eg: RSAPublicKey)
             var ev = asn1.fromDer(e.value);
-            e.subjectKeyIdentifier = forge.util.bytesToHex(ev.value);
+            e.subjectKeyIdentifier = crypto.util.bytesToHex(ev.value);
         }
     }
     return e;
@@ -1655,30 +1644,30 @@ pki.certificateExtensionFromAsn1 = function (ext) {
  *
  * @return the certification request (CSR).
  */
-pki.certificationRequestFromAsn1 = function (obj, computeHash) {
+export const certificationRequestFromAsn1 = function (obj, computeHash) {
     // validate certification request and capture data
     const capture = {};
     const errors = [];
     if (!asn1.validate(obj, certificationRequestValidator, capture, errors)) {
         var error = new Error("Cannot read PKCS#10 certificate request. " +
-      "ASN.1 object is not a PKCS#10 CertificationRequest.");
+            "ASN.1 object is not a PKCS#10 CertificationRequest.");
         error.errors = errors;
         throw error;
     }
 
     // get oid
     var oid = asn1.derToOid(capture.publicKeyOid);
-    if (oid !== pki.oids.rsaEncryption) {
+    if (oid !== crypto.oids.rsaEncryption) {
         throw new Error("Cannot read public key. OID is not RSA.");
     }
 
     // create certification request
-    const csr = pki.createCertificationRequest();
+    const csr = crypto.pki.createCertificationRequest();
     csr.version = capture.csrVersion ? capture.csrVersion.charCodeAt(0) : 0;
-    csr.signatureOid = forge.asn1.derToOid(capture.csrSignatureOid);
+    csr.signatureOid = crypto.asn1.derToOid(capture.csrSignatureOid);
     csr.signatureParameters = _readSignatureParameters(
         csr.signatureOid, capture.csrSignatureParams, true);
-    csr.siginfo.algorithmOid = forge.asn1.derToOid(capture.csrSignatureOid);
+    csr.siginfo.algorithmOid = crypto.asn1.derToOid(capture.csrSignatureOid);
     csr.siginfo.parameters = _readSignatureParameters(
         csr.siginfo.algorithmOid, capture.csrSignatureParams, false);
     csr.signature = capture.csrSignature;
@@ -1687,34 +1676,34 @@ pki.certificationRequestFromAsn1 = function (obj, computeHash) {
     csr.certificationRequestInfo = capture.certificationRequestInfo;
 
     if (computeHash) {
-    // check signature OID for supported signature types
+        // check signature OID for supported signature types
         csr.md = null;
         if (csr.signatureOid in oids) {
             var oid = oids[csr.signatureOid];
             switch (oid) {
                 case "sha1WithRSAEncryption":
-                    csr.md = forge.md.sha1.create();
+                    csr.md = crypto.md.sha1.create();
                     break;
                 case "md5WithRSAEncryption":
-                    csr.md = forge.md.md5.create();
+                    csr.md = crypto.md.md5.create();
                     break;
                 case "sha256WithRSAEncryption":
-                    csr.md = forge.md.sha256.create();
+                    csr.md = crypto.md.sha256.create();
                     break;
                 case "sha384WithRSAEncryption":
-                    csr.md = forge.md.sha384.create();
+                    csr.md = crypto.md.sha384.create();
                     break;
                 case "sha512WithRSAEncryption":
-                    csr.md = forge.md.sha512.create();
+                    csr.md = crypto.md.sha512.create();
                     break;
                 case "RSASSA-PSS":
-                    csr.md = forge.md.sha256.create();
+                    csr.md = crypto.md.sha256.create();
                     break;
             }
         }
         if (is.null(csr.md)) {
             var error = new Error("Could not compute certification request digest. " +
-        "Unknown signature OID.");
+                "Unknown signature OID.");
             error.signatureOid = csr.signatureOid;
             throw error;
         }
@@ -1725,7 +1714,7 @@ pki.certificationRequestFromAsn1 = function (obj, computeHash) {
     }
 
     // handle subject, build subject message digest
-    const smd = forge.md.sha1.create();
+    const smd = crypto.md.sha1.create();
     csr.subject.getField = function (sn) {
         return _getAttribute(csr.subject, sn);
     };
@@ -1733,12 +1722,12 @@ pki.certificationRequestFromAsn1 = function (obj, computeHash) {
         _fillMissingFields([attr]);
         csr.subject.attributes.push(attr);
     };
-    csr.subject.attributes = pki.RDNAttributesAsArray(
+    csr.subject.attributes = crypto.pki.RDNAttributesAsArray(
         capture.certificationRequestInfoSubject, smd);
     csr.subject.hash = smd.digest().toHex();
 
     // convert RSA public key from ASN.1
-    csr.publicKey = pki.publicKeyFromAsn1(capture.subjectPublicKeyInfo);
+    csr.publicKey = crypto.pki.publicKeyFromAsn1(capture.subjectPublicKeyInfo);
 
     // convert attributes from ASN.1
     csr.getAttribute = function (sn) {
@@ -1748,7 +1737,7 @@ pki.certificationRequestFromAsn1 = function (obj, computeHash) {
         _fillMissingFields([attr]);
         csr.attributes.push(attr);
     };
-    csr.attributes = pki.CRIAttributesAsArray(
+    csr.attributes = crypto.pki.CRIAttributesAsArray(
         capture.certificationRequestInfoAttributes || []);
 
     return csr;
@@ -1761,7 +1750,7 @@ pki.certificationRequestFromAsn1 = function (obj, computeHash) {
  *
  * @return the empty certification request.
  */
-pki.createCertificationRequest = function () {
+export const createCertificationRequest = function () {
     const csr = {};
     csr.version = 0x00;
     csr.signatureOid = null;
@@ -1797,7 +1786,7 @@ pki.createCertificationRequest = function () {
      * @param attrs the array of subject attributes to use.
      */
     csr.setSubject = function (attrs) {
-    // set new attributes
+        // set new attributes
         _fillMissingFields(attrs);
         csr.subject.attributes = attrs;
         csr.subject.hash = null;
@@ -1809,7 +1798,7 @@ pki.createCertificationRequest = function () {
      * @param attrs the array of attributes to use.
      */
     csr.setAttributes = function (attrs) {
-    // set new attributes
+        // set new attributes
         _fillMissingFields(attrs);
         csr.attributes = attrs;
     };
@@ -1818,22 +1807,22 @@ pki.createCertificationRequest = function () {
      * Signs this certification request using the given private key.
      *
      * @param key the private key to sign with.
-     * @param md the message digest object to use (defaults to forge.md.sha1).
+     * @param md the message digest object to use (defaults to crypto.md.sha1).
      */
     csr.sign = function (key, md) {
-    // TODO: get signature OID from private key
-        csr.md = md || forge.md.sha1.create();
+        // TODO: get signature OID from private key
+        csr.md = md || crypto.md.sha1.create();
         const algorithmOid = oids[`${csr.md.algorithm}WithRSAEncryption`];
         if (!algorithmOid) {
             const error = new Error("Could not compute certification request digest. " +
-        "Unknown message digest algorithm OID.");
+                "Unknown message digest algorithm OID.");
             error.algorithm = csr.md.algorithm;
             throw error;
         }
         csr.signatureOid = csr.siginfo.algorithmOid = algorithmOid;
 
         // get CertificationRequestInfo, convert to DER
-        csr.certificationRequestInfo = pki.getCertificationRequestInfo(csr);
+        csr.certificationRequestInfo = crypto.pki.getCertificationRequestInfo(csr);
         const bytes = asn1.toDer(csr.certificationRequestInfo);
 
         // digest and sign
@@ -1863,36 +1852,35 @@ pki.createCertificationRequest = function () {
                 const oid = oids[csr.signatureOid];
                 switch (oid) {
                     case "sha1WithRSAEncryption":
-                        md = forge.md.sha1.create();
+                        md = crypto.md.sha1.create();
                         break;
                     case "md5WithRSAEncryption":
-                        md = forge.md.md5.create();
+                        md = crypto.md.md5.create();
                         break;
                     case "sha256WithRSAEncryption":
-                        md = forge.md.sha256.create();
+                        md = crypto.md.sha256.create();
                         break;
                     case "sha384WithRSAEncryption":
-                        md = forge.md.sha384.create();
+                        md = crypto.md.sha384.create();
                         break;
                     case "sha512WithRSAEncryption":
-                        md = forge.md.sha512.create();
+                        md = crypto.md.sha512.create();
                         break;
                     case "RSASSA-PSS":
-                        md = forge.md.sha256.create();
+                        md = crypto.md.sha256.create();
                         break;
                 }
             }
             if (is.null(md)) {
                 var error = new Error(
                     "Could not compute certification request digest. " +
-          "Unknown signature OID.");
+                    "Unknown signature OID.");
                 error.signatureOid = csr.signatureOid;
                 throw error;
             }
 
             // produce DER formatted CertificationRequestInfo and digest it
-            const cri = csr.certificationRequestInfo ||
-        pki.getCertificationRequestInfo(csr);
+            const cri = csr.certificationRequestInfo || crypto.pki.getCertificationRequestInfo(csr);
             const bytes = asn1.toDer(cri);
             md.update(bytes.getBytes());
         }
@@ -1911,7 +1899,7 @@ pki.createCertificationRequest = function () {
                      * initialize mgf
                      */
                     hash = oids[csr.signatureParameters.mgf.hash.algorithmOid];
-                    if (is.undefined(hash) || is.undefined(forge.md[hash])) {
+                    if (is.undefined(hash) || is.undefined(crypto.md[hash])) {
                         var error = new Error("Unsupported MGF hash function.");
                         error.oid = csr.signatureParameters.mgf.hash.algorithmOid;
                         error.name = hash;
@@ -1919,27 +1907,27 @@ pki.createCertificationRequest = function () {
                     }
 
                     mgf = oids[csr.signatureParameters.mgf.algorithmOid];
-                    if (is.undefined(mgf) || is.undefined(forge.mgf[mgf])) {
+                    if (is.undefined(mgf) || is.undefined(crypto.mgf[mgf])) {
                         var error = new Error("Unsupported MGF function.");
                         error.oid = csr.signatureParameters.mgf.algorithmOid;
                         error.name = mgf;
                         throw error;
                     }
 
-                    mgf = forge.mgf[mgf].create(forge.md[hash].create());
+                    mgf = crypto.mgf[mgf].create(crypto.md[hash].create());
 
                     /**
                      * initialize hash function
                      */
                     hash = oids[csr.signatureParameters.hash.algorithmOid];
-                    if (is.undefined(hash) || is.undefined(forge.md[hash])) {
+                    if (is.undefined(hash) || is.undefined(crypto.md[hash])) {
                         var error = new Error("Unsupported RSASSA-PSS hash function.");
                         error.oid = csr.signatureParameters.hash.algorithmOid;
                         error.name = hash;
                         throw error;
                     }
 
-                    scheme = forge.pss.create(forge.md[hash].create(), mgf,
+                    scheme = crypto.pss.create(crypto.md[hash].create(), mgf,
                         csr.signatureParameters.saltLength);
                     break;
             }
@@ -1980,7 +1968,7 @@ function _dnToAsn1(obj) {
             valueTagClass = attr.valueTagClass;
 
             if (valueTagClass === asn1.Type.UTF8) {
-                value = forge.util.encodeUtf8(value);
+                value = crypto.util.encodeUtf8(value);
             }
             // FIXME: handle more encodings
         }
@@ -2017,15 +2005,15 @@ function _getAttributesAsJson(attrs) {
         const attr = attrs[i];
         if (attr.shortName && (
             attr.valueTagClass === asn1.Type.UTF8 ||
-      attr.valueTagClass === asn1.Type.PRINTABLESTRING ||
-      attr.valueTagClass === asn1.Type.IA5STRING)) {
+            attr.valueTagClass === asn1.Type.PRINTABLESTRING ||
+            attr.valueTagClass === asn1.Type.IA5STRING)) {
             let value = attr.value;
             if (attr.valueTagClass === asn1.Type.UTF8) {
-                value = forge.util.encodeUtf8(attr.value);
+                value = crypto.util.encodeUtf8(attr.value);
             }
             if (!(attr.shortName in rval)) {
                 rval[attr.shortName] = value;
-            } else if (forge.util.isArray(rval[attr.shortName])) {
+            } else if (crypto.util.isArray(rval[attr.shortName])) {
                 rval[attr.shortName].push(value);
             } else {
                 rval[attr.shortName] = [rval[attr.shortName], value];
@@ -2047,17 +2035,17 @@ function _fillMissingFields(attrs) {
 
         // populate missing name
         if (is.undefined(attr.name)) {
-            if (attr.type && attr.type in pki.oids) {
-                attr.name = pki.oids[attr.type];
+            if (attr.type && attr.type in crypto.pki.oids) {
+                attr.name = crypto.pki.oids[attr.type];
             } else if (attr.shortName && attr.shortName in _shortNames) {
-                attr.name = pki.oids[_shortNames[attr.shortName]];
+                attr.name = crypto.pki.oids[_shortNames[attr.shortName]];
             }
         }
 
         // populate missing type (OID)
         if (is.undefined(attr.type)) {
-            if (attr.name && attr.name in pki.oids) {
-                attr.type = pki.oids[attr.name];
+            if (attr.name && attr.name in crypto.pki.oids) {
+                attr.type = crypto.pki.oids[attr.name];
             } else {
                 var error = new Error("Attribute type not specified.");
                 error.attribute = attr;
@@ -2079,7 +2067,7 @@ function _fillMissingFields(attrs) {
             if (!attr.value && attr.extensions) {
                 attr.value = [];
                 for (let ei = 0; ei < attr.extensions.length; ++ei) {
-                    attr.value.push(pki.certificateExtensionToAsn1(
+                    attr.value.push(crypto.pki.certificateExtensionToAsn1(
                         _fillMissingExtensionFields(attr.extensions[ei])));
                 }
             }
@@ -2107,15 +2095,15 @@ function _fillMissingExtensionFields(e, options) {
 
     // populate missing name
     if (is.undefined(e.name)) {
-        if (e.id && e.id in pki.oids) {
-            e.name = pki.oids[e.id];
+        if (e.id && e.id in crypto.pki.oids) {
+            e.name = crypto.pki.oids[e.id];
         }
     }
 
     // populate missing id
     if (is.undefined(e.id)) {
-        if (e.name && e.name in pki.oids) {
-            e.id = pki.oids[e.name];
+        if (e.name && e.name in crypto.pki.oids) {
+            e.id = crypto.pki.oids[e.name];
         } else {
             var error = new Error("Extension ID not specified.");
             error.extension = e;
@@ -2131,7 +2119,7 @@ function _fillMissingExtensionFields(e, options) {
 
     // value is a BIT STRING
     if (e.name === "keyUsage") {
-    // build flags
+        // build flags
         var unused = 0;
         var b2 = 0x00;
         let b3 = 0x00;
@@ -2182,7 +2170,7 @@ function _fillMissingExtensionFields(e, options) {
         e.value = asn1.create(
             asn1.Class.UNIVERSAL, asn1.Type.BITSTRING, false, value);
     } else if (e.name === "basicConstraints") {
-    // basicConstraints is a SEQUENCE
+        // basicConstraints is a SEQUENCE
         e.value = asn1.create(
             asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
         // cA BOOLEAN flag defaults to false
@@ -2197,7 +2185,7 @@ function _fillMissingExtensionFields(e, options) {
                 asn1.integerToDer(e.pathLenConstraint).getBytes()));
         }
     } else if (e.name === "extKeyUsage") {
-    // extKeyUsage is a SEQUENCE of OIDs
+        // extKeyUsage is a SEQUENCE of OIDs
         e.value = asn1.create(
             asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
         var seq = e.value.value;
@@ -2216,8 +2204,8 @@ function _fillMissingExtensionFields(e, options) {
             }
         }
     } else if (e.name === "nsCertType") {
-    // nsCertType is a BIT STRING
-    // build flags
+        // nsCertType is a BIT STRING
+        // build flags
         var unused = 0;
         var b2 = 0x00;
 
@@ -2262,7 +2250,7 @@ function _fillMissingExtensionFields(e, options) {
         e.value = asn1.create(
             asn1.Class.UNIVERSAL, asn1.Type.BITSTRING, false, value);
     } else if (e.name === "subjectAltName" || e.name === "issuerAltName") {
-    // SYNTAX SEQUENCE
+        // SYNTAX SEQUENCE
         e.value = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
 
         var altName;
@@ -2271,7 +2259,7 @@ function _fillMissingExtensionFields(e, options) {
             var value = altName.value;
             // handle IP
             if (altName.type === 7 && altName.ip) {
-                value = forge.util.bytesFromIP(altName.ip);
+                value = crypto.util.bytesFromIP(altName.ip);
                 if (is.null(value)) {
                     var error = new Error(
                         'Extension "ip" value is not a valid IPv4 or IPv6 address.');
@@ -2292,9 +2280,9 @@ function _fillMissingExtensionFields(e, options) {
                 value));
         }
     } else if (e.name === "nsComment" && options.cert) {
-    // sanity check value is ASCII (req'd) and not too big
+        // sanity check value is ASCII (req'd) and not too big
         if (!(/^[\x00-\x7F]*$/.test(e.comment)) ||
-      (e.comment.length < 1) || (e.comment.length > 128)) {
+            (e.comment.length < 1) || (e.comment.length > 128)) {
             throw new Error('Invalid "nsComment" content.');
         }
         // IA5STRING opaque comment
@@ -2307,7 +2295,7 @@ function _fillMissingExtensionFields(e, options) {
         e.value = asn1.create(
             asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, ski.getBytes());
     } else if (e.name === "authorityKeyIdentifier" && options.cert) {
-    // SYNTAX SEQUENCE
+        // SYNTAX SEQUENCE
         e.value = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
         var seq = e.value.value;
 
@@ -2331,7 +2319,7 @@ function _fillMissingExtensionFields(e, options) {
         }
 
         if (e.serialNumber) {
-            const serialNumber = forge.util.hexToBytes(e.serialNumber === true ?
+            const serialNumber = crypto.util.hexToBytes(e.serialNumber === true ?
                 options.cert.serialNumber : e.serialNumber);
             seq.push(
                 asn1.create(asn1.Class.CONTEXT_SPECIFIC, 2, false, serialNumber));
@@ -2353,7 +2341,7 @@ function _fillMissingExtensionFields(e, options) {
             var value = altName.value;
             // handle IP
             if (altName.type === 7 && altName.ip) {
-                value = forge.util.bytesFromIP(altName.ip);
+                value = crypto.util.bytesFromIP(altName.ip);
                 if (is.null(value)) {
                     var error = new Error(
                         'Extension "ip" value is not a valid IPv4 or IPv6 address.');
@@ -2469,7 +2457,7 @@ function _CRIAttributesToAsn1(csr) {
             valueTagClass = attr.valueTagClass;
         }
         if (valueTagClass === asn1.Type.UTF8) {
-            value = forge.util.encodeUtf8(value);
+            value = crypto.util.encodeUtf8(value);
         }
         let valueConstructed = false;
         if ("valueConstructed" in attr) {
@@ -2512,11 +2500,11 @@ function _dateToAsn1(date) {
         return asn1.create(
             asn1.Class.UNIVERSAL, asn1.Type.UTCTIME, false,
             asn1.dateToUtcTime(date));
-    } 
+    }
     return asn1.create(
         asn1.Class.UNIVERSAL, asn1.Type.GENERALIZEDTIME, false,
         asn1.dateToGeneralizedTime(date));
-  
+
 }
 
 /**
@@ -2526,12 +2514,12 @@ function _dateToAsn1(date) {
  *
  * @return the asn1 TBSCertificate.
  */
-pki.getTBSCertificate = function (cert) {
+export const getTBSCertificate = function (cert) {
     // TBSCertificate
     const notBefore = _dateToAsn1(cert.validity.notBefore);
     const notAfter = _dateToAsn1(cert.validity.notAfter);
     const tbs = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-    // version
+        // version
         asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, true, [
             // integer
             asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false,
@@ -2539,7 +2527,7 @@ pki.getTBSCertificate = function (cert) {
         ]),
         // serialNumber
         asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false,
-            forge.util.hexToBytes(cert.serialNumber)),
+            crypto.util.hexToBytes(cert.serialNumber)),
         // signature
         asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
             // algorithm
@@ -2559,37 +2547,37 @@ pki.getTBSCertificate = function (cert) {
         // subject
         _dnToAsn1(cert.subject),
         // SubjectPublicKeyInfo
-        pki.publicKeyToAsn1(cert.publicKey)
+        crypto.pki.publicKeyToAsn1(cert.publicKey)
     ]);
 
     if (cert.issuer.uniqueId) {
-    // issuerUniqueID (optional)
+        // issuerUniqueID (optional)
         tbs.value.push(
             asn1.create(asn1.Class.CONTEXT_SPECIFIC, 1, true, [
                 asn1.create(asn1.Class.UNIVERSAL, asn1.Type.BITSTRING, false,
                     // TODO: support arbitrary bit length ids
                     String.fromCharCode(0x00) +
-          cert.issuer.uniqueId
+                    cert.issuer.uniqueId
                 )
             ])
         );
     }
     if (cert.subject.uniqueId) {
-    // subjectUniqueID (optional)
+        // subjectUniqueID (optional)
         tbs.value.push(
             asn1.create(asn1.Class.CONTEXT_SPECIFIC, 2, true, [
                 asn1.create(asn1.Class.UNIVERSAL, asn1.Type.BITSTRING, false,
                     // TODO: support arbitrary bit length ids
                     String.fromCharCode(0x00) +
-          cert.subject.uniqueId
+                    cert.subject.uniqueId
                 )
             ])
         );
     }
 
     if (cert.extensions.length > 0) {
-    // extensions (optional)
-        tbs.value.push(pki.certificateExtensionsToAsn1(cert.extensions));
+        // extensions (optional)
+        tbs.value.push(crypto.pki.certificateExtensionsToAsn1(cert.extensions));
     }
 
     return tbs;
@@ -2603,16 +2591,16 @@ pki.getTBSCertificate = function (cert) {
  *
  * @return the asn1 CertificationRequestInfo.
  */
-pki.getCertificationRequestInfo = function (csr) {
+export const getCertificationRequestInfo = function (csr) {
     // CertificationRequestInfo
     const cri = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-    // version
+        // version
         asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false,
             asn1.integerToDer(csr.version).getBytes()),
         // subject
         _dnToAsn1(csr.subject),
         // SubjectPublicKeyInfo
-        pki.publicKeyToAsn1(csr.publicKey),
+        crypto.pki.publicKeyToAsn1(csr.publicKey),
         // attributes
         _CRIAttributesToAsn1(csr)
     ]);
@@ -2627,7 +2615,7 @@ pki.getCertificationRequestInfo = function (csr) {
  *
  * @return the asn1 representation of a DistinguishedName.
  */
-pki.distinguishedNameToAsn1 = function (dn) {
+export const distinguishedNameToAsn1 = function (dn) {
     return _dnToAsn1(dn);
 };
 
@@ -2638,13 +2626,13 @@ pki.distinguishedNameToAsn1 = function (dn) {
  *
  * @return the asn1 representation of an X.509v3 RSA certificate.
  */
-pki.certificateToAsn1 = function (cert) {
+export const certificateToAsn1 = function (cert) {
     // prefer cached TBSCertificate over generating one
-    const tbsCertificate = cert.tbsCertificate || pki.getTBSCertificate(cert);
+    const tbsCertificate = cert.tbsCertificate || crypto.pki.getTBSCertificate(cert);
 
     // Certificate
     return asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-    // TBSCertificate
+        // TBSCertificate
         tbsCertificate,
         // AlgorithmIdentifier (signature algorithm)
         asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
@@ -2667,7 +2655,7 @@ pki.certificateToAsn1 = function (cert) {
  *
  * @return the extensions in ASN.1 format.
  */
-pki.certificateExtensionsToAsn1 = function (exts) {
+export const certificateExtensionsToAsn1 = function (exts) {
     // create top-level extension container
     const rval = asn1.create(asn1.Class.CONTEXT_SPECIFIC, 3, true, []);
 
@@ -2676,7 +2664,7 @@ pki.certificateExtensionsToAsn1 = function (exts) {
     rval.value.push(seq);
 
     for (let i = 0; i < exts.length; ++i) {
-        seq.value.push(pki.certificateExtensionToAsn1(exts[i]));
+        seq.value.push(crypto.pki.certificateExtensionToAsn1(exts[i]));
     }
 
     return rval;
@@ -2689,7 +2677,7 @@ pki.certificateExtensionsToAsn1 = function (exts) {
  *
  * @return the extension in ASN.1 format.
  */
-pki.certificateExtensionToAsn1 = function (ext) {
+export const certificateExtensionToAsn1 = function (ext) {
     // create a sequence for each extension
     const extseq = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
 
@@ -2700,7 +2688,7 @@ pki.certificateExtensionToAsn1 = function (ext) {
 
     // critical defaults to false
     if (ext.critical) {
-    // critical BOOLEAN DEFAULT FALSE
+        // critical BOOLEAN DEFAULT FALSE
         extseq.value.push(asn1.create(
             asn1.Class.UNIVERSAL, asn1.Type.BOOLEAN, false,
             String.fromCharCode(0xFF)));
@@ -2708,7 +2696,7 @@ pki.certificateExtensionToAsn1 = function (ext) {
 
     let value = ext.value;
     if (!is.string(ext.value)) {
-    // value is asn.1
+        // value is asn.1
         value = asn1.toDer(value).getBytes();
     }
 
@@ -2726,14 +2714,14 @@ pki.certificateExtensionToAsn1 = function (ext) {
  *
  * @return the asn1 representation of a certification request.
  */
-pki.certificationRequestToAsn1 = function (csr) {
+export const certificationRequestToAsn1 = function (csr) {
     // prefer cached CertificationRequestInfo over generating one
     const cri = csr.certificationRequestInfo ||
-    pki.getCertificationRequestInfo(csr);
+    crypto.pki.getCertificationRequestInfo(csr);
 
     // Certificate
     return asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-    // CertificationRequestInfo
+        // CertificationRequestInfo
         cri,
         // AlgorithmIdentifier (signature algorithm)
         asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
@@ -2757,10 +2745,10 @@ pki.certificationRequestToAsn1 = function (csr) {
  *
  * @return the CA store.
  */
-pki.createCaStore = function (certs) {
+export const createCaStore = function (certs) {
     // create CA store
     const caStore = {
-    // stored certificates
+        // stored certificates
         certs: {}
     };
 
@@ -2776,7 +2764,7 @@ pki.createCaStore = function (certs) {
         const rval = getBySubject(cert.issuer);
 
         // see if there are multiple matches
-        /*if(forge.util.isArray(rval)) {
+        /*if(crypto.util.isArray(rval)) {
       // TODO: resolve multiple matches by checking
       // authorityKey/subjectKey/issuerUniqueID/other identifiers, etc.
       // FIXME: or alternatively do authority key mapping
@@ -2791,12 +2779,12 @@ pki.createCaStore = function (certs) {
      * Adds a trusted certificate to the store.
      *
      * @param cert the certificate to add as a trusted certificate (either a
-     *          pki.certificate object or a PEM-formatted certificate).
+     *          crypto.pki.certificate object or a PEM-formatted certificate).
      */
     caStore.addCertificate = function (cert) {
-    // convert from pem if necessary
+        // convert from pem if necessary
         if (is.string(cert)) {
-            cert = forge.pki.certificateFromPem(cert);
+            cert = crypto.pki.certificateFromPem(cert);
         }
 
         ensureSubjectHasHash(cert.subject);
@@ -2805,7 +2793,7 @@ pki.createCaStore = function (certs) {
             if (cert.subject.hash in caStore.certs) {
                 // subject hash already exists, append to array
                 let tmp = caStore.certs[cert.subject.hash];
-                if (!forge.util.isArray(tmp)) {
+                if (!crypto.util.isArray(tmp)) {
                     tmp = [tmp];
                 }
                 tmp.push(cert);
@@ -2825,22 +2813,22 @@ pki.createCaStore = function (certs) {
      * @return true if the certificate is in the store, false if not.
      */
     caStore.hasCertificate = function (cert) {
-    // convert from pem if necessary
+        // convert from pem if necessary
         if (is.string(cert)) {
-            cert = forge.pki.certificateFromPem(cert);
+            cert = crypto.pki.certificateFromPem(cert);
         }
 
         let match = getBySubject(cert.subject);
         if (!match) {
             return false;
         }
-        if (!forge.util.isArray(match)) {
+        if (!crypto.util.isArray(match)) {
             match = [match];
         }
         // compare DER-encoding of certificates
-        const der1 = asn1.toDer(pki.certificateToAsn1(cert)).getBytes();
+        const der1 = asn1.toDer(crypto.pki.certificateToAsn1(cert)).getBytes();
         for (let i = 0; i < match.length; ++i) {
-            const der2 = asn1.toDer(pki.certificateToAsn1(match[i])).getBytes();
+            const der2 = asn1.toDer(crypto.pki.certificateToAsn1(match[i])).getBytes();
             if (der1 === der2) {
                 return true;
             }
@@ -2859,7 +2847,7 @@ pki.createCaStore = function (certs) {
         for (const hash in caStore.certs) {
             if (caStore.certs.hasOwnProperty(hash)) {
                 const value = caStore.certs[hash];
-                if (!forge.util.isArray(value)) {
+                if (!crypto.util.isArray(value)) {
                     certList.push(value);
                 } else {
                     for (let i = 0; i < value.length; ++i) {
@@ -2886,7 +2874,7 @@ pki.createCaStore = function (certs) {
 
         // convert from pem if necessary
         if (is.string(cert)) {
-            cert = forge.pki.certificateFromPem(cert);
+            cert = crypto.pki.certificateFromPem(cert);
         }
         ensureSubjectHasHash(cert.subject);
         if (!caStore.hasCertificate(cert)) {
@@ -2895,16 +2883,16 @@ pki.createCaStore = function (certs) {
 
         const match = getBySubject(cert.subject);
 
-        if (!forge.util.isArray(match)) {
+        if (!crypto.util.isArray(match)) {
             result = caStore.certs[cert.subject.hash];
             delete caStore.certs[cert.subject.hash];
             return result;
         }
 
         // compare DER-encoding of certificates
-        const der1 = asn1.toDer(pki.certificateToAsn1(cert)).getBytes();
+        const der1 = asn1.toDer(crypto.pki.certificateToAsn1(cert)).getBytes();
         for (let i = 0; i < match.length; ++i) {
-            const der2 = asn1.toDer(pki.certificateToAsn1(match[i])).getBytes();
+            const der2 = asn1.toDer(crypto.pki.certificateToAsn1(match[i])).getBytes();
             if (der1 === der2) {
                 result = match[i];
                 match.splice(i, 1);
@@ -2923,17 +2911,17 @@ pki.createCaStore = function (certs) {
     }
 
     function ensureSubjectHasHash(subject) {
-    // produce subject hash if it doesn't exist
+        // produce subject hash if it doesn't exist
         if (!subject.hash) {
-            const md = forge.md.sha1.create();
-            subject.attributes = pki.RDNAttributesAsArray(_dnToAsn1(subject), md);
+            const md = crypto.md.sha1.create();
+            subject.attributes = crypto.pki.RDNAttributesAsArray(_dnToAsn1(subject), md);
             subject.hash = md.digest().toHex();
         }
     }
 
     // auto-add passed in certs
     if (certs) {
-    // parse PEM-formatted certificates as necessary
+        // parse PEM-formatted certificates as necessary
         for (let i = 0; i < certs.length; ++i) {
             const cert = certs[i];
             caStore.addCertificate(cert);
@@ -2946,13 +2934,13 @@ pki.createCaStore = function (certs) {
 /**
  * Certificate verification errors, based on TLS.
  */
-pki.certificateError = {
-    bad_certificate: "forge.pki.BadCertificate",
-    unsupported_certificate: "forge.pki.UnsupportedCertificate",
-    certificate_revoked: "forge.pki.CertificateRevoked",
-    certificate_expired: "forge.pki.CertificateExpired",
-    certificate_unknown: "forge.pki.CertificateUnknown",
-    unknown_ca: "forge.pki.UnknownCertificateAuthority"
+export const certificateError = {
+    bad_certificate: "crypto.pki.BadCertificate",
+    unsupported_certificate: "crypto.pki.UnsupportedCertificate",
+    certificate_revoked: "crypto.pki.CertificateRevoked",
+    certificate_expired: "crypto.pki.CertificateExpired",
+    certificate_unknown: "crypto.pki.CertificateUnknown",
+    unknown_ca: "crypto.pki.UnknownCertificateAuthority"
 };
 
 /**
@@ -2984,7 +2972,7 @@ pki.certificateError = {
  *
  * @return true if successful, error thrown if not.
  */
-pki.verifyCertificateChain = function (caStore, chain, options) {
+export const verifyCertificateChain = function (caStore, chain, options) {
     /* From: RFC3280 - Internet X.509 Public Key Infrastructure Certificate
     Section 6: Certification Path Validation
     See inline parentheticals related to this particular implementation.
@@ -3148,10 +3136,10 @@ pki.verifyCertificateChain = function (caStore, chain, options) {
         if (validityCheckDate) {
             // 1. check valid time
             if (validityCheckDate < cert.validity.notBefore ||
-         validityCheckDate > cert.validity.notAfter) {
+                validityCheckDate > cert.validity.notAfter) {
                 error = {
                     message: "Certificate is not valid yet or has expired.",
-                    error: pki.certificateError.certificate_expired,
+                    error: crypto.pki.certificateError.certificate_expired,
                     notBefore: cert.validity.notBefore,
                     notAfter: cert.validity.notAfter,
                     // TODO: we might want to reconsider renaming 'now' to
@@ -3182,7 +3170,7 @@ pki.verifyCertificateChain = function (caStore, chain, options) {
                 // but none of the parents actually verify ... but the intermediate
                 // is in the CA and it should pass this check; needs investigation
                 let parents = parent;
-                if (!forge.util.isArray(parents)) {
+                if (!crypto.util.isArray(parents)) {
                     parents = [parents];
                 }
 
@@ -3200,17 +3188,17 @@ pki.verifyCertificateChain = function (caStore, chain, options) {
                 if (!verified) {
                     error = {
                         message: "Certificate signature is invalid.",
-                        error: pki.certificateError.bad_certificate
+                        error: crypto.pki.certificateError.bad_certificate
                     };
                 }
             }
 
             if (is.null(error) && (!parent || selfSigned) &&
-        !caStore.hasCertificate(cert)) {
+                !caStore.hasCertificate(cert)) {
                 // no parent issuer and certificate itself is not trusted
                 error = {
                     message: "Certificate is not trusted.",
-                    error: pki.certificateError.unknown_ca
+                    error: crypto.pki.certificateError.unknown_ca
                 };
             }
         }
@@ -3222,7 +3210,7 @@ pki.verifyCertificateChain = function (caStore, chain, options) {
             // parent is not issuer
             error = {
                 message: "Certificate issuer is invalid.",
-                error: pki.certificateError.bad_certificate
+                error: crypto.pki.certificateError.bad_certificate
             };
         }
 
@@ -3242,8 +3230,8 @@ pki.verifyCertificateChain = function (caStore, chain, options) {
                 if (ext.critical && !(ext.name in se)) {
                     error = {
                         message:
-              "Certificate has an unsupported critical extension.",
-                        error: pki.certificateError.unsupported_certificate
+                            "Certificate has an unsupported critical extension.",
+                        error: crypto.pki.certificateError.unsupported_certificate
                     };
                 }
             }
@@ -3252,7 +3240,7 @@ pki.verifyCertificateChain = function (caStore, chain, options) {
         // 8. check for CA if cert is not first or is the only certificate
         // remaining in chain with no parent or is self-signed
         if (is.null(error) &&
-      (!first || (chain.length === 0 && (!parent || selfSigned)))) {
+            (!first || (chain.length === 0 && (!parent || selfSigned)))) {
             // first check keyUsage extension and then basic constraints
             const bcExt = cert.getExtension("basicConstraints");
             const keyUsageExt = cert.getExtension("keyUsage");
@@ -3263,12 +3251,12 @@ pki.verifyCertificateChain = function (caStore, chain, options) {
                     // bad certificate
                     error = {
                         message:
-              "Certificate keyUsage or basicConstraints conflict " +
-              "or indicate that the certificate is not a CA. " +
-              "If the certificate is the only one in the chain or " +
-              "isn't the first then the certificate must be a " +
-              "valid CA.",
-                        error: pki.certificateError.bad_certificate
+                            "Certificate keyUsage or basicConstraints conflict " +
+                            "or indicate that the certificate is not a CA. " +
+                            "If the certificate is the only one in the chain or " +
+                            "isn't the first then the certificate must be a " +
+                            "valid CA.",
+                        error: crypto.pki.certificateError.bad_certificate
                     };
                 }
             }
@@ -3277,16 +3265,16 @@ pki.verifyCertificateChain = function (caStore, chain, options) {
                 // bad certificate
                 error = {
                     message:
-            "Certificate basicConstraints indicates the certificate " +
-            "is not a CA.",
-                    error: pki.certificateError.bad_certificate
+                        "Certificate basicConstraints indicates the certificate " +
+                        "is not a CA.",
+                    error: crypto.pki.certificateError.bad_certificate
                 };
             }
             // if error is not null and keyUsage is available, then we know it
             // has keyCertSign and there is a basic constraints extension too,
             // which means we can check pathLenConstraint (if it exists)
             if (is.null(error) && !is.null(keyUsageExt) &&
-        "pathLenConstraint" in bcExt) {
+                "pathLenConstraint" in bcExt) {
                 // pathLen is the maximum # of intermediate CA certs that can be
                 // found between the current certificate and the end-entity (depth 0)
                 // certificate; this number does not include the end-entity (depth 0,
@@ -3296,8 +3284,8 @@ pki.verifyCertificateChain = function (caStore, chain, options) {
                     // pathLenConstraint violated, bad certificate
                     error = {
                         message:
-              "Certificate basicConstraints pathLenConstraint violated.",
-                        error: pki.certificateError.bad_certificate
+                            "Certificate basicConstraints pathLenConstraint violated.",
+                        error: crypto.pki.certificateError.bad_certificate
                     };
                 }
             }
@@ -3314,14 +3302,14 @@ pki.verifyCertificateChain = function (caStore, chain, options) {
             if (vfd === true) {
                 error = {
                     message: "The application rejected the certificate.",
-                    error: pki.certificateError.bad_certificate
+                    error: crypto.pki.certificateError.bad_certificate
                 };
             }
 
             // check for custom error info
             if (ret || ret === 0) {
                 // set custom message and error
-                if (typeof ret === "object" && !forge.util.isArray(ret)) {
+                if (typeof ret === "object" && !crypto.util.isArray(ret)) {
                     if (ret.message) {
                         error.message = ret.message;
                     }

@@ -26,11 +26,14 @@
  *
  * body: the binary-encoded body.
  */
-const forge = require("./forge");
-require("./util");
+
+const {
+    crypto
+} = adone;
+
 
 // shortcut for pem API
-const pem = module.exports = forge.pem = forge.pem || {};
+// const pem = module.exports = forge.pem = forge.pem || {};
 
 /**
  * Encodes (serializes) the given PEM object.
@@ -41,7 +44,7 @@ const pem = module.exports = forge.pem = forge.pem || {};
  *
  * @return the PEM-formatted string.
  */
-pem.encode = function (msg, options) {
+export const encode = function (msg, options) {
     options = options || {};
     let rval = `-----BEGIN ${msg.type}-----\r\n`;
 
@@ -67,7 +70,7 @@ pem.encode = function (msg, options) {
     }
 
     if (msg.headers) {
-    // encode all other headers
+        // encode all other headers
         for (let i = 0; i < msg.headers.length; ++i) {
             rval += foldHeader(msg.headers[i]);
         }
@@ -79,7 +82,7 @@ pem.encode = function (msg, options) {
     }
 
     // add body
-    rval += `${forge.util.encode64(msg.body, options.maxline || 64)}\r\n`;
+    rval += `${crypto.util.encode64(msg.body, options.maxline || 64)}\r\n`;
 
     rval += `-----END ${msg.type}-----\r\n`;
     return rval;
@@ -92,7 +95,7 @@ pem.encode = function (msg, options) {
  *
  * @return the PEM message objects in an array.
  */
-pem.decode = function (str) {
+export const decode = function (str) {
     const rval = [];
 
     // split string into PEM messages (be lenient w/EOF on BEGIN line)
@@ -112,7 +115,7 @@ pem.decode = function (str) {
             contentDomain: null,
             dekInfo: null,
             headers: [],
-            body: forge.util.decode64(match[3])
+            body: crypto.util.decode64(match[3])
         };
         rval.push(msg);
 
@@ -151,10 +154,10 @@ pem.decode = function (str) {
                 if (!msg.procType) {
                     if (header.name !== "Proc-Type") {
                         throw new Error("Invalid PEM formatted message. The first " +
-              'encapsulated header must be "Proc-Type".');
+                            'encapsulated header must be "Proc-Type".');
                     } else if (header.values.length !== 2) {
                         throw new Error('Invalid PEM formatted message. The "Proc-Type" ' +
-              "header must have two subfields.");
+                            "header must have two subfields.");
                     }
                     msg.procType = { version: values[0], type: values[1] };
                 } else if (!msg.contentDomain && header.name === "Content-Domain") {
@@ -164,7 +167,7 @@ pem.decode = function (str) {
                     // special-case DEK-Info
                     if (header.values.length === 0) {
                         throw new Error('Invalid PEM formatted message. The "DEK-Info" ' +
-              "header must have at least one subfield.");
+                            "header must have at least one subfield.");
                     }
                     msg.dekInfo = { algorithm: values[0], parameters: values[1] || null };
                 } else {
@@ -177,7 +180,7 @@ pem.decode = function (str) {
 
         if (msg.procType === "ENCRYPTED" && !msg.dekInfo) {
             throw new Error('Invalid PEM formatted message. The "DEK-Info" ' +
-        'header must be present if "Proc-Type" is "ENCRYPTED".');
+                'header must be present if "Proc-Type" is "ENCRYPTED".');
         }
     }
 
@@ -211,8 +214,8 @@ function foldHeader(header) {
                 ++candidate;
                 rval = `${rval.substr(0, candidate)}\r\n ${rval.substr(candidate)}`;
             } else {
-                rval = `${rval.substr(0, candidate) 
-                }\r\n${insert}${rval.substr(candidate + 1)}`;
+                rval = `${rval.substr(0, candidate)
+                    }\r\n${insert}${rval.substr(candidate + 1)}`;
             }
             length = (i - candidate - 1);
             candidate = -1;

@@ -133,23 +133,19 @@
  * The full OID (including ASN.1 tag and length of 6 bytes) is:
  * 0x06062A864886F70D
  */
-const forge = require("./forge");
-require("./util");
-require("./oids");
+// const forge = require("./forge");
+// require("./util");
+// require("./oids");
 
 const {
-    is
+    is,
+    crypto
 } = adone;
-
-/**
- * ASN.1 API
- */
-const asn1 = module.exports = forge.asn1 = forge.asn1 || {};
 
 /**
  * ASN.1 classes.
  */
-asn1.Class = {
+export const Class = {
     UNIVERSAL: 0x00,
     APPLICATION: 0x40,
     CONTEXT_SPECIFIC: 0x80,
@@ -160,7 +156,7 @@ asn1.Class = {
  * ASN.1 types. Not all types are supported by this implementation, only
  * those necessary to implement a simple PKI are implemented.
  */
-asn1.Type = {
+export const Type = {
     NONE: 0,
     BOOLEAN: 1,
     INTEGER: 2,
@@ -184,6 +180,46 @@ asn1.Type = {
     BMPSTRING: 30
 };
 
+
+/**
+ * Copies an asn1 object.
+ *
+ * @param obj the asn1 object.
+ * @param [options] copy options:
+ *          [excludeBitStringContents] true to not copy bitStringContents
+ *
+ * @return the a copy of the asn1 object.
+ */
+export const copy = function (obj, options) {
+    let c;
+
+    if (crypto.util.isArray(obj)) {
+        c = [];
+        for (let i = 0; i < obj.length; ++i) {
+            c.push(copy(obj[i], options));
+        }
+        return c;
+    }
+
+    if (is.string(obj)) {
+        // TODO: copy byte buffer if it's a buffer not a string
+        return obj;
+    }
+
+    c = {
+        tagClass: obj.tagClass,
+        type: obj.type,
+        constructed: obj.constructed,
+        composed: obj.composed,
+        value: copy(obj.value, options)
+    };
+    if (options && !options.excludeBitStringContents) {
+        // TODO: copy byte buffer if it's a buffer not a string
+        c.bitStringContents = obj.bitStringContents;
+    }
+    return c;
+};
+
 /**
  * Creates a new asn1 object.
  *
@@ -197,7 +233,7 @@ asn1.Type = {
  *
  * @return the asn1 object.
  */
-asn1.create = function (tagClass, type, constructed, value, options) {
+export const create = function (tagClass, type, constructed, value, options) {
     /* An asn1 object has a tagClass, a type, a constructed flag, and a
     value. The value's type depends on the constructed flag. If
     constructed, it will contain a list of other asn1 objects. If not,
@@ -205,7 +241,7 @@ asn1.create = function (tagClass, type, constructed, value, options) {
     according to the ASN.1 data type. */
 
     // remove undefined values
-    if (forge.util.isArray(value)) {
+    if (crypto.util.isArray(value)) {
         const tmp = [];
         for (let i = 0; i < value.length; ++i) {
             if (!is.undefined(value[i])) {
@@ -219,56 +255,17 @@ asn1.create = function (tagClass, type, constructed, value, options) {
         tagClass,
         type,
         constructed,
-        composed: constructed || forge.util.isArray(value),
+        composed: constructed || crypto.util.isArray(value),
         value
     };
     if (options && "bitStringContents" in options) {
-    // TODO: copy byte buffer if it's a buffer not a string
+        // TODO: copy byte buffer if it's a buffer not a string
         obj.bitStringContents = options.bitStringContents;
         // TODO: add readonly flag to avoid this overhead
         // save copy to detect changes
-        obj.original = asn1.copy(obj);
+        obj.original = copy(obj);
     }
     return obj;
-};
-
-/**
- * Copies an asn1 object.
- *
- * @param obj the asn1 object.
- * @param [options] copy options:
- *          [excludeBitStringContents] true to not copy bitStringContents
- *
- * @return the a copy of the asn1 object.
- */
-asn1.copy = function (obj, options) {
-    let copy;
-
-    if (forge.util.isArray(obj)) {
-        copy = [];
-        for (let i = 0; i < obj.length; ++i) {
-            copy.push(asn1.copy(obj[i], options));
-        }
-        return copy;
-    }
-
-    if (is.string(obj)) {
-    // TODO: copy byte buffer if it's a buffer not a string
-        return obj;
-    }
-
-    copy = {
-        tagClass: obj.tagClass,
-        type: obj.type,
-        constructed: obj.constructed,
-        composed: obj.composed,
-        value: asn1.copy(obj.value, options)
-    };
-    if (options && !options.excludeBitStringContents) {
-    // TODO: copy byte buffer if it's a buffer not a string
-        copy.bitStringContents = obj.bitStringContents;
-    }
-    return copy;
 };
 
 /**
@@ -283,16 +280,16 @@ asn1.copy = function (obj, options) {
  *
  * @return true if the asn1 objects are equal.
  */
-asn1.equals = function (obj1, obj2, options) {
-    if (forge.util.isArray(obj1)) {
-        if (!forge.util.isArray(obj2)) {
+export const equals = function (obj1, obj2, options) {
+    if (crypto.util.isArray(obj1)) {
+        if (!crypto.util.isArray(obj2)) {
             return false;
         }
         if (obj1.length !== obj2.length) {
             return false;
         }
         for (let i = 0; i < obj1.length; ++i) {
-            if (!asn1.equals(obj1[i], obj2[i])) {
+            if (!equals(obj1[i], obj2[i])) {
                 return false;
             }
         }
@@ -308,10 +305,10 @@ asn1.equals = function (obj1, obj2, options) {
     }
 
     let equal = obj1.tagClass === obj2.tagClass &&
-    obj1.type === obj2.type &&
-    obj1.constructed === obj2.constructed &&
-    obj1.composed === obj2.composed &&
-    asn1.equals(obj1.value, obj2.value);
+        obj1.type === obj2.type &&
+        obj1.constructed === obj2.constructed &&
+        obj1.composed === obj2.composed &&
+        equals(obj1.value, obj2.value);
     if (options && options.includeBitStringContents) {
         equal = equal && (obj1.bitStringContents === obj2.bitStringContents);
     }
@@ -329,7 +326,7 @@ asn1.equals = function (obj1, obj2, options) {
  *
  * @return the length of the BER-encoded ASN.1 value or undefined.
  */
-asn1.getBerValueLength = function (b) {
+export const getBerValueLength = function (b) {
     // TODO: move this function and related DER/BER functions to a der.js
     // file; better abstract ASN.1 away from der/ber.
     const b2 = b.getByte();
@@ -341,11 +338,11 @@ asn1.getBerValueLength = function (b) {
     let length;
     const longForm = b2 & 0x80;
     if (!longForm) {
-    // length is just the first byte
+        // length is just the first byte
         length = b2;
     } else {
-    // the number of bytes the length is specified in bits 7 through 1
-    // and each length byte is in big-endian base-256
+        // the number of bytes the length is specified in bits 7 through 1
+        // and each length byte is in big-endian base-256
         length = b.getInt((b2 & 0x7F) << 3);
     }
     return length;
@@ -358,7 +355,7 @@ asn1.getBerValueLength = function (b) {
  * @param remaining the bytes remaining in the current parsing state.
  * @param n the number of bytes the buffer must have.
  */
-function _checkBufferLength(bytes, remaining, n) {
+const _checkBufferLength = (bytes, remaining, n) => {
     if (n > remaining) {
         const error = new Error("Too few bytes to parse DER.");
         error.available = bytes.length();
@@ -366,7 +363,7 @@ function _checkBufferLength(bytes, remaining, n) {
         error.requested = n;
         throw error;
     }
-}
+};
 
 /**
  * Gets the length of a BER-encoded ASN.1 value.
@@ -392,11 +389,11 @@ const _getValueLength = function (bytes, remaining) {
     let length;
     const longForm = b2 & 0x80;
     if (!longForm) {
-    // length is just the first byte
+        // length is just the first byte
         length = b2;
     } else {
-    // the number of bytes the length is specified in bits 7 through 1
-    // and each length byte is in big-endian base-256
+        // the number of bytes the length is specified in bits 7 through 1
+        // and each length byte is in big-endian base-256
         const longFormBytes = b2 & 0x7F;
         _checkBufferLength(bytes, remaining, longFormBytes);
         length = bytes.getInt(longFormBytes << 3);
@@ -426,7 +423,7 @@ const _getValueLength = function (bytes, remaining) {
  *
  * @return the parsed asn1 object.
  */
-asn1.fromDer = function (bytes, options) {
+export const fromDer = function (bytes, options) {
     if (is.undefined(options)) {
         options = {
             strict: true,
@@ -448,7 +445,7 @@ asn1.fromDer = function (bytes, options) {
 
     // wrap in buffer if needed
     if (is.string(bytes)) {
-        bytes = forge.util.createBuffer(bytes);
+        bytes = crypto.util.createBuffer(bytes);
     }
 
     return _fromDer(bytes, bytes.length(), 0, options);
@@ -464,7 +461,7 @@ asn1.fromDer = function (bytes, options) {
  *
  * @return the parsed asn1 object.
  */
-function _fromDer(bytes, remaining, depth, options) {
+const _fromDer = function (bytes, remaining, depth, options) {
     // temporary storage for consumption calculations
     let start;
 
@@ -508,11 +505,11 @@ function _fromDer(bytes, remaining, depth, options) {
     // constructed flag is bit 6 (32 = 0x20) of the first byte
     const constructed = ((b1 & 0x20) === 0x20);
     if (constructed) {
-    // parse child asn1 objects from the value
+        // parse child asn1 objects from the value
         value = [];
         if (is.undefined(length)) {
             // asn1 object of indefinite length, read until end tag
-            for (;;) {
+            for (; ;) {
                 _checkBufferLength(bytes, remaining, 2);
                 if (bytes.bytes(2) === String.fromCharCode(0, 0)) {
                     bytes.getBytes(2);
@@ -535,8 +532,8 @@ function _fromDer(bytes, remaining, depth, options) {
     }
 
     // if a BIT STRING, save the contents including padding
-    if (is.undefined(value) && tagClass === asn1.Class.UNIVERSAL &&
-    type === asn1.Type.BITSTRING) {
+    if (is.undefined(value) && tagClass === Class.UNIVERSAL &&
+        type === Type.BITSTRING) {
         bitStringContents = bytes.bytes(length);
     }
 
@@ -544,16 +541,16 @@ function _fromDer(bytes, remaining, depth, options) {
     // value that contains other ASN.1 objects. BIT STRINGs (and OCTET STRINGs)
     // can be used this way.
     if (is.undefined(value) && options.decodeBitStrings &&
-    tagClass === asn1.Class.UNIVERSAL &&
-    // FIXME: OCTET STRINGs not yet supported here
-    // .. other parts of forge expect to decode OCTET STRINGs manually
-    (type === asn1.Type.BITSTRING /*|| type === asn1.Type.OCTETSTRING*/) &&
-    length > 1) {
-    // save read position
+        tagClass === Class.UNIVERSAL &&
+        // FIXME: OCTET STRINGs not yet supported here
+        // .. other parts of forge expect to decode OCTET STRINGs manually
+        (type === Type.BITSTRING /*|| type === Type.OCTETSTRING*/) &&
+        length > 1) {
+        // save read position
         const savedRead = bytes.read;
         const savedRemaining = remaining;
         let unused = 0;
-        if (type === asn1.Type.BITSTRING) {
+        if (type === Type.BITSTRING) {
             /**
              * The first octet gives the number of bits by which the length of the
              * bit string is less than the next multiple of eight (this is called
@@ -580,7 +577,7 @@ function _fromDer(bytes, remaining, depth, options) {
                 const composed = _fromDer(bytes, remaining, depth + 1, subOptions);
                 let used = start - bytes.length();
                 remaining -= used;
-                if (type == asn1.Type.BITSTRING) {
+                if (type === Type.BITSTRING) {
                     used++;
                 }
 
@@ -588,10 +585,11 @@ function _fromDer(bytes, remaining, depth, options) {
                 // CONTEXT_SPECIFIC then assume we've got an encapsulated ASN.1 object
                 const tc = composed.tagClass;
                 if (used === length &&
-          (tc === asn1.Class.UNIVERSAL || tc === asn1.Class.CONTEXT_SPECIFIC)) {
+                    (tc === Class.UNIVERSAL || tc === Class.CONTEXT_SPECIFIC)) {
                     value = [composed];
                 }
             } catch (ex) {
+                //
             }
         }
         if (is.undefined(value)) {
@@ -602,8 +600,8 @@ function _fromDer(bytes, remaining, depth, options) {
     }
 
     if (is.undefined(value)) {
-    // asn1 not constructed or composed, get raw value
-    // TODO: do DER to OID conversion and vice-versa in .toDer?
+        // asn1 not constructed or composed, get raw value
+        // TODO: do DER to OID conversion and vice-versa in .toDer?
 
         if (is.undefined(length)) {
             if (options.strict) {
@@ -613,7 +611,7 @@ function _fromDer(bytes, remaining, depth, options) {
             length = remaining;
         }
 
-        if (type === asn1.Type.BMPSTRING) {
+        if (type === Type.BMPSTRING) {
             value = "";
             for (; length > 0; length -= 2) {
                 _checkBufferLength(bytes, remaining, 2);
@@ -631,8 +629,8 @@ function _fromDer(bytes, remaining, depth, options) {
     };
 
     // create and return asn1 object
-    return asn1.create(tagClass, type, constructed, value, asn1Options);
-}
+    return create(tagClass, type, constructed, value, asn1Options);
+};
 
 /**
  * Converts the given asn1 object to a buffer of bytes in DER format.
@@ -641,30 +639,30 @@ function _fromDer(bytes, remaining, depth, options) {
  *
  * @return the buffer of bytes.
  */
-asn1.toDer = function (obj) {
-    const bytes = forge.util.createBuffer();
+export const toDer = function (obj) {
+    const bytes = crypto.util.createBuffer();
 
     // build the first byte
     let b1 = obj.tagClass | obj.type;
 
     // for storing the ASN.1 value
-    const value = forge.util.createBuffer();
+    const value = crypto.util.createBuffer();
 
     // use BIT STRING contents if available and data not changed
     let useBitStringContents = false;
     if ("bitStringContents" in obj) {
         useBitStringContents = true;
         if (obj.original) {
-            useBitStringContents = asn1.equals(obj, obj.original);
+            useBitStringContents = equals(obj, obj.original);
         }
     }
 
     if (useBitStringContents) {
         value.putBytes(obj.bitStringContents);
     } else if (obj.composed) {
-    // if composed, use each child asn1 object's DER bytes as value
-    // turn on 6th bit (0x20 = 32) to indicate asn1 is constructed
-    // from other asn1 objects
+        // if composed, use each child asn1 object's DER bytes as value
+        // turn on 6th bit (0x20 = 32) to indicate asn1 is constructed
+        // from other asn1 objects
         if (obj.constructed) {
             b1 |= 0x20;
         } else {
@@ -673,29 +671,29 @@ asn1.toDer = function (obj) {
         }
 
         // add all of the child DER bytes together
-        for (var i = 0; i < obj.value.length; ++i) {
+        for (let i = 0; i < obj.value.length; ++i) {
             if (!is.undefined(obj.value[i])) {
-                value.putBuffer(asn1.toDer(obj.value[i]));
+                value.putBuffer(toDer(obj.value[i]));
             }
         }
     } else {
-    // use asn1.value directly
-        if (obj.type === asn1.Type.BMPSTRING) {
-            for (var i = 0; i < obj.value.length; ++i) {
+        // use asn1.value directly
+        if (obj.type === Type.BMPSTRING) {
+            for (let i = 0; i < obj.value.length; ++i) {
                 value.putInt16(obj.value.charCodeAt(i));
             }
         } else {
             // ensure integer is minimally-encoded
             // TODO: should all leading bytes be stripped vs just one?
             // .. ex '00 00 01' => '01'?
-            if (obj.type === asn1.Type.INTEGER &&
-        obj.value.length > 1 &&
-        // leading 0x00 for positive integer
-        ((obj.value.charCodeAt(0) === 0 &&
-        (obj.value.charCodeAt(1) & 0x80) === 0) ||
-        // leading 0xFF for negative integer
-        (obj.value.charCodeAt(0) === 0xFF &&
-        (obj.value.charCodeAt(1) & 0x80) === 0x80))) {
+            if (obj.type === Type.INTEGER &&
+                obj.value.length > 1 &&
+                // leading 0x00 for positive integer
+                ((obj.value.charCodeAt(0) === 0 &&
+                    (obj.value.charCodeAt(1) & 0x80) === 0) ||
+                    // leading 0xFF for negative integer
+                    (obj.value.charCodeAt(0) === 0xFF &&
+                        (obj.value.charCodeAt(1) & 0x80) === 0x80))) {
                 value.putBytes(obj.value.substr(1));
             } else {
                 value.putBytes(obj.value);
@@ -708,14 +706,14 @@ asn1.toDer = function (obj) {
 
     // use "short form" encoding
     if (value.length() <= 127) {
-    // one byte describes the length
-    // bit 8 = 0 and bits 7-1 = length
+        // one byte describes the length
+        // bit 8 = 0 and bits 7-1 = length
         bytes.putByte(value.length() & 0x7F);
     } else {
-    // use "long form" encoding
-    // 2 to 127 bytes describe the length
-    // first byte: bit 8 = 1 and bits 7-1 = # of additional bytes
-    // other bytes: length in base 256, big-endian
+        // use "long form" encoding
+        // 2 to 127 bytes describe the length
+        // first byte: bit 8 = 1 and bits 7-1 = # of additional bytes
+        // other bytes: length in base 256, big-endian
         let len = value.length();
         let lenBytes = "";
         do {
@@ -729,7 +727,7 @@ asn1.toDer = function (obj) {
 
         // concatenate length bytes in reverse since they were generated
         // little endian and we need big endian
-        for (var i = lenBytes.length - 1; i >= 0; --i) {
+        for (let i = lenBytes.length - 1; i >= 0; --i) {
             bytes.putByte(lenBytes.charCodeAt(i));
         }
     }
@@ -747,10 +745,10 @@ asn1.toDer = function (obj) {
  *
  * @return the byte buffer.
  */
-asn1.oidToDer = function (oid) {
+export const oidToDer = function (oid) {
     // split OID into individual values
     const values = oid.split(".");
-    const bytes = forge.util.createBuffer();
+    const bytes = crypto.util.createBuffer();
 
     // first byte is 40 * value1 + value2
     bytes.putByte(40 * parseInt(values[0], 10) + parseInt(values[1], 10));
@@ -758,8 +756,8 @@ asn1.oidToDer = function (oid) {
     // the last byte for each value
     let last; let valueBytes; let value; let b;
     for (let i = 2; i < values.length; ++i) {
-    // produce value bytes in reverse because we don't know how many
-    // bytes it will take to store the value
+        // produce value bytes in reverse because we don't know how many
+        // bytes it will take to store the value
         last = true;
         valueBytes = [];
         value = parseInt(values[i], 10);
@@ -792,12 +790,12 @@ asn1.oidToDer = function (oid) {
  *
  * @return the OID dot-separated string.
  */
-asn1.derToOid = function (bytes) {
+export const derToOid = function (bytes) {
     let oid;
 
     // wrap in buffer if needed
     if (is.string(bytes)) {
-        bytes = forge.util.createBuffer(bytes);
+        bytes = crypto.util.createBuffer(bytes);
     }
 
     // first byte is 40 * value1 + value2
@@ -833,7 +831,7 @@ asn1.derToOid = function (bytes) {
  *
  * @return the date.
  */
-asn1.utcTimeToDate = function (utc) {
+export const utcTimeToDate = function (utc) {
     /**
      * The following formats can be used:
      *
@@ -869,7 +867,7 @@ asn1.utcTimeToDate = function (utc) {
 
     // not just YYMMDDhhmmZ
     if (utc.length > 11) {
-    // get character after minutes
+        // get character after minutes
         var c = utc.charAt(10);
         var end = 10;
 
@@ -886,7 +884,7 @@ asn1.utcTimeToDate = function (utc) {
     date.setUTCHours(hh, mm, ss, 0);
 
     if (end) {
-    // get +/- after end of time
+        // get +/- after end of time
         c = utc.charAt(end);
         if (c === "+" || c === "-") {
             // get hours+minutes offset
@@ -916,7 +914,7 @@ asn1.utcTimeToDate = function (utc) {
  *
  * @return the date.
  */
-asn1.generalizedTimeToDate = function (gentime) {
+export const generalizedTimeToDate = function (gentime) {
     /**
      * The following formats can be used:
      *
@@ -960,7 +958,7 @@ asn1.generalizedTimeToDate = function (gentime) {
 
     const end = gentime.length - 5; const c = gentime.charAt(end);
     if (c === "+" || c === "-") {
-    // get hours+minutes offset
+        // get hours+minutes offset
         const hhoffset = parseInt(gentime.substr(end + 1, 2), 10);
         const mmoffset = parseInt(gentime.substr(end + 4, 2), 10);
 
@@ -1006,7 +1004,7 @@ asn1.generalizedTimeToDate = function (gentime) {
  *
  * @return the UTCTime value.
  */
-asn1.dateToUtcTime = function (date) {
+export const dateToUtcTime = function (date) {
     // TODO: validate; currently assumes proper format
     if (is.string(date)) {
         return date;
@@ -1042,7 +1040,7 @@ asn1.dateToUtcTime = function (date) {
  *
  * @return the GeneralizedTime value as a string.
  */
-asn1.dateToGeneralizedTime = function (date) {
+export const dateToGeneralizedTime = function (date) {
     // TODO: validate; currently assumes proper format
     if (is.string(date)) {
         return date;
@@ -1079,8 +1077,8 @@ asn1.dateToGeneralizedTime = function (date) {
  *
  * @return the byte buffer.
  */
-asn1.integerToDer = function (x) {
-    const rval = forge.util.createBuffer();
+export const integerToDer = function (x) {
+    const rval = crypto.util.createBuffer();
     if (x >= -0x80 && x < 0x80) {
         return rval.putSignedInt(x, 8);
     }
@@ -1106,10 +1104,10 @@ asn1.integerToDer = function (x) {
  *
  * @return the integer.
  */
-asn1.derToInteger = function (bytes) {
+export const derToInteger = function (bytes) {
     // wrap in buffer if needed
     if (is.string(bytes)) {
-        bytes = forge.util.createBuffer(bytes);
+        bytes = crypto.util.createBuffer(bytes);
     }
 
     const n = bytes.length() * 8;
@@ -1142,24 +1140,24 @@ asn1.derToInteger = function (bytes) {
  *
  * @return true on success, false on failure.
  */
-asn1.validate = function (obj, v, capture, errors) {
+export const validate = function (obj, v, capture, errors) {
     let rval = false;
 
     // ensure tag class and type are the same if specified
     if ((obj.tagClass === v.tagClass || is.undefined(v.tagClass)) &&
-    (obj.type === v.type || is.undefined(v.type))) {
-    // ensure constructed flag is the same if specified
+        (obj.type === v.type || is.undefined(v.type))) {
+        // ensure constructed flag is the same if specified
         if (obj.constructed === v.constructed ||
-      is.undefined(v.constructed)) {
+            is.undefined(v.constructed)) {
             rval = true;
 
             // handle sub values
-            if (v.value && forge.util.isArray(v.value)) {
+            if (v.value && crypto.util.isArray(v.value)) {
                 let j = 0;
                 for (let i = 0; rval && i < v.value.length; ++i) {
                     rval = v.value[i].optional || false;
                     if (obj.value[j]) {
-                        rval = asn1.validate(obj.value[j], v.value[i], capture, errors);
+                        rval = validate(obj.value[j], v.value[i], capture, errors);
                         if (rval) {
                             ++j;
                         } else if (v.value[i].optional) {
@@ -1169,10 +1167,7 @@ asn1.validate = function (obj, v, capture, errors) {
                     if (!rval && errors) {
                         errors.push(
                             `[${v.name}] ` +
-              `Tag class "${v.tagClass}", type "${ 
-                  v.type}" expected value length "${ 
-                  v.value.length}", got "${ 
-                  obj.value.length}"`);
+                            `Tag class "${v.tagClass}", type "${v.type}" expected value length "${v.value.length}", got "${obj.value.length}"`);
                     }
                 }
             }
@@ -1188,7 +1183,7 @@ asn1.validate = function (obj, v, capture, errors) {
                     capture[v.captureBitStringContents] = obj.bitStringContents;
                 }
                 if (v.captureBitStringValue && "bitStringContents" in obj) {
-                    let value;
+                    // let value;
                     if (obj.bitStringContents.length < 2) {
                         capture[v.captureBitStringValue] = "";
                     } else {
@@ -1205,20 +1200,18 @@ asn1.validate = function (obj, v, capture, errors) {
         } else if (errors) {
             errors.push(
                 `[${v.name}] ` +
-        `Expected constructed "${v.constructed}", got "${ 
-            obj.constructed}"`);
+                `Expected constructed "${v.constructed}", got "${obj.constructed}"`);
         }
     } else if (errors) {
         if (obj.tagClass !== v.tagClass) {
             errors.push(
                 `[${v.name}] ` +
-        `Expected tag class "${v.tagClass}", got "${ 
-            obj.tagClass}"`);
+                `Expected tag class "${v.tagClass}", got "${obj.tagClass}"`);
         }
         if (obj.type !== v.type) {
             errors.push(
                 `[${v.name}] ` +
-        `Expected type "${v.type}", got "${obj.type}"`);
+                `Expected type "${v.type}", got "${obj.type}"`);
         }
     }
     return rval;
@@ -1236,7 +1229,7 @@ const _nonLatinRegex = /[^\\u0000-\\u00ff]/;
  *
  * @return the string.
  */
-asn1.prettyPrint = function (obj, level, indentation) {
+export const prettyPrint = function (obj, level, indentation) {
     let rval = "";
 
     // set default level and indentation
@@ -1250,93 +1243,93 @@ asn1.prettyPrint = function (obj, level, indentation) {
 
     // create indent
     let indent = "";
-    for (var i = 0; i < level * indentation; ++i) {
+    for (let i = 0; i < level * indentation; ++i) {
         indent += " ";
     }
 
     // print class:type
     rval += `${indent}Tag: `;
     switch (obj.tagClass) {
-        case asn1.Class.UNIVERSAL:
+        case Class.UNIVERSAL:
             rval += "Universal:";
             break;
-        case asn1.Class.APPLICATION:
+        case Class.APPLICATION:
             rval += "Application:";
             break;
-        case asn1.Class.CONTEXT_SPECIFIC:
+        case Class.CONTEXT_SPECIFIC:
             rval += "Context-Specific:";
             break;
-        case asn1.Class.PRIVATE:
+        case Class.PRIVATE:
             rval += "Private:";
             break;
     }
 
-    if (obj.tagClass === asn1.Class.UNIVERSAL) {
+    if (obj.tagClass === Class.UNIVERSAL) {
         rval += obj.type;
 
         // known types
         switch (obj.type) {
-            case asn1.Type.NONE:
+            case Type.NONE:
                 rval += " (None)";
                 break;
-            case asn1.Type.BOOLEAN:
+            case Type.BOOLEAN:
                 rval += " (Boolean)";
                 break;
-            case asn1.Type.INTEGER:
+            case Type.INTEGER:
                 rval += " (Integer)";
                 break;
-            case asn1.Type.BITSTRING:
+            case Type.BITSTRING:
                 rval += " (Bit string)";
                 break;
-            case asn1.Type.OCTETSTRING:
+            case Type.OCTETSTRING:
                 rval += " (Octet string)";
                 break;
-            case asn1.Type.NULL:
+            case Type.NULL:
                 rval += " (Null)";
                 break;
-            case asn1.Type.OID:
+            case Type.OID:
                 rval += " (Object Identifier)";
                 break;
-            case asn1.Type.ODESC:
+            case Type.ODESC:
                 rval += " (Object Descriptor)";
                 break;
-            case asn1.Type.EXTERNAL:
+            case Type.EXTERNAL:
                 rval += " (External or Instance of)";
                 break;
-            case asn1.Type.REAL:
+            case Type.REAL:
                 rval += " (Real)";
                 break;
-            case asn1.Type.ENUMERATED:
+            case Type.ENUMERATED:
                 rval += " (Enumerated)";
                 break;
-            case asn1.Type.EMBEDDED:
+            case Type.EMBEDDED:
                 rval += " (Embedded PDV)";
                 break;
-            case asn1.Type.UTF8:
+            case Type.UTF8:
                 rval += " (UTF8)";
                 break;
-            case asn1.Type.ROID:
+            case Type.ROID:
                 rval += " (Relative Object Identifier)";
                 break;
-            case asn1.Type.SEQUENCE:
+            case Type.SEQUENCE:
                 rval += " (Sequence)";
                 break;
-            case asn1.Type.SET:
+            case Type.SET:
                 rval += " (Set)";
                 break;
-            case asn1.Type.PRINTABLESTRING:
+            case Type.PRINTABLESTRING:
                 rval += " (Printable String)";
                 break;
-            case asn1.Type.IA5String:
+            case Type.IA5String:
                 rval += " (IA5String (ASCII))";
                 break;
-            case asn1.Type.UTCTIME:
+            case Type.UTCTIME:
                 rval += " (UTC time)";
                 break;
-            case asn1.Type.GENERALIZEDTIME:
+            case Type.GENERALIZEDTIME:
                 rval += " (Generalized time)";
                 break;
-            case asn1.Type.BMPSTRING:
+            case Type.BMPSTRING:
                 rval += " (BMP String)";
                 break;
         }
@@ -1350,10 +1343,10 @@ asn1.prettyPrint = function (obj, level, indentation) {
     if (obj.composed) {
         let subvalues = 0;
         let sub = "";
-        for (var i = 0; i < obj.value.length; ++i) {
+        for (let i = 0; i < obj.value.length; ++i) {
             if (!is.undefined(obj.value[i])) {
                 subvalues += 1;
-                sub += asn1.prettyPrint(obj.value[i], level + 1, indentation);
+                sub += prettyPrint(obj.value[i], level + 1, indentation);
                 if ((i + 1) < obj.value.length) {
                     sub += ",";
                 }
@@ -1362,50 +1355,50 @@ asn1.prettyPrint = function (obj, level, indentation) {
         rval += `${indent}Sub values: ${subvalues}${sub}`;
     } else {
         rval += `${indent}Value: `;
-        if (obj.type === asn1.Type.OID) {
-            const oid = asn1.derToOid(obj.value);
+        if (obj.type === Type.OID) {
+            const oid = derToOid(obj.value);
             rval += oid;
-            if (forge.pki && forge.pki.oids) {
-                if (oid in forge.pki.oids) {
-                    rval += ` (${forge.pki.oids[oid]}) `;
+            if (crypto.pki.oids) {
+                if (oid in crypto.pki.oids) {
+                    rval += ` (${crypto.pki.oids[oid]}) `;
                 }
             }
         }
-        if (obj.type === asn1.Type.INTEGER) {
+        if (obj.type === Type.INTEGER) {
             try {
-                rval += asn1.derToInteger(obj.value);
+                rval += derToInteger(obj.value);
             } catch (ex) {
-                rval += `0x${forge.util.bytesToHex(obj.value)}`;
+                rval += `0x${crypto.util.bytesToHex(obj.value)}`;
             }
-        } else if (obj.type === asn1.Type.BITSTRING) {
+        } else if (obj.type === Type.BITSTRING) {
             // TODO: shift bits as needed to display without padding
             if (obj.value.length > 1) {
                 // remove unused bits field
-                rval += `0x${forge.util.bytesToHex(obj.value.slice(1))}`;
+                rval += `0x${crypto.util.bytesToHex(obj.value.slice(1))}`;
             } else {
                 rval += "(none)";
             }
             // show unused bit count
             if (obj.value.length > 0) {
                 const unused = obj.value.charCodeAt(0);
-                if (unused == 1) {
+                if (unused === 1) {
                     rval += " (1 unused bit shown)";
                 } else if (unused > 1) {
                     rval += ` (${unused} unused bits shown)`;
                 }
             }
-        } else if (obj.type === asn1.Type.OCTETSTRING) {
+        } else if (obj.type === Type.OCTETSTRING) {
             if (!_nonLatinRegex.test(obj.value)) {
                 rval += `(${obj.value}) `;
             }
-            rval += `0x${forge.util.bytesToHex(obj.value)}`;
-        } else if (obj.type === asn1.Type.UTF8) {
-            rval += forge.util.decodeUtf8(obj.value);
-        } else if (obj.type === asn1.Type.PRINTABLESTRING ||
-      obj.type === asn1.Type.IA5String) {
+            rval += `0x${crypto.util.bytesToHex(obj.value)}`;
+        } else if (obj.type === Type.UTF8) {
+            rval += crypto.util.decodeUtf8(obj.value);
+        } else if (obj.type === Type.PRINTABLESTRING ||
+            obj.type === Type.IA5String) {
             rval += obj.value;
         } else if (_nonLatinRegex.test(obj.value)) {
-            rval += `0x${forge.util.bytesToHex(obj.value)}`;
+            rval += `0x${crypto.util.bytesToHex(obj.value)}`;
         } else if (obj.value.length === 0) {
             rval += "[null]";
         } else {

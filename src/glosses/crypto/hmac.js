@@ -1,31 +1,24 @@
 /**
  * Hash-based Message Authentication Code implementation. Requires a message
- * digest object that can be obtained, for example, from forge.md.sha1 or
- * forge.md.md5.
+ * digest object that can be obtained, for example, from crypto.md.sha1 or
+ * crypto.md.md5.
  *
  * @author Dave Longley
  *
  * Copyright (c) 2010-2012 Digital Bazaar, Inc. All rights reserved.
  */
-const forge = require("./forge");
-require("./md");
-require("./util");
 
 const {
-    is
+    is,
+    crypto
 } = adone;
-
-/**
- * HMAC API
- */
-const hmac = module.exports = forge.hmac = forge.hmac || {};
 
 /**
  * Creates an HMAC object that uses the given message digest object.
  *
  * @return an HMAC object.
  */
-hmac.create = function () {
+export const create = function () {
     // the hmac key to use
     let _key = null;
 
@@ -54,8 +47,8 @@ hmac.create = function () {
             if (is.string(md)) {
                 // create builtin message digest
                 md = md.toLowerCase();
-                if (md in forge.md.algorithms) {
-                    _md = forge.md.algorithms[md].create();
+                if (md in crypto.md.algorithms) {
+                    _md = crypto.md.algorithms[md].create();
                 } else {
                     throw new Error(`Unknown hash algorithm "${md}"`);
                 }
@@ -71,11 +64,11 @@ hmac.create = function () {
         } else {
             if (is.string(key)) {
                 // convert string into byte buffer
-                key = forge.util.createBuffer(key);
-            } else if (forge.util.isArray(key)) {
+                key = crypto.util.createBuffer(key);
+            } else if (crypto.util.isArray(key)) {
                 // convert byte array into byte buffer
                 var tmp = key;
-                key = forge.util.createBuffer();
+                key = crypto.util.createBuffer();
                 for (var i = 0; i < tmp.length; ++i) {
                     key.putByte(tmp[i]);
                 }
@@ -92,8 +85,8 @@ hmac.create = function () {
             // mix key into inner and outer padding
             // ipadding = [0x36 * blocksize] ^ key
             // opadding = [0x5C * blocksize] ^ key
-            _ipadding = forge.util.createBuffer();
-            _opadding = forge.util.createBuffer();
+            _ipadding = crypto.util.createBuffer();
+            _opadding = crypto.util.createBuffer();
             keylen = key.length();
             for (var i = 0; i < keylen; ++i) {
                 var tmp = key.at(i);

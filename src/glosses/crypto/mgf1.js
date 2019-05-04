@@ -7,33 +7,32 @@
  * Copyright (c) 2012 Stefan Siegl <stesie@brokenpipe.de>
  * Copyright (c) 2014 Digital Bazaar, Inc.
  */
-const forge = require("./forge");
-require("./util");
 
-forge.mgf = forge.mgf || {};
-const mgf1 = module.exports = forge.mgf.mgf1 = forge.mgf1 = forge.mgf1 || {};
+const {
+    crypto
+} = adone;
 
 /**
  * Creates a MGF1 mask generation function object.
  *
- * @param md the message digest API to use (eg: forge.md.sha1.create()).
+ * @param md the message digest API to use (eg: crypto.md.sha1.create()).
  *
  * @return a mask generation function object.
  */
-mgf1.create = function (md) {
+export const create = function (md) {
     const mgf = {
-    /**
-     * Generate mask of specified length.
-     *
-     * @param {String} seed The seed for mask generation.
-     * @param maskLen Number of bytes to generate.
-     * @return {String} The generated mask.
-     */
+        /**
+         * Generate mask of specified length.
+         *
+         * @param {String} seed The seed for mask generation.
+         * @param maskLen Number of bytes to generate.
+         * @return {String} The generated mask.
+         */
         generate(seed, maskLen) {
             /**
              * 2. Let T be the empty octet string.
              */
-            const t = new forge.util.ByteBuffer();
+            const t = new crypto.util.ByteBuffer();
 
             /**
              * 3. For counter from 0 to ceil(maskLen / hLen), do the following:
@@ -43,7 +42,7 @@ mgf1.create = function (md) {
                 /**
                  * a. Convert counter to an octet string C of length 4 octets
                  */
-                const c = new forge.util.ByteBuffer();
+                const c = new crypto.util.ByteBuffer();
                 c.putInt32(i);
 
                 /**

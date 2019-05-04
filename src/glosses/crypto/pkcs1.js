@@ -43,17 +43,11 @@
  *
  * Copyright (c) 2013-2014 Digital Bazaar, Inc.
  */
-const forge = require("./forge");
-require("./util");
-require("./random");
-require("./sha1");
 
 const {
-    is
+    is,
+    crypto
 } = adone;
-
-// shortcut for PKCS#1 API
-const pkcs1 = module.exports = forge.pkcs1 = forge.pkcs1 || {};
 
 /**
  * Encode the given RSAES-OAEP message (M) using key, with optional label (L)
@@ -73,7 +67,7 @@ const pkcs1 = module.exports = forge.pkcs1 = forge.pkcs1 || {};
  *
  * @return the encoded message bytes.
  */
-pkcs1.encode_rsa_oaep = function (key, message, options) {
+export const encode_rsa_oaep = function (key, message, options) {
     // parse arguments
     let label;
     let seed;
@@ -95,7 +89,7 @@ pkcs1.encode_rsa_oaep = function (key, message, options) {
 
     // default OAEP to SHA-1 message digest
     if (!md) {
-        md = forge.md.sha1.create();
+        md = crypto.md.sha1.create();
     } else {
         md.start();
     }
@@ -130,7 +124,7 @@ pkcs1.encode_rsa_oaep = function (key, message, options) {
     const DB = `${lHash.getBytes() + PS}\x01${message}`;
 
     if (!seed) {
-        seed = forge.random.getBytes(md.digestLength);
+        seed = crypto.random.getBytes(md.digestLength);
     } else if (seed.length !== md.digestLength) {
         var error = new Error("Invalid RSAES-OAEP seed. The seed length must " +
       "match the digest length.");
@@ -140,10 +134,10 @@ pkcs1.encode_rsa_oaep = function (key, message, options) {
     }
 
     const dbMask = rsa_mgf1(seed, keyLength - md.digestLength - 1, mgf1Md);
-    const maskedDB = forge.util.xorBytes(DB, dbMask, DB.length);
+    const maskedDB = crypto.util.xorBytes(DB, dbMask, DB.length);
 
     const seedMask = rsa_mgf1(maskedDB, md.digestLength, mgf1Md);
-    const maskedSeed = forge.util.xorBytes(seed, seedMask, seed.length);
+    const maskedSeed = crypto.util.xorBytes(seed, seedMask, seed.length);
 
     // return encoded message
     return `\x00${maskedSeed}${maskedDB}`;
@@ -166,7 +160,7 @@ pkcs1.encode_rsa_oaep = function (key, message, options) {
  *
  * @return the decoded message bytes.
  */
-pkcs1.decode_rsa_oaep = function (key, em, options) {
+export const decode_rsa_oaep = function (key, em, options) {
     // parse args
     let label;
     let md;
@@ -195,7 +189,7 @@ pkcs1.decode_rsa_oaep = function (key, em, options) {
 
     // default OAEP to SHA-1 message digest
     if (is.undefined(md)) {
-        md = forge.md.sha1.create();
+        md = crypto.md.sha1.create();
     } else {
         md.start();
     }
@@ -221,10 +215,10 @@ pkcs1.decode_rsa_oaep = function (key, em, options) {
     const maskedDB = em.substring(1 + md.digestLength);
 
     const seedMask = rsa_mgf1(maskedDB, md.digestLength, mgf1Md);
-    const seed = forge.util.xorBytes(maskedSeed, seedMask, maskedSeed.length);
+    const seed = crypto.util.xorBytes(maskedSeed, seedMask, maskedSeed.length);
 
     const dbMask = rsa_mgf1(seed, keyLength - md.digestLength - 1, mgf1Md);
-    const db = forge.util.xorBytes(maskedDB, dbMask, maskedDB.length);
+    const db = crypto.util.xorBytes(maskedDB, dbMask, maskedDB.length);
 
     const lHashPrime = db.substring(0, md.digestLength);
 
@@ -265,7 +259,7 @@ pkcs1.decode_rsa_oaep = function (key, em, options) {
 function rsa_mgf1(seed, maskLength, hash) {
     // default to SHA-1 message digest
     if (!hash) {
-        hash = forge.md.sha1.create();
+        hash = crypto.md.sha1.create();
     }
     let t = "";
     const count = Math.ceil(maskLength / hash.digestLength);

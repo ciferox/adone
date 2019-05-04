@@ -15,24 +15,17 @@
  *
  * Copyright (c) 2010-2014 Digital Bazaar, Inc.
  */
-const forge = require("./forge");
-require("./cipher");
-require("./cipherModes");
-require("./util");
-
 const {
-    is
+    is,
+    crypto
 } = adone;
 
-/**
- * AES API
- */
-module.exports = forge.aes = forge.aes || {};
+// require("./cipherModes");
 
 /**
  * Deprecated. Instead, use:
  *
- * var cipher = forge.cipher.createCipher('AES-<mode>', key);
+ * var cipher = crypto.cipher.createCipher('AES-<mode>', key);
  * cipher.start({iv: iv});
  *
  * Creates an AES cipher object to encrypt data using the given symmetric key.
@@ -48,7 +41,7 @@ module.exports = forge.aes = forge.aes || {};
  *
  * @return the cipher.
  */
-forge.aes.startEncrypting = function (key, iv, output, mode) {
+export const startEncrypting = function (key, iv, output, mode) {
     const cipher = _createCipher({
         key,
         output,
@@ -62,7 +55,7 @@ forge.aes.startEncrypting = function (key, iv, output, mode) {
 /**
  * Deprecated. Instead, use:
  *
- * var cipher = forge.cipher.createCipher('AES-<mode>', key);
+ * var cipher = crypto.cipher.createCipher('AES-<mode>', key);
  *
  * Creates an AES cipher object to encrypt data using the given symmetric key.
  *
@@ -74,7 +67,7 @@ forge.aes.startEncrypting = function (key, iv, output, mode) {
  *
  * @return the cipher.
  */
-forge.aes.createEncryptionCipher = function (key, mode) {
+export const createEncryptionCipher = function (key, mode) {
     return _createCipher({
         key,
         output: null,
@@ -86,7 +79,7 @@ forge.aes.createEncryptionCipher = function (key, mode) {
 /**
  * Deprecated. Instead, use:
  *
- * var decipher = forge.cipher.createDecipher('AES-<mode>', key);
+ * var decipher = crypto.cipher.createDecipher('AES-<mode>', key);
  * decipher.start({iv: iv});
  *
  * Creates an AES cipher object to decrypt data using the given symmetric key.
@@ -102,7 +95,7 @@ forge.aes.createEncryptionCipher = function (key, mode) {
  *
  * @return the cipher.
  */
-forge.aes.startDecrypting = function (key, iv, output, mode) {
+export const startDecrypting = function (key, iv, output, mode) {
     const cipher = _createCipher({
         key,
         output,
@@ -116,7 +109,7 @@ forge.aes.startDecrypting = function (key, iv, output, mode) {
 /**
  * Deprecated. Instead, use:
  *
- * var decipher = forge.cipher.createDecipher('AES-<mode>', key);
+ * var decipher = crypto.cipher.createDecipher('AES-<mode>', key);
  *
  * Creates an AES cipher object to decrypt data using the given symmetric key.
  *
@@ -128,7 +121,7 @@ forge.aes.startDecrypting = function (key, iv, output, mode) {
  *
  * @return the cipher.
  */
-forge.aes.createDecryptionCipher = function (key, mode) {
+export const createDecryptionCipher = function (key, mode) {
     return _createCipher({
         key,
         output: null,
@@ -145,7 +138,7 @@ forge.aes.createDecryptionCipher = function (key, mode) {
  *
  * @return the AES algorithm object.
  */
-forge.aes.Algorithm = function (name, mode) {
+export const Algorithm = function (name, mode) {
     if (!init) {
         initialize();
     }
@@ -173,7 +166,7 @@ forge.aes.Algorithm = function (name, mode) {
  *          decrypt true if the algorithm should be initialized for decryption,
  *            false for encryption.
  */
-forge.aes.Algorithm.prototype.initialize = function (options) {
+Algorithm.prototype.initialize = function (options) {
     if (this._init) {
         return;
     }
@@ -189,19 +182,19 @@ forge.aes.Algorithm.prototype.initialize = function (options) {
     if (is.string(key) &&
     (key.length === 16 || key.length === 24 || key.length === 32)) {
     // convert key string into byte buffer
-        key = forge.util.createBuffer(key);
-    } else if (forge.util.isArray(key) &&
+        key = crypto.util.createBuffer(key);
+    } else if (crypto.util.isArray(key) &&
     (key.length === 16 || key.length === 24 || key.length === 32)) {
     // convert key integer array into byte buffer
         tmp = key;
-        key = forge.util.createBuffer();
+        key = crypto.util.createBuffer();
         for (var i = 0; i < tmp.length; ++i) {
             key.putByte(tmp[i]);
         }
     }
 
     // convert key byte buffer into 32-bit integer array
-    if (!forge.util.isArray(key)) {
+    if (!crypto.util.isArray(key)) {
         tmp = key;
         key = [];
 
@@ -216,7 +209,7 @@ forge.aes.Algorithm.prototype.initialize = function (options) {
     }
 
     // key must be an array of 32-bit integers by now
-    if (!forge.util.isArray(key) ||
+    if (!crypto.util.isArray(key) ||
     !(key.length === 4 || key.length === 6 || key.length === 8)) {
         throw new Error("Invalid key parameter.");
     }
@@ -226,7 +219,7 @@ forge.aes.Algorithm.prototype.initialize = function (options) {
     const encryptOp = (["CFB", "OFB", "CTR", "GCM"].indexOf(mode) !== -1);
 
     // do key expansion
-    this._w = _expandKey(key, options.decrypt && !encryptOp);
+    this._w = __expandKey(key, options.decrypt && !encryptOp);
     this._init = true;
 };
 
@@ -238,39 +231,39 @@ forge.aes.Algorithm.prototype.initialize = function (options) {
  *
  * @return the expanded key.
  */
-forge.aes._expandKey = function (key, decrypt) {
+export const _expandKey = function (key, decrypt) {
     if (!init) {
         initialize();
     }
-    return _expandKey(key, decrypt);
+    return __expandKey(key, decrypt);
 };
 
-/**
- * Updates a single block. Typically only used for testing.
- *
- * @param w the expanded key to use.
- * @param input an array of block-size 32-bit words.
- * @param output an array of block-size 32-bit words.
- * @param decrypt true to decrypt, false to encrypt.
- */
-forge.aes._updateBlock = _updateBlock;
+// /**
+//  * Updates a single block. Typically only used for testing.
+//  *
+//  * @param w the expanded key to use.
+//  * @param input an array of block-size 32-bit words.
+//  * @param output an array of block-size 32-bit words.
+//  * @param decrypt true to decrypt, false to encrypt.
+//  */
+// _updateBlock = _updateBlock;
 
 /**
  *  Register AES algorithms *
  */
 
-registerAlgorithm("AES-ECB", forge.cipher.modes.ecb);
-registerAlgorithm("AES-CBC", forge.cipher.modes.cbc);
-registerAlgorithm("AES-CFB", forge.cipher.modes.cfb);
-registerAlgorithm("AES-OFB", forge.cipher.modes.ofb);
-registerAlgorithm("AES-CTR", forge.cipher.modes.ctr);
-registerAlgorithm("AES-GCM", forge.cipher.modes.gcm);
+registerAlgorithm("AES-ECB", crypto.cipher.modes.ecb);
+registerAlgorithm("AES-CBC", crypto.cipher.modes.cbc);
+registerAlgorithm("AES-CFB", crypto.cipher.modes.cfb);
+registerAlgorithm("AES-OFB", crypto.cipher.modes.ofb);
+registerAlgorithm("AES-CTR", crypto.cipher.modes.ctr);
+registerAlgorithm("AES-GCM", crypto.cipher.modes.gcm);
 
 function registerAlgorithm(name, mode) {
     const factory = function () {
-        return new forge.aes.Algorithm(name, mode);
+        return new Algorithm(name, mode);
     };
-    forge.cipher.registerAlgorithm(name, factory);
+    crypto.cipher.registerAlgorithm(name, factory);
 }
 
 /**
@@ -677,7 +670,7 @@ function initialize() {
  *
  * @return the generated key schedule.
  */
-function _expandKey(key, decrypt) {
+function __expandKey(key, decrypt) {
     // copy the key's words to initialize the key schedule
     let w = key.slice(0);
 
@@ -812,7 +805,7 @@ function _expandKey(key, decrypt) {
  * @param output the updated output block.
  * @param decrypt true to decrypt the block, false to encrypt it.
  */
-function _updateBlock(w, input, output, decrypt) {
+export function _updateBlock(w, input, output, decrypt) {
     /**
      * Cipher(byte in[4*Nb], byte out[4*Nb], word w[Nb*(Nr+1)])
      * begin
@@ -1058,8 +1051,8 @@ function _updateBlock(w, input, output, decrypt) {
 /**
  * Deprecated. Instead, use:
  *
- * forge.cipher.createCipher('AES-<mode>', key);
- * forge.cipher.createDecipher('AES-<mode>', key);
+ * crypto.cipher.createCipher('AES-<mode>', key);
+ * crypto.cipher.createDecipher('AES-<mode>', key);
  *
  * Creates a deprecated AES cipher object. This object's mode will default to
  * CBC (cipher-block-chaining).
@@ -1082,9 +1075,9 @@ function _createCipher(options) {
 
     let cipher;
     if (options.decrypt) {
-        cipher = forge.cipher.createDecipher(algorithm, options.key);
+        cipher = crypto.cipher.createDecipher(algorithm, options.key);
     } else {
-        cipher = forge.cipher.createCipher(algorithm, options.key);
+        cipher = crypto.cipher.createCipher(algorithm, options.key);
     }
 
     // backwards compatible start API
@@ -1092,7 +1085,7 @@ function _createCipher(options) {
     cipher.start = function (iv, options) {
     // backwards compatibility: support second arg as output buffer
         let output = null;
-        if (options instanceof forge.util.ByteBuffer) {
+        if (options instanceof crypto.util.ByteBuffer) {
             output = options;
             options = {};
         }

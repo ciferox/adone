@@ -7,20 +7,15 @@
  *
  * Copyright (c) 2010-2013 Digital Bazaar, Inc.
  */
-const forge = require("./forge");
-require("./hmac");
-require("./md");
-require("./util");
 
 const {
-    is
+    is,
+    crypto
 } = adone;
 
-const pkcs5 = forge.pkcs5 = forge.pkcs5 || {};
-
-let crypto;
-if (forge.util.isNodejs && !forge.options.usePureJavaScript) {
-    crypto = require("crypto");
+let stdCrypto;
+if (is.nodejs && !crypto.options.usePureJavaScript) {
+    stdCrypto = require("crypto");
 }
 
 /**
@@ -39,7 +34,7 @@ if (forge.util.isNodejs && !forge.options.usePureJavaScript) {
  * @return the derived key, as a binary-encoded string of bytes, for the
  *           synchronous version (if no callback is specified).
  */
-module.exports = forge.pbkdf2 = pkcs5.pbkdf2 = function (
+export default function (
     p, s, c, dkLen, md, callback) {
     if (is.function(md)) {
         callback = md;
@@ -48,30 +43,30 @@ module.exports = forge.pbkdf2 = pkcs5.pbkdf2 = function (
 
     // use native implementation if possible and not disabled, note that
     // some node versions only support SHA-1, others allow digest to be changed
-    if (forge.util.isNodejs && !forge.options.usePureJavaScript &&
-    crypto.pbkdf2 && (is.null(md) || typeof md !== "object") &&
-    (crypto.pbkdf2Sync.length > 4 || (!md || md === "sha1"))) {
+    if (is.nodejs && !crypto.options.usePureJavaScript &&
+        stdCrypto.pbkdf2 && (is.null(md) || typeof md !== "object") &&
+        (stdCrypto.pbkdf2Sync.length > 4 || (!md || md === "sha1"))) {
         if (!is.string(md)) {
             // default prf to SHA-1
             md = "sha1";
         }
-        p = new Buffer(p, "binary");
-        s = new Buffer(s, "binary");
+        p = Buffer.from(p, "binary");
+        s = Buffer.from(s, "binary");
         if (!callback) {
-            if (crypto.pbkdf2Sync.length === 4) {
-                return crypto.pbkdf2Sync(p, s, c, dkLen).toString("binary");
+            if (stdCrypto.pbkdf2Sync.length === 4) {
+                return stdCrypto.pbkdf2Sync(p, s, c, dkLen).toString("binary");
             }
-            return crypto.pbkdf2Sync(p, s, c, dkLen, md).toString("binary");
+            return stdCrypto.pbkdf2Sync(p, s, c, dkLen, md).toString("binary");
         }
-        if (crypto.pbkdf2Sync.length === 4) {
-            return crypto.pbkdf2(p, s, c, dkLen, (err, key) => {
+        if (stdCrypto.pbkdf2Sync.length === 4) {
+            return stdCrypto.pbkdf2(p, s, c, dkLen, (err, key) => {
                 if (err) {
                     return callback(err);
                 }
                 callback(null, key.toString("binary"));
             });
         }
-        return crypto.pbkdf2(p, s, c, dkLen, md, (err, key) => {
+        return stdCrypto.pbkdf2(p, s, c, dkLen, md, (err, key) => {
             if (err) {
                 return callback(err);
             }
@@ -80,14 +75,14 @@ module.exports = forge.pbkdf2 = pkcs5.pbkdf2 = function (
     }
 
     if (is.nil(md)) {
-    // default prf to SHA-1
+        // default prf to SHA-1
         md = "sha1";
     }
     if (is.string(md)) {
-        if (!(md in forge.md.algorithms)) {
+        if (!(md in crypto.md.algorithms)) {
             throw new Error(`Unknown hash algorithm: ${md}`);
         }
-        md = forge.md[md].create();
+        md = crypto.md[md].create();
     }
 
     const hLen = md.digestLength;
@@ -138,10 +133,12 @@ module.exports = forge.pbkdf2 = pkcs5.pbkdf2 = function (
      *
      * Here, INT(i) is a four-octet encoding of the integer i, most
      */
-    const prf = forge.hmac.create();
+    const prf = crypto.hmac.create();
     prf.start(md, p);
     let dk = "";
-    let xor; let u_c; let u_c1;
+    let xor;
+    let u_c;
+    let u_c1;
 
     // sync version
     if (!callback) {
@@ -149,7 +146,7 @@ module.exports = forge.pbkdf2 = pkcs5.pbkdf2 = function (
             // PRF(P, S || INT(i)) (first iteration)
             prf.start(null, null);
             prf.update(s);
-            prf.update(forge.util.int32ToBytes(i));
+            prf.update(crypto.util.int32ToBytes(i));
             xor = u_c1 = prf.digest().getBytes();
 
             // PRF(P, u_{c-1}) (other iterations)
@@ -158,7 +155,7 @@ module.exports = forge.pbkdf2 = pkcs5.pbkdf2 = function (
                 prf.update(u_c1);
                 u_c = prf.digest().getBytes();
                 // F(p, s, c, i)
-                xor = forge.util.xorBytes(xor, u_c, hLen);
+                xor = crypto.util.xorBytes(xor, u_c, hLen);
                 u_c1 = u_c;
             }
 
@@ -184,7 +181,7 @@ module.exports = forge.pbkdf2 = pkcs5.pbkdf2 = function (
         // PRF(P, S || INT(i)) (first iteration)
         prf.start(null, null);
         prf.update(s);
-        prf.update(forge.util.int32ToBytes(i));
+        prf.update(crypto.util.int32ToBytes(i));
         xor = u_c1 = prf.digest().getBytes();
 
         // PRF(P, u_{c-1}) (other iterations)
@@ -198,10 +195,10 @@ module.exports = forge.pbkdf2 = pkcs5.pbkdf2 = function (
             prf.update(u_c1);
             u_c = prf.digest().getBytes();
             // F(p, s, c, i)
-            xor = forge.util.xorBytes(xor, u_c, hLen);
+            xor = crypto.util.xorBytes(xor, u_c, hLen);
             u_c1 = u_c;
             ++j;
-            return forge.util.setImmediate(inner);
+            return crypto.util.setImmediate(inner);
         }
 
         /**

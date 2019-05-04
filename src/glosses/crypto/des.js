@@ -29,24 +29,16 @@
  * Copyright (c) 2012 Stefan Siegl <stesie@brokenpipe.de>
  * Copyright (c) 2012-2014 Digital Bazaar, Inc.
  */
-const forge = require("./forge");
-require("./cipher");
-require("./cipherModes");
-require("./util");
 
 const {
-    is
+    is,
+    crypto
 } = adone;
-
-/**
- * DES API
- */
-module.exports = forge.des = forge.des || {};
 
 /**
  * Deprecated. Instead, use:
  *
- * var cipher = forge.cipher.createCipher('DES-<mode>', key);
+ * var cipher = crypto.cipher.createCipher('DES-<mode>', key);
  * cipher.start({iv: iv});
  *
  * Creates an DES cipher object to encrypt data using the given symmetric key.
@@ -63,7 +55,7 @@ module.exports = forge.des = forge.des || {};
  *
  * @return the cipher.
  */
-forge.des.startEncrypting = function (key, iv, output, mode) {
+export const startEncrypting = function (key, iv, output, mode) {
     const cipher = _createCipher({
         key,
         output,
@@ -77,7 +69,7 @@ forge.des.startEncrypting = function (key, iv, output, mode) {
 /**
  * Deprecated. Instead, use:
  *
- * var cipher = forge.cipher.createCipher('DES-<mode>', key);
+ * var cipher = crypto.cipher.createCipher('DES-<mode>', key);
  *
  * Creates an DES cipher object to encrypt data using the given symmetric key.
  *
@@ -88,7 +80,7 @@ forge.des.startEncrypting = function (key, iv, output, mode) {
  *
  * @return the cipher.
  */
-forge.des.createEncryptionCipher = function (key, mode) {
+export const createEncryptionCipher = function (key, mode) {
     return _createCipher({
         key,
         output: null,
@@ -100,7 +92,7 @@ forge.des.createEncryptionCipher = function (key, mode) {
 /**
  * Deprecated. Instead, use:
  *
- * var decipher = forge.cipher.createDecipher('DES-<mode>', key);
+ * var decipher = crypto.cipher.createDecipher('DES-<mode>', key);
  * decipher.start({iv: iv});
  *
  * Creates an DES cipher object to decrypt data using the given symmetric key.
@@ -117,7 +109,7 @@ forge.des.createEncryptionCipher = function (key, mode) {
  *
  * @return the cipher.
  */
-forge.des.startDecrypting = function (key, iv, output, mode) {
+export const startDecrypting = function (key, iv, output, mode) {
     const cipher = _createCipher({
         key,
         output,
@@ -131,7 +123,7 @@ forge.des.startDecrypting = function (key, iv, output, mode) {
 /**
  * Deprecated. Instead, use:
  *
- * var decipher = forge.cipher.createDecipher('DES-<mode>', key);
+ * var decipher = crypto.cipher.createDecipher('DES-<mode>', key);
  *
  * Creates an DES cipher object to decrypt data using the given symmetric key.
  *
@@ -142,7 +134,7 @@ forge.des.startDecrypting = function (key, iv, output, mode) {
  *
  * @return the cipher.
  */
-forge.des.createDecryptionCipher = function (key, mode) {
+export const createDecryptionCipher = function (key, mode) {
     return _createCipher({
         key,
         output: null,
@@ -159,7 +151,7 @@ forge.des.createDecryptionCipher = function (key, mode) {
  *
  * @return the DES algorithm object.
  */
-forge.des.Algorithm = function (name, mode) {
+export const Algorithm = function (name, mode) {
     const self = this;
     self.name = name;
     self.mode = new mode({
@@ -184,12 +176,12 @@ forge.des.Algorithm = function (name, mode) {
  *          decrypt true if the algorithm should be initialized for decryption,
  *            false for encryption.
  */
-forge.des.Algorithm.prototype.initialize = function (options) {
+Algorithm.prototype.initialize = function (options) {
     if (this._init) {
         return;
     }
 
-    const key = forge.util.createBuffer(options.key);
+    const key = crypto.util.createBuffer(options.key);
     if (this.name.indexOf("3DES") === 0) {
         if (key.length() !== 24) {
             throw new Error(`Invalid Triple-DES key size: ${key.length() * 8}`);
@@ -205,23 +197,23 @@ forge.des.Algorithm.prototype.initialize = function (options) {
  *  Register DES algorithms *
  */
 
-registerAlgorithm("DES-ECB", forge.cipher.modes.ecb);
-registerAlgorithm("DES-CBC", forge.cipher.modes.cbc);
-registerAlgorithm("DES-CFB", forge.cipher.modes.cfb);
-registerAlgorithm("DES-OFB", forge.cipher.modes.ofb);
-registerAlgorithm("DES-CTR", forge.cipher.modes.ctr);
+registerAlgorithm("DES-ECB", crypto.cipher.modes.ecb);
+registerAlgorithm("DES-CBC", crypto.cipher.modes.cbc);
+registerAlgorithm("DES-CFB", crypto.cipher.modes.cfb);
+registerAlgorithm("DES-OFB", crypto.cipher.modes.ofb);
+registerAlgorithm("DES-CTR", crypto.cipher.modes.ctr);
 
-registerAlgorithm("3DES-ECB", forge.cipher.modes.ecb);
-registerAlgorithm("3DES-CBC", forge.cipher.modes.cbc);
-registerAlgorithm("3DES-CFB", forge.cipher.modes.cfb);
-registerAlgorithm("3DES-OFB", forge.cipher.modes.ofb);
-registerAlgorithm("3DES-CTR", forge.cipher.modes.ctr);
+registerAlgorithm("3DES-ECB", crypto.cipher.modes.ecb);
+registerAlgorithm("3DES-CBC", crypto.cipher.modes.cbc);
+registerAlgorithm("3DES-CFB", crypto.cipher.modes.cfb);
+registerAlgorithm("3DES-OFB", crypto.cipher.modes.ofb);
+registerAlgorithm("3DES-CTR", crypto.cipher.modes.ctr);
 
 function registerAlgorithm(name, mode) {
     const factory = function () {
-        return new forge.des.Algorithm(name, mode);
+        return new crypto.des.Algorithm(name, mode);
     };
-    forge.cipher.registerAlgorithm(name, factory);
+    crypto.cipher.registerAlgorithm(name, factory);
 }
 
 /**
@@ -459,8 +451,8 @@ function _updateBlock(keys, input, output, decrypt) {
 /**
  * Deprecated. Instead, use:
  *
- * forge.cipher.createCipher('DES-<mode>', key);
- * forge.cipher.createDecipher('DES-<mode>', key);
+ * crypto.cipher.createCipher('DES-<mode>', key);
+ * crypto.cipher.createDecipher('DES-<mode>', key);
  *
  * Creates a deprecated DES cipher object. This object's mode will default to
  * CBC (cipher-block-chaining).
@@ -482,9 +474,9 @@ function _createCipher(options) {
 
     let cipher;
     if (options.decrypt) {
-        cipher = forge.cipher.createDecipher(algorithm, options.key);
+        cipher = crypto.cipher.createDecipher(algorithm, options.key);
     } else {
-        cipher = forge.cipher.createCipher(algorithm, options.key);
+        cipher = crypto.cipher.createCipher(algorithm, options.key);
     }
 
     // backwards compatible start API
@@ -492,7 +484,7 @@ function _createCipher(options) {
     cipher.start = function (iv, options) {
     // backwards compatibility: support second arg as output buffer
         let output = null;
-        if (options instanceof forge.util.ByteBuffer) {
+        if (options instanceof crypto.util.ByteBuffer) {
             output = options;
             options = {};
         }

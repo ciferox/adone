@@ -46,13 +46,10 @@
  * Tom Wu
  * tjw@cs.Stanford.EDU
  */
-const forge = require("./forge");
 
 const {
     is
 } = adone;
-
-module.exports = forge.jsbn = forge.jsbn || {};
 
 // Bits per digit
 let dbits;
@@ -62,7 +59,7 @@ const canary = 0xdeadbeefcafe;
 const j_lm = ((canary & 0xffffff) == 0xefcafe);
 
 // (public) Constructor
-function BigInteger(a, b, c) {
+export function BigInteger(a, b, c) {
     this.data = [];
     if (!is.nil(a)) {
         if (is.number(a)) {
@@ -74,7 +71,6 @@ function BigInteger(a, b, c) {
         } 
     }
 }
-forge.jsbn.BigInteger = BigInteger;
 
 // return new, unset BigInteger
 function nbi() {

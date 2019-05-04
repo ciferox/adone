@@ -5,17 +5,17 @@
  *
  * Copyright (c) 2010-2018 Digital Bazaar, Inc.
  */
-const forge = require("./forge");
-const baseN = require("./baseN");
 
 const {
     is
 } = adone;
 
+const baseN = require("./baseN");
+
 /**
  * Utilities API
  */
-const util = module.exports = forge.util = forge.util || {};
+const util = {};
 
 // define setImmediate and nextTick
 (function () {
@@ -115,17 +115,12 @@ const util = module.exports = forge.util = forge.util || {};
     util.nextTick = util.setImmediate;
 })();
 
-// check if running under Node.js
-util.isNodejs =
-  !is.undefined(process) && process.versions && process.versions.node;
-
-
 // 'self' will also work in Web Workers (instance of WorkerGlobalScope) while
 // it will point to `window` in the main thread.
 // To remain compatible with older browsers, we fall back to 'window' if 'self'
 // is not available.
 util.globalScope = (function () {
-    if (util.isNodejs) {
+    if (is.nodejs) {
         return global;
     }
 
@@ -3013,3 +3008,5 @@ util.estimateCores = function (options, callback) {
         }, 0);
     }
 };
+
+export default util;

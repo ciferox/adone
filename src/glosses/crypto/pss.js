@@ -5,16 +5,11 @@
  *
  * Copyright (c) 2012 Stefan Siegl <stesie@brokenpipe.de>
  */
-const forge = require("./forge");
-require("./random");
-require("./util");
 
 const {
-    is
+    is,
+    crypto
 } = adone;
-
-// shortcut for PSS API
-const pss = module.exports = forge.pss = forge.pss || {};
 
 /**
  * Creates a PSS signature scheme object.
@@ -24,7 +19,7 @@ const pss = module.exports = forge.pss = forge.pss || {};
  * 1. Specify the saltLength only and the built-in PRNG will generate it.
  * 2. Specify the saltLength and a custom PRNG with 'getBytesSync' defined that
  *   will be used.
- * 3. Specify the salt itself as a forge.util.ByteBuffer.
+ * 3. Specify the salt itself as a crypto.util.ByteBuffer.
  *
  * @param options the options to use:
  *          md the message digest object to use, a forge md instance.
@@ -35,7 +30,7 @@ const pss = module.exports = forge.pss = forge.pss || {};
  *
  * @return a signature scheme object.
  */
-pss.create = function (options) {
+export const create = function (options) {
     // backwards compatibility w/legacy args: hash, mgf, sLen
     if (arguments.length === 3) {
         options = {
@@ -52,7 +47,7 @@ pss.create = function (options) {
     let salt_ = options.salt || null;
     if (is.string(salt_)) {
     // assume binary-encoded string
-        salt_ = forge.util.createBuffer(salt_);
+        salt_ = crypto.util.createBuffer(salt_);
     }
 
     let sLen;
@@ -68,7 +63,7 @@ pss.create = function (options) {
         throw new Error("Given salt length does not match length of given salt.");
     }
 
-    const prng = options.prng || forge.random;
+    const prng = options.prng || crypto.random;
 
     const pssobj = {};
 
@@ -111,7 +106,7 @@ pss.create = function (options) {
         /**
          * 5. Let M' = (0x)00 00 00 00 00 00 00 00 || mHash || salt;
          */
-        const m_ = new forge.util.ByteBuffer();
+        const m_ = new crypto.util.ByteBuffer();
         m_.fillWithByte(0, 8);
         m_.putBytes(mHash);
         m_.putBytes(salt);
@@ -126,7 +121,7 @@ pss.create = function (options) {
         /**
          * 7. Generate an octet string PS consisting of emLen - sLen - hLen - 2
          */
-        const ps = new forge.util.ByteBuffer();
+        const ps = new crypto.util.ByteBuffer();
         ps.fillWithByte(0, emLen - sLen - hLen - 2);
 
         /**
@@ -254,7 +249,7 @@ pss.create = function (options) {
         /**
          * 12.  Let M' = (0x)00 00 00 00 00 00 00 00 || mHash || salt
          */
-        const m_ = new forge.util.ByteBuffer();
+        const m_ = new crypto.util.ByteBuffer();
         m_.fillWithByte(0, 8);
         m_.putBytes(mHash);
         m_.putBytes(salt);

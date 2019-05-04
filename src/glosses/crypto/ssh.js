@@ -8,14 +8,10 @@
  *
  * @author https://github.com/shellac
  */
-const forge = require("./forge");
-require("./aes");
-require("./hmac");
-require("./md5");
-require("./sha1");
-require("./util");
 
-const ssh = module.exports = forge.ssh = forge.ssh || {};
+const {
+    crypto
+} = adone;
 
 /**
  * Encodes (and optionally encrypts) a private RSA key as a Putty PPK file.
@@ -26,7 +22,7 @@ const ssh = module.exports = forge.ssh = forge.ssh || {};
  *
  * @return the PPK file as a string.
  */
-ssh.privateKeyToPutty = function (privateKey, passphrase, comment) {
+export const privateKeyToPutty = function (privateKey, passphrase, comment) {
     comment = comment || "";
     passphrase = passphrase || "";
     const algorithm = "ssh-rsa";
@@ -37,19 +33,19 @@ ssh.privateKeyToPutty = function (privateKey, passphrase, comment) {
     ppk += `Comment: ${comment}\r\n`;
 
     // public key into buffer for ppk
-    const pubbuffer = forge.util.createBuffer();
+    const pubbuffer = crypto.util.createBuffer();
     _addStringToBuffer(pubbuffer, algorithm);
     _addBigIntegerToBuffer(pubbuffer, privateKey.e);
     _addBigIntegerToBuffer(pubbuffer, privateKey.n);
 
     // write public key
-    const pub = forge.util.encode64(pubbuffer.bytes(), 64);
+    const pub = crypto.util.encode64(pubbuffer.bytes(), 64);
     let length = Math.floor(pub.length / 66) + 1; // 66 = 64 + \r\n
     ppk += `Public-Lines: ${length}\r\n`;
     ppk += pub;
 
     // private key into a buffer
-    const privbuffer = forge.util.createBuffer();
+    const privbuffer = crypto.util.createBuffer();
     _addBigIntegerToBuffer(privbuffer, privateKey.d);
     _addBigIntegerToBuffer(privbuffer, privateKey.p);
     _addBigIntegerToBuffer(privbuffer, privateKey.q);
@@ -58,10 +54,10 @@ ssh.privateKeyToPutty = function (privateKey, passphrase, comment) {
     // optionally encrypt the private key
     let priv;
     if (!passphrase) {
-    // use the unencrypted buffer
-        priv = forge.util.encode64(privbuffer.bytes(), 64);
+        // use the unencrypted buffer
+        priv = crypto.util.encode64(privbuffer.bytes(), 64);
     } else {
-    // encrypt RSA key using passphrase
+        // encrypt RSA key using passphrase
         let encLen = privbuffer.length() + 16 - 1;
         encLen -= encLen % 16;
 
@@ -71,14 +67,14 @@ ssh.privateKeyToPutty = function (privateKey, passphrase, comment) {
         padding.truncate(padding.length() - encLen + privbuffer.length());
         privbuffer.putBuffer(padding);
 
-        const aeskey = forge.util.createBuffer();
+        const aeskey = crypto.util.createBuffer();
         aeskey.putBuffer(_sha1("\x00\x00\x00\x00", passphrase));
         aeskey.putBuffer(_sha1("\x00\x00\x00\x01", passphrase));
 
         // encrypt some bytes using CBC mode
         // key is 40 bytes, so truncate *by* 8 bytes
-        const cipher = forge.aes.createEncryptionCipher(aeskey.truncate(8), "CBC");
-        cipher.start(forge.util.createBuffer().fillWithByte(0, 16));
+        const cipher = crypto.aes.createEncryptionCipher(aeskey.truncate(8), "CBC");
+        cipher.start(crypto.util.createBuffer().fillWithByte(0, 16));
         cipher.update(privbuffer.copy());
         cipher.finish();
         const encrypted = cipher.output;
@@ -87,7 +83,7 @@ ssh.privateKeyToPutty = function (privateKey, passphrase, comment) {
         // due to padding we finish as an exact multiple of 16
         encrypted.truncate(16); // all padding
 
-        priv = forge.util.encode64(encrypted.bytes(), 64);
+        priv = crypto.util.encode64(encrypted.bytes(), 64);
     }
 
     // output private key
@@ -98,7 +94,7 @@ ssh.privateKeyToPutty = function (privateKey, passphrase, comment) {
     // MAC
     const mackey = _sha1("putty-private-key-file-mac-key", passphrase);
 
-    const macbuffer = forge.util.createBuffer();
+    const macbuffer = crypto.util.createBuffer();
     _addStringToBuffer(macbuffer, algorithm);
     _addStringToBuffer(macbuffer, encryptionAlgorithm);
     _addStringToBuffer(macbuffer, comment);
@@ -107,7 +103,7 @@ ssh.privateKeyToPutty = function (privateKey, passphrase, comment) {
     macbuffer.putInt32(privbuffer.length());
     macbuffer.putBuffer(privbuffer);
 
-    const hmac = forge.hmac.create();
+    const hmac = crypto.hmac.create();
     hmac.start("sha1", mackey);
     hmac.update(macbuffer.bytes());
 
@@ -124,16 +120,16 @@ ssh.privateKeyToPutty = function (privateKey, passphrase, comment) {
  *
  * @return the public key in OpenSSH format.
  */
-ssh.publicKeyToOpenSSH = function (key, comment) {
+export const publicKeyToOpenSSH = function (key, comment) {
     const type = "ssh-rsa";
     comment = comment || "";
 
-    const buffer = forge.util.createBuffer();
+    const buffer = crypto.util.createBuffer();
     _addStringToBuffer(buffer, type);
     _addBigIntegerToBuffer(buffer, key.e);
     _addBigIntegerToBuffer(buffer, key.n);
 
-    return `${type} ${forge.util.encode64(buffer.bytes())} ${comment}`;
+    return `${type} ${crypto.util.encode64(buffer.bytes())} ${comment}`;
 };
 
 /**
@@ -144,12 +140,12 @@ ssh.publicKeyToOpenSSH = function (key, comment) {
  *
  * @return the public key in OpenSSH format.
  */
-ssh.privateKeyToOpenSSH = function (privateKey, passphrase) {
+export const privateKeyToOpenSSH = function (privateKey, passphrase) {
     if (!passphrase) {
-        return forge.pki.privateKeyToPem(privateKey);
+        return crypto.pki.privateKeyToPem(privateKey);
     }
     // OpenSSH private key is just a legacy format, it seems
-    return forge.pki.encryptRsaPrivateKey(privateKey, passphrase,
+    return crypto.pki.encryptRsaPrivateKey(privateKey, passphrase,
         { legacy: true, algorithm: "aes128" });
 };
 
@@ -157,7 +153,7 @@ ssh.privateKeyToOpenSSH = function (privateKey, passphrase) {
  * Gets the SSH fingerprint for the given public key.
  *
  * @param options the options to use.
- *          [md] the message digest object to use (defaults to forge.md.md5).
+ *          [md] the message digest object to use (defaults to crypto.md.md5).
  *          [encoding] an alternative output encoding, such as 'hex'
  *            (defaults to none, outputs a byte buffer).
  *          [delimiter] the delimiter to use between bytes for 'hex' encoded
@@ -165,12 +161,12 @@ ssh.privateKeyToOpenSSH = function (privateKey, passphrase) {
  *
  * @return the fingerprint as a byte buffer or other encoding based on options.
  */
-ssh.getPublicKeyFingerprint = function (key, options) {
+export const getPublicKeyFingerprint = function (key, options) {
     options = options || {};
-    const md = options.md || forge.md.md5.create();
+    const md = options.md || crypto.md.md5.create();
 
     const type = "ssh-rsa";
-    const buffer = forge.util.createBuffer();
+    const buffer = crypto.util.createBuffer();
     _addStringToBuffer(buffer, type);
     _addBigIntegerToBuffer(buffer, key.e);
     _addBigIntegerToBuffer(buffer, key.n);
@@ -205,7 +201,7 @@ function _addBigIntegerToBuffer(buffer, val) {
     if (hexVal[0] >= "8") {
         hexVal = `00${hexVal}`;
     }
-    const bytes = forge.util.hexToBytes(hexVal);
+    const bytes = crypto.util.hexToBytes(hexVal);
     buffer.putInt32(bytes.length);
     buffer.putBytes(bytes);
 }
@@ -227,7 +223,7 @@ function _addStringToBuffer(buffer, val) {
  * @return the sha1 hash of the provided arguments.
  */
 function _sha1() {
-    const sha = forge.md.sha1.create();
+    const sha = crypto.md.sha1.create();
     const num = arguments.length;
     for (let i = 0; i < num; ++i) {
         sha.update(arguments[i]);

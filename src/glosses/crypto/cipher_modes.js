@@ -5,23 +5,17 @@
  *
  * Copyright (c) 2010-2014 Digital Bazaar, Inc.
  */
-const forge = require("./forge");
-require("./util");
 
 const {
-    is
+    is,
+    crypto
 } = adone;
-
-forge.cipher = forge.cipher || {};
-
-// supported cipher modes
-const modes = module.exports = forge.cipher.modes = forge.cipher.modes || {};
 
 /**
  *  Electronic codebook (ECB) (Don't use this; it's not secure) *
  */
 
-modes.ecb = function (options) {
+export const ecb = function (options) {
     options = options || {};
     this.name = "ECB";
     this.cipher = options.cipher;
@@ -31,9 +25,9 @@ modes.ecb = function (options) {
     this._outBlock = new Array(this._ints);
 };
 
-modes.ecb.prototype.start = function (options) {};
+ecb.prototype.start = function (options) {};
 
-modes.ecb.prototype.encrypt = function (input, output, finish) {
+ecb.prototype.encrypt = function (input, output, finish) {
     // not enough input to encrypt
     if (input.length() < this.blockSize && !(finish && input.length() > 0)) {
         return true;
@@ -53,7 +47,7 @@ modes.ecb.prototype.encrypt = function (input, output, finish) {
     }
 };
 
-modes.ecb.prototype.decrypt = function (input, output, finish) {
+ecb.prototype.decrypt = function (input, output, finish) {
     // not enough input to decrypt
     if (input.length() < this.blockSize && !(finish && input.length() > 0)) {
         return true;
@@ -73,7 +67,7 @@ modes.ecb.prototype.decrypt = function (input, output, finish) {
     }
 };
 
-modes.ecb.prototype.pad = function (input, options) {
+ecb.prototype.pad = function (input, options) {
     // add PKCS#7 padding to block (each pad byte is the
     // value of the number of pad bytes)
     const padding = (input.length() === this.blockSize ?
@@ -82,7 +76,7 @@ modes.ecb.prototype.pad = function (input, options) {
     return true;
 };
 
-modes.ecb.prototype.unpad = function (output, options) {
+ecb.prototype.unpad = function (output, options) {
     // check for error: input data not a multiple of blockSize
     if (options.overflow > 0) {
         return false;
@@ -104,7 +98,7 @@ modes.ecb.prototype.unpad = function (output, options) {
  *  Cipher-block Chaining (CBC) *
  */
 
-modes.cbc = function (options) {
+export const cbc = function (options) {
     options = options || {};
     this.name = "CBC";
     this.cipher = options.cipher;
@@ -114,7 +108,7 @@ modes.cbc = function (options) {
     this._outBlock = new Array(this._ints);
 };
 
-modes.cbc.prototype.start = function (options) {
+cbc.prototype.start = function (options) {
     // Note: legacy support for using IV residue (has security flaws)
     // if IV is null, reuse block from previous processing
     if (is.null(options.iv)) {
@@ -132,7 +126,7 @@ modes.cbc.prototype.start = function (options) {
     }
 };
 
-modes.cbc.prototype.encrypt = function (input, output, finish) {
+cbc.prototype.encrypt = function (input, output, finish) {
     // not enough input to encrypt
     if (input.length() < this.blockSize && !(finish && input.length() > 0)) {
         return true;
@@ -154,7 +148,7 @@ modes.cbc.prototype.encrypt = function (input, output, finish) {
     this._prev = this._outBlock;
 };
 
-modes.cbc.prototype.decrypt = function (input, output, finish) {
+cbc.prototype.decrypt = function (input, output, finish) {
     // not enough input to decrypt
     if (input.length() < this.blockSize && !(finish && input.length() > 0)) {
         return true;
@@ -176,7 +170,7 @@ modes.cbc.prototype.decrypt = function (input, output, finish) {
     this._prev = this._inBlock.slice(0);
 };
 
-modes.cbc.prototype.pad = function (input, options) {
+cbc.prototype.pad = function (input, options) {
     // add PKCS#7 padding to block (each pad byte is the
     // value of the number of pad bytes)
     const padding = (input.length() === this.blockSize ?
@@ -185,7 +179,7 @@ modes.cbc.prototype.pad = function (input, options) {
     return true;
 };
 
-modes.cbc.prototype.unpad = function (output, options) {
+cbc.prototype.unpad = function (output, options) {
     // check for error: input data not a multiple of blockSize
     if (options.overflow > 0) {
         return false;
@@ -207,7 +201,7 @@ modes.cbc.prototype.unpad = function (output, options) {
  *  Cipher feedback (CFB) *
  */
 
-modes.cfb = function (options) {
+export const cfb = function (options) {
     options = options || {};
     this.name = "CFB";
     this.cipher = options.cipher;
@@ -216,11 +210,11 @@ modes.cfb = function (options) {
     this._inBlock = null;
     this._outBlock = new Array(this._ints);
     this._partialBlock = new Array(this._ints);
-    this._partialOutput = forge.util.createBuffer();
+    this._partialOutput = crypto.util.createBuffer();
     this._partialBytes = 0;
 };
 
-modes.cfb.prototype.start = function (options) {
+cfb.prototype.start = function (options) {
     if (!("iv" in options)) {
         throw new Error("Invalid IV parameter.");
     }
@@ -230,7 +224,7 @@ modes.cfb.prototype.start = function (options) {
     this._partialBytes = 0;
 };
 
-modes.cfb.prototype.encrypt = function (input, output, finish) {
+cfb.prototype.encrypt = function (input, output, finish) {
     // not enough input to encrypt
     const inputLength = input.length();
     if (inputLength === 0) {
@@ -290,7 +284,7 @@ modes.cfb.prototype.encrypt = function (input, output, finish) {
     this._partialBytes = 0;
 };
 
-modes.cfb.prototype.decrypt = function (input, output, finish) {
+cfb.prototype.decrypt = function (input, output, finish) {
     // not enough input to decrypt
     const inputLength = input.length();
     if (inputLength === 0) {
@@ -354,7 +348,7 @@ modes.cfb.prototype.decrypt = function (input, output, finish) {
  *  Output feedback (OFB) *
  */
 
-modes.ofb = function (options) {
+export const ofb = function (options) {
     options = options || {};
     this.name = "OFB";
     this.cipher = options.cipher;
@@ -362,11 +356,11 @@ modes.ofb = function (options) {
     this._ints = this.blockSize / 4;
     this._inBlock = null;
     this._outBlock = new Array(this._ints);
-    this._partialOutput = forge.util.createBuffer();
+    this._partialOutput = crypto.util.createBuffer();
     this._partialBytes = 0;
 };
 
-modes.ofb.prototype.start = function (options) {
+ofb.prototype.start = function (options) {
     if (!("iv" in options)) {
         throw new Error("Invalid IV parameter.");
     }
@@ -376,7 +370,7 @@ modes.ofb.prototype.start = function (options) {
     this._partialBytes = 0;
 };
 
-modes.ofb.prototype.encrypt = function (input, output, finish) {
+ofb.prototype.encrypt = function (input, output, finish) {
     // not enough input to encrypt
     const inputLength = input.length();
     if (input.length() === 0) {
@@ -435,13 +429,13 @@ modes.ofb.prototype.encrypt = function (input, output, finish) {
     this._partialBytes = 0;
 };
 
-modes.ofb.prototype.decrypt = modes.ofb.prototype.encrypt;
+ofb.prototype.decrypt = ofb.prototype.encrypt;
 
 /**
  *  Counter (CTR) *
  */
 
-modes.ctr = function (options) {
+export const ctr = function (options) {
     options = options || {};
     this.name = "CTR";
     this.cipher = options.cipher;
@@ -449,11 +443,11 @@ modes.ctr = function (options) {
     this._ints = this.blockSize / 4;
     this._inBlock = null;
     this._outBlock = new Array(this._ints);
-    this._partialOutput = forge.util.createBuffer();
+    this._partialOutput = crypto.util.createBuffer();
     this._partialBytes = 0;
 };
 
-modes.ctr.prototype.start = function (options) {
+ctr.prototype.start = function (options) {
     if (!("iv" in options)) {
         throw new Error("Invalid IV parameter.");
     }
@@ -463,7 +457,7 @@ modes.ctr.prototype.start = function (options) {
     this._partialBytes = 0;
 };
 
-modes.ctr.prototype.encrypt = function (input, output, finish) {
+ctr.prototype.encrypt = function (input, output, finish) {
     // not enough input to encrypt
     const inputLength = input.length();
     if (inputLength === 0) {
@@ -518,13 +512,13 @@ modes.ctr.prototype.encrypt = function (input, output, finish) {
     inc32(this._inBlock);
 };
 
-modes.ctr.prototype.decrypt = modes.ctr.prototype.encrypt;
+ctr.prototype.decrypt = ctr.prototype.encrypt;
 
 /**
  *  Galois/Counter Mode (GCM) *
  */
 
-modes.gcm = function (options) {
+export const gcm = function (options) {
     options = options || {};
     this.name = "GCM";
     this.cipher = options.cipher;
@@ -532,7 +526,7 @@ modes.gcm = function (options) {
     this._ints = this.blockSize / 4;
     this._inBlock = new Array(this._ints);
     this._outBlock = new Array(this._ints);
-    this._partialOutput = forge.util.createBuffer();
+    this._partialOutput = crypto.util.createBuffer();
     this._partialBytes = 0;
 
     // R is actually this value concatenated with 120 more zero bits, but
@@ -541,12 +535,12 @@ modes.gcm = function (options) {
     this._R = 0xE1000000;
 };
 
-modes.gcm.prototype.start = function (options) {
+gcm.prototype.start = function (options) {
     if (!("iv" in options)) {
         throw new Error("Invalid IV parameter.");
     }
     // ensure IV is a byte buffer
-    const iv = forge.util.createBuffer(options.iv);
+    const iv = crypto.util.createBuffer(options.iv);
 
     // no ciphered data processed yet
     this._cipherLength = 0;
@@ -554,9 +548,9 @@ modes.gcm.prototype.start = function (options) {
     // default additional data is none
     let additionalData;
     if ("additionalData" in options) {
-        additionalData = forge.util.createBuffer(options.additionalData);
+        additionalData = crypto.util.createBuffer(options.additionalData);
     } else {
-        additionalData = forge.util.createBuffer();
+        additionalData = crypto.util.createBuffer();
     }
 
     // default tag length is 128 bits
@@ -570,7 +564,7 @@ modes.gcm.prototype.start = function (options) {
     this._tag = null;
     if (options.decrypt) {
     // save tag to check later
-        this._tag = forge.util.createBuffer(options.tag).getBytes();
+        this._tag = crypto.util.createBuffer(options.tag).getBytes();
         if (this._tag.length !== (this._tagLength / 8)) {
             throw new Error("Authentication tag does not match tag length.");
         }
@@ -619,7 +613,7 @@ modes.gcm.prototype.start = function (options) {
     this._partialBytes = 0;
 
     // consume authentication data
-    additionalData = forge.util.createBuffer(additionalData);
+    additionalData = crypto.util.createBuffer(additionalData);
     // save additional data length as a BE 64-bit number
     this._aDataLength = from64To32(additionalData.length() * 8);
     // pad additional data to 128 bit (16 byte) block size
@@ -638,7 +632,7 @@ modes.gcm.prototype.start = function (options) {
     }
 };
 
-modes.gcm.prototype.encrypt = function (input, output, finish) {
+gcm.prototype.encrypt = function (input, output, finish) {
     // not enough input to encrypt
     const inputLength = input.length();
     if (inputLength === 0) {
@@ -714,7 +708,7 @@ modes.gcm.prototype.encrypt = function (input, output, finish) {
     inc32(this._inBlock);
 };
 
-modes.gcm.prototype.decrypt = function (input, output, finish) {
+gcm.prototype.decrypt = function (input, output, finish) {
     // not enough input to decrypt
     const inputLength = input.length();
     if (inputLength < this.blockSize && !(finish && inputLength > 0)) {
@@ -747,7 +741,7 @@ modes.gcm.prototype.decrypt = function (input, output, finish) {
     }
 };
 
-modes.gcm.prototype.afterFinish = function (output, options) {
+gcm.prototype.afterFinish = function (output, options) {
     let rval = true;
 
     // handle overflow
@@ -756,7 +750,7 @@ modes.gcm.prototype.afterFinish = function (output, options) {
     }
 
     // handle authentication tag
-    this.tag = forge.util.createBuffer();
+    this.tag = crypto.util.createBuffer();
 
     // concatenate additional data length with cipher length
     const lengths = this._aDataLength.concat(from64To32(this._cipherLength * 8));
@@ -807,7 +801,7 @@ modes.gcm.prototype.afterFinish = function (output, options) {
  *
  * @return the block result of the multiplication.
  */
-modes.gcm.prototype.multiply = function (x, y) {
+gcm.prototype.multiply = function (x, y) {
     const z_i = [0, 0, 0, 0];
     const v_i = y.slice(0);
 
@@ -832,7 +826,7 @@ modes.gcm.prototype.multiply = function (x, y) {
     return z_i;
 };
 
-modes.gcm.prototype.pow = function (x, out) {
+gcm.prototype.pow = function (x, out) {
     // if LSB(x) is 1, x = x >>> 1
     // else x = (x >>> 1) ^ R
     const lsb = x[3] & 1;
@@ -855,7 +849,7 @@ modes.gcm.prototype.pow = function (x, out) {
     }
 };
 
-modes.gcm.prototype.tableMultiply = function (x) {
+gcm.prototype.tableMultiply = function (x) {
     // assumes 4-bit tables are used
     const z = [0, 0, 0, 0];
     for (let i = 0; i < 32; ++i) {
@@ -881,7 +875,7 @@ modes.gcm.prototype.tableMultiply = function (x) {
  *
  * @return the hashed value (Ym).
  */
-modes.gcm.prototype.ghash = function (h, y, x) {
+gcm.prototype.ghash = function (h, y, x) {
     y[0] ^= x[0];
     y[1] ^= x[1];
     y[2] ^= x[2];
@@ -905,7 +899,7 @@ modes.gcm.prototype.ghash = function (h, y, x) {
  * @param h the hash subkey.
  * @param bits the bit size for a component.
  */
-modes.gcm.prototype.generateHashTable = function (h, bits) {
+gcm.prototype.generateHashTable = function (h, bits) {
     // TODO: There are further optimizations that would use only the
     // first table M_0 (or some variant) along with a remainder table;
     // this can be explored in the future
@@ -930,7 +924,7 @@ modes.gcm.prototype.generateHashTable = function (h, bits) {
  * @param mid the pre-multiplied value for the middle key of the table.
  * @param bits the bit size for a component.
  */
-modes.gcm.prototype.generateSubHashTable = function (mid, bits) {
+gcm.prototype.generateSubHashTable = function (mid, bits) {
     // compute the table quickly by minimizing the number of
     // POW operations -- they only need to be performed for powers of 2,
     // all other entries can be composed from those powers using XOR
@@ -975,18 +969,18 @@ modes.gcm.prototype.generateSubHashTable = function (mid, bits) {
 function transformIV(iv) {
     if (is.string(iv)) {
     // convert iv string into byte buffer
-        iv = forge.util.createBuffer(iv);
+        iv = crypto.util.createBuffer(iv);
     }
 
-    if (forge.util.isArray(iv) && iv.length > 4) {
+    if (crypto.util.isArray(iv) && iv.length > 4) {
     // convert iv byte array into byte buffer
         const tmp = iv;
-        iv = forge.util.createBuffer();
+        iv = crypto.util.createBuffer();
         for (let i = 0; i < tmp.length; ++i) {
             iv.putByte(tmp[i]);
         }
     }
-    if (!forge.util.isArray(iv)) {
+    if (!crypto.util.isArray(iv)) {
     // convert iv byte buffer into 32-bit integer array
         iv = [iv.getInt32(), iv.getInt32(), iv.getInt32(), iv.getInt32()];
     }

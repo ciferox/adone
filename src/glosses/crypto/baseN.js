@@ -28,8 +28,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
-const api = {};
-module.exports = api;
 
 const {
     is
@@ -47,7 +45,7 @@ const _reverseAlphabets = {};
  *
  * @return the baseN-encoded output string.
  */
-api.encode = function (input, alphabet, maxline) {
+export const encode = function (input, alphabet, maxline) {
     if (!is.string(alphabet)) {
         throw new TypeError('"alphabet" must be a string.');
     }
@@ -104,7 +102,7 @@ api.encode = function (input, alphabet, maxline) {
  *
  * @return the Uint8Array.
  */
-api.decode = function (input, alphabet) {
+export const decode = function (input, alphabet) {
     if (!is.string(input)) {
         throw new TypeError('"input" must be a string.');
     }
@@ -116,7 +114,7 @@ api.decode = function (input, alphabet) {
     if (!table) {
     // compute reverse alphabet
         table = _reverseAlphabets[alphabet] = [];
-        for (var i = 0; i < alphabet.length; ++i) {
+        for (let i = 0; i < alphabet.length; ++i) {
             table[alphabet.charCodeAt(i)] = i;
         }
     }
@@ -127,7 +125,7 @@ api.decode = function (input, alphabet) {
     const base = alphabet.length;
     const first = alphabet.charAt(0);
     const bytes = [0];
-    for (var i = 0; i < input.length; i++) {
+    for (let i = 0; i < input.length; i++) {
         const value = table[input.charCodeAt(i)];
         if (is.undefined(value)) {
             return;

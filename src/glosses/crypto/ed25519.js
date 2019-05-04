@@ -8,48 +8,41 @@
  *
  * https://github.com/dchest/tweetnacl-js
  */
-const forge = require("./forge");
-require("./jsbn");
-require("./random");
-require("./sha512");
-require("./util");
 
 const {
-    is
+    is,
+    crypto
 } = adone;
 
 if (is.undefined(BigInteger)) {
-    var BigInteger = forge.jsbn.BigInteger;
+    var BigInteger = crypto.jsbn.BigInteger;
 }
 
-const ByteBuffer = forge.util.ByteBuffer;
+const ByteBuffer = crypto.util.ByteBuffer;
 const NativeBuffer = is.undefined(Buffer) ? Uint8Array : Buffer;
 
 /**
  * Ed25519 algorithms, see RFC 8032:
  * https://tools.ietf.org/html/rfc8032
  */
-forge.pki = forge.pki || {};
-module.exports = forge.pki.ed25519 = forge.ed25519 = forge.ed25519 || {};
-const ed25519 = forge.ed25519;
 
-ed25519.constants = {};
-ed25519.constants.PUBLIC_KEY_BYTE_LENGTH = 32;
-ed25519.constants.PRIVATE_KEY_BYTE_LENGTH = 64;
-ed25519.constants.SEED_BYTE_LENGTH = 32;
-ed25519.constants.SIGN_BYTE_LENGTH = 64;
-ed25519.constants.HASH_BYTE_LENGTH = 64;
+export const constants = {};
+constants.PUBLIC_KEY_BYTE_LENGTH = 32;
+constants.PRIVATE_KEY_BYTE_LENGTH = 64;
+constants.SEED_BYTE_LENGTH = 32;
+constants.SIGN_BYTE_LENGTH = 64;
+constants.HASH_BYTE_LENGTH = 64;
 
-ed25519.generateKeyPair = function (options) {
+export const generateKeyPair = function (options) {
     options = options || {};
     let seed = options.seed;
     if (is.undefined(seed)) {
-    // generate seed
-        seed = forge.random.getBytesSync(ed25519.constants.SEED_BYTE_LENGTH);
+        // generate seed
+        seed = crypto.random.getBytesSync(constants.SEED_BYTE_LENGTH);
     } else if (is.string(seed)) {
-        if (seed.length !== ed25519.constants.SEED_BYTE_LENGTH) {
+        if (seed.length !== constants.SEED_BYTE_LENGTH) {
             throw new TypeError(
-                `"seed" must be ${ed25519.constants.SEED_BYTE_LENGTH 
+                `"seed" must be ${constants.SEED_BYTE_LENGTH
                 } bytes in length.`);
         }
     } else if (!(seed instanceof Uint8Array)) {
@@ -59,8 +52,8 @@ ed25519.generateKeyPair = function (options) {
 
     seed = messageToNativeBuffer({ message: seed, encoding: "binary" });
 
-    const pk = new NativeBuffer(ed25519.constants.PUBLIC_KEY_BYTE_LENGTH);
-    const sk = new NativeBuffer(ed25519.constants.PRIVATE_KEY_BYTE_LENGTH);
+    const pk = new NativeBuffer(constants.PUBLIC_KEY_BYTE_LENGTH);
+    const sk = new NativeBuffer(constants.PRIVATE_KEY_BYTE_LENGTH);
     for (let i = 0; i < 32; ++i) {
         sk[i] = seed[i];
     }
@@ -68,83 +61,76 @@ ed25519.generateKeyPair = function (options) {
     return { publicKey: pk, privateKey: sk };
 };
 
-ed25519.publicKeyFromPrivateKey = function (options) {
+export const publicKeyFromPrivateKey = function (options) {
     options = options || {};
     const privateKey = messageToNativeBuffer({
         message: options.privateKey, encoding: "binary"
     });
-    if (privateKey.length !== ed25519.constants.PRIVATE_KEY_BYTE_LENGTH) {
+    if (privateKey.length !== constants.PRIVATE_KEY_BYTE_LENGTH) {
         throw new TypeError(
-            `"options.privateKey" must have a byte length of ${ 
-                ed25519.constants.PRIVATE_KEY_BYTE_LENGTH}`);
+            `"options.privateKey" must have a byte length of ${constants.PRIVATE_KEY_BYTE_LENGTH}`);
     }
 
-    const pk = new NativeBuffer(ed25519.constants.PUBLIC_KEY_BYTE_LENGTH);
+    const pk = new NativeBuffer(constants.PUBLIC_KEY_BYTE_LENGTH);
     for (let i = 0; i < pk.length; ++i) {
         pk[i] = privateKey[32 + i];
     }
     return pk;
 };
 
-ed25519.sign = function (options) {
+export const sign = function (options) {
     options = options || {};
     const msg = messageToNativeBuffer(options);
     const privateKey = messageToNativeBuffer({
         message: options.privateKey,
         encoding: "binary"
     });
-    if (privateKey.length !== ed25519.constants.PRIVATE_KEY_BYTE_LENGTH) {
-        throw new TypeError(
-            `"options.privateKey" must have a byte length of ${ 
-                ed25519.constants.PRIVATE_KEY_BYTE_LENGTH}`);
+    if (privateKey.length !== constants.PRIVATE_KEY_BYTE_LENGTH) {
+        throw new TypeError(`"options.privateKey" must have a byte length of ${constants.PRIVATE_KEY_BYTE_LENGTH}`);
     }
 
     const signedMsg = new NativeBuffer(
-        ed25519.constants.SIGN_BYTE_LENGTH + msg.length);
+        constants.SIGN_BYTE_LENGTH + msg.length);
     crypto_sign(signedMsg, msg, msg.length, privateKey);
 
-    const sig = new NativeBuffer(ed25519.constants.SIGN_BYTE_LENGTH);
+    const sig = new NativeBuffer(constants.SIGN_BYTE_LENGTH);
     for (let i = 0; i < sig.length; ++i) {
         sig[i] = signedMsg[i];
     }
     return sig;
 };
 
-ed25519.verify = function (options) {
+export const verify = function (options) {
     options = options || {};
     const msg = messageToNativeBuffer(options);
     if (is.undefined(options.signature)) {
         throw new TypeError(
             '"options.signature" must be a node.js Buffer, a Uint8Array, a forge ' +
-      "ByteBuffer, or a binary string.");
+            "ByteBuffer, or a binary string.");
     }
     const sig = messageToNativeBuffer({
         message: options.signature,
         encoding: "binary"
     });
-    if (sig.length !== ed25519.constants.SIGN_BYTE_LENGTH) {
-        throw new TypeError(
-            `"options.signature" must have a byte length of ${ 
-                ed25519.constants.SIGN_BYTE_LENGTH}`);
+    if (sig.length !== constants.SIGN_BYTE_LENGTH) {
+        throw new TypeError(`"options.signature" must have a byte length of ${constants.SIGN_BYTE_LENGTH}`);
     }
     const publicKey = messageToNativeBuffer({
         message: options.publicKey,
         encoding: "binary"
     });
-    if (publicKey.length !== ed25519.constants.PUBLIC_KEY_BYTE_LENGTH) {
-        throw new TypeError(
-            `"options.publicKey" must have a byte length of ${ 
-                ed25519.constants.PUBLIC_KEY_BYTE_LENGTH}`);
+    if (publicKey.length !== constants.PUBLIC_KEY_BYTE_LENGTH) {
+        throw new TypeError(`"options.publicKey" must have a byte length of ${constants.PUBLIC_KEY_BYTE_LENGTH}`);
     }
 
-    const sm = new NativeBuffer(ed25519.constants.SIGN_BYTE_LENGTH + msg.length);
-    const m = new NativeBuffer(ed25519.constants.SIGN_BYTE_LENGTH + msg.length);
+    const sm = new NativeBuffer(constants.SIGN_BYTE_LENGTH + msg.length);
+    const m = new NativeBuffer(constants.SIGN_BYTE_LENGTH + msg.length);
     let i;
-    for (i = 0; i < ed25519.constants.SIGN_BYTE_LENGTH; ++i) {
+    for (i = 0; i < constants.SIGN_BYTE_LENGTH; ++i) {
         sm[i] = sig[i];
     }
     for (i = 0; i < msg.length; ++i) {
-        sm[i + ed25519.constants.SIGN_BYTE_LENGTH] = msg[i];
+        sm[i + constants.SIGN_BYTE_LENGTH] = msg[i];
     }
     return (crypto_sign_open(m, sm, sm.length, publicKey) >= 0);
 };
@@ -178,8 +164,8 @@ function messageToNativeBuffer(options) {
     } else if (!(message instanceof ByteBuffer)) {
         throw new TypeError(
             '"options.message" must be a node.js Buffer, a Uint8Array, a forge ' +
-      'ByteBuffer, or a string with "options.encoding" specifying its ' +
-      "encoding.");
+            'ByteBuffer, or a string with "options.encoding" specifying its ' +
+            "encoding.");
     }
 
     // convert to native buffer
@@ -216,14 +202,14 @@ const I = gf([
 // whichever is available, to improve performance
 function sha512(msg, msgLen) {
     // Note: `out` and `msg` are NativeBuffer
-    const md = forge.md.sha512.create();
+    const md = crypto.md.sha512.create();
     const buffer = new ByteBuffer(msg);
     md.update(buffer.getBytes(msgLen), "binary");
     const hash = md.digest().getBytes();
     if (!is.undefined(Buffer)) {
         return new Buffer(hash, "binary");
     }
-    const out = new NativeBuffer(ed25519.constants.HASH_BYTE_LENGTH);
+    const out = new NativeBuffer(constants.HASH_BYTE_LENGTH);
     for (let i = 0; i < 64; ++i) {
         out[i] = hash.charCodeAt(i);
     }
@@ -981,16 +967,16 @@ function M(o, a, b) {
     v = t15 + c + 65535; c = Math.floor(v / 65536); t15 = v - c * 65536;
     t0 += c - 1 + 37 * (c - 1);
 
-    o[ 0] = t0;
-    o[ 1] = t1;
-    o[ 2] = t2;
-    o[ 3] = t3;
-    o[ 4] = t4;
-    o[ 5] = t5;
-    o[ 6] = t6;
-    o[ 7] = t7;
-    o[ 8] = t8;
-    o[ 9] = t9;
+    o[0] = t0;
+    o[1] = t1;
+    o[2] = t2;
+    o[3] = t3;
+    o[4] = t4;
+    o[5] = t5;
+    o[6] = t6;
+    o[7] = t7;
+    o[8] = t8;
+    o[9] = t9;
     o[10] = t10;
     o[11] = t11;
     o[12] = t12;

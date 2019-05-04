@@ -5,20 +5,21 @@
  *
  * Copyright (c) 2010-2013 Digital Bazaar, Inc.
  */
-const forge = require("./forge");
 
-forge.pki = forge.pki || {};
-const oids = module.exports = forge.pki.oids = forge.oids = forge.oids || {};
+// forge.pki = forge.pki || {};
+// const oids = module.exports = forge.pki.oids = forge.oids = forge.oids || {};
+const oids = {};
 
 // set id to name mapping and name to id mapping
-function _IN(id, name) {
+const _IN = (id, name) => {
     oids[id] = name;
     oids[name] = id;
-}
+};
+
 // set id to name mapping only
-function _I_(id, name) {
+const _I_ = (id, name) => {
     oids[id] = name;
-}
+};
 
 // algorithm OIDs
 _IN("1.2.840.113549.1.1.1", "rsaEncryption");
@@ -161,3 +162,5 @@ _IN("1.3.6.1.5.5.7.3.2", "clientAuth");
 _IN("1.3.6.1.5.5.7.3.3", "codeSigning");
 _IN("1.3.6.1.5.5.7.3.4", "emailProtection");
 _IN("1.3.6.1.5.5.7.3.8", "timeStamping");
+
+export default oids;

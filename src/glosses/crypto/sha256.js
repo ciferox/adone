@@ -7,19 +7,17 @@
  *
  * Copyright (c) 2010-2015 Digital Bazaar, Inc.
  */
-const forge = require("./forge");
-require("./md");
-require("./util");
 
-const sha256 = module.exports = forge.sha256 = forge.sha256 || {};
-forge.md.sha256 = forge.md.algorithms.sha256 = sha256;
+const {
+    crypto
+} = adone;
 
 /**
  * Creates a SHA-256 message digest object.
  *
  * @return a message digest object.
  */
-sha256.create = function () {
+export const create = function () {
     // do initialization as necessary
     if (!_initialized) {
         _init();
@@ -29,7 +27,7 @@ sha256.create = function () {
     let _state = null;
 
     // input buffer
-    let _input = forge.util.createBuffer();
+    let _input = crypto.util.createBuffer();
 
     // used for word storage
     const _w = new Array(64);
@@ -62,7 +60,7 @@ sha256.create = function () {
         for (let i = 0; i < int32s; ++i) {
             md.fullMessageLength.push(0);
         }
-        _input = forge.util.createBuffer();
+        _input = crypto.util.createBuffer();
         _state = {
             h0: 0x6A09E667,
             h1: 0xBB67AE85,
@@ -90,7 +88,7 @@ sha256.create = function () {
      */
     md.update = function (msg, encoding) {
         if (encoding === "utf8") {
-            msg = forge.util.encodeUtf8(msg);
+            msg = crypto.util.encodeUtf8(msg);
         }
 
         // update message length
@@ -146,7 +144,7 @@ sha256.create = function () {
          * must *always* be present, so if the message length is already
          */
 
-        const finalBlock = forge.util.createBuffer();
+        const finalBlock = crypto.util.createBuffer();
         finalBlock.putBytes(_input.bytes());
 
         // compute remaining size to be digested (include message length size)
@@ -184,7 +182,7 @@ sha256.create = function () {
             h7: _state.h7
         };
         _update(s2, _w, finalBlock);
-        const rval = forge.util.createBuffer();
+        const rval = crypto.util.createBuffer();
         rval.putInt32(s2.h0);
         rval.putInt32(s2.h1);
         rval.putInt32(s2.h2);
@@ -212,7 +210,7 @@ let _k = null;
 function _init() {
     // create padding
     _padding = String.fromCharCode(128);
-    _padding += forge.util.fillString(String.fromCharCode(0x00), 64);
+    _padding += crypto.util.fillString(String.fromCharCode(0x00), 64);
 
     // create K table for SHA-256
     _k = [

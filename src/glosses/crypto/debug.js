@@ -5,12 +5,6 @@
  *
  * Copyright 2008-2013 Digital Bazaar, Inc.
  */
-const forge = require("./forge");
-
-/**
- * DEBUG API
- */
-module.exports = forge.debug = forge.debug || {};
 
 // Private storage for debugging.
 // Useful to expose data that is otherwise unviewable behind closures.
@@ -20,9 +14,14 @@ module.exports = forge.debug = forge.debug || {};
 // (function() {
 //   var cat = 'forge.test.Test'; // debugging category
 //   var sState = {...}; // local state
-//   forge.debug.set(cat, 'sState', sState);
+//   set(cat, 'sState', sState);
 // })();
-forge.debug.storage = {};
+
+const {
+    is
+} = adone;
+
+export let storage = {};
 
 /**
  * Gets debug data. Omit name for all cat data  Omit name and cat for
@@ -32,15 +31,15 @@ forge.debug.storage = {};
  * @param name name of data to get (optional).
  * @return object with requested debug data or undefined.
  */
-forge.debug.get = function (cat, name) {
+export const get = function (cat, name) {
     let rval;
     if (is.undefined(cat)) {
-        rval = forge.debug.storage;
-    } else if (cat in forge.debug.storage) {
+        rval = storage;
+    } else if (cat in storage) {
         if (is.undefined(name)) {
-            rval = forge.debug.storage[cat];
+            rval = storage[cat];
         } else {
-            rval = forge.debug.storage[cat][name];
+            rval = storage[cat][name];
         }
     }
     return rval;
@@ -53,11 +52,11 @@ forge.debug.get = function (cat, name) {
  * @param name name of data to set.
  * @param data data to set.
  */
-forge.debug.set = function (cat, name, data) {
-    if (!(cat in forge.debug.storage)) {
-        forge.debug.storage[cat] = {};
+export const set = function (cat, name, data) {
+    if (!(cat in storage)) {
+        storage[cat] = {};
     }
-    forge.debug.storage[cat][name] = data;
+    storage[cat][name] = data;
 };
 
 /**
@@ -67,14 +66,14 @@ forge.debug.set = function (cat, name, data) {
  * @param cat name of debugging category.
  * @param name name of data to clear or omit to clear entire category.
  */
-forge.debug.clear = function (cat, name) {
+export const clear = function (cat, name) {
     if (is.undefined(cat)) {
-        forge.debug.storage = {};
-    } else if (cat in forge.debug.storage) {
+        storage = {};
+    } else if (cat in storage) {
         if (is.undefined(name)) {
-            delete forge.debug.storage[cat];
+            delete storage[cat];
         } else {
-            delete forge.debug.storage[cat][name];
+            delete storage[cat][name];
         }
     }
 };

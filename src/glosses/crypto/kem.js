@@ -7,19 +7,17 @@
  * Copyright (c) 2014 Lautaro Cozzani <lautaro.cozzani@scytl.com>
  * Copyright (c) 2014 Digital Bazaar, Inc.
  */
-const forge = require("./forge");
-require("./util");
-require("./random");
-require("./jsbn");
 
-module.exports = forge.kem = forge.kem || {};
+const {
+    crypto
+} = adone;
 
-const BigInteger = forge.jsbn.BigInteger;
+const { BigInteger } = crypto.jsbn;
 
 /**
  * The API for the RSA Key Encapsulation Mechanism (RSA-KEM) from ISO 18033-2.
  */
-forge.kem.rsa = {};
+export const rsa = {};
 
 /**
  * Creates an RSA KEM API object for generating a secret asymmetric key.
@@ -35,9 +33,9 @@ forge.kem.rsa = {};
  *          [prng] a custom crypto-secure pseudo-random number generator to use,
  *            that must define "getBytesSync".
  */
-forge.kem.rsa.create = function (kdf, options) {
+rsa.create = function (kdf, options) {
     options = options || {};
-    const prng = options.prng || forge.random;
+    const prng = options.prng || crypto.random;
 
     const kem = {};
 
@@ -53,20 +51,20 @@ forge.kem.rsa.create = function (kdf, options) {
      *   key: the secret key to use for encrypting a message.
      */
     kem.encrypt = function (publicKey, keyLength) {
-    // generate a random r where 1 < r < n
+        // generate a random r where 1 < r < n
         const byteLength = Math.ceil(publicKey.n.bitLength() / 8);
         let r;
         do {
             r = new BigInteger(
-                forge.util.bytesToHex(prng.getBytesSync(byteLength)),
+                crypto.util.bytesToHex(prng.getBytesSync(byteLength)),
                 16).mod(publicKey.n);
         } while (r.compareTo(BigInteger.ONE) <= 0);
 
         // prepend r with zeros
-        r = forge.util.hexToBytes(r.toString(16));
+        r = crypto.util.hexToBytes(r.toString(16));
         const zeros = byteLength - r.length;
         if (zeros > 0) {
-            r = forge.util.fillString(String.fromCharCode(0), zeros) + r;
+            r = crypto.util.fillString(String.fromCharCode(0), zeros) + r;
         }
 
         // encrypt the random
@@ -89,7 +87,7 @@ forge.kem.rsa.create = function (kdf, options) {
      * @return the secret key as a binary-encoded string of bytes.
      */
     kem.decrypt = function (privateKey, encapsulation, keyLength) {
-    // decrypt the encapsulation and generate the secret key
+        // decrypt the encapsulation and generate the secret key
         const r = privateKey.decrypt(encapsulation, "NONE");
         return kdf.generate(r, keyLength);
     };
@@ -97,7 +95,7 @@ forge.kem.rsa.create = function (kdf, options) {
     return kem;
 };
 
-// TODO: add forge.kem.kdf.create('KDF1', {md: ..., ...}) API?
+// TODO: add crypto.kem.kdf.create('KDF1', {md: ..., ...}) API?
 
 /**
  * Creates a key derivation API object that implements KDF1 per ISO 18033-2.
@@ -108,7 +106,7 @@ forge.kem.rsa.create = function (kdf, options) {
  *
  * @return a KDF1 API object.
  */
-forge.kem.kdf1 = function (md, digestLength) {
+export const kdf1 = function (md, digestLength) {
     _createKDF(this, md, 0, digestLength || md.digestLength);
 };
 
@@ -121,7 +119,7 @@ forge.kem.kdf1 = function (md, digestLength) {
  *
  * @return a KDF2 API object.
  */
-forge.kem.kdf2 = function (md, digestLength) {
+export const kdf2 = function (md, digestLength) {
     _createKDF(this, md, 1, digestLength || md.digestLength);
 };
 
@@ -144,12 +142,12 @@ function _createKDF(kdf, md, counterStart, digestLength) {
      * @return the key as a binary-encoded string.
      */
     kdf.generate = function (x, length) {
-        const key = new forge.util.ByteBuffer();
+        const key = new crypto.util.ByteBuffer();
 
         // run counter from counterStart to ceil(length / Hash.len)
         const k = Math.ceil(length / digestLength) + counterStart;
 
-        const c = new forge.util.ByteBuffer();
+        const c = new crypto.util.ByteBuffer();
         for (let i = counterStart; i < k; ++i) {
             // I2OSP(i, 4): convert counter to an octet string of 4 octets
             c.putInt32(i);

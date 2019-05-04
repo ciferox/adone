@@ -282,9 +282,6 @@ describe("util", () => {
     });
 
     it("should base58 encode some bytes", () => {
-        if (is.undefined(Uint8Array)) {
-            return;
-        }
         const buffer = new Uint8Array([
             0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07]);
         const encoded = UTIL.binary.base58.encode(buffer);
@@ -292,9 +289,6 @@ describe("util", () => {
     });
 
     it("should base58 encode some bytes from a ByteBuffer", () => {
-        if (is.undefined(Uint8Array)) {
-            return;
-        }
         const buffer = UTIL.createBuffer(new Uint8Array([
             0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07]));
         const encoded = UTIL.binary.base58.encode(buffer);
@@ -302,9 +296,6 @@ describe("util", () => {
     });
 
     it("should base58 decode some bytes", () => {
-        if (is.undefined(Uint8Array)) {
-            return;
-        }
         const decoded = UTIL.binary.base58.decode("13DUyZY2dc");
         const buffer = new Uint8Array([
             0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07]);
@@ -314,9 +305,6 @@ describe("util", () => {
     });
 
     it("should base58 encode some bytes with whitespace", () => {
-        if (is.undefined(Uint8Array)) {
-            return;
-        }
         const buffer = new Uint8Array([
             0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07]);
         const encoded = UTIL.binary.base58.encode(buffer, 4);
@@ -324,9 +312,6 @@ describe("util", () => {
     });
 
     it("should base58 decode some bytes with whitespace", () => {
-        if (is.undefined(Uint8Array)) {
-            return;
-        }
         const decoded = UTIL.binary.base58.decode("13DU\r\nyZY2\r\ndc");
         const buffer = new Uint8Array([
             0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07]);

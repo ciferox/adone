@@ -296,51 +296,22 @@ export default async function adapter(config) {
             });
         }
 
-        let uploadProgress;
-        if (is.function(config.onUploadProgress)) {
-            uploadProgress = config.onUploadProgress;
-        } else {
-            uploadProgress = adone.noop;
-        }
-
-        const eventData = {
-            lengthComputable: true,
-            loaded: 0,
-            total: headers["Content-Length"] || 0
-        };
-
         if (is.nil(data)) {
             req.end(data);
-            uploadProgress(eventData);
             return;
         } else if (!is.stream(data)) {
             if (data.length <= adone.stream.buffer.DEFAULT_INITIAL_SIZE) {
                 req.end(data);
-                eventData.loaded = eventData.total = data.length;
-                uploadProgress(eventData);
                 return;
             }
             const stream = new adone.stream.buffer.ReadableStream();
             stream.put(data);
             stream.stop();
-            data = stream;
-            eventData.total = data.length;
-        } else {
-            eventData.lengthComputable = false;
+            data = stream;   
         }
-
-        // const counter = new adone.stream.CountingStream();
-
-        // counter.on("data", () => {
-        //     console.log("chunk", counter.count);
-        //     eventData.loaded = counter.count;
-        //     uploadProgress(eventData);
-        // });
-
-        // counter.pause(); // on("data") resumes the stream, we dont want it
 
         data.on("error", (err) => {
             reject(__.enhanceError(err, config, null, req));
-        })/*.pipe(counter)*/.pipe(req);
+        }).pipe(req);
     });
 }
