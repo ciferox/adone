@@ -1,36 +1,7 @@
 const {
     is,
-    path: aPath,
-    util: { omit, arrify }
+    path: aPath
 } = adone;
-
-const normalizeValue = (dirName, item, name) => {
-    const val = item[name];
-    if (is.array(val)) {
-        const result = [];
-        for (const v of val) {
-            result.push(v.startsWith("!")
-                ? `!${aPath.join(dirName, v.slice(1))}`
-                : aPath.join(dirName, v)
-            );
-        }
-        return result;
-    } else if (is.string(val)) {
-        return (is.string(dirName))
-            ? aPath.join(dirName, val)
-            : val;
-    }
-
-    return val;
-};
-
-const addIfNotIncluded = (arr, item) => {
-    for (const i of arrify(item)) {
-        if (!arr.includes(i)) {
-            arr.push(i);
-        }
-    }
-};
 
 export default class Configuration extends adone.configuration.GenericConfig {
     /**
@@ -43,155 +14,27 @@ export default class Configuration extends adone.configuration.GenericConfig {
     /**
      * Loads configuration.
      */
-    async load() {
-        await super.load(Configuration.configName);
+    async load(options) {
+        await super.load(Configuration.configName, options);
     }
 
-    loadSync() {
-        super.loadSync(Configuration.configName);
+    loadSync(options) {
+        super.loadSync(Configuration.configName, options);
     }
 
     /**
      * Saves configuration.
      * 
-     * @param {*} cwd path where config should be saved
+     * @param {string} cwd path where config should be saved
      */
-    async save({ cwd = this.cwd } = {}) {
-        return super.save(is.string(cwd) ? aPath.join(cwd, Configuration.configName) : Configuration.configName, {
-            space: "    "
-        });
-    }
-
-    getEntries(path) {
-        const units = {};
-        const entries = [];
-
-        if (is.plainObject(this.raw.scheme)) {
-            this._parseScheme("", "", this.raw, this.raw.scheme, units);
-
-            // Convert object to array
-            const keys = Object.keys(units);
-            for (const key of keys) {
-                entries.push({
-                    id: key,
-                    ...units[key]
-                });
-            }
+    async save({ cwd, ...options } = {}) {
+        if (!options.ext) {
+            options.ext = ".json";
         }
-
-        let validator;
-        if (is.regexp(path)) {
-            validator = (entry) => path.test(entry.id);
-        } else {
-            validator = (entry) => entry.id.startsWith(path);
+        if (options.ext === ".json" && !options.space) {
+            options.space = "    ";
         }
-
-        return !is.nil(path) ? entries.filter(validator) : entries;
-    }
-
-    _parseScheme(prefix, dirName, parent, scheme, units) {
-        const srcs = [];
-        for (const [key, val] of Object.entries(scheme)) {
-            if (is.plainObject(val)) {
-                const fullKey = prefix.length > 0
-                    ? `${prefix}.${key}`
-                    : key;
-
-                const unit = units[fullKey] = {
-                    ...omit(val, ["description", "scheme", "src", "dst", "task"])
-                };
-
-                const src = normalizeValue(dirName, val, "src");
-                if (src) {
-                    unit.src = (is.string(src) && src.endsWith("/"))
-                        ? aPath.join(src, "**", "*")
-                        : src;
-
-                    addIfNotIncluded(srcs, src);
-                }
-
-                const dst = normalizeValue(dirName, val, "dst");
-                if (dst) {
-                    unit.dst = dst;
-                }
-
-                const task = normalizeValue(null, val, "task");
-                if (task) {
-                    unit.task = task;
-                }
-
-                if (is.exist(val.native)) {
-                    const nativeGlob = adone.glob.globize(val.native.src, { recursive: true });
-                    addIfNotIncluded(srcs, nativeGlob);
-
-                    if (is.string(unit.src)) {
-                        unit.src = [unit.src];
-                    }
-                    if (is.array(unit.src)) {
-                        addIfNotIncluded(unit.src, `!${nativeGlob}`);
-                    }
-                }
-
-                if (is.plainObject(val.scheme)) {
-                    const childSrcs = this._parseScheme(fullKey, dirName, val, val.scheme, units);
-                    if (childSrcs.length > 0) {
-                        addIfNotIncluded(srcs, childSrcs);
-
-                        let isParentGlob = true;
-
-                        if (is.string(unit.src) && !is.glob(unit.src)) {
-                            isParentGlob = false;
-                        } else if (is.array(unit.src)) {
-                            isParentGlob = false;
-                            for (const s of unit.src) {
-                                if (is.glob(s)) {
-                                    isParentGlob = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (is.exist(unit.src) && isParentGlob) {
-                            const excludes = [];
-                            for (const src of childSrcs) {
-                                if (is.string(src)) {
-                                    if (!src.startsWith("!")) {
-                                        excludes.push(src);
-                                    }
-                                } else { // array
-                                    for (const s of src) {
-                                        if (!s.startsWith("!")) {
-                                            excludes.push(s);
-                                        }
-                                    }
-                                }
-                            }
-
-                            const parents = excludes.map((x) => adone.glob.parent(x));
-                            const prefix = adone.text.longestCommonPrefix(parents);
-                            if (prefix === "") {
-                                throw new adone.error.NotValidException(`No common glob prefix in '${fullKey}' block`);
-                            }
-
-                            unit.src = arrify(unit.src);
-                            addIfNotIncluded(unit.src, excludes.map((x) => `!${x}`));
-                        }
-                    }
-                }
-
-                if (is.string(unit.task)) {
-                    if (!is.exist(unit.src)) {
-                        throw new adone.error.NotValidException(`No 'src' property needed by 'task' in '${fullKey}'`);
-                    }
-
-                    if (!is.exist(unit.dst)) {
-                        unit.dst = ".";
-                    }
-                }
-            }
-        }
-
-        return srcs;
+        return super.save(is.string(cwd) ? aPath.join(cwd, Configuration.configName) : Configuration.configName, options);
     }
 
     static async load({ cwd } = {}) {
@@ -210,7 +53,7 @@ export default class Configuration extends adone.configuration.GenericConfig {
         return config;
     }
 
-    static configName = aPath.join(".adone", "config.json");
+    static configName = aPath.join(".adone", "config");
 
     static default = {};
 }

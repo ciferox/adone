@@ -14,26 +14,23 @@ const addIfNotIncluded = (arr, item, filter = adone.truly) => {
 };
 
 export default class DevConfiguration extends adone.configuration.GenericConfig {
-    constructor(options) {
-        super(options);
-
-        this.#applyDefaults();
+    getBasedir() {
+        return this.raw.basedir || this.cwd;
     }
 
-    async load(path, options) {
-        await super.load(path, options);
-        this.#applyDefaults();
-    }
-
-    loadSync(path, options) {
-        super.loadSync(path, options);
-        this.#applyDefaults();
-    }
-
-    #applyDefaults() {
-        if (!is.string(this.raw.basedir)) {
-            this.raw.basedir = this.cwd;
+    /**
+     * Saves configuration.
+     * 
+     * @param {string} cwd path where config should be saved
+     */
+    async save({ cwd, ...options } = {}) {
+        if (!options.ext) {
+            options.ext = ".json";
         }
+        if (options.ext === ".json" && !options.space) {
+            options.space = "    ";
+        }
+        return super.save(is.string(cwd) ? path.join(cwd, DevConfiguration.configName) : DevConfiguration.configName, options);
     }
 
     /**

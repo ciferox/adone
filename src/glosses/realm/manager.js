@@ -58,9 +58,15 @@ export default class RealmManager extends task.TaskManager {
         }
         this.cwd = cwd;
 
-        this.config = realm.Configuration.loadSync({
-            cwd
-        });
+        try {
+            this.config = realm.Configuration.loadSync({
+                cwd
+            });
+        } catch (err) {
+            this.config = new realm.Configuration({
+                cwd
+            });
+        }
 
         adone.lazify({
             devConfig: () => {
@@ -70,7 +76,9 @@ export default class RealmManager extends task.TaskManager {
                         cwd
                     });
                 } catch (err) {
-                    cfg = null;
+                    cfg = new realm.DevConfiguration({
+                        cwd
+                    });
                 }
                 return cfg;
             }

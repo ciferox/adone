@@ -1,7 +1,6 @@
 const {
     app,
     is,
-    std,
     cli,
     realm
 } = adone;
@@ -10,17 +9,17 @@ const {
     subsystem
 } = app;
 
-const subCommand = (name) => std.path.join(__dirname, "commands", name);
+const subCommand = (name) => adone.path.join(__dirname, "commands", name);
 
 @subsystem({
     commandsGroups: [
         {
-            name: "local",
-            description: "Adone realm commands"
+            name: "own",
+            description: "ADONE specific"
         },
         {
             name: "generic",
-            description: "Generic realm commands"
+            description: "Generic commands"
         }
     ],
     subsystems: [
@@ -38,39 +37,15 @@ const subCommand = (name) => std.path.join(__dirname, "commands", name);
         },
         {
             name: "merge",
-            group: "local",
+            group: "own",
             description: "Merge realm",
             subsystem: subCommand("merge")
-        },
-        {
-            name: "createFile",
-            group: "generic",
-            description: "Create adone/project/web/... artifact",
-            subsystem: subCommand("create_file")
         },
         {
             name: "dev",
             group: "generic",
             description: "Start realm development cycle",
             subsystem: subCommand("dev")
-        },
-        {
-            name: "install",
-            group: "local",
-            description: "Install adone glosses, extensions, subsystems, applications, etc.",
-            subsystem: subCommand("install")
-        },
-        {
-            name: "uninstall",
-            group: "local",
-            description: "Uninstall adone glosses, extensions, applications, etc.",
-            subsystem: subCommand("uninstall")
-        },
-        {
-            name: "list",
-            group: "local",
-            description: "List installed packages",
-            subsystem: subCommand("list")
         },
         {
             name: "info",
@@ -89,42 +64,6 @@ const subCommand = (name) => std.path.join(__dirname, "commands", name);
             group: "generic",
             description: "Build realm sources",
             subsystem: subCommand("build")
-        },
-        {
-            name: "rebuild",
-            group: "generic",
-            description: "Rebuild realm sources",
-            subsystem: subCommand("rebuild")
-        },
-        {
-            name: "config",
-            group: "generic",
-            description: "Configure realm",
-            subsystem: subCommand("config")
-        },
-        {
-            name: "nbuild",
-            group: "generic",
-            description: "Build C++ addons",
-            subsystem: subCommand("nbuild")
-        },
-        {
-            name: "nclean",
-            group: "generic",
-            description: "Clean builded C++ addons",
-            subsystem: subCommand("nclean")
-        },
-        {
-            name: "incver",
-            group: "generic",
-            description: "Increase realm version",
-            subsystem: subCommand("incver")
-        },
-        {
-            name: "deps",
-            group: "generic",
-            description: "Show dependencies for a particular source file or adone namespace",
-            subsystem: subCommand("deps")
         }
     ]
 })

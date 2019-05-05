@@ -3,8 +3,7 @@ import { createManagerFor } from "./utils";
 const {
     is,
     error,
-    realm,
-    std
+    realm
 } = adone;
 
 describe("realm", () => {
@@ -21,6 +20,8 @@ describe("realm", () => {
         "clean",
         "build",
         "copy",
+        "gyp",
+        "cmake",
         "transpile",
         "transpileExe",
         "adoneTranspile",
@@ -55,40 +56,9 @@ describe("realm", () => {
         assert.isTrue(is.realm(adone.realm.rootRealm));
     });
 
-    describe("tasks configuration", () => {
-        it("realm without tasks", async () => {
-            const mgr = await createManagerFor({ name: "no_tasks" });
-
-            assert.isObject(mgr.config.raw.scheme);
-            assert.lengthOf(mgr.getTaskNames(), 0);
-        });
-
-        it("realm with default tasks configuration", async () => {
-            const mgr = await createManagerFor({ name: "realm1" });
-
-            assert.isObject(mgr.config.raw.scheme);
-            assert.sameMembers(mgr.getTaskNames(), ["task1", "task2"]);
-        });
-
-        it("realm with configuration tasks with pub tag", async () => {
-            const mgr = await createManagerFor({ name: "realm2" });
-
-            assert.isObject(mgr.config.raw.scheme);
-            assert.sameMembers(mgr.getTaskNames(), ["task1", "task2"]);
-        });
-
-        it("realm with configuration tasks with dev tag", async () => {
-            const mgr = await createManagerFor({ name: "realm2" });
-
-            assert.isObject(mgr.config.raw.scheme);
-            assert.sameMembers(mgr.getTaskNames(), ["task1", "task2"]);
-        });
-    });
-
     describe("root realm", () => {
         it("before connect", () => {
             assert.instanceOf(rootRealm, adone.realm.RealmManager);
-            assert.isUndefined(rootRealm.ROOT_PATH);
             assert.deepEqual(rootRealm.package, adone.package);
             assert.isObject(rootRealm.config);
         });
@@ -109,6 +79,32 @@ describe("realm", () => {
                 await rootRealm.connect();
             }
             assert.equal(i, 10);
+        });
+    });
+
+    describe("tasks configuration", () => {
+        it("realm without tasks", async () => {
+            const mgr = await createManagerFor({ name: "no_tasks" });
+            
+            assert.equal(mgr.getTaskNames().length, rootRealm.getTaskNames("pub").length);
+        });
+
+        it("realm with default tasks configuration", async () => {
+            const mgr = await createManagerFor({ name: "realm1" });
+
+            assert.sameMembers(mgr.getTaskNames(), ["task1", "task2", ...rootRealm.getTaskNames("pub")]);
+        });
+
+        it("realm with configuration tasks with pub tag", async () => {
+            const mgr = await createManagerFor({ name: "realm2" });
+
+            assert.sameMembers(mgr.getTaskNames("pub"), ["task1", "task2", ...rootRealm.getTaskNames("pub")]);
+        });
+
+        it("realm with configuration tasks with dev tag", async () => {
+            const mgr = await createManagerFor({ name: "realm2" });
+
+            assert.sameMembers(mgr.getTaskNames("dev"), []);
         });
     });
 
@@ -144,7 +140,7 @@ describe("realm", () => {
                 transpile: true
             });
 
-            assert.sameMembers(nr.getTaskNames(), ["nestedA", "nestedB", "pubA", "pubB", "dummy"]);
+            assert.sameMembers(nr.getTaskNames(), ["nestedA", "nestedB", "pubA", "pubB", "dummy", ...rootRealm.getTaskNames("pub")]);
         });
 
         it("run task of super realm", async () => {

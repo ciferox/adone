@@ -10,7 +10,7 @@ const {
     is
 } = adone;
 
-const baseN = require("./baseN");
+const baseN = require("./basen");
 
 /**
  * Utilities API

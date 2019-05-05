@@ -13,7 +13,7 @@ export default class Configuration extends adone.configuration.GenericConfig {
 
     async save() {
         return super.save(Configuration.configName, {
-            space: "  "
+            space: "    "
         });
     }
 

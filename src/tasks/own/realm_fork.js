@@ -25,7 +25,7 @@ export default class extends BaseTask {
         }
     }
 
-    async main({ realm, path, name, artifactTags, filter } = {}) {
+    async main({ realm, path, name, tags, filter } = {}) {
         this.manager.notify(this, "progress", {
             message: "checking"
         });
@@ -43,6 +43,7 @@ export default class extends BaseTask {
         }
 
         if (!is.string(name) || name.length === 0) {
+            // name = realm.name;
             throw new error.NotValidException(`Invalid name: ${adone.inspect(name)}`);
         }
 
@@ -68,17 +69,17 @@ export default class extends BaseTask {
         await fs.mkdirp(this.destCwd);
 
         const artifacts = new Set;
-        if (is.array(artifactTags) && artifactTags.length > 0) {
-            artifactTags = new Set(artifactTags);
-        } else if (is.string(artifactTags) && artifactTags.length > 0) {
-            artifactTags = new Set(artifactTags.split(","));
-        } else if (!artifactTags || artifactTags.length === 0) {
-            artifactTags = new Set();
+        if (is.array(tags) && tags.length > 0) {
+            tags = new Set(tags);
+        } else if (is.string(tags) && tags.length > 0) {
+            tags = new Set(tags.split(","));
+        } else if (!tags || tags.length === 0) {
+            tags = new Set();
             const files = await fs.readdir(realm.cwd);
             files.forEach((file) => artifacts.add(file));
         }
 
-        for (const attr of artifactTags.values()) {
+        for (const attr of tags.values()) {
             const files = realm.artifacts.get(attr).map((info) => info.path);
             files.forEach((file) => artifacts.add(file));
         }
@@ -86,10 +87,6 @@ export default class extends BaseTask {
         // artifacts required for a realm
         artifacts.add(".adone");
         artifacts.add("package.json");
-
-        this.manager.notify(this, "progress", {
-            message: "copying realm artifactTags"
-        });
 
         for (const dir of artifacts.values()) {
             this.manager.notify(this, "progress", {

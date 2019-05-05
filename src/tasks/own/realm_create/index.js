@@ -12,81 +12,115 @@ const __ = adone.lazify({
     helper: "./helpers"
 }, null, require);
 
+/**
+ * Creates realm.
+ * 
+ * `options`
+ * - `name` - name of realm saved as package.json's 'name' property.
+ * - `dir` - directory name of realm.
+ * - `path` - destination path of realm. Full realm path will be `path.join(path, dir || name)`.
+ * - `realm` - realm specific configuration.
+ *   - `config` - predefined config parameters.
+ *     - `ext` - configuration extension, where possible value might be one of supported by `adone.configuration.Generic`. Default is '.json'.
+ *     - `...props` - properties to put in configuration.
+ *   - `dev` - predefined dev-config parameters like `defaultTask`, `units`, etc.
+ *     - `ext` - configuration extension. Default is '.json'.
+ *     - `...props` - properties to put in configuration.
+ * 
+ * 
+ * If `options.realm.config` is not defined or equal to `false`, associated config will not be created.
+ * If `options.realm.dev` is not defined or equal to `false`, associated config will not be created.
+ */
 @adone.task.task("realmCreate")
 export default class extends realm.BaseTask {
-    async main(info = {}) {
-        if (!is.string(info.name)) {
+    async main(options = {}) {
+        // keep original options immutable
+        options = adone.lodash.defaults(options, {
+            initGit: false,
+            initNpm: false,
+            initJsconfig: false,
+            initEslint: false
+        })
+
+        if (!is.string(options.name) || options.name.trim().length === 0) {
             throw new error.InvalidArgumentException("Invalid name of realm");
         }
+        options.name = options.name.trim();
 
-        if (!is.string(info.basePath)) {
+        if (!is.string(options.path) || options.path.trim().length === 0) {
             throw new error.InvalidArgumentException("Invalid base path");
         }
+        options.path = path.resolve(options.path.trim());
 
-        if (!(await fs.exists(info.basePath))) {
-            await fs.mkdirp(info.basePath);
-        }
-
-        const cwd = path.join(info.basePath, info.dir || info.name);
+        const cwd = path.join(options.path, options.dir || options.name);
         if (await fs.exists(cwd)) {
             throw new error.ExistsException(`Path '${cwd}' already exists`);
         }
 
-        info.cwd = this.cwd = cwd;
+        // ensure path exists
+        await fs.mkdirp(cwd);
+        options.cwd = this.cwd = cwd;
 
         this.manager.notify(this, "progress", {
             message: "initializing"
         });
 
-        await fs.mkdirp(path.join(cwd, ".adone"));
+        await fs.mkdir(path.join(cwd, ".adone"));
 
         this.manager.notify(this, "progress", {
             message: `creating ${style.primary(configuration.NpmConfig.configName)}`
         });
 
-        const npmConfig = await __.helper.packageConfig.create(info);
+        const npmConfig = await __.helper.packageConfig.create(options);
 
-        this.manager.notify(this, "progress", {
-            message: `creating ${style.primary(realm.Configuration.configName)}`
-        });
+        if (is.plainObject(options.realm)) {
+            if (options.realm.config) {
+                this.manager.notify(this, "progress", {
+                    message: `creating ${style.primary(realm.Configuration.configName)}`
+                });
 
-        await __.helper.realmConfig.create(info);
-        await __.helper.realmConfig.createDev({
-            cwd,
-            superRealm: adone.realm.rootRealm
-        });
+                await __.helper.realmConfig.create({
+                    ...options.realm.config,
+                    cwd
+                });
+            }
 
-        info = adone.lodash.defaults(info, {
-            initGit: false,
-            initNpm: false,
-            initJsconfig: false,
-            initEslint: false
-        });
+            if (options.realm.dev) {
+                this.manager.notify(this, "progress", {
+                    message: `creating ${style.primary(realm.DevConfiguration.configName)}`
+                });
 
-        if (info.initJsconfig) {
+                await __.helper.realmConfig.createDev({
+                    ...options.realm.dev,
+                    cwd
+                });
+            }
+        }
+
+        if (options.initJsconfig) {
             this.manager.notify(this, "progress", {
                 message: `creating ${style.primary("jsconfig.json")}`
             });
-            await __.helper.jsconfig.create(info);
+            await __.helper.jsconfig.create(options);
         }
 
-        if (info.initEslint) {
+        if (options.initEslint) {
             this.manager.notify(this, "progress", {
                 message: `creating ${style.primary(".eslintrc.js")}`
             });
             await __.helper.eslintrc.create({ cwd, npmConfig });
         }
 
-        if (info.initGit) {
+        if (options.initGit) {
             // Check git is installed
             await fs.which("git");
             this.manager.notify(this, "progress", {
                 message: "initializing git repo"
             });
-            await __.helper.git.init(info);
+            await __.helper.git.init(options);
         }
 
-        if (info.initNpm) {
+        if (options.initNpm) {
             this.manager.notify(this, "progress", {
                 message: "installing npm packages"
             });
@@ -94,7 +128,7 @@ export default class extends realm.BaseTask {
         }
 
         this.manager.notify(this, "progress", {
-            message: `realm ${style.primary.bold(info.name)} successfully created`,
+            message: `realm ${style.primary.bold(options.name)} successfully created`,
             status: true
         });
 

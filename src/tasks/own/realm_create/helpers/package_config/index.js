@@ -16,11 +16,6 @@ const PACKAGE_PROPS = [
 ];
 
 export const create = async ({ cwd, ...props } = {}) => {
-    const configPath = std.path.join(cwd, configuration.NpmConfig.configName);
-    if (await fs.exists(configPath)) {
-        throw new adone.error.ExistsException(`Package file '${configPath}' already exists`);
-    }
-
     const config = new configuration.NpmConfig({
         cwd
     });

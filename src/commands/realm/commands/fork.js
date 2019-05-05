@@ -5,14 +5,12 @@ const {
 
 export default class extends Subsystem {
     @mainCommand({
-        arguments: [
+        options: [
             {
-                name: "name",
+                name: ["--name", "-N"],
                 type: String,
                 help: "Realm name (directory name)"
-            }
-        ],
-        options: [
+            },
             {
                 name: ["--path", "-P"],
                 type: String,
@@ -30,10 +28,8 @@ export default class extends Subsystem {
         try {
             const rootRealm = await this.parent.connectRealm();
             await rootRealm.runAndWait("realmFork", {
-                realm: process.cwd(),
-                name: args.get("name"),
-                path: opts.get("path"),
-                artifactTags: opts.get("tags")
+                ...opts.getAll(),
+                realm: process.cwd()
             });
 
             return 0;
