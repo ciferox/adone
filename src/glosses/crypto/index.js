@@ -8,6 +8,7 @@ export const options = {
 };
 
 lazify({
+    // forge
     aes: "./aes",
     asn1: "./asn1",
     cipher: "./cipher",
@@ -48,7 +49,10 @@ lazify({
     ssh: "./ssh",
     task: "./task",
     tls: "./tls",
-    util: "./util"
+    util: "./util",
+
+    // extra
+    crc: "./crc"
 }, adone.asNamespace(exports), require);
 
 

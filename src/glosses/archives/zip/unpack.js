@@ -532,7 +532,7 @@ class ZipFile extends event.Emitter {
                         }
                         // NameCRC32     4 bytes     File Name Field CRC32 Checksum
                         const oldNameCrc32 = extraField.data.readUInt32LE(1);
-                        if (adone.crypto.crc32.unsigned(buffer.slice(0, entry.fileNameLength)) !== oldNameCrc32) {
+                        if (adone.crypto.crc.crc32.unsigned(buffer.slice(0, entry.fileNameLength)) !== oldNameCrc32) {
                             // > If the CRC check fails, this UTF-8 Path Extra Field should be
                             // > ignored and the File Name field in the header should be used instead.
                             continue;

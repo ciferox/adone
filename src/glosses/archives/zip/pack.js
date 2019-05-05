@@ -2,7 +2,7 @@ const {
     is,
     error,
     fs,
-    crypto: { crc32 },
+    crypto: { crc: { crc32 } },
     compressor: { deflate },
     std: { stream: { Transform, PassThrough } },
     event
