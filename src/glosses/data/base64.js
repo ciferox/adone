@@ -128,7 +128,7 @@ export const encodeVLQ = (aValue) => {
     return encoded;
 };
 
-export const encode = (str, { buffer = true } = {}) => {
+export const encode = (str, { buffer = false } = {}) => {
     if (!is.buffer(str)) {
         str = Buffer.from(str);
     }
@@ -145,5 +145,3 @@ export const decode = (str, { buffer = false, encoding = "binary" } = {}) => {
     }
     return b.toString(encoding);
 };
-
-export const any = false;

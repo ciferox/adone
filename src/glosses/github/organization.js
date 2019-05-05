@@ -1,16 +1,9 @@
-/**
- * @file
- * @copyright  2013 Michael Aufreiter (Development Seed) and 2016 Yahoo Inc.
- * @license    Licensed under {@link https://spdx.org/licenses/BSD-3-Clause-Clear.html BSD-3-Clause-Clear}.
- *             Github.js is freely distributable.
- */
-
 import Requestable from "./requestable";
 
 /**
  * Organization encapsulates the functionality to create repositories in organizations
  */
-class Organization extends Requestable {
+export default class Organization extends Requestable {
     /**
      * Create a new Organization
      * @param {string} organization - the name of the organization
@@ -117,5 +110,3 @@ class Organization extends Requestable {
         return this._request("POST", `/orgs/${this.__name}/projects`, options, cb);
     }
 }
-
-module.exports = Organization;

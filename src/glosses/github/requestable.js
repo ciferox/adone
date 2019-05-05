@@ -1,15 +1,10 @@
 /**
- * @file
- * @copyright  2016 Yahoo Inc.
- * @license    Licensed under {@link https://spdx.org/licenses/BSD-3-Clause-Clear.html BSD-3-Clause-Clear}.
- *             Github.js is freely distributable.
+ * eslint-disable func-style
  */
-
-import axios from "axios";
-import debug from "debug";
-import { Base64 } from "js-base64";
-
-const log = debug("github:request");
+const {
+    is,
+    data: { base64 }
+} = adone;
 
 /**
  * The error structure returned when a network call fails
@@ -30,10 +25,47 @@ class ResponseError extends Error {
     }
 }
 
+// ////////////////////////// //
+//  Private helper functions  //
+// ////////////////////////// //
+const METHODS_WITH_NO_BODY = ["GET", "HEAD", "DELETE"];
+function methodHasNoBody(method) {
+    return METHODS_WITH_NO_BODY.indexOf(method) !== -1;
+}
+
+function getNextPage(linksHeader = "") {
+    const links = linksHeader.split(/\s*,\s*/); // splits and strips the urls
+    return links.reduce((nextUrl, link) => {
+        if (link.search(/rel="next"/) !== -1) {
+            return (link.match(/<(.*)>/) || [])[1];
+        }
+
+        return nextUrl;
+    }, undefined);
+}
+
+function callbackErrorOrThrow(cb, path) {
+    return function handler(object) {
+        let error;
+        if (object.hasOwnProperty("config")) {
+            const { response: { status, statusText }, config: { method, url } } = object;
+            const message = (`${status} error making request ${method} ${url}: "${statusText}"`);
+            error = new ResponseError(message, path, object);
+        } else {
+            error = object;
+        }
+        if (cb) {
+            cb(error);
+        } else {
+            throw error;
+        }
+    };
+}
+
 /**
  * Requestable wraps the logic for making http requests to the API
  */
-class Requestable {
+export default class Requestable {
     /**
      * Either a username and password or an oauth token for Github
      * @typedef {Object} Requestable.auth
@@ -60,7 +92,7 @@ class Requestable {
         if (auth.token) {
             this.__authorizationHeader = `token ${auth.token}`;
         } else if (auth.username && auth.password) {
-            this.__authorizationHeader = `Basic ${Base64.encode(`${auth.username}:${auth.password}`)}`;
+            this.__authorizationHeader = `Basic ${base64.encode(`${auth.username}:${auth.password}`)}`;
         }
     }
 
@@ -117,7 +149,7 @@ class Requestable {
             requestOptions.type = requestOptions.type || "all";
         }
         requestOptions.sort = requestOptions.sort || "updated";
-      requestOptions.per_page = requestOptions.per_page || '100'; // eslint-disable-line
+        requestOptions.per_page = requestOptions.per_page || '100'; // eslint-disable-line
 
         return requestOptions;
     }
@@ -179,8 +211,7 @@ class Requestable {
             responseType: raw ? "text" : "json"
         };
 
-        log(`${config.method} to ${config.url}`);
-        const requestPromise = axios(config).catch(callbackErrorOrThrow(cb, path));
+        const requestPromise = adone.http.client.request(config).catch(callbackErrorOrThrow(cb, path));
 
         if (cb) {
             requestPromise.then((response) => {
@@ -257,7 +288,6 @@ class Requestable {
 
                 const nextUrl = getNextPage(response.headers.link);
                 if (nextUrl && !(options && !is.number(options.page))) {
-                    log(`getting next page: ${nextUrl}`);
                     return this._requestAllPages(nextUrl, options, cb, results);
                 }
 
@@ -269,46 +299,4 @@ class Requestable {
                 return response;
             }).catch(callbackErrorOrThrow(cb, path));
     }
-}
-
-module.exports = Requestable;
-
-// ////////////////////////// //
-//  Private helper functions  //
-// ////////////////////////// //
-const METHODS_WITH_NO_BODY = ["GET", "HEAD", "DELETE"];
-function methodHasNoBody(method) {
-    return METHODS_WITH_NO_BODY.indexOf(method) !== -1;
-}
-
-function getNextPage(linksHeader = "") {
-    const links = linksHeader.split(/\s*,\s*/); // splits and strips the urls
-    return links.reduce((nextUrl, link) => {
-        if (link.search(/rel="next"/) !== -1) {
-            return (link.match(/<(.*)>/) || [])[1];
-        }
-
-        return nextUrl;
-    }, undefined);
-}
-
-function callbackErrorOrThrow(cb, path) {
-    return function handler(object) {
-        let error;
-        if (object.hasOwnProperty("config")) {
-            const { response: { status, statusText }, config: { method, url } } = object;
-            const message = (`${status} error making request ${method} ${url}: "${statusText}"`);
-            error = new ResponseError(message, path, object);
-            log(`${message} ${JSON.stringify(object.data)}`);
-        } else {
-            error = object;
-        }
-        if (cb) {
-            log("going to error callback");
-            cb(error);
-        } else {
-            log("throwing error");
-            throw error;
-        }
-    };
 }

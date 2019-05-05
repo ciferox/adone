@@ -27,7 +27,7 @@ describe("realm", "common tasks", () => {
         });
 
         after(async () => {
-            // await fs.remove(tmpTestPath);
+            await fs.remove(tmpTestPath);
         });
 
         it("create realm without 'name' should be thrown", async () => {

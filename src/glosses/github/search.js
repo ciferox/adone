@@ -1,18 +1,9 @@
-/**
- * @file
- * @copyright  2013 Michael Aufreiter (Development Seed) and 2016 Yahoo Inc.
- * @license    Licensed under {@link https://spdx.org/licenses/BSD-3-Clause-Clear.html BSD-3-Clause-Clear}.
- *             Github.js is freely distributable.
- */
-
 import Requestable from "./requestable";
-import debug from "debug";
-const log = debug("github:search");
 
 /**
  * Wrap the Search API
  */
-class Search extends Requestable {
+export default class Search extends Requestable {
     /**
      * Create a Search
      * @param {Object} defaults - defaults for the search
@@ -50,7 +41,6 @@ class Search extends Requestable {
             requestOptions[prop] = withOptions[prop];
         });
 
-        log(`searching ${path} with options:`, requestOptions);
         return this._requestAllPages(`/search/${path}`, requestOptions, cb);
     }
 
@@ -98,5 +88,3 @@ class Search extends Requestable {
         return this._search("users", options, cb);
     }
 }
-
-module.exports = Search;

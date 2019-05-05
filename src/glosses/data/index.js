@@ -4,12 +4,12 @@ adone.lazify({
     mpak: "./mpak",
     bson: "./bson",
     base64: "./base64",
-    base64url: "./base64url",
     yaml: "./yaml",
     basex: "./basex",
     base32: "./base32",
     base58: "./base58",
     varint: "./varint",
     varintSigned: "./varint_signed",
-    protobuf: "./protobuf"
+    protobuf: "./protobuf",
+    utf8: "./utf8"
 }, adone.asNamespace(exports), require);

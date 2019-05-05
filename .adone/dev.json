@@ -277,6 +277,12 @@
                             "task": "transpile",
                             "src": "src/glosses/data/protobuf/**/*.js",
                             "dst": "lib/glosses/data/protobuf"
+                        },
+                        "utf8": {
+                            "description": "UTF8 encoder/decoder",
+                            "task": "transpile",
+                            "src": "src/glosses/data/utf8.js",
+                            "dst": "lib/glosses/data"
                         }
                     }
                 },
@@ -713,13 +719,15 @@
                             "description": "Implementation of DoT template engine",
                             "task": "transpile",
                             "src": "src/glosses/templating/dot/**/*.js",
-                            "dst": "lib/glosses/templating/dot"
+                            "dst": "lib/glosses/templating/dot",
+                            "original": "https://github.com/olado/doT"
                         },
                         "nunjucks": {
                             "description": "Implementation of Nunjucks template engine",
                             "task": "transpile",
                             "src": "src/glosses/templating/nunjucks/**/*.js",
-                            "dst": "lib/glosses/templating/nunjucks"
+                            "dst": "lib/glosses/templating/nunjucks",
+                            "original": "https://github.com/mozilla/nunjucks"
                         }
                     }
                 },

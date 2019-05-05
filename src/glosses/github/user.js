@@ -1,18 +1,13 @@
-/**
- * @file
- * @copyright  2013 Michael Aufreiter (Development Seed) and 2016 Yahoo Inc.
- * @license    Licensed under {@link https://spdx.org/licenses/BSD-3-Clause-Clear.html BSD-3-Clause-Clear}.
- *             Github.js is freely distributable.
- */
+const {
+    is
+} = adone;
 
 import Requestable from "./requestable";
-import debug from "debug";
-const log = debug("github:user");
 
 /**
  * A User allows scoping of API requests to a particular Github user.
  */
-class User extends Requestable {
+export default class User extends Requestable {
     /**
      * Create a User.
      * @param {string} [username] - the user to use for user-scoped queries
@@ -65,7 +60,6 @@ class User extends Requestable {
 
         options = this._getOptionsWithDefaults(options);
 
-        log(`Fetching repositories with options: ${JSON.stringify(options)}`);
         return this._requestAllPages(this.__getScopedUrl("repos"), options, cb);
     }
 
@@ -210,5 +204,3 @@ class User extends Requestable {
         return this._request("POST", "/user/repos", options, cb);
     }
 }
-
-module.exports = User;

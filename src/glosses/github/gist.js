@@ -1,16 +1,9 @@
-/**
- * @file
- * @copyright  2013 Michael Aufreiter (Development Seed) and 2016 Yahoo Inc.
- * @license    Licensed under {@link https://spdx.org/licenses/BSD-3-Clause-Clear.html BSD-3-Clause-Clear}.
- *             Github.js is freely distributable.
- */
-
 import Requestable from "./requestable";
 
 /**
  * A Gist can retrieve and modify gists.
  */
-class Gist extends Requestable {
+export default class Gist extends Requestable {
     /**
      * Create a Gist.
      * @param {string} id - the id of the gist (not required when creating a gist)
@@ -184,5 +177,3 @@ class Gist extends Requestable {
         return this._request("DELETE", `/gists/${this.__id}/comments/${comment}`, null, cb);
     }
 }
-
-module.exports = Gist;

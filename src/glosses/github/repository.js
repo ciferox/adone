@@ -1,15 +1,14 @@
 import Requestable from "./requestable";
-import Utf8 from "utf8";
-import {
-    Base64
-} from "js-base64";
-import debug from "debug";
-const log = debug("github:repository");
+
+const {
+    is,
+    data: { base64, utf8 }
+} = adone;
 
 /**
  * Repository encapsulates the functionality to create, query, and modify files.
  */
-class Repository extends Requestable {
+export default class Repository extends Requestable {
     /**
      * Create a Repository.
      * @param {string} fullname - the full name of the repository
@@ -245,7 +244,6 @@ class Repository extends Requestable {
     createBlob(content, cb) {
         const postBody = this._getContentObject(content);
 
-        log("sending content", postBody);
         return this._request("POST", `/repos/${this.__fullname}/git/blobs`, postBody, cb);
     }
 
@@ -256,28 +254,25 @@ class Repository extends Requestable {
      */
     _getContentObject(content) {
         if (is.string(content)) {
-            log("contet is a string");
             return {
-                content: Utf8.encode(content),
+                content: utf8.encode(content),
                 encoding: "utf-8"
             };
 
         } else if (!is.undefined(Buffer) && content instanceof Buffer) {
-            log("We appear to be in Node");
             return {
                 content: content.toString("base64"),
                 encoding: "base64"
             };
 
-        } else if (!is.undefined(Blob) && content instanceof Blob) {
-            log("We appear to be in the browser");
+        // eslint-disable-next-line adone/no-typeof
+        } else if (typeof Blob !== "undefined" && content instanceof Blob) {
             return {
-                content: Base64.encode(content),
+                content: base64.encode(content),
                 encoding: "base64"
             };
 
-      } else { // eslint-disable-line
-            log(`Not sure what this content is: ${typeof content}, ${JSON.stringify(content)}`);
+        } else { // eslint-disable-line
             throw new Error("Unknown content passed to postBlob. Must be string or Buffer (node) or Blob (web)");
         }
     }
@@ -294,7 +289,7 @@ class Repository extends Requestable {
      */
     updateTree(baseTreeSHA, path, blobSHA, cb) {
         const newTree = {
-         base_tree: baseTreeSHA, // eslint-disable-line
+            base_tree: baseTreeSHA, // eslint-disable-line
             tree: [{
                 path,
                 sha: blobSHA,
@@ -739,7 +734,7 @@ class Repository extends Requestable {
             message,
             author: options.author,
             committer: options.committer,
-            content: shouldEncode ? Base64.encode(content) : content
+            content: shouldEncode ? base64.encode(content) : content
         };
 
         return this.getSha(branch, filePath)
@@ -871,7 +866,4 @@ class Repository extends Requestable {
         options.AcceptHeader = "inertia-preview";
         return this._request("POST", `/repos/${this.__fullname}/projects`, options, cb);
     }
-
 }
-
-module.exports = Repository;
