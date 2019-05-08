@@ -152,7 +152,7 @@ export const checkVersion = async (ver) => {
 export const getSHASUMS = async ({ version, type = "utf8" } = {}) => {
     version = validateVersion(version);
 
-    let sums = (await adone.http.client.request(`https://nodejs.org/download/release/${version}/SHASUMS256.txt`)).data;
+    const sums = (await adone.http.client.request(`https://nodejs.org/download/release/${version}/SHASUMS256.txt`)).data;
 
     if (type === "array" || type === "object") {
         const items = sums.split("\n")

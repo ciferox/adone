@@ -1,4 +1,8 @@
 {
+    "origin": {
+        "type": "github",
+        "path": "ciferox/adone"
+    },
     "artifacts": {
         "share": [
             "share"

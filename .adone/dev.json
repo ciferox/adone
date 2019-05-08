@@ -254,10 +254,22 @@
                             "src": "src/glosses/data/yaml/**/*.js",
                             "dst": "lib/glosses/data/yaml"
                         },
+                        "base32": {
+                            "description": "Implementation of Base32 serializer",
+                            "task": "transpile",
+                            "src": "src/glosses/data/base32.js",
+                            "dst": "lib/glosses/data"
+                        },
                         "base58": {
                             "description": "Implementation of Base58 serializer",
                             "task": "transpile",
                             "src": "src/glosses/data/base58.js",
+                            "dst": "lib/glosses/data"
+                        },
+                        "basex": {
+                            "description": "",
+                            "task": "transpile",
+                            "src": "src/glosses/data/basex.js",
                             "dst": "lib/glosses/data"
                         },
                         "varint": {

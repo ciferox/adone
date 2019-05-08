@@ -709,6 +709,10 @@ export const assignDeep = (target, ...sources) => {
 
 export const pick = (obj, props) => {
     const newObj = {};
+    props = arrify(props);
+    if (props.length === 0) {
+        return obj;
+    }
     for (const prop of props) {
         if (prop in obj) {
             newObj[prop] = obj[prop];

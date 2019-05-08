@@ -1334,9 +1334,9 @@ class Command {
                 }), {
                     model: [
                         { id: "left-spacing", width: 4 },
-                        { id: "names", maxWidth: 40, wordwrap: true },
+                        { id: "names", maxWidth: 40, wordWrap: true },
                         { id: "between-cells", width: 2 },
-                        { id: "message", wordwrap: false }
+                        { id: "message", wordWrap: false }
                     ],
                     width: "100%",
                     borderless: true,
@@ -1372,9 +1372,9 @@ class Command {
                     }), {
                         model: [
                             { id: "left-spacing", width: 4 },
-                            { id: "names", maxWidth: 40, wordwrap: true },
+                            { id: "names", maxWidth: 40, wordWrap: true },
                             { id: "between-cells", width: 2 },
-                            { id: "message", wordwrap: true }
+                            { id: "message", wordWrap: true }
                         ],
                         width: "100%",
                         borderless: true,
@@ -1411,9 +1411,9 @@ class Command {
                     }), {
                         model: [
                             { id: "left-spacing", width: 4 },
-                            { id: "names", maxWidth: 40, wordwrap: true },
+                            { id: "names", maxWidth: 40, wordWrap: true },
                             { id: "between-cells", width: 2 },
-                            { id: "message", wordwrap: true }
+                            { id: "message", wordWrap: true }
                         ],
                         width: "100%",
                         borderless: true,

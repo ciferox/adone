@@ -822,6 +822,28 @@ export default class Repository extends Requestable {
     }
 
     /**
+     * Get information about a release by tag name.
+     * @see https://developer.github.com/v3/repos/releases/#get-a-release-by-tag-name
+     * @param {string} tag - the tag of the release
+     * @param {Requestable.callback} cb - will receive the release information
+     * @return {Promise} - the promise for the http request
+     */
+    getReleaseByTag(tag, cb) {
+        return this._request("GET", `/repos/${this.__fullname}/releases/tags/${tag}`, null, cb);
+    }
+
+    /**
+     * List assets for a release
+     * @see https://developer.github.com/v3/repos/releases/#list-assets-for-a-release
+     * @param {string} id - the id of the release
+     * @param {Requestable.callback} cb - will receive the release information
+     * @return {Promise} - the promise for the http request
+     */
+    listAssets(id, cb) {
+        return this._request("GET", `/repos/${this.__fullname}/releases/${id}/assets`, null, cb);
+    }
+
+    /**
      * Delete a release
      * @see https://developer.github.com/v3/repos/releases/#delete-a-release
      * @param {string} id - the release to be deleted
@@ -830,6 +852,17 @@ export default class Repository extends Requestable {
      */
     deleteRelease(id, cb) {
         return this._request("DELETE", `/repos/${this.__fullname}/releases/${id}`, null, cb);
+    }
+
+    /**
+     * Delete a release
+     * @see https://developer.github.com/v3/repos/releases/#delete-a-release
+     * @param {string} id - the release to be deleted
+     * @param {Requestable.callback} cb - will receive true if the operation is successful
+     * @return {Promise} - the promise for the http request
+     */
+    deleteAsset(assetId, cb) {
+        return this._request("DELETE", `/repos/${this.__fullname}/releases/assets/${assetId}`, null, cb);
     }
 
     /**

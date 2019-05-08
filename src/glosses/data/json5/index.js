@@ -1,4 +1,4 @@
 adone.lazify({
     encode: "./encode",
     decode: "./decode"
-}, exports, require);
+}, adone.asNamespace(exports), require);

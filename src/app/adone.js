@@ -6,6 +6,7 @@ const __ = adone.lazify({
 
 const {
     is,
+    cli,
     path,
     app
 } = adone;
@@ -15,6 +16,35 @@ const {
     mainCommand
 } = app;
 
+const log = ({ stdout, stderr, inspect, ...options } = {}) => {
+    if (is.plainObject(inspect)) {
+        const options = inspect.options || {
+            style: "color",
+            depth: 8,
+            noType: true,
+            noArrayProperty: true
+        };
+        const value = is.array(inspect.value)
+            ? inspect.value.map((rel) => adone.util.pick(rel, inspect.onlyProps))
+            : adone.util.pick(inspect.value, inspect.onlyProps)
+
+        stdout = adone.inspect(value, options);
+    }
+    if (stderr) {
+        cli.updateProgress({
+            status: false,
+            clean: true
+        });
+        console.error(stderr);
+    } else if (stdout) {
+        if (!is.undefined(options.status) && !is.undefined(options.clean)) {
+            cli.updateProgress(options);
+        }
+        console.log(stdout);
+    } else {
+        cli.updateProgress(options);
+    }
+};
 
 const command = (name) => path.join(__dirname, "..", "commands", name);
 
@@ -51,8 +81,10 @@ export default class ADONEApp extends app.Application {
         await this._addInstalledSubsystems();
 
         if (!this.replBanner) {
-            this.replBanner = `${adone.cli.chalk.bold.hex("ab47bc")("ADONE")} v${adone.package.version}, ${adone.cli.chalk.bold.hex("689f63")("Node.JS")} ${process.version}`
+            this.replBanner = `${cli.chalk.bold.hex("ab47bc")("ADONE")} v${adone.package.version}, ${cli.chalk.bold.hex("689f63")("Node.JS")} ${process.version}`
         }
+
+        this.log = log;
     }
 
     @mainCommand({

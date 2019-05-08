@@ -1,3 +1,5 @@
+adone.asNamespace(exports);
+
 /**
  * Generate a character map.
  * @param {string} alphabet e.g. "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
