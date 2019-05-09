@@ -6,8 +6,6 @@ const {
     util
 } = adone;
 
-// const glob = require("glob");
-
 export default async ({ realm, path: addonPath, debug, jobs = process.env.JOBS, solution, argv } = {}) => {
     argv = util.arrify(argv);
     let platformMake = "make";
@@ -63,97 +61,84 @@ export default async ({ realm, path: addonPath, debug, jobs = process.env.JOBS, 
             await fs.which(command);
         } catch (err) {
             if (is.windows && /not found/.test(err.message)) {
-                // TODO
-                // // Search for the location of "msbuild.exe" file on Windows.
-                // const findMsbuild = () => {
-                //     const notfoundErr = 'Can\'t find "msbuild.exe". Do you have Microsoft Visual Studio C++ 2008+ installed?';
-                //     let cmd = 'reg query "HKLM\\Software\\Microsoft\\MSBuild\\ToolsVersions" /s';
-                //     if (process.arch !== "ia32") {
-                //         cmd += " /reg:32";
-                //     }
-                //     exec(cmd, (err, stdout) => {
-                //         if (err) {
-                //             return callback(new Error(`${err.message}\n${notfoundErr}`));
-                //         }
-                //         const reVers = /ToolsVersions\\([^\\]+)$/i;
-                //         const rePath = /\r\n[ \t]+MSBuildToolsPath[ \t]+REG_SZ[ \t]+([^\r]+)/i;
-                //         const msbuilds = [];
-                //         let r;
-                //         let msbuildPath;
-                //         stdout.split("\r\n\r\n").forEach((l) => {
-                //             if (!l) {
-                //                 return;
-                //             }
-                //             l = l.trim();
-                //             if (r = reVers.exec(l.substring(0, l.indexOf("\r\n")))) {
-                //                 const ver = parseFloat(r[1], 10);
-                //                 if (ver >= 3.5) {
-                //                     if (r = rePath.exec(l)) {
-                //                         msbuilds.push({
-                //                             version: ver,
-                //                             path: r[1]
-                //                         });
-                //                     }
-                //                 }
-                //             }
-                //         });
-                //         msbuilds.sort((x, y) => {
-                //             return (x.version < y.version ? -1 : 1);
-                //         });
-                //         (function verifyMsbuild() {
-                //             if (!msbuilds.length) {
-                //                 return callback(new Error(notfoundErr));
-                //             }
-                //             msbuildPath = path.resolve(msbuilds.pop().path, "msbuild.exe");
-                //             fs.stat(msbuildPath, (err) => {
-                //                 if (err) {
-                //                     if (err.code == "ENOENT") {
-                //                         if (msbuilds.length) {
-                //                             return verifyMsbuild();
-                //                         }
-                //                         callback(new Error(notfoundErr));
+                // Search for the location of "msbuild.exe" file on Windows.
+                const findMsbuild = () => {
+                    const notfoundErr = 'Can\'t find "msbuild.exe". Do you have Microsoft Visual Studio C++ 2008+ installed?';
+                    let cmd = 'reg query "HKLM\\Software\\Microsoft\\MSBuild\\ToolsVersions" /s';
+                    if (process.arch !== "ia32") {
+                        cmd += " /reg:32";
+                    }
+                    exec(cmd, (err, stdout) => {
+                        if (err) {
+                            return callback(new Error(`${err.message}\n${notfoundErr}`));
+                        }
+                        const reVers = /ToolsVersions\\([^\\]+)$/i;
+                        const rePath = /\r\n[ \t]+MSBuildToolsPath[ \t]+REG_SZ[ \t]+([^\r]+)/i;
+                        const msbuilds = [];
+                        let r;
+                        let msbuildPath;
+                        stdout.split("\r\n\r\n").forEach((l) => {
+                            if (!l) {
+                                return;
+                            }
+                            l = l.trim();
+                            if (r = reVers.exec(l.substring(0, l.indexOf("\r\n")))) {
+                                const ver = parseFloat(r[1], 10);
+                                if (ver >= 3.5) {
+                                    if (r = rePath.exec(l)) {
+                                        msbuilds.push({
+                                            version: ver,
+                                            path: r[1]
+                                        });
+                                    }
+                                }
+                            }
+                        });
+                        msbuilds.sort((x, y) => {
+                            return (x.version < y.version ? -1 : 1);
+                        });
+                        (function verifyMsbuild() {
+                            if (!msbuilds.length) {
+                                return callback(new Error(notfoundErr));
+                            }
+                            msbuildPath = path.resolve(msbuilds.pop().path, "msbuild.exe");
+                            fs.stat(msbuildPath, (err) => {
+                                if (err) {
+                                    if (err.code == "ENOENT") {
+                                        if (msbuilds.length) {
+                                            return verifyMsbuild();
+                                        }
+                                        callback(new Error(notfoundErr));
 
-                //                     } else {
-                //                         callback(err);
-                //                     }
-                //                     return;
-                //                 }
-                //                 command = msbuildPath;
-                //                 doBuild();
-                //             });
-                //         })();
-                //     });
-                // }
-                // // On windows and no 'msbuild' found. Let's guess where it is
-                // return findMsbuild();
+                                    } else {
+                                        callback(err);
+                                    }
+                                    return;
+                                }
+                                command = msbuildPath;
+                                doBuild();
+                            });
+                        })();
+                    });
+                };
+                // On windows and no 'msbuild' found. Let's guess where it is
+                return findMsbuild();
             }
             // Some other error or 'make' not found on Unix, report that to the user
             throw err;
         }
     };
 
+    let guessedSolution;
     if (is.windows) {
-        // TODO
-        //     /**
-        //  * On Windows, find the first build/*.sln file.
-        //  */
-        //     function findSolutionFile() {
-        //         glob("build/*.sln", (err, files) => {
-        //             if (err) {
-        //                 return callback(err);
-        //             }
-        //             if (files.length === 0) {
-        //                 return callback(new Error('Could not find *.sln file. Did you run "configure"?'));
-        //             }
-        //             guessedSolution = files[0];
-        //             log.verbose("found first Solution file", guessedSolution);
-        //             doWhich();
-        //         });
-        //     }
-        //     findSolutionFile();
-    } else {
-        await doWhich();
+        /**
+         * On Windows, find the first build/*.sln file.
+         */
+        const files = await adone.glob(path.join(buildPath, "*.sln"));
+        guessedSolution = files[0];
     }
+
+    await doWhich();
 
     // Enable Verbose build
     // const verbose = log.levels[log.level] <= log.levels.verbose;
@@ -174,9 +159,11 @@ export default async ({ realm, path: addonPath, debug, jobs = process.env.JOBS, 
         // Since there are many ways to state '32-bit Intel', default to it.
         // N.B. msbuild's Condition string equality tests are case-insensitive.
         const archLower = arch.toLowerCase();
-        const p = archLower === "x64" ? "x64" :
-            (archLower === "arm" ? "ARM" :
-                (archLower === "arm64" ? "ARM64" : "Win32"));
+        const p = archLower === "x64"
+            ? "x64"
+            : (archLower === "arm"
+                ? "ARM"
+                : (archLower === "arm64" ? "ARM64" : "Win32"));
         argv.push(`/p:Configuration=${buildType};Platform=${p}`);
         if (jobs) {
             const j = parseInt(jobs, 10);

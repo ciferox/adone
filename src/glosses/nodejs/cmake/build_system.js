@@ -121,7 +121,7 @@ const exec = (command) => {
 };
 
 const vsDetect = {
-    isInstalled: async (version) => {
+    async isInstalled(version) {
         const vsInstalled = (await this._isVSInstalled(version));
         const vsvNextInstalled = (await this._isVSvNextInstalled(version));
         const buildToolsInstalled = (await this._isBuildToolsInstalled(version));
@@ -129,7 +129,7 @@ const vsDetect = {
 
         return vsInstalled || vsvNextInstalled || buildToolsInstalled || foundByVSWhere;
     },
-    _isFoundByVSWhere: async (version) => {
+    async _isFoundByVSWhere(version) {
         // TODO: with auto download
         /*
         let mainVer = version.split(".")[0];
@@ -144,7 +144,7 @@ const vsDetect = {
         */
         return false;
     },
-    _isBuildToolsInstalled: async (version) => {
+    async _isBuildToolsInstalled(version) {
         const mainVer = version.split(".")[0];
         let key;
         let testPhrase;
@@ -164,7 +164,7 @@ const vsDetect = {
         }
         return false;
     },
-    _isVSInstalled: async (version) => {
+    async _isVSInstalled(version) {
         // On x64 this will look for x64 keys only, but if VS and compilers installed properly,
         // it will write it's keys to 64 bit registry as well.
         const command = `reg query "HKLM\\Software\\Microsoft\\VisualStudio\\${version}"`;
@@ -183,7 +183,7 @@ const vsDetect = {
         }
         return false;
     },
-    _isVSvNextInstalled: async (version) => {
+    async _isVSvNextInstalled(version) {
         const mainVer = version.split(".")[0];
         const command = `reg query "HKLM\\SOFTWARE\\Classes\\Installer\\Dependencies\\Microsoft.VisualStudio.MinShell.Msi,v${mainVer}"`;
         try {
@@ -474,7 +474,7 @@ export default class BuildSystem {
     // toolset
     async initialize(install) {
         if (!this._initialized) {
-            if (environment.isWin) {
+            if (is.windows) {
                 await this.initializeWin(install);
             } else {
                 this.initializePosix(install);
@@ -558,7 +558,7 @@ export default class BuildSystem {
     }
 
     async _getTopSupportedVisualStudioGenerator() {
-        assert(environment.isWin);
+        assert(is.windows);
         const list = await BuildSystem.getGenerators(this.options);
         let maxVer = 0;
         let result = null;

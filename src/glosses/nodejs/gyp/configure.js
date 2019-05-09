@@ -60,7 +60,7 @@ class PythonFinder {
             }
         ];
 
-        const runChecks = () => {
+        const runChecks = async () => {
             const check = toCheck.shift();
             if (!check) {
                 throw new adone.error.NotFoundException("Could not find any Python 2 installation to use");
@@ -74,7 +74,11 @@ class PythonFinder {
                 throw new adone.error.NotFoundException("Could not find any Python 2 installation to use");
             }
 
-            return check.check.apply(this, [check.arg]);
+            try {
+                return await check.check.apply(this, [check.arg]);
+            } catch (err) {
+                return runChecks();
+            }
         };
 
         return runChecks();

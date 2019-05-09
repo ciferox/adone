@@ -1,14 +1,14 @@
 // See http://www.robvanderwoude.com/escapechars.php
 const metaCharsRegExp = /([()\][%!^"`<>&|;, *?])/g;
 
-export const escapeCommand = function (arg) {
+export const command = function (arg) {
     // Escape meta chars
     arg = arg.replace(metaCharsRegExp, "^$1");
 
     return arg;
 };
 
-export const escapeArgument = function (arg, doubleEscapeMetaChars) {
+export const argument = function (arg, doubleEscapeMetaChars) {
     // Convert to string
     arg = `${arg}`;
 

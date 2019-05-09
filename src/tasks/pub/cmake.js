@@ -11,18 +11,9 @@ export default class extends BaseTask {
         const version = process.version;
         const realm = this.manager;
 
-        const nodeManager = new nodejs.NodejsManager({
-            realm
-        });
-
-        await nodeManager.download({
-            version,
-            type: "headers"
-        });
-
-        const nodePath = await nodeManager.extract({
-            version,
-            type: "headers"
+        const nodeManager = new nodejs.NodejsManager({ realm });
+        const nodePath = await nodeManager.prepareDevFiles({
+            version
         });
 
         await nodejs.cmake.configure({

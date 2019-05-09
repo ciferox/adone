@@ -1,7 +1,7 @@
 const {
     is,
     fs: { whichSync },
-    std: { path }
+    path
 } = adone;
 
 const pathKey = adone.system.env.pathKey();

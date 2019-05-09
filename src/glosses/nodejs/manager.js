@@ -144,6 +144,45 @@ export default class NodejsManager {
         return result;
     }
 
+    /**
+     * Downloads development files for current platform.
+     */
+    async prepareDevFiles({ version } = {}) {
+        if (!version) {
+            version = await nodejs.checkVersion("latest");
+        }
+
+        await this.download({
+            version,
+            type: "headers"
+        });
+
+        const nodePath = await this.extract({
+            version,
+            type: "headers"
+        });
+
+        if (is.windows) {
+            const dirName = adone.std.os.arch() === "x64" ? "win-x64" : "win-x86";
+            const url = `https://nodejs.org/download/release/${version}/${dirName}/node.lib`;
+            const destPath = aPath.join(nodePath, dirName);
+            await fs.mkdirp(destPath);
+            const downloader = new adone.http.Downloader({
+                url,
+                dest: aPath.join(destPath, "node.lib")
+            });
+
+            try {
+                await downloader.download();
+                await adone.promise.delay(500);
+            } catch (err) {
+                console.error(err.stack);
+                throw err;
+            }
+        }
+        return nodePath;
+    }
+
     // TODO: force disable 'strip' mode when extracting to default cache
     async extract({ outPath, version, platform, arch, type = "release", ext, strip = false } = {}) {
         const destPath = outPath || await this.getCachePath(this.cache[type]);

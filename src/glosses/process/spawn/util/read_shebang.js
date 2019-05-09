@@ -1,8 +1,8 @@
 const {
-    std: { fs }
+    fs
 } = adone;
 
-export const readShebang = function (command) {
+export default (command) => {
     // Read the first 150 bytes from the file
     const size = 150;
     const buffer = Buffer.alloc(size);

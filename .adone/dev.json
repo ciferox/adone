@@ -544,6 +544,11 @@
                                     "task": "copy",
                                     "src": "src/glosses/nodejs/gyp/addon/**/*",
                                     "dst": "lib/glosses/nodejs/gyp/addon"
+                                },
+                                "findpython": {
+                                    "task": "copy",
+                                    "src": "src/glosses/nodejs/gyp/find_vs2017.cs",
+                                    "dst": "lib/glosses/nodejs/gyp"
                                 }
                             }
                         },
@@ -566,7 +571,15 @@
                     "description": "Implementation of system notifier",
                     "task": "transpile",
                     "src": "src/glosses/notifier/**/*.js",
-                    "dst": "lib/glosses/notifier"
+                    "dst": "lib/glosses/notifier",
+                    "units": {
+                        "exe": {
+                            "description": "Native third-party notifiers",
+                            "src": "src/glosses/notifier/__/notifiers/exe/**/*",
+                            "dst": "lib/glosses/notifier/__/notifiers/exe",
+                            "task": "copy"
+                        }
+                    }
                 },
                 "omnitron": {
                     "description": "Multi-purpose service oriented application framework",

@@ -56,8 +56,16 @@ const validateVersion = (version) => {
     throw new error.NotValidException(`Invalid version: ${version}`);
 };
 
-export const getArchiveName = async ({ version, platform = getCurrentPlatform(), arch = getCurrentArch(), type = "release", omitSuffix = false, ext = DEFAULT_EXT } = {}) => {
+export const getArchiveName = async ({ version, platform = getCurrentPlatform(), arch = getCurrentArch(), type = "release", omitSuffix = false, ext } = {}) => {
     version = validateVersion(version);
+
+    if (is.undefined(ext)) {
+        ext = (type === "sources" || type === "headers") 
+            ? ".tar.gz"
+            : is.windows
+                ? ".zip"
+                : ".tar.gz";
+    }
     if (ext.length > 0 && !ext.startsWith(".")) {
         ext = `.${ext}`;
     }
@@ -76,12 +84,14 @@ export const getArchiveName = async ({ version, platform = getCurrentPlatform(),
         throw new error.NotValidException(`Unknown type of archive: ${type}`);
     }
 
-    if (platform === "win") {
-        if (!WIN_EXTS.includes(ext)) {
-            throw new error.NotValidException(`For 'win' platform archive extension should be '.7z' or '.zip. Got '${ext}`);
+    if (platform) {
+        if (platform === "win") {
+            if (!WIN_EXTS.includes(ext)) {
+                throw new error.NotValidException(`For 'win' platform archive extension should be '.7z' or '.zip. Got '${ext}'`);
+            }
+        } else if (!UNIX_EXTS.includes(ext)) {
+            throw new error.NotValidException(`For unix platforms archive extension should be '.tar.gz' or '.tar.xz. Got '${ext}'`);
         }
-    } else if (!UNIX_EXTS.includes(ext)) {
-        throw new error.NotValidException(`For unix platforms archive extension should be '.tar.gz' or '.tar.xz. Got '${ext}`);
     }
 
     let prefix = `node-${version}`;

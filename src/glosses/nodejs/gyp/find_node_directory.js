@@ -1,5 +1,4 @@
 const path = require("path");
-const log = require("./npmlog");
 
 module.exports = function findNodeDirectory(scriptLocation, processObj) {
     // set dirname and process if not passed in
@@ -13,17 +12,12 @@ module.exports = function findNodeDirectory(scriptLocation, processObj) {
 
     // Have a look to see what is above us, to try and work out where we are
     npm_parent_directory = path.join(scriptLocation, "../../../..");
-    log.verbose("node-gyp root", `npm_parent_directory is ${
-        path.basename(npm_parent_directory)}`);
     node_root_dir = "";
 
-    log.verbose("node-gyp root", "Finding node root directory");
     if (path.basename(npm_parent_directory) === "deps") {
     // We are in a build directory where this script lives in
     // deps/npm/node_modules/node-gyp/lib
         node_root_dir = path.join(npm_parent_directory, "..");
-        log.verbose("node-gyp root", `in build directory, root = ${
-            node_root_dir}`);
     } else if (path.basename(npm_parent_directory) === "node_modules") {
     // We are in a node install directory where this script lives in
     // lib/node_modules/npm/node_modules/node-gyp/lib or
@@ -34,8 +28,6 @@ module.exports = function findNodeDirectory(scriptLocation, processObj) {
         } else {
             node_root_dir = path.join(npm_parent_directory, "../..");
         }
-        log.verbose("node-gyp root", `in install directory, root = ${
-            node_root_dir}`);
     } else {
     // We don't know where we are, try working it out from the location
     // of the node binary

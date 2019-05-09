@@ -1,24 +1,16 @@
+import readShebang from "./util/read_shebang";
+
 const {
     is,
-    semver,
-    std: { path }
+    path
 } = adone;
 
 const resolveCommand = require("./util/resolve_command");
 const escape = require("./util/escape");
-const readShebang = require("./util/read_shebang");
 
 const isWin = process.platform === "win32";
 const isExecutableRegExp = /\.(?:com|exe)$/i;
 const isCmdShimRegExp = /node_modules[\\/].bin[\\/][^\\/]+\.cmd$/i;
-
-// `options.shell` is supported in Node ^4.8.0, ^5.7.0 and >= 6.0.0
-let supportsShellOption;
-try {
-    supportsShellOption = semver.satisfies(process.version, "^4.8.0 || ^5.7.0 || >= 6.0.0", true) || false;
-} catch (err) {
-    supportsShellOption = false;
-}
 
 const detectShebang = function (parsed) {
     parsed.file = resolveCommand(parsed);
@@ -75,30 +67,6 @@ const parseNonShell = function (parsed) {
 
 const parseShell = function (parsed) {
     // If node supports the shell option, there's no need to mimic its behavior
-    if (supportsShellOption) {
-        return parsed;
-    }
-
-    // Mimic node shell option
-    // See https://github.com/nodejs/node/blob/b9f6a2dc059a1062776133f3d4fd848c4da7d150/lib/child_process.js#L335
-    const shellCommand = [parsed.command].concat(parsed.args).join(" ");
-
-    if (isWin) {
-        parsed.command = is.string(parsed.options.shell) ? parsed.options.shell : process.env.comspec || "cmd.exe";
-        parsed.args = ["/d", "/s", "/c", `"${shellCommand}"`];
-        parsed.options.windowsVerbatimArguments = true; // Tell node's spawn that the arguments are already escaped
-    } else {
-        if (is.string(parsed.options.shell)) {
-            parsed.command = parsed.options.shell;
-        } else if (process.platform === "android") {
-            parsed.command = "/system/bin/sh";
-        } else {
-            parsed.command = "/bin/sh";
-        }
-
-        parsed.args = ["-c", shellCommand];
-    }
-
     return parsed;
 };
 

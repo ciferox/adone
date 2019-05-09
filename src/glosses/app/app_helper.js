@@ -1148,7 +1148,7 @@ class Command {
             } else {
                 options.handler = (args, opts, { command }) => {
                     console.log(escape(command.getHelpMessage()));
-                    return 1;
+                    return 0;
                 };
                 options.handler[INTERNAL] = true;
             }
