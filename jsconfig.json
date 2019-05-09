@@ -4,27 +4,12 @@
         "experimentalDecorators": true
     },
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "lib"
     ],
     "include": [
-        ".adone/**/*",
-        "src/**/*",
-        // "tests",
-        "benchmarks",
-        "examples",
-        "tests/glosses/js/compiler/traverse/traverse.test.js",
-        "tests/glosses/js/compiler/traverse/scope.test.js",
-        "tests/glosses/js/compiler/traverse/replacement.test.js",
-        "tests/glosses/js/compiler/traverse/removal.test.js",
-        "tests/glosses/js/compiler/traverse/modification.test.js",
-        "tests/glosses/js/compiler/traverse/introspection.test.js",
-        "tests/glosses/js/compiler/traverse/inference.test.js",
-        "tests/glosses/js/compiler/traverse/hub.test.js",
-        "tests/glosses/js/compiler/traverse/family.test.js",
-        "tests/glosses/js/compiler/traverse/evaluation.test.js",
-        "tests/glosses/js/compiler/traverse/conversion.test.js",
-        "tests/glosses/js/compiler/traverse/arrow_transform.test.js",
-        "tests/glosses/js/compiler/traverse/arrow_transform.js",
-        "tests/glosses/js/compiler/traverse/ancestry.test.js"
+        "./.adone/**/*.js",
+        "./src/**/*.js",
+        "./tests/**/*.js"
     ]
 }

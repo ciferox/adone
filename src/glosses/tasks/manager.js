@@ -71,7 +71,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
         } else if (is.function(task)) {
             TaskClass = class extends adone.task.Task {
                 main(...args) {
-                    return task(...args);
+                    return task.apply(this, args);
                 }
             };
         } else {

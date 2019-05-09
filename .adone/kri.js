@@ -1,6 +1,6 @@
 export default {
-    "realm": {
-        "artifactTags": [
+    realm: {
+        artifactTags: [
             "src",
             "lib.tasks",
             "info",

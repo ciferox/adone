@@ -9,7 +9,7 @@ describe("compressor", "xz", "regressions", () => {
 
     describe("regression-#7", () => {
         it("should perform correctly", (done) => {
-            const input = fs.createReadStream(fixture("..", "..", "..", "fixtures", "big"));
+            const input = fs.createReadStream(fixture("..", "..", "fixtures", "big"));
             const compressor = lzma.compressStream({ sync: true });
 
             input.pipe(compressor).pipe(new BufferList(done));

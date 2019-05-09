@@ -254,6 +254,7 @@ export default class BuildSystem {
         } else {
             D.push({ CMAKE_LIBRARY_OUTPUT_DIRECTORY: this.buildDir });
         }
+        D.push({ ADONE_BUILD_DIRECTORY: this.workDir });
 
         const incPaths = [
             path.join(this.options.nodePath, "include/node"),

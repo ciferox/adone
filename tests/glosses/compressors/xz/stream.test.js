@@ -3,7 +3,7 @@ const helpers = require("./helpers.js");
 const { lzma, xz } = adone.compressor;
 
 describe("compressor", "xz", "stream", () => {
-    const commonFixturePath = (relPath) => path.join(__dirname, "../..", "fixtures", relPath);
+    const commonFixturePath = (relPath) => path.join(__dirname, "..", "fixtures", relPath);
 
     const fixturePath = (relPath) => path.join(__dirname, "fixtures", relPath);
 

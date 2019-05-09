@@ -1,9 +1,14 @@
 import * as helpers from "./helpers";
 
-const { is, std: { fs, path }, compressor: { xz } } = adone;
+const {
+    is,
+    fs,
+    path,
+    compressor: { xz }
+} = adone;
 
 describe("compressor", "xz", () => {
-    const commonFixturePath = (relPath) => path.resolve(__dirname, "../..", "fixtures", relPath);
+    const commonFixturePath = (relPath) => path.resolve(__dirname, "..", "fixtures", relPath);
 
     const fixture = (name) => path.join(__dirname, "fixtures", name);
 

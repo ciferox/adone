@@ -33,3 +33,60 @@ export const spawnSync = function (command, args, options) {
 
     return result;
 };
+
+export const spawnAsync = function (command, args, options) {
+    const cp = spawn(command, args, options);
+
+    const promise = new Promise((resolve, reject) => {
+        let stdout = null;
+        let stderr = null;
+
+        cp.stdout && cp.stdout.on("data", (data) => {
+            stdout = stdout || Buffer.from("");
+            stdout = Buffer.concat([stdout, data]);
+        });
+
+        cp.stderr && cp.stderr.on("data", (data) => {
+            stderr = stderr || Buffer.from("");
+            stderr = Buffer.concat([stderr, data]);
+        });
+
+        const cleanupListeners = () => {
+            cp.removeListener("error", onError);
+            cp.removeListener("close", onClose);
+        };
+
+        const onError = (err) => {
+            cleanupListeners();
+            reject(err);
+        };
+
+        const onClose = (code) => {
+            cleanupListeners();
+
+            stdout = stdout && stdout.toString();
+            stderr = stderr && stderr.toString();
+
+            if (code !== 0) {
+                reject(Object.assign(new Error(`Command failed, exited with code #${code}`), {
+                    exitCode: code,
+                    stdout,
+                    stderr
+                }));
+                return;
+            }
+            resolve({
+                stdout,
+                stderr
+            });
+        };
+
+        cp
+            .on("error", onError)
+            .on("close", onClose);
+    });
+
+    promise.cp = cp;
+
+    return promise;
+};
