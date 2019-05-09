@@ -14,6 +14,13 @@ adone.lazify({
     gyp: "./gyp"
 }, adone.asNamespace(exports), require);
 
+
+if (is.windows) {
+    adone.lazify({
+        findVS2017: "./find_vs2017"
+    }, exports, require);
+}
+
 const versionRegex = () => /^v\d+\.\d+\.\d+/;
 const nonStrictVersionRegex = () => /^\d+\.\d+\.\d+/;
 

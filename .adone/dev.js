@@ -210,11 +210,36 @@ export default {
                                                 .dest(buildPath);
                                         }
 
-                                        if (is.windows) {
+                                        try {
+                                            if (is.windows) {
+                                                const libPath = path.join(xzPath, "build", "lib", "liblzma.lib");
+                                                if (!(await fs.pathExists(libPath))) {
+                                                    const vsSetup = await adone.nodejs.findVS2017();
+                                                    const msbuildPath = path.join(vsSetup.path, "MSBuild", "15.0", "Bin", "MSBuild.exe");
+                                                    const { arch } = global.process;
+                                                    const p = (arch === "x64")
+                                                        ? "x64"
+                                                        : (arch === "arm"
+                                                            ? "ARM"
+                                                            : (arch === "arm64" ? "ARM64" : "Win32"));
+                                                    const args = [
+                                                        path.join(xzPath, "windows", "vs2017", "xz_win.sln"),
+                                                        "/clp:Verbosity=minimal",
+                                                        "/nologo",
+                                                        `/p:Configuration=Release;Platform=${p}`,
+                                                        `/m:${adone.std.os.cpus().length}`
+                                                    ];
 
-                                        } else {
-                                            if (!(await fs.pathExists(path.join(xzPath, "build", "lib", "liblzma.a")))) {
-                                                try {
+                                                    await process.spawnAsync(msbuildPath, args, {
+                                                        cwd: xzPath
+                                                    });
+
+                                                    await fs.mkdirp(path.join(xzPath, "build", "lib"));
+                                                    await fs.copyFile(path.join(xzPath, "windows", "vs2017", "Release", "x64", "liblzma", "liblzma.lib"), libPath);
+                                                    await fs.copyEx(path.join(xzPath, "src", "liblzma", "api"), path.join(xzPath, "build", "include"));
+                                                }
+                                            } else {
+                                                if (!(await fs.pathExists(path.join(xzPath, "build", "lib", "liblzma.a")))) {
                                                     await process.spawnAsync("sh", ["autogen.sh"], {
                                                         cwd: xzPath
                                                     });
@@ -245,11 +270,11 @@ export default {
                                                     await process.spawnAsync(make, ["install"], {
                                                         cwd: xzPath
                                                     });
-                                                } catch (err) {
-                                                    // console.error(err.stderr);
-                                                    throw err;
                                                 }
                                             }
+                                        } catch (err) {
+                                            // console.error(err.stderr);
+                                            throw err;
                                         }
 
                                         return this.manager.runAndWait("cmake", options);
@@ -607,11 +632,6 @@ export default {
                                     task: "copy",
                                     src: "src/glosses/nodejs/gyp/addon/**/*",
                                     dst: "lib/glosses/nodejs/gyp/addon"
-                                },
-                                findpython: {
-                                    task: "copy",
-                                    src: "src/glosses/nodejs/gyp/find_vs2017.cs",
-                                    dst: "lib/glosses/nodejs/gyp"
                                 }
                             }
                         },
@@ -625,6 +645,19 @@ export default {
                                     task: "copy",
                                     src: "src/glosses/nodejs/cmake/addon/**/*",
                                     dst: "lib/glosses/nodejs/cmake/addon"
+                                }
+                            }
+                        },
+                        findVS2017: {
+                            description: "Find VS2017",
+                            src: "src/glosses/nodejs/find_vs2017/index.js",
+                            dst: "lib/glosses/nodejs/find_vs2017",
+                            task: "transpile",
+                            units: {
+                                script: {
+                                    task: "copy",
+                                    src: "src/glosses/nodejs/find_vs2017/find_vs2017.cs",
+                                    dst: "lib/glosses/nodejs/find_vs2017"
                                 }
                             }
                         }

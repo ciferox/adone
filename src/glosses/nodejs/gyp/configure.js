@@ -401,8 +401,7 @@ const configure = async ({ realm, path: addonPath, nodePath, python: pythonPath,
     };
 
     if (is.windows && (!msvsVersion || msvsVersion === "2017")) {
-        const findVS2017 = require("./find_vs2017");
-        const vsSetup = await findVS2017();
+        const vsSetup = await adone.nodejs.findVS2017();
         return createConfigFile(vsSetup);
     }
     return createConfigFile();

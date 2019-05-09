@@ -15,6 +15,8 @@ set(SOURCE_FILES
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
 
+add_definitions(-DLZMA_API_STATIC)
+
 # Gives our library file a .node extension without any "lib" prefix
 set_target_properties(${PROJECT_NAME} PROPERTIES
     PREFIX ""
@@ -27,8 +29,14 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     "${ADONE_BUILD_DIRECTORY}/xz/build/include"
     "src/snappy")
 
+IF (WIN32)
+    set(XZ_LIBNAME liblzma.lib)
+ELSE()
+    set(XZ_LIBNAME liblzma.a)
+ENDIF()
+
 # Essential library files to link to a node addon
 # You should add this line in every CMake.js based project
 target_link_libraries(${PROJECT_NAME} 
-    ${ADONE_BUILD_DIRECTORY}/xz/build/lib/liblzma.a
+    ${ADONE_BUILD_DIRECTORY}/xz/build/lib/${XZ_LIBNAME}
     ${CMAKE_JS_LIB})

@@ -3,7 +3,7 @@ const {
     std: { childProcess: { execFile } }
 } = adone;
 
-module.exports = function findVS2017() {
+export default () => {
     const ps = path.join(process.env.SystemRoot, "System32", "WindowsPowerShell",
         "v1.0", "powershell.exe");
     const csFile = path.join(__dirname, "find_vs2017.cs");
