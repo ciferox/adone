@@ -18,14 +18,14 @@ if(WIN32)
         -DLEVELDB_PLATFORM_UV=1
     )
 
+    SET(CMAKE_C_FLAGS_RELEASE "/O2 /GL /Gy /EHsc")
+
     add_library(libleveldb
         db/builder.cc
-        db/c.cc
-        db/dbformat.cc
         db/db_impl.cc
         db/db_iter.cc
-        db/dumpfile.cc
         db/filename.cc
+        db/dbformat.cc
         db/log_reader.cc
         db/log_writer.cc
         db/memtable.cc
@@ -36,7 +36,6 @@ if(WIN32)
         db/write_batch.cc
         helpers/memenv/memenv.cc
         port/port_posix_sse.cc
-        port/port_win.cc
         table/block.cc
         table/block_builder.cc
         table/filter_block.cc
@@ -53,10 +52,8 @@ if(WIN32)
         util/comparator.cc
         util/crc32c.cc
         util/env.cc
-        util/env_win.cc
         util/filter_policy.cc
         util/hash.cc
-        util/histogram.cc
         util/logging.cc
         util/options.cc
         util/status.cc
@@ -127,7 +124,9 @@ else(WIN32)
 endif(WIN32)
 
 target_include_directories(libleveldb PRIVATE
+    ${CMAKE_JS_INC}
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../port-libuv
     "include")
 
 target_link_libraries(libleveldb PUBLIC snappylib)
