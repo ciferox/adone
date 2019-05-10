@@ -1,7 +1,6 @@
 export default {
     defaultTask: "copy",
     nonWatchableTasks: [
-        "gyp",
         "cmake"
     ],
     units: {
@@ -572,14 +571,7 @@ export default {
                     description: "Implementation of common math classes and primitives",
                     task: "transpile",
                     src: "src/glosses/math/**/*.js",
-                    dst: "lib/glosses/math",
-                    units: {
-                        native: {
-                            task: "gyp",
-                            src: "src/glosses/math/bignumber/native",
-                            dst: "lib/glosses/math/bignumber/native"
-                        }
-                    }
+                    dst: "lib/glosses/math"
                 },
                 model: {
                     description: "Model definition and validation",
@@ -617,24 +609,6 @@ export default {
                     src: "src/glosses/nodejs/**/*.js",
                     dst: "lib/glosses/nodejs",
                     units: {
-                        gyp: {
-                            task: "transpile",
-                            src: "src/glosses/nodejs/gyp/**/*.js",
-                            dst: "lib/glosses/nodejs/gyp",
-                            description: "Node.js native addon build tool based on gyp",
-                            units: {
-                                gyp: {
-                                    task: "copy",
-                                    src: "src/glosses/nodejs/gyp/gyp/**/*",
-                                    dst: "lib/glosses/nodejs/gyp/gyp"
-                                },
-                                addon: {
-                                    task: "copy",
-                                    src: "src/glosses/nodejs/gyp/addon/**/*",
-                                    dst: "lib/glosses/nodejs/gyp/addon"
-                                }
-                            }
-                        },
                         cmake: {
                             description: "Node.js native addon build tool based on cmake",
                             src: "src/glosses/nodejs/cmake/**/*.js",
@@ -807,19 +781,6 @@ export default {
                             task: "transpile",
                             src: "src/glosses/system/env.js",
                             dst: "lib/glosses/system"
-                        },
-                        user: {
-                            description: "Utilites for lookup uid and gid information",
-                            task: "transpile",
-                            src: "src/glosses/system/user/index.js",
-                            dst: "lib/glosses/system/user",
-                            units: {
-                                native: {
-                                    task: "cmake",
-                                    src: "src/glosses/system/user/native",
-                                    dst: "lib/glosses/system/user/native"
-                                }
-                            }
                         }
                     }
                 },

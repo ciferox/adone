@@ -696,7 +696,6 @@ adone.lazify({
     application: () => (obj) => obj instanceof adone.app.Application,
     byteArray: () => (obj) => obj instanceof adone.collection.ByteArray,
     long: () => (obj) => obj instanceof adone.math.Long,
-    bigNumber: () => (obj) => obj instanceof adone.math.BigNumber,
     emitter: () => (obj) => obj instanceof adone.event.Emitter,
     asyncEmitter: () => (obj) => obj instanceof adone.event.AsyncEmitter,
     coreStream: () => (obj) => obj instanceof adone.stream.core.Stream,

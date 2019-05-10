@@ -10,8 +10,7 @@ const {
 adone.lazify({
     NodejsManager: "./manager",
     NodejsCompiler: "./compiler",
-    cmake: "./cmake",
-    gyp: "./gyp"
+    cmake: "./cmake"
 }, adone.asNamespace(exports), require);
 
 

@@ -20,7 +20,6 @@ describe("realm", () => {
         "clean",
         "build",
         "copy",
-        "gyp",
         "cmake",
         "transpile",
         "transpileExe",

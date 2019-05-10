@@ -9,5 +9,3 @@ src/native/nan/* linguist-vendored
 src/native/napi/* linguist-vendored
 src/glosses/async/* linguist-vendored
 src/glosses/lodash/* linguist-vendored
-src/glosses/nodejs/gyp/gyp/* linguist-vendored
-src/glosses/nodejs/gyp/addon/* linguist-vendored

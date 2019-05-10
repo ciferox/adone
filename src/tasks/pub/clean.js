@@ -8,9 +8,7 @@ const {
 const clean = async function ({ manager, ...unit } = {}) {
     let srcGlob;
 
-    if (unit.task === "gyp") {
-        return adone.nodejs.gyp.clean({ realm: manager, path: unit.src });
-    } else if (unit.task === "cmake") {
+    if (unit.task === "cmake") {
         return adone.nodejs.cmake.clean({ realm: manager, path: unit.src });
     }
 

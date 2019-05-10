@@ -5,7 +5,6 @@ const {
 adone.lazify({
     Long: "./long",
     BitSet: "./bitset",
-    BigNumber: "./bignumber",
     simd: "./simd",
     matrix: "./matrix",
     Decimal: "./decimal"
