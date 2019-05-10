@@ -26,9 +26,6 @@
         "src.native": [
             "src/native"
         ],
-        "lib.tasks": [
-            "lib/tasks"
-        ],
         "configs": [
             "etc",
             ".eslintignore",
@@ -49,6 +46,7 @@
     },
     "tasks": {
         "basePath": "lib/tasks",
+        "altBasePath": "src/tasks",
         "default": false,
         "tags": {
             "pub": "pub",

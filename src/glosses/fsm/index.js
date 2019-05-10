@@ -78,81 +78,81 @@ export class StateMachine extends AsyncEmitter {
                 }
                 this.emit("invalidTransition", t.name, this.#state);
                 throw new error.IllegalStateException(`Invalid transition '${t.name}' for '${this.#state}' state`);
-        };
+            };
+        }
     }
-}
 
-isTransitionAllow(name) {
-    const states = this.#allowedStates.get(name);
-    return states.includes(this.#state);
-}
-
-addAllowedState(transitionName, state) {
-    const states = this.#allowedStates.get(transitionName);
-    if (is.undefined(states)) {
-        this.#allowedStates.set(transitionName, util.arrify(state));
-    } else {
-        states.push(...util.arrayDiff(state));
+    isTransitionAllow(name) {
+        const states = this.#allowedStates.get(name);
+        return states.includes(this.#state);
     }
-}
 
-getState() {
-    return this.#state;
-}
-
-async waitUntilStateEnters(state, timeout) {
-    if (state === this.#state) {
-        return;
+    addAllowedState(transitionName, state) {
+        const states = this.#allowedStates.get(transitionName);
+        if (is.undefined(states)) {
+            this.#allowedStates.set(transitionName, util.arrify(state));
+        } else {
+            states.push(...util.arrayDiff(state));
+        }
     }
-    const stateUpdate = new Promise((resolve) => {
-        const handler = (incomingState) => {
-            if (incomingState === state) {
-                this.off("state", handler);
-                resolve();
-            }
-        };
-        this.on("state", handler);
-    });
-    if (is.number(timeout) && timeout > 0) {
-        await this.#timeout(stateUpdate, timeout);
-    } else {
-        await stateUpdate;
+
+    getState() {
+        return this.#state;
     }
-}
 
-async waitUntilStateLeaves(state, timeout) {
-    if (state !== this.#state) {
-        return;
+    async waitUntilStateEnters(state, timeout) {
+        if (state === this.#state) {
+            return;
+        }
+        const stateUpdate = new Promise((resolve) => {
+            const handler = (incomingState) => {
+                if (incomingState === state) {
+                    this.off("state", handler);
+                    resolve();
+                }
+            };
+            this.on("state", handler);
+        });
+        if (is.number(timeout) && timeout > 0) {
+            await this.#timeout(stateUpdate, timeout);
+        } else {
+            await stateUpdate;
+        }
     }
-    const stateUpdate = new Promise((resolve) => {
-        const handler = (incomingState) => {
-            if (incomingState !== state) {
-                this.off("state", handler);
-                resolve();
-            }
-        };
 
-        this.on("state", handler);
-    });
-    if (is.number(timeout) && timeout > 0) {
-        await this.#timeout(stateUpdate, timeout);
-    } else {
-        await stateUpdate;
+    async waitUntilStateLeaves(state, timeout) {
+        if (state !== this.#state) {
+            return;
+        }
+        const stateUpdate = new Promise((resolve) => {
+            const handler = (incomingState) => {
+                if (incomingState !== state) {
+                    this.off("state", handler);
+                    resolve();
+                }
+            };
+
+            this.on("state", handler);
+        });
+        if (is.number(timeout) && timeout > 0) {
+            await this.#timeout(stateUpdate, timeout);
+        } else {
+            await stateUpdate;
+        }
     }
-}
 
-#timeout(promise, ms) {
-    const timeout = new Promise((resolve, reject) => {
-        const id = setTimeout(() => {
-            clearTimeout(id);
-            reject(new error.TimeoutException("State awating timed out"));
-        }, ms);
-    });
-    return Promise.race([promise, timeout]);
-}
+    #timeout(promise, ms) {
+        const timeout = new Promise((resolve, reject) => {
+            const id = setTimeout(() => {
+                clearTimeout(id);
+                reject(new error.TimeoutException("State awating timed out"));
+            }, ms);
+        });
+        return Promise.race([promise, timeout]);
+    }
 
-#updateState(newState) {
-    this.#state = newState;
-    this.emit("state", newState);
-}
+    #updateState(newState) {
+        this.#state = newState;
+        this.emit("state", newState);
+    }
 }

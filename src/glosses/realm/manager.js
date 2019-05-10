@@ -111,17 +111,24 @@ export default class RealmManager extends task.TaskManager {
         try {
             const tasksConfig = this.config.raw.tasks;
             if (is.object(tasksConfig) && is.string(tasksConfig.basePath)) {
-                const tasksBasePath = this.getPath(tasksConfig.basePath);
+                let tasksBasePath = this.getPath(tasksConfig.basePath);
 
-                if (fs.existsSync(tasksBasePath)) {
+                const loadTasks = async (basePath) => {
                     if (is.object(tasksConfig.tags)) {
                         for (const [tag, path] of Object.entries(tasksConfig.tags)) {
-                            await this.loadTasksFrom(aPath.join(tasksBasePath, path), {
+                            await this.loadTasksFrom(aPath.join(basePath, path), {
                                 transpile: options.transpile,
                                 tag
                             });
                         }
                     }
+                };
+
+                if (fs.existsSync(tasksBasePath)) {
+                    await loadTasks(tasksBasePath);
+                } else if (is.string(tasksConfig.altBasePath)) {
+                    tasksBasePath = this.getPath(tasksConfig.altBasePath);
+                    fs.existsSync(tasksBasePath) && await loadTasks(tasksBasePath);
                 }
 
                 if (tasksConfig.default !== false) {
