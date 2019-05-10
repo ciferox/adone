@@ -10,7 +10,7 @@ const {
 } = adone;
 
 
-const PingMessageStream = require(path.join(adone.ROOT_PATH, "lib/ipfs/http_client/utils/ping-message-stream"));
+const PingMessageStream = require(adone.getPath("lib/ipfs/http_client/utils/ping-message-stream"));
 
 // Determine if a ping response object is a pong, or something else, like a status message
 const isPong = function (pingResponse) {

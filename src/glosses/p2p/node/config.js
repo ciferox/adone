@@ -14,7 +14,6 @@ const transport = s.union([
     }),
     "function"
 ]);
-
 const modulesSchema = s({
     connEncryption: optional(list([s("object|function")])),
     // this is hacky to simulate optional because interface doesnt work correctly with it
@@ -88,7 +87,7 @@ module.exports.validate = (opts) => {
 
     // Improve errors throwed, reduce stack by throwing here and add reason to the message
     if (error) {
-        throw new Error(`${error.message}${error.reason ? ` - ${error.reason}` : ""}`);
+        throw new Error(`${error.message}${error.reason ? " - " + error.reason : ""}`);
     } else {
         // Throw when dht is enabled but no dht module provided
         if (options.config.dht.enabled) {

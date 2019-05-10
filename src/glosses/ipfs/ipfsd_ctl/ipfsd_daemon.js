@@ -43,7 +43,7 @@ class Daemon {
     constructor(opts) {
         const rootPath = process.env.testpath
             ? process.env.testpath
-            : adone.ROOT_PATH;
+            : adone.cwd;
 
         this.opts = opts || { type: "go" };
         const td = tmpDir(this.opts.type === "js");

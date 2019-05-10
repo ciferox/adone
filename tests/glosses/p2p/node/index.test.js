@@ -583,7 +583,7 @@ describe("state machine (fsm)", () => {
 });
 
 describe("getPeerInfo", () => {
-    const getPeerInfo = require(srcPath("get-peer-info"));
+    const getPeerInfo = require(srcPath("get_peer_info"));
 
     it("should callback with error for invalid string multiaddr", (done) => {
         getPeerInfo(null)("INVALID MULTIADDR", (err) => {

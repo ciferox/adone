@@ -9,7 +9,7 @@ module.exports = (type, rootPath) => {
         js: path.join("lib", "ipfs", "main", "cli", "bin.js")
     };
 
-    let appRoot = rootPath ? rootPath : adone.ROOT_PATH;
+    let appRoot = rootPath ? rootPath : adone.cwd;
     // If inside <appname>.asar try to load from .asar.unpacked
     // this only works if asar was built with
     // asar --unpack-dir=node_modules/go-ipfs-dep/* (not tested)

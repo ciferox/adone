@@ -3,9 +3,9 @@ const {
 } = adone;
 
 const isNode = require("detect-node");
-const flatten = require(path.join(adone.ROOT_PATH, "lib/ipfs/ipfsd_ctl/utils/flatten"));
-const tempDir = require(path.join(adone.ROOT_PATH, "lib/ipfs/ipfsd_ctl/utils/tmp-dir"));
-const findIpfsExecutable = require(path.join(adone.ROOT_PATH, "lib/ipfs/ipfsd_ctl/utils/find_ipfs_executable"));
+const flatten = require(adone.getPath("lib/ipfs/ipfsd_ctl/utils/flatten"));
+const tempDir = require(adone.getPath("lib/ipfs/ipfsd_ctl/utils/tmp-dir"));
+const findIpfsExecutable = require(adone.getPath("lib/ipfs/ipfsd_ctl/utils/find_ipfs_executable"));
 
 describe("utils", () => {
     describe(".flatten", () => {

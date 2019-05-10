@@ -28,8 +28,8 @@ describe("extreme", () => {
         };
         Date.now = () => 1459875739796;
         os.hostname = () => "abcdefghijklmnopqr";
-        adone.module.require.uncache(join(adone.ROOT_PATH, "lib", "glosses", "logger", "index.js"));
-        const logger = require(join(adone.ROOT_PATH, "lib", "glosses", "logger", "index.js"));
+        adone.module.require.uncache(adone.getPath("lib", "glosses", "logger", "index.js"));
+        const logger = require(adone.getPath("lib", "glosses", "logger", "index.js"));
         let expected = "";
         let actual = "";
         const normal = logger(writer((s, enc, cb) => {
@@ -76,8 +76,8 @@ describe("extreme", () => {
         os.hostname = function () {
             return "abcdefghijklmnopqr";
         };
-        adone.module.require.uncache(join(adone.ROOT_PATH, "lib", "glosses", "logger", "index.js"));
-        const logger = require(join(adone.ROOT_PATH, "lib", "glosses", "logger", "index.js"));
+        adone.module.require.uncache(adone.getPath("lib", "glosses", "logger", "index.js"));
+        const logger = require(adone.getPath("lib", "glosses", "logger", "index.js"));
         let expected = "";
         let actual = "";
         const normal = logger(writer((s, enc, cb) => {

@@ -4,7 +4,7 @@ const {
 } = adone;
 
 const isrunning = require("is-running");
-const exec = require(path.join(adone.ROOT_PATH, "lib/ipfs/ipfsd_ctl/utils/exec"));
+const exec = require(adone.getPath("lib/ipfs/ipfsd_ctl/utils/exec"));
 
 const survivor = path.join(__dirname, "..", "survivor");
 

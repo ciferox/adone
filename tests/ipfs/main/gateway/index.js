@@ -6,7 +6,7 @@ const {
     std: { os, path }
 } = adone;
 
-const HttpApi = require(path.join(adone.ROOT_PATH, "lib/ipfs/main/http"));
+const HttpApi = require(path.join(adone.cwd, "lib/ipfs/main/http"));
 
 
 const interfaceFixturePath = (...args) => adone.path.join(__dirname, "..", "..", "interface", "fixtures", ...args);

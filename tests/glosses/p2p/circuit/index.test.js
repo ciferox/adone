@@ -10,7 +10,7 @@ const {
 } = adone;
 const { collect, handshake, lengthPrefixed: lp, values, asyncMap, pair, protocolBuffers: pb } = pull;
 
-const srcPath = (...args) => path.join(adone.ROOT_PATH, "lib", "glosses", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", ...args);
 
 describe("p2p", "circuit", () => {
     describe("dialer tests", () => {

@@ -8,7 +8,7 @@ const {
     std: { path }
 } = adone;
 
-const srcPath = (...args) => path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", "node", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "node", ...args);
 const { codes } = require(srcPath("errors"));
 
 

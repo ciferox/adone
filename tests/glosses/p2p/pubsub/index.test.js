@@ -6,6 +6,11 @@ const {
     p2p: { PubsubBaseProtocol }
 } = adone;
 
+const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "pubsub", ...args);
+const { Message } = require(srcPath("message"));
+const { SignPrefix } = require(srcPath("message/sign"));
+const { randomSeqno, normalizeOutRpcMessage } = require(srcPath("utils"));
+
 const utils = require("./utils");
 const { createNode } = utils;
 
@@ -86,6 +91,29 @@ describe("pubsub base protocol", () => {
                     cb();
                 }, 1000)
             ], done);
+        });
+
+        it("_buildMessage normalizes and signs messages", (done) => {
+            const message = {
+                from: "QmABC",
+                data: "hello",
+                seqno: randomSeqno(),
+                topicIDs: ["test-topic"]
+            };
+
+            psA._buildMessage(message, (err, signedMessage) => {
+                expect(err).to.not.exist();
+
+                const bytesToSign = Buffer.concat([
+                    SignPrefix,
+                    Message.encode(normalizeOutRpcMessage(message))
+                ]);
+
+                psA.peerId.pubKey.verify(bytesToSign, signedMessage.signature, (err, verified) => {
+                    expect(verified).to.eql(true);
+                    done(err);
+                });
+            });
         });
     });
 

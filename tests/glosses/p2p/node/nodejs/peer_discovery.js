@@ -7,7 +7,7 @@ const {
     std: { path, crypto }
 } = adone;
 
-const srcPath = (...args) => path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", ...args);
 const signalling = require(srcPath("transports", "webrtc_star/sig-server"));
 
 describe("peer discovery", () => {
@@ -290,13 +290,13 @@ describe("peer discovery", () => {
                 dht: {
                     enabled: false
                 },
-                autoDial: true,
                 peerDiscovery: {
+                    autoDial: true,
                     mdns: {
                         enabled: true,
                         interval: 200, // discover quickly
                         // use a random tag to prevent CI collision
-                        serviceTag: crypto.randomBytes(10).toString("hex")
+                        serviceTag: crypto.randomBytes(10).toString('hex')
                     }
                 }
             }
@@ -421,6 +421,7 @@ describe("peer discovery", () => {
                         randomWalk: {
                             enabled: true,
                             queriesPerPeriod: 1,
+                            delay: 100,
                             interval: 200, // start the query sooner
                             timeout: 3000
                         }

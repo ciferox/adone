@@ -5,7 +5,7 @@ const {
 const fixture = std.path.join.bind(std.path, __dirname, "fixtures");
 
 describe("cli", () => {
-    const ADONE_CLI_PATH = std.path.join(adone.ROOT_PATH, "bin", "adone.js");
+    const ADONE_CLI_PATH = adone.getPath("bin", "adone.js");
     describe("'run' command", () => {
         it("simple script", async () => {
             const result = await forkProcess(ADONE_CLI_PATH, ["run", fixture("raw.js")]);

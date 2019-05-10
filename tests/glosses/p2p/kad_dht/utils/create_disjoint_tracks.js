@@ -1,44 +1,18 @@
-const distance = require("xor-distance");
+/* eslint-disable func-style */
 const waterfall = require("async/waterfall");
-const map = require("async/map");
 
+const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", ...args);
 const {
-    multiformat: { multihashingAsync: multihashing }
-} = adone;
-
-const convertPeerId = function (peer, callback) {
-    multihashing.digest(peer.id, "sha2-256", callback);
-};
-
-const sortClosestPeers = function (peers, target, callback) {
-    map(peers, (peer, cb) => {
-        convertPeerId(peer, (err, id) => {
-            if (err) {
-                return cb(err);
-            }
-
-            cb(null, {
-                peer,
-                distance: distance(id, target)
-            });
-        });
-    }, (err, distances) => {
-        if (err) {
-            return callback(err);
-        }
-
-        callback(null, distances.sort(xorCompare).map((d) => d.peer));
-    });
-};
-
-const xorCompare = (a, b) => distance.compare(a.distance, b.distance);
+    convertPeerId,
+    sortClosestPeers
+} = require(srcPath("utils"));
 
 /**
  * Given an array of peerInfos, decide on a target, start peers, and
  * "next", a successor function for the query to use. See comment
  * where this is called for details.
  */
-const createDisjointTracks = function (peerInfos, goodLength, callback) {
+function createDisjointTracks(peerInfos, goodLength, callback) {
     const ids = peerInfos.map((info) => info.id);
     const us = ids[0];
     let target;
@@ -79,18 +53,18 @@ const createDisjointTracks = function (peerInfos, goodLength, callback) {
                         end: true,
                         closerPeers: []
                     };
-
-                }
+                    
+                } 
                 const infoIdx = ids.indexOf(track[nextPos]);
                 return {
                     closerPeers: [peerInfos[infoIdx]]
                 };
-
+                
             };
 
             cb(null, target.id, [goodTrack[0], badTrack[0]], next);
         }
     ], callback);
-};
+}
 
 module.exports = createDisjointTracks;

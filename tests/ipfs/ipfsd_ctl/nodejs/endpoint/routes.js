@@ -8,7 +8,7 @@ const proxyquire = require("proxyquire");
 const Hapi = require("hapi");
 
 const routes = proxyquire(
-    path.join(adone.ROOT_PATH, "lib/ipfs/ipfsd_ctl/endpoint/routes"),
+    adone.getPath("lib/ipfs/ipfsd_ctl/endpoint/routes"),
     {
         "../factory_daemon": class {
             spawn(ops, cb) {

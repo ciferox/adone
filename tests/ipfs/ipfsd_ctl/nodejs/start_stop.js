@@ -6,8 +6,8 @@ const {
 const async = require("async");
 const isrunning = require("is-running");
 
-const findIpfsExecutable = require(path.join(adone.ROOT_PATH, "lib/ipfs/ipfsd_ctl/utils/find_ipfs_executable"));
-const tempDir = require(path.join(adone.ROOT_PATH, "lib/ipfs/ipfsd_ctl/utils/tmp-dir"));
+const findIpfsExecutable = require(adone.getPath("lib/ipfs/ipfsd_ctl/utils/find_ipfs_executable"));
+const tempDir = require(adone.getPath("lib/ipfs/ipfsd_ctl/utils/tmp-dir"));
 
 const dfBaseConfig = require("../utils/df_config_nodejs");
 

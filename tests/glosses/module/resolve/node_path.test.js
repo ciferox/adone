@@ -60,5 +60,5 @@ it("$NODE_PATH", () => {
         isDirectory: isDir
     });
     const root = require("safe-buffer/package.json").main;
-    assert.equal(res, path.resolve(adone.ROOT_PATH, "node_modules/safe-buffer", root), "safe-buffer resolves");
+    assert.equal(res, path.resolve(adone.cwd, "node_modules/safe-buffer", root), "safe-buffer resolves");
 });

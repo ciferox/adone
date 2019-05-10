@@ -388,7 +388,7 @@ describe("lines", () => {
         fs.readFile(__filename, "utf-8", (err, source) => {
             assert.equal(err, null);
             assert.strictEqual(fromString(source).guessTabWidth(), 4);
-            fs.readFile(path.join(adone.ROOT_PATH, "package.json"), "utf-8", (err, source) => {
+            fs.readFile(adone.getPath("package.json"), "utf-8", (err, source) => {
                 assert.equal(err, null);
                 assert.strictEqual(fromString(source).guessTabWidth(), 2);
                 done();

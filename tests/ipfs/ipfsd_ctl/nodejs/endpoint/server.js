@@ -2,7 +2,7 @@ const {
     std: { path }
 } = adone;
 
-const Server = require(path.join(adone.ROOT_PATH, "lib/ipfs/ipfsd_ctl/endpoint/server"));
+const Server = require(adone.getPath("lib/ipfs/ipfsd_ctl/endpoint/server"));
 const portUsed = require("detect-port");
 
 describe("endpoint server", () => {

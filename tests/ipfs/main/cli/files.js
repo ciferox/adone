@@ -26,7 +26,7 @@ const fixturePath = (...args) => adone.path.join(__dirname, "..", "fixtures", ..
 
 describe("files", () => runOnAndOff((thing) => {
     let ipfs;
-    const readme = fs.readFileSync(path.join(adone.ROOT_PATH, "lib/ipfs/main/init-files/init-docs/readme"))
+    const readme = fs.readFileSync(adone.getPath("lib/ipfs/main/init-files/init-docs/readme"))
         .toString("utf-8");
 
     const recursiveGetDirResults = [

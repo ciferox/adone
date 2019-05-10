@@ -71,7 +71,7 @@ export default class extends BaseTask {
         const devConfig = this.manager.devConfig;
         const nonWatchbaleTasks = adone.util.arrify(devConfig.get("nonWatchableTasks"));
         const observer = await adone.task.runParallel(this.manager, devConfig.getUnits(path)
-            .filter((unit) => !nonWatchbaleTasks.includes(unit.task))
+            .filter((unit) => !nonWatchbaleTasks.includes(unit.task) && !is.function(unit.task))
             .map((unit) => ({
                 task: WatchTask,
                 args: {

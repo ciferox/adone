@@ -2,7 +2,7 @@ const {
     std: { path }
 } = adone;
 
-const srcPath = (...args) => path.join(adone.ROOT_PATH, "lib/ipfs/http_client", ...args);
+const srcPath = (...args) => adone.getPath("lib/ipfs/http_client", ...args);
 
 const defaultConfig = require(srcPath("utils/default-config.js"));
 const config = defaultConfig();

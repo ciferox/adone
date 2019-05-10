@@ -11,7 +11,7 @@ const {
     std: { path }
 } = adone;
 
-const srcPath = (...args) => path.join(adone.ROOT_PATH, "lib", "glosses", "p2p", ...args);
+const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", ...args);
 const signalling = require(srcPath("transports", "webrtc_star/sig-server"));
 
 describe("transports", () => {

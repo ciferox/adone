@@ -4,7 +4,7 @@ const {
     std: { path }
 } = adone;
 
-export const srcPath = (...args) => path.join(adone.ROOT_PATH, "lib", "glosses", "ipfs", "mfs", ...args);
+export const srcPath = (...args) => adone.getPath("lib", "glosses", "ipfs", "mfs", ...args);
 
 const core = require(srcPath("core"));
 const isWebWorker = require("detect-webworker");

@@ -46,7 +46,7 @@ const on = function (tests) {
 
             df.spawn({
                 type: "js",
-                exec: path.join(adone.ROOT_PATH, "lib/ipfs/main/cli/bin.js"),
+                exec: path.join(adone.cwd, "lib/ipfs/main/cli/bin.js"),
                 initOptions: { bits: 512 },
                 config: { Bootstrap: [] }
             }, (err, node) => {

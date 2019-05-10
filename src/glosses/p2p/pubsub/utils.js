@@ -83,15 +83,17 @@ exports.normalizeInRpcMessages = (messages) => {
     });
 };
 
+exports.normalizeOutRpcMessage = (message) => {
+    const m = Object.assign({}, message);
+    if (is.string(message.from) || message.from instanceof String) {
+        m.from = bs58.decode(message.from);
+    }
+    return m;
+};
+
 exports.normalizeOutRpcMessages = (messages) => {
     if (!messages) {
         return messages;
     }
-    return messages.map((msg) => {
-        const m = Object.assign({}, msg);
-        if (is.string(msg.from) || msg.from instanceof String) {
-            m.from = bs58.decode(msg.from);
-        }
-        return m;
-    });
+    return messages.map(exports.normalizeOutRpcMessage);
 };

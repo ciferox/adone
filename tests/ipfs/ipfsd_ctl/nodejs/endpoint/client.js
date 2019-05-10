@@ -9,7 +9,7 @@ const {
     std: { path }
 } = adone;
 
-const ClientFactory = proxyquire(path.join(adone.ROOT_PATH, "lib/ipfs/ipfsd_ctl/factory_client"), {
+const ClientFactory = proxyquire(adone.getPath("lib/ipfs/ipfsd_ctl/factory_client"), {
     superagent: () => {
         return superagent;
     }
