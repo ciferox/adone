@@ -12,7 +12,7 @@ export default class GitHub {
      *                                  not provided requests will be made unauthenticated
      * @param {string} [apiBase=https://api.github.com] - the base Github API URL
      */
-    constructor(auth, apiBase = "https://api.github.com") {
+    constructor(auth, apiBase = github.apiBase) {
         this.__apiBase = apiBase;
         this.__auth = auth || {};
     }

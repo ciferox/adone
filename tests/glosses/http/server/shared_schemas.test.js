@@ -672,10 +672,10 @@ describe("shared schemas", () => {
     });
 
     // https://github.com/fastify/fastify/issues/1043
-    it("The schema resolver should clean the $id key before passing it to the compiler", (done) => {
+    it("The schema resolver should clean the $id key before passing it to the compiler without modify it", (done) => {
         const fastify = server();
 
-        fastify.addSchema({
+        const first = {
             $id: "first",
             type: "object",
             properties: {
@@ -683,7 +683,9 @@ describe("shared schemas", () => {
                     type: "number"
                 }
             }
-        });
+        };
+
+        fastify.addSchema(first);
 
         fastify.addSchema({
             $id: "second",
@@ -731,8 +733,10 @@ describe("shared schemas", () => {
             }
         });
 
+        assert.ok(first.$id);
         fastify.ready((err) => {
             assert.notExists(err);
+            assert.ok(first.$id);
             done();
         });
     });

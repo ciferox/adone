@@ -74,7 +74,8 @@ function build(options) {
     const modifyCoreObjects = options.modifyCoreObjects !== false;
     const requestIdHeader = options.requestIdHeader || defaultInitOptions.requestIdHeader;
     const querystringParser = options.querystringParser || querystring.parse;
-    const genReqId = options.genReqId || reqIdGenFactory(requestIdHeader);
+    const genReqId = options.genReqId || reqIdGenFactory();
+    const requestIdLogLabel = options.requestIdLogLabel || "reqId";
     const bodyLimit = options.bodyLimit || defaultInitOptions.bodyLimit;
 
     // Instance Fastify components
@@ -276,7 +277,7 @@ function build(options) {
             return;
         }
 
-        req.id = genReqId(req);
+        req.id = req.headers[requestIdHeader] || genReqId(req);
         req.originalUrl = req.url;
         let hostname = req.headers.host;
         let ip = req.connection.remoteAddress;
@@ -290,7 +291,7 @@ function build(options) {
             }
         }
 
-        const childLogger = logger.child({ reqId: req.id, level: context.logLevel });
+        const childLogger = logger.child({ [requestIdLogLabel]: req.id, level: context.logLevel });
 
         // added hostname, ip, and ips back to the Node req object to maintain backward compatibility
         if (modifyCoreObjects) {
@@ -487,32 +488,20 @@ function build(options) {
                 return;
             }
 
-            if (opts.preParsing) {
-                if (is.array(opts.preParsing)) {
-                    opts.preParsing = opts.preParsing.map((hook) => hook.bind(this));
-                } else {
-                    opts.preParsing = opts.preParsing.bind(this);
-                }
-            }
-
-            if (opts.preValidation) {
-                if (is.array(opts.preValidation)) {
-                    opts.preValidation = opts.preValidation.map((hook) => hook.bind(this));
-                } else {
-                    opts.preValidation = opts.preValidation.bind(this);
-                }
-            }
-
             if (is.nil(opts.preHandler) && !is.nil(opts.beforeHandler)) {
                 beforeHandlerWarning();
                 opts.preHandler = opts.beforeHandler;
             }
 
-            if (opts.preHandler) {
-                if (is.array(opts.preHandler)) {
-                    opts.preHandler = opts.preHandler.map((hook) => hook.bind(this));
-                } else {
-                    opts.preHandler = opts.preHandler.bind(this);
+            const hooks = ["preParsing", "preValidation", "onRequest", "preHandler", "preSerialization"];
+
+            for (const hook of hooks) {
+                if (opts[hook]) {
+                    if (is.array(opts[hook])) {
+                        opts[hook] = opts[hook].map((fn) => fn.bind(this));
+                    } else {
+                        opts[hook] = opts[hook].bind(this);
+                    }
                 }
             }
 
@@ -527,23 +516,18 @@ function build(options) {
             // the route registration. To be sure to load also that hooks/middlewares,
             // we must listen for the avvio's preReady event, and update the context object accordingly.
             avvio.once("preReady", () => {
-                const onRequest = this[kHooks].onRequest;
                 const onResponse = this[kHooks].onResponse;
                 const onSend = this[kHooks].onSend;
                 const onError = this[kHooks].onError;
-                const preParsing = this[kHooks].preParsing.concat(opts.preParsing || []);
-                const preValidation = this[kHooks].preValidation.concat(opts.preValidation || []);
-                const preSerialization = this[kHooks].preSerialization.concat(opts.preSerialization || []);
-                const preHandler = this[kHooks].preHandler.concat(opts.preHandler || []);
 
-                context.onRequest = onRequest.length ? onRequest : null;
-                context.preParsing = preParsing.length ? preParsing : null;
-                context.preValidation = preValidation.length ? preValidation : null;
-                context.preSerialization = preSerialization.length ? preSerialization : null;
-                context.preHandler = preHandler.length ? preHandler : null;
                 context.onSend = onSend.length ? onSend : null;
                 context.onError = onError.length ? onError : null;
                 context.onResponse = onResponse.length ? onResponse : null;
+
+                for (const hook of hooks) {
+                    const toSet = this[kHooks][hook].concat(opts[hook] || []);
+                    context[hook] = toSet.length ? toSet : null;
+                }
 
                 context._middie = buildMiddie(this[kMiddlewares]);
 

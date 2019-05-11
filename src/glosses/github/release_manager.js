@@ -27,6 +27,7 @@ export default class GitHubReleaseManager {
         }
 
         const fullname = `${owner}/${repo}`;
+        this.apiBase = apiBase;
         this.repo = new github.Repository(fullname, auth, apiBase);
         this.auth = auth;
     }
@@ -114,8 +115,8 @@ export default class GitHubReleaseManager {
         })).data;
     }
 
-    updateAsset(options) {
-
+    async updateAsset({ id, name, path } = {}) {
+        
     }
 
     async deleteAsset(assetId) {

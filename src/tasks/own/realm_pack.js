@@ -2,14 +2,16 @@ const {
     cli,
     error,
     is,
+    fast,
     fs,
     path: aPath,
+    nodejs,
     realm: { BaseTask, RealmManager }
 } = adone;
 
-@adone.task.task("realmFork")
+@adone.task.task("realmPack")
 export default class extends BaseTask {
-    async main({ realm, path, name, tags, filter } = {}) {
+    async main({ realm, path, name, tags, filter, type = nodejs.DEFAULT_EXT } = {}) {
         this.manager.notify(this, "progress", {
             message: "checking"
         });
@@ -27,12 +29,11 @@ export default class extends BaseTask {
         }
 
         if (!is.string(name) || name.length === 0) {
-            // name = realm.name;
-            throw new error.NotValidException(`Invalid name: ${adone.inspect(name)}`);
+            name = `${realm.name}-v${realm.package.version}-node-v${process.version.split(".")[0].slice(1)}.x-${nodejs.getCurrentPlatform()}-${nodejs.getCurrentArch()}`;
         }
 
         this.manager.notify(this, "progress", {
-            message: "connecting to source realm"
+            message: "connecting to realm"
         });
 
         // Connect to source realm
@@ -41,16 +42,8 @@ export default class extends BaseTask {
         });
 
         this.manager.notify(this, "progress", {
-            message: "preparing to copy common realm files"
+            message: `packing realm ${cli.style.primary(realm.name)}`
         });
-
-        const destCwd = aPath.resolve(path, name);
-        if (await fs.exists(destCwd)) {
-            throw new error.ExistsException(`Path '${destCwd}' already exists`);
-        }
-
-        this.destCwd = destCwd;
-        await fs.mkdirp(this.destCwd);
 
         const artifacts = new Set;
         if (is.array(tags) && tags.length > 0) {
@@ -72,45 +65,32 @@ export default class extends BaseTask {
         artifacts.add(".adone");
         artifacts.add("package.json");
 
+        const from = [];
         for (const dir of artifacts.values()) {
-            this.manager.notify(this, "progress", {
-                message: `copying ${cli.style.accent(dir)}`
-            });
-
             const fromPath = aPath.join(realm.cwd, dir);
-            const toPath = aPath.join(this.destCwd, dir);
-
             if (await fs.isDirectory(fromPath)) {
-                await fs.copyEx(fromPath, toPath, {
-                    base: realm.cwd,
-                    results: false,
-                    dot: true,
-                    junk: true,
-                    filter
-                });
+                from.push(aPath.join(dir, "**", "*"));
             } else {
-                await fs.copyFile(fromPath, toPath, fs.constants.COPYFILE_EXCL);
+                from.push(dir);
             }
         }
 
+        const filename = `${name}${type}`;
+        await fast.src([
+            ...from,
+            ...filter,
+        ], {
+            cwd: realm.cwd,
+            base: realm.cwd
+        })
+            .archive(type, filename)
+            .dest(path);
+
         this.manager.notify(this, "progress", {
-            message: `realm ${cli.style.primary(realm.name)} successfully forked into ${cli.style.accent(this.destCwd)}`,
+            message: `realm ${cli.style.primary(realm.name)} successfully packed`,
             status: true
         });
 
-        this.destRealm = new RealmManager({
-            cwd: this.destCwd
-        });
-
-        return this.destRealm;
-    }
-
-    async undo(err) {
-        this.manager.notify(this, "progress", {
-            message: err.message,
-            status: false
-        });
-
-        is.string(this.destCwd) && await fs.remove(this.destCwd);
+        return aPath.join(path, filename);
     }
 }

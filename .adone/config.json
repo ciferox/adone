@@ -1,14 +1,14 @@
 {
-    "origin": {
-        "type": "github",
-        "path": "ciferox/adone"
-    },
     "artifacts": {
         "share": [
             "share"
         ],
         "src": [
             "src"
+        ],
+        "release": [
+            "bin",
+            "lib"
         ],
         "src.app": [
             "src/app"

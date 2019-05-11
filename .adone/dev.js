@@ -1,4 +1,14 @@
 export default {
+    publish: {
+        type: "github",
+        apiBase: "https://api.github.com",
+        owner: "ciferox",
+        repo: "adone",
+        realm: {
+            devArtifacts: ["src", "info", "share"],
+            relArtifacts: ["release", "info", "share"]
+        }
+    },
     defaultTask: "copy",
     nonWatchableTasks: [
         "cmake"

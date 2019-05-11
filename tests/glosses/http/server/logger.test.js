@@ -318,6 +318,127 @@ describe("logger", () => {
         });
     });
 
+    it("The request id header key can be customized along with a custom id generator", (done) => {
+        const REQUEST_ID = "42";
+
+        const stream = split(JSON.parse);
+        const fastify = server({
+            logger: { stream, level: "info" },
+            requestIdHeader: "my-custom-request-id",
+            genReqId() {
+                return "foo";
+            }
+        });
+
+        expect(10).checks(() => {
+            fastify.close();
+            done();
+        });
+
+        fastify.get("/one", (req, reply) => {
+            assert.equal(req.id, REQUEST_ID);
+            expect(1).to.be.ok.mark();
+            req.log.info("some log message");
+            reply.send({ id: req.id });
+        });
+
+        fastify.get("/two", (req, reply) => {
+            assert.equal(req.id, "foo");
+            expect(1).to.be.ok.mark();
+            req.log.info("some log message 2");
+            reply.send({ id: req.id });
+        });
+
+        const matches = [
+            { reqId: REQUEST_ID, msg: "incoming request" },
+            { reqId: REQUEST_ID, msg: "some log message" },
+            { reqId: REQUEST_ID, msg: "request completed" },
+            { reqId: "foo", msg: "incoming request" },
+            { reqId: "foo", msg: "some log message 2" },
+            { reqId: "foo", msg: "request completed" }
+        ];
+
+        let i = 0;
+        stream.on("data", (line) => {
+            assert.deepOwnInclude(line, matches[i]);
+            expect(1).to.be.ok.mark();
+            i += 1;
+        });
+
+        fastify.inject({
+            method: "GET",
+            url: "/one",
+            headers: {
+                "my-custom-request-id": REQUEST_ID
+            }
+        }, (err, res) => {
+            assert.notExists(err);
+            const payload = JSON.parse(res.payload);
+            assert.equal(payload.id, REQUEST_ID);
+            expect(1).to.be.ok.mark();
+        });
+
+        fastify.inject({
+            method: "GET",
+            url: "/two"
+        }, (err, res) => {
+            assert.notExists(err);
+            const payload = JSON.parse(res.payload);
+            assert.equal(payload.id, "foo");
+            expect(1).to.be.ok.mark();
+        });
+    });
+
+    it("The request id log label can be changed", (done) => {
+        // t.plan(6);
+        const REQUEST_ID = "42";
+
+        const stream = split(JSON.parse);
+        const fastify = server({
+            logger: { stream, level: "info" },
+            requestIdHeader: "my-custom-request-id",
+            requestIdLogLabel: "traceId"
+        });
+
+        expect(5).checks(() => {
+            fastify.close();
+            done();
+        });
+
+        fastify.get("/one", (req, reply) => {
+            assert.equal(req.id, REQUEST_ID);
+            expect(1).to.be.ok.mark();
+            req.log.info("some log message");
+            reply.send({ id: req.id });
+        });
+
+        const matches = [
+            { traceId: REQUEST_ID, msg: "incoming request" },
+            { traceId: REQUEST_ID, msg: "some log message" },
+            { traceId: REQUEST_ID, msg: "request completed" }
+        ];
+
+        let i = 0;
+        stream.on("data", (line) => {
+            assert.deepOwnInclude(line, matches[i]);
+            expect(1).to.be.ok.mark();
+            i += 1;
+        });
+
+        fastify.inject({
+            method: "GET",
+            url: "/one",
+            headers: {
+                "my-custom-request-id": REQUEST_ID
+            }
+        }, (err, res) => {
+            assert.notExists(err);
+            const payload = JSON.parse(res.payload);
+            assert.equal(payload.id, REQUEST_ID);
+            expect(1).to.be.ok.mark();
+        });
+    });
+
     it("The logger should accept custom serializer", (done) => {
         expect(2).checks(done);
 

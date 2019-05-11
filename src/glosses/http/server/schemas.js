@@ -2,6 +2,8 @@ const {
     is
 } = adone;
 
+const fastClone = require('rfdc')({ circles: false, proto: true })
+
 const {
     codes: {
         FST_ERR_SCH_MISSING_ID,
@@ -16,7 +18,8 @@ function Schemas() {
     this.store = {};
 }
 
-Schemas.prototype.add = function (schema) {
+Schemas.prototype.add = function (inputSchema) {
+    const schema = fastClone(inputSchema)
     const id = schema.$id;
     if (is.undefined(id)) {
         throw new FST_ERR_SCH_MISSING_ID();
