@@ -7,7 +7,7 @@ export default function plugin() {
     } = adone;
 
     return function pack(type, packerOptions = {}) {
-        if (!(type in adone.archive)) {
+        if (!(type.slice(1) in adone.archive)) {
             throw new error.InvalidArgumentException(`Unknown archive type: ${type}`);
         }
         if (is.string(packerOptions)) {
@@ -23,7 +23,7 @@ export default function plugin() {
         }
 
         switch (type) {
-            case "tar": {
+            case ".tar": {
                 const archive = adone.archive.tar;
                 const stream = new archive.RawPackStream();
                 let resultFile = null;
@@ -78,7 +78,7 @@ export default function plugin() {
                     this.push(resultFile);
                 });
             }
-            case "zip": {
+            case ".zip": {
                 const zipfile = new adone.archive.zip.pack.ZipFile();
                 const {
                     compress = true
