@@ -457,7 +457,29 @@ export default {
                     description: "Replacement of native fs with promises and extras",
                     task: "transpile",
                     src: "src/glosses/fs/**/*.js",
-                    dst: "lib/glosses/fs"
+                    dst: "lib/glosses/fs",
+                    units: {
+                        watcher: {
+                            description: "File system watcher",
+                            src: "src/glosses/fs/extra/watcher/*.js",
+                            dst: "lib/glosses/fs/extra/watcher",
+                            task: "transpile",
+                            units: {
+                                fsevents: {
+                                    platform: "darwin",
+                                    task: "transpile",
+                                    src: "src/glosses/fs/extra/watcher/fsevents.js",
+                                    dst: "lib/glosses/fs/extra/watcher"
+                                },
+                                native: {
+                                    platform: "darwin",
+                                    task: "cmake",
+                                    src: "src/glosses/fs/extra/watcher/native",
+                                    dst: "lib/glosses/fs/extra/watcher/native"
+                                }
+                            }
+                        }
+                    }
                 },
                 fsm: {
                     description: "Finite State Machine implementation",

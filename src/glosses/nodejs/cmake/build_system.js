@@ -257,7 +257,7 @@ export default class BuildSystem {
         const incPaths = [
             path.join(this.options.nodePath, "include/node"),
             adone.getPath("lib", "native", "nan"), // nan
-            adone.getPath("lib", "native", "napi", "external-napi"), // napi
+            adone.getPath("lib", "native", "napi"), // napi
             adone.getPath("lib", "native", "napi-macros"), // napi-macros
             adone.getPath("lib", "native", "adone")
         ];

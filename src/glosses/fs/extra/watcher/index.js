@@ -11,7 +11,7 @@ const {
 
 let FSEvents;
 try {
-    FSEvents = adone.fsevents;
+    FSEvents = require("./fsevents");
 } catch (error) {
     //
 }
