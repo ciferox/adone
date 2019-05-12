@@ -7,8 +7,6 @@ const {
     std: { os }
 } = adone;
 
-const splitargs = require("splitargs");
-
 const environment = {
     platform: os.platform(),
     isWin: os.platform() === "win32",
@@ -404,7 +402,7 @@ export default class BuildSystem {
 
     _run(command) {
         const options = _.defaults({ silent: this.silent }, { silent: false });
-        const args = splitargs(command);
+        const args = adone.util.splitargs(command);
         const name = args[0];
         args.splice(0, 1);
         return adone.process.exec(name, args, {

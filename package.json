@@ -265,7 +265,6 @@
     "sort-keys": "^2.0.0",
     "spdy-transport": "^3.0.0",
     "split2": "^3.0.0",
-    "splitargs": "^0.0.7",
     "stable": "^0.1.8",
     "stack-trace": "^0.0.10",
     "std-mocks": "^1.0.1",
