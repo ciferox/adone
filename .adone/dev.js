@@ -249,9 +249,9 @@ export default {
                                                 }
                                             } else {
                                                 if (!(await fs.pathExists(path.join(xzPath, "build", "lib", "liblzma.a")))) {
-                                                    await process.spawnAsync("sh", ["autogen.sh"], {
-                                                        cwd: xzPath
-                                                    });
+                                                    //await process.spawnAsync("sh", ["autogen.sh"], {
+                                                    //    cwd: xzPath
+                                                    //});
 
                                                     const configureArgs = [
                                                         "--enable-static",

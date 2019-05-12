@@ -89,7 +89,9 @@ const subCommand = (name) => adone.path.join(__dirname, "commands", name);
             } else {
                 manager = realm.rootRealm;
             }
-            await manager.connect();
+            await manager.connect({
+                transpile: true
+            });
             progress && await cli.observe("progress", manager);
             return manager;
         }

@@ -120,6 +120,10 @@ else(WIN32)
         )
 
         target_link_libraries(libleveldb PUBLIC pthread)
+    elseif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
+        add_definitions(
+            -DOS_MACOSX=1
+        )
     endif()
 endif(WIN32)
 

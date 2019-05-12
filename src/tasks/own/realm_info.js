@@ -35,7 +35,9 @@ export default class extends realm.BaseTask {
         const all = (common && units && tasks) || (!common && !units && !tasks);
 
         const r = new realm.RealmManager({ cwd });
-        await r.connect();
+        await r.connect({
+            transpile: true
+        });
 
         this.manager.notify(this, "progress", {
             message: "collecting info"
