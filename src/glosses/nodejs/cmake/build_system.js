@@ -402,7 +402,7 @@ export default class BuildSystem {
 
     _run(command) {
         const options = _.defaults({ silent: this.silent }, { silent: false });
-        const args = adone.util.splitargs(command);
+        const args = adone.util.splitArgs(command);
         const name = args[0];
         args.splice(0, 1);
         return adone.process.exec(name, args, {
