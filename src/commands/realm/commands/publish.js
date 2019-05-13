@@ -47,7 +47,7 @@ export default class extends Subsystem {
             const targetRealm = await rootRealm.runAndWait("realmFork", {
                 name: r.name,
                 path: tmpPath,
-                tags: publishInfo.realm.devArtifacts,
+                tags: publishInfo.artifacts.dev,
                 realm: r.cwd
             });
             await targetRealm.connect({
@@ -74,7 +74,7 @@ export default class extends Subsystem {
 
             const path = await rootRealm.runAndWait("realmPack", {
                 realm: targetRealm,
-                tags: publishInfo.realm.relArtifacts,
+                tags: publishInfo.artifacts.rel,
                 path: tmpPath,
                 filter: [
                     "!**/*.js.map",

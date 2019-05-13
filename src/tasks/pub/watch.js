@@ -17,7 +17,6 @@ class WatchTask extends TransformTask {
     }
 
     initialize(params) {
-        this.targetTask = this.manager.getTaskInstance(params.task);
         // const watcherOptions = {};
 
         // uses a lot of processor time...
@@ -40,7 +39,19 @@ class WatchTask extends TransformTask {
     }
 
     transform(stream, params) {
-        return this.targetTask.transform(stream, params);
+        const targetTask = this.manager.getTaskInstance(params.task);
+        if (targetTask instanceof adone.realm.TransformTask) {
+            return targetTask.transform(stream, params);
+        }
+        const manager = this.manager;
+        return stream.through(async function (file) {
+            file.contents = await manager.runAndWait(params.task, {
+                src: params.src,
+                dst: params.dst,
+                save: false
+            });
+            this.push(file);
+        });
     }
 
     notify(stream, params) {

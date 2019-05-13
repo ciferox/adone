@@ -112,7 +112,7 @@ export default class DevConfiguration extends adone.configuration.GenericConfig 
                                 const excludes = [];
                                 for (let childSrc of childSrcs) {
                                     if (!childSrc.startsWith("!")) {
-                                        if (!is.glob(childSrc)) {
+                                        if (childSrc.endsWith("/")) {
                                             childSrc = path.join(childSrc, "**", "*");
                                         }
                                         excludes.push(childSrc);

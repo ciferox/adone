@@ -1,5 +1,6 @@
 import MemoryFileSystem from "./memory_fs";
 import { isBuffer } from "../../../common";
+import aPath from "../../path";
 import { inflateRawSync } from "zlib";
 
 const decompressionMethods = {};
@@ -510,7 +511,6 @@ const getEOCD = (data) => {
     throw new Error("Could not locate End of Central Directory signature");
 };
 
-
 /**
  * ZIP file system.
  * 
@@ -561,36 +561,7 @@ export default class ZipFileSystem extends MemoryFileSystem {
             }
             const path = `/${filename}`;
             const isDir = cd.isDirectory();
-            const navigated = this._navigate(path, isDir);
-            let index;
-
-            const commonStat = {
-                uid: this._uid,
-                gid: this._gid,
-                // mtimeMs: cd.lastModFileTime().getTime()
-            };
-
-            if (isDir) {
-                [, index] = this._iNodeMgr.createINode(
-                    MemoryFileSystem.Directory,
-                    {
-                        ...commonStat,
-                        mode: MemoryFileSystem.applyUmask(MemoryFileSystem.DEFAULT_DIRECTORY_PERM, this._umask),
-                        parent: navigated.dir.getEntryIndex(".")
-                    }
-                );
-            } else {
-                [/*target*/, index] = this._iNodeMgr.createINode(
-                    MemoryFileSystem.File,
-                    {
-                        ...commonStat,
-                        mode: MemoryFileSystem.applyUmask(MemoryFileSystem.DEFAULT_FILE_PERM, this._umask),
-                        data: () => cd.getData(), // lazy,
-                        size: cd.uncompressedSize()
-                    }
-                );
-            }
-            navigated.dir.addEntry(navigated.name, index);
+            this._processItem(path, isDir, cd);
 
             cdOffset += cd.totalSize();
             cdEntries.push(cd);
@@ -598,5 +569,42 @@ export default class ZipFileSystem extends MemoryFileSystem {
 
         this._directoryEntries = cdEntries;
         this._eocd = eocd;
+    }
+
+    _processItem(path, isDir, cd) {
+        let navigated = this._navigate(path, isDir);
+        if (navigated.remaining) {
+            this._processItem(aPath.dirname(path), true);
+            navigated = this._navigate(path, isDir);
+        }
+        let index;
+
+        const commonStat = {
+            uid: this._uid,
+            gid: this._gid,
+            // mtimeMs: cd.lastModFileTime().getTime()
+        };
+
+        if (isDir) {
+            [, index] = this._iNodeMgr.createINode(
+                MemoryFileSystem.Directory,
+                {
+                    ...commonStat,
+                    mode: MemoryFileSystem.applyUmask(MemoryFileSystem.DEFAULT_DIRECTORY_PERM, this._umask),
+                    parent: navigated.dir.getEntryIndex(".")
+                }
+            );
+        } else {
+            [/*target*/, index] = this._iNodeMgr.createINode(
+                MemoryFileSystem.File,
+                {
+                    ...commonStat,
+                    mode: MemoryFileSystem.applyUmask(MemoryFileSystem.DEFAULT_FILE_PERM, this._umask),
+                    data: () => cd.getData(), // lazy,
+                    size: cd.uncompressedSize()
+                }
+            );
+        }
+        navigated.dir.addEntry(navigated.name, index);
     }
 }

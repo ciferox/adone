@@ -4,10 +4,16 @@ export default {
         apiBase: "https://api.github.com",
         owner: "ciferox",
         repo: "adone",
-        realm: {
-            devArtifacts: ["src", "info", "share"],
-            relArtifacts: ["release", "info", "share"]
-        }
+        artifacts: {
+            dev: ["src", "info", "share"],
+            rel: ["release", "info", "share"]
+        },
+        filter: [
+            "!bin/adone.map",
+            "!.adone/kri.js",
+            "!.adone/dev.js"
+        ],
+        skipInstallNodeModules: true
     },
     defaultTask: "copy",
     nonWatchableTasks: [
