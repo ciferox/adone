@@ -1,33 +1,8 @@
-const {
-    is
-} = adone;
 
-exports.toCallback = (doWork) => {
-    return function (input, callback) {
-        let res;
-        try {
-            res = doWork(input);
-        } catch (err) {
-            process.nextTick(callback, err);
-            return;
-        }
 
-        process.nextTick(callback, null, res);
-    };
-};
+const { Buffer } = require("buffer");
 
-exports.toBuf = (doWork, other) => (input) => {
-    const result = doWork(input, other);
-    return Buffer.from(result, "hex");
-};
-
-exports.fromString = (doWork, other) => (_input) => {
-    const input = is.buffer(_input) ? _input.toString() : _input;
-    return doWork(input, other);
-};
-
-exports.fromNumberTo32BitBuf = (doWork, other) => (input) => {
-    let number = doWork(input, other);
+const fromNumberTo32BitBuf = (number) => {
     const bytes = new Array(4);
 
     for (let i = 0; i < 4; i++) {
@@ -36,4 +11,8 @@ exports.fromNumberTo32BitBuf = (doWork, other) => (input) => {
     }
 
     return Buffer.from(bytes);
+};
+
+module.exports = {
+    fromNumberTo32BitBuf
 };

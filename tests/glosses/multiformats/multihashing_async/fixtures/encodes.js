@@ -1,5 +1,3 @@
-
-
 module.exports = [[
     "beep boop",
     "sha1",
