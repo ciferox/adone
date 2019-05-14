@@ -19,25 +19,19 @@ const NODEJS_PATHS = [
 
 export default class NodejsManager {
     constructor({ realm, cache } = {}) {
-        if (is.realm(realm)) {
-            this.realm = realm;
-        } else {
-            this.realm = adone.realm.rootRealm;
-        }
-        this.cache = cache || {};
-        if (!this.cache.basePath) {
-            this.cache.basePath = aPath.join(this.realm.getPath("var"), "nodejs");
-        }
-        this.cache.downloads = this.cache.downloads || "downloads";
-        this.cache.release = this.cache.release || "releases";
-        this.cache.sources = this.cache.sources || "sources";
-        this.cache.headers = this.cache.headers || "headers";
+        this.cache = new nodejs.FsCache({
+            downloads: "downloads",
+            release: "releases",
+            sources: "sources",
+            headers: "headers",
+            ...cache,
+            realm,
+            appName: "nodejs"
+        });
     }
 
     async getCachePath(...dirs) {
-        const cachePath = aPath.join(this.cache.basePath, ...dirs);
-        await fs.mkdirp(cachePath);
-        return cachePath;
+        return this.cache.getPath(...dirs);
     }
 
     async getCachePathFor(dirName, options) {
@@ -209,7 +203,7 @@ export default class NodejsManager {
     async removeActive() {
         try {
             const basePath = await nodejs.getPrefixPath();
-            
+
             for (const dirs of NODEJS_PATHS) {
                 // eslint-disable-next-line no-await-in-loop
                 await fs.remove(aPath.join(basePath, ...dirs));

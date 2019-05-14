@@ -156,10 +156,10 @@ describe("nodejs", () => {
         it("defaults", () => {
             const nm = new nodejs.NodejsManager();
 
-            assert.deepEqual(nm.cache, {
-                basePath: path.join(adone.VAR_PATH, "nodejs"),
+            assert.deepEqual(adone.util.pick(nm.cache, ["basePath", "downloads", "release", "sources", "headers"]), {
+                basePath: adone.getPath("var", "nodejs"),
                 downloads: "downloads",
-                releases: "releases",
+                release: "releases",
                 sources: "sources",
                 headers: "headers"
             });
@@ -169,10 +169,10 @@ describe("nodejs", () => {
             const basePath = await createTmpPath();
             const nm = await createManager({ basePath });
 
-            assert.deepEqual(nm.cache, {
-                basePath,
+            assert.deepEqual(adone.util.pick(nm.cache, ["basePath", "downloads", "release", "sources", "headers"]), {
+                basePath: path.join(basePath, "nodejs"),
                 downloads: "downloads",
-                releases: "releases",
+                release: "releases",
                 sources: "sources",
                 headers: "headers"
             });
@@ -181,7 +181,7 @@ describe("nodejs", () => {
         it("custom cache dirs", async () => {
             const nm = await createManager({
                 downloads: "archives",
-                releases: "rel",
+                release: "rel",
                 sources: "srcs",
                 headers: "hdrs"
             });

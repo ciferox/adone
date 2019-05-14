@@ -8,7 +8,7 @@ const DEFAULT_API_BASE = "https://api.github.com";
  * Manages github repository releases.
  */
 export default class GitHubReleaseManager {
-    constructor({ owner, repo, auth: githubAuth, apiBase = DEFAULT_API_BASE } = {}) {
+    constructor({ owner, repo, auth: githubAuth = "", apiBase = DEFAULT_API_BASE } = {}) {
         let auth = (process.env.GITHUB_AUTH || githubAuth).trim();
         if (auth) {
             if (auth.includes(":")) {
@@ -22,8 +22,6 @@ export default class GitHubReleaseManager {
                     token: auth
                 };
             }
-        } else {
-            throw new adone.error.NotValidException("Invalid auth. Provide 'auth' option orset GITHUB_AUTH environment variable");
         }
 
         const fullname = `${owner}/${repo}`;
