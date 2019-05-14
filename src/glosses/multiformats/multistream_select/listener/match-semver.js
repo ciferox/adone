@@ -1,7 +1,3 @@
-
-
-const semver = require("semver");
-
 /**
  * Match protocols using semver `~` matching.
  *
@@ -24,7 +20,7 @@ function matchSemver(myProtocol, senderProtocol, callback) {
         return callback(null, false);
     }
     // does my protocol satisfy the sender?
-    const valid = semver.satisfies(myVersion, `~${senderVersion}`);
+    const valid = adone.semver.satisfies(myVersion, `~${senderVersion}`);
 
     callback(null, valid);
 }

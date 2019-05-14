@@ -4,20 +4,16 @@
  * @module multihash
  */
 
-
-const bs58 = require("bs58");
-
 const cs = require("./constants");
 
 const {
-    is
+    is,
+    data: { base58, varint }
 } = adone;
 
 exports.names = cs.names;
 exports.codes = cs.codes;
 exports.defaultLengths = cs.defaultLengths;
-
-const varint = require("varint");
 
 /**
  * Convert the given multihash to a hex encoded string.
@@ -54,7 +50,7 @@ exports.toB58String = function toB58String(hash) {
         throw new Error("must be passed a buffer");
     }
 
-    return bs58.encode(hash);
+    return base58.encode(hash);
 };
 
 /**
@@ -69,7 +65,7 @@ exports.fromB58String = function fromB58String(hash) {
         encoded = hash.toString();
     }
 
-    return Buffer.from(bs58.decode(encoded));
+    return Buffer.from(base58.decode(encoded));
 };
 
 /**

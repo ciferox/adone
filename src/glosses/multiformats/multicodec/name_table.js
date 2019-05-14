@@ -1,5 +1,5 @@
 
-const baseTable = require("./base-table");
+const baseTable = require("./base_table");
 
 // this creates a map for code as hexString -> codecName
 

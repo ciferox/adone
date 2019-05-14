@@ -299,7 +299,6 @@
     "uri-to-multiaddr": "^3.0.1",
     "url-join": "^4.0.0",
     "urllib": "^2.33.0",
-    "varint": "^5.0.0",
     "varint-decoder": "^0.1.1",
     "webcrypto": "^0.1.1",
     "webrtcsupport": "^2.2.0",

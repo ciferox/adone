@@ -801,7 +801,7 @@ describe("multiformat", "multiaddr", () => {
 
     describe("codec", () => {
         const codec = require(srcPath("codec"));
-        const varint = require("varint");
+        const { varint } = adone.data;
 
         describe(".stringToStringTuples", () => {
             it("throws on invalid addresses", () => {
@@ -950,7 +950,7 @@ describe("multiformat", "multiaddr", () => {
     });
 
     describe("protocols", () => {
-        const protocols = require(srcPath("protocols-table"));
+        const protocols = require(srcPath("protocols_table"));
         describe("throws on non existent protocol", () => {
             it("number", () => {
                 expect(

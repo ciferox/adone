@@ -3,9 +3,8 @@ const {
     multiformat: { multibase, multicodec, multihash: mh }
 } = adone;
 
-const codecs = require("../multicodec/base-table");
-const CIDUtil = require("./cid-util");
-const withIs = require("class-is");
+const codecs = require("../multicodec/base_table");
+const CIDUtil = require("./cid_util");
 
 /**
  * @typedef {Object} SerializedCID
@@ -60,7 +59,7 @@ class CID {
      * new CID(<cid>)
      */
     constructor(version, codec, multihash, multibaseName) {
-        if (module.exports.isCID(version)) {
+        if (version instanceof CID) {
             // version is an exising CID instance
             const cid = version;
             this.version = cid.version;
@@ -203,7 +202,7 @@ class CID {
             throw new Error("Cannot convert non 32 byte multihash CID to CIDv0");
         }
 
-        return new _CID(0, this.codec, this.multihash);
+        return new CID(0, this.codec, this.multihash);
     }
 
     /**
@@ -212,7 +211,7 @@ class CID {
      * @returns {CID}
      */
     toV1() {
-        return new _CID(1, this.codec, this.multihash);
+        return new CID(1, this.codec, this.multihash);
     }
 
     /**
@@ -286,12 +285,6 @@ class CID {
         }
     }
 }
+CID.codecs = codecs;
 
-const _CID = withIs(CID, {
-    className: "CID",
-    symbolName: "@ipld/js-cid/CID"
-});
-
-_CID.codecs = codecs;
-
-module.exports = _CID;
+module.exports = CID;

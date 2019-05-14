@@ -1,7 +1,10 @@
-const varint = require("varint");
 const util = require("../util");
 const select = require("../select");
-const once = require("once");
+
+const {
+    data: { varint },
+    util: { once }
+} = adone;
 
 const PROTOCOL_ID = require("./../constants").PROTOCOL_ID;
 

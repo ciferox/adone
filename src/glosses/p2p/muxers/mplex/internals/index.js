@@ -1,11 +1,11 @@
 const stream = require("readable-stream");
-const varint = require("varint");
 const debug = require("debug");
 
 const Channel = require("./channel");
 
 const {
-    is
+    is,
+    data: { varint }
 } = adone;
 
 /**

@@ -1,10 +1,9 @@
+const protocols = require("./protocols_table");
 
-
-const ip = require("ip");
-const isIp = require("is-ip");
-const protocols = require("./protocols-table");
-const bs58 = require("bs58");
-const varint = require("varint");
+const {
+    data: { varint, base58 },
+    net: { ip }
+} = adone;
 
 module.exports = Convert;
 
@@ -73,7 +72,7 @@ Convert.toBuffer = function convertToBuffer(proto, str) {
 };
 
 function ip2buf(ipString) {
-    if (!isIp(ipString)) {
+    if (!ip.isIp(ipString)) {
         throw new Error("invalid ip address");
     }
     return ip.toBuffer(ipString);
@@ -81,7 +80,7 @@ function ip2buf(ipString) {
 
 function buf2ip(ipBuff) {
     const ipString = ip.toString(ipBuff);
-    if (!isIp(ipString)) {
+    if (!ip.isIp(ipString)) {
         throw new Error("invalid ip address");
     }
     return ipString;
@@ -116,7 +115,7 @@ function buf2str(buf) {
 
 function mh2buf(hash) {
     // the address is a varint prefixed multihash string representation
-    const mh = Buffer.from(bs58.decode(hash));
+    const mh = Buffer.from(base58.decode(hash));
     const size = Buffer.from(varint.encode(mh.length));
     return Buffer.concat([size, mh]);
 }
@@ -129,5 +128,5 @@ function buf2mh(buf) {
         throw new Error("inconsistent lengths");
     }
 
-    return bs58.encode(address);
+    return base58.encode(address);
 }

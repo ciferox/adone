@@ -1,7 +1,7 @@
-const varint = require("varint");
 const debug = require("debug");
 
 const {
+    data: { varint },
     is,
     stream: { pull: { through2 } }
 } = adone;

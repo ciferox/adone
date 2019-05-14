@@ -1,9 +1,8 @@
 const {
+    data:{ varint },
     stream: { pull }
 } = adone;
 const { block, pushable: Pushable, lengthPrefixed: lp, reader: Reader } = pull;
-
-const varint = require("varint");
 
 const delay = function (time) {
     return pull.asyncMap((val, cb) => {

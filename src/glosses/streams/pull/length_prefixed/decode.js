@@ -1,6 +1,5 @@
-const varint = require("varint");
-
 const {
+    data: { varint },
     is,
     stream: { pull: { reader: Reader, pushable } }
 } = adone;

@@ -3,11 +3,12 @@ const {
 } = adone;
 
 adone.lazify({
-    Long: "./long",
+    BigInteger: "./big_integer",
     BitSet: "./bitset",
+    Decimal: "./decimal",
+    Long: "./long",
     simd: "./simd",
-    matrix: "./matrix",
-    Decimal: "./decimal"
+    matrix: "./matrix"
 }, adone.asNamespace(exports), require);
 
 export const random = (min = 0, max = 0xFFFFFFFF) => {

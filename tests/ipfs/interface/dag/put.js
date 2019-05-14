@@ -86,7 +86,7 @@ module.exports = (createCommon, options) => {
             }, (err, cid) => {
                 expect(err).to.not.exist();
                 expect(cid).to.exist();
-                expect(CID.isCID(cid)).to.equal(true);
+                expect(cid instanceof CID).to.equal(true);
                 dagCbor.util.cid(cborNode, (err, _cid) => {
                     expect(err).to.not.exist();
                     expect(cid.buffer).to.eql(_cid.buffer);

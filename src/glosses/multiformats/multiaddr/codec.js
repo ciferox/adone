@@ -1,8 +1,8 @@
 const convert = require("./convert");
-const protocols = require("./protocols-table");
-const varint = require("varint");
+const protocols = require("./protocols_table");
 
 const {
+    data: { varint },
     is
 } = adone;
 

@@ -1,10 +1,9 @@
 const codec = require("./codec");
-const protocols = require("./protocols-table");
-const varint = require("varint");
-const bs58 = require("bs58");
+const protocols = require("./protocols_table");
 const withIs = require("class-is");
 
 const {
+    data: { varint, base58 },
     is
 } = adone;
 
@@ -30,9 +29,9 @@ const Multiaddr = withIs.proto(function (addr) {
     }
 
     if (addr instanceof Buffer) {
-    /**
-     * @type {Buffer} - The raw bytes representing this multiaddress
-     */
+        /**
+         * @type {Buffer} - The raw bytes representing this multiaddress
+         */
         this.buffer = codec.fromBuffer(addr);
     } else if (is.string(addr) || addr instanceof String) {
         if (addr.length > 0 && addr.charAt(0) !== "/") {
@@ -95,8 +94,8 @@ Multiaddr.prototype.toOptions = function toOptions() {
  * // '<Multiaddr 047f000001060fa1 - /ip4/127.0.0.1/tcp/4001>'
  */
 Multiaddr.prototype.inspect = function inspect() {
-    return `<Multiaddr ${ 
-        this.buffer.toString("hex")} - ${ 
+    return `<Multiaddr ${
+        this.buffer.toString("hex")} - ${
         codec.bufferToString(this.buffer)}>`;
 };
 
@@ -259,7 +258,7 @@ Multiaddr.prototype.getPeerId = function getPeerId() {
             }
         })[0][1];
 
-        bs58.decode(b58str);
+        base58.decode(b58str);
     } catch (e) {
         b58str = null;
     }
@@ -363,10 +362,10 @@ Multiaddr.prototype.nodeAddress = function nodeAddress() {
  */
 Multiaddr.fromNodeAddress = function fromNodeAddress(addr, transport) {
     if (!addr) {
-        throw new Error("requires node address object"); 
+        throw new Error("requires node address object");
     }
     if (!transport) {
-        throw new Error("requires transport protocol"); 
+        throw new Error("requires transport protocol");
     }
     const ip = (addr.family === "IPv6") ? "ip6" : "ip4";
     return Multiaddr(`/${[ip, addr.address, transport, addr.port].join("/")}`);

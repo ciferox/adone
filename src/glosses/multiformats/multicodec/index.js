@@ -9,13 +9,13 @@
  * // prefixedProtobuf 0x50...
  *
  */
-const varint = require("varint");
-const codecNameToCodeVarint = require("./varint-table");
-const codeToCodecName = require("./name-table");
+const codecNameToCodeVarint = require("./varint_table");
+const codeToCodecName = require("./name_table");
 const util = require("./util");
 
 const {
-    is
+    is,
+    data: { varint }
 } = adone;
 
 exports = module.exports;

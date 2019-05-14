@@ -12,7 +12,7 @@ const encode = (opts) => {
     }, opts || {});
 
     // Only needed for varint
-    const varint = require("varint");
+    const { varint } = adone.data;
     let pool = opts.fixed ? null : createPool();
     let used = 0;
 

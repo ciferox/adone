@@ -1,5 +1,6 @@
-
-const varint = require("varint");
+const {
+    data: { varint }
+} = adone;
 
 module.exports = {
     numberToBuffer,
