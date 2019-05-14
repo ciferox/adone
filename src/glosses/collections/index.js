@@ -10,7 +10,6 @@ adone.lazify({
     Stack: "./stack",
     BufferList: "./buffer_list",
     ArraySet: "./array_set",
-    ByteArray: "./byte_array",
     Queue: "./queue",
     AsyncQueue: "./async_queue",
     PriorityQueue: "./priority_queue",

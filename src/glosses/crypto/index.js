@@ -52,7 +52,10 @@ lazify({
     util: "./util",
 
     // extra
-    crc: "./crc"
+    blake: "./blake",
+    crc: "./crc",
+    murmurHash3: "./murmur_hash3",
+    sha3: "./sha3"
 }, adone.asNamespace(exports), require);
 
 

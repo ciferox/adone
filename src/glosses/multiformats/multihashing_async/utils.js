@@ -1,6 +1,6 @@
-
-
-const { Buffer } = require("buffer");
+const {
+    buffer: { Buffer }
+} = adone;
 
 const fromNumberTo32BitBuf = (number) => {
     const bytes = new Array(4);

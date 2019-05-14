@@ -1,7 +1,7 @@
 const {
     is,
     math: { BigNumber },
-    collection: { ByteArray },
+    buffer: { SmartBuffer },
     std: { net }
 } = adone;
 
@@ -180,7 +180,7 @@ export default class Generator {
     }
 
     genDataType(data) {
-        const buf = new ByteArray();
+        const buf = new SmartBuffer();
         const type = datatypes[data.type];
         let cbyte = 0;
         if (type < 8) {
@@ -304,7 +304,7 @@ export default class Generator {
     }
 
     genArray(array) {
-        const buf = new ByteArray();
+        const buf = new SmartBuffer();
         for (const i of array) {
             buf.write(this.genData(i));
         }
@@ -316,7 +316,7 @@ export default class Generator {
     }
 
     genMap(obj) {
-        const buf = new ByteArray();
+        const buf = new SmartBuffer();
         let length = 0;
         for (const key of Object.keys(obj)) {
             buf.write(this.genData(key));
@@ -388,7 +388,7 @@ export default class Generator {
 
         const numNodes = list.length;
 
-        const dataBuf = new ByteArray();
+        const dataBuf = new SmartBuffer();
         const dataRef = [];
         for (const i of data) {
             dataRef.push(dataBuf.woffset);
@@ -416,7 +416,7 @@ export default class Generator {
             }
         }
 
-        const treeBuf = new ByteArray();
+        const treeBuf = new SmartBuffer();
         for (const node of list) {
             switch (this.metadata.recordSize) {
                 case 24:
@@ -439,7 +439,7 @@ export default class Generator {
             }
         }
 
-        const metadataBuf = new ByteArray();
+        const metadataBuf = new SmartBuffer();
 
         /* eslint-disable camelcase */
         metadataBuf.write(this.genData({

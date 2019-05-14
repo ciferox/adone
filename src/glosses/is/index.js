@@ -694,7 +694,7 @@ adone.lazify({
     // All of these predicates should be replced in-place during transpiling
     subsystem: () => (obj) => obj instanceof adone.app.Subsystem,
     application: () => (obj) => obj instanceof adone.app.Application,
-    byteArray: () => (obj) => obj instanceof adone.collection.ByteArray,
+    smartBuffer: () => (obj) => obj instanceof adone.buffer.SmartBuffer,
     long: () => (obj) => obj instanceof adone.math.Long,
     emitter: () => (obj) => obj instanceof adone.event.Emitter,
     asyncEmitter: () => (obj) => obj instanceof adone.event.AsyncEmitter,

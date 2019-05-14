@@ -17,7 +17,7 @@ export const create = (id, impulse, action, data) => {
 };
 
 export const encode = (packet) => {
-    const buf = new adone.collection.ByteArray(adone.collection.ByteArray.DEFAULT_CAPACITY, true);
+    const buf = new adone.buffer.SmartBuffer(adone.buffer.SmartBuffer.DEFAULT_CAPACITY, true);
     __.serializer.encode(packet.data, buf);
     buf.writeUInt8(packet.flags);
     buf.writeVarint32(packet.id);

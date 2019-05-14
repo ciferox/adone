@@ -1,8 +1,8 @@
+const {
+    buffer: { Buffer },
+    crypto: { sha3, murmurHash3 }
+} = adone;
 
-
-const { Buffer } = require("buffer");
-const sha3 = require("js-sha3");
-const mur = require("murmurhash3js-revisited");
 const sha = require("./sha");
 const { fromNumberTo32BitBuf } = require("./utils");
 
@@ -32,9 +32,9 @@ const hash = (algorithm) => async (data) => {
         case "keccak-512":
             return Buffer.from(sha3.keccak512.arrayBuffer(data));
         case "murmur3-128":
-            return Buffer.from(mur.x64.hash128(data), "hex");
+            return Buffer.from(murmurHash3.x64.hash128(data), "hex");
         case "murmur3-32":
-            return fromNumberTo32BitBuf(mur.x86.hash32(data));
+            return fromNumberTo32BitBuf(murmurHash3.x86.hash32(data));
 
         default:
             throw new TypeError(`${algorithm} is not a supported algorithm`);

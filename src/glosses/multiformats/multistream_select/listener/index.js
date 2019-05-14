@@ -1,10 +1,9 @@
-const assert = require("assert");
 const select = require("../select");
-const selectHandler = require("./select-handler");
-const lsHandler = require("./ls-handler");
-const matchExact = require("./match-exact");
+const selectHandler = require("./select_handler");
+const lsHandler = require("./ls_handler");
+const matchExact = require("./match_exact");
 
-const util = require("./../util");
+// const util = require("./../util");
 
 const PROTOCOL_ID = require("./../constants").PROTOCOL_ID;
 
@@ -30,7 +29,7 @@ class Listener {
 
             }
         };
-        this.log = util.log.listener();
+        // this.log = util.log.listener();
     }
 
     /**
@@ -42,7 +41,7 @@ class Listener {
      * @returns {undefined}
      */
     handle(rawConn, callback) {
-        this.log("listener handle conn");
+        // this.log("listener handle conn");
 
         const selectStream = select(PROTOCOL_ID, (err, conn) => {
             if (err) {
@@ -51,7 +50,7 @@ class Listener {
 
             const shConn = new Connection(conn, rawConn);
 
-            const sh = selectHandler(shConn, this.handlers, this.log);
+            const sh = selectHandler(shConn, this.handlers/*, this.log*/);
 
             pull(
                 shConn,
@@ -60,7 +59,7 @@ class Listener {
             );
 
             callback();
-        }, this.log);
+        }/*, this.log*/);
 
         pull(
             rawConn,
@@ -78,12 +77,13 @@ class Listener {
      * @returns {undefined}
      */
     addHandler(protocol, handlerFunc, matchFunc) {
-        this.log(`adding handler: ${protocol}`);
-        assert(is.function(handlerFunc), "handler must be a function");
-
-        if (this.handlers[protocol]) {
-            this.log(`overwriting handler for ${protocol}`);
+        // this.log(`adding handler: ${protocol}`);
+        if (!is.function(handlerFunc)) {
+            throw new Error("Handler must be a function");
         }
+        // if (this.handlers[protocol]) {
+        //     this.log(`overwriting handler for ${protocol}`);
+        // }
 
         if (!matchFunc) {
             matchFunc = matchExact;

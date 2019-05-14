@@ -1,6 +1,5 @@
 const codec = require("./codec");
 const protocols = require("./protocols_table");
-const withIs = require("class-is");
 
 const {
     data: { varint, base58 },
@@ -18,7 +17,7 @@ const {
  * Multiaddr('/ip4/127.0.0.1/tcp/4001')
  * // <Multiaddr 047f000001060fa1 - /ip4/127.0.0.1/tcp/4001>
  */
-const Multiaddr = withIs.proto(function (addr) {
+const Multiaddr = adone.util.withIs.proto(function (addr) {
     if (!(this instanceof Multiaddr)) {
         return new Multiaddr(addr);
     }

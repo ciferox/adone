@@ -5,14 +5,14 @@ const {
     stream: { pull: { handshake, lengthPrefixed } }
 } = adone;
 
-const select = function (multicodec, callback, log) {
+const select = function (multicodec, callback/*, log*/) {
     const stream = handshake({
         timeout: 60 * 1000
     }, callback);
 
     const shake = stream.handshake;
 
-    log(`writing multicodec: ${multicodec}`);
+    // log(`writing multicodec: ${multicodec}`);
     writeEncoded(shake, Buffer.from(`${multicodec}\n`), callback);
 
     lengthPrefixed.decodeFromReader(shake, (err, data) => {
@@ -25,7 +25,7 @@ const select = function (multicodec, callback, log) {
             return callback(new Error(`"${multicodec}" not supported`), shake.rest());
         }
 
-        log(`received ack: ${protocol}`);
+        // log(`received ack: ${protocol}`);
         callback(null, shake.rest());
     });
 

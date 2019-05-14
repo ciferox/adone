@@ -3,7 +3,6 @@
  *
  * @module multicodec
  * @example
- * const multicodec = require('multicodec')
  *
  * const prefixedProtobuf = multicodec.addPrefix('protobuf', protobufBuffer)
  * // prefixedProtobuf 0x50...

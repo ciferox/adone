@@ -6451,3 +6451,13 @@ Copyright Mathias Bynens <https://mathiasbynens.be/>
 - https://github.com/peterolson/BigInteger.js
 
 The Unlicense
+
+- https://github.com/emn178/js-sha3
+
+MIT 
+
+Copyright 2015-2018 Chen, Yi-Cyuan
+
+- https://github.com/dcposch/blakejs
+
+Creative Commons CC0. Ported from the reference C implementation in RFC 7693.

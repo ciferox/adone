@@ -1,7 +1,7 @@
-
-
-const { Buffer } = require("buffer");
-const blake = require("blakejs");
+const {
+    buffer: { Buffer },
+    crypto: { blake }
+} = adone;
 
 const minB = 0xb201;
 const minS = 0xb241;

@@ -130,10 +130,10 @@ export default {
                     dst: "lib/glosses/async",
                     original: "https://github.com/caolan/async"
                 },
-                bundler: {
-                    description: "Multi-asset bundler",
-                    src: "src/glosses/bundler/**/*.js",
-                    dst: "lib/glosses/bundler",
+                buffer: {
+                    description: "Buffer implementations and utilites",
+                    src: "src/glosses/buffer/**/*.js",
+                    dst: "lib/glosses/buffer",
                     task: "transpile"
                 },
                 cli: {

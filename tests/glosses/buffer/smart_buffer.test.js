@@ -1,25 +1,25 @@
 const {
     is,
     math: { Long },
-    collection: { ByteArray }
+    buffer: { SmartBuffer }
 } = adone;
 
-describe("collection", "ByteArray", () => {
+describe("collection", "SmartBuffer", () => {
     it("init", () => {
-        assert.ok(is.class(ByteArray));
+        assert.ok(is.class(SmartBuffer));
     });
 
     describe("base", () => {
         it("allocate", () => {
-            let bb = new ByteArray();
+            let bb = new SmartBuffer();
             assert.strictEqual(bb.roffset, 0);
             assert.strictEqual(bb.woffset, 0);
-            assert.strictEqual(bb.noAssert, ByteArray.DEFAULT_NOASSERT);
+            assert.strictEqual(bb.noAssert, SmartBuffer.DEFAULT_NOASSERT);
             assert.strictEqual(bb.buffer.length, bb.capacity);
-            assert.strictEqual(bb.capacity, ByteArray.DEFAULT_CAPACITY);
-            bb = ByteArray.alloc(undefined, !ByteArray.DEFAULT_NOASSERT);
-            assert.strictEqual(bb.capacity, ByteArray.DEFAULT_CAPACITY);
-            assert.strictEqual(bb.noAssert, !ByteArray.DEFAULT_NOASSERT);
+            assert.strictEqual(bb.capacity, SmartBuffer.DEFAULT_CAPACITY);
+            bb = SmartBuffer.alloc(undefined, !SmartBuffer.DEFAULT_NOASSERT);
+            assert.strictEqual(bb.capacity, SmartBuffer.DEFAULT_CAPACITY);
+            assert.strictEqual(bb.noAssert, !SmartBuffer.DEFAULT_NOASSERT);
 
             // Fixed set of properties
             for (const i in bb) {
@@ -30,7 +30,7 @@ describe("collection", "ByteArray", () => {
         });
 
         it("clone", () => {
-            const bb = new ByteArray(1, true, false);
+            const bb = new SmartBuffer(1, true, false);
             const bb2 = bb.clone();
             assert.strictEqual(bb.buffer, bb2.buffer);
             assert.equal(bb.roffset, bb2.roffset);
@@ -42,7 +42,7 @@ describe("collection", "ByteArray", () => {
         });
 
         it("assert", () => {
-            const bb = new ByteArray();
+            const bb = new SmartBuffer();
             assert.strictEqual(bb.noAssert, false);
             assert.strictEqual(bb.assert(false), bb);
             assert.strictEqual(bb.noAssert, true);
@@ -55,7 +55,7 @@ describe("collection", "ByteArray", () => {
         it("Buffer", () => {
             const buf = Buffer.alloc(1);
             buf[0] = 0x01;
-            const bb = ByteArray.wrap(buf);
+            const bb = SmartBuffer.wrap(buf);
             assert.strictEqual(bb.capacity, 1);
             assert.equal(Buffer.compare(bb.buffer, buf), 0);
             assert.strictEqual(bb.toDebug(), "<01]");
@@ -63,7 +63,7 @@ describe("collection", "ByteArray", () => {
 
         it("ArrayBuffer", () => {
             const buf = new ArrayBuffer(1);
-            const bb = ByteArray.wrap(buf);
+            const bb = SmartBuffer.wrap(buf);
             assert.strictEqual(bb.capacity, 1);
             assert.ok(bb.buffer instanceof Buffer);
             assert.equal(bb.roffset, 0);
@@ -74,7 +74,7 @@ describe("collection", "ByteArray", () => {
             // Full view
             const buf = new Uint8Array(1);
             buf[0] = 0x01;
-            const bb = ByteArray.wrap(buf);
+            const bb = SmartBuffer.wrap(buf);
             assert.strictEqual(bb.capacity, 1);
             assert.ok(bb.buffer instanceof Buffer);
             assert.strictEqual(bb.toDebug(), "<01]");
@@ -82,15 +82,15 @@ describe("collection", "ByteArray", () => {
 
         it("Array", () => {
             const arr = [1, 255, -1];
-            const bb = ByteArray.wrap(arr);
+            const bb = SmartBuffer.wrap(arr);
             assert.strictEqual(bb.capacity, 3);
             assert.strictEqual(bb.toDebug(), "<01 FF FF]");
         });
 
-        it("ByteArray", () => {
-            const bb2 = ByteArray.wrap("\x12\x34\x56\x78", "binary");
+        it("SmartBuffer", () => {
+            const bb2 = SmartBuffer.wrap("\x12\x34\x56\x78", "binary");
             bb2.offset = 1;
-            const bb = ByteArray.wrap(bb2);
+            const bb = SmartBuffer.wrap(bb2);
             assert.strictEqual(bb2.roffset, bb.roffset);
             assert.strictEqual(bb2.woffset, bb.woffset);
             assert.strictEqual(bb2.capacity, bb.capacity);
@@ -98,7 +98,7 @@ describe("collection", "ByteArray", () => {
         });
 
         it("string", () => {
-            const bb = ByteArray.wrap("\u0061\u0062");
+            const bb = SmartBuffer.wrap("\u0061\u0062");
             assert.equal(bb.toDebug(), "<61 62]");
         });
     });
@@ -106,7 +106,7 @@ describe("collection", "ByteArray", () => {
     describe("encodings", () => {
         it("UTF8", () => {
             ["aäöüß€b", ""].forEach((str) => {
-                const bb = ByteArray.wrap(str, "utf8"); // Calls ByteArray#fromUTF8
+                const bb = SmartBuffer.wrap(str, "utf8"); // Calls SmartBuffer#fromUTF8
                 assert.strictEqual(bb.toUTF8(), str);
                 if (str.length > 2) {
                     bb.roffset = 1;
@@ -118,14 +118,14 @@ describe("collection", "ByteArray", () => {
 
         it("debug", () => {
             ["60<61 62>63*", "<60 61 62 63]", "|", "^61*", "12|"].forEach((str) => {
-                const bb = ByteArray.wrap(str, "debug"); // Calls ByteArray#fromDebug
+                const bb = SmartBuffer.wrap(str, "debug"); // Calls SmartBuffer#fromDebug
                 assert.equal(bb.toDebug(), str);
             });
         });
 
         it("binary", () => {
             ["\x61\x62\x63\x64", "", "  "].forEach((str) => {
-                const bb = ByteArray.wrap(str, "binary"); // Calls ByteArray#fromBinary
+                const bb = SmartBuffer.wrap(str, "binary"); // Calls SmartBuffer#fromBinary
                 assert.strictEqual(bb.toBinary(), str);
                 if (str.length > 2) {
                     bb.roffset = 1;
@@ -137,7 +137,7 @@ describe("collection", "ByteArray", () => {
 
         it("hex", () => {
             ["61626364", "61", ""].forEach((str) => {
-                const bb = ByteArray.wrap(str, "hex"); // Calls ByteArray#fromHex
+                const bb = SmartBuffer.wrap(str, "hex"); // Calls SmartBuffer#fromHex
                 assert.strictEqual(bb.toHex(), str);
                 if (str.length > 2) {
                     bb.roffset = 1;
@@ -149,7 +149,7 @@ describe("collection", "ByteArray", () => {
 
         it("base64", () => {
             ["", "YWI=", "YWJjZGVmZw==", "YWJjZGVmZ2g=", "YWJjZGVmZ2hp"].forEach((str) => {
-                const bb = ByteArray.wrap(str, "base64"); // Calls ByteArray#fromBase64
+                const bb = SmartBuffer.wrap(str, "base64"); // Calls SmartBuffer#fromBase64
                 assert.strictEqual(bb.toBase64(), str);
                 if (str.length > 8) {
                     bb.roffset = 3;
@@ -164,23 +164,23 @@ describe("collection", "ByteArray", () => {
         it("concat", () => {
             const bbs = [
                 new ArrayBuffer(1),
-                ByteArray.fromDebug("00<01 02]"),
-                ByteArray.fromDebug("00 01 02<03>00*"),
-                ByteArray.fromDebug("00|"),
-                ByteArray.fromDebug("<04]"),
+                SmartBuffer.fromDebug("00<01 02]"),
+                SmartBuffer.fromDebug("00 01 02<03>00*"),
+                SmartBuffer.fromDebug("00|"),
+                SmartBuffer.fromDebug("<04]"),
                 Buffer.alloc(0),
                 new Uint8Array(0),
                 "05"
             ];
-            let bb = ByteArray.concat(bbs, "hex", !ByteArray.DEFAULT_NOASSERT);
-            assert.strictEqual(bb.noAssert, !ByteArray.DEFAULT_NOASSERT);
+            let bb = SmartBuffer.concat(bbs, "hex", !SmartBuffer.DEFAULT_NOASSERT);
+            assert.strictEqual(bb.noAssert, !SmartBuffer.DEFAULT_NOASSERT);
             assert.equal(bb.toDebug(), "<00 01 02 03 04 05]");
-            bb = ByteArray.concat([]);
-            assert.strictEqual(bb.buffer, new ByteArray(0).buffer); // EMPTY_BUFFER
+            bb = SmartBuffer.concat([]);
+            assert.strictEqual(bb.buffer, new SmartBuffer(0).buffer); // EMPTY_BUFFER
         });
 
         it("resize", () => {
-            const bb = new ByteArray(1);
+            const bb = new SmartBuffer(1);
             bb.roffset = bb.woffset = 1;
             bb.resize(2);
             bb.fill(0, 0, 2);
@@ -189,7 +189,7 @@ describe("collection", "ByteArray", () => {
         });
 
         it("ensureCapacity", () => {
-            const bb = new ByteArray(5);
+            const bb = new SmartBuffer(5);
             assert.equal(bb.capacity, 5);
             bb.ensureCapacity(6); // Doubles
             assert.equal(bb.capacity, 10);
@@ -198,14 +198,14 @@ describe("collection", "ByteArray", () => {
         });
 
         it("slice", () => {
-            const b = ByteArray.wrap("\x12\x34\x56");
+            const b = SmartBuffer.wrap("\x12\x34\x56");
             const b2 = b.slice(1, 3);
-            const b3 = ByteArray.wrap("\x34\x56");
+            const b3 = SmartBuffer.wrap("\x34\x56");
             assert.equal(Buffer.compare(b2.buffer, b3.buffer), 0);
         });
 
         it("reset", () => {
-            const bb = ByteArray.wrap("\x12\x34\x56\x78");
+            const bb = SmartBuffer.wrap("\x12\x34\x56\x78");
             bb.reset();
             assert.equal(bb.roffset, 0);
             bb.roffset = 1;
@@ -216,7 +216,7 @@ describe("collection", "ByteArray", () => {
         });
 
         it("copy", () => {
-            const bb = ByteArray.wrap("\x01");
+            const bb = SmartBuffer.wrap("\x01");
             const bb2 = bb.copy();
             assert.equal(bb.roffset, 0);
             assert.notStrictEqual(bb, bb2);
@@ -228,8 +228,8 @@ describe("collection", "ByteArray", () => {
         });
 
         it("copyTo", () => {
-            const bb = ByteArray.wrap("\x01");
-            const bb2 = new ByteArray(2).fill(0);
+            const bb = SmartBuffer.wrap("\x01");
+            const bb2 = new SmartBuffer(2).fill(0);
             assert.equal(bb.toDebug(), "<01]");
             assert.equal(bb2.toDebug(), "<00 00]");
             // Modifies source and target offsets
@@ -258,7 +258,7 @@ describe("collection", "ByteArray", () => {
         });
 
         it("compact", () => {
-            const bb = ByteArray.wrap("\x01\x02");
+            const bb = SmartBuffer.wrap("\x01\x02");
             let prevBuffer = bb.buffer;
             bb.compact();
             assert.strictEqual(bb.buffer, prevBuffer);
@@ -275,7 +275,7 @@ describe("collection", "ByteArray", () => {
         });
 
         it("reverse", () => {
-            const bb = ByteArray.wrap("\x12\x34\x56\x78");
+            const bb = SmartBuffer.wrap("\x12\x34\x56\x78");
             bb.reverse(1, 3);
             assert.equal(bb.toString("debug"), "<12 56 34 78]");
             bb.reverse();
@@ -289,8 +289,8 @@ describe("collection", "ByteArray", () => {
         });
 
         it("write", () => {
-            const bb = ByteArray.wrap("\x12\x34");
-            const bb2 = ByteArray.wrap("\x56\x78");
+            const bb = SmartBuffer.wrap("\x12\x34");
+            const bb2 = SmartBuffer.wrap("\x56\x78");
             bb.roffset = 2;
             bb.write(bb2); // Modifies offsets of both
             assert.equal(bb.toString("debug"), "12 34<56 78]");
@@ -303,7 +303,7 @@ describe("collection", "ByteArray", () => {
 
         describe("writeBuffer", () => {
             it("should prepend a buffer", () => {
-                const b = new ByteArray();
+                const b = new SmartBuffer();
                 b.writeBuffer(Buffer.from("hello"));
                 b.writeBuffer(Buffer.from(" "));
                 b.writeBuffer(Buffer.from("world"));
@@ -311,7 +311,7 @@ describe("collection", "ByteArray", () => {
             });
 
             it("should write at the given offset", () => {
-                const b = new ByteArray();
+                const b = new SmartBuffer();
                 b.writeBuffer(Buffer.alloc(7)); // TODO: WTF, otherways it does not work, because the offset prop is zero
                 b.writeBuffer(Buffer.from("hello"), 0);
                 b.writeBuffer(Buffer.from(" "), 1);
@@ -321,8 +321,8 @@ describe("collection", "ByteArray", () => {
         });
 
         it("prepend", () => {
-            const bb = ByteArray.wrap("\x12\x34");
-            const bb2 = ByteArray.wrap("\x56\x78");
+            const bb = SmartBuffer.wrap("\x12\x34");
+            const bb2 = SmartBuffer.wrap("\x56\x78");
             assert.strictEqual(bb.prepend(bb2), bb); // Relative prepend at 0, 2 bytes (2 overflow)
             assert.equal(bb.toDebug(), "<56 78 12 34]");
             assert.equal(bb2.toDebug(), "56 78|");
@@ -345,15 +345,15 @@ describe("collection", "ByteArray", () => {
         });
 
         it("prependTo", () => {
-            const bb = ByteArray.wrap("\x12\x34");
-            const bb2 = ByteArray.wrap("\x56\x78");
+            const bb = SmartBuffer.wrap("\x12\x34");
+            const bb2 = SmartBuffer.wrap("\x56\x78");
             assert.strictEqual(bb2.prependTo(bb), bb2);
             assert.equal(bb.toDebug(), "<56 78 12 34]");
             assert.equal(bb2.toDebug(), "56 78|");
         });
 
         it("length", () => {
-            const bb = ByteArray.wrap("\x12\x34");
+            const bb = SmartBuffer.wrap("\x12\x34");
             assert.strictEqual(bb.length, 2);
             bb.roffset = 2;
             assert.strictEqual(bb.length, 0);
@@ -362,7 +362,7 @@ describe("collection", "ByteArray", () => {
         });
 
         it("skipRead", () => {
-            const bb = ByteArray.wrap("\x12\x34\x56");
+            const bb = SmartBuffer.wrap("\x12\x34\x56");
             assert.strictEqual(bb.roffset, 0);
             assert.strictEqual(bb.woffset, 3);
             bb.skipRead(3);
@@ -383,7 +383,7 @@ describe("collection", "ByteArray", () => {
         });
 
         it("skipWrite", () => {
-            const bb = new ByteArray(3);
+            const bb = new SmartBuffer(3);
             assert.strictEqual(bb.roffset, 0);
             assert.strictEqual(bb.woffset, 0);
             bb.skipWrite(3);
@@ -403,9 +403,9 @@ describe("collection", "ByteArray", () => {
         });
 
         it("order", () => {
-            // assert.strictEqual(ByteArray.LITTLE_ENDIAN, true);
-            // assert.strictEqual(ByteArray.BIG_ENDIAN, false);
-            const bb = new ByteArray(2);
+            // assert.strictEqual(SmartBuffer.LITTLE_ENDIAN, true);
+            // assert.strictEqual(SmartBuffer.BIG_ENDIAN, false);
+            const bb = new SmartBuffer(2);
             // assert.strictEqual(bb.littleEndian, false);
             bb.writeInt32BE(0x12345678);
             bb.reset();
@@ -447,7 +447,7 @@ describe("collection", "ByteArray", () => {
                 le += be.substr(i - 2, 2);
             }
             it(name.toLowerCase(), () => {
-                const bb = new ByteArray(size);
+                const bb = new SmartBuffer(size);
                 let writeLE;
                 let readLE;
                 let writeBE;
@@ -524,7 +524,7 @@ describe("collection", "ByteArray", () => {
         });
 
         it("bitset", () => {
-            const bb = new ByteArray(2);
+            const bb = new SmartBuffer(2);
 
             const run = (data) => {
                 bb.reset(true);
@@ -549,8 +549,8 @@ describe("collection", "ByteArray", () => {
         });
 
         it("calculateVarint", () => {
-            assert.equal(ByteArray.MAX_VARINT32_BYTES, 5);
-            assert.equal(ByteArray.MAX_VARINT64_BYTES, 10);
+            assert.equal(SmartBuffer.MAX_VARINT32_BYTES, 5);
+            assert.equal(SmartBuffer.MAX_VARINT64_BYTES, 10);
             let values = [
                 [0, 1],
                 [-1, 5, 10],
@@ -563,8 +563,8 @@ describe("collection", "ByteArray", () => {
                 [0xFFFFFFFF | 0, 5, 10]
             ];
             for (let i = 0; i < values.length; i++) {
-                assert.equal(ByteArray.calculateVarint32(values[i][0]), values[i][1]);
-                assert.equal(ByteArray.calculateVarint64(values[i][0]), values[i].length > 2 ? values[i][2] : values[i][1]);
+                assert.equal(SmartBuffer.calculateVarint32(values[i][0]), values[i][1]);
+                assert.equal(SmartBuffer.calculateVarint64(values[i][0]), values[i].length > 2 ? values[i][2] : values[i][1]);
             }
             values = [
                 [Long.fromNumber(1).shl(35), 6],
@@ -575,7 +575,7 @@ describe("collection", "ByteArray", () => {
                 [Long.fromNumber(1, true).shl(63), 10]
             ];
             for (let i = 0; i < values.length; i++) {
-                assert.equal(ByteArray.calculateVarint64(values[i][0]), values[i][1]);
+                assert.equal(SmartBuffer.calculateVarint64(values[i][0]), values[i][1]);
             }
         });
 
@@ -592,10 +592,10 @@ describe("collection", "ByteArray", () => {
                 [-2147483648, 4294967295]
             ];
             for (let i = 0; i < values.length; i++) {
-                assert.equal(ByteArray.zigZagEncode32(values[i][0]), values[i][1]);
-                assert.equal(ByteArray.zigZagDecode32(values[i][1]), values[i][0]);
-                assert.equal(ByteArray.zigZagEncode64(values[i][0]).toNumber(), values[i][1]);
-                assert.equal(ByteArray.zigZagDecode64(values[i][1]).toNumber(), values[i][0]);
+                assert.equal(SmartBuffer.zigZagEncode32(values[i][0]), values[i][1]);
+                assert.equal(SmartBuffer.zigZagDecode32(values[i][1]), values[i][0]);
+                assert.equal(SmartBuffer.zigZagEncode64(values[i][0]).toNumber(), values[i][1]);
+                assert.equal(SmartBuffer.zigZagDecode64(values[i][1]).toNumber(), values[i][0]);
             }
             values = [
                 [Long.MAX_VALUE, Long.MAX_UNSIGNED_VALUE.sub(Long.ONE)],
@@ -603,8 +603,8 @@ describe("collection", "ByteArray", () => {
             ];
             // NOTE: Even 64bit doubles from toNumber() fail for these values so we are using toString() here
             for (let i = 0; i < values.length; i++) {
-                assert.equal(ByteArray.zigZagEncode64(values[i][0]).toString(), values[i][1].toString());
-                assert.equal(ByteArray.zigZagDecode64(values[i][1]).toString(), values[i][0].toString());
+                assert.equal(SmartBuffer.zigZagEncode64(values[i][0]).toString(), values[i][1].toString());
+                assert.equal(SmartBuffer.zigZagDecode64(values[i][1]).toString(), values[i][0].toString());
             }
 
             // 32 bit ZZ
@@ -616,7 +616,7 @@ describe("collection", "ByteArray", () => {
                 2147483647,
                 -2147483648
             ];
-            let bb = new ByteArray(10);
+            let bb = new SmartBuffer(10);
             for (let i = 0; i < values.length; i++) {
                 const encLen = bb.writeVarint32ZigZag(values[i], 0);
                 bb.limit = encLen;
@@ -638,7 +638,7 @@ describe("collection", "ByteArray", () => {
                 Long.fromBits(0xFFFFFFFF, 0x7FFFFFFF),
                 Long.fromBits(0xFFFFFFFF, 0xFFFFFFFF)
             ];
-            bb = new ByteArray(10);
+            bb = new SmartBuffer(10);
             for (let i = 0; i < values.length; i++) {
                 const encLen = bb.writeVarint64ZigZag(values[i], 0);
                 const dec = bb.readVarint64ZigZag(0);
@@ -648,23 +648,23 @@ describe("collection", "ByteArray", () => {
         });
 
         it("utf8string", () => {
-            const bb = new ByteArray(2);
+            const bb = new SmartBuffer(2);
             const str = "ä☺𠜎️☁️";
             let str2;
             // Writing
             assert.strictEqual(bb.writeString(str), bb);
             bb.reset();
             // Reading
-            str2 = bb.readString(ByteArray.calculateUTF8Chars(str), ByteArray.METRICS_CHARS);
+            str2 = bb.readString(SmartBuffer.calculateUTF8Chars(str), SmartBuffer.METRICS_CHARS);
             assert.strictEqual(str2.length, str.length);
             assert.strictEqual(str2, str);
             bb.reset();
-            str2 = bb.readString(bb.capacity, ByteArray.METRICS_BYTES);
+            str2 = bb.readString(bb.capacity, SmartBuffer.METRICS_BYTES);
             assert.strictEqual(str2, str);
         });
 
         it("vstring", () => {
-            const bb = new ByteArray(2);
+            const bb = new SmartBuffer(2);
             bb.writeVString("ab"); // resizes to 2*2=4
             assert.strictEqual(bb.capacity, 4);
             assert.strictEqual(bb.woffset, 3);
@@ -676,7 +676,7 @@ describe("collection", "ByteArray", () => {
         });
 
         it("cstring", () => {
-            const bb = new ByteArray(2);
+            const bb = new SmartBuffer(2);
             bb.writeCString("a");
             assert.equal(bb.capacity, 2);
             assert.equal(bb.woffset, 2);
@@ -694,7 +694,7 @@ describe("collection", "ByteArray", () => {
 
     describe("convert", () => {
         it("toHex", () => {
-            const bb = new ByteArray(4);
+            const bb = new SmartBuffer(4);
             bb.writeUInt16BE(0x1234);
             bb.writeUInt8(0x56);
             assert.equal(bb.toHex(), "123456");
@@ -709,7 +709,7 @@ describe("collection", "ByteArray", () => {
         });
 
         it("toBase64", () => {
-            const bb = new ByteArray(8);
+            const bb = new SmartBuffer(8);
             bb.writeString("abcdefg"); // 7 chars
             assert.equal(bb.toBase64(), "YWJjZGVmZw==");
             assert.strictEqual(bb.roffset, 0);
@@ -723,7 +723,7 @@ describe("collection", "ByteArray", () => {
         });
 
         it("toBinary", () => {
-            const bb = new ByteArray(5);
+            const bb = new SmartBuffer(5);
             bb.writeUInt32BE(0x001234FF);
             // bb.flip();
             assert.strictEqual(bb.toBinary(), "\x00\x12\x34\xFF");
@@ -732,7 +732,7 @@ describe("collection", "ByteArray", () => {
         });
 
         it("toString", () => {
-            const bb = new ByteArray(3);
+            const bb = new SmartBuffer(3);
             bb.writeUInt16BE(0x6162);
             assert.equal(bb.toString("hex"), "6162");
             assert.equal(bb.toString("base64"), "YWI=");
@@ -744,7 +744,7 @@ describe("collection", "ByteArray", () => {
         });
 
         it("toBuffer", () => {
-            const bb = new ByteArray(2);
+            const bb = new SmartBuffer(2);
             bb.writeUInt16BE(0x1234);
             let buf = bb.toBuffer();
             assert.strictEqual(buf, bb.buffer);
@@ -758,7 +758,7 @@ describe("collection", "ByteArray", () => {
         });
 
         it("toArrayBuffer", () => {
-            const bb = new ByteArray(3);
+            const bb = new SmartBuffer(3);
             assert.ok(bb.buffer instanceof Buffer);
             bb.writeUInt16BE(0x1234);
             bb.roffset = 1;
@@ -771,7 +771,7 @@ describe("collection", "ByteArray", () => {
     describe("misc", () => {
         it("pbjsi19", () => {
             // assert that this issue is fixed: https://github.com/dcodeIO/ProtoBuf.js/issues/19
-            const bb = new ByteArray(9); // Trigger resize to 18 in writeVarint64
+            const bb = new SmartBuffer(9); // Trigger resize to 18 in writeVarint64
             bb.writeVarint32(16);
             bb.writeVarint32(2);
             bb.writeVarint32(24);
@@ -785,7 +785,7 @@ describe("collection", "ByteArray", () => {
         });
 
         it("NaN", () => {
-            const bb = new ByteArray(4);
+            const bb = new SmartBuffer(4);
             assert.ok(isNaN(bb.writeFloatBE(NaN).readFloatBE(0)));
             bb.reset(true);
             assert.strictEqual(bb.writeFloatBE(Number(Infinity)).readFloatBE(0), Number(Infinity));

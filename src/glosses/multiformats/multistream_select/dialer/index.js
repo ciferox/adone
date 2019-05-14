@@ -1,18 +1,15 @@
-const util = require("../util");
+// const util = require("../util");
 const select = require("../select");
 
 const {
     data: { varint },
-    util: { once }
-} = adone;
-
-const PROTOCOL_ID = require("./../constants").PROTOCOL_ID;
-
-const {
+    util: { once },
     p2p: { Connection },
     stream: { pull }
 } = adone;
 const { collect, map, take, lengthPrefixed } = pull;
+
+const { PROTOCOL_ID } = require("./../constants");
 
 /**
  *
@@ -23,7 +20,7 @@ class Dialer {
      */
     constructor() {
         this.conn = null;
-        this.log = util.log.dialer();
+        // this.log = util.log.dialer();
     }
 
     /**
@@ -35,18 +32,18 @@ class Dialer {
      * @returns {undefined}
      */
     handle(rawConn, callback) {
-        this.log("dialer handle conn");
+        // this.log("dialer handle conn");
         callback = once(callback);
         const s = select(PROTOCOL_ID, (err, conn) => {
             if (err) {
                 return callback(err);
             }
-            this.log("handshake success");
+            // this.log("handshake success");
 
             this.conn = new Connection(conn, rawConn);
 
             callback();
-        }, this.log);
+        }/*, this.log*/);
 
         // Handle unexpected errors from pull, like 'already piped'
         try {
@@ -56,7 +53,7 @@ class Dialer {
                 rawConn
             );
         } catch (err) {
-            this.log.error(err);
+            // this.log.error(err);
             callback(err);
         }
     }
@@ -74,7 +71,7 @@ class Dialer {
      * @returns {undefined}
      */
     select(protocol, callback) {
-        this.log(`dialer select ${protocol}`);
+        // this.log(`dialer select ${protocol}`);
         callback = once(callback);
         if (!this.conn) {
             return callback(new Error("multistream handshake has not finalized yet"));
@@ -86,7 +83,7 @@ class Dialer {
                 return callback(err);
             }
             callback(null, new Connection(conn, this.conn));
-        }, this.log);
+        }/*, this.log*/);
 
         pull(
             this.conn,
@@ -125,7 +122,7 @@ class Dialer {
                     callback(null, list.slice(1));
                 })
             );
-        }, this.log);
+        }/*, this.log*/);
 
         pull(
             this.conn,

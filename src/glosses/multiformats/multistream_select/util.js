@@ -1,4 +1,4 @@
-const debug = require("debug");
+// const debug = require("debug");
 
 const {
     is,
@@ -8,7 +8,7 @@ const { collect, values, lengthPrefixed } = pull;
 
 exports = module.exports;
 
-const randomId = () => ((~~(Math.random() * 1e9)).toString(36));
+// const randomId = () => ((~~(Math.random() * 1e9)).toString(36));
 
 // prefixes a message with a varint
 // TODO this is a pull-stream 'creep' (pull stream to add a byte?')
@@ -34,29 +34,29 @@ exports.writeEncoded = (writer, msg, callback) => {
     });
 };
 
-const createLogger = function (type) {
-    const rId = randomId();
+// const createLogger = function (type) {
+//     const rId = randomId();
 
-    const printer = function (logger) {
-        return (msg) => {
-            if (is.array(msg)) {
-                msg = msg.join(" ");
-            }
-            logger("(%s) %s", rId, msg);
-        };
-    };
+//     const printer = function (logger) {
+//         return (msg) => {
+//             if (is.array(msg)) {
+//                 msg = msg.join(" ");
+//             }
+//             logger("(%s) %s", rId, msg);
+//         };
+//     };
 
-    const log = printer(debug(`mss:${type}`));
-    log.error = printer(debug(`mss:${type}:error`));
+//     const log = printer(debug(`mss:${type}`));
+//     log.error = printer(debug(`mss:${type}:error`));
 
-    return log;
-};
+//     return log;
+// };
 
-exports.log = {};
+// exports.log = {};
 
-exports.log.dialer = () => {
-    return createLogger("dialer\t");
-};
-exports.log.listener = () => {
-    return createLogger("listener\t");
-};
+// exports.log.dialer = () => {
+//     return createLogger("dialer\t");
+// };
+// exports.log.listener = () => {
+//     return createLogger("listener\t");
+// };

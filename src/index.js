@@ -105,6 +105,7 @@ lazify({
     app: "./glosses/app",
     archive: "./glosses/archives",
     assertion: "./glosses/assertion",
+    buffer: "./glosses/buffer",
     cli: "./glosses/cli",
     collection: "./glosses/collections",
     compressor: "./glosses/compressors",

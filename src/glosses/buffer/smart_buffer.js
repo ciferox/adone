@@ -194,20 +194,20 @@ const utfx = {
 };
 
 /**
- * @typedef {string | ByteArray | Buffer | Uint8Array | ArrayBuffer} Wrappable
+ * @typedef {string | SmartBuffer | Buffer | Uint8Array | ArrayBuffer} Wrappable
  */
 
 /**
  * @typedef {"c" | "b"} Metrics
  */
-export default class ByteArray {
+export default class SmartBuffer {
     /**
-     * Constructs a new ByteArray
+     * Constructs a new SmartBuffer
      *
-     * @param {number} [capacity] Initial capacity. Defaults to ByteArray.DEFAULT_CAPACITY(64)
-     * @param {boolean} [noAssert] Whether to skip assertions of offsets and values. Defaults to ByteArray.DEFAULT_NOASSERT(false)
+     * @param {number} [capacity] Initial capacity. Defaults to SmartBuffer.DEFAULT_CAPACITY(64)
+     * @param {boolean} [noAssert] Whether to skip assertions of offsets and values. Defaults to SmartBuffer.DEFAULT_NOASSERT(false)
      */
-    constructor(capacity = ByteArray.DEFAULT_CAPACITY, noAssert = ByteArray.DEFAULT_NOASSERT) {
+    constructor(capacity = SmartBuffer.DEFAULT_CAPACITY, noAssert = SmartBuffer.DEFAULT_NOASSERT) {
         if (!noAssert) {
             capacity = capacity | 0;
             if (capacity < 0) {
@@ -232,7 +232,7 @@ export default class ByteArray {
     }
 
     /**
-     * Gets the capacity of this ByteArray's backing buffer or real length.
+     * Gets the capacity of this SmartBuffer's backing buffer or real length.
      *
      * @returns {number}
      */
@@ -292,7 +292,7 @@ export default class ByteArray {
      *
      * @param {number} length Number of bytes to read
      * @param {number} [offset] Offset to read from. Will use and increase offset by length if omitted.
-     * @returns {ByteArray}
+     * @returns {SmartBuffer}
      */
     read(length, offset) {
         const relative = is.undefined(offset);
@@ -618,7 +618,7 @@ export default class ByteArray {
     }
 
     /**
-     * Appends some data to this ByteArray.
+     * Appends some data to this SmartBuffer.
      * This will overwrite any contents behind the specified offset up to the appended data's length.
      *
      * @param {Wrappable} source The source write from
@@ -645,8 +645,8 @@ export default class ByteArray {
         if (isString) {
             length = length || Buffer.byteLength(source);
         } else {
-            if (!is.byteArray(source)) {
-                source = ByteArray.wrap(source, encoding);
+            if (!is.smartBuffer(source)) {
+                source = SmartBuffer.wrap(source, encoding);
             }
             length = source.woffset - source.roffset;
         }
@@ -675,7 +675,7 @@ export default class ByteArray {
      * Writes the array as a bitset.
      * @param {boolean[]} value Array of booleans to write
      * @param {number} [offset] Offset to write to
-     * @returns {ByteArray}
+     * @returns {SmartBuffer}
      */
     writeBitSet(value, offset) {
         const relative = is.undefined(offset);
@@ -1176,7 +1176,7 @@ export default class ByteArray {
                 throw new error.NotValidException(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
             }
         }
-        const size = ByteArray.calculateVarint32(value);
+        const size = SmartBuffer.calculateVarint32(value);
         let b;
         offset += size;
         let capacity10 = this.buffer.length;
@@ -1206,7 +1206,7 @@ export default class ByteArray {
      * @returns {this | number} this if offset is omitted, else the actual number of bytes written
      */
     writeVarint32ZigZag(value, offset) {
-        return this.writeVarint32(ByteArray.zigZagEncode32(value), offset);
+        return this.writeVarint32(SmartBuffer.zigZagEncode32(value), offset);
     }
 
     /**
@@ -1263,9 +1263,9 @@ export default class ByteArray {
     readVarint32ZigZag(offset) {
         let val = this.readVarint32(offset);
         if (is.object(val)) {
-            val.value = ByteArray.zigZagDecode32(val.value);
+            val.value = SmartBuffer.zigZagDecode32(val.value);
         } else {
-            val = ByteArray.zigZagDecode32(val);
+            val = SmartBuffer.zigZagDecode32(val);
         }
         return val;
     }
@@ -1305,7 +1305,7 @@ export default class ByteArray {
         } else if (value.unsigned !== false) {
             value = value.toSigned();
         }
-        const size = ByteArray.calculateVarint64(value);
+        const size = SmartBuffer.calculateVarint64(value);
         const part0 = value.toInt() >>> 0;
         const part1 = value.shru(28).toInt() >>> 0;
         const part2 = value.shru(56).toInt() >>> 0;
@@ -1362,7 +1362,7 @@ export default class ByteArray {
      * @returns {this | number} this if offset is omitted, else the actual number of bytes written
      */
     writeVarint64ZigZag(value, offset) {
-        return this.writeVarint64(ByteArray.zigZagEncode64(value), offset);
+        return this.writeVarint64(SmartBuffer.zigZagEncode64(value), offset);
     }
 
     /**
@@ -1451,9 +1451,9 @@ export default class ByteArray {
     readVarint64ZigZag(offset) {
         let val = this.readVarint64(offset);
         if (val && is.long(val.value)) {
-            val.value = ByteArray.zigZagDecode64(val.value);
+            val.value = SmartBuffer.zigZagDecode64(val.value);
         } else {
-            val = ByteArray.zigZagDecode64(val);
+            val = SmartBuffer.zigZagDecode64(val);
         }
         return val;
     }
@@ -1587,7 +1587,7 @@ export default class ByteArray {
      * Reads an UTF8 encoded string
      *
      * @param {number} length Number of characters or bytes to read
-     * @param {Metrics} [metrics] Metrics specifying what n is meant to count. Defaults to ByteArray.METRICS_CHARS("c")
+     * @param {Metrics} [metrics] Metrics specifying what n is meant to count. Defaults to SmartBuffer.METRICS_CHARS("c")
      * @param {number} [offset] Offset to read from
      * @returns {string | { string: string, length: number}} The string read if offset is omitted,
      *      else the string read and the actual number of bytes read
@@ -1602,7 +1602,7 @@ export default class ByteArray {
             offset = this.roffset;
         }
         if (is.undefined(metrics)) {
-            metrics = ByteArray.METRICS_CHARS;
+            metrics = SmartBuffer.METRICS_CHARS;
         }
         if (!this.noAssert) {
             if (!is.number(length) || length % 1 !== 0) {
@@ -1621,7 +1621,7 @@ export default class ByteArray {
         const start = offset;
         let temp;
         let sd;
-        if (metrics === ByteArray.METRICS_CHARS) {
+        if (metrics === SmartBuffer.METRICS_CHARS) {
             sd = stringDestination();
             utfx.decodeUTF8(() => i < length && offset < this.buffer.length ? this.buffer[offset++] : null, (cp) => {
                 ++i;
@@ -1635,7 +1635,7 @@ export default class ByteArray {
                 return sd();
             }
             return { string: sd(), length: offset - start };
-        } else if (metrics === ByteArray.METRICS_BYTES) {
+        } else if (metrics === SmartBuffer.METRICS_BYTES) {
             if (!this.noAssert) {
                 if (!is.number(offset) || offset % 1 !== 0) {
                     throw new error.InvalidArgumentException(`Illegal offset: ${offset} (not an integer)`);
@@ -1682,7 +1682,7 @@ export default class ByteArray {
         }
         const start = offset;
         const k = Buffer.byteLength(str, "utf8");
-        const l = ByteArray.calculateVarint32(k);
+        const l = SmartBuffer.calculateVarint32(k);
         offset += l + k;
         let capacity15 = this.buffer.length;
         if (offset > capacity15) {
@@ -1721,7 +1721,7 @@ export default class ByteArray {
         }
         const start = offset;
         const len = this.readVarint32(offset);
-        const str = this.readString(len.value, ByteArray.METRICS_BYTES, offset += len.length);
+        const str = this.readString(len.value, SmartBuffer.METRICS_BYTES, offset += len.length);
         offset += str.length;
         if (relative) {
             this.roffset = offset;
@@ -1731,10 +1731,10 @@ export default class ByteArray {
     }
 
     /**
-     * Appends this ByteArray's contents to another ByteArray.
-     * This will overwrite any contents behind the specified offset up to the length of this ByteArray's data
+     * Appends this SmartBuffer's contents to another SmartBuffer.
+     * This will overwrite any contents behind the specified offset up to the length of this SmartBuffer's data
      *
-     * @param {ByteArray} target
+     * @param {SmartBuffer} target
      * @param {number} [offset] Offset to append to
      * @returns {this}
      */
@@ -1755,7 +1755,7 @@ export default class ByteArray {
     }
 
     /**
-     * Resets this ByteArray's offsets.
+     * Resets this SmartBuffer's offsets.
      *
      * @returns {this}
      */
@@ -1768,13 +1768,13 @@ export default class ByteArray {
     }
 
     /**
-     * Creates a cloned instance of this ByteArray, preset with this ByteArray's values for roffset and woffset.
+     * Creates a cloned instance of this SmartBuffer, preset with this SmartBuffer's values for roffset and woffset.
      *
      * @param {boolean} copy Whether to copy the backing buffer or to return another view on the same, false by default
-     * @param {ByteArray}
+     * @param {SmartBuffer}
      */
     clone(copy) {
-        const bb = new ByteArray(0, this.noAssert);
+        const bb = new SmartBuffer(0, this.noAssert);
         if (copy) {
             const buffer = Buffer.allocUnsafe(this.buffer.length);
             this.buffer.copy(buffer);
@@ -1788,7 +1788,7 @@ export default class ByteArray {
     }
 
     /**
-     * Compacts this ByteArray to be backed by a buffer of its contents' length.
+     * Compacts this SmartBuffer to be backed by a buffer of its contents' length.
      * Will set offset = 0 and limit = capacity.
      *
      * @param {number} begin Offset to start at, buffer offset by default
@@ -1830,11 +1830,11 @@ export default class ByteArray {
     }
 
     /**
-     * Creates a copy of this ByteArray's contents.
+     * Creates a copy of this SmartBuffer's contents.
      *
      * @param {number} begin Begin offset, buffer offset by default
      * @param {number} end End offset, buffer limit by default
-     * @returns {ByteArray}
+     * @returns {SmartBuffer}
      */
     copy(begin, end) {
         begin = is.undefined(begin) ? this.roffset : begin;
@@ -1853,10 +1853,10 @@ export default class ByteArray {
             }
         }
         if (begin === end) {
-            return new ByteArray(0, this.noAssert);
+            return new SmartBuffer(0, this.noAssert);
         }
         const capacity = end - begin;
-        const bb = new ByteArray(capacity, this.noAssert);
+        const bb = new SmartBuffer(capacity, this.noAssert);
         bb.roffset = 0;
         bb.woffset = 0;
         this.copyTo(bb, 0, begin, end);
@@ -1864,9 +1864,9 @@ export default class ByteArray {
     }
 
     /**
-     * Copies this ByteArray's contents to another ByteArray.
+     * Copies this SmartBuffer's contents to another SmartBuffer.
      *
-     * @param {ByteArray} target
+     * @param {SmartBuffer} target
      * @param {number} [targetOffset] Offset to copy to. Will use and increase the target's offset by the number of bytes copied if omitted
      * @param {number} [sourceStart] Offset to start copying from. Will use and increase offset by the number of bytes copied if omitted
      * @param {number} [sourceEnd] Offset to end copying from, defaults to the buffer limit
@@ -1876,8 +1876,8 @@ export default class ByteArray {
         let relative;
         let targetRelative;
         if (!this.noAssert) {
-            if (!is.byteArray(target)) {
-                throw new error.InvalidArgumentException("'target' is not a ByteArray");
+            if (!is.smartBuffer(target)) {
+                throw new error.InvalidArgumentException("'target' is not a SmartBuffer");
             }
         }
         targetOffset = (targetRelative = is.undefined(targetOffset)) ? target.woffset : targetOffset | 0;
@@ -1911,7 +1911,7 @@ export default class ByteArray {
     }
 
     /**
-     * Makes sure that this ByteArray is backed by a ByteArray#buffer of at least the specified capacity.
+     * Makes sure that this SmartBuffer is backed by a SmartBuffer#buffer of at least the specified capacity.
      * If the current capacity is exceeded, it will be doubled.
      * If double the current capacity is less than the required capacity, the required capacity will be used instead
      *
@@ -1927,7 +1927,7 @@ export default class ByteArray {
     }
 
     /**
-     * Overwrites this ByteArray's contents with the specified value.
+     * Overwrites this SmartBuffer's contents with the specified value.
      *
      * @param {number | string} value Byte value to fill with. If given as a string, the first character is used
      * @param {number} [begin] Begin offset. Will use and increase offset by the number of bytes written if omitted. defaults to offset
@@ -1973,7 +1973,7 @@ export default class ByteArray {
     }
 
     /**
-     * Prepends some data to this ByteArray.
+     * Prepends some data to this SmartBuffer.
      * This will overwrite any contents before the specified offset up to the prepended data's length.
      * If there is not enough space available before the specified offset,
      * the backing buffer will be resized and its contents moved accordingly
@@ -2001,8 +2001,8 @@ export default class ByteArray {
                 throw new error.NotValidException(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
             }
         }
-        if (!is.byteArray(source)) {
-            source = ByteArray.wrap(source, encoding);
+        if (!is.smartBuffer(source)) {
+            source = SmartBuffer.wrap(source, encoding);
         }
         const len = source.buffer.length - source.roffset;
         if (len <= 0) {
@@ -2027,7 +2027,7 @@ export default class ByteArray {
     }
 
     /**
-     * Prepends this ByteArray to another ByteArray.
+     * Prepends this SmartBuffer to another SmartBuffer.
      * This will overwrite any contents before the specified offset up to the prepended data's length.
      * If there is not enough space available before the specified offset,
      * the backing buffer will be resized and its contents moved accordingly
@@ -2041,7 +2041,7 @@ export default class ByteArray {
     }
 
     /**
-     * Resizes this ByteArray to be backed by a buffer of at least the given capacity.
+     * Resizes this SmartBuffer to be backed by a buffer of at least the given capacity.
      * Will do nothing if already that large or larger.
      *
      * @param {number} capacity	Capacity required
@@ -2066,7 +2066,7 @@ export default class ByteArray {
     }
 
     /**
-     * Reverses this ByteArray's contents.
+     * Reverses this SmartBuffer's contents.
      *
      * @param {number} [begin] Offset to start at, defaults to roffset
      * @param {number} [end] Offset to end at, defaults to woffset
@@ -2142,11 +2142,11 @@ export default class ByteArray {
     }
 
     /**
-     * Slices this ByteArray by creating a cloned instance with roffset = begin and woffset = end
+     * Slices this SmartBuffer by creating a cloned instance with roffset = begin and woffset = end
      *
      * @param {number} [begin] Begin offset, defaults to offset
      * @param {number} [end] End offset, defaults to limit
-     * @returns {ByteArray}
+     * @returns {SmartBuffer}
      */
     slice(begin, end) {
         begin = is.undefined(begin) ? this.roffset : begin;
@@ -2164,14 +2164,14 @@ export default class ByteArray {
                 throw new error.NotValidException(`Illegal range: 0 <= ${begin} <= ${end} <= ${this.buffer.length}`);
             }
         }
-        const bb = new ByteArray(end - begin);
+        const bb = new SmartBuffer(end - begin);
         bb.buffer = this.buffer.slice(begin, end);
         bb.woffset = bb.capacity;
         return bb;
     }
 
     /**
-     * Returns a copy of the backing buffer that contains this ByteArray's contents.
+     * Returns a copy of the backing buffer that contains this SmartBuffer's contents.
      *
      * @param {boolean} [forceCopy] If true returns a copy, otherwise returns a view referencing the same memory if possible,
      *      false by default
@@ -2207,7 +2207,7 @@ export default class ByteArray {
     }
 
     /**
-     * Returns a raw buffer compacted to contain this ByteArray's contents
+     * Returns a raw buffer compacted to contain this SmartBuffer's contents
      *
      * @returns {ArrayBuffer}
      */
@@ -2233,7 +2233,7 @@ export default class ByteArray {
     }
 
     /**
-     * Converts the ByteArray's contents to a string
+     * Converts the SmartBuffer's contents to a string
      *
      * @param {string} encoding Output encoding
      * @param {number} [begin] Begin offset, offset by default
@@ -2264,7 +2264,7 @@ export default class ByteArray {
     }
 
     /**
-     * Encodes this ByteArray's contents to a base64 encoded string
+     * Encodes this SmartBuffer's contents to a base64 encoded string
      *
      * @param {number} [begin] Begin offset, offset by default
      * @param {number} [end] End offset, limit by default
@@ -2281,7 +2281,7 @@ export default class ByteArray {
     }
 
     /**
-     * Encodes this ByteArray to a binary encoded string, that is using only characters 0x00-0xFF as bytes
+     * Encodes this SmartBuffer to a binary encoded string, that is using only characters 0x00-0xFF as bytes
      *
      * @param {number} [begin] Begin offset, offset by default
      * @param {number} [end] End offset, limit by default
@@ -2298,7 +2298,7 @@ export default class ByteArray {
     }
 
     /**
-     * Encodes this ByteArray to a hex encoded string with marked offsets
+     * Encodes this SmartBuffer to a hex encoded string with marked offsets
      *
      * '<' - roffset
      * '>' - woffset
@@ -2367,7 +2367,7 @@ export default class ByteArray {
     }
 
     /**
-     * Encodes this ByteArray's contents to a hex encoded string
+     * Encodes this SmartBuffer's contents to a hex encoded string
      *
      * @param {number} [begin] Begin offset, offset by default
      * @param {number} [end] End offset, limit by default
@@ -2393,7 +2393,7 @@ export default class ByteArray {
     }
 
     /**
-     * Encodes this ByteArray's contents to an UTF8 encoded string
+     * Encodes this SmartBuffer's contents to an UTF8 encoded string
      *
      * @param {number} [begin] Begin offset, offset by default
      * @param {number} [end] End offset, limit by default
@@ -2419,13 +2419,13 @@ export default class ByteArray {
     }
 
     /**
-     * Allocates a new ByteArray backed by a buffer of the specified capacity.
+     * Allocates a new SmartBuffer backed by a buffer of the specified capacity.
      *
-     * @param {number} [capacity] Initial capacity. Defaults to ByteArray.DEFAULT_CAPACITY(64)
-     * @param {boolean} [noAssert] Whether to skip assertions of offsets and values. Defaults to ByteArray.DEFAULT_NOASSERT(false)
+     * @param {number} [capacity] Initial capacity. Defaults to SmartBuffer.DEFAULT_CAPACITY(64)
+     * @param {boolean} [noAssert] Whether to skip assertions of offsets and values. Defaults to SmartBuffer.DEFAULT_NOASSERT(false)
      */
     static alloc(capacity, noAssert) {
-        return new ByteArray(capacity, noAssert);
+        return new SmartBuffer(capacity, noAssert);
     }
 
     /**
@@ -2433,7 +2433,7 @@ export default class ByteArray {
      *
      * @param {Wrappable[]} buffers
      * @param {string} encoding Encoding for strings
-     * @param {boolean} noAssert Whether to skip assertions of offsets and values. Defaults to ByteArray.DEFAULT_NOASSERT(false)
+     * @param {boolean} noAssert Whether to skip assertions of offsets and values. Defaults to SmartBuffer.DEFAULT_NOASSERT(false)
      */
     static concat(buffers, encoding, noAssert) {
         if (is.boolean(encoding) || !is.string(encoding)) {
@@ -2445,8 +2445,8 @@ export default class ByteArray {
         let i = 0;
         let length;
         for (; i < k; ++i) {
-            if (!is.byteArray(buffers[i])) {
-                buffers[i] = ByteArray.wrap(buffers[i], encoding);
+            if (!is.smartBuffer(buffers[i])) {
+                buffers[i] = SmartBuffer.wrap(buffers[i], encoding);
             }
             length = buffers[i].woffset - buffers[i].roffset;
             if (length > 0) {
@@ -2454,9 +2454,9 @@ export default class ByteArray {
             }
         }
         if (capacity === 0) {
-            return new ByteArray(0, noAssert);
+            return new SmartBuffer(0, noAssert);
         }
-        const bb = new ByteArray(capacity, noAssert);
+        const bb = new SmartBuffer(capacity, noAssert);
         let bi;
         i = 0;
 
@@ -2475,11 +2475,11 @@ export default class ByteArray {
 
     /**
      * Wraps a buffer or a string.
-     * Sets the allocated ByteArray's offset to 0 and its limit to the length of the wrapped data
+     * Sets the allocated SmartBuffer's offset to 0 and its limit to the length of the wrapped data
      *
      * @param {Wrappable} buffer
      * @param {string} encoding Encoding for strings
-     * @param {boolean} noAssert Whether to skip assertions of offsets and values. Defaults to ByteArray.DEFAULT_NOASSERT(false)
+     * @param {boolean} noAssert Whether to skip assertions of offsets and values. Defaults to SmartBuffer.DEFAULT_NOASSERT(false)
      */
     static wrap(buffer, encoding, noAssert) {
         if (is.string(buffer)) {
@@ -2488,22 +2488,22 @@ export default class ByteArray {
             }
             switch (encoding) {
                 case "base64":
-                    return ByteArray.fromBase64(buffer);
+                    return SmartBuffer.fromBase64(buffer);
                 case "hex":
-                    return ByteArray.fromHex(buffer);
+                    return SmartBuffer.fromHex(buffer);
                 case "binary":
-                    return ByteArray.fromBinary(buffer);
+                    return SmartBuffer.fromBinary(buffer);
                 case "utf8":
-                    return ByteArray.fromUTF8(buffer);
+                    return SmartBuffer.fromUTF8(buffer);
                 case "debug":
-                    return ByteArray.fromDebug(buffer);
+                    return SmartBuffer.fromDebug(buffer);
                 default:
                     throw new error.NotSupportedException(`Unsupported encoding: ${encoding}`);
             }
         }
 
         let bb;
-        if (is.byteArray(buffer)) {
+        if (is.smartBuffer(buffer)) {
             bb = buffer.clone();
             return bb;
         }
@@ -2524,7 +2524,7 @@ export default class ByteArray {
             }
             buffer = Buffer.from(buffer);
         }
-        bb = new ByteArray(0, noAssert);
+        bb = new SmartBuffer(0, noAssert);
         if (buffer.length > 0) { // Avoid references to more than one EMPTY_BUFFER
             bb.buffer = buffer;
             bb.woffset = buffer.length;
@@ -2667,55 +2667,55 @@ export default class ByteArray {
     }
 
     /**
-     * Decodes a base64 encoded string to a ByteArray
+     * Decodes a base64 encoded string to a SmartBuffer
      *
      * @param {string} str
-     * @returns {ByteArray}
+     * @returns {SmartBuffer}
      */
     static fromBase64(str) {
-        return ByteArray.wrap(Buffer.from(str, "base64"));
+        return SmartBuffer.wrap(Buffer.from(str, "base64"));
     }
 
     /**
      * Encodes a binary string to base64 like window.btoa does
      *
      * @param {string} str
-     * @returns {ByteArray}
+     * @returns {SmartBuffer}
      */
     static btoa(str) {
-        return ByteArray.fromBinary(str).toBase64();
+        return SmartBuffer.fromBinary(str).toBase64();
     }
 
     /**
      * Decodes a base64 encoded string to binary like window.atob does
      *
      * @param {string} b64
-     * @returns {ByteArray}
+     * @returns {SmartBuffer}
      */
     static atob(b64) {
-        return ByteArray.fromBase64(b64).toBinary();
+        return SmartBuffer.fromBase64(b64).toBinary();
     }
 
     /**
-     * Decodes a binary encoded string, that is using only characters 0x00-0xFF as bytes, to a ByteArray
+     * Decodes a binary encoded string, that is using only characters 0x00-0xFF as bytes, to a SmartBuffer
      *
      * @param {string} str
-     * @returns {ByteArray}
+     * @returns {SmartBuffer}
      */
     static fromBinary(str) {
-        return ByteArray.wrap(Buffer.from(str, "binary"));
+        return SmartBuffer.wrap(Buffer.from(str, "binary"));
     }
 
     /**
-     * Decodes a hex encoded string with marked offsets to a ByteArray
+     * Decodes a hex encoded string with marked offsets to a SmartBuffer
      *
      * @param {string} str
      * @param {boolean} [noAssert]
-     * @returns {ByteArray}
+     * @returns {SmartBuffer}
      */
     static fromDebug(str, noAssert) {
         const k = str.length;
-        const bb = new ByteArray(((k + 1) / 3) | 0, noAssert);
+        const bb = new SmartBuffer(((k + 1) / 3) | 0, noAssert);
         let i = 0;
         let j = 0;
         let ch;
@@ -2827,7 +2827,7 @@ export default class ByteArray {
     }
 
     /**
-     * Decodes a hex encoded string to a ByteArray
+     * Decodes a hex encoded string to a SmartBuffer
      *
      * @param {string} str
      * @param {boolean} [noAssert]
@@ -2841,18 +2841,18 @@ export default class ByteArray {
                 throw new error.InvalidArgumentException("Illegal str: Length not a multiple of 2");
             }
         }
-        const bb = new ByteArray(0, true);
+        const bb = new SmartBuffer(0, true);
         bb.buffer = Buffer.from(str, "hex");
         bb.woffset = bb.buffer.length;
         return bb;
     }
 
     /**
-     * Decodes an UTF8 encoded string to a ByteArray
+     * Decodes an UTF8 encoded string to a SmartBuffer
      *
      * @param {string} str
      * @param {boolean} [noAssert]
-     * @returns {ByteArray}
+     * @returns {SmartBuffer}
      */
     static fromUTF8(str, noAssert) {
         if (!noAssert) {
@@ -2860,7 +2860,7 @@ export default class ByteArray {
                 throw new error.InvalidArgumentException("Illegal str: Not a string");
             }
         }
-        const bb = new ByteArray(0, noAssert);
+        const bb = new SmartBuffer(0, noAssert);
         bb.buffer = Buffer.from(str, "utf8");
         bb.woffset = bb.buffer.length;
         return bb;
@@ -2870,29 +2870,29 @@ export default class ByteArray {
 /**
  * Default initial capacity
  */
-ByteArray.DEFAULT_CAPACITY = 64;
+SmartBuffer.DEFAULT_CAPACITY = 64;
 
 /**
  * Default no assertions flag
  */
-ByteArray.DEFAULT_NOASSERT = false;
+SmartBuffer.DEFAULT_NOASSERT = false;
 
 /**
  * Maximum number of bytes required to store a 32bit base 128 variable-length integer
  */
-ByteArray.MAX_VARINT32_BYTES = 5;
+SmartBuffer.MAX_VARINT32_BYTES = 5;
 
 /**
  * Maximum number of bytes required to store a 64bit base 128 variable-length integer
  */
-ByteArray.MAX_VARINT64_BYTES = 10;
+SmartBuffer.MAX_VARINT64_BYTES = 10;
 
 /**
  * Metrics representing number of UTF8 characters. Evaluates to `c`.
  */
-ByteArray.METRICS_CHARS = "c";
+SmartBuffer.METRICS_CHARS = "c";
 
 /**
  * Metrics representing number of bytes. Evaluates to `b`.
  */
-ByteArray.METRICS_BYTES = "b";
+SmartBuffer.METRICS_BYTES = "b";

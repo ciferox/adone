@@ -59,7 +59,7 @@ class CID {
      * new CID(<cid>)
      */
     constructor(version, codec, multihash, multibaseName) {
-        if (version instanceof CID) {
+        if (module.exports.isCID(version)) {
             // version is an exising CID instance
             const cid = version;
             this.version = cid.version;
@@ -202,7 +202,7 @@ class CID {
             throw new Error("Cannot convert non 32 byte multihash CID to CIDv0");
         }
 
-        return new CID(0, this.codec, this.multihash);
+        return new _CID(0, this.codec, this.multihash);
     }
 
     /**
@@ -211,7 +211,7 @@ class CID {
      * @returns {CID}
      */
     toV1() {
-        return new CID(1, this.codec, this.multihash);
+        return new _CID(1, this.codec, this.multihash);
     }
 
     /**
@@ -285,6 +285,12 @@ class CID {
         }
     }
 }
-CID.codecs = codecs;
 
-module.exports = CID;
+const _CID = adone.util.withIs(CID, {
+    className: "CID",
+    symbolName: "@ipld/js-cid/CID"
+});
+  
+_CID.codecs = codecs;
+  
+module.exports = _CID;    

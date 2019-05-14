@@ -346,7 +346,7 @@ export default class RemotePeer extends AbstractPeer {
         });
 
         // receive data from remote netron
-        const permBuffer = new adone.collection.ByteArray(0);
+        const permBuffer = new adone.buffer.SmartBuffer(0);
         let lpsz = 0;
 
         const handler = (chunk) => {

@@ -69,8 +69,7 @@ describe("error handling", () => {
                 try {
                     await fn(buf);
                 } catch (err) {
-                    expect(err).to.exist();
-                    expect(err.code).to.eql("ERR_HASH_ALGORITHM_NOT_SPECIFIED");
+                    expect(err).to.instanceOf(adone.error.NotValidException);
                     return;
                 }
                 expect.fail("Did not throw");
@@ -83,8 +82,7 @@ describe("error handling", () => {
                 try {
                     await fn(buf, "snake-oil");
                 } catch (err) {
-                    expect(err).to.exist();
-                    expect(err.code).to.eql("ERR_HASH_ALGORITHM_NOT_SUPPORTED");
+                    expect(err).to.instanceOf(adone.error.NotSupportedException);
                     return;
                 } finally {
                     stub.restore();

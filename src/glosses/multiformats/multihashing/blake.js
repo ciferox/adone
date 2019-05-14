@@ -1,8 +1,8 @@
 const {
+    crypto: { blake },
     is
 } = adone;
 
-const blake = require("blakejs");
 const minB = 0xb201;
 const minS = 0xb241;
 

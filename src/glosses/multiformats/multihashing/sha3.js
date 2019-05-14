@@ -1,6 +1,6 @@
-
-
-const sha3 = require("js-sha3");
+const {
+    crypto: { sha3 }
+} = adone;
 
 const functions = [
     [0x14, sha3.sha3_512],

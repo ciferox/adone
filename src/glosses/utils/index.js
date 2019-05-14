@@ -84,7 +84,8 @@ adone.lazify({
     clone: "./clone",
     detectFileType: "./detect_file_type",
     mockInstance: "./mock_instance",
-    splitArgs: "./split_args"
+    splitArgs: "./split_args",
+    withIs: "./with_is"
 }, adone.asNamespace(exports), require);
 
 const irregularPlurals = {

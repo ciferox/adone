@@ -1,10 +1,8 @@
 const {
-    is,
+    buffer: { Buffer },
     multiformat: { multihash }
 } = adone;
 
-const { Buffer } = require("buffer");
-const errcode = require("err-code");
 const crypto = require("./crypto");
 
 /**
@@ -52,12 +50,12 @@ Multihashing.digest = async (buf, alg, length) => {
  */
 Multihashing.createHash = function (alg) {
     if (!alg) {
-        throw errcode("hash algorithm must be specified", "ERR_HASH_ALGORITHM_NOT_SPECIFIED");
+        throw new adone.error.NotValidException("Hash algorithm must be specified");
     }
 
     alg = multihash.coerceCode(alg);
     if (!Multihashing.functions[alg]) {
-        throw errcode(`multihash function '${alg}' not yet supported`, "ERR_HASH_ALGORITHM_NOT_SUPPORTED");
+        throw new adone.error.NotSupportedException(`Multihash function '${alg}' not yet supported`);
     }
 
     return Multihashing.functions[alg];

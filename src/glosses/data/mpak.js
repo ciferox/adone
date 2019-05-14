@@ -1,6 +1,6 @@
 const {
     is,
-    collection: { ByteArray }
+    buffer: { SmartBuffer }
 } = adone;
 
 export class Encoder {
@@ -9,7 +9,7 @@ export class Encoder {
     }
 
     encode(x, buf) {
-        buf = buf || new ByteArray(1024, true);
+        buf = buf || new SmartBuffer(1024, true);
         this._encode(x, buf);
         return buf;
     }
@@ -219,8 +219,8 @@ export class Decoder {
     }
 
     decode(buf) {
-        if (!is.byteArray(buf)) {
-            buf = ByteArray.wrap(buf, undefined, true);
+        if (!is.smartBuffer(buf)) {
+            buf = SmartBuffer.wrap(buf, undefined, true);
         }
 
         const result = this.tryDecode(buf);
@@ -522,7 +522,7 @@ export class Serializer {
         this.registerEncoder(type, (obj) => {
             return (obj instanceof constructor);
         }, (obj) => {
-            const extBuf = new ByteArray(this._initialCapacity, true);
+            const extBuf = new SmartBuffer(this._initialCapacity, true);
             encode(obj, extBuf);
             return extBuf;
         });
