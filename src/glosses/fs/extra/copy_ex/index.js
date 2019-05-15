@@ -1,135 +1,119 @@
-const {
-    error: { errno, CopyException },
-    event: { Emitter },
-    is,
-    glob,
-    fs: { junk, createReadStream, createWriteStream, stat, lstat, readlink, readdir, symlink, mkdirp, remove, utimes },
-    path
-} = adone;
+export default (fs) => {
+    const {
+        error: { errno, CopyException },
+        event: { Emitter },
+        is,
+        glob,
+        path
+    } = adone;
 
-const emitterMixin = (obj) => {
-    for (const k of Object.getOwnPropertyNames(Emitter.prototype)) {
-        obj[k] = Emitter.prototype[k];
-    }
+    const { junk, createReadStream, createWriteStream, stat, lstat, readlink, readdir, symlink, mkdirp, remove, utimes } = fs;
 
-    Object.defineProperty(obj, "_events", {
-        get() {
-            return this.__events || (this.__events = {});
-        },
-        set(val) {
-            this.__events = val;
+    const emitterMixin = (obj) => {
+        for (const k of Object.getOwnPropertyNames(Emitter.prototype)) {
+            obj[k] = Emitter.prototype[k];
         }
-    });
 
-    obj.off = function (event, fn) {
-        switch (arguments.length) {
-            case 2:
-                this.removeListener(event, fn);
-                return this;
-            case 1:
-                this.removeAllListeners(event);
-                return this;
-            case 0:
-                this.removeAllListeners();
-                return this;
-        }
-    };
+        Object.defineProperty(obj, "_events", {
+            get() {
+                return this.__events || (this.__events = {});
+            },
+            set(val) {
+                this.__events = val;
+            }
+        });
 
-    return obj;
-};
-
-const fsError = (code, path) => {
-    const errorType = errno.code[code];
-    const message = `${errorType.code}, ${errorType.description} ${path}`;
-    const error = new Error(message);
-    error.errno = errorType.errno;
-    error.code = errorType.code;
-    error.path = path;
-    return error;
-};
-
-// TODO: expose somewhere in adone
-const slash = (input) => {
-    const isExtendedLengthPath = /^\\\\\?\\/.test(input);
-    const hasNonAscii = /[^\u0000-\u0080]+/.test(input); // eslint-disable-line no-control-regex
-
-    return (isExtendedLengthPath || hasNonAscii)
-        ? input
-        : input.replace(/\\/g, "/");
-};
-
-
-const batch = (inputs, iteratee, options) => {
-    const results = options.results ? [] : undefined;
-    if (inputs.length === 0) {
-        return Promise.resolve(results);
-    }
-    return new Promise(((resolve, reject) => {
-        let currentIndex = -1;
-        let activeWorkers = 0;
-        const startWorker = function (input) {
-            ++activeWorkers;
-            iteratee(input).then((result) => {
-                --activeWorkers;
-                if (results) {
-                    results.push(result);
-                }
-                if (currentIndex < inputs.length - 1) {
-                    startWorker(inputs[++currentIndex]);
-                } else if (activeWorkers === 0) {
-                    resolve(results);
-                }
-            }).catch(reject);
+        obj.off = function (event, fn) {
+            switch (arguments.length) {
+                case 2:
+                    this.removeListener(event, fn);
+                    return this;
+                case 1:
+                    this.removeAllListeners(event);
+                    return this;
+                case 0:
+                    this.removeAllListeners();
+                    return this;
+            }
         };
 
-        while (currentIndex < Math.min(inputs.length, options.concurrency) - 1) {
-            startWorker(inputs[++currentIndex]);
+        return obj;
+    };
+
+    const fsError = (code, path) => {
+        const errorType = errno.code[code];
+        const message = `${errorType.code}, ${errorType.description} ${path}`;
+        const error = new Error(message);
+        error.errno = errorType.errno;
+        error.code = errorType.code;
+        error.path = path;
+        return error;
+    };
+
+    // TODO: expose somewhere in adone
+    const slash = (input) => {
+        const isExtendedLengthPath = /^\\\\\?\\/.test(input);
+        const hasNonAscii = /[^\u0000-\u0080]+/.test(input); // eslint-disable-line no-control-regex
+
+        return (isExtendedLengthPath || hasNonAscii)
+            ? input
+            : input.replace(/\\/g, "/");
+    };
+
+
+    const batch = (inputs, iteratee, options) => {
+        const results = options.results ? [] : undefined;
+        if (inputs.length === 0) {
+            return Promise.resolve(results);
         }
-    }));
-};
+        return new Promise(((resolve, reject) => {
+            let currentIndex = -1;
+            let activeWorkers = 0;
+            const startWorker = function (input) {
+                ++activeWorkers;
+                iteratee(input).then((result) => {
+                    --activeWorkers;
+                    if (results) {
+                        results.push(result);
+                    }
+                    if (currentIndex < inputs.length - 1) {
+                        startWorker(inputs[++currentIndex]);
+                    } else if (activeWorkers === 0) {
+                        resolve(results);
+                    }
+                }).catch(reject);
+            };
 
-
-export default (fs) => {
-
-    const getFileListing = (srcPath, shouldExpandSymlinks) => {
-        return readdir(srcPath)
-            .then((filenames) => {
-                return Promise.all(
-                    filenames.map((filename) => {
-                        const filePath = path.join(srcPath, filename);
-                        return (shouldExpandSymlinks ? stat : lstat)(filePath)
-                            .then((stats) => {
-                                if (stats.isDirectory()) {
-                                    return getFileListing(filePath, shouldExpandSymlinks)
-                                        .then((childPaths) => {
-                                            return [filePath].concat(childPaths);
-                                        });
-                                }
-                                return [filePath];
-
-                            });
-                    })
-                )
-                    .then(function mergeArrays(arrays) {
-                        return Array.prototype.concat.apply([], arrays);
-                    });
-            });
+            while (currentIndex < Math.min(inputs.length, options.concurrency) - 1) {
+                startWorker(inputs[++currentIndex]);
+            }
+        }));
     };
 
-    const getFilePaths = (src, shouldExpandSymlinks) => {
-        return (shouldExpandSymlinks ? stat : lstat)(src)
-            .then((stats) => {
-                if (stats.isDirectory()) {
-                    return getFileListing(src, shouldExpandSymlinks)
-                        .then((filenames) => {
-                            return [src].concat(filenames);
-                        });
-                }
-                return [src];
+    const getFileListing = (srcPath, shouldExpandSymlinks) => readdir(srcPath).then((filenames) => {
+        return Promise.all(
+            filenames.map((filename) => {
+                const filePath = path.join(srcPath, filename);
+                return (shouldExpandSymlinks ? stat : lstat)(filePath).then((stats) => {
+                    if (stats.isDirectory()) {
+                        return getFileListing(filePath, shouldExpandSymlinks).then((childPaths) => [filePath].concat(childPaths));
+                    }
+                    return [filePath];
+                });
+            })
+        ).then(function mergeArrays(arrays) {
+            return Array.prototype.concat.apply([], arrays);
+        });
+    });
 
+    const getFilePaths = (src, shouldExpandSymlinks) => (shouldExpandSymlinks ? stat : lstat)(src).then((stats) => {
+        if (stats.isDirectory()) {
+            return getFileListing(src, shouldExpandSymlinks).then((filenames) => {
+                return [src].concat(filenames);
             });
-    };
-
+        }
+        return [src];
+    });
 
     const dotFilter = (relativePath) => {
         const filename = path.basename(relativePath);
@@ -175,6 +159,7 @@ export default (fs) => {
         if (!filter && !useDotFilter && !useJunkFilter) {
             return paths.map((filePath) => path.relative(src, filePath));
         }
+
         return paths.filter((p) => {
             const pp = path.relative(base, p);
             return (!useDotFilter || dotFilter(pp)) && (!useJunkFilter || junkFilter(pp)) && (!filter || matcher(slash(pp), filter, options));
@@ -404,9 +389,9 @@ export default (fs) => {
                 return batch(operations, (operation) => {
                     return _copy(operation.src, operation.dest, hasFinishedGetter, emitEvent, options);
                 }, {
-                    results: options.results !== false,
-                    concurrency: options.concurrency || 255
-                });
+                        results: options.results !== false,
+                        concurrency: options.concurrency || 255
+                    });
             })
             .catch((error) => {
                 if (error instanceof CopyException) {

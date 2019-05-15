@@ -1,3 +1,5 @@
+
+
 /**
  * The contents of this file was copied (and modified) from:
  * minimatch v3.0.3, ISC LICENSE, Copyright (c) Isaac Z. Schlueter and Contributors
@@ -7,7 +9,7 @@
 let fixtures = ["a", "b", "c", "d", "abc", "abd", "abe", "bb", "bcd", "ca", "cb", "dd", "de", "bdir/", "bdir/cfile"];
 
 // pattern | expected | options | fixtures
-const patterns = [
+module.exports = [
     "http://www.bashcookbook.com/bashinfo/source/bash-1.14.7/tests/glob-test",
     ["a*", ["a", "abc", "abd", "abe"]],
     ["X*", ["X*"], { nonull: true }],
@@ -34,22 +36,22 @@ const patterns = [
         ["/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\u0001/"], { nonull: true, bash: { skip: true } }],
 
     /**
-     * Character classes
-     */
+   * Character classes
+   */
 
     "character classes",
     ["[a-c]b*", ["abc", "abd", "abe", "bb", "cb"]],
     ["[a-y]*[^c]", ["abd", "abe", "bb", "bcd", "bdir/", "ca", "cb", "dd", "de"], { bash: true }],
     ["a*[^c]", ["abd", "abe"]],
-    function () {
+    () => {
         fixtures.push("a-b", "aXb");
     },
     ["a[X-]b", ["a-b", "aXb"]],
-    function () {
+    () => {
         fixtures.push(".x", ".y");
     },
     ["[^a-c]*", ["d", "dd", "de"]],
-    function () {
+    () => {
         fixtures.push("a*b/", "a*b/ooo", "ab/ooo");
     },
 
@@ -65,14 +67,13 @@ const patterns = [
     ["a[\\\\b]c", ["abc"]],
     ["a?c", ["abc"]],
     ["a\\*c", [], { null: true }, ["abc"]],
-    ["", [""], { null: true }, [""]],
 
     /**
-     * Bash tests
-     */
+   * Bash tests
+   */
 
     "http://www.opensource.apple.com/source/bash/bash-23/bash/tests/glob-test",
-    function () {
+    () => {
         fixtures.push("man/", "man/man1/", "man/man1/bash.1");
     },
     ["*/man*/bash.*", ["man/man1/bash.1"]],
@@ -137,7 +138,7 @@ const patterns = [
 
     // .. and . can only match patterns starting with .,
     // even when options.dot is set.
-    function () {
+    () => {
         fixtures = ["a/./b", "a/../b", "a/c/b", "a/.d/b"];
     },
     ["a/*/b", ["a/c/b", "a/.d/b"], { dot: true }],
@@ -187,7 +188,7 @@ const patterns = [
     // ],
 
     // crazy nested {,,} and *(||) tests.
-    function () {
+    () => {
         fixtures = [
             "a", "b", "c", "d", "ab", "ac", "ad", "bc", "cb", "bc,d",
             "c,db", "c,d", "d)", "(b|c", "*(b|c", "b|c", "b|cc", "cb|c",
@@ -212,7 +213,7 @@ const patterns = [
 
     // begin channelling Boole and deMorgan...
     "negation tests",
-    function () {
+    () => {
         fixtures = ["d", "e", "!ab", "!abc", "a!b"];
     },
 
@@ -229,7 +230,7 @@ const patterns = [
     ["!\\!a*", ["a!b", "d", "e"]],
 
     // negation nestled within a pattern
-    function () {
+    () => {
         fixtures = [
             "foo.js",
             "foo.bar",
@@ -243,7 +244,7 @@ const patterns = [
     // copy bash 4.3 behavior on this.
 
     "https://github.com/isaacs/minimatch/issues/5",
-    function () {
+    () => {
         fixtures = [
             "a/b/.x/c", "a/b/.x/c/d", "a/b/.x/c/d/e", "a/b/.x", "a/b/.x/",
             "a/.x/b", ".x", ".x/", ".x/a", ".x/a/b", "a/.x/b/.x/c", ".x/.x"
@@ -263,10 +264,8 @@ const patterns = [
     ["[a-0][a-\u0100]", []]
 ];
 
-Object.defineProperty(patterns, "fixtures", {
-    get() {
+Object.defineProperty(module.exports, "fixtures", {
+    get: () => {
         return fixtures;
     }
 });
-
-export default patterns;

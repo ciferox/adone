@@ -45,6 +45,7 @@
     "base32-encode": "^1.1.1",
     "base32.js": "^0.1.0",
     "bash-match": "^1.0.2",
+    "bash-path": "^2.0.1",
     "bignumber.js": "^8.0.2",
     "binary-querystring": "~0.1.2",
     "bl": "^2.1.2",

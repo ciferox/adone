@@ -1,4 +1,6 @@
-export default [
+
+
+module.exports = [
     "!**",
     "!**/*",
     "!**/*.md",
@@ -87,7 +89,7 @@ export default [
     "a/b/c/*.js"
 ];
 
-export const other = [
+module.exports.other = [
     "code/{for,while,*-{test,exec}}*.js",
     "code/{for-*,while*}.js",
     "**/a/*/b/c/.js",
