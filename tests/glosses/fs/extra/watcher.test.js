@@ -9,7 +9,7 @@ const { Watcher } = fs;
 const { platform: os } = process;
 
 
-describe("fs", "watcher", function watcherTests() {
+describe("watcher", function watcherTests() {
     this.timeout(10000);
 
     const watch = (paths, options) => new Watcher(options || {}).add(paths);

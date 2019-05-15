@@ -1,5 +1,5 @@
 const {
-    fs2: fse,
+    fs: fse,
     path,
     std: { fs, os }
 } = adone;

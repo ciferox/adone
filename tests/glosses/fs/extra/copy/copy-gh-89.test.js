@@ -1,13 +1,11 @@
 const {
-    fs2: fse
+    fs: fse,
+    path,
+    std: { fs, os }
 } = adone;
 
 // relevant: https://github.com/jprichardson/node-fs-extra/issues/89
 // come up with better file name
-
-const fs = require("fs");
-const os = require("os");
-const path = require("path");
 
 describe("copy() - gh #89", () => {
     const TEST_DIR = path.join(os.tmpdir(), "fs-extra", "copy-gh-89");

@@ -1,11 +1,10 @@
 const {
-    fs2: fse
+    fs: fse,
+    path,
+    std: { fs, os }
 } = adone;
 
-const fs = require("fs");
-const os = require("os");
 const { copy: ncp } = fse;
-const path = require("path");
 
 describe("ncp / symlink", () => {
     const TEST_DIR = path.join(os.tmpdir(), "fs-extra", "ncp-symlinks");

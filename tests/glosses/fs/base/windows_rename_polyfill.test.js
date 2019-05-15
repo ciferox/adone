@@ -9,7 +9,7 @@ fs.rename = function (a, b, cb) {
     });
 };
 
-const { base } = adone.fs2;
+const { base } = adone.fs;
 const a = `${__dirname}/a`;
 const b = `${__dirname}/b`;
 

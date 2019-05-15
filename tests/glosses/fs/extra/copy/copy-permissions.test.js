@@ -1,10 +1,8 @@
 const {
-    fs2: fse
+    fs: fse,
+    path,
+    std: { fs, os }
 } = adone;
-
-const fs = require("fs");
-const os = require("os");
-const path = require("path");
 
 const o777 = parseInt("777", 8);
 const o666 = parseInt("666", 8);

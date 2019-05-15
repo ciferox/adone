@@ -1,4 +1,4 @@
-const fs = adone.fs2.base;
+const fs = adone.fs.base;
 const rimraf = require("rimraf");
 const mkdirp = require("mkdirp");
 const p = require("path").resolve(__dirname, "files");

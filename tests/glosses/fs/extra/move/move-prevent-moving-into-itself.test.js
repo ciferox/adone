@@ -1,9 +1,9 @@
 const {
-    fs2: fs
+    fs,
+    path,
+    std: { os }
 } = adone;
 
-const os = require("os");
-const path = require("path");
 const klawSync = require("klaw-sync");
 
 const FILES = [

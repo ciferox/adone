@@ -1,11 +1,8 @@
 const {
-    fs2: fse
+    fs: fse,
+    path,
+    std: { crypto, fs, os }
 } = adone;
-
-const fs = require("fs");
-const os = require("os");
-const path = require("path");
-const crypto = require("crypto");
 
 const SIZE = 16 * 64 * 1024 + 7;
 let TEST_DIR = "";

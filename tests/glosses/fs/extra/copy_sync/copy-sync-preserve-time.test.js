@@ -1,10 +1,10 @@
 /* eslint-disable func-style */
 const {
-    fs2: fs
+    fs,
+    path,
+    std: { os }
 } = adone;
 
-const os = require("os");
-const path = require("path");
 const nodeVersion = process.versions.node;
 const nodeVersionMajor = parseInt(nodeVersion.split(".")[0], 10);
 

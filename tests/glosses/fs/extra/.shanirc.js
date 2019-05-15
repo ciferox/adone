@@ -1,3 +1,3 @@
 export default (ctx) => {
-    ctx.prefix("fs2", "extra");
+    ctx.prefix("fs", "extra");
 };

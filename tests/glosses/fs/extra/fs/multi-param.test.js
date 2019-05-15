@@ -1,11 +1,9 @@
 const {
     semver,
-    fs2: fs
+    fs,
+    path,
+    std: { os, crypto }
 } = adone;
-
-const path = require("path");
-const crypto = require("crypto");
-const os = require("os");
 
 const SIZE = 1000;
 

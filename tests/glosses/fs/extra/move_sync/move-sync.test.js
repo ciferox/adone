@@ -1,10 +1,10 @@
 const {
-    fs2: fse
+    fs: fse,
+    path,
+    std:{ os }
 } = adone;
 
 const fs = fse.base;
-const os = require("os");
-const path = require("path");
 const rimraf = require("rimraf");
 
 function createSyncErrFn(errCode) {

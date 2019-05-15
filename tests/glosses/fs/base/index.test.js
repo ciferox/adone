@@ -42,13 +42,13 @@ describe("fs", "base", () => {
                 }
 
                 if (method.match(/Sync$/)) {
-                    adone.fs2.base[method].apply(adone.fs2.base, args);
+                    adone.fs.base[method].apply(adone.fs.base, args);
                     expect(true).to.be.ok.mark();
                 } else {
                     args.push((err) => {
                         expect(err).to.be.exist.mark();
                     });
-                    adone.fs2.base[method].apply(adone.fs2.base, args);
+                    adone.fs.base[method].apply(adone.fs.base, args);
                 }
             });
         });
@@ -82,15 +82,15 @@ describe("fs", "base", () => {
                 const method = args.shift();
                 args.unshift(file);
                 const methodSync = `${method}Sync`;
-                assert.isTrue(typeof adone.fs2.base[methodSync] === "function");
+                assert.isTrue(typeof adone.fs.base[methodSync] === "function");
                 const err = assert.throws(() => {
-                    adone.fs2.base[methodSync].apply(adone.fs2.base, args);
+                    adone.fs.base[methodSync].apply(adone.fs.base, args);
                 });
                 assert.equal(err.code, "ENOENT");
                 // add the callback
                 args.push(verify(done));
-                assert.isTrue(typeof adone.fs2.base[method] === "function");
-                adone.fs2.base[method].apply(adone.fs2.base, args);
+                assert.isTrue(typeof adone.fs.base[method] === "function");
+                adone.fs.base[method].apply(adone.fs.base, args);
             };
         };
 
@@ -102,8 +102,8 @@ describe("fs", "base", () => {
     describe("close", () => {
         it("`close` is patched correctly", () => {
 
-            assert.notEqual(adone.fs2.base.close, fs$close, "patch close");
-            assert.notEqual(adone.fs2.base.closeSync, fs$closeSync, "patch closeSync");
+            assert.notEqual(adone.fs.base.close, fs$close, "patch close");
+            assert.notEqual(adone.fs.base.closeSync, fs$closeSync, "patch closeSync");
         });
     });
 
@@ -122,7 +122,7 @@ describe("fs", "base", () => {
 
         const go = () => {
             opens++;
-            adone.fs2.base.open(__filename, "r", (er, fd) => {
+            adone.fs.base.open(__filename, "r", (er, fd) => {
                 if (er) {
                     throw er;
                 }
@@ -164,7 +164,7 @@ describe("fs", "base", () => {
             const closes = fds.slice(0);
             fds.length = 0;
             closes.forEach((fd) => {
-                adone.fs2.base.close(fd, (er) => {
+                adone.fs.base.close(fd, (er) => {
                     if (er) {
                         throw er;
                     }
@@ -182,7 +182,7 @@ describe("fs", "base", () => {
 
     describe("open", () => {
         it("open an existing file works", (done) => {
-            const fs = adone.fs2.base;
+            const fs = adone.fs.base;
             const fd = fs.openSync(__filename, "r");
             fs.closeSync(fd);
             fs.open(__filename, "r", (er, fd) => {
@@ -199,7 +199,7 @@ describe("fs", "base", () => {
         });
 
         it("open a non-existing file throws", (done) => {
-            const fs = adone.fs2.base;
+            const fs = adone.fs.base;
             let er;
             let fd;
             try {
@@ -232,13 +232,13 @@ describe("fs", "base", () => {
         const paths = new Array(num);
 
         after(() => {
-            adone.fs2.removeSync(p);
+            adone.fs.removeSync(p);
         });
 
         it("write files", (done) => {
-            const fs = adone.fs2.base;
-            adone.fs2.removeSync(p);
-            adone.fs2.mkdirpSync(p);
+            const fs = adone.fs.base;
+            adone.fs.removeSync(p);
+            adone.fs.mkdirpSync(p);
 
             expect(num).checks(done);
 
@@ -254,7 +254,7 @@ describe("fs", "base", () => {
         });
 
         it("read files", (done) => {
-            const fs = adone.fs2.base;
+            const fs = adone.fs.base;
             // now read them
             expect(num).checks(done);
             for (let i = 0; i < num; ++i) {

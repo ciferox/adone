@@ -1,5 +1,5 @@
 const {
-    fs2: fse
+    fs: fse
 } = adone;
 
 const CWD = process.cwd();

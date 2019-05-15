@@ -1,12 +1,11 @@
 const {
-    fs2: fse
+    fs: fse,
+    path,
+    std: { fs, os }
 } = adone;
 
 const CWD = process.cwd();
 
-const fs = fse.base;
-const os = require("os");
-const path = require("path");
 const { createLink, createLinkSync } = fse;
 
 describe("fse-ensure-link", () => {

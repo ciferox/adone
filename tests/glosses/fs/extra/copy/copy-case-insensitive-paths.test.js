@@ -1,9 +1,8 @@
 const {
-    fs2: fs
+    fs,
+    path,
+    std: { os }
 } = adone;
-
-const os = require("os");
-const path = require("path");
 
 describe("+ copy() - case insensitive paths", () => {
     let TEST_DIR = "";

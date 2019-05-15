@@ -133,6 +133,7 @@ export const improve = (fs) => {
         whichSync: "./which/sync",
 
         copyEx: "./copy_ex",
+        removeEx: "./remove_ex",
         readdirp: "./readdirp", // only promisified
         util: "./utils",
         createFiles: "./create_files",
@@ -164,6 +165,7 @@ export const improve = (fs) => {
         if (err) {
             if (err.code === "ENOENT") {
                 callback(null, false);
+                return;
             }
             callback(err);
             return;

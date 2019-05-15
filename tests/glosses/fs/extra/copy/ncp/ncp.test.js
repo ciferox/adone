@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { copy: ncp } = adone.fs2;
+const { copy: ncp } = adone.fs;
 const path = require("path");
 const rimraf = require("rimraf");
 const assert = require("assert");

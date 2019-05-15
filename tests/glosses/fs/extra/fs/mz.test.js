@@ -1,5 +1,5 @@
 const {
-    fs2: fs
+    fs
 } = adone;
 
 // This is adapted from https://github.com/normalize/mz

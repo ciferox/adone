@@ -1,5 +1,5 @@
 const fs = require("fs");
-const gfs = adone.fs2.base;
+const gfs = adone.fs.base;
 
 it("base fs uses same stats constructor as fs", () => {
     assert.equal(gfs.Stats, fs.Stats, "should reference the same constructor");

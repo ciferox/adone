@@ -1,9 +1,8 @@
 const {
-    fs2: fs
+    fs,
+    path,
+    std: { os }
 } = adone;
-
-const path = require("path");
-const os = require("os");
 
 describe("pathExists()", () => {
     let TEST_DIR;

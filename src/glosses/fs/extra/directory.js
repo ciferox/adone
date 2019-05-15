@@ -195,11 +195,11 @@ export default (fs) => {
             }
         }
 
-        unlink({ relPath/*, retries = 10, delay = 100*/ } = {}) {
+        unlink({ relPath, retries = 10, delay = 100 } = {}) {
             if (is.string(relPath) && !aPath.isAbsolute(relPath)) {
-                return fs.remove(aPath.join(this._path, relPath)/*, { maxBusyTries: retries, emfileWait: delay }*/);
+                return fs.removeEx(aPath.join(this._path, relPath), { maxBusyTries: retries, emfileWait: delay });
             }
-            return fs.remove(this._path/*, { maxBusyTries: retries, emfileWait: delay }*/);
+            return fs.removeEx(this._path, { maxBusyTries: retries, emfileWait: delay });
         }
 
         async find({ files = true, dirs = false } = {}) {

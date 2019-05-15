@@ -34,7 +34,7 @@ describe("readdir-options", () => {
                         er.code = "EMFILE";
                         cb(er);
                         process.nextTick(() => {
-                            adone.fs2.base.closeSync(realFs.openSync(__filename, "r"));
+                            adone.fs.base.closeSync(realFs.openSync(__filename, "r"));
                         });
                     });
                     return;
@@ -49,7 +49,7 @@ describe("readdir-options", () => {
                     cb(null, ret);
                 });
             };
-            adone.fs2.base.readdir("whatevers", { encoding: enc }, (er, files) => {
+            adone.fs.base.readdir("whatevers", { encoding: enc }, (er, files) => {
                 assert.notExists(er);
                 assert.deepEqual(files, getRet(enc).sort());
                 realFs.readdir = readdir;

@@ -1,11 +1,11 @@
 const {
-    fs2: fse
+    fs: fse,
+    path,
+    std: { os }
 } = adone;
 
 // relevant: https://github.com/jprichardson/node-fs-extra/issues/599
 
-const os = require("os");
-const path = require("path");
 const klawSync = require("klaw-sync");
 
 let TEST_DIR = "";

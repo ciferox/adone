@@ -1,12 +1,12 @@
 const {
-    fs2: fse
+    fs: fse,
+    path,
+    std: { os }
 } = adone;
 
 const CWD = process.cwd();
 
 const fs = fse.base;
-const os = require("os");
-const path = require("path");
 const { symlinkPaths } = fse.createSymlink;
 const { symlinkPathsSync } = fse.createSymlinkSync;
 const TEST_DIR = path.join(os.tmpdir(), "fs-extra", "ensure-symlink");

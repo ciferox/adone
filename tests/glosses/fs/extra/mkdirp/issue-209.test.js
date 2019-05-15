@@ -1,5 +1,5 @@
 const {
-    fs2: fse
+    fs: fse
 } = adone;
 
 describe("mkdirp: issue-209, win32, when bad path, should return a cleaner error", () => {

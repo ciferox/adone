@@ -1,10 +1,9 @@
 const {
-    fs2: fse
+    fs: fse,
+    path,
+    std: { fs, os }
 } = adone;
 
-const fs = require("fs");
-const os = require("os");
-const path = require("path");
 const { outputJson } = fse;
 
 describe("json", () => {

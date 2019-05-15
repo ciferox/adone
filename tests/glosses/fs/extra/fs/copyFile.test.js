@@ -1,11 +1,9 @@
 const {
     is,
-    fs2: fse
+    fs: fse,
+    path, 
+    std: { fs, os }
 } = adone;
-
-const os = require("os");
-const fs = require("fs");
-const path = require("path");
 
 // Only availible in Node 8.5+
 if (is.function(fs.copyFile)) {

@@ -1,9 +1,9 @@
 const {
-    fs2: fs
+    fs,
+    path,
+    std: { os }
 } = adone;
 
-const os = require("os");
-const path = require("path");
 const klawSync = require("klaw-sync");
 
 // these files are used for all tests
@@ -19,8 +19,43 @@ const dat1 = "file1";
 const dat2 = "file2";
 const dat3 = "file3";
 
+
+const testSuccess = (src, dest, done) => {
+    const srclen = klawSync(src).length;
+    assert(srclen > 2);
+    fs.copy(src, dest, (err) => {
+        assert.ifError(err);
+
+        const destlen = klawSync(dest).length;
+
+        assert.strictEqual(destlen, srclen);
+
+        FILES.forEach((f) => assert(fs.existsSync(path.join(dest, f)), "file copied"));
+
+        const o0 = fs.readFileSync(path.join(dest, FILES[0]), "utf8");
+        const o1 = fs.readFileSync(path.join(dest, FILES[1]), "utf8");
+        const o2 = fs.readFileSync(path.join(dest, FILES[2]), "utf8");
+        const o3 = fs.readFileSync(path.join(dest, FILES[3]), "utf8");
+
+        assert.strictEqual(o0, dat0, "file contents matched");
+        assert.strictEqual(o1, dat1, "file contents matched");
+        assert.strictEqual(o2, dat2, "file contents matched");
+        assert.strictEqual(o3, dat3, "file contents matched");
+        done();
+    });
+};
+
+const testError = (src, dest, done) => {
+    fs.copy(src, dest, (err) => {
+        assert.strictEqual(err.message, `Cannot copy '${src}' to a subdirectory of itself, '${dest}'.`);
+        done();
+    });
+};
+
+
 describe("+ copy() - prevent copying into itself", () => {
-    let TEST_DIR; let src;
+    let TEST_DIR;
+    let src;
 
     beforeEach((done) => {
         TEST_DIR = path.join(os.tmpdir(), "fs-extra", "copy-prevent-copying-into-itself");
@@ -43,9 +78,8 @@ describe("+ copy() - prevent copying into itself", () => {
             fs.writeFileSync(srcFile, dat0);
 
             fs.copy(srcFile, destFile, (err) => {
-                assert.ifError(err);
-
-                assert(fs.existsSync(destFile, "file copied"));
+                assert.notExists(err);
+                assert.isTrue(fs.existsSync(destFile), "file copied");
                 const out = fs.readFileSync(destFile, "utf8");
                 assert.strictEqual(out, dat0, "file contents matched");
                 done();
@@ -341,35 +375,3 @@ describe("+ copy() - prevent copying into itself", () => {
         });
     });
 });
-
-function testSuccess(src, dest, done) {
-    const srclen = klawSync(src).length;
-    assert(srclen > 2);
-    fs.copy(src, dest, (err) => {
-        assert.ifError(err);
-
-        const destlen = klawSync(dest).length;
-
-        assert.strictEqual(destlen, srclen);
-
-        FILES.forEach((f) => assert(fs.existsSync(path.join(dest, f)), "file copied"));
-
-        const o0 = fs.readFileSync(path.join(dest, FILES[0]), "utf8");
-        const o1 = fs.readFileSync(path.join(dest, FILES[1]), "utf8");
-        const o2 = fs.readFileSync(path.join(dest, FILES[2]), "utf8");
-        const o3 = fs.readFileSync(path.join(dest, FILES[3]), "utf8");
-
-        assert.strictEqual(o0, dat0, "file contents matched");
-        assert.strictEqual(o1, dat1, "file contents matched");
-        assert.strictEqual(o2, dat2, "file contents matched");
-        assert.strictEqual(o3, dat3, "file contents matched");
-        done();
-    });
-}
-
-function testError(src, dest, done) {
-    fs.copy(src, dest, (err) => {
-        assert.strictEqual(err.message, `Cannot copy '${src}' to a subdirectory of itself, '${dest}'.`);
-        done();
-    });
-}

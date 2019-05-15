@@ -1,5 +1,5 @@
 const {
-    fs2: fs
+    fs
 } = adone;
 
 const os = require("os");

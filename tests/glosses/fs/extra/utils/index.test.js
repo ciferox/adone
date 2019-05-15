@@ -1,11 +1,10 @@
 const {
     is,
-    fs2: fse
+    fs: fse,
+    path,
+    std: { fs, os }
 } = adone;
 
-const fs = require("fs");
-const os = require("os");
-const path = require("path");
 // const proxyquire = require("proxyquire");
 let gracefulFsStub;
 let utimes;
@@ -28,7 +27,7 @@ describe("utimes", () => {
 
             // HFS => false
             if (process.platform === "darwin") {
-                assert.strictEqual(res, false); 
+                assert.strictEqual(res, false);
             }
 
             // does anyone use FAT anymore?
@@ -37,7 +36,7 @@ describe("utimes", () => {
 
             // this would fail if ext2/ext3
             if (process.platform === "linux") {
-                assert.strictEqual(res, true); 
+                assert.strictEqual(res, true);
             }
         });
     });
@@ -52,7 +51,7 @@ describe("utimes", () => {
     });
 
     describe("utimesMillis()", () => {
-    // see discussion https://github.com/jprichardson/node-fs-extra/pull/141
+        // see discussion https://github.com/jprichardson/node-fs-extra/pull/141
         it("should set the utimes w/ millisecond precision", (done) => {
             const tmpFile = path.join(TEST_DIR, "someFile");
             fs.writeFileSync(tmpFile, "hello");
@@ -85,7 +84,7 @@ describe("utimes", () => {
 
             gracefulFsStub.open = (pathIgnored, flagsIgnored, modeIgnored, callback) => {
                 if (is.function(modeIgnored)) {
-                    callback = modeIgnored; 
+                    callback = modeIgnored;
                 }
                 process.nextTick(() => callback(null, fakeFd));
             };
@@ -95,7 +94,7 @@ describe("utimes", () => {
                 assert.strictEqual(fd, fakeFd);
                 closeCalled = true;
                 if (callback) {
-                    process.nextTick(callback); 
+                    process.nextTick(callback);
                 }
             };
 

@@ -1,10 +1,8 @@
 const {
-    fs2: fse
+    fs: fse,
+    path,
+    std: { fs, os }
 } = adone;
-
-const os = require("os");
-const fs = require("fs");
-const path = require("path");
 
 describe("native fs", () => {
     let TEST_DIR;

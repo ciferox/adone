@@ -7,7 +7,7 @@ fs.readdir = function (path, cb) {
     });
 };
 
-const g = adone.fs2.base;
+const g = adone.fs.base;
 
 it("readdir reorder", (done) => {
     g.readdir("whatevers", (er, files) => {

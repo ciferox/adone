@@ -1,9 +1,8 @@
 const {
-    fs2: fse
+    fs: fse,
+    path,
+    std: { os }
 } = adone;
-
-const os = require("os");
-const path = require("path");
 
 describe("mkdirp: issue-93, win32, when drive does not exist, it should return a cleaner error", () => {
     let TEST_DIR;
