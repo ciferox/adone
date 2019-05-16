@@ -173,6 +173,16 @@ export default class IP4 {
     }
 
     /**
+     * Helper function getting start address.
+     * @memberof IP4
+     * @instance
+     * @returns {BigInteger}
+     */
+    _startAddress() {
+        return BigInteger(this.mask() + repeat(0, constants4.BITS - this.subnetMask), 2);
+    }
+
+    /**
      * The first address in the range given by this address' subnet.
      * Often referred to as the Network Address.
      * @memberof IP4
@@ -180,10 +190,29 @@ export default class IP4 {
      * @returns {IP4}
      */
     startAddress() {
-        const startAddress = BigInteger(this.mask() +
-            repeat(0, constants4.BITS - this.subnetMask), 2);
+        return IP4.fromBigInteger(this._startAddress());
+    }
 
-        return IP4.fromBigNumber(startAddress);
+    /**
+     * The first host address in the range given by this address's subnet ie
+     * the first address after the Network Address
+     * @memberof IP4
+     * @instance
+     * @returns {IP4}
+     */
+    startAddressExclusive() {
+        const adjust = BigInteger("1");
+        return IP4.fromBigInteger(this._startAddress().plus(adjust));
+    }
+
+    /**
+     * Helper function getting end address.
+     * @memberof IP4
+     * @instance
+     * @returns {BigInteger}
+     */
+    _endAddress() {
+        return BigInteger(this.mask() + repeat(1, constants4.BITS - this.subnetMask), 2);
     }
 
     /**
@@ -194,8 +223,19 @@ export default class IP4 {
      * @returns {IP4}
      */
     endAddress() {
-        const endAddress = BigInteger(this.mask() + repeat(1, constants4.BITS - this.subnetMask), 2);
-        return IP4.fromBigNumber(endAddress);
+        return IP4.fromBigInteger(this._endAddress());
+    }
+
+    /**
+     * The last host address in the range given by this address's subnet ie
+     * the last address prior to the Broadcast Address
+     * @memberof IP4
+     * @instance
+     * @returns {IP4}
+     */
+    endAddressExclusive() {
+        const adjust = BigInteger("1");
+        return IP4.fromBigInteger(this._endAddress().subtract(adjust));
     }
 
     /**
@@ -238,7 +278,7 @@ export default class IP4 {
         const start = this.startAddress().toBigNumber();
         const end = this.endAddress().toBigNumber();
         for (let i = start; end.greaterOrEquals(i); i = i.plus(1)) {
-            yield IP4.fromBigNumber(i);
+            yield IP4.fromBigInteger(i);
         }
     }
 
@@ -280,7 +320,7 @@ export default class IP4 {
      * @param {BigInteger} bigNumber - a BigInteger to convert
      * @returns {IP4}
      */
-    static fromBigNumber(bigNumber) {
+    static fromBigInteger(bigNumber) {
         return IP4.fromInteger(parseInt(bigNumber.toString(), 10));
     }
 

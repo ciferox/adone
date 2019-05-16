@@ -2450,8 +2450,16 @@ describe("net", "ip", () => {
                     expect(topic.startAddress().correctForm()).to.equal("127.0.0.0");
                 });
 
+                it("has a correct start address hosts only", () => {
+                    expect(topic.startAddressExclusive().correctForm()).to.equal("127.0.0.1");
+                });
+
                 it("has a correct end address", () => {
                     expect(topic.endAddress().correctForm()).to.equal("127.0.255.255");
+                });
+
+                it("has a correct end address hosts only", () => {
+                    expect(topic.endAddressExclusive().correctForm()).to.equal("127.0.255.254");
                 });
 
                 it("is in its own subnet", () => {
@@ -2464,7 +2472,7 @@ describe("net", "ip", () => {
             });
 
             describe("Creating an address from a BigNumber", () => {
-                const topic = IP4.fromBigNumber(2130706433);
+                const topic = IP4.fromBigInteger(2130706433);
 
                 it("should parse correctly", () => {
                     expect(topic.isValid()).to.equal(true);
@@ -2708,8 +2716,16 @@ describe("net", "ip", () => {
                     expect(topic.startAddress().correctForm()).to.equal("ffff::");
                 });
 
+                it("has a correct start address hosts only", () => {
+                    expect(topic.startAddressExclusive().correctForm()).to.equal("ffff::1");
+                });
+
                 it("has a correct end address", () => {
                     expect(topic.endAddress().correctForm()).to.equal("ffff::ffff:ffff:ffff:ffff");
+                });
+
+                it("has a correct end address hosts only", () => {
+                    expect(topic.endAddressExclusive().correctForm()).to.equal("ffff::ffff:ffff:ffff:fffe");
                 });
 
                 it("calculates and formats the subnet size", () => {
@@ -2995,7 +3011,7 @@ describe("net", "ip", () => {
             });
 
             describe("An address from a BigNumber", () => {
-                const topic = IP6.fromBigNumber(new adone.math.BigInteger("51923840109643282840007714694758401"));
+                const topic = IP6.fromBigInteger(new adone.math.BigInteger("51923840109643282840007714694758401"));
 
                 it("should parse correctly", () => {
                     expect(topic.valid).to.equal(true);

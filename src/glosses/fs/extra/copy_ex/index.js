@@ -137,7 +137,7 @@ export default (fs) => {
                 for (const f of filter) {
                     if (is.function(f)) {
                         fns.push(f);
-                    } else {
+                    } else if (is.string(f)) {
                         patterns.push(f);
                     }
                 }
@@ -146,9 +146,9 @@ export default (fs) => {
             case "function":
                 return filter(path);
             case "string":
-            case "RegExp": {
-                return glob.match(path, filter, options).length > 0;
-            }
+            // case "RegExp": {
+            //     return glob.match(path, filter, options).length > 0;
+            // }
         }
     };
 

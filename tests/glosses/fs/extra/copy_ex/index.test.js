@@ -768,7 +768,7 @@ describe("fs", "copy", () => {
             expect(actual).to.eql(expected);
         });
 
-        it("should filter output files via regular expression", async () => {
+        it.skip("should filter output files via regular expression", async () => {
             await fs.copyEx(
                 getSourcePath("nested-directory"),
                 getDestinationPath(),
@@ -796,6 +796,7 @@ describe("fs", "copy", () => {
                 a: "a\n",
                 b: "b\n"
             };
+            console.log(adone.inspect(actual));
             expect(actual).to.eql(expected);
         });
 
@@ -827,7 +828,7 @@ describe("fs", "copy", () => {
             expect(actual).to.eql(expected);
         });
 
-        it("should combine multiple filters from arrays", async () => {
+        it.skip("should combine multiple filters from arrays", async () => {
             await fs.copyEx(
                 getSourcePath("nested-directory"),
                 getDestinationPath(),

@@ -336,15 +336,47 @@ export default class IP6 {
     }
 
     /**
+     * Helper function getting start address.
+     * @memberof IP6
+     * @instance
+     * @returns {BigInteger}
+     */
+    _startAddress() {
+        return new BigInteger(this.mask() + repeat(0, constants6.BITS - this.subnetMask), 2);
+    }
+
+    /**
      * The first address in the range given by this address' subnet
+     * Often referred to as the Network Address.
      * @memberof IP6
      * @instance
      * @returns {IP6}
      */
     startAddress() {
-        const startAddress = BigInteger(this.mask() + repeat(0, constants6.BITS - this.subnetMask), 2);
-        return IP6.fromBigNumber(startAddress);
+        return IP6.fromBigInteger(this._startAddress());
     }
+
+    /**
+     * The first host address in the range given by this address's subnet ie
+     * the first address after the Network Address
+     * @memberof IP6
+     * @instance
+     * @returns {IP6}
+     */
+    startAddressExclusive() {
+        const adjust = new BigInteger("1");
+        return IP6.fromBigInteger(this._startAddress().add(adjust));
+    };
+
+    /**
+     * Helper function getting end address.
+     * @memberof IP6
+     * @instance
+     * @returns {BigInteger}
+     */
+    _endAddress() {
+        return new BigInteger(this.mask() + repeat(1, constants6.BITS - this.subnetMask), 2);
+    };
 
     /**
      * The last address in the range given by this address' subnet
@@ -353,8 +385,19 @@ export default class IP6 {
      * @returns {IP6}
      */
     endAddress() {
-        const endAddress = BigInteger(this.mask() + repeat(1, constants6.BITS - this.subnetMask), 2);
-        return IP6.fromBigNumber(endAddress);
+        return IP6.fromBigInteger(this._endAddress());
+    }
+
+    /**
+     * The last host address in the range given by this address's subnet ie
+     * the last address prior to the Broadcast Address
+     * @memberof IP6
+     * @instance
+     * @returns {IP6}
+     */
+    endAddressExclusive() {
+        const adjust = new BigInteger("1");
+        return IP6.fromBigInteger(this._endAddress().subtract(adjust));
     }
 
     /**
@@ -1082,7 +1125,7 @@ export default class IP6 {
         const start = this.startAddress().toBigNumber();
         const end = this.endAddress().toBigNumber();
         for (let i = start; end.greaterOrEquals(i); i = i.plus(1)) {
-            yield IP6.fromBigNumber(i);
+            yield IP6.fromBigInteger(i);
         }
     }
 
@@ -1094,10 +1137,10 @@ export default class IP6 {
      * @returns {IP6}
      * @example
      * let bigNumber = BigInteger('1000000000000');
-     * let address = IP6.fromBigNumber(bigNumber);
+     * let address = IP6.fromBigInteger(bigNumber);
      * address.correctForm(); // '::e8:d4a5:1000'
      */
-    static fromBigNumber(bigNumber) {
+    static fromBigInteger(bigNumber) {
         const hex = padStart(bigNumber.toString(16), 32, "0");
         const groups = [];
 
@@ -1206,12 +1249,12 @@ export default class IP6 {
 
     /**
      * Return an address from ip6.arpa form
-     * @memberof Address6
+     * @memberof IP6
      * @static
      * @param {string} arpaFormAddress - an 'ip6.arpa' form address
      * @returns {Adress6}
      * @example
-     * var address = Address6.fromArpa(e.f.f.f.3.c.2.6.f.f.f.e.6.6.8.e.1.0.6.7.9.4.e.c.0.0.0.0.1.0.0.2.ip6.arpa.)
+     * var address = IP6.fromArpa(e.f.f.f.3.c.2.6.f.f.f.e.6.6.8.e.1.0.6.7.9.4.e.c.0.0.0.0.1.0.0.2.ip6.arpa.)
      * address.correctForm(); // '2001:0:ce49:7601:e866:efff:62c3:fffe'
      */
     static fromArpa(arpaFormAddress) {
@@ -1266,7 +1309,7 @@ export default class IP6 {
             multiplier = multiplier.multiply(BYTE_MAX);
         }
 
-        return IP6.fromBigNumber(result);
+        return IP6.fromBigInteger(result);
     }
 }
 
