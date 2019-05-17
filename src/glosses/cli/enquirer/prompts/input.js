@@ -1,5 +1,3 @@
-
-
 const Prompt = require("../types/string");
 const completer = require("../completer");
 

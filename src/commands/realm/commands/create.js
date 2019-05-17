@@ -2,35 +2,26 @@ const {
     app: { Subsystem, mainCommand },
     cli,
     fs,
+    process: { execStdout },
     std
 } = adone;
 
 
 const getGitUser = async () => {
-    let name;
-    let email;
-    const {
-        process: { execStdout }
-    } = adone;
-
     try {
-        name = (await execStdout("git", ["config", "--get", "user.name"])).trim();
-        name = name && JSON.stringify(name.toString().trim()).slice(1, -1);
+        const name = (await execStdout("git", ["config", "--get", "user.name"])).trim();
+        return name && JSON.stringify(name.toString().trim()).slice(1, -1);
     } catch (err) {
-        name = "";
+        return "";
     }
+};
 
+const getGitEmail = async () => {
     try {
-        email = (await execStdout("git", ["config", "--get", "user.email"])).trim();
+        return (await adone.process.execStdout("git", ["config", "--get", "user.email"])).trim();
     } catch (err) {
-        email = "";
+        return "";
     }
-
-    return {
-        name,
-        email,
-        full: name + (email && ` <${email}>`)
-    };
 };
 
 export default class extends Subsystem {
@@ -40,24 +31,23 @@ export default class extends Subsystem {
                 name: "name",
                 type: String,
                 required: false,
-                help: "Project name"
+                help: "Realm/project name"
             }
         ],
         options: [
             {
-                name: ["--base-path", "-P"],
+                name: ["--path", "-P"],
                 type: String,
                 default: process.cwd(),
                 help: "Base path in which realm will be created"
             },
             {
-                name: "--dir",
+                name: ["--dir", "-D"],
                 type: String,
-                default: "",
-                help: "Directory name of project used instead of project name"
+                help: "Directory name (default is same as 'name')"
             },
             {
-                name: ["--description", "-D"],
+                name: "--description",
                 type: String,
                 default: "",
                 help: "Realm description"
@@ -69,14 +59,10 @@ export default class extends Subsystem {
                 help: "Initial version"
             },
             {
-                name: "--author",
+                name: ["--author", "-A"],
                 type: String,
                 default: "",
                 help: "Author name"
-            },
-            {
-                name: "--dev-config",
-                help: "Create development configuration"
             },
             {
                 name: "--init-git",
@@ -98,38 +84,58 @@ export default class extends Subsystem {
     })
     async main(args, opts) {
         let info;
-        if (!args.has("name")) {
-            info = await cli.prompt([
+        if (args.has("name")) {
+            info = {
+                name: args.get("name"),
+                ...opts.getAll()
+            };
+            info.dir = info.dir || info.name;
+            info.author = info.author || `${await getGitUser()} <${await getGitEmail()}>`;
+        } else {
+            const {
+                prompt
+            } = cli.Enquirer;
+            info = await prompt([
                 {
-                    name: "name",
-                    message: "Realm name",
-                    async validate(value) {
-                        if (!value) {
-                            return "Please enter a valid name";
+                    type: "snippet",
+                    name: "config",
+                    message: "Common package.json fields",
+                    required: true,
+                    fields: [
+                        {
+                            name: "author",
+                            message: "Author name"
+                        },
+                        {
+                            name: "email",
+                            valiate: adone.is.email
+                        },
+                        {
+                            name: "version",
+                            validate(value, state, item) {
+                                if (item && item.name === "version" && !adone.semver.valid(value)) {
+                                    return this.styles.danger("version should be a valid semver value");
+                                }
+                                return true;
+                            }
                         }
-                        return true;
-                    }
-                },
-                {
-                    name: "description",
-                    message: "Project description"
-                },
-                {
-                    name: "author",
-                    message: "Author",
-                    default: (await getGitUser()).full
+                    ],
+                    template: `{
+  "name": "\${name}",
+  "description": "\${description}",
+  "version": "\${version}",
+  "author": "\${author:${await getGitUser()}} <\${email:${await getGitEmail()}}>",
+  "license": "\${license:${adone.package.license}}"
+}
+`
                 },
                 {
                     name: "options",
-                    type: "checkbox",
+                    type: "multiselect",
                     message: "Options",
                     search: true,
                     asObject: true,
                     choices: [
-                        {
-                            name: "Create development configuration",
-                            value: "devConfig"
-                        },
                         {
                             name: "Initialize git repository",
                             value: "initGit"
@@ -146,17 +152,22 @@ export default class extends Subsystem {
                             name: "Install npm packages",
                             value: "initNpm"
                         }
-                    ]
+                    ],
+                    result(names) {
+                        return names.map((name) => this.find(name).value);
+                    }
                 },
                 {
-                    name: "basePath",
+                    type: "input",
+                    name: "path",
                     message: "Realm base path",
                     default: process.cwd()
                 },
                 {
+                    type: "input",
                     name: "dir",
                     message: "Directory name",
-                    default: (answers) => answers.name,
+                    initial: ({ state }) => state.answers.config.values.name,
                     async validate(value) {
                         const fullPath = std.path.join(process.cwd(), value);
 
@@ -172,32 +183,17 @@ export default class extends Subsystem {
                 }
             ]);
 
-            Object.assign(info, info.options);
+            Object.assign(info, JSON.parse(info.config.result));
+            delete info.config;
+            for (const opt of info.options) {
+                info[opt] = true;
+            }
             delete info.options;
-        } else {
-            info = {
-                name: args.get("name"),
-                ...opts.getAll()
-            };
         }
 
         try {
             const rootRealm = await this.parent.connectRealm();
-            const newRealm = await rootRealm.runAndWait("realmCreate", info);
-
-            const { merge } = await cli.prompt({
-                type: "confirm",
-                name: "merge",
-                message: `Whould you like to merge ${cli.style.primary(info.name)} realm into ADONE realm?`
-            });
-
-            if (merge) {
-                await adone.realm.rootRealm.runAndWait("realmMerge", {
-                    superRealm: adone.realm.rootRealm,
-                    subRealm: newRealm,
-                    symlink: true
-                });
-            }
+            await rootRealm.runAndWait("realmCreate", info);
 
             return 0;
         } catch (err) {

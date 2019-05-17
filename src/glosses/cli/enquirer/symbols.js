@@ -1,7 +1,5 @@
-
-
 const isWindows = process.platform === "win32";
-const colors = require("ansi-colors");
+const colors = require("./colors");
 const utils = require("./utils");
 
 const symbols = {
@@ -63,4 +61,3 @@ symbols.merge = (options) => {
 };
 
 module.exports = symbols;
-

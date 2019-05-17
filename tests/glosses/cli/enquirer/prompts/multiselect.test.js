@@ -4,8 +4,7 @@ const {
     is
 } = adone;
 
-const assert = require("assert");
-const colors = require("ansi-colors");
+const colors = require(adone.getPath("lib", "glosses", "cli", "enquirer", "colors"));
 const support = require("../support");
 const { expect } = support(assert);
 const MultiSelect = require(srcPath("prompts/multiselect"));

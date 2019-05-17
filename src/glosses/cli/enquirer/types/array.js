@@ -2,7 +2,7 @@ const {
     is
 } = adone;
 
-const colors = require("ansi-colors");
+const colors = require("../colors");
 const Prompt = require("../prompt");
 const roles = require("../roles");
 const utils = require("../utils");

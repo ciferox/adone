@@ -1,4 +1,6 @@
-
+const {
+    is
+} = adone;
 
 module.exports = (prompt) => {
     prompt.timers = prompt.timers || {};

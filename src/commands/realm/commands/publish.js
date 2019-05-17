@@ -31,7 +31,7 @@ export default class extends Subsystem {
             await rootRealm.runAndWait("realmPublish", {
                 realm: process.cwd(),
                 auth,
-                 tag
+                tag
             });
 
             return 0;

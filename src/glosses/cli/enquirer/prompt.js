@@ -3,7 +3,7 @@ const {
 } = adone;
 
 const Events = require("events");
-const colors = require("ansi-colors");
+const colors = require("./colors");
 const keypress = require("./keypress");
 const timer = require("./timer");
 const State = require("./state");

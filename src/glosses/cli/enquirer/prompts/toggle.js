@@ -1,5 +1,3 @@
-
-
 const BooleanPrompt = require("../types/boolean");
 
 class TogglePrompt extends BooleanPrompt {

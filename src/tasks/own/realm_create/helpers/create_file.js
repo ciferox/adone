@@ -27,7 +27,7 @@ export const createFile = async (template, { name, fileName, cwd = process.cwd()
         filePath += ".js";
     }
 
-    if ((await fs.exists(filePath)) && !rewriteFile) {
+    if ((await fs.pathExists(filePath)) && !rewriteFile) {
         throw new adone.error.ExistsException(`File '${filePath}' already exists`);
     }
 

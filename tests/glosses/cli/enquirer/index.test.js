@@ -3,7 +3,7 @@ const {
 } = adone;
 const { Input } = Enquirer;
 
-const colors = require("ansi-colors");
+const colors = require(adone.getPath("lib", "glosses", "cli", "enquirer", "colors"));
 let enquirer;
 
 describe("Enquirer", () => {

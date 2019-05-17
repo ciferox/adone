@@ -46,16 +46,13 @@ yarn-error.log*
 
 # realm files/dirs
 /.adone/identity.json
-/etc/adone/*
 /bin/
+/etc/
 /lib/
 /run/
 /var/
 /opt/
 /tmp/
-
-# realm specific
-/.adone/dev.json
 
 test-fixtures/
 _fixtures/

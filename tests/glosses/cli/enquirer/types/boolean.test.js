@@ -1,6 +1,5 @@
 import { srcPath } from "../helpers";
-const colors = require("ansi-colors");
-const assert = require("assert");
+const colors = require(adone.getPath("lib", "glosses", "cli", "enquirer", "colors"));
 const BooleanPrompt = require(srcPath("types/boolean"));
 let prompt;
 

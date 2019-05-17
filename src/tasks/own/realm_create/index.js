@@ -48,12 +48,12 @@ export default class extends realm.BaseTask {
         options.name = options.name.trim();
 
         if (!is.string(options.path) || options.path.trim().length === 0) {
-            throw new error.InvalidArgumentException("Invalid base path");
+            throw new error.InvalidArgumentException("Invalid destination path");
         }
         options.path = path.resolve(options.path.trim());
 
         const cwd = path.join(options.path, options.dir || options.name);
-        if (await fs.exists(cwd)) {
+        if (await fs.pathExists(cwd)) {
             throw new error.ExistsException(`Path '${cwd}' already exists`);
         }
 
@@ -97,6 +97,10 @@ export default class extends realm.BaseTask {
             }
         }
 
+        const newRealm = new realm.RealmManager({ cwd });
+        await newRealm.config.save();
+        await newRealm.devConfig.save();
+
         if (options.initJsconfig) {
             this.manager.notify(this, "progress", {
                 message: `creating ${style.primary("jsconfig.json")}`
@@ -132,7 +136,7 @@ export default class extends realm.BaseTask {
             status: true
         });
 
-        return new realm.RealmManager({ cwd });
+        return newRealm;
     }
 
     async undo(err) {

@@ -1,5 +1,3 @@
-
-
 const Select = require("./select");
 
 class MultiSelect extends Select {

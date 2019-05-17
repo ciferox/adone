@@ -1,4 +1,6 @@
-
+const {
+    is
+} = adone;
 
 const utils = require("./utils");
 const roles = {

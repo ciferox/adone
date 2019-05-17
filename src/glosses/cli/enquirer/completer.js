@@ -1,5 +1,3 @@
-
-
 const unique = (arr) => arr.filter((v, i) => arr.lastIndexOf(v) === i);
 const compact = (arr) => unique(arr).filter(Boolean);
 

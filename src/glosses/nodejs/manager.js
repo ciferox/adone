@@ -68,9 +68,6 @@ export default class NodejsManager {
         }
 
         const archName = await nodejs.getArchiveName({ version, type, ext, platform, arch });
-
-        const tmpPath = await fs.tmpName();
-
         const downloadPath = aPath.join(await this.getCachePath(this.cache.downloads), await nodejs.getArchiveName({ version, ext: "", platform: "", arch: "" }));
 
         if (!is.string(outPath) || outPath.length === 0) {
@@ -90,10 +87,9 @@ export default class NodejsManager {
         }
 
         const url = `https://nodejs.org/download/release/${version}/${archName}`;
-        const tmpFullPath = aPath.join(tmpPath, archName);
         const downloader = new adone.http.Downloader({
             url,
-            dest: tmpFullPath
+            dest: fullPath
         });
 
         if (progressBar instanceof adone.cli.Progress) {
@@ -125,15 +121,9 @@ export default class NodejsManager {
                 result.hashsum = hashsum;
             }
         } catch (err) {
-            progressBar.destroy();
-            console.error(err.stack);
+            progressBar && progressBar.destroy();
             throw err;
-            // throw new error.Exception(`Could not get ${url}: ${err.message}`);
         }
-
-        await fs.mkdirp(outPath);
-        await fs.copyFile(tmpFullPath, fullPath);
-        await fs.remove(tmpPath);
 
         return result;
     }

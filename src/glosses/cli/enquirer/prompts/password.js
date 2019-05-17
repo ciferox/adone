@@ -1,5 +1,3 @@
-
-
 const StringPrompt = require("../types/string");
 
 class PasswordPrompt extends StringPrompt {

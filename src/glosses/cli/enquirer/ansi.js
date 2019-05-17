@@ -1,7 +1,5 @@
-
-
 const isTerm = process.env.TERM_PROGRAM === "Apple_Terminal";
-const colors = require("ansi-colors");
+const colors = require("./colors");
 const utils = require("./utils");
 const ansi = module.exports = exports;
 const ESC = "\u001b[";

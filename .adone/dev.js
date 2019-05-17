@@ -24,18 +24,39 @@ export default {
             description: "Realm tasks",
             src: "src/tasks/**/*.js",
             dst: "lib/tasks",
-            task: "transpile"
+            task: "transpile",
+            units: {
+                assets: {
+                    description: "Tasks assets",
+                    src: [
+                        "src/tasks/own/realm_create/helpers/eslintrc/eslintrc.js_",
+                        "src/tasks/own/realm_create/helpers/git/gitignore_"
+                    ],
+                    dst: "lib/tasks",
+                    task: "copy"
+                }
+            }
         },
         app: {
             description: "ADONE CLI application",
-            src: "src/app/adone",
-            dst: "bin",
-            task: "transpileExe",
             units: {
+                posix: {
+                    description: "Executable for posix platforms",
+                    src: "src/app/adone",
+                    dst: "bin",
+                    task: "transpileExe"        
+                },
+                windows: {
+                    description: "Executable fro windows platforms",
+                    src: "src/app/adone.cmd",
+                    dst: "bin",
+                    task: "copy"
+                },
                 internals: {
                     description: "ADONE CLI internals",
                     src: [
                         "!src/app/adone",
+                        "!src/app/adone.cmd",
                         "src/app/**/*.js"
                     ],
                     dst: "lib/app",

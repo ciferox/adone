@@ -1,5 +1,5 @@
 import { srcPath } from "../helpers";
-const { cyan, dim, gray } = require("ansi-colors");
+const { cyan, dim, gray } = require(adone.getPath("lib", "glosses", "cli", "enquirer", "colors"));
 const support = require("../support");
 const { expect, immediate } = support(assert);
 const PromptSelect = require(srcPath("prompts/select"));

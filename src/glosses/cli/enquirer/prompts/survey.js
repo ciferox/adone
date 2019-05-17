@@ -1,4 +1,6 @@
-
+const {
+    is
+} = adone;
 
 const ArrayPrompt = require("../types/array");
 

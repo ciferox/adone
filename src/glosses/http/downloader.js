@@ -2,6 +2,7 @@ const {
     http,
     fs,
     is,
+    path,
     stream,
     error,
     std
@@ -35,8 +36,8 @@ export default class Downlader extends adone.event.Emitter {
         }
 
         // string - path
-        dest = std.path.resolve(dest);
-        const dirname = std.path.dirname(dest);
+        dest = path.resolve(dest);
+        const dirname = path.dirname(dest);
         await fs.mkdirp(dirname); // ensure the directory exists
         return fs.createWriteStream(dest);
     }

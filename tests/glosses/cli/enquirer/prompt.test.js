@@ -3,7 +3,7 @@ const {
     is
 } = adone;
 
-const colors = require("ansi-colors");
+const colors = require(adone.getPath("lib", "glosses", "cli", "enquirer", "colors"));
 const PromptBase = require(srcPath("prompt"));
 let prompt;
 

@@ -1,5 +1,3 @@
-
-
 /**
  * Actions are mappings from keypress event names to method names
  * in the prompts.

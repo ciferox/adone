@@ -1,5 +1,3 @@
-
-
 const StringPrompt = require("../types/string");
 
 class ListPrompt extends StringPrompt {

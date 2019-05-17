@@ -3,7 +3,7 @@ const {
 } = adone;
 
 const toString = Object.prototype.toString;
-const colors = require("ansi-colors");
+const colors = require("./colors");
 let called = false;
 const fns = [];
 

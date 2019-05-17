@@ -1,6 +1,8 @@
+const {
+    is
+} = adone;
 
-
-const colors = require("./ansi-colors");
+const colors = require("../colors");
 const interpolate = require("../interpolate");
 const Prompt = require("../prompt");
 

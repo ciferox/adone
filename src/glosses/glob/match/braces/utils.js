@@ -2,16 +2,6 @@ const {
     is
 } = adone;
 
-exports.isInteger = (num) => {
-    if (is.number(num)) {
-        return is.integer(num);
-    }
-    if (is.string(num) && num.trim() !== "") {
-        return is.integer(Number(num));
-    }
-    return false;
-};
-
 /**
  * Find a node of the given type
  */
@@ -26,7 +16,7 @@ exports.exceedsLimit = (min, max, step = 1, limit) => {
     if (limit === false) {
         return false; 
     }
-    if (!exports.isInteger(min) || !exports.isInteger(max)) {
+    if (!is.numeral(min) || !is.numeral(max)) {
         return false; 
     }
     return ((Number(max) - Number(min)) / Number(step)) >= limit;

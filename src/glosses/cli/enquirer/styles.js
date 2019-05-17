@@ -3,7 +3,7 @@ const {
 } = adone;
 
 const utils = require("./utils");
-const colors = require("ansi-colors");
+const colors = require("./colors");
 
 const styles = {
     default: colors.noop,

@@ -1,5 +1,3 @@
-
-
 const hint = "(Use <shift>+<up/down> to sort)";
 const Prompt = require("./select");
 
