@@ -16,7 +16,8 @@ const {
     kReplyIsError,
     kReplyHeaders,
     kReplyHasStatusCode,
-    kReplyIsRunningOnErrorHook
+    kReplyIsRunningOnErrorHook,
+    kDisableRequestLogging
 } = require("./symbols.js");
 const { hookRunner, onSendHookRunner } = require("./hooks");
 const validation = require("./validation");
@@ -161,7 +162,7 @@ Reply.prototype.header = function (key, value) {
     value = is.undefined(value) ? "" : value;
 
     if (this[kReplyHeaders][_key] && _key === "set-cookie") {
-    // https://tools.ietf.org/html/rfc7230#section-3.2.2
+        // https://tools.ietf.org/html/rfc7230#section-3.2.2
         if (is.string(this[kReplyHeaders][_key])) {
             this[kReplyHeaders][_key] = [this[kReplyHeaders][_key]];
         }
@@ -195,9 +196,9 @@ Reply.prototype.status = Reply.prototype.code;
 Reply.prototype.serialize = function (payload) {
     if (!is.null(this[kReplySerializer])) {
         return this[kReplySerializer](payload);
-    } 
+    }
     return serialize(this.context, payload, this.res.statusCode);
-  
+
 };
 
 Reply.prototype.serializer = function (fn) {
@@ -326,7 +327,7 @@ function sendStream(payload, res, reply) {
                 onErrorHook(reply, err);
             }
         }
-    // there is nothing to do if there is not an error
+        // there is nothing to do if there is not an error
     });
 
     eos(res, (err) => {
@@ -458,6 +459,9 @@ function onResponseIterator(fn, request, reply, next) {
 }
 
 function onResponseCallback(err, request, reply) {
+    if (reply.log[kDisableRequestLogging]) {
+        return
+    }
     let responseTime = 0;
 
     if (!is.undefined(reply[kReplyStartTime])) {
@@ -511,7 +515,7 @@ function notFound(reply) {
     reply.context.handler(reply.request, reply);
 }
 
-function noop() {}
+function noop() { }
 
 function getHeaderProper(reply, key) {
     key = key.toLowerCase();

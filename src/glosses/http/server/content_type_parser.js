@@ -6,7 +6,7 @@ const {
  * eslint-disable func-style
  */
 const lru = require("tiny-lru");
-const Bourne = require("bourne");
+const secureJson = require("secure-json-parse");
 const {
     kDefaultJsonParse,
     kContentTypeParser,
@@ -209,7 +209,7 @@ function getDefaultJsonParser(onProtoPoisoning) {
         }
 
         try {
-            var json = Bourne.parse(body, { protoAction: onProtoPoisoning });
+            var json = secureJson.parse(body, { protoAction: onProtoPoisoning });
         } catch (err) {
             err.statusCode = 400;
             return done(err, undefined);

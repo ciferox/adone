@@ -9,7 +9,7 @@ const FindMyWay = require("find-my-way");
 const Avvio = require("avvio");
 const querystring = require("querystring");
 const Middie = require("middie");
-const lightMyRequest = require("light-my-request");
+let lightMyRequest;
 const proxyAddr = require("proxy-addr");
 
 const {
@@ -27,7 +27,8 @@ const {
     kFourOhFour,
     kState,
     kOptions,
-    kGlobalHooks
+    kGlobalHooks,
+    kDisableRequestLogging
 } = require("./symbols.js");
 
 const { createServer } = require("./server");
@@ -77,6 +78,7 @@ function build(options) {
     const genReqId = options.genReqId || reqIdGenFactory();
     const requestIdLogLabel = options.requestIdLogLabel || "reqId";
     const bodyLimit = options.bodyLimit || defaultInitOptions.bodyLimit;
+    const disableRequestLogging = options.disableRequestLogging || false;
 
     // Instance Fastify components
     const { logger, hasLogger } = createLogger(options);
@@ -256,6 +258,9 @@ function build(options) {
     fastify.setNotFoundHandler();
     fourOhFour.arrange404(fastify);
 
+    const schemaCache = new Map();
+    schemaCache.put = schemaCache.set;
+
     return fastify;
 
     // HTTP request entry point, the routing has already been executed
@@ -292,6 +297,7 @@ function build(options) {
         }
 
         const childLogger = logger.child({ [requestIdLogLabel]: req.id, level: context.logLevel });
+        childLogger[kDisableRequestLogging] = disableRequestLogging;
 
         // added hostname, ip, and ips back to the Node req object to maintain backward compatibility
         if (modifyCoreObjects) {
@@ -302,7 +308,9 @@ function build(options) {
             req.log = res.log = childLogger;
         }
 
-        childLogger.info({ req }, "incoming request");
+        if (disableRequestLogging === false) {
+            childLogger.info({ req }, "incoming request");
+        }
 
         const queryPrefix = req.url.indexOf("?");
         const query = querystringParser(queryPrefix > -1 ? req.url.slice(queryPrefix + 1) : "");
@@ -457,7 +465,12 @@ function build(options) {
 
             // run 'onRoute' hooks
             for (const hook of this[kGlobalHooks].onRoute) {
-                hook.call(this, opts);
+                try {
+                    hook.call(this, opts);
+                } catch (error) {
+                    done(error);
+                    return;
+                }
             }
 
             const config = opts.config || {};
@@ -476,16 +489,21 @@ function build(options) {
                 opts.attachValidation
             );
 
-            try {
-                if (is.nil(opts.schemaCompiler) && is.nil(this[kSchemaCompiler])) {
-                    const externalSchemas = this[kSchemas].getJsonSchemas({ onlyAbsoluteUri: true });
-                    this.setSchemaCompiler(buildSchemaCompiler(externalSchemas));
-                }
+            // TODO this needs to be refactored so that buildSchemaCompiler is
+            // not called for every single route. Creating a new one for every route
+            // is going to be very expensive.
+            if (opts.schema) {
+                try {
+                    if (is.nil(opts.schemaCompiler) && is.nil(this[kSchemaCompiler])) {
+                        const externalSchemas = this[kSchemas].getJsonSchemas({ onlyAbsoluteUri: true });
+                        this.setSchemaCompiler(buildSchemaCompiler(externalSchemas, schemaCache));
+                    }
 
-                buildSchema(context, opts.schemaCompiler || this[kSchemaCompiler], this[kSchemas]);
-            } catch (error) {
-                done(error);
-                return;
+                    buildSchema(context, opts.schemaCompiler || this[kSchemaCompiler], this[kSchemas]);
+                } catch (error) {
+                    done(error);
+                    return;
+                }
             }
 
             if (is.nil(opts.preHandler) && !is.nil(opts.beforeHandler)) {
@@ -544,6 +562,12 @@ function build(options) {
     // If the server is not ready yet, this
     // utility will automatically force it.
     function inject(opts, cb) {
+        // lightMyRequest is dynamically laoded as it seems very expensive
+        // because of Ajv
+        if (is.undefined(lightMyRequest)) {
+            lightMyRequest = require("light-my-request");
+        }
+
         if (fastify[kState].started) {
             return lightMyRequest(httpHandler, opts, cb);
         }
@@ -583,6 +607,17 @@ function build(options) {
     // wrapper that we expose to the user for hooks handling
     function addHook(name, fn) {
         throwIfAlreadyStarted('Cannot call "addHook" when fastify instance is already started!');
+
+        // TODO: v3 instead of log a warning, throw an error
+        if (name === "onSend" || name === "preSerialization") {
+            if (fn.constructor.name === "AsyncFunction" && fn.length === 4) {
+                fastify.log.warn("Async function has too many arguments. Async hooks should not use the 'next' argument.", new Error().stack);
+            }
+        } else {
+            if (fn.constructor.name === "AsyncFunction" && fn.length === 3) {
+                fastify.log.warn("Async function has too many arguments. Async hooks should not use the 'next' argument.", new Error().stack);
+            }
+        }
 
         if (name === "onClose") {
             this[kHooks].validate(name, fn);

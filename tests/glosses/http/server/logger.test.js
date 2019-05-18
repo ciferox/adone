@@ -1169,4 +1169,29 @@ describe("logger", () => {
             });
         });
     });
+
+    it("should not log incoming request and outgoing response when disabled", (done) => {
+        const lines = [];
+        const dest = new stream.Writable({
+            write(chunk, enc, cb) {
+                lines.push(JSON.parse(chunk));
+                cb();
+            }
+        });
+        const fastify = server({ disableRequestLogging: true, logger: { level: "info", stream: dest } });
+
+        fastify.get("/500", (req, reply) => {
+            reply.code(500).send(Error("500 error"));
+        });
+
+        fastify.inject({
+            url: "/500",
+            method: "GET"
+        }, (e, res) => {
+            assert.equal(lines.length, 1);
+            assert.ok(lines[0].msg);
+            assert.equal(lines[0].msg, "500 error");
+            done();
+        });
+    });
 });

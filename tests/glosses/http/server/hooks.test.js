@@ -1,5 +1,4 @@
 const {
-    semver,
     std: { stream, fs },
     http: { server }
 } = adone;
@@ -613,6 +612,25 @@ describe("hooks", () => {
         fastify.ready((err) => {
             assert.notExists(err);
             expect(true).to.be.ok.mark();
+        });
+    });
+
+    it("onRoute hook that throws should be caught ", (done) => {
+        const fastify = server();
+
+        fastify.register((instance, opts, next) => {
+            instance.addHook("onRoute", () => {
+                throw new Error("snap");
+            });
+            instance.get("/", opts, (req, reply) => {
+                reply.send();
+            });
+            next();
+        });
+
+        fastify.ready((err) => {
+            assert.ok(err);
+            done();
         });
     });
 
@@ -3314,6 +3332,42 @@ describe("hooks", () => {
                 assert.notExists(err);
                 assert.equal(res.statusCode, 200);
                 expect(true).to.be.ok.mark();
+            });
+        });
+
+        describe("Should log a warning if is an async function with `next`", () => {
+            it("3 arguments", (done) => {
+                const stream = split(JSON.parse);
+                const fastify = server({
+                    logger: { stream }
+                });
+
+                stream.on("data", (line) => {
+                    assert.strictEqual(line.level, 40);
+                    assert.isTrue(line.msg.startsWith("Async function has too many arguments. Async hooks should not use the 'next' argument."));
+                    assert.isTrue(/server(\\|\/)hooks\.test\.js/.test(line.msg));
+                    done();
+                });
+
+                fastify.addHook("onRequest", async (req, reply, next) => { });
+            });
+
+            it("4 arguments", (done) => {
+                expect(2).checks(done);
+                const stream = split(JSON.parse);
+                const fastify = server({
+                    logger: { stream }
+                });
+
+                stream.on("data", (line) => {
+                    assert.strictEqual(line.level, 40);
+                    assert.isTrue(line.msg.startsWith("Async function has too many arguments. Async hooks should not use the 'next' argument."));
+                    assert.isTrue(/server(\\|\/)hooks\.test\.js/.test(line.msg));
+                    expect(1).to.be.ok.mark();
+                });
+
+                fastify.addHook("onSend", async (req, reply, payload, next) => { });
+                fastify.addHook("preSerialization", async (req, reply, payload, next) => { });
             });
         });
     });
