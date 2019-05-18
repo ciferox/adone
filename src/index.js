@@ -102,6 +102,7 @@ lazify({
     }, null, require, { asNamespace: true })),
 
     // glosses
+    acorn: "./glosses/acorn",
     app: "./glosses/app",
     archive: "./glosses/archives",
     assertion: "./glosses/assertion",
@@ -150,6 +151,7 @@ lazify({
     punycode: "./glosses/punycode",
     realm: "./glosses/realm",
     regex: "./glosses/regex",
+    rollup: "./glosses/rollup",
     schema: "./glosses/schema",
     semver: "./glosses/semver",
     shell: "./glosses/shell",

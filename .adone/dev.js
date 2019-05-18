@@ -94,6 +94,13 @@ export default {
         glosses: {
             description: "Glosses",
             units: {
+                acorn: {
+                    description: "A small, fast, JavaScript-based JavaScript parser ",
+                    task: "transpile",
+                    src: "src/glosses/acorn/**/*.js",
+                    dst: "lib/glosses/acorn",
+                    original: "https://github.com/acornjs/acorn"
+                },
                 app: {
                     description: "Application framework",
                     src: "src/glosses/app/**/*.js",
@@ -783,6 +790,25 @@ export default {
                     task: "transpile",
                     src: "src/glosses/regex/**/*.js",
                     dst: "lib/glosses/regex"
+                },
+                rollup: {
+                    description: "Next-generation ES module bundler",
+                    task: "tsc",
+                    src: [
+                        "src/glosses/rollup/**/*.ts",
+                        "!src/glosses/rollup/**/*.d.ts"
+                    ],
+                    dst: "lib/glosses/rollup",
+                    tsConfig: "tsconfig.json",
+                    original: "https://github.com/rollup/rollup",
+                    units: {
+                        plugins: {
+                            description: "Plugins",
+                            task: "transpile",
+                            src: "src/glosses/rollup/plugins/**/*.js",
+                            dst: "lib/glosses/rollup/plugins"
+                        }
+                    }
                 },
                 schema: {
                     description: "Schema validators",

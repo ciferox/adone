@@ -2,8 +2,9 @@
 export default class TSCompileTask extends adone.realm.TransformTask {
     transform(stream, params) {
         const transpileOptions = {
-            cwd: this.manager.cwd,
-            sourceMap: true
+            cwd: adone.path.join(this.manager.cwd, adone.glob.parent(params.src)),
+            sourceMap: true,
+            ...adone.util.omit(params, ["original", "description", "src", "dst", "task"])
         };
         return stream
             .sourcemapsInit()
