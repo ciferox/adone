@@ -8,6 +8,7 @@ adone.lazify({
     archive: "./extensions/archive",
     extract: "./extensions/extract",
     transpile: "./extensions/transpile",
+    tscompile: "./extensions/tscompile",
     deleteLines: "./extensions/delete_lines",
     rename: "./extensions/rename",
     concat: "./extensions/concat",

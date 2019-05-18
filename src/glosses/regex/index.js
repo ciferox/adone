@@ -47,7 +47,6 @@ export const ip = ({ exact = false } = {}) => exact ?
 export const ip4 = ({ exact = false } = {}) => exact ? new RegExp(`^${v4}$`) : new RegExp(`${b}${v4}${b}`, "g");
 export const ip6 = ({ exact = false } = {}) => exact ? new RegExp(`^${v6}$`) : new RegExp(`${b}${v6}${b}`, "g");
 
-
 export const protocol = () => /^[a-z][a-z0-9.+-]*$/i;
 export const idn = () => /[^a-z0-9\._-]/i;
 export const punycode = () => /(xn--)/i;

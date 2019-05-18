@@ -133,7 +133,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
                         ? adone.require(fullPath)
                         : require(fullPath);
                 } catch (err) {
-                    // console.log(adone.pretty.error(err));
+                    console.log(adone.pretty.error(err));
                     // ignore non javascript files
                     continue;
                 }

@@ -28,7 +28,8 @@ const defaultStyle = {
     errorStackMethodAs: identity,
     errorStackFile: identity,
     errorStackLine: identity,
-    errorStackColumn: identity
+    errorStackColumn: identity,
+    truncate: (str, maxLength) => `${str.slice(0, maxLength - 1)}…`
 };
 
 const style = {
@@ -61,7 +62,20 @@ const style = {
         errorStackMethodAs: (str) => esc.yellow.open + str + esc.reset.open,
         errorStackFile: (str) => esc.cyanBright.open + str + esc.reset.open,
         errorStackLine: (str) => esc.blue.open + str + esc.reset.open,
-        errorStackColumn: (str) => esc.magenta.open + str + esc.reset.open
+        errorStackColumn: (str) => esc.magenta.open + str + esc.reset.open,
+        truncate: (str, maxLength) => {
+            const trail = `${esc.gray.open}…${esc.reset.open}`;
+            str = str.slice(0, maxLength - trail.length);
+
+            // Search for an ansi escape sequence at the end, that could be truncated.
+            // The longest one is '\x1b[107m': 6 characters.
+            const lastEscape = str.lastIndexOf("\x1b");
+            if (lastEscape >= str.length - 6) {
+                str = str.slice(0, lastEscape);
+            }
+
+            return str + trail;
+        }
     }),
     html: Object.assign({}, defaultStyle, {
         tab: "&nbsp;&nbsp;&nbsp;&nbsp;",
@@ -173,7 +187,7 @@ const specialObjectSubstitution = (object, runtime, options) => {
     }
 };
 
-const COMPLEX_TYPES = ["global", "adone", "Array", "Object", "object", "class", "function", "Error", "namespace", "process"];
+const COMPLEX_TYPES = ["global", "adone", "Array", "Object", "object", "class", "function", "Error", "namespace", "process", "Set", "Map", "RegExp", "Date"];
 
 /**
  * Inspect an object, return a string ready to be displayed with console.log(), or even as an HTML output.
@@ -530,9 +544,10 @@ const inspect = (obj, options = {}) => {
         options.style = defaultStyle;
     } else if (is.string(options.style)) {
         options.style = style[options.style];
-    } else {
-        options.style = Object.assign({}, defaultStyle, options.style);
     }
+    // else {
+    //     options.style = Object.assign({}, defaultStyle, options.style);
+    // }
 
     if (is.undefined(options.depth)) {
         options.depth = 3;
@@ -562,7 +577,7 @@ const inspect = (obj, options = {}) => {
     let str = inspect_(runtime, options, obj);
 
     if (str.length > options.outputMaxLength) {
-        str = `${str.slice(0, options.outputMaxLength - 1)}…`;
+        str = options.style.truncate(str, options.outputMaxLength);
     }
 
     return str;

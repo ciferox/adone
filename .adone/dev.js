@@ -44,7 +44,7 @@ export default {
                     description: "Executable for posix platforms",
                     src: "src/app/adone",
                     dst: "bin",
-                    task: "transpileExe"        
+                    task: "transpileExe"
                 },
                 windows: {
                     description: "Executable fro windows platforms",
@@ -940,6 +940,31 @@ export default {
                     task: "transpile",
                     src: "src/glosses/vault/**/*.js",
                     dst: "lib/glosses/vault"
+                },
+                web: {
+                    description: "WEB framework",
+                    task: "transpile",
+                    src: "src/glosses/web/index.js",
+                    dst: "lib/glosses/web",
+                    units: {
+                        core: {
+                            description: "core",
+                            units: {
+                                js: {
+                                    description: "JS files",
+                                    task: "transpile",
+                                    src: "src/glosses/web/core/**/*.js",
+                                    dst: "lib/glosses/web/core"
+                                },
+                                ts: {
+                                    description: "TypeScript files",
+                                    task: "tsc",
+                                    src: "src/glosses/web/core/**/*.ts",
+                                    dst: "lib/glosses/web/core"
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

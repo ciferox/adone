@@ -3,7 +3,7 @@ const {
     inspect
 } = adone;
 
-export default (options, error) => {
+const inspectError = (options, error) => {
     let str = "";
     let stack;
 
@@ -14,7 +14,7 @@ export default (options, error) => {
     }
 
     if (!(error instanceof Error)) {
-        return `Not an error -- regular variable inspection: ${adone.inspect(options, error)}`;
+        return `inspectError: not an error -- regular variable inspection: ${inspect(options, error)}`;
     }
 
     if (!options.style) {
@@ -38,5 +38,11 @@ export default (options, error) => {
         str += `${options.style.errorStack(stack)}\n`;
     }
 
+    if (error.from) {
+        str += options.style.newline + options.style.errorFromMessage("Error created from:") + options.style.newline + inspectError(options, error.from);
+    }
+
     return str;
 };
+
+export default inspectError;

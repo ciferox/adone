@@ -163,7 +163,8 @@ lazify({
     typescript: "./glosses/typescript",
     uri: "./glosses/uri",
     util: "./glosses/utils",
-    vault: "./glosses/vault"
+    vault: "./glosses/vault",
+    web: "./glosses/web"
 }, adone);
 
 // mappings
