@@ -84,7 +84,7 @@ describe("realm", "common tasks", () => {
         it("create realm with '.adone/config.json'", async () => {
             const name = getRealmName();
 
-            const config =  {
+            const config = {
                 prop1: "some value",
                 artifacts: {
                     custom: ["a1", "a2"]
@@ -409,6 +409,72 @@ describe("realm", "common tasks", () => {
 
             const dstRootFiles = (await fs.readdir(destRealm.cwd));
             assert.sameMembers(dstRootFiles, [".adone", "package.json", "share", "LICENSE", "README.md"]);
+        });
+    });
+
+    describe("install node modules", () => {
+        it("install 'production' modules by default", async () => {
+            const path = await fs.tmpName();
+            const destRealm = await rootRealm.runAndWait("realmFork", {
+                realm: getRealmPathFor("realm4"),
+                name: "realm4",
+                path
+            });
+            await destRealm.connect();
+            await destRealm.runAndWait("installModules");
+
+            const installedModules = (await fs.readdirp(aPath.join(destRealm.cwd, "node_modules"), {
+                files: false,
+                depth: 1
+            })).map((item) => item.name);
+
+            assert.sameMembers(installedModules, ["inherits", "isarray", "safe-buffer"]);
+            await fs.remove(path);
+        });
+
+        it("install prod and dev modules", async () => {
+            const path = await fs.tmpName();
+            const destRealm = await rootRealm.runAndWait("realmFork", {
+                realm: getRealmPathFor("realm4"),
+                name: "realm4",
+                path
+            });
+            await destRealm.connect();
+            await destRealm.runAndWait("installModules", {
+                dev: true
+            });
+
+            const installedModules = (await fs.readdirp(aPath.join(destRealm.cwd, "node_modules"), {
+                files: false,
+                depth: 1
+            })).map((item) => item.name);
+
+            assert.includeMembers(installedModules, ["inherits", "isarray", "safe-buffer", "once", "wrappy"]);
+            await fs.remove(path);
+        });
+
+        it("install specified modules", async () => {
+            const path = await fs.tmpName();
+            const destRealm = await rootRealm.runAndWait("realmFork", {
+                realm: getRealmPathFor("realm5"),
+                name: "realm5",
+                path
+            });
+            await destRealm.connect();
+            await destRealm.runAndWait("installModules", {
+                modules: {
+                    inherits: "~2.0.3",
+                    isarray: "~1.0.0"
+                }
+            });
+
+            const installedModules = (await fs.readdirp(aPath.join(destRealm.cwd, "node_modules"), {
+                files: false,
+                depth: 1
+            })).map((item) => item.name);
+
+            assert.includeMembers(installedModules, ["inherits", "isarray"]);
+            await fs.remove(path);
         });
     });
 

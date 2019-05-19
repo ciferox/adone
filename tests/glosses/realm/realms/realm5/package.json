@@ -1,0 +1,9 @@
+{
+    "name": "realm4",
+    "dependencies": {
+        "safe-buffer": "5.1.2"
+    },
+    "devDependencies": {
+        "once": "1.4.0"
+    }
+}

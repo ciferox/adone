@@ -98,8 +98,8 @@ export default class extends realm.BaseTask {
         }
 
         const newRealm = new realm.RealmManager({ cwd });
-        await newRealm.config.save();
-        await newRealm.devConfig.save();
+        // await newRealm.config.save();
+        // await newRealm.devConfig.save();
 
         if (options.initJsconfig) {
             this.manager.notify(this, "progress", {

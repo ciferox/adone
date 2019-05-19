@@ -13,7 +13,9 @@ export default {
             "!.adone/kri.js",
             "!.adone/dev.js"
         ],
-        skipInstallNodeModules: true
+        nodeModules: {
+            "ajv-pack": "latest"
+        }
     },
     defaultTask: "copy",
     nonWatchableTasks: [

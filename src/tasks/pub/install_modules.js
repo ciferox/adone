@@ -3,24 +3,46 @@ const {
     realm: { BaseTask }
 } = adone;
 
-const MANAGERS = ["pnpm", "yarn", "npm"];
+const MANAGERS = [
+    {
+        name: "pnpm",
+        single: {
+            args: ["i"],
+            dev: "-D"
+        }
+    },
+    {
+        name: "yarn",
+        single: {
+            args: ["add"],
+            dev: "-D"
+        }
+    },
+    {
+        name: "npm",
+        single: {
+            args: ["install"],
+            dev: "--save-dev"
+        }
+    }
+];
 
 @adone.task.task("installModules")
 export default class extends BaseTask {
-    async main({ cwd } = {}) {
-        let pkgName;
-        for (const name of MANAGERS) {
+    async main({ cwd, dev = false, modules } = {}) {
+        let app;
+        for (const appInfo of MANAGERS) {
             try {
                 // eslint-disable-next-line no-await-in-loop
-                await adone.fs.which(name);
-                pkgName = name;
+                await adone.fs.which(appInfo.name);
+                app = appInfo;
                 break;
             } catch (err) {
                 // try next
             }
         }
 
-        if (!is.string(pkgName)) {
+        if (!app) {
             throw new adone.error.NotFoundException(`No package manager found. Inslall one of: ${MANAGERS.join(", ")}`);
         }
 
@@ -28,8 +50,26 @@ export default class extends BaseTask {
             cwd = this.manager.cwd;
         }
 
-        await adone.process.exec(pkgName, ["install"], {
-            cwd
-        });
+        if (is.plainObject(modules)) {
+            for (const [name, version] of Object.entries(modules)) {
+                const args = [...app.single.args];
+                if (dev) {
+                    args.push(app.single.dev);
+                }
+                args.push(`${name}@${version}`)
+                await adone.process.exec(app.name, args, {
+                    cwd
+                });
+            }
+        } else {
+            const args = ["install"];
+            if (!dev) {
+                args.push("--production");
+            }
+
+            await adone.process.exec(app.name, args, {
+                cwd
+            });
+        }
     }
 }

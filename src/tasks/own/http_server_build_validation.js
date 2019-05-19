@@ -88,6 +88,8 @@ ${customRule0.toString()}
 module.exports.defaultInitOptions = ${JSON.stringify(defaultInitOptions)}
 `
 
-        fs.writeFileSync(aPath.join(this.manager.cwd, dst), moduleCode)
+        const destPath = aPath.join(this.manager.cwd, dst);
+        await fs.mkdirp(aPath.dirname(destPath));
+        fs.writeFileSync(destPath, moduleCode)
     }
 }
