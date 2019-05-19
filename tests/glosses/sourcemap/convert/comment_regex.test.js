@@ -15,7 +15,7 @@ function commentWithCharSet(prefix, suffix, sep) {
     return rx.test(`${prefix}sourceMappingURL=data:application/json;charset${sep}utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiIiwic291cmNlcyI6WyJmdW5jdGlvbiBmb28oKSB7XG4gY29uc29sZS5sb2coXCJoZWxsbyBJIGFtIGZvb1wiKTtcbiBjb25zb2xlLmxvZyhcIndobyBhcmUgeW91XCIpO1xufVxuXG5mb28oKTtcbiJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQSJ9${suffix}`);
 }
 
-describe("sourcemap", "convert", "comment regex", () => {
+describe("convert", "comment regex", () => {
     // Source Map v2 Tests
     it("comment regex old spec - @", () => {
         [

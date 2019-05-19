@@ -28,7 +28,7 @@ describe("fast", "extension", "extract", () => {
             await tmpdir.unlink();
         });
 
-        describe("tar", () => {
+        describe(".tar", () => {
             it("should unpack files", async () => {
                 const input = await tmpdir.addDirectory("input");
                 await input.addFile("a", { contents: "abc" });
@@ -38,7 +38,7 @@ describe("fast", "extension", "extract", () => {
 
                 await fast
                     .src(input.getFile("**", "*"))
-                    .pack("tar", { filename: "archive.tar" })
+                    .pack(".tar", { filename: "archive.tar" })
                     .dest(output);
 
                 const files = await fast
@@ -67,7 +67,7 @@ describe("fast", "extension", "extract", () => {
 
                 await fast
                     .src(input.getFile("**", "*"))
-                    .pack("tar", { filename: "archive.tar" })
+                    .pack(".tar", { filename: "archive.tar" })
                     .dest(output);
 
                 const files = await fast
@@ -93,7 +93,7 @@ describe("fast", "extension", "extract", () => {
 
                 await fast
                     .src(input.getFile("**", "*"))
-                    .pack("tar", { filename: "archive.tar" })
+                    .pack(".tar", { filename: "archive.tar" })
                     .dest(output);
 
                 const files = await fast
@@ -113,7 +113,7 @@ describe("fast", "extension", "extract", () => {
 
                 await fast
                     .src(input.getFile("**", "*"))
-                    .pack("tar", { filename: "archive.tar" })
+                    .pack(".tar", { filename: "archive.tar" })
                     .dest(output);
 
                 const files = await fast
@@ -145,7 +145,7 @@ describe("fast", "extension", "extract", () => {
 
                 await fast
                     .src(input.getFile("**", "*"))
-                    .pack("tar", { filename: "archive.tar" })
+                    .pack(".tar", { filename: "archive.tar" })
                     .dest(output);
 
                 const files = await fast
@@ -164,7 +164,7 @@ describe("fast", "extension", "extract", () => {
 
                 await fast
                     .src(input.getFile("**", "*"))
-                    .pack("tar", { filename: "archive.tar" })
+                    .pack(".tar", { filename: "archive.tar" })
                     .dest(output);
 
                 const files = await fast
@@ -185,7 +185,7 @@ describe("fast", "extension", "extract", () => {
 
                 await fast
                     .src(input.getFile("**", "*"), { links: true })
-                    .pack("tar", { filename: "archive.tar" })
+                    .pack(".tar", { filename: "archive.tar" })
                     .dest(output);
 
                 const files = await fast
@@ -205,7 +205,7 @@ describe("fast", "extension", "extract", () => {
             });
         });
 
-        describe("zip", () => {
+        describe(".zip", () => {
             const streamToString = async (stream) => {
                 const buffer = await stream.pipe(new BufferList());
                 return buffer.toString();
@@ -220,7 +220,7 @@ describe("fast", "extension", "extract", () => {
 
                 await fast
                     .src(input.getFile("**", "*"))
-                    .pack("zip", { filename: "archive.zip" })
+                    .pack(".zip", { filename: "archive.zip" })
                     .dest(output);
 
                 const files = await fast
@@ -249,7 +249,7 @@ describe("fast", "extension", "extract", () => {
 
                 await fast
                     .src(input.getFile("**", "*"))
-                    .pack("zip", { filename: "archive.zip" })
+                    .pack(".zip", { filename: "archive.zip" })
                     .dest(output);
 
                 const files = await fast
@@ -275,7 +275,7 @@ describe("fast", "extension", "extract", () => {
 
                 await fast
                     .src(input.getFile("**", "*"))
-                    .pack("zip", { filename: "archive.zip" })
+                    .pack(".zip", { filename: "archive.zip" })
                     .dest(output);
 
                 const files = await fast
@@ -295,7 +295,7 @@ describe("fast", "extension", "extract", () => {
 
                 await fast
                     .src(input.getFile("**", "*"))
-                    .pack("zip", { filename: "archive.zip" })
+                    .pack(".zip", { filename: "archive.zip" })
                     .dest(output);
 
                 const files = await fast
@@ -327,7 +327,7 @@ describe("fast", "extension", "extract", () => {
 
                 await fast
                     .src(input.getFile("**", "*"))
-                    .pack("zip", { filename: "archive.zip" })
+                    .pack(".zip", { filename: "archive.zip" })
                     .dest(output);
 
                 const files = await fast
@@ -346,7 +346,7 @@ describe("fast", "extension", "extract", () => {
 
                 await fast
                     .src(input.getFile("**", "*"))
-                    .pack("zip", { filename: "archive.zip" })
+                    .pack(".zip", { filename: "archive.zip" })
                     .dest(output);
 
                 const files = await fast

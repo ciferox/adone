@@ -1,9 +1,6 @@
-/* eslint-disable func-style */
 const {
     is
 } = adone;
-
-const URL = require("./url");
 
 /**
  * This is a helper function for getting values from parameter/options
@@ -15,22 +12,360 @@ const URL = require("./url");
  * from the object. If this is not specified and the property is missing, an
  * error will be thrown.
  */
-export function getArg(aArgs, aName, aDefaultValue) {
+function getArg(aArgs, aName, aDefaultValue) {
     if (aName in aArgs) {
         return aArgs[aName];
     } else if (arguments.length === 3) {
         return aDefaultValue;
     }
     throw new Error(`"${aName}" is a required argument.`);
+
 }
+exports.getArg = getArg;
+
+const urlRegexp = /^(?:([\w+\-.]+):)?\/\/(?:(\w+:\w+)@)?([\w.-]*)(?::(\d+))?(.*)$/;
+const dataUrlRegexp = /^data:.+\,.+$/;
+
+function urlParse(aUrl) {
+    const match = aUrl.match(urlRegexp);
+    if (!match) {
+        return null;
+    }
+    return {
+        scheme: match[1],
+        auth: match[2],
+        host: match[3],
+        port: match[4],
+        path: match[5]
+    };
+}
+exports.urlParse = urlParse;
+
+function urlGenerate(aParsedUrl) {
+    let url = "";
+    if (aParsedUrl.scheme) {
+        url += `${aParsedUrl.scheme}:`;
+    }
+    url += "//";
+    if (aParsedUrl.auth) {
+        url += `${aParsedUrl.auth}@`;
+    }
+    if (aParsedUrl.host) {
+        url += aParsedUrl.host;
+    }
+    if (aParsedUrl.port) {
+        url += `:${aParsedUrl.port}`;
+    }
+    if (aParsedUrl.path) {
+        url += aParsedUrl.path;
+    }
+    return url;
+}
+exports.urlGenerate = urlGenerate;
+
+/**
+ * Normalizes a path, or the path portion of a URL:
+ *
+ * - Replaces consecutive slashes with one slash.
+ * - Removes unnecessary '.' parts.
+ * - Removes unnecessary '<dir>/..' parts.
+ *
+ * Based on code in the Node.js 'path' core module.
+ *
+ * @param aPath The path or url to normalize.
+ */
+function normalize(aPath) {
+    let path = aPath;
+    const url = urlParse(aPath);
+    if (url) {
+        if (!url.path) {
+            return aPath;
+        }
+        path = url.path;
+    }
+    const isAbsolute = exports.isAbsolute(path);
+
+    const parts = path.split(/\/+/);
+    for (var part, up = 0, i = parts.length - 1; i >= 0; i--) {
+        part = parts[i];
+        if (part === ".") {
+            parts.splice(i, 1);
+        } else if (part === "..") {
+            up++;
+        } else if (up > 0) {
+            if (part === "") {
+                // The first part is blank if the path is absolute. Trying to go
+                // above the root is a no-op. Therefore we can remove all '..' parts
+                // directly after the root.
+                parts.splice(i + 1, up);
+                up = 0;
+            } else {
+                parts.splice(i, 2);
+                up--;
+            }
+        }
+    }
+    path = parts.join("/");
+
+    if (path === "") {
+        path = isAbsolute ? "/" : ".";
+    }
+
+    if (url) {
+        url.path = path;
+        return urlGenerate(url);
+    }
+    return path;
+}
+exports.normalize = normalize;
+
+/**
+ * Joins two paths/URLs.
+ *
+ * @param aRoot The root path or URL.
+ * @param aPath The path or URL to be joined with the root.
+ *
+ * - If aPath is a URL or a data URI, aPath is returned, unless aPath is a
+ *   scheme-relative URL: Then the scheme of aRoot, if any, is prepended
+ *   first.
+ * - Otherwise aPath is a path. If aRoot is a URL, then its path portion
+ *   is updated with the result and aRoot is returned. Otherwise the result
+ *   is returned.
+ *   - If aPath is absolute, the result is aPath.
+ *   - Otherwise the two paths are joined with a slash.
+ * - Joining for example 'http://' and 'www.example.com' is also supported.
+ */
+function join(aRoot, aPath) {
+    if (aRoot === "") {
+        aRoot = ".";
+    }
+    if (aPath === "") {
+        aPath = ".";
+    }
+    const aPathUrl = urlParse(aPath);
+    const aRootUrl = urlParse(aRoot);
+    if (aRootUrl) {
+        aRoot = aRootUrl.path || "/";
+    }
+
+    // `join(foo, '//www.example.org')`
+    if (aPathUrl && !aPathUrl.scheme) {
+        if (aRootUrl) {
+            aPathUrl.scheme = aRootUrl.scheme;
+        }
+        return urlGenerate(aPathUrl);
+    }
+
+    if (aPathUrl || aPath.match(dataUrlRegexp)) {
+        return aPath;
+    }
+
+    // `join('http://', 'www.example.com')`
+    if (aRootUrl && !aRootUrl.host && !aRootUrl.path) {
+        aRootUrl.host = aPath;
+        return urlGenerate(aRootUrl);
+    }
+
+    const joined = aPath.charAt(0) === "/"
+        ? aPath
+        : normalize(`${aRoot.replace(/\/+$/, "")}/${aPath}`);
+
+    if (aRootUrl) {
+        aRootUrl.path = joined;
+        return urlGenerate(aRootUrl);
+    }
+    return joined;
+}
+exports.join = join;
+
+exports.isAbsolute = function (aPath) {
+    return aPath.charAt(0) === "/" || urlRegexp.test(aPath);
+};
+
+/**
+ * Make a path relative to a URL or another path.
+ *
+ * @param aRoot The root path or URL.
+ * @param aPath The path or URL to be made relative to aRoot.
+ */
+function relative(aRoot, aPath) {
+    if (aRoot === "") {
+        aRoot = ".";
+    }
+
+    aRoot = aRoot.replace(/\/$/, "");
+
+    // It is possible for the path to be above the root. In this case, simply
+    // checking whether the root is a prefix of the path won't work. Instead, we
+    // need to remove components from the root one by one, until either we find
+    // a prefix that fits, or we run out of components to remove.
+    let level = 0;
+    while (aPath.indexOf(`${aRoot}/`) !== 0) {
+        const index = aRoot.lastIndexOf("/");
+        if (index < 0) {
+            return aPath;
+        }
+
+        // If the only part of the root that is left is the scheme (i.e. http://,
+        // file:///, etc.), one or more slashes (/), or simply nothing at all, we
+        // have exhausted all components, so the path is not relative to the root.
+        aRoot = aRoot.slice(0, index);
+        if (aRoot.match(/^([^\/]+:\/)?\/*$/)) {
+            return aPath;
+        }
+
+        ++level;
+    }
+
+    // Make sure we add a "../" for each component we removed from the root.
+    return Array(level + 1).join("../") + aPath.substr(aRoot.length + 1);
+}
+exports.relative = relative;
+
+const supportsNullProto = (function () {
+    const obj = Object.create(null);
+    return !("__proto__" in obj);
+}());
 
 function identity(s) {
     return s;
 }
 
-export const toSetString = identity;
+/**
+ * Because behavior goes wacky when you set `__proto__` on objects, we
+ * have to prefix all the strings in our set with an arbitrary character.
+ *
+ * See https://github.com/mozilla/source-map/pull/31 and
+ * https://github.com/mozilla/source-map/issues/30
+ *
+ * @param String aStr
+ */
+function toSetString(aStr) {
+    if (isProtoString(aStr)) {
+        return `$${aStr}`;
+    }
 
-export const fromSetString = identity;
+    return aStr;
+}
+exports.toSetString = supportsNullProto ? identity : toSetString;
+
+function fromSetString(aStr) {
+    if (isProtoString(aStr)) {
+        return aStr.slice(1);
+    }
+
+    return aStr;
+}
+exports.fromSetString = supportsNullProto ? identity : fromSetString;
+
+function isProtoString(s) {
+    if (!s) {
+        return false;
+    }
+
+    const length = s.length;
+
+    if (length < 9 /* "__proto__".length */) {
+        return false;
+    }
+
+    if (s.charCodeAt(length - 1) !== 95 /* '_' */ ||
+        s.charCodeAt(length - 2) !== 95 /* '_' */ ||
+        s.charCodeAt(length - 3) !== 111 /* 'o' */ ||
+        s.charCodeAt(length - 4) !== 116 /* 't' */ ||
+        s.charCodeAt(length - 5) !== 111 /* 'o' */ ||
+        s.charCodeAt(length - 6) !== 114 /* 'r' */ ||
+        s.charCodeAt(length - 7) !== 112 /* 'p' */ ||
+        s.charCodeAt(length - 8) !== 95 /* '_' */ ||
+        s.charCodeAt(length - 9) !== 95 /* '_' */) {
+        return false;
+    }
+
+    for (let i = length - 10; i >= 0; i--) {
+        if (s.charCodeAt(i) !== 36 /* '$' */) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Comparator between two mappings where the original positions are compared.
+ *
+ * Optionally pass in `true` as `onlyCompareGenerated` to consider two
+ * mappings with the same original source/line/column, but different generated
+ * line and column the same. Useful when searching for a mapping with a
+ * stubbed out mapping.
+ */
+function compareByOriginalPositions(mappingA, mappingB, onlyCompareOriginal) {
+    let cmp = strcmp(mappingA.source, mappingB.source);
+    if (cmp !== 0) {
+        return cmp;
+    }
+
+    cmp = mappingA.originalLine - mappingB.originalLine;
+    if (cmp !== 0) {
+        return cmp;
+    }
+
+    cmp = mappingA.originalColumn - mappingB.originalColumn;
+    if (cmp !== 0 || onlyCompareOriginal) {
+        return cmp;
+    }
+
+    cmp = mappingA.generatedColumn - mappingB.generatedColumn;
+    if (cmp !== 0) {
+        return cmp;
+    }
+
+    cmp = mappingA.generatedLine - mappingB.generatedLine;
+    if (cmp !== 0) {
+        return cmp;
+    }
+
+    return strcmp(mappingA.name, mappingB.name);
+}
+exports.compareByOriginalPositions = compareByOriginalPositions;
+
+/**
+ * Comparator between two mappings with deflated source and name indices where
+ * the generated positions are compared.
+ *
+ * Optionally pass in `true` as `onlyCompareGenerated` to consider two
+ * mappings with the same generated line and column, but different
+ * source/name/original line and column the same. Useful when searching for a
+ * mapping with a stubbed out mapping.
+ */
+function compareByGeneratedPositionsDeflated(mappingA, mappingB, onlyCompareGenerated) {
+    let cmp = mappingA.generatedLine - mappingB.generatedLine;
+    if (cmp !== 0) {
+        return cmp;
+    }
+
+    cmp = mappingA.generatedColumn - mappingB.generatedColumn;
+    if (cmp !== 0 || onlyCompareGenerated) {
+        return cmp;
+    }
+
+    cmp = strcmp(mappingA.source, mappingB.source);
+    if (cmp !== 0) {
+        return cmp;
+    }
+
+    cmp = mappingA.originalLine - mappingB.originalLine;
+    if (cmp !== 0) {
+        return cmp;
+    }
+
+    cmp = mappingA.originalColumn - mappingB.originalColumn;
+    if (cmp !== 0) {
+        return cmp;
+    }
+
+    return strcmp(mappingA.name, mappingB.name);
+}
+exports.compareByGeneratedPositionsDeflated = compareByGeneratedPositionsDeflated;
 
 function strcmp(aStr1, aStr2) {
     if (aStr1 === aStr2) {
@@ -56,7 +391,7 @@ function strcmp(aStr1, aStr2) {
  * Comparator between two mappings with inflated source and name strings where
  * the generated positions are compared.
  */
-export function compareByGeneratedPositionsInflated(mappingA, mappingB) {
+function compareByGeneratedPositionsInflated(mappingA, mappingB) {
     let cmp = mappingA.generatedLine - mappingB.generatedLine;
     if (cmp !== 0) {
         return cmp;
@@ -84,295 +419,67 @@ export function compareByGeneratedPositionsInflated(mappingA, mappingB) {
 
     return strcmp(mappingA.name, mappingB.name);
 }
+exports.compareByGeneratedPositionsInflated = compareByGeneratedPositionsInflated;
 
 /**
  * Strip any JSON XSSI avoidance prefix from the string (as documented
  * in the source maps specification), and then parse the string as
  * JSON.
  */
-export function parseSourceMapInput(str) {
+function parseSourceMapInput(str) {
     return JSON.parse(str.replace(/^\)]}'[^\n]*\n/, ""));
 }
-
-// We use 'http' as the base here because we want URLs processed relative
-// to the safe base to be treated as "special" URLs during parsing using
-// the WHATWG URL parsing. This ensures that backslash normalization
-// applies to the path and such.
-const PROTOCOL = "http:";
-const PROTOCOL_AND_HOST = `${PROTOCOL}//host`;
-
-/**
- * Make it easy to create small utilities that tweak a URL's path.
- */
-function createSafeHandler(cb) {
-    return (input) => {
-        const type = getURLType(input);
-        const base = buildSafeBase(input);
-        const url = new URL(input, base);
-
-        cb(url);
-
-        const result = url.toString();
-
-        if (type === "absolute") {
-            return result;
-        } else if (type === "scheme-relative") {
-            return result.slice(PROTOCOL.length);
-        } else if (type === "path-absolute") {
-            return result.slice(PROTOCOL_AND_HOST.length);
-        }
-
-        // This assumes that the callback will only change
-        // the path, search and hash values.
-        return computeRelativeURL(base, result);
-    };
-}
-
-function withBase(url, base) {
-    return new URL(url, base).toString();
-}
-
-function buildUniqueSegment(prefix, str) {
-    let id = 0;
-    do {
-        const ident = prefix + (id++);
-        if (!str.includes(ident)) {
-            return ident;
-        }
-    } while (true);
-}
-
-function buildSafeBase(str) {
-    const maxDotParts = str.split("..").length - 1;
-
-    // If we used a segment that also existed in `str`, then we would be unable
-    // to compute relative paths. For example, if `segment` were just "a":
-    //
-    //   const url = "../../a/"
-    //   const base = buildSafeBase(url); // http://host/a/a/
-    //   const joined = "http://host/a/";
-    //   const result = relative(base, joined);
-    //
-    // Expected: "../../a/";
-    // Actual: "a/"
-    //
-    const segment = buildUniqueSegment("p", str);
-
-    let base = `${PROTOCOL_AND_HOST}/`;
-    for (let i = 0; i < maxDotParts; i++) {
-        base += `${segment}/`;
-    }
-    return base;
-}
-
-const ABSOLUTE_SCHEME = /^[A-Za-z0-9\+\-\.]+:/;
-function getURLType(url) {
-    if (url[0] === "/") {
-        if (url[1] === "/") {
-            return "scheme-relative";
-        }
-        return "path-absolute";
-    }
-
-    return ABSOLUTE_SCHEME.test(url) ? "absolute" : "path-relative";
-}
-
-/**
- * Given two URLs that are assumed to be on the same
- * protocol/host/user/password build a relative URL from the
- * path, params, and hash values.
- *
- * @param rootURL The root URL that the target will be relative to.
- * @param targetURL The target that the relative URL points to.
- * @return A rootURL-relative, normalized URL value.
- */
-function computeRelativeURL(rootURL, targetURL) {
-    if (is.string(rootURL)) {
-        rootURL = new URL(rootURL); 
-    }
-    if (is.string(targetURL)) {
-        targetURL = new URL(targetURL);
-    }
-
-    const targetParts = targetURL.pathname.split("/");
-    const rootParts = rootURL.pathname.split("/");
-
-    // If we've got a URL path ending with a "/", we remove it since we'd
-    // otherwise be relative to the wrong location.
-    if (rootParts.length > 0 && !rootParts[rootParts.length - 1]) {
-        rootParts.pop();
-    }
-
-    while (
-        targetParts.length > 0 &&
-    rootParts.length > 0 &&
-    targetParts[0] === rootParts[0]
-    ) {
-        targetParts.shift();
-        rootParts.shift();
-    }
-
-    const relativePath = rootParts
-        .map(() => "..")
-        .concat(targetParts)
-        .join("/");
-
-    return relativePath + targetURL.search + targetURL.hash;
-}
-
-/**
- * Given a URL, ensure that it is treated as a directory URL.
- *
- * @param url
- * @return A normalized URL value.
- */
-const ensureDirectory = createSafeHandler((url) => {
-    url.pathname = url.pathname.replace(/\/?$/, "/");
-});
-
-/**
- * Given a URL, strip off any filename if one is present.
- *
- * @param url
- * @return A normalized URL value.
- */
-const trimFilename = createSafeHandler((url) => {
-    url.href = new URL(".", url.toString()).toString();
-});
-
-/**
- * Normalize a given URL.
- * * Convert backslashes.
- * * Remove any ".." and "." segments.
- *
- * @param url
- * @return A normalized URL value.
- */
-export const normalize = createSafeHandler((url) => {});
-
-/**
- * Joins two paths/URLs.
- *
- * All returned URLs will be normalized.
- *
- * @param aRoot The root path or URL. Assumed to reference a directory.
- * @param aPath The path or URL to be joined with the root.
- * @return A joined and normalized URL value.
- */
-export function join(aRoot, aPath) {
-    const pathType = getURLType(aPath);
-    const rootType = getURLType(aRoot);
-
-    aRoot = ensureDirectory(aRoot);
-
-    if (pathType === "absolute") {
-        return withBase(aPath, undefined);
-    }
-    if (rootType === "absolute") {
-        return withBase(aPath, aRoot);
-    }
-
-    if (pathType === "scheme-relative") {
-        return normalize(aPath);
-    }
-    if (rootType === "scheme-relative") {
-        return withBase(aPath, withBase(aRoot, PROTOCOL_AND_HOST)).slice(PROTOCOL.length);
-    }
-
-    if (pathType === "path-absolute") {
-        return normalize(aPath);
-    }
-    if (rootType === "path-absolute") {
-        return withBase(aPath, withBase(aRoot, PROTOCOL_AND_HOST)).slice(PROTOCOL_AND_HOST.length);
-    }
-
-    const base = buildSafeBase(aPath + aRoot);
-    const newPath = withBase(aPath, withBase(aRoot, base));
-    return computeRelativeURL(base, newPath);
-}
-
-/**
- * Make a path relative to a URL or another path. If returning a
- * relative URL is not possible, the original target will be returned.
- * All returned URLs will be normalized.
- *
- * @param aRoot The root path or URL.
- * @param aPath The path or URL to be made relative to aRoot.
- * @return A rootURL-relative (if possible), normalized URL value.
- */
-export function relative(rootURL, targetURL) {
-    const result = relativeIfPossible(rootURL, targetURL);
-
-    return is.string(result) ? result : normalize(targetURL);
-}
-
-function relativeIfPossible(rootURL, targetURL) {
-    const urlType = getURLType(rootURL);
-    if (urlType !== getURLType(targetURL)) {
-        return null;
-    }
-
-    const base = buildSafeBase(rootURL + targetURL);
-    const root = new URL(rootURL, base);
-    const target = new URL(targetURL, base);
-
-    try {
-        new URL("", target.toString());
-    } catch (err) {
-    // Bail if the URL doesn't support things being relative to it,
-    // For example, data: and blob: URLs.
-        return null;
-    }
-
-    if (
-        target.protocol !== root.protocol ||
-    target.user !== root.user ||
-    target.password !== root.password ||
-    target.hostname !== root.hostname ||
-    target.port !== root.port
-    ) {
-        return null;
-    }
-
-    return computeRelativeURL(root, target);
-}
+exports.parseSourceMapInput = parseSourceMapInput;
 
 /**
  * Compute the URL of a source given the the source root, the source's
  * URL, and the source map's URL.
  */
-export function computeSourceURL(sourceRoot, sourceURL, sourceMapURL) {
-    // The source map spec states that "sourceRoot" and "sources" entries are to be appended. While
-    // that is a little vague, implementations have generally interpreted that as joining the
-    // URLs with a `/` between then, assuming the "sourceRoot" doesn't already end with one.
-    // For example,
-    //
-    //   sourceRoot: "some-dir",
-    //   sources: ["/some-path.js"]
-    //
-    // and
-    //
-    //   sourceRoot: "some-dir/",
-    //   sources: ["/some-path.js"]
-    //
-    // must behave as "some-dir/some-path.js".
-    //
-    // With this library's the transition to a more URL-focused implementation, that behavior is
-    // preserved here. To acheive that, we trim the "/" from absolute-path when a sourceRoot value
-    // is present in order to make the sources entries behave as if they are relative to the
-    // "sourceRoot", as they would have if the two strings were simply concated.
-    if (sourceRoot && getURLType(sourceURL) === "path-absolute") {
-        sourceURL = sourceURL.replace(/^\//, "");
-    }
+function computeSourceURL(sourceRoot, sourceURL, sourceMapURL) {
+    sourceURL = sourceURL || "";
 
-    let url = normalize(sourceURL || "");
-
-    // Parsing URLs can be expensive, so we only perform these joins when needed.
     if (sourceRoot) {
-        url = join(sourceRoot, url); 
+        // This follows what Chrome does.
+        if (sourceRoot[sourceRoot.length - 1] !== "/" && sourceURL[0] !== "/") {
+            sourceRoot += "/";
+        }
+        // The spec says:
+        //   Line 4: An optional source root, useful for relocating source
+        //   files on a server or removing repeated values in the
+        //   “sources” entry.  This value is prepended to the individual
+        //   entries in the “source” field.
+        sourceURL = sourceRoot + sourceURL;
     }
+
+    // Historically, SourceMapConsumer did not take the sourceMapURL as
+    // a parameter.  This mode is still somewhat supported, which is why
+    // this code block is conditional.  However, it's preferable to pass
+    // the source map URL to SourceMapConsumer, so that this function
+    // can implement the source URL resolution algorithm as outlined in
+    // the spec.  This block is basically the equivalent of:
+    //    new URL(sourceURL, sourceMapURL).toString()
+    // ... except it avoids using URL, which wasn't available in the
+    // older releases of node still supported by this library.
+    //
+    // The spec says:
+    //   If the sources are not absolute URLs after prepending of the
+    //   “sourceRoot”, the sources are resolved relative to the
+    //   SourceMap (like resolving script src in a html document).
     if (sourceMapURL) {
-        url = join(trimFilename(sourceMapURL), url); 
+        const parsed = urlParse(sourceMapURL);
+        if (!parsed) {
+            throw new Error("sourceMapURL could not be parsed");
+        }
+        if (parsed.path) {
+            // Strip the last path component, but keep the "/".
+            const index = parsed.path.lastIndexOf("/");
+            if (index >= 0) {
+                parsed.path = parsed.path.substring(0, index + 1);
+            }
+        }
+        sourceURL = join(urlGenerate(parsed), sourceURL);
     }
-    return url;
+
+    return normalize(sourceURL);
 }
+exports.computeSourceURL = computeSourceURL;

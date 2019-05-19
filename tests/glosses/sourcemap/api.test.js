@@ -1,12 +1,9 @@
 const {
-    is,
     sourcemap
 } = adone;
 
-it("api", () => {
-    assert.isTrue(is.class(sourcemap.SourceMapGenerator));
-    assert.isTrue(is.class(sourcemap.SourceMapConsumer));
-    assert.isTrue(is.class(sourcemap.BasicSourceMapConsumer));
-    assert.isTrue(is.class(sourcemap.IndexedSourceMapConsumer));
-    assert.isTrue(is.class(sourcemap.SourceNode));
+it("test that the api is properly exposed in the top level", () => {
+    assert.equal(typeof sourcemap.SourceMapGenerator, "function");
+    assert.equal(typeof sourcemap.SourceMapConsumer, "function");
+    assert.equal(typeof sourcemap.SourceNode, "function");
 });

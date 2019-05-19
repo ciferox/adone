@@ -1,6 +1,5 @@
-/* eslint-disable func-style */
-export const GREATEST_LOWER_BOUND = 1;
-export const LEAST_UPPER_BOUND = 2;
+exports.GREATEST_LOWER_BOUND = 1;
+exports.LEAST_UPPER_BOUND = 2;
 
 /**
  * Recursive implementation of binary search.
@@ -28,10 +27,10 @@ function recursiveSearch(aLow, aHigh, aNeedle, aHaystack, aCompare, aBias) {
     const mid = Math.floor((aHigh - aLow) / 2) + aLow;
     const cmp = aCompare(aNeedle, aHaystack[mid], true);
     if (cmp === 0) {
-        // Found the element we are looking for.
+    // Found the element we are looking for.
         return mid;
     } else if (cmp > 0) {
-        // Our needle is greater than aHaystack[mid].
+    // Our needle is greater than aHaystack[mid].
         if (aHigh - mid > 1) {
             // The element is in the upper half.
             return recursiveSearch(mid, aHigh, aNeedle, aHaystack, aCompare, aBias);
@@ -39,12 +38,13 @@ function recursiveSearch(aLow, aHigh, aNeedle, aHaystack, aCompare, aBias) {
 
         // The exact needle element was not found in this haystack. Determine if
         // we are in termination case (3) or (2) and return the appropriate thing.
-        if (aBias === LEAST_UPPER_BOUND) {
+        if (aBias == exports.LEAST_UPPER_BOUND) {
             return aHigh < aHaystack.length ? aHigh : -1;
-        }
+        } 
         return mid;
+    
     }
-
+  
     // Our needle is less than aHaystack[mid].
     if (mid - aLow > 1) {
         // The element is in the lower half.
@@ -52,10 +52,12 @@ function recursiveSearch(aLow, aHigh, aNeedle, aHaystack, aCompare, aBias) {
     }
 
     // we are in termination case (3) or (2) and return the appropriate thing.
-    if (aBias === LEAST_UPPER_BOUND) {
+    if (aBias == exports.LEAST_UPPER_BOUND) {
         return mid;
-    }
+    } 
     return aLow < 0 ? -1 : aLow;
+    
+  
 }
 
 /**
@@ -76,7 +78,7 @@ function recursiveSearch(aLow, aHigh, aNeedle, aHaystack, aCompare, aBias) {
  *     searching for, respectively, if the exact element cannot be found.
  *     Defaults to 'binarySearch.GREATEST_LOWER_BOUND'.
  */
-export const search = function (aNeedle, aHaystack, aCompare, aBias) {
+exports.search = function search(aNeedle, aHaystack, aCompare, aBias) {
     if (aHaystack.length === 0) {
         return -1;
     }

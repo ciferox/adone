@@ -152,7 +152,6 @@ lazify({
     realm: "./glosses/realm",
     regex: "./glosses/regex",
     rollup: "./glosses/rollup",
-    schema: "./glosses/schema",
     semver: "./glosses/semver",
     shell: "./glosses/shell",
     sourcemap: "./glosses/sourcemap",
@@ -165,6 +164,7 @@ lazify({
     typescript: "./glosses/typescript",
     uri: "./glosses/uri",
     util: "./glosses/utils",
+    validation: "./glosses/validation",
     vault: "./glosses/vault",
     web: "./glosses/web"
 }, adone);

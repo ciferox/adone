@@ -1,7 +1,7 @@
 import { dirname, extname, join, normalize, resolve, sep } from 'path';
 import builtinList from 'builtin-modules';
 import resolveId from 'resolve';
-import isModule from 'is-module';
+import isModule from './is_module';
 import fs from 'fs';
 import { createFilter } from '../../pluginutils';
 // import { peerDependencies } from '../package.json';

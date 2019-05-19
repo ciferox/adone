@@ -29,29 +29,29 @@ const isSourceNode = "$$$isSourceNode$$$";
  *        generated JS, or other SourceNodes.
  * @param aName The original identifier.
  */
-export default class SourceNode {
-    constructor(aLine, aColumn, aSource, aChunks, aName) {
-        this.children = [];
-        this.sourceContents = {};
-        this.line = is.nil(aLine) ? null : aLine;
-        this.column = is.nil(aColumn) ? null : aColumn;
-        this.source = is.nil(aSource) ? null : aSource;
-        this.name = is.nil(aName) ? null : aName;
-        this[isSourceNode] = true;
-        if (!is.nil(aChunks)) {
-            this.add(aChunks);
-        }
+export default function SourceNode(aLine, aColumn, aSource, aChunks, aName) {
+    this.children = [];
+    this.sourceContents = {};
+    this.line = is.nil(aLine) ? null : aLine;
+    this.column = is.nil(aColumn) ? null : aColumn;
+    this.source = is.nil(aSource) ? null : aSource;
+    this.name = is.nil(aName) ? null : aName;
+    this[isSourceNode] = true;
+    if (!is.nil(aChunks)) {
+        this.add(aChunks);
     }
+}
 
-    /**
-     * Creates a SourceNode from generated code and a SourceMapConsumer.
-     *
-     * @param aGeneratedCode The generated code
-     * @param aSourceMapConsumer The SourceMap for the generated code
-     * @param aRelativePath Optional. The path that relative sources in the
-     *        SourceMapConsumer should be relative to.
-     */
-    static fromStringWithSourceMap(aGeneratedCode, aSourceMapConsumer, aRelativePath) {
+/**
+ * Creates a SourceNode from generated code and a SourceMapConsumer.
+ *
+ * @param aGeneratedCode The generated code
+ * @param aSourceMapConsumer The SourceMap for the generated code
+ * @param aRelativePath Optional. The path that relative sources in the
+ *        SourceMapConsumer should be relative to.
+ */
+SourceNode.fromStringWithSourceMap =
+    function SourceNode_fromStringWithSourceMap(aGeneratedCode, aSourceMapConsumer, aRelativePath) {
         // The SourceNode we want to fill with the generated code
         // and the SourceMap
         const node = new SourceNode();
@@ -81,7 +81,6 @@ export default class SourceNode {
         // To extract it current and last mapping is used.
         // Here we store the last mapping.
         let lastMapping = null;
-        let nextLine;
 
         aSourceMapConsumer.eachMapping((mapping) => {
             if (!is.null(lastMapping)) {
@@ -97,7 +96,7 @@ export default class SourceNode {
                     // There is no new line in between.
                     // Associate the code between "lastGeneratedColumn" and
                     // "mapping.generatedColumn" with "lastMapping"
-                    nextLine = remainingLines[remainingLinesIndex] || "";
+                    var nextLine = remainingLines[remainingLinesIndex] || "";
                     const code = nextLine.substr(0, mapping.generatedColumn -
                         lastGeneratedColumn);
                     remainingLines[remainingLinesIndex] = nextLine.substr(mapping.generatedColumn -
@@ -117,7 +116,7 @@ export default class SourceNode {
                 lastGeneratedLine++;
             }
             if (lastGeneratedColumn < mapping.generatedColumn) {
-                nextLine = remainingLines[remainingLinesIndex] || "";
+                var nextLine = remainingLines[remainingLinesIndex] || "";
                 node.add(nextLine.substr(0, mapping.generatedColumn));
                 remainingLines[remainingLinesIndex] = nextLine.substr(mapping.generatedColumn);
                 lastGeneratedColumn = mapping.generatedColumn;
@@ -161,66 +160,67 @@ export default class SourceNode {
                     mapping.name));
             }
         }
-    }
+    };
 
-    /**
-     * Add a chunk of generated JS to this source node.
-     *
-     * @param aChunk A string snippet of generated JS code, another instance of
-     *        SourceNode, or an array where each member is one of those things.
-     */
-    add(aChunk) {
-        if (is.array(aChunk)) {
-            aChunk.forEach(function (chunk) {
-                this.add(chunk);
-            }, this);
-        } else if (aChunk[isSourceNode] || is.string(aChunk)) {
-            if (aChunk) {
-                this.children.push(aChunk);
-            }
-        } else {
-            throw new TypeError(
-                `Expected a SourceNode, string, or an array of SourceNodes and strings. Got ${aChunk}`
-            );
+/**
+ * Add a chunk of generated JS to this source node.
+ *
+ * @param aChunk A string snippet of generated JS code, another instance of
+ *        SourceNode, or an array where each member is one of those things.
+ */
+SourceNode.prototype.add = function SourceNode_add(aChunk) {
+    if (is.array(aChunk)) {
+        aChunk.forEach(function (chunk) {
+            this.add(chunk);
+        }, this);
+    } else if (aChunk[isSourceNode] || is.string(aChunk)) {
+        if (aChunk) {
+            this.children.push(aChunk);
         }
-        return this;
+    } else {
+        throw new TypeError(
+            `Expected a SourceNode, string, or an array of SourceNodes and strings. Got ${aChunk}`
+        );
     }
+    return this;
+};
 
-    /**
-     * Add a chunk of generated JS to the beginning of this source node.
-     *
-     * @param aChunk A string snippet of generated JS code, another instance of
-     *        SourceNode, or an array where each member is one of those things.
-     */
-    prepend(aChunk) {
-        if (is.array(aChunk)) {
-            for (let i = aChunk.length - 1; i >= 0; i--) {
-                this.prepend(aChunk[i]);
-            }
-        } else if (aChunk[isSourceNode] || is.string(aChunk)) {
-            this.children.unshift(aChunk);
-        } else {
-            throw new TypeError(
-                `Expected a SourceNode, string, or an array of SourceNodes and strings. Got ${aChunk}`
-            );
+/**
+ * Add a chunk of generated JS to the beginning of this source node.
+ *
+ * @param aChunk A string snippet of generated JS code, another instance of
+ *        SourceNode, or an array where each member is one of those things.
+ */
+SourceNode.prototype.prepend = function SourceNode_prepend(aChunk) {
+    if (is.array(aChunk)) {
+        for (let i = aChunk.length - 1; i >= 0; i--) {
+            this.prepend(aChunk[i]);
         }
-        return this;
+    } else if (aChunk[isSourceNode] || is.string(aChunk)) {
+        this.children.unshift(aChunk);
+    } else {
+        throw new TypeError(
+            `Expected a SourceNode, string, or an array of SourceNodes and strings. Got ${aChunk}`
+        );
     }
+    return this;
+};
 
-    /**
-     * Walk over the tree of JS snippets in this node and its children. The
-     * walking function is called once for each snippet of JS and is passed that
-     * snippet and the its original associated source's line/column location.
-     *
-     * @param aFn The traversal function.
-     */
-    walk(aFn) {
-        let chunk;
-        for (let i = 0, len = this.children.length; i < len; i++) {
-            chunk = this.children[i];
-            if (chunk[isSourceNode]) {
-                chunk.walk(aFn);
-            } else if (chunk !== "") {
+/**
+ * Walk over the tree of JS snippets in this node and its children. The
+ * walking function is called once for each snippet of JS and is passed that
+ * snippet and the its original associated source's line/column location.
+ *
+ * @param aFn The traversal function.
+ */
+SourceNode.prototype.walk = function SourceNode_walk(aFn) {
+    let chunk;
+    for (let i = 0, len = this.children.length; i < len; i++) {
+        chunk = this.children[i];
+        if (chunk[isSourceNode]) {
+            chunk.walk(aFn);
+        } else {
+            if (chunk !== "") {
                 aFn(chunk, {
                     source: this.source,
                     line: this.line,
@@ -230,115 +230,155 @@ export default class SourceNode {
             }
         }
     }
+};
 
-    /**
-     * Like `String.prototype.join` except for SourceNodes. Inserts `aStr` between
-     * each of `this.children`.
-     *
-     * @param aSep The separator.
-     */
-    join(aSep) {
-        let newChildren;
-        let i;
-        const len = this.children.length;
-        if (len > 0) {
-            newChildren = [];
-            for (i = 0; i < len - 1; i++) {
-                newChildren.push(this.children[i]);
-                newChildren.push(aSep);
-            }
+/**
+ * Like `String.prototype.join` except for SourceNodes. Inserts `aStr` between
+ * each of `this.children`.
+ *
+ * @param aSep The separator.
+ */
+SourceNode.prototype.join = function SourceNode_join(aSep) {
+    let newChildren;
+    let i;
+    const len = this.children.length;
+    if (len > 0) {
+        newChildren = [];
+        for (i = 0; i < len - 1; i++) {
             newChildren.push(this.children[i]);
-            this.children = newChildren;
+            newChildren.push(aSep);
         }
-        return this;
+        newChildren.push(this.children[i]);
+        this.children = newChildren;
     }
+    return this;
+};
 
-    /**
-     * Call String.prototype.replace on the very right-most source snippet. Useful
-     * for trimming whitespace from the end of a source node, etc.
-     *
-     * @param aPattern The pattern to replace.
-     * @param aReplacement The thing to replace the pattern with.
-     */
-    replaceRight(aPattern, aReplacement) {
-        const lastChild = this.children[this.children.length - 1];
-        if (lastChild[isSourceNode]) {
-            lastChild.replaceRight(aPattern, aReplacement);
-        } else if (is.string(lastChild)) {
-            this.children[this.children.length - 1] = lastChild.replace(aPattern, aReplacement);
-        } else {
-            this.children.push("".replace(aPattern, aReplacement));
-        }
-        return this;
+/**
+ * Call String.prototype.replace on the very right-most source snippet. Useful
+ * for trimming whitespace from the end of a source node, etc.
+ *
+ * @param aPattern The pattern to replace.
+ * @param aReplacement The thing to replace the pattern with.
+ */
+SourceNode.prototype.replaceRight = function SourceNode_replaceRight(aPattern, aReplacement) {
+    const lastChild = this.children[this.children.length - 1];
+    if (lastChild[isSourceNode]) {
+        lastChild.replaceRight(aPattern, aReplacement);
+    } else if (is.string(lastChild)) {
+        this.children[this.children.length - 1] = lastChild.replace(aPattern, aReplacement);
+    } else {
+        this.children.push("".replace(aPattern, aReplacement));
     }
+    return this;
+};
 
-    /**
-     * Set the source content for a source file. This will be added to the SourceMapGenerator
-     * in the sourcesContent field.
-     *
-     * @param aSourceFile The filename of the source file
-     * @param aSourceContent The content of the source file
-     */
-    setSourceContent(aSourceFile, aSourceContent) {
+/**
+ * Set the source content for a source file. This will be added to the SourceMapGenerator
+ * in the sourcesContent field.
+ *
+ * @param aSourceFile The filename of the source file
+ * @param aSourceContent The content of the source file
+ */
+SourceNode.prototype.setSourceContent =
+    function SourceNode_setSourceContent(aSourceFile, aSourceContent) {
         this.sourceContents[util.toSetString(aSourceFile)] = aSourceContent;
-    }
+    };
 
-    /**
-     * Walk over the tree of SourceNodes. The walking function is called for each
-     * source file content and is passed the filename and source content.
-     *
-     * @param aFn The traversal function.
-     */
-    walkSourceContents(aFn) {
-        for (let i = 0, len = this.children.length; i < len; i++) {
+/**
+ * Walk over the tree of SourceNodes. The walking function is called for each
+ * source file content and is passed the filename and source content.
+ *
+ * @param aFn The traversal function.
+ */
+SourceNode.prototype.walkSourceContents =
+    function SourceNode_walkSourceContents(aFn) {
+        for (var i = 0, len = this.children.length; i < len; i++) {
             if (this.children[i][isSourceNode]) {
                 this.children[i].walkSourceContents(aFn);
             }
         }
 
         const sources = Object.keys(this.sourceContents);
-        for (let i = 0, len = sources.length; i < len; i++) {
+        for (var i = 0, len = sources.length; i < len; i++) {
             aFn(util.fromSetString(sources[i]), this.sourceContents[sources[i]]);
         }
-    }
+    };
 
-    /**
-     * Return the string representation of this source node. Walks over the tree
-     * and concatenates all the various snippets together to one string.
-     */
-    toString() {
-        let str = "";
-        this.walk((chunk) => {
-            str += chunk;
-        });
-        return str;
-    }
+/**
+ * Return the string representation of this source node. Walks over the tree
+ * and concatenates all the various snippets together to one string.
+ */
+SourceNode.prototype.toString = function SourceNode_toString() {
+    let str = "";
+    this.walk((chunk) => {
+        str += chunk;
+    });
+    return str;
+};
 
-    /**
-     * Returns the string representation of this source node along with a source
-     * map.
-     */
-    toStringWithSourceMap(aArgs) {
-        const generated = {
-            code: "",
-            line: 1,
-            column: 0
-        };
-        const map = new SourceMapGenerator(aArgs);
-        let sourceMappingActive = false;
-        let lastOriginalSource = null;
-        let lastOriginalLine = null;
-        let lastOriginalColumn = null;
-        let lastOriginalName = null;
-        this.walk((chunk, original) => {
-            generated.code += chunk;
-            if (!is.null(original.source)
-                && !is.null(original.line)
-                && !is.null(original.column)) {
-                if (lastOriginalSource !== original.source
-                    || lastOriginalLine !== original.line
-                    || lastOriginalColumn !== original.column
-                    || lastOriginalName !== original.name) {
+/**
+ * Returns the string representation of this source node along with a source
+ * map.
+ */
+SourceNode.prototype.toStringWithSourceMap = function SourceNode_toStringWithSourceMap(aArgs) {
+    const generated = {
+        code: "",
+        line: 1,
+        column: 0
+    };
+    const map = new SourceMapGenerator(aArgs);
+    let sourceMappingActive = false;
+    let lastOriginalSource = null;
+    let lastOriginalLine = null;
+    let lastOriginalColumn = null;
+    let lastOriginalName = null;
+    this.walk((chunk, original) => {
+        generated.code += chunk;
+        if (!is.null(original.source)
+            && !is.null(original.line)
+            && !is.null(original.column)) {
+            if (lastOriginalSource !== original.source
+                || lastOriginalLine !== original.line
+                || lastOriginalColumn !== original.column
+                || lastOriginalName !== original.name) {
+                map.addMapping({
+                    source: original.source,
+                    original: {
+                        line: original.line,
+                        column: original.column
+                    },
+                    generated: {
+                        line: generated.line,
+                        column: generated.column
+                    },
+                    name: original.name
+                });
+            }
+            lastOriginalSource = original.source;
+            lastOriginalLine = original.line;
+            lastOriginalColumn = original.column;
+            lastOriginalName = original.name;
+            sourceMappingActive = true;
+        } else if (sourceMappingActive) {
+            map.addMapping({
+                generated: {
+                    line: generated.line,
+                    column: generated.column
+                }
+            });
+            lastOriginalSource = null;
+            sourceMappingActive = false;
+        }
+        for (let idx = 0, length = chunk.length; idx < length; idx++) {
+            if (chunk.charCodeAt(idx) === NEWLINE_CODE) {
+                generated.line++;
+                generated.column = 0;
+                // Mappings end at eol
+                if (idx + 1 === length) {
+                    lastOriginalSource = null;
+                    sourceMappingActive = false;
+                } else if (sourceMappingActive) {
                     map.addMapping({
                         source: original.source,
                         original: {
@@ -352,52 +392,15 @@ export default class SourceNode {
                         name: original.name
                     });
                 }
-                lastOriginalSource = original.source;
-                lastOriginalLine = original.line;
-                lastOriginalColumn = original.column;
-                lastOriginalName = original.name;
-                sourceMappingActive = true;
-            } else if (sourceMappingActive) {
-                map.addMapping({
-                    generated: {
-                        line: generated.line,
-                        column: generated.column
-                    }
-                });
-                lastOriginalSource = null;
-                sourceMappingActive = false;
+            } else {
+                generated.column++;
             }
-            for (let idx = 0, length = chunk.length; idx < length; idx++) {
-                if (chunk.charCodeAt(idx) === NEWLINE_CODE) {
-                    generated.line++;
-                    generated.column = 0;
-                    // Mappings end at eol
-                    if (idx + 1 === length) {
-                        lastOriginalSource = null;
-                        sourceMappingActive = false;
-                    } else if (sourceMappingActive) {
-                        map.addMapping({
-                            source: original.source,
-                            original: {
-                                line: original.line,
-                                column: original.column
-                            },
-                            generated: {
-                                line: generated.line,
-                                column: generated.column
-                            },
-                            name: original.name
-                        });
-                    }
-                } else {
-                    generated.column++;
-                }
-            }
-        });
-        this.walkSourceContents((sourceFile, sourceContent) => {
-            map.setSourceContent(sourceFile, sourceContent);
-        });
+        }
+    });
+    this.walkSourceContents((sourceFile, sourceContent) => {
+        map.setSourceContent(sourceFile, sourceContent);
+    });
 
-        return { code: generated.code, map };
-    }
-}
+    return { code: generated.code, map };
+};
+

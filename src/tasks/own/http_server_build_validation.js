@@ -1,10 +1,10 @@
 const {
     fs,
     path: aPath,
-    realm: { BaseTask }
+    realm: { BaseTask },
+    validation: { ajv: { Ajv } }
 } = adone;
 
-const Ajv = require('ajv')
 const pack = require('ajv-pack')
 
 @adone.task.task("buildValidation")

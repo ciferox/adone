@@ -40,7 +40,7 @@ describe("source maps", () => {
         assert.ok(printed.map);
         assert.strictEqual(printed.map.file, "source.map.json");
         assert.strictEqual(printed.map.sourceRoot, sourceRoot);
-        const smc = await new sourceMap.SourceMapConsumer(printed.map);
+        const smc = new sourceMap.SourceMapConsumer(printed.map);
         function check(origLine, origCol, genLine, genCol, lastColumn) {
             assert.deepEqual(smc.originalPositionFor({
                 line: genLine,
@@ -115,8 +115,8 @@ describe("source maps", () => {
             inputSourceMap: useStrictResult.map
         }).print(stripConsole(useStrictAst));
         assert.strictEqual(oneStepResult.code, twoStepResult.code);
-        const smc1 = await new sourceMap.SourceMapConsumer(oneStepResult.map);
-        const smc2 = await new sourceMap.SourceMapConsumer(twoStepResult.map);
+        const smc1 = new sourceMap.SourceMapConsumer(oneStepResult.map);
+        const smc2 = new sourceMap.SourceMapConsumer(twoStepResult.map);
         smc1.eachMapping((mapping) => {
             const pos = {
                 line: mapping.generatedLine,

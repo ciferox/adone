@@ -359,7 +359,7 @@ function assertMapping(generatedLine, generatedColumn, originalSource,
 }
 exports.assertMapping = assertMapping;
 
-function assertEqualMaps(assert, actualMap, expectedMap) {
+function assertEqualMaps(actualMap, expectedMap) {
     assert.equal(actualMap.version, expectedMap.version, "version mismatch");
     assert.equal(actualMap.file, expectedMap.file, "file mismatch");
     assert.equal(actualMap.names.length,

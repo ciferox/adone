@@ -1,8 +1,8 @@
 const __ = adone.lazify({
     SourceMapGenerator: "./source_map_generator",
-    SourceMapConsumer: ["./source_map_consumer", (mod) => mod.SourceMapConsumer],
-    BasicSourceMapConsumer: ["./source_map_consumer", (mod) => mod.BasicSourceMapConsumer],
-    IndexedSourceMapConsumer: ["./source_map_consumer", (mod) => mod.IndexedSourceMapConsumer],
+    SourceMapConsumer: ["./source_map_consumer", "SourceMapConsumer"],
+    BasicSourceMapConsumer: ["./source_map_consumer", "BasicSourceMapConsumer"],
+    IndexedSourceMapConsumer: ["./source_map_consumer", "IndexedSourceMapConsumer"],
     SourceNode: "./source_node",
     convert: "./convert",
     inline: "./inline",

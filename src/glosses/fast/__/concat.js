@@ -48,7 +48,7 @@ export default class Concat {
             }
 
             if (sourceMap && sourceMap.mappings && sourceMap.mappings.length > 0) {
-                const upstreamSM = await sourcemap.createConsumer(sourceMap);
+                const upstreamSM = sourcemap.createConsumer(sourceMap);
                 upstreamSM.eachMapping((mapping) => {
                     if (mapping.source) {
                         this._sourceMap.addMapping({

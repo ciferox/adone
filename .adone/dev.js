@@ -810,19 +810,6 @@ export default {
                         }
                     }
                 },
-                schema: {
-                    description: "Schema validators",
-                    task: "transpile",
-                    src: "src/glosses/schema/**/*.js",
-                    dst: "lib/glosses/schema",
-                    units: {
-                        dot: {
-                            task: "adoneDotCompiler",
-                            src: "src/glosses/schema/__/dot/*.jst",
-                            dst: "lib/glosses/schema/__/dot"
-                        }
-                    }
-                },
                 semver: {
                     description: "Semantic version parser",
                     task: "transpile",
@@ -958,6 +945,32 @@ export default {
                             task: "transpile",
                             src: "src/glosses/utils/throttle/**/*.js",
                             dst: "lib/glosses/utils/throttle"
+                        }
+                    }
+                },
+                validation: {
+                    description: "Data validation",
+                    src: "src/glosses/validation/index.js",
+                    dst: "lib/glosses/validation",
+                    task: "transpile",
+                    units: {
+                        ajv: {
+                            description: "The fastest JSON Schema Validator",
+                            task: "transpile",
+                            src: "src/glosses/validation/ajv/**/*.js",
+                            dst: "lib/glosses/validation/ajv",
+                            units: {
+                                dot: {
+                                    task: "adoneDotCompiler",
+                                    src: "src/glosses/validation/ajv/dot/*.jst",
+                                    dst: "lib/glosses/validation/ajv/dotjs"
+                                },
+                                refs: {
+                                    task: "copy",
+                                    src: "src/glosses/validation/ajv/refs/*.json",
+                                    dst: "lib/glosses/validation/ajv/refs"
+                                }
+                            }
                         }
                     }
                 },

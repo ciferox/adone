@@ -2,7 +2,7 @@ const {
     sourcemap: { convert, inline: { generate: generator } }
 } = adone;
 
-describe("sourcemap", "convert", () => {
+describe("convert", () => {
     const gen = generator({ charset: "utf-8" })
         .addMappings("foo.js", [{ original: { line: 2, column: 3 }, generated: { line: 5, column: 10 } }], { line: 5 })
         .addGeneratedMappings("bar.js", "var a = 2;\nconsole.log(a)", { line: 23, column: 22 });
