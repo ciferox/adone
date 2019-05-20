@@ -1,4 +1,3 @@
-import MagicString from 'magic-string';
 import { Node, StatementNode } from '../ast/nodes/shared/Node';
 import { treeshakeNode } from './treeshakeNode';
 
@@ -66,7 +65,7 @@ export function findFirstLineBreakOutsideComment(code: string, start = 0) {
 
 export function renderStatementList(
 	statements: StatementNode[],
-	code: MagicString,
+	code: adone.text.MagicString,
 	start: number,
 	end: number,
 	options: RenderOptions
@@ -113,7 +112,7 @@ export function renderStatementList(
 // This assumes that the first character is not part of the first node
 export function getCommaSeparatedNodesWithBoundaries<N extends Node>(
 	nodes: N[],
-	code: MagicString,
+	code: adone.text.MagicString,
 	start: number,
 	end: number
 ): ({

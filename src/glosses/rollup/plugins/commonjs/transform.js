@@ -1,5 +1,4 @@
 import { walk } from 'estree-walker';
-import MagicString from 'magic-string';
 import { attachScopes, extractAssignedNames, makeLegalIdentifier } from '../../pluginutils';
 import { flatten, isFalsy, isReference, isTruthy } from './ast-utils.js';
 import { getProxyId, HELPERS_ID } from './helpers';
@@ -77,7 +76,7 @@ export function transformCommonjs(
 ) {
 	const ast = astCache || tryParse(parse, code, id);
 
-	const magicString = new MagicString(code);
+	const magicString = new adone.text.MagicString(code);
 
 	const required = {};
 	// Because objects have no guaranteed ordering, yet we need it,

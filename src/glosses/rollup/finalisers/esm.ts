@@ -1,11 +1,10 @@
-import { Bundle as MagicStringBundle } from 'magic-string';
 import { FinaliserOptions } from './index';
 
-export * from 'magic-string';
+// export * from 'magic-string';
 import { OutputOptions } from '../rollup/types';
 
 export default function esm(
-	magicString: MagicStringBundle,
+	magicString: adone.text.MagicString.Bundle,
 	{ intro, outro, dependencies, exports }: FinaliserOptions,
 	options: OutputOptions
 ) {

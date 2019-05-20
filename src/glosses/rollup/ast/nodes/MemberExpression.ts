@@ -1,4 +1,3 @@
-import MagicString from 'magic-string';
 import { BLANK } from '../../utils/blank';
 import relativeId from '../../utils/relativeId';
 import { NodeRenderOptions, RenderOptions } from '../../utils/renderHelpers';
@@ -234,7 +233,7 @@ export default class MemberExpression extends NodeBase implements DeoptimizableE
 	}
 
 	render(
-		code: MagicString,
+		code: adone.text.MagicString,
 		options: RenderOptions,
 		{ renderedParentType, isCalleeOfRenderedParent }: NodeRenderOptions = BLANK
 	) {

@@ -4,6 +4,7 @@ const __ = adone.lazify({
     BasicSourceMapConsumer: ["./source_map_consumer", "BasicSourceMapConsumer"],
     IndexedSourceMapConsumer: ["./source_map_consumer", "IndexedSourceMapConsumer"],
     SourceNode: "./source_node",
+    codec: "./codec",
     convert: "./convert",
     inline: "./inline",
     support: "./support"

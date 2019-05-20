@@ -1,4 +1,3 @@
-import MagicString from 'magic-string';
 import { BLANK } from '../../utils/blank';
 import {
 	getCommaSeparatedNodesWithBoundaries,
@@ -79,7 +78,7 @@ export default class SequenceExpression extends NodeBase {
 	}
 
 	render(
-		code: MagicString,
+		code: adone.text.MagicString,
 		options: RenderOptions,
 		{ renderedParentType, isCalleeOfRenderedParent }: NodeRenderOptions = BLANK
 	) {

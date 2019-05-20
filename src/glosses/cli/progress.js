@@ -96,7 +96,7 @@ export default class ProgressBar {
         clean = false,
         spinner,
         statusMap,
-        timeFormatter = adone.pretty.time,
+        timeFormatter = adone.pretty.ms,
         blank = "—",
         filled = approx(symbol.square),
         callback,

@@ -1,4 +1,3 @@
-import MagicString from 'magic-string';
 import { RenderOptions } from '../../utils/renderHelpers';
 import { getSystemExportStatement } from '../../utils/systemJsRendering';
 import { ExecutionPathOptions } from '../ExecutionPathOptions';
@@ -46,7 +45,7 @@ export default class AssignmentExpression extends NodeBase {
 		return path.length > 0 && this.right.hasEffectsWhenAccessedAtPath(path, options);
 	}
 
-	render(code: MagicString, options: RenderOptions) {
+	render(code: adone.text.MagicString, options: RenderOptions) {
 		this.left.render(code, options);
 		this.right.render(code, options);
 		if (options.format === 'system') {

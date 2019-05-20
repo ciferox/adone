@@ -1,4 +1,3 @@
-import MagicString from 'magic-string';
 import { dirname, normalize, relative } from '../../utils/path';
 import { PluginDriver } from '../../utils/pluginDriver';
 import { ObjectPathKey } from '../values';
@@ -27,7 +26,7 @@ export default class MetaProperty extends NodeBase {
 	}
 
 	renderFinalMechanism(
-		code: MagicString,
+		code: adone.text.MagicString,
 		chunkId: string,
 		format: string,
 		pluginDriver: PluginDriver

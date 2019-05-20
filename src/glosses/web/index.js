@@ -1,3 +1,4 @@
 adone.lazify({
-    core: "./core"
+    compiler: "./compiler",
+    csstree: "./csstree"
 }, exports, require);

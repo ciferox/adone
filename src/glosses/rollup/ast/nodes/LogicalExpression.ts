@@ -1,4 +1,3 @@
-import MagicString from 'magic-string';
 import { BLANK } from '../../utils/blank';
 import { NodeRenderOptions, RenderOptions } from '../../utils/renderHelpers';
 import { removeAnnotations } from '../../utils/treeshakeNode';
@@ -157,7 +156,7 @@ export default class LogicalExpression extends NodeBase implements Deoptimizable
 	}
 
 	render(
-		code: MagicString,
+		code: adone.text.MagicString,
 		options: RenderOptions,
 		{ renderedParentType, isCalleeOfRenderedParent }: NodeRenderOptions = BLANK
 	) {

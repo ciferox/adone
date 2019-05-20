@@ -1,47 +1,30 @@
-const {
-    is,
-    util: { fromMs, pluralizeWord }
-} = adone;
+export default (options) => {
+    options = Object.assign({
+        date: new Date(),
+        local: true,
+        showTimeZone: false,
+        showMilliseconds: false
+    }, options);
 
-export default (ms, opts) => {
-    if (!is.finite(ms)) {
-        throw new TypeError(`${ms} is not finite number`);
+    let { date } = options;
+
+    if (options.local) {
+        // Offset the date so it will return the correct value when getting the ISO string
+        date = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
     }
 
-    opts = opts || {};
+    let end = "";
 
-    if (ms < 1000) {
-        const msDecimalDigits = is.number(opts.msDecimalDigits) ? opts.msDecimalDigits : 0;
-        return (msDecimalDigits ? ms.toFixed(msDecimalDigits) : Math.ceil(ms)) + (opts.verbose ? ` ${pluralizeWord("millisecond", Math.ceil(ms))}` : "ms");
+    if (options.showTimeZone) {
+        end = ` UTC${options.local ? adone.pretty.timeZone(date) : ""}`;
     }
 
-    const ret = [];
-
-    const add = function (val, long, short, valStr) {
-        if (val === 0) {
-            return;
-        }
-
-        const postfix = opts.verbose ? ` ${pluralizeWord(long, val)}` : short;
-
-        ret.push((valStr || val) + postfix);
-    };
-
-    const parsed = fromMs(ms);
-
-    add(parsed.days, "day", "d");
-    add(parsed.hours, "hour", "h");
-    add(parsed.minutes, "minute", "m");
-
-    if (opts.compact) {
-        add(parsed.seconds, "second", "s");
-        return `~${ret[0]}`;
+    if (options.showMilliseconds && date.getUTCMilliseconds() > 0) {
+        end = ` ${date.getUTCMilliseconds()}ms${end}`;
     }
 
-    const sec = ms / 1000 % 60;
-    const secDecimalDigits = is.number(opts.secDecimalDigits) ? opts.secDecimalDigits : 1;
-    const secStr = sec.toFixed(secDecimalDigits).replace(/\.0$/, "");
-    add(sec, "second", "s", secStr);
-
-    return ret.join(" ");
+    return date
+        .toISOString()
+        .replace(/T/, " ")
+        .replace(/\..+/, end);
 };

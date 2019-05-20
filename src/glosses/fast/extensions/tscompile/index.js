@@ -32,7 +32,7 @@ const TS_COMPILER_OPTIONS = {
 };
 
 const readConfig = (ts, fileExists, readFile, options) => {
-    let config = { compilerOptions: {} };
+    let config = { compilerOptions: options.compilerOptions || {} };
     let basePath = options.cwd;
     let configFileName = undefined;
     // Read project configuration when available.
@@ -75,6 +75,7 @@ const readConfig = (ts, fileExists, readFile, options) => {
     delete config.options.tsBuildInfoFile;
     delete config.options.incremental;
     // Target ES5 output by default (instead of ES3).
+    // console.log(config.options.target);
     if (is.undefined(config.options.target)) {
         config.options.target = ts.ScriptTarget.ES5;
     }

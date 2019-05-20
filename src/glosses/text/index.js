@@ -319,5 +319,6 @@ adone.lazify({
     wrapAnsi: "./wrap_ansi",
     truncate: "./truncate",
     toCamelCase: "./to_camel_case",
-    sprintf: "./sprintf"
+    sprintf: "./sprintf",
+    MagicString: "./magic_string"
 }, adone.asNamespace(exports), require);

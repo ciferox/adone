@@ -1,4 +1,3 @@
-import { Bundle as MagicStringBundle } from 'magic-string';
 import { GlobalsOption, OutputOptions } from '../rollup/types';
 import { error } from '../utils/error';
 import { isLegal } from '../utils/identifierHelpers';
@@ -13,7 +12,7 @@ import warnOnBuiltins from './shared/warnOnBuiltins';
 const thisProp = (name: string) => `this${keypath(name)}`;
 
 export default function iife(
-	magicString: MagicStringBundle,
+	magicString: adone.text.MagicString.Bundle,
 	{
 		dependencies,
 		exports,

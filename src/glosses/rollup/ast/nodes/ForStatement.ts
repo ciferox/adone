@@ -1,4 +1,3 @@
-import MagicString from 'magic-string';
 import { NO_SEMICOLON, RenderOptions } from '../../utils/renderHelpers';
 import { ExecutionPathOptions } from '../ExecutionPathOptions';
 import BlockScope from '../scopes/BlockScope';
@@ -27,7 +26,7 @@ export default class ForStatement extends StatementBase {
 		);
 	}
 
-	render(code: MagicString, options: RenderOptions) {
+	render(code: adone.text.MagicString, options: RenderOptions) {
 		if (this.init) this.init.render(code, options, NO_SEMICOLON);
 		if (this.test) this.test.render(code, options, NO_SEMICOLON);
 		if (this.update) this.update.render(code, options, NO_SEMICOLON);

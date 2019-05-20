@@ -1,5 +1,4 @@
 import sha256 from 'hash.js/lib/hash/sha/256';
-import MagicString, { Bundle as MagicStringBundle, SourceMap } from 'magic-string';
 import ExportDefaultDeclaration from './ast/nodes/ExportDefaultDeclaration';
 import FunctionDeclaration from './ast/nodes/FunctionDeclaration';
 import { UNDEFINED_EXPRESSION } from './ast/values';
@@ -37,6 +36,11 @@ import { RESERVED_NAMES } from './utils/reservedNames';
 import { sanitizeFileName } from './utils/sanitizeFileName';
 import { timeEnd, timeStart } from './utils/timers';
 import { MISSING_EXPORT_SHIM_VARIABLE } from './utils/variableNames';
+
+const {
+	text: { MagicString: { Bundle: MagicStringBundle, SourceMap } }
+} = adone;
+
 
 export interface ModuleDeclarations {
 	dependencies: ModuleDeclarationDependency[];
@@ -99,7 +103,7 @@ function getGlobalName(
 			guess: module.variableName,
 			message: `No name was provided for external module '${
 				module.id
-			}' in output.globals – guessing '${module.variableName}'`,
+				}' in output.globals – guessing '${module.variableName}'`,
 			source: module.id
 		});
 		return module.variableName;
@@ -140,7 +144,7 @@ export default class Chunk {
 		exports: ChunkExports;
 	} = undefined as any;
 	private renderedHash: string = undefined as any;
-	private renderedModuleSources: MagicString[] = undefined as any;
+	private renderedModuleSources: adone.text.MagicString[] = undefined as any;
 	private renderedSource: MagicStringBundle | null = null;
 	private renderedSourceLength: number = undefined as any;
 	private sortedExportNames: string[] | null = null;
@@ -312,7 +316,7 @@ export default class Chunk {
 					const variable = this.exportNames[exportName];
 					return `${relativeId((variable.module as Module).id).replace(/\\/g, '/')}:${
 						variable.name
-					}:${exportName}`;
+						}:${exportName}`;
 				})
 				.join(',')
 		);
@@ -530,7 +534,7 @@ export default class Chunk {
 				if (namespace.included && !this.graph.preserveModules) {
 					const rendered = namespace.renderBlock(renderOptions);
 					if (namespace.renderFirst()) hoistedSource += n + rendered;
-					else magicString.addSource(new MagicString(rendered));
+					else magicString.addSource(new adone.text.MagicString(rendered));
 				}
 			}
 		}
@@ -622,7 +626,7 @@ export default class Chunk {
 				code: 'INVALID_TLA_FORMAT',
 				message: `Module format ${
 					options.format
-				} does not support top-level await. Use the "es" or "system" output formats rather.`
+					} does not support top-level await. Use the "es" or "system" output formats rather.`
 			});
 		}
 

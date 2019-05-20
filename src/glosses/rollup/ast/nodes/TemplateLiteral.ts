@@ -1,4 +1,3 @@
-import MagicString from 'magic-string';
 import { RenderOptions } from '../../utils/renderHelpers';
 import { LiteralValueOrUnknown, ObjectPath, UNKNOWN_VALUE } from '../values';
 import * as NodeType from './NodeType';
@@ -17,7 +16,7 @@ export default class TemplateLiteral extends NodeBase {
 		return this.quasis[0].value.cooked;
 	}
 
-	render(code: MagicString, options: RenderOptions) {
+	render(code: adone.text.MagicString, options: RenderOptions) {
 		(code.indentExclusionRanges as [number, number][]).push([this.start, this.end] as [
 			number,
 			number

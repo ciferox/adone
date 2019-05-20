@@ -1,7 +1,6 @@
 // import * as acorn from 'acorn';
 import * as ESTree from 'estree';
 import { locate } from 'locate-character';
-import MagicString from 'magic-string';
 import extractAssignedNames from './pluginutils/extractAssignedNames';
 import ClassDeclaration from './ast/nodes/ClassDeclaration';
 import ExportAllDeclaration from './ast/nodes/ExportAllDeclaration';
@@ -100,7 +99,7 @@ export interface AstContext {
 	includeDynamicImport: (node: Import) => void;
 	includeVariable: (variable: Variable) => void;
 	isCrossChunkImport: (importDescription: ImportDescription) => boolean;
-	magicString: MagicString;
+	magicString: adone.text.MagicString;
 	module: Module; // not to be used for tree-shaking
 	moduleContext: string;
 	nodeConstructors: { [name: string]: typeof NodeBase };
@@ -212,7 +211,7 @@ export default class Module {
 	private context: string;
 	private esTreeAst: ESTree.Program;
 	private graph: Graph;
-	private magicString: MagicString;
+	private magicString: adone.text.MagicString;
 	private namespaceVariable: NamespaceVariable = undefined as any;
 	private transformDependencies: string[];
 	private transitiveReexports: string[];
@@ -480,7 +479,7 @@ export default class Module {
 		});
 	}
 
-	render(options: RenderOptions): MagicString {
+	render(options: RenderOptions): adone.text.MagicString {
 		const magicString = this.magicString.clone();
 		this.ast.render(magicString, options);
 		this.usesTopLevelAwait = this.astContext.usesTopLevelAwait;
@@ -521,7 +520,7 @@ export default class Module {
 		// can change that, but it makes sense to use it for the source file name
 		const fileName = this.id;
 
-		this.magicString = new MagicString(code, {
+		this.magicString = new adone.text.MagicString(code, {
 			filename: (this.excludeFromSourcemap ? null : fileName) as string, // don't include plugin helpers in sourcemap
 			indentExclusionRanges: []
 		});

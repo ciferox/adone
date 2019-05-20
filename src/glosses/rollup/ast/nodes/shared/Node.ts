@@ -1,5 +1,4 @@
 import { locate } from 'locate-character';
-import MagicString from 'magic-string';
 import { AstContext, CommentDescription } from '../../../Module';
 import { NodeRenderOptions, RenderOptions } from '../../../utils/renderHelpers';
 import CallOptions from '../../CallOptions';
@@ -62,7 +61,7 @@ export interface Node extends Entity {
 	 * for for-loops that do not use a declared loop variable.
 	 */
 	includeWithAllDeclaredVariables(includeAllChildrenRecursively: boolean): void;
-	render(code: MagicString, options: RenderOptions, nodeRenderOptions?: NodeRenderOptions): void;
+	render(code: adone.text.MagicString, options: RenderOptions, nodeRenderOptions?: NodeRenderOptions): void;
 
 	/**
 	 * Start a new execution path to determine if this node has an effect on the bundle and
@@ -204,7 +203,7 @@ export class NodeBase implements ExpressionNode {
 		this.included = false;
 	}
 
-	insertSemicolon(code: MagicString) {
+	insertSemicolon(code: adone.text.MagicString) {
 		if (code.original[this.end - 1] !== ';') {
 			code.appendLeft(this.end, ';');
 		}
@@ -243,7 +242,7 @@ export class NodeBase implements ExpressionNode {
 		}
 	}
 
-	render(code: MagicString, options: RenderOptions) {
+	render(code: adone.text.MagicString, options: RenderOptions) {
 		for (const key of this.keys) {
 			const value = (this as GenericEsTreeNode)[key];
 			if (value === null || key === 'annotations') continue;

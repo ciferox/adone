@@ -1,4 +1,3 @@
-import MagicString from 'magic-string';
 import { RenderOptions } from '../../utils/renderHelpers';
 import ChildScope from '../scopes/ChildScope';
 import { IdentifierWithVariable } from './Identifier';
@@ -25,7 +24,7 @@ export default class ClassDeclaration extends ClassNode {
 		super.parseNode(esTreeNode);
 	}
 
-	render(code: MagicString, options: RenderOptions) {
+	render(code: adone.text.MagicString, options: RenderOptions) {
 		if (options.format === 'system' && this.id && this.id.variable.exportName) {
 			code.appendLeft(
 				this.end,

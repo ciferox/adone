@@ -1,4 +1,3 @@
-import MagicString from 'magic-string';
 import { RenderOptions } from '../../utils/renderHelpers';
 import CallOptions from '../CallOptions';
 import { DeoptimizableEntity } from '../DeoptimizableEntity';
@@ -163,7 +162,7 @@ export default class Property extends NodeBase implements DeoptimizableEntity {
 		});
 	}
 
-	render(code: MagicString, options: RenderOptions) {
+	render(code: adone.text.MagicString, options: RenderOptions) {
 		if (!this.shorthand) {
 			this.key.render(code, options);
 		}

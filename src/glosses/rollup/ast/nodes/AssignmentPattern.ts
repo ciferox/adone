@@ -1,4 +1,3 @@
-import MagicString from 'magic-string';
 import { BLANK } from '../../utils/blank';
 import { NodeRenderOptions, RenderOptions } from '../../utils/renderHelpers';
 import { ExecutionPathOptions } from '../ExecutionPathOptions';
@@ -37,7 +36,7 @@ export default class AssignmentPattern extends NodeBase implements PatternNode {
 	}
 
 	render(
-		code: MagicString,
+		code: adone.text.MagicString,
 		options: RenderOptions,
 		{ isShorthandProperty }: NodeRenderOptions = BLANK
 	) {

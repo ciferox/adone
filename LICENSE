@@ -6416,3 +6416,16 @@ Creative Commons CC0. Ported from the reference C implementation in RFC 7693.
 The MIT License (MIT)
 
 Copyright (c) 2014-present, Jon Schlinkert.
+
+- https://github.com/sindresorhus/date-time
+- https://github.com/sindresorhus/time-zone
+
+MIT License
+
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+- https://github.com/rich-harris/magic-string
+
+MIT License
+
+Copyright 2018 Rich Harris

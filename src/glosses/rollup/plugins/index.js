@@ -3,5 +3,6 @@ adone.lazify({
     cleanup: "./cleanup",
     commonjs: "./commonjs",
     json: "./json",
-    resolve: "./resolve"
+    resolve: "./resolve",
+    svelte: "./svelte"
 }, exports, require);

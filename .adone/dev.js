@@ -68,9 +68,23 @@ export default {
         },
         commands: {
             description: "ADONE CLI commands",
-            src: "src/commands/**/*.js",
-            dst: "lib/commands",
-            task: "transpile"
+            units: {
+                inspect: {
+                    src: "src/commands/inspect/**/*.js",
+                    dst: "lib/commands/inspect",
+                    task: "transpile"
+                },
+                realm: {
+                    src: "src/commands/realm/**/*.js",
+                    dst: "lib/commands/realm",
+                    task: "transpile"
+                },
+                rollup: {
+                    src: "src/commands/rollup/**/*.ts",
+                    dst: "lib/commands/rollup",
+                    task: "tsc"
+                }
+            }
         },
         common: {
             description: "ADONE common",
@@ -801,7 +815,15 @@ export default {
                         "!src/glosses/rollup/**/*.d.ts"
                     ],
                     dst: "lib/glosses/rollup",
-                    tsConfig: "tsconfig.json",
+                    compilerOptions: {
+                        allowSyntheticDefaultImports: true,
+                        noEmitOnError: true,
+                        noUnusedLocals: true,
+                        noUnusedParameters: true,
+                        strictPropertyInitialization: false,
+                        strictFunctionTypes: false,
+                        strict: true
+                    },
                     original: "https://github.com/rollup/rollup",
                     units: {
                         plugins: {
@@ -829,10 +851,9 @@ export default {
                     src: "src/glosses/sourcemap/**/*.js",
                     dst: "lib/glosses/sourcemap",
                     units: {
-                        wasm: {
-                            description: "mappings.wasm",
-                            task: "copy",
-                            src: "src/glosses/sourcemap/mappings.wasm",
+                        codec: {
+                            task: "tsc",
+                            src: "src/glosses/sourcemap/codec.ts",
                             dst: "lib/glosses/sourcemap"
                         }
                     }
@@ -988,20 +1009,64 @@ export default {
                     src: "src/glosses/web/index.js",
                     dst: "lib/glosses/web",
                     units: {
-                        core: {
-                            description: "core",
+                        compiler: {
+                            description: "Compiler",
+                            task: "tsc",
+                            src: "src/glosses/web/compiler/**/*.ts",
+                            dst: "lib/glosses/web/compiler",
+                            compilerOptions: {
+                                noImplicitThis: true,
+                                noEmitOnError: true,
+                                importHelpers: true
+                            }
+                        },
+                        browser: {
+                            description: "Browser-side stuff",
                             units: {
-                                js: {
-                                    description: "JS files",
-                                    task: "transpile",
-                                    src: "src/glosses/web/core/**/*.js",
-                                    dst: "lib/glosses/web/core"
-                                },
-                                ts: {
-                                    description: "TypeScript files",
-                                    task: "tsc",
-                                    src: "src/glosses/web/core/**/*.ts",
-                                    dst: "lib/glosses/web/core"
+                                core: {
+                                    // src: [
+                                    //     "src/glosses/web/browser/core/*.js",
+                                    //     "!src/glosses/web/browser/core/rollup.config.js"
+                                    // ],
+                                    task: "rollup",
+                                    options: {
+                                        config: "src/glosses/web/browser/core/rollup.config.js"
+                                    }
+                                }
+                            }
+                        },
+                        // core: {
+                        //     description: "compiler",
+                        //     units: {
+                        //         js: {
+                        //             description: "JS files",
+                        //             task: "transpile",
+                        //             src: "src/glosses/web/core/**/*.js",
+                        //             dst: "lib/glosses/web/core"
+                        //         },
+                        //         ts: {
+                        //             description: "TypeScript files",
+                        //             task: "tsc",
+                        //             src: "src/glosses/web/core/**/*.ts",
+                        //             dst: "lib/glosses/web/core",
+                        //             compilerOptions: {
+                        //                 noImplicitThis: true,
+                        //                 noEmitOnError: true,
+                        //                 importHelpers: true
+                        //             }
+                        //         }
+                        //     }
+                        // },
+                        csstree: {
+                            description: "A tool set for working with CSS",
+                            src: "src/glosses/web/csstree/**/*.js",
+                            dst: "lib/glosses/web/csstree",
+                            task: "transpile",
+                            units: {
+                                data: {
+                                    src: "src/glosses/web/csstree/data/*.json",
+                                    dst: "lib/glosses/web/csstree/data",
+                                    task: "copy"
                                 }
                             }
                         }

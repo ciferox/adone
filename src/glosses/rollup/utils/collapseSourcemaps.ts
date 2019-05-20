@@ -1,4 +1,3 @@
-import { DecodedSourceMap, SourceMap } from 'magic-string';
 import Chunk from '../Chunk';
 import Module from '../Module';
 import { ExistingRawSourceMap, RawSourceMap } from '../rollup/types';
@@ -146,7 +145,7 @@ class Link {
 export default function collapseSourcemaps(
 	bundle: Chunk,
 	file: string,
-	map: DecodedSourceMap,
+	map/*: DecodedSourceMap*/,
 	modules: Module[],
 	bundleSourcemapChain: RawSourceMap[],
 	excludeContent: boolean
@@ -219,5 +218,5 @@ export default function collapseSourcemaps(
 
 	sourcesContent = (excludeContent ? null : sourcesContent) as string[];
 
-	return new SourceMap({ file, sources, sourcesContent, names, mappings });
+	return new adone.text.MagicString.SourceMap({ file, sources, sourcesContent, names, mappings });
 }

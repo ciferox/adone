@@ -1,4 +1,3 @@
-import MagicString from 'magic-string';
 import { BLANK } from '../../utils/blank';
 import {
 	getCommaSeparatedNodesWithBoundaries,
@@ -71,7 +70,7 @@ export default class VariableDeclaration extends NodeBase {
 		}
 	}
 
-	render(code: MagicString, options: RenderOptions, nodeRenderOptions: NodeRenderOptions = BLANK) {
+	render(code: adone.text.MagicString, options: RenderOptions, nodeRenderOptions: NodeRenderOptions = BLANK) {
 		if (areAllDeclarationsIncludedAndNotExported(this.declarations)) {
 			for (const declarator of this.declarations) {
 				declarator.render(code, options);
@@ -88,7 +87,7 @@ export default class VariableDeclaration extends NodeBase {
 	}
 
 	private renderDeclarationEnd(
-		code: MagicString,
+		code: adone.text.MagicString,
 		separatorString: string,
 		lastSeparatorPos: number,
 		actualContentEnd: number,
@@ -128,7 +127,7 @@ export default class VariableDeclaration extends NodeBase {
 	}
 
 	private renderReplacedDeclarations(
-		code: MagicString,
+		code: adone.text.MagicString,
 		options: RenderOptions,
 		{ start = this.start, end = this.end, isNoStatement }: NodeRenderOptions
 	): void {

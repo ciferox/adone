@@ -1,4 +1,3 @@
-import MagicString from 'magic-string';
 import { findFirstOccurrenceOutsideComment, RenderOptions } from '../../utils/renderHelpers';
 import CallExpression from './CallExpression';
 import * as NodeType from './NodeType';
@@ -66,7 +65,7 @@ export default class Import extends NodeBase {
 		this.context.addDynamicImport(this);
 	}
 
-	render(code: MagicString, options: RenderOptions) {
+	render(code: adone.text.MagicString, options: RenderOptions) {
 		if (this.resolutionNamespace) {
 			const _ = options.compact ? '' : ' ';
 			const s = options.compact ? '' : ';';
@@ -92,7 +91,7 @@ export default class Import extends NodeBase {
 		}
 	}
 
-	renderFinalResolution(code: MagicString, resolution: string, format: string) {
+	renderFinalResolution(code: adone.text.MagicString, resolution: string, format: string) {
 		if (this.included) {
 			if (format === 'amd' && resolution.startsWith("'.") && resolution.endsWith(".js'")) {
 				resolution = resolution.slice(0, -4) + "'";

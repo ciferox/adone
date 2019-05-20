@@ -3,5 +3,7 @@ adone.lazify({
     json: "./json",
     size: "./size",
     table: "./table",
-    time: "./time"
+    ms: "./ms",
+    time: "./time",
+    timeZone: "./time_zone"
 }, adone.asNamespace(exports), require);

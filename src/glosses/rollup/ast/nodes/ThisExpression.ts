@@ -1,4 +1,3 @@
-import MagicString from 'magic-string';
 import { RenderOptions } from '../../utils/renderHelpers';
 import { ExecutionPathOptions } from '../ExecutionPathOptions';
 import ModuleScope from '../scopes/ModuleScope';
@@ -43,7 +42,7 @@ export default class ThisExpression extends NodeBase {
 		}
 	}
 
-	render(code: MagicString, _options: RenderOptions) {
+	render(code: adone.text.MagicString, _options: RenderOptions) {
 		if (this.alias !== null) {
 			code.overwrite(this.start, this.end, this.alias, {
 				contentOnly: false,

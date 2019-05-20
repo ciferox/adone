@@ -1,8 +1,7 @@
-import MagicString from 'magic-string';
 import * as NodeType from '../ast/nodes/NodeType';
 import { Node } from '../ast/nodes/shared/Node';
 
-export function treeshakeNode(node: Node, code: MagicString, start: number, end: number) {
+export function treeshakeNode(node: Node, code: adone.text.MagicString, start: number, end: number) {
 	code.remove(start, end);
 	if (node.annotations) {
 		for (const annotation of node.annotations) {
@@ -15,7 +14,7 @@ export function treeshakeNode(node: Node, code: MagicString, start: number, end:
 	}
 }
 
-export function removeAnnotations(node: Node, code: MagicString) {
+export function removeAnnotations(node: Node, code: adone.text.MagicString) {
 	if (!node.annotations && node.parent.type === NodeType.ExpressionStatement) {
 		node = node.parent as Node;
 	}

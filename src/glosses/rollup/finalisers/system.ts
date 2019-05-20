@@ -1,4 +1,3 @@
-import { Bundle as MagicStringBundle } from 'magic-string';
 import { ChunkExports, ModuleDeclarations } from '../Chunk';
 import { OutputOptions } from '../rollup/types';
 import { MISSING_EXPORT_SHIM_VARIABLE } from '../utils/variableNames';
@@ -78,7 +77,7 @@ const getMissingExportsBlock = (exports: ChunkExports, _: string, t: string, n: 
 	);
 
 export default function system(
-	magicString: MagicStringBundle,
+	magicString: adone.text.MagicString.Bundle,
 	{
 		dependencies,
 		exports,

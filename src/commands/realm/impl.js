@@ -73,26 +73,26 @@ const subCommand = (name) => adone.path.join(__dirname, "commands", name);
         }
     ]
 })
-    export default () => class RealmCommand extends app.Subsystem {
-        resolvePath(args, opts) {
-            let path = args.has("path") ? args.get("path") : null;
-            if (is.string(path) && opts.has("re")) {
-                path = new RegExp(path);
-            }
-            return path;
+export default () => class RealmCommand extends app.Subsystem {
+    resolvePath(args, opts) {
+        let path = args.has("path") ? args.get("path") : null;
+        if (is.string(path) && opts.has("re")) {
+            path = new RegExp(path);
         }
+        return path;
+    }
 
-        async connectRealm({ cwd, progress = true } = {}) {
-            let manager;
-            if (is.string(cwd)) {
-                manager = new realm.RealmManager({ cwd });
-            } else {
-                manager = realm.rootRealm;
-            }
-            await manager.connect({
-                transpile: true
-            });
-            progress && await cli.observe("progress", manager);
-            return manager;
+    async connectRealm({ cwd, progress = true } = {}) {
+        let manager;
+        if (is.string(cwd)) {
+            manager = new realm.RealmManager({ cwd });
+        } else {
+            manager = realm.rootRealm;
         }
-    };
+        await manager.connect({
+            transpile: true
+        });
+        progress && await cli.observe("progress", manager);
+        return manager;
+    }
+};

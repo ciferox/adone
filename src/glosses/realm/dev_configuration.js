@@ -65,6 +65,7 @@ export default class DevConfiguration extends adone.configuration.GenericConfig 
     }
 
     _walkUnits(prefix, tree, units) {
+        // TODO: need more accurate validation of 'src', 'dst' fields.
         const srcs = [];
         for (const [key, val] of Object.entries(tree)) {
             if (is.plainObject(val)) {

@@ -1,4 +1,3 @@
-import MagicString from 'magic-string';
 import { RenderOptions } from '../../utils/renderHelpers';
 import * as NodeType from './NodeType';
 import { ExpressionNode, StatementBase } from './shared/Node';
@@ -27,7 +26,7 @@ export default class ExpressionStatement extends StatementBase {
 		}
 	}
 
-	render(code: MagicString, options: RenderOptions) {
+	render(code: adone.text.MagicString, options: RenderOptions) {
 		super.render(code, options);
 		if (this.included) this.insertSemicolon(code);
 	}

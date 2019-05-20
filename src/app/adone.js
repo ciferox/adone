@@ -61,6 +61,12 @@ const command = (name) => path.join(__dirname, "..", "commands", name);
             group: "common",
             description: "Realm management",
             subsystem: command("realm")
+        },
+        {
+            name: "rollup",
+            group: "common",
+            description: "Rollup CLI",
+            subsystem: command("rollup")
         }
     ]
 })

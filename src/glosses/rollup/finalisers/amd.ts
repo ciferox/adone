@@ -1,4 +1,3 @@
-import { Bundle as MagicStringBundle } from 'magic-string';
 import { OutputOptions } from '../rollup/types';
 import { FinaliserOptions } from './index';
 import { compactEsModuleExport, esModuleExport } from './shared/esModuleExport';
@@ -20,7 +19,7 @@ function removeExtensionFromRelativeAmdId(id: string) {
 }
 
 export default function amd(
-	magicString: MagicStringBundle,
+	magicString: adone.text.MagicString.Bundle,
 	{
 		dependencies,
 		dynamicImport,

@@ -1,4 +1,3 @@
-import MagicString from 'magic-string';
 import { RenderOptions } from '../../utils/renderHelpers';
 import { ExecutionPathOptions } from '../ExecutionPathOptions';
 import { EMPTY_PATH, ObjectPath } from '../values';
@@ -32,7 +31,7 @@ export default class UpdateExpression extends NodeBase {
 		return path.length > 1;
 	}
 
-	render(code: MagicString, options: RenderOptions) {
+	render(code: adone.text.MagicString, options: RenderOptions) {
 		this.argument.render(code, options);
 		const variable = this.argument.variable;
 		if (options.format === 'system' && variable && variable.exportName) {

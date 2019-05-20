@@ -1,4 +1,3 @@
-import MagicString from 'magic-string';
 import { RenderOptions } from '../../utils/renderHelpers';
 import { ExecutionPathOptions } from '../ExecutionPathOptions';
 import { UNKNOWN_EXPRESSION } from '../values';
@@ -21,7 +20,7 @@ export default class ReturnStatement extends StatementBase {
 		this.scope.addReturnExpression(this.argument || UNKNOWN_EXPRESSION);
 	}
 
-	render(code: MagicString, options: RenderOptions) {
+	render(code: adone.text.MagicString, options: RenderOptions) {
 		if (this.argument) {
 			this.argument.render(code, options);
 			if (this.argument.start === this.start + 6 /* 'return'.length */) {
