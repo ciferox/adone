@@ -1022,41 +1022,27 @@ export default {
                         },
                         browser: {
                             description: "Browser-side stuff",
+                            task: "rollup",
+                            options: {
+                                config: "src/glosses/web/browser/rollup.config.js"
+                            }
+                        },
+                        sapper: {
+                            description: "Web framework",
+                            task: "tsc",
+                            src: [
+                                "src/glosses/web/sapper/**/*.ts",
+                                "!src/glosses/web/sapper/**/*.d.ts",
+                                "!src/glosses/web/sapper/runtime/**/*"
+                            ],
+                            dst: "lib/glosses/web/sapper",
                             units: {
-                                core: {
-                                    // src: [
-                                    //     "src/glosses/web/browser/core/*.js",
-                                    //     "!src/glosses/web/browser/core/rollup.config.js"
-                                    // ],
-                                    task: "rollup",
-                                    options: {
-                                        config: "src/glosses/web/browser/core/rollup.config.js"
-                                    }
+                                internal: {
+                                    src: "src/glosses/web/sapper/runtime/internal/*",
+                                    dst: "lib/glosses/web/sapper/runtime/internal"
                                 }
                             }
                         },
-                        // core: {
-                        //     description: "compiler",
-                        //     units: {
-                        //         js: {
-                        //             description: "JS files",
-                        //             task: "transpile",
-                        //             src: "src/glosses/web/core/**/*.js",
-                        //             dst: "lib/glosses/web/core"
-                        //         },
-                        //         ts: {
-                        //             description: "TypeScript files",
-                        //             task: "tsc",
-                        //             src: "src/glosses/web/core/**/*.ts",
-                        //             dst: "lib/glosses/web/core",
-                        //             compilerOptions: {
-                        //                 noImplicitThis: true,
-                        //                 noEmitOnError: true,
-                        //                 importHelpers: true
-                        //             }
-                        //         }
-                        //     }
-                        // },
                         csstree: {
                             description: "A tool set for working with CSS",
                             src: "src/glosses/web/csstree/**/*.js",

@@ -103,7 +103,7 @@ function getGlobalName(
 			guess: module.variableName,
 			message: `No name was provided for external module '${
 				module.id
-				}' in output.globals – guessing '${module.variableName}'`,
+			}' in output.globals – guessing '${module.variableName}'`,
 			source: module.id
 		});
 		return module.variableName;
@@ -316,7 +316,7 @@ export default class Chunk {
 					const variable = this.exportNames[exportName];
 					return `${relativeId((variable.module as Module).id).replace(/\\/g, '/')}:${
 						variable.name
-						}:${exportName}`;
+					}:${exportName}`;
 				})
 				.join(',')
 		);
@@ -626,7 +626,7 @@ export default class Chunk {
 				code: 'INVALID_TLA_FORMAT',
 				message: `Module format ${
 					options.format
-					} does not support top-level await. Use the "es" or "system" output formats rather.`
+				} does not support top-level await. Use the "es" or "system" output formats rather.`
 			});
 		}
 

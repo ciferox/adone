@@ -1,21 +1,21 @@
-import { extname, resolve } from 'path';
-import { sync as nodeResolveSync } from 'resolve';
-import { createFilter } from '../../pluginutils';
+import { extname, resolve } from "path";
+import { sync as nodeResolveSync } from "resolve";
+import { createFilter } from "../../pluginutils";
 // import { peerDependencies } from '../package.json';
-import { EXTERNAL_SUFFIX, getIdFromExternalProxyId, getIdFromProxyId, HELPERS, HELPERS_ID, PROXY_SUFFIX } from './helpers';
-import { getIsCjsPromise, setIsCjsPromise } from './is-cjs';
-import { getResolveId } from './resolve-id';
-import { checkEsModule, hasCjsKeywords, transformCommonjs } from './transform.js';
-import { getName } from './utils.js';
+import { EXTERNAL_SUFFIX, getIdFromExternalProxyId, getIdFromProxyId, HELPERS, HELPERS_ID, PROXY_SUFFIX } from "./helpers";
+import { getIsCjsPromise, setIsCjsPromise } from "./is-cjs";
+import { getResolveId } from "./resolve-id";
+import { checkEsModule, hasCjsKeywords, transformCommonjs } from "./transform.js";
+import { getName } from "./utils.js";
 
 export default function commonjs(options = {}) {
-	const extensions = options.extensions || ['.js'];
+	const extensions = options.extensions || [".js"];
 	const filter = createFilter(options.include, options.exclude);
 	const ignoreGlobal = options.ignoreGlobal;
 
 	const customNamedExports = {};
 	if (options.namedExports) {
-		Object.keys(options.namedExports).forEach(id => {
+		Object.keys(options.namedExports).forEach((id) => {
 			let resolvedId;
 
 			try {
@@ -33,10 +33,10 @@ export default function commonjs(options = {}) {
 	const allowDynamicRequire = !!options.ignore; // TODO maybe this should be configurable?
 
 	const ignoreRequire =
-		typeof options.ignore === 'function'
+		typeof options.ignore === "function"
 			? options.ignore
 			: Array.isArray(options.ignore)
-				? id => options.ignore.includes(id)
+				? (id) => options.ignore.includes(id)
 				: () => false;
 
 	const resolveId = getResolveId(extensions);
@@ -79,12 +79,12 @@ export default function commonjs(options = {}) {
 	}
 
 	return {
-		name: 'commonjs',
+		name: "commonjs",
 
 		buildStart() {
-			const [major, minor] = this.meta.rollupVersion.split('.').map(Number);
+			const [major, minor] = this.meta.rollupVersion.split(".").map(Number);
 			const minVersion = adone.rollup.VERSION;//peerDependencies.rollup.slice(2);
-			const [minMajor, minMinor] = minVersion.split('.').map(Number);
+			const [minMajor, minMinor] = minVersion.split(".").map(Number);
 			if (major < minMajor || (major === minMajor && minor < minMinor)) {
 				this.error(
 					`Insufficient Rollup version: "rollup-plugin-commonjs" requires at least rollup@${minVersion} but found rollup@${
@@ -111,7 +111,7 @@ export default function commonjs(options = {}) {
 				const actualId = getIdFromProxyId(id);
 				const name = getName(actualId);
 
-				return getIsCjsPromise(actualId).then(isCjs => {
+				return getIsCjsPromise(actualId).then((isCjs) => {
 					if (isCjs)
 						return `import { __moduleExports } from ${JSON.stringify(
 							actualId

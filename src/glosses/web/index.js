@@ -1,4 +1,6 @@
 adone.lazify({
     compiler: "./compiler",
-    csstree: "./csstree"
+    csstree: "./csstree",
+    api: "./sapper/api",
+    config: "./sapper/config/rollup"
 }, exports, require);

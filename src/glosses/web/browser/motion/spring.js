@@ -1,9 +1,9 @@
-import { writable } from 'svelte/store'; // eslint-disable-line import/no-unresolved
-import { loop, now } from 'svelte/internal'; // eslint-disable-line import/no-unresolved
-import { is_date } from './utils.js';
+import { writable } from "adoneweb/store"; // eslint-disable-line import/no-unresolved
+import { loop, now } from "adoneweb/core"; // eslint-disable-line import/no-unresolved
+import { is_date } from "./utils.js";
 
 function tick_spring(ctx, last_value, current_value, target_value) {
-	if (typeof current_value === 'number' || is_date(current_value)) {
+	if (typeof current_value === "number" || is_date(current_value)) {
 		const delta = target_value - current_value;
 		const velocity = (current_value - last_value) / (ctx.dt||1/60); // guard div by 0
 		const spring = ctx.opts.stiffness * delta;
@@ -21,7 +21,7 @@ function tick_spring(ctx, last_value, current_value, target_value) {
 	} else if (Array.isArray(current_value)) {
 		return current_value.map((_, i) =>
 			tick_spring(ctx, last_value[i], current_value[i], target_value[i]));
-	} else if (typeof current_value === 'object') {
+	} else if (typeof current_value === "object") {
 		const next_value = {};
 		for (const k in current_value)
 			next_value[k] = tick_spring(ctx, last_value[k], current_value[k], target_value[k]);

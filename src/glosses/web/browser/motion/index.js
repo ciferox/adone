@@ -1,2 +1,2 @@
-export * from './spring.js';
-export * from './tweened.js';
+export * from "./spring.js";
+export * from "./tweened.js";

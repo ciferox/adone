@@ -76,9 +76,13 @@ export default class RealmManager extends task.TaskManager {
                         cwd
                     });
                 } catch (err) {
-                    cfg = new realm.DevConfiguration({
-                        cwd
-                    });
+                    if (err.code && err.code === "MODULE_NOT_FOUND") {
+                        cfg = new realm.DevConfiguration({
+                            cwd
+                        });
+                    } else {
+                        throw err;
+                    }
                 }
                 return cfg;
             }
