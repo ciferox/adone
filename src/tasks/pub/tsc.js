@@ -5,8 +5,8 @@ export default class TSCompileTask extends adone.realm.TransformTask {
             cwd: adone.path.join(this.manager.cwd, adone.glob.parent(params.src)),
             sourceMap: true,
             compilerOptions: {
-                target: "es6",
-                lib: ["es5", "es6", "dom"],
+                target: "es2017",
+                lib: ["es5", "es6", "es2017","dom"],
                 emitDecoratorMetadata: true,
                 experimentalDecorators: true,
                 moduleResolution: "node",

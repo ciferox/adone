@@ -43,6 +43,9 @@ export default [
         ],
         plugins: [
             plugin.typescript({
+                importHelpers: false,
+                target: "es2017",
+                lib: ["es6", "es2017", "dom"],
                 include: "src/glosses/web/browser/store/**",
                 exclude: "src/glosses/web/browser/core/**"
             })
@@ -65,7 +68,7 @@ export default [
         ],
         external: (id) => id.startsWith("adoneweb/")
     },
-    ...["index", "easing", "transition", "animate"].map((name) => ({
+    ...["easing", "transition", "animate"].map((name) => ({
         input: `src/glosses/web/browser/${name}.mjs`,
         output: {
             file: `lib/glosses/web/browser/${name}.js`,

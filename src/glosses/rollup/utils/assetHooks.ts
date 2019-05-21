@@ -1,4 +1,3 @@
-import sha256 from 'hash.js/lib/hash/sha/256';
 import { Asset, EmitAsset, OutputBundle } from '../rollup/types';
 import {
 	errAssetNotFinalisedForFileName,
@@ -15,6 +14,10 @@ import { addWithNewReferenceId } from './referenceIds';
 import { isPlainName } from './relativeId';
 import { makeUnique, renderNamePattern } from './renderNamePattern';
 
+const {
+	crypto: { sha256 }
+} = adone;
+
 export function getAssetFileName(
 	asset: Asset,
 	existingNames: Record<string, any>,
@@ -27,11 +30,11 @@ export function getAssetFileName(
 		renderNamePattern(assetFileNames, 'assetFileNames', name => {
 			switch (name) {
 				case 'hash':
-					const hash = sha256();
+					const hash = sha256.create();
 					hash.update(name);
 					hash.update(':');
 					hash.update(asset.source);
-					return hash.digest('hex').substr(0, 8);
+					return hash.digest().toHex().substr(0, 8);
 				case 'name':
 					return asset.name.substr(0, asset.name.length - extname(asset.name).length);
 				case 'extname':

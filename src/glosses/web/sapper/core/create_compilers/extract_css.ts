@@ -1,10 +1,27 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import hash from 'string-hash';
-import * as codec from 'sourcemap-codec';
 import { PageComponent, Dirs } from '../../interfaces';
 import { CompileResult, Chunk } from './interfaces';
 import { posixify } from '../../utils'
+
+const {
+	fs,
+	path,
+	sourcemap: { codec }
+} = adone;
+
+// from 'string-hash' module
+function hash(str) {
+	var hash = 5381,
+		i = str.length;
+
+	while (i) {
+		hash = (hash * 33) ^ str.charCodeAt(--i);
+	}
+
+	/* JavaScript does bitwise operations (like XOR, above) on 32-bit signed
+	 * integers. Since we want the results to be always positive, convert the
+	 * signed int to an unsigned by doing an unsigned bitshift. */
+	return hash >>> 0;
+}
 
 const inline_sourcemap_header = 'data:application/json;charset=utf-8;base64,';
 

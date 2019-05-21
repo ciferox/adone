@@ -1,4 +1,4 @@
-import { getContext } from 'adoneweb';
+import { getContext } from 'adoneweb/core';
 import { CONTEXT_KEY } from '@sapper/internal/shared';
 
 export const stores = () => getContext(CONTEXT_KEY);

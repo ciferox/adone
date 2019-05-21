@@ -275,7 +275,6 @@
     "stream-to-promise": "^2.2.0",
     "streamifier": "^0.1.1",
     "streaming-iterables": "^4.1.0",
-    "string-hash": "^1.1.3",
     "string-to-stream": "^1.1.1",
     "superagent": "^4.0.0-beta.5",
     "superagent-mocker": "^0.5.2",

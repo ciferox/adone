@@ -28,13 +28,16 @@ const template = function (kind, external) {
             plugin.string({
                 include: "**/*.md"
             }),
-            plugin.typescript(
-            )
+            plugin.typescript({
+                importHelpers: false,
+                target: "es2017",
+                lib: ["es6", "es2017", "dom"]
+            })
         ]
     };
 }
 
 export default [
-    template("app", (id) => /^(svelte\/?|@sapper\/)/.test(id)),
-    template("server", (id) => /^(svelte\/?|@sapper\/)/.test(id) || builtinModules.includes(id))
+    template("app", (id) => /^(adoneweb\/?|@sapper\/)/.test(id)),
+    template("server", (id) => /^(adoneweb\/?|@sapper\/)/.test(id) || builtinModules.includes(id))
 ];

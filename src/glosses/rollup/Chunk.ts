@@ -1,4 +1,3 @@
-import sha256 from 'hash.js/lib/hash/sha/256';
 import ExportDefaultDeclaration from './ast/nodes/ExportDefaultDeclaration';
 import FunctionDeclaration from './ast/nodes/FunctionDeclaration';
 import { UNDEFINED_EXPRESSION } from './ast/values';
@@ -38,6 +37,7 @@ import { timeEnd, timeStart } from './utils/timers';
 import { MISSING_EXPORT_SHIM_VARIABLE } from './utils/variableNames';
 
 const {
+	crypto: { sha256 },
 	text: { MagicString: { Bundle: MagicStringBundle, SourceMap } }
 } = adone;
 
@@ -103,7 +103,7 @@ function getGlobalName(
 			guess: module.variableName,
 			message: `No name was provided for external module '${
 				module.id
-			}' in output.globals – guessing '${module.variableName}'`,
+				}' in output.globals – guessing '${module.variableName}'`,
 			source: module.id
 		});
 		return module.variableName;
@@ -308,7 +308,7 @@ export default class Chunk {
 	getRenderedHash(): string {
 		if (this.renderedHash) return this.renderedHash;
 		if (!this.renderedSource) return '';
-		const hash = sha256();
+		const hash = sha256.create();
 		hash.update(this.renderedSource.toString());
 		hash.update(
 			this.getExportNames()
@@ -316,11 +316,11 @@ export default class Chunk {
 					const variable = this.exportNames[exportName];
 					return `${relativeId((variable.module as Module).id).replace(/\\/g, '/')}:${
 						variable.name
-					}:${exportName}`;
+						}:${exportName}`;
 				})
 				.join(',')
 		);
-		return (this.renderedHash = hash.digest('hex'));
+		return (this.renderedHash = hash.digest().toHex());
 	}
 
 	getRenderedSourceLength() {
@@ -626,7 +626,7 @@ export default class Chunk {
 				code: 'INVALID_TLA_FORMAT',
 				message: `Module format ${
 					options.format
-				} does not support top-level await. Use the "es" or "system" output formats rather.`
+					} does not support top-level await. Use the "es" or "system" output formats rather.`
 			});
 		}
 
@@ -782,7 +782,7 @@ export default class Chunk {
 	}
 
 	private computeContentHashWithDependencies(addons: Addons, options: OutputOptions): string {
-		const hash = sha256();
+		const hash = sha256.create();
 
 		hash.update(
 			[addons.intro, addons.outro, addons.banner, addons.footer].map(addon => addon || '').join(':')
@@ -793,7 +793,7 @@ export default class Chunk {
 			else hash.update(dep.getRenderedHash());
 		});
 
-		return hash.digest('hex').substr(0, 8);
+		return hash.digest().toHex().substr(0, 8);
 	}
 
 	private finaliseDynamicImports(format: string) {
