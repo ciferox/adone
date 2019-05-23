@@ -5,7 +5,7 @@ import type { Token } from "./tokenizer";
 import type { SourceLocation } from "./util/location";
 import type { PlaceholderTypes } from "./plugins/placeholders";
 
-/**
+/*
  * If making any changes to the AST, update:
  * - This repository:
  *   - This file
@@ -263,8 +263,6 @@ export type TryStatement = NodeBase & {
   block: BlockStatement,
   handler: CatchClause | null,
   finalizer: BlockStatement | null,
-
-  guardedHandlers: $ReadOnlyArray<empty>, // TODO: Not in spec
 };
 
 export type CatchClause = NodeBase & {

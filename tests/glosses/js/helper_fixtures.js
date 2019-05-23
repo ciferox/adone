@@ -3,7 +3,8 @@ import resolve from "try-resolve";
 const {
     lodash: { extend, clone, trimEnd, cloneDeep },
     semver,
-    std: { fs, path }
+    fs,
+    path
 } = adone;
 
 const nodeVersion = semver.clean(process.version.slice(1));

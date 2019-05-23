@@ -1,1 +1,1 @@
-import a = require("adone");
+import a = require("a");

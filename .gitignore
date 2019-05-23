@@ -60,4 +60,3 @@ yarn.lock
 test-fixtures/
 _fixtures/
 test-resources/
-**/native/build/**/*

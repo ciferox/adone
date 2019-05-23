@@ -21,13 +21,15 @@ import {
     isLoose
 } from "./features";
 
-export { FEATURES };
+// import pkg from "../package.json";
+
+export { FEATURES, injectInitialization };
 
 // Note: Versions are represented as an integer. e.g. 7.1.5 is represented
 //       as 70000100005. This method is easier than using a semver-parsing
 //       package, but it breaks if we relese x.y.z where x, y or z are
 //       greater than 99_999.
-const version = core.version.split(".").reduce((v, x) => v * 1e5 + Number(x), 0);
+const version = adone.js.compiler.core.version.split(".").reduce((v, x) => v * 1e5 + Number(x), 0);
 const versionKey = "@babel/plugin-class-features/version";
 
 export function createClassFeaturePlugin({
@@ -50,7 +52,7 @@ export function createClassFeaturePlugin({
 
         visitor: {
             Class(path, state) {
-                if (this.file.get(versionKey) !== version) {
+                if (this.file.get(versionKey) !== version) { 
                     return;
                 }
 
@@ -119,13 +121,13 @@ export function createClassFeaturePlugin({
                         }
                     }
 
-                    if (!isDecorated) {
+                    if (!isDecorated) { 
                         isDecorated = hasOwnDecorators(path.node);
                     }
                 }
 
                 if (!props.length && !isDecorated) {
-                    return;
+                    return; 
                 }
 
                 let ref;
@@ -178,11 +180,11 @@ export function createClassFeaturePlugin({
                         instanceNodes,
                         (referenceVisitor, state) => {
                             if (isDecorated) {
-                                return;
+                                return; 
                             }
                             for (const prop of props) {
                                 if (prop.node.static) {
-                                    continue;
+                                    continue; 
                                 }
                                 prop.traverse(referenceVisitor, state);
                             }
@@ -197,15 +199,15 @@ export function createClassFeaturePlugin({
 
             PrivateName(path) {
                 if (this.file.get(versionKey) !== version) {
-                    return;
+                    return; 
                 }
 
                 throw path.buildCodeFrameError(`Unknown PrivateName "${path}"`);
             },
 
             ExportDefaultDeclaration(path) {
-                if (this.file.get(versionKey) !== version) {
-                    return;
+                if (this.file.get(versionKey) !== version) { 
+                    return; 
                 }
 
                 const decl = path.get("declaration");

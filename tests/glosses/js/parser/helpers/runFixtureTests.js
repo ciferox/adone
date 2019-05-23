@@ -1,8 +1,10 @@
 import { multiple as getFixtures } from "../../helper_fixtures";
 
 const {
+    is,
     js: { compiler: { codeFrameColumns } },
-    std: { fs, path }
+    fs,
+    path
 } = adone;
 
 const rootPath = path.join(__dirname, "../../../../..");
@@ -15,7 +17,7 @@ class FixtureError extends Error {
         let fixtureStackFrame = "";
         if (previousError.loc) {
             fixtureStackFrame =
-                codeFrameColumns(
+                `${codeFrameColumns(
                     code,
                     {
                         start: {
@@ -24,29 +26,29 @@ class FixtureError extends Error {
                         },
                     },
                     { highlightCode: true },
-                ) +
-                "\n" +
+                )
+                }\n` +
                 `at fixture (${fixturePath}:${previousError.loc.line}:${previousError
                     .loc.column + 1})\n`;
         }
 
         this.stack =
-            previousError.constructor.name +
-            ": " +
-            previousError.message +
-            "\n" +
-            fixtureStackFrame +
-            previousError.stack
+            `${previousError.constructor.name
+            }: ${
+            previousError.message
+            }\n${
+            fixtureStackFrame
+            }${previousError.stack
                 .split("\n")
                 .slice(messageLines)
-                .join("\n");
+                .join("\n")}`;
     }
 }
 
 export function runFixtureTests(fixturesPath, parseFunction) {
     const fixtures = getFixtures(fixturesPath);
 
-    Object.keys(fixtures).forEach(function (name) {
+    Object.keys(fixtures).forEach((name) => {
         fixtures[name].forEach(function (testSuite) {
             testSuite.tests.forEach(function (task) {
                 const testFn = task.disabled ? it.skip : it;
@@ -82,7 +84,7 @@ export function runFixtureTests(fixturesPath, parseFunction) {
 export function runThrowTestsWithEstree(fixturesPath, parseFunction) {
     const fixtures = getFixtures(fixturesPath);
 
-    Object.keys(fixtures).forEach(function (name) {
+    Object.keys(fixtures).forEach((name) => {
         fixtures[name].forEach(function (testSuite) {
             testSuite.tests.forEach(function (task) {
                 if (!task.options.throws) return;
@@ -132,22 +134,22 @@ function runTest(test, parseFunction) {
         if (opts.throws) {
             if (err.message === opts.throws) {
                 return;
-            } else {
-                if (process.env.OVERWRITE) {
-                    const fn = path.dirname(test.expect.loc) + "/options.json";
-                    test.options = test.options || {};
-                    test.options.throws = err.message;
-                    fs.writeFileSync(fn, JSON.stringify(test.options, null, "  "));
-                    return;
-                }
-
-                err.message =
-                    "Expected error message: " +
-                    opts.throws +
-                    ". Got error message: " +
-                    err.message;
-                throw err;
             }
+            if (process.env.OVERWRITE) {
+                const fn = path.dirname(test.expect.loc) + "/options.json";
+                test.options = test.options || {};
+                test.options.throws = err.message;
+                fs.writeFileSync(fn, JSON.stringify(test.options, null, "  "));
+                return;
+            }
+
+            err.message =
+                "Expected error message: " +
+                opts.throws +
+                ". Got error message: " +
+                err.message;
+            throw err;
+
         }
 
         throw err;
@@ -168,6 +170,9 @@ function runTest(test, parseFunction) {
         const mis = misMatch(JSON.parse(test.expect.code), ast);
 
         if (mis) {
+            if (process.env.OVERWRITE) {
+                return save(test, ast);
+            }
             throw new Error(mis);
         }
     }
@@ -181,41 +186,41 @@ function ppJSON(v) {
 function addPath(str, pt) {
     if (str.charAt(str.length - 1) === ")") {
         return str.slice(0, str.length - 1) + "/" + pt + ")";
-    } else {
-        return str + " (" + pt + ")";
     }
+    return str + " (" + pt + ")";
+
 }
 
 function misMatch(exp, act) {
     if (exp instanceof RegExp || act instanceof RegExp) {
         const left = ppJSON(exp);
         const right = ppJSON(act);
-        if (left !== right) return left + " !== " + right;
-    } else if (Array.isArray(exp)) {
-        if (!Array.isArray(act)) return ppJSON(exp) + " != " + ppJSON(act);
+        if (left !== right) { return left + " !== " + right; }
+    } else if (is.array(exp)) {
+        if (!is.array(act)) { return ppJSON(exp) + " != " + ppJSON(act); }
         if (act.length != exp.length) {
-            return "array length mismatch " + exp.length + " != " + act.length;
+            return `array length mismatch ${exp.length} != ${act.length}`;
         }
         for (let i = 0; i < act.length; ++i) {
             const mis = misMatch(exp[i], act[i]);
-            if (mis) return addPath(mis, i);
+            if (mis) { return addPath(mis, i); }
         }
-    } else if (!exp || !act || typeof exp != "object" || typeof act != "object") {
-        if (exp !== act && typeof exp != "function") {
-            return ppJSON(exp) + " !== " + ppJSON(act);
+    } else if (!exp || !act || typeof exp !== "object" || typeof act !== "object") {
+        if (exp !== act && !is.function(exp)) {
+            return `${ppJSON(exp)} !== ${ppJSON(act)}`;
         }
     } else {
         for (const prop of Object.keys(exp)) {
             const mis = misMatch(exp[prop], act[prop]);
-            if (mis) return addPath(mis, prop);
+            if (mis) { return addPath(mis, prop); }
         }
 
         for (const prop of Object.keys(act)) {
-            if (typeof act[prop] === "function") {
+            if (is.function(act[prop])) {
                 continue;
             }
 
-            if (!(prop in exp) && act[prop] !== undefined) {
+            if (!(prop in exp) && !is.undefined(act[prop])) {
                 return `Did not expect a property '${prop}'`;
             }
         }
