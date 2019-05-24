@@ -15,7 +15,7 @@ export default function create_module(
 	format: ModuleFormat,
 	name: string,
 	banner: string,
-	sveltePath = 'svelte',
+	sveltePath = 'foundation',
 	helpers: { name: string, alias: string }[],
 	imports: Node[],
 	module_exports: Export[],

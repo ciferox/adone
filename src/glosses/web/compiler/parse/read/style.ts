@@ -3,7 +3,7 @@ import { Parser } from '../index';
 import { Node } from '../../interfaces';
 
 const {
-	web: { csstree: { parse } }
+	web: { extra: { csstree: { parse } } }
 } = adone;
 
 export default function read_style(parser: Parser, start: number, attributes: Node[]) {

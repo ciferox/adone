@@ -1020,39 +1020,46 @@ export default {
                                 importHelpers: true
                             }
                         },
-                        browser: {
-                            description: "Browser-side stuff",
-                            task: "rollup",
-                            options: {
-                                config: "src/glosses/web/browser/rollup.config.js"
-                            }
-                        },
-                        sapper: {
-                            description: "Web framework",
+                        kit: {
+                            description: "Web kit",
                             task: "tsc",
                             src: [
-                                "src/glosses/web/sapper/**/*.ts",
-                                "!src/glosses/web/sapper/**/*.d.ts",
-                                "!src/glosses/web/sapper/runtime/**/*"
+                                "src/glosses/web/kit/**/*.ts",
+                                "!src/glosses/web/kit/**/*.d.ts"
                             ],
-                            dst: "lib/glosses/web/sapper",
+                            dst: "lib/glosses/web/kit"
+                        },
+                        runtime: {
+                            description: "Browser runtime",
+                            task: "rollup",
+                            options: {
+                                config: "src/glosses/web/runtime/rollup.config.js"
+                            },
                             units: {
                                 internal: {
-                                    src: "src/glosses/web/sapper/runtime/internal/*",
-                                    dst: "lib/glosses/web/sapper/runtime/internal"
+                                    src: "src/glosses/web/runtime/internal/*",
+                                    dst: "lib/glosses/web/runtime/internal"
                                 }
                             }
                         },
-                        csstree: {
-                            description: "A tool set for working with CSS",
-                            src: "src/glosses/web/csstree/**/*.js",
-                            dst: "lib/glosses/web/csstree",
+                        extra: {
+                            description: "Extra stuff and third-parties",
+                            src: "src/glosses/web/extra/index.js",
+                            dst: "lib/glosses/web/extra",
                             task: "transpile",
                             units: {
-                                data: {
-                                    src: "src/glosses/web/csstree/data/*.json",
-                                    dst: "lib/glosses/web/csstree/data",
-                                    task: "copy"
+                                csstree: {
+                                    description: "A tool set for working with CSS",
+                                    src: "src/glosses/web/extra/csstree/**/*.js",
+                                    dst: "lib/glosses/web/extra/csstree",
+                                    task: "transpile",
+                                    units: {
+                                        data: {
+                                            src: "src/glosses/web/extra/csstree/data/*.json",
+                                            dst: "lib/glosses/web/extra/csstree/data",
+                                            task: "copy"
+                                        }
+                                    }
                                 }
                             }
                         }
