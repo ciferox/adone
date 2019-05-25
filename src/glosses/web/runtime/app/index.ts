@@ -1,5 +1,5 @@
-import { getContext } from '@sapper/foundation/core';
-import { CONTEXT_KEY } from '@sapper/internal/shared';
+import { getContext } from '@adone/foundation/core';
+import { CONTEXT_KEY } from '@adone/internal/shared';
 
 export const stores = () => getContext(CONTEXT_KEY);
 

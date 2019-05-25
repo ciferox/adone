@@ -10,14 +10,7 @@ const template = function (kind, external) {
         output: {
             file: `lib/glosses/web/runtime/${kind}.mjs`,
             format: "es",
-            paths: (id) => {
-                if (id.startsWith("@sapper")) {
-                    return id.replace("@sapper", ".");
-                } else if (id.startsWith("foundation")) {
-                    return id.replace("foundation", "./foundation");
-                }
-                return id;
-            }
+            paths: (id) => id.replace("@adone", ".")
         },
         external,
         plugins: [
@@ -38,8 +31,8 @@ const template = function (kind, external) {
 };
 
 export default [
-    template("app", (id) => /^(foundation\/?|@sapper\/)/.test(id)),
-    template("server", (id) => /^(foundation\/?|@sapper\/)/.test(id) || builtinModules.includes(id)),
+    template("app", (id) => /^(@adone\/)/.test(id)),
+    template("server", (id) => /^(@adone\/)/.test(id) || builtinModules.includes(id)),
 
     {
         input: "src/glosses/web/runtime/foundation/core/index.js",

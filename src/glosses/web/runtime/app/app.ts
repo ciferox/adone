@@ -1,6 +1,6 @@
-import { writable } from '@sapper/foundation/store.mjs';
-import App from '@sapper/internal/App.svelte';
-import { root_preload, ErrorComponent, ignore, components, routes } from '@sapper/internal/manifest-client';
+import { writable } from '@adone/foundation/store.mjs';
+import App from '@adone/internal/App.svelte';
+import { root_preload, ErrorComponent, ignore, components, routes } from '@adone/internal/manifest-client';
 import {
 	Target,
 	ScrollPosition,

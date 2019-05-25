@@ -1,4 +1,4 @@
-import { writable } from '@sapper/foundation/store.mjs';
+import { writable } from '@adone/foundation/store.mjs';
 import fs from 'fs';
 import path from 'path';
 import cookie from 'cookie';
@@ -6,8 +6,8 @@ import devalue from 'devalue';
 import fetch from 'node-fetch';
 import URL from 'url';
 import { Manifest, Page, Req, Res } from './types';
-import { build_dir, dev, src_dir } from '@sapper/internal/manifest-server';
-import App from '@sapper/internal/App.svelte';
+import { build_dir, dev, src_dir } from '@adone/internal/manifest-server';
+import App from '@adone/internal/App.svelte';
 
 export function get_page_handler(
 	manifest: Manifest,

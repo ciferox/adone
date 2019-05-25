@@ -139,7 +139,7 @@ module.exports = function svelte(options = {}) {
     });
 
     fixed_options.format = "esm";
-    fixed_options.sveltePath = options.sveltePath || adone.getPath("lib/glosses/web/runtime/foundation");
+    fixed_options.sveltePath = options.sveltePath || "@adone/foundation";
 
     // handle CSS extraction
     if ("css" in options) {

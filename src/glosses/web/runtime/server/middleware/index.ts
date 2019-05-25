@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { build_dir, dev, manifest } from '@sapper/internal/manifest-server';
+import { build_dir, dev, manifest } from '@adone/internal/manifest-server';
 import { Handler, Req, Res } from './types';
 import { get_server_route_handler } from './get_server_route_handler';
 import { get_page_handler } from './get_page_handler';

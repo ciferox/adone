@@ -74,7 +74,7 @@ class Watcher extends EventEmitter {
 		cwd = '.',
 		src = 'src',
 		routes = 'src/routes',
-		output = 'src/node_modules/@sapper',
+		output = 'src/node_modules/@adone',
 		static: static_files = 'static',
 		dest = '__sapper__/dev',
 		'dev-port': dev_port,

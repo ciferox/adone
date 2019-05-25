@@ -30,7 +30,7 @@ export default async function ({
 	cwd,
 	src = 'src',
 	routes = 'src/routes',
-	output = 'src/node_modules/@sapper',
+	output = 'src/node_modules/@adone',
 	static: static_files = 'static',
 	dest = '__sapper__/build',
 
@@ -71,7 +71,7 @@ export default async function ({
 
 	const manifest_data = create_manifest_data(routes, ext);
 
-	// create src/node_modules/@sapper/app.mjs and server.mjs
+	// create src/node_modules/@adone/app.mjs and server.mjs
 	create_app({
 		bundler,
 		manifest_data,

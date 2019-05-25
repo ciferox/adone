@@ -1,4 +1,4 @@
-import { components, routes } from '@sapper/internal/manifest-client';
+import { components, routes } from '@adone/internal/manifest-client';
 import { load_component } from '../app';
 
 export default function prefetchRoutes(pathnames: string[]) {
