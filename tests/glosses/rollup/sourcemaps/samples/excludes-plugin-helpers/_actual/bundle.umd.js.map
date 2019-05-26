@@ -1,0 +1,1 @@
+{"version":3,"file":"bundle.umd.js","sources":["../main.js"],"sourcesContent":["import foo from '\\0helper';\n\nfoo( 42 );\n"],"names":[],"mappings":";;;;;;AAEA,GAAG,EAAE,EAAE,EAAE,CAAC"}

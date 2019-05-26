@@ -24,10 +24,10 @@ export default function create_module(
 	const internal_path = `${sveltePath}/core`;
 
 	if (format === 'esm') {
-		return esm(code, name, banner, sveltePath, internal_path, helpers, imports, module_exports, source);
+		return esm(code, name, banner, internal_path, internal_path, helpers, imports, module_exports, source);
 	}
 
-	if (format === 'cjs') return cjs(code, name, banner, sveltePath, internal_path, helpers, imports, module_exports);
+	if (format === 'cjs') return cjs(code, name, banner, internal_path, internal_path, helpers, imports, module_exports);
 
 	throw new Error(`options.format is invalid (must be ${list(Object.keys(wrappers))})`);
 }

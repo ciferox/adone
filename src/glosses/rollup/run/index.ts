@@ -1,4 +1,3 @@
-import { realpathSync } from 'fs';
 import { InputOptions, WarningHandler } from '../rollup/types';
 import mergeOptions from '../utils/mergeOptions';
 import { getAliasName } from '../utils/relativeId';
@@ -7,6 +6,10 @@ import batchWarnings from './batchWarnings';
 import build from './build';
 import loadConfigFile from './loadConfigFile';
 import watch from './watch';
+
+const {
+	fs: { realpathSync }
+} = adone;
 
 const execute = (configFile: string, configs: InputOptions[], options: any) => {
 	if (options.watch) {
@@ -73,14 +76,17 @@ export default function runRollup(options: any) {
 
 	let configFile = options.config === true || options.config.length === "" ? 'rollup.config.js' : options.config;
 
+	const cwd = options.cwd || process.cwd();
+	console.log(cwd);
+	delete options.cwd;
 	if (configFile) {
 		if (configFile.slice(0, 5) === 'node:') {
 			const pkgName = configFile.slice(5);
 			try {
-				configFile = adone.module.resolve(`rollup-config-${pkgName}`, { basedir: process.cwd() });
+				configFile = adone.module.resolve(`rollup-config-${pkgName}`, { basedir: cwd });
 			} catch (err) {
 				try {
-					configFile = adone.module.resolve(pkgName, { basedir: process.cwd() });
+					configFile = adone.module.resolve(pkgName, { basedir: cwd });
 				} catch (err) {
 					if (err.code === 'MODULE_NOT_FOUND') {
 						handleError({
@@ -94,7 +100,7 @@ export default function runRollup(options: any) {
 			}
 		} else {
 			// find real path of config so it matches what Node provides to callbacks in require.extensions
-			configFile = realpathSync(configFile);
+			configFile = realpathSync(adone.path.join(cwd, configFile));
 		}
 
 		if (options.watch) {

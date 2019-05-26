@@ -1,0 +1,1 @@
+{"version":3,"file":"bundle.es.js","sources":["../foo.js","../main.js"],"sourcesContent":["export const foo = () => 42;\n","import { foo } from './foo';\n\nconsole.log( `the answer is ${foo()}` );\n"],"names":["const"],"mappings":"AAAOA,IAAM,GAAG,eAAM,SAAG,KAAE,CAAC;;;;;ACE5B,OAAO,CAAC,GAAG,uBAAmB,GAAG,EAAE,IAAI,CAAC;;;"}

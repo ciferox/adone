@@ -1,0 +1,1 @@
+{"version":3,"file":"bundle.cjs.js","sources":["../foo.js","../main.js"],"sourcesContent":["export var foo = 1;\n","import { foo } from './foo.js';\nassert.equal( foo, 2 );\n"],"names":[],"mappings":";;AAAO,IAAI,GAAG,GAAG,CAAC,CAAC;;ACCnB,MAAM,CAAC,KAAK,EAAE,GAAG,EAAE,CAAC,EAAE,CAAC"}
