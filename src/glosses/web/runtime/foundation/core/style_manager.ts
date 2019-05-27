@@ -1,4 +1,5 @@
-import { element } from "./dom.js";
+import { element } from './dom';
+import { raf } from './utils';
 
 let stylesheet;
 let active = 0;
@@ -15,7 +16,7 @@ function hash(str) {
 
 export function create_rule(node, a, b, duration, delay, ease, fn, uid = 0) {
 	const step = 16.666 / duration;
-	let keyframes = "{\n";
+	let keyframes = '{\n';
 
 	for (let p = 0; p <= 1; p += step) {
 		const t = a + (b - a) * ease(p);
@@ -27,7 +28,7 @@ export function create_rule(node, a, b, duration, delay, ease, fn, uid = 0) {
 
 	if (!current_rules[name]) {
 		if (!stylesheet) {
-			const style = element("style");
+			const style = element('style');
 			document.head.appendChild(style);
 			stylesheet = style.sheet;
 		}
@@ -36,27 +37,27 @@ export function create_rule(node, a, b, duration, delay, ease, fn, uid = 0) {
 		stylesheet.insertRule(`@keyframes ${name} ${rule}`, stylesheet.cssRules.length);
 	}
 
-	const animation = node.style.animation || "";
-	node.style.animation = `${animation ? `${animation}, ` : ""}${name} ${duration}ms linear ${delay}ms 1 both`;
+	const animation = node.style.animation || '';
+	node.style.animation = `${animation ? `${animation}, ` : ``}${name} ${duration}ms linear ${delay}ms 1 both`;
 
 	active += 1;
 	return name;
 }
 
-export function delete_rule(node, name) {
-	node.style.animation = (node.style.animation || "")
-		.split(", ")
+export function delete_rule(node, name?) {
+	node.style.animation = (node.style.animation || '')
+		.split(', ')
 		.filter(name
 			? anim => anim.indexOf(name) < 0 // remove specific animation
-			: anim => anim.indexOf("__svelte") === -1 // remove all Svelte animations
+			: anim => anim.indexOf('__svelte') === -1 // remove all Svelte animations
 		)
-		.join(", ");
+		.join(', ');
 
 	if (name && !--active) clear_rules();
 }
 
 export function clear_rules() {
-	requestAnimationFrame(() => {
+	raf(() => {
 		if (active) return;
 		let i = stylesheet.cssRules.length;
 		while (i--) stylesheet.deleteRule(i);

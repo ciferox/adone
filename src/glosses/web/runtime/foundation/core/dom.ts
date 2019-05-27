@@ -1,28 +1,28 @@
-export function append(target, node) {
+export function append(target:Node, node:Node) {
 	target.appendChild(node);
 }
 
-export function insert(target, node, anchor) {
+export function insert(target: Node, node: Node, anchor?:Node) {
 	target.insertBefore(node, anchor || null);
 }
 
-export function detach(node) {
+export function detach(node: Node) {
 	node.parentNode.removeChild(node);
 }
 
-export function detach_between(before, after) {
+export function detach_between(before: Node, after: Node) {
 	while (before.nextSibling && before.nextSibling !== after) {
 		before.parentNode.removeChild(before.nextSibling);
 	}
 }
 
-export function detach_before(after) {
+export function detach_before(after:Node) {
 	while (after.previousSibling) {
 		after.parentNode.removeChild(after.previousSibling);
 	}
 }
 
-export function detach_after(before) {
+export function detach_after(before:Node) {
 	while (before.nextSibling) {
 		before.parentNode.removeChild(before.nextSibling);
 	}
@@ -34,37 +34,42 @@ export function destroy_each(iterations, detaching) {
 	}
 }
 
-export function element(name) {
-	return document.createElement(name);
+export function element<K extends keyof HTMLElementTagNameMap>(name: K) {
+	return document.createElement<K>(name);
 }
 
-export function object_without_properties(obj, exclude) {
-	const target = {};
+export function object_without_properties<T,K extends keyof T>(obj:T, exclude: K[]) {
+	const target = {} as Pick<T, Exclude<keyof T, K>>;
 	for (const k in obj) {
-		if (Object.prototype.hasOwnProperty.call(obj, k) && exclude.indexOf(k) === -1) {
+		if (
+			Object.prototype.hasOwnProperty.call(obj, k)
+			// @ts-ignore
+			&& exclude.indexOf(k) === -1
+		) {
+			// @ts-ignore
 			target[k] = obj[k];
 		}
 	}
 	return target;
 }
 
-export function svg_element(name) {
-	return document.createElementNS("http://www.w3.org/2000/svg", name);
+export function svg_element(name:string):SVGElement {
+	return document.createElementNS('http://www.w3.org/2000/svg', name);
 }
 
-export function text(data) {
+export function text(data:string) {
 	return document.createTextNode(data);
 }
 
 export function space() {
-	return text(" ");
+	return text(' ');
 }
 
 export function empty() {
-	return text("");
+	return text('');
 }
 
-export function listen(node, event, handler, options) {
+export function listen(node: Node, event: string, handler: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions | EventListenerOptions) {
 	node.addEventListener(event, handler, options);
 	return () => node.removeEventListener(event, handler, options);
 }
@@ -72,6 +77,7 @@ export function listen(node, event, handler, options) {
 export function prevent_default(fn) {
 	return function(event) {
 		event.preventDefault();
+		// @ts-ignore
 		return fn.call(this, event);
 	};
 }
@@ -79,18 +85,19 @@ export function prevent_default(fn) {
 export function stop_propagation(fn) {
 	return function(event) {
 		event.stopPropagation();
+		// @ts-ignore
 		return fn.call(this, event);
 	};
 }
 
-export function attr(node, attribute, value) {
+export function attr(node: Element, attribute: string, value?: string) {
 	if (value == null) node.removeAttribute(attribute);
 	else node.setAttribute(attribute, value);
 }
 
-export function set_attributes(node, attributes) {
+export function set_attributes(node: HTMLElement, attributes: { [x: string]: string; }) {
 	for (const key in attributes) {
-		if (key === "style") {
+		if (key === 'style') {
 			node.style.cssText = attributes[key];
 		} else if (key in node) {
 			node[key] = attributes[key];
@@ -109,7 +116,7 @@ export function set_custom_element_data(node, prop, value) {
 }
 
 export function xlink_attr(node, attribute, value) {
-	node.setAttributeNS("http://www.w3.org/1999/xlink", attribute, value);
+	node.setAttributeNS('http://www.w3.org/1999/xlink', attribute, value);
 }
 
 export function get_binding_group_value(group) {
@@ -121,7 +128,7 @@ export function get_binding_group_value(group) {
 }
 
 export function to_number(value) {
-	return value === "" ? undefined : +value;
+	return value === '' ? undefined : +value;
 }
 
 export function time_ranges_to_array(ranges) {
@@ -164,7 +171,7 @@ export function claim_text(nodes, data) {
 }
 
 export function set_data(text, data) {
-	data = "" + data;
+	data = '' + data;
 	if (text.data !== data) text.data = data;
 }
 
@@ -199,52 +206,52 @@ export function select_options(select, value) {
 }
 
 export function select_value(select) {
-	const selected_option = select.querySelector(":checked") || select.options[0];
+	const selected_option = select.querySelector(':checked') || select.options[0];
 	return selected_option && selected_option.__value;
 }
 
 export function select_multiple_value(select) {
-	return [].map.call(select.querySelectorAll(":checked"), option => option.__value);
+	return [].map.call(select.querySelectorAll(':checked'), option => option.__value);
 }
 
 export function add_resize_listener(element, fn) {
-	if (getComputedStyle(element).position === "static") {
-		element.style.position = "relative";
+	if (getComputedStyle(element).position === 'static') {
+		element.style.position = 'relative';
 	}
 
-	const object = document.createElement("object");
-	object.setAttribute("style", "display: block; position: absolute; top: 0; left: 0; height: 100%; width: 100%; overflow: hidden; pointer-events: none; z-index: -1;");
-	object.type = "text/html";
+	const object = document.createElement('object');
+	object.setAttribute('style', 'display: block; position: absolute; top: 0; left: 0; height: 100%; width: 100%; overflow: hidden; pointer-events: none; z-index: -1;');
+	object.type = 'text/html';
 
 	let win;
 
 	object.onload = () => {
 		win = object.contentDocument.defaultView;
-		win.addEventListener("resize", fn);
+		win.addEventListener('resize', fn);
 	};
 
 	if (/Trident/.test(navigator.userAgent)) {
 		element.appendChild(object);
-		object.data = "about:blank";
+		object.data = 'about:blank';
 	} else {
-		object.data = "about:blank";
+		object.data = 'about:blank';
 		element.appendChild(object);
 	}
 
 	return {
 		cancel: () => {
-			win && win.removeEventListener && win.removeEventListener("resize", fn);
+			win && win.removeEventListener && win.removeEventListener('resize', fn);
 			element.removeChild(object);
 		}
 	};
 }
 
 export function toggle_class(element, name, toggle) {
-	element.classList[toggle ? "add" : "remove"](name);
+	element.classList[toggle ? 'add' : 'remove'](name);
 }
 
-export function custom_event(type, detail) {
-	const e = document.createEvent("CustomEvent");
+export function custom_event<T=any>(type: string, detail?: T) {
+	const e: CustomEvent<T> = document.createEvent('CustomEvent');
 	e.initCustomEvent(type, false, false, detail);
 	return e;
 }

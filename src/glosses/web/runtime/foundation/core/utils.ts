@@ -8,7 +8,7 @@ export function assign(tar, src) {
 }
 
 export function is_promise(value) {
-	return value && typeof value.then === "function";
+	return value && typeof value.then === 'function';
 }
 
 export function add_location(element, file, line, column, char) {
@@ -30,11 +30,11 @@ export function run_all(fns) {
 }
 
 export function is_function(thing) {
-	return typeof thing === "function";
+	return typeof thing === 'function';
 }
 
 export function safe_not_equal(a, b) {
-	return a != a ? b == b : a !== b || ((a && typeof a === "object") || typeof a === "function");
+	return a != a ? b == b : a !== b || ((a && typeof a === 'object') || typeof a === 'function');
 }
 
 export function not_equal(a, b) {
@@ -42,7 +42,7 @@ export function not_equal(a, b) {
 }
 
 export function validate_store(store, name) {
-	if (!store || typeof store.subscribe !== "function") {
+	if (!store || typeof store.subscribe !== 'function') {
 		throw new Error(`'${name}' is not a store with a 'subscribe' method`);
 	}
 }
@@ -76,15 +76,23 @@ export function get_slot_changes(definition, ctx, changed, fn) {
 
 export function exclude_internal_props(props) {
 	const result = {};
-	for (const k in props) if (k[0] !== "$") result[k] = props[k];
+	for (const k in props) if (k[0] !== '$') result[k] = props[k];
 	return result;
 }
 
-export let now = typeof window !== "undefined"
+const is_client = typeof window !== 'undefined';
+
+export let now: () => number = is_client
 	? () => window.performance.now()
 	: () => Date.now();
+
+export let raf = is_client ? requestAnimationFrame : noop;
 
 // used internally for testing
 export function set_now(fn) {
 	now = fn;
+}
+
+export function set_raf(fn) {
+	raf = fn;
 }

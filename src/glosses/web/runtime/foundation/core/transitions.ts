@@ -1,8 +1,8 @@
-import { identity as linear, noop, now, run_all } from "./utils.js";
-import { loop } from "./loop.js";
-import { create_rule, delete_rule } from "./style_manager.js";
-import { custom_event } from "./dom.js";
-import { add_render_callback } from "./scheduler.js";
+import { identity as linear, noop, now, run_all } from './utils';
+import { loop } from './loop';
+import { create_rule, delete_rule } from './style_manager';
+import { custom_event } from './dom';
+import { add_render_callback } from './scheduler';
 
 let promise;
 
@@ -18,7 +18,7 @@ function wait() {
 }
 
 function dispatch(node, direction, kind) {
-	node.dispatchEvent(custom_event(`${direction ? "intro" : "outro"}${kind}`));
+	node.dispatchEvent(custom_event(`${direction ? 'intro' : 'outro'}${kind}`));
 }
 
 let outros;
@@ -95,7 +95,7 @@ export function create_in_transition(node, fn, params) {
 
 			delete_rule(node);
 
-			if (typeof config === "function") {
+			if (typeof config === 'function') {
 				config = config();
 				wait().then(go);
 			} else {
@@ -163,7 +163,7 @@ export function create_out_transition(node, fn, params) {
 		});
 	}
 
-	if (typeof config === "function") {
+	if (typeof config === 'function') {
 		wait().then(() => {
 			config = config();
 			go();
@@ -229,6 +229,7 @@ export function create_bidirectional_transition(node, fn, params, intro) {
 		};
 
 		if (!b) {
+			// @ts-ignore todo: improve typings
 			program.group = outros;
 			outros.remaining += 1;
 		}
@@ -246,14 +247,14 @@ export function create_bidirectional_transition(node, fn, params, intro) {
 			if (b) tick(0, 1);
 
 			running_program = init(program, duration);
-			add_render_callback(() => dispatch(node, b, "start"));
+			add_render_callback(() => dispatch(node, b, 'start'));
 
 			loop(now => {
 				if (pending_program && now > pending_program.start) {
 					running_program = init(pending_program, duration);
 					pending_program = null;
 
-					dispatch(node, running_program.b, "start");
+					dispatch(node, running_program.b, 'start');
 
 					if (css) {
 						clear_animation();
@@ -264,7 +265,7 @@ export function create_bidirectional_transition(node, fn, params, intro) {
 				if (running_program) {
 					if (now >= running_program.end) {
 						tick(t = running_program.b, 1 - t);
-						dispatch(node, running_program.b, "end");
+						dispatch(node, running_program.b, 'end');
 
 						if (!pending_program) {
 							// we're done
@@ -294,7 +295,7 @@ export function create_bidirectional_transition(node, fn, params, intro) {
 
 	return {
 		run(b) {
-			if (typeof config === "function") {
+			if (typeof config === 'function') {
 				wait().then(() => {
 					config = config();
 					go(b);

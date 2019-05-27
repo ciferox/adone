@@ -1,4 +1,7 @@
-const Parser = adone.acorn.Parser.extend(adone.acorn.plugin.dynamicImport);
+import * as acorn from 'acorn';
+import dynamicImport from 'acorn-dynamic-import';
+
+const Parser = acorn.Parser.extend(dynamicImport);
 
 export const parse = (source: string) => Parser.parse(source, {
 	sourceType: 'module',

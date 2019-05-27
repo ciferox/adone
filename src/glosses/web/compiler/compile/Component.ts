@@ -1,3 +1,5 @@
+import MagicString, { Bundle } from 'magic-string';
+// @ts-ignore
 import { walk, childKeys } from 'estree-walker';
 import { getLocator } from 'locate-character';
 import Stats from '../Stats';
@@ -8,7 +10,7 @@ import { create_scopes, extract_names, Scope, extract_identifiers } from './util
 import Stylesheet from './css/Stylesheet';
 import { test } from '../config';
 import Fragment from './nodes/Fragment';
-import internal_exports from './internal_exports'; 
+import internal_exports from './internal_exports';
 import { Node, Ast, CompileOptions, Var, Warning } from '../interfaces';
 import error from '../utils/error';
 import get_code_frame from '../utils/get_code_frame';
@@ -19,6 +21,7 @@ import { remove_indentation, add_indentation } from '../utils/indentation';
 import get_object from './utils/get_object';
 import unwrap_parens from './utils/unwrap_parens';
 import Slot from './nodes/Slot';
+import { Node as ESTreeNode } from 'estree';
 
 type ComponentOptions = {
 	namespace?: string;
@@ -35,7 +38,7 @@ childKeys.EachBlock = childKeys.IfBlock = ['children', 'else'];
 childKeys.Attribute = ['value'];
 childKeys.ExportNamedDeclaration = ['declaration', 'specifiers'];
 
-function remove_node(code: adone.text.MagicString, start: number, end: number, body: Node, node: Node) {
+function remove_node(code: MagicString, start: number, end: number, body: Node, node: Node) {
 	const i = body.indexOf(node);
 	if (i === -1) throw new Error('node not in list');
 
@@ -69,7 +72,7 @@ export default class Component {
 
 	ast: Ast;
 	source: string;
-	code: adone.text.MagicString;
+	code: MagicString;
 	name: string;
 	compile_options: CompileOptions;
 	fragment: Fragment;
@@ -140,7 +143,7 @@ export default class Component {
 		);
 		this.locate = getLocator(this.source);
 
-		this.code = new adone.text.MagicString(source);
+		this.code = new MagicString(source);
 
 		// styles
 		this.stylesheet = new Stylesheet(source, ast, compile_options.filename, compile_options.dev);
@@ -282,11 +285,11 @@ export default class Component {
 			const parts = module.split('✂]');
 			const final_chunk = parts.pop();
 
-			const compiled = new adone.text.MagicString.Bundle({ separator: '' });
+			const compiled = new Bundle({ separator: '' });
 
 			function add_string(str: string) {
 				compiled.addSource({
-					content: new adone.text.MagicString(str),
+					content: new MagicString(str),
 				});
 			}
 
@@ -297,7 +300,7 @@ export default class Component {
 			if (!parts.length) {
 				compiled.addSource({
 					filename,
-					content: new adone.text.MagicString(this.source).remove(0, this.source.length),
+					content: new MagicString(this.source).remove(0, this.source.length),
 				});
 			}
 
@@ -756,7 +759,7 @@ export default class Component {
 					});
 				}
 
-				if (adone.rollup.isReference(node, parent)) {
+				if (adone.rollup.isReference(node as ESTreeNode, parent as ESTreeNode)) {
 					const object = get_object(node);
 					const { name } = object;
 
@@ -774,7 +777,7 @@ export default class Component {
 		});
 	}
 
-	invalidate(name, value) {
+	invalidate(name, value?) {
 		const variable = this.var_lookup.get(name);
 
 		if (variable && (variable.subscribable && variable.reassigned)) {
@@ -783,6 +786,10 @@ export default class Component {
 
 		if (name[0] === '$' && name[1] !== '$') {
 			return `${name.slice(1)}.set(${name})`
+		}
+
+		if (variable && !variable.referenced && !variable.is_reactive_dependency && !variable.export_name && !name.startsWith('$$')) {
+			return value || name;
 		}
 
 		if (value) {
@@ -1020,7 +1027,7 @@ export default class Component {
 						scope = map.get(node);
 					}
 
-					if (adone.rollup.isReference(node, parent)) {
+					if (adone.rollup.isReference(node as ESTreeNode, parent as ESTreeNode)) {
 						const { name } = flatten_reference(node);
 						const owner = scope.find_owner(name);
 
@@ -1111,13 +1118,14 @@ export default class Component {
 						} else if (node.type === 'UpdateExpression') {
 							const identifier = get_object(node.argument);
 							assignees.add(identifier.name);
-						} else if (adone.rollup.isReference(node, parent)) {
+						} else if (adone.rollup.isReference(node as ESTreeNode, parent as ESTreeNode)) {
 							const identifier = get_object(node);
 							if (!assignee_nodes.has(identifier)) {
 								const { name } = identifier;
 								const owner = scope.find_owner(name);
-								const component_var = component.var_lookup.get(name);
-								const is_writable_or_mutated = component_var && (component_var.writable || component_var.mutated);
+								const variable = component.var_lookup.get(name);
+								if (variable) variable.is_reactive_dependency = true;
+								const is_writable_or_mutated = variable && (variable.writable || variable.mutated);
 								if (
 									(!owner || owner === component.instance_scope) &&
 									(name[0] === '$' || is_writable_or_mutated)

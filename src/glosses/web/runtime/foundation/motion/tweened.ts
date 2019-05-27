@@ -1,7 +1,7 @@
-import { writable } from "foundation/store"; // eslint-disable-line import/no-unresolved
-import { assign, loop, now } from "foundation/core"; // eslint-disable-line import/no-unresolved
-import { linear } from "foundation/easing"; // eslint-disable-line import/no-unresolved
-import { is_date } from "./utils.js";
+import { writable } from 'foundation/store'; // eslint-disable-line import/no-unresolved
+import { assign, loop, now } from 'foundation/core'; // eslint-disable-line import/no-unresolved
+import { linear } from 'foundation/easing'; // eslint-disable-line import/no-unresolved
+import { is_date } from './utils';
 
 function get_interpolator(a, b) {
 	if (a === b || a !== a) return () => a;
@@ -9,7 +9,7 @@ function get_interpolator(a, b) {
 	const type = typeof a;
 
 	if (type !== typeof b || Array.isArray(a) !== Array.isArray(b)) {
-		throw new Error("Cannot interpolate values of different type");
+		throw new Error('Cannot interpolate values of different type');
 	}
 
 	if (Array.isArray(a)) {
@@ -20,8 +20,8 @@ function get_interpolator(a, b) {
 		return t => arr.map(fn => fn(t));
 	}
 
-	if (type === "object") {
-		if (!a || !b) throw new Error("Object cannot be null");
+	if (type === 'object') {
+		if (!a || !b) throw new Error('Object cannot be null');
 
 		if (is_date(a) && is_date(b)) {
 			a = a.getTime();
@@ -46,7 +46,7 @@ function get_interpolator(a, b) {
 		};
 	}
 
-	if (type === "number") {
+	if (type === 'number') {
 		const delta = b - a;
 		return t => a + t * delta;
 	}
@@ -81,7 +81,7 @@ export function tweened(value, defaults = {}) {
 
 			if (!started) {
 				fn = interpolate(value, new_value);
-				if (typeof duration === "function") duration = duration(value, new_value);
+				if (typeof duration === 'function') duration = duration(value, new_value);
 				started = true;
 			}
 

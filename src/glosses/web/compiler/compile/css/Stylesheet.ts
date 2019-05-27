@@ -1,3 +1,4 @@
+import MagicString from 'magic-string';
 import { walk } from 'estree-walker';
 import Selector from './Selector';
 import Element from '../nodes/Element';
@@ -42,7 +43,7 @@ class Rule {
 		return this.selectors.some(s => s.used);
 	}
 
-	minify(code: adone.text.MagicString, dev: boolean) {
+	minify(code: MagicString, dev: boolean) {
 		let c = this.node.start;
 		let started = false;
 
@@ -77,7 +78,7 @@ class Rule {
 		code.remove(c, this.node.block.end - 1);
 	}
 
-	transform(code: adone.text.MagicString, id: string, keyframes: Map<string, string>) {
+	transform(code: MagicString, id: string, keyframes: Map<string, string>) {
 		if (this.parent && this.parent.node.type === 'Atrule' && is_keyframes_node(this.parent.node)) return true;
 
 		const attr = `.${id}`;
@@ -106,7 +107,7 @@ class Declaration {
 		this.node = node;
 	}
 
-	transform(code: adone.text.MagicString, keyframes: Map<string, string>) {
+	transform(code: MagicString, keyframes: Map<string, string>) {
 		const property = this.node.property && remove_css_prefix(this.node.property.toLowerCase());
 		if (property === 'animation' || property === 'animation-name') {
 			this.node.value.children.forEach((block: Node) => {
@@ -120,7 +121,7 @@ class Declaration {
 		}
 	}
 
-	minify(code: adone.text.MagicString) {
+	minify(code: MagicString) {
 		if (!this.node.property) return; // @apply, and possibly other weird cases?
 
 		const c = this.node.start + this.node.property.length;
@@ -166,7 +167,7 @@ class Atrule {
 		return true; // TODO
 	}
 
-	minify(code: adone.text.MagicString, dev: boolean) {
+	minify(code: MagicString, dev: boolean) {
 		if (this.node.name === 'media') {
 			const expression_char = code.original[this.node.expression.start];
 			let c = this.node.start + (expression_char === '(' ? 6 : 7);
@@ -210,7 +211,7 @@ class Atrule {
 		}
 	}
 
-	transform(code: adone.text.MagicString, id: string, keyframes: Map<string, string>) {
+	transform(code: MagicString, id: string, keyframes: Map<string, string>) {
 		if (is_keyframes_node(this.node)) {
 			this.node.expression.children.forEach(({ type, name, start, end }: Node) => {
 				if (type === 'Identifier') {
@@ -348,7 +349,7 @@ export default class Stylesheet {
 			return { code: null, map: null };
 		}
 
-		const code = new adone.text.MagicString(this.source);
+		const code = new MagicString(this.source);
 
 		walk(this.ast.css, {
 			enter: (node: Node) => {

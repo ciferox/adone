@@ -1,3 +1,4 @@
+import MagicString from 'magic-string';
 import Stylesheet from './Stylesheet';
 import { gather_possible_values, UNKNOWN } from './gather_possible_values';
 import { Node } from '../../interfaces';
@@ -42,7 +43,7 @@ export default class Selector {
 		}
 	}
 
-	minify(code: adone.text.MagicString) {
+	minify(code: MagicString) {
 		let c: number = null;
 		this.blocks.forEach((block, i) => {
 			if (i > 0) {
@@ -55,7 +56,7 @@ export default class Selector {
 		});
 	}
 
-	transform(code: adone.text.MagicString, attr: string) {
+	transform(code: MagicString, attr: string) {
 		function encapsulate_block(block: Block) {
 			let i = block.selectors.length;
 			while (i--) {

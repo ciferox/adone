@@ -1,8 +1,10 @@
+import { SourceMap } from 'magic-string';
+
 export interface PreprocessorGroup {
 	markup?: (options: {
 		content: string,
 		filename: string
-	}) => { code: string, map?: adone.text.MagicString.SourceMap | string, dependencies?: string[] };
+	}) => { code: string, map?: SourceMap | string, dependencies?: string[] };
 	style?: Preprocessor;
 	script?: Preprocessor;
 }
@@ -11,11 +13,11 @@ export type Preprocessor = (options: {
 	content: string,
 	attributes: Record<string, string | boolean>,
 	filename?: string
-}) => { code: string, map?: adone.text.MagicString.SourceMap | string, dependencies?: string[] };
+}) => { code: string, map?: SourceMap | string, dependencies?: string[] };
 
 interface Processed {
 	code: string;
-	map?: adone.text.MagicString.SourceMap | string;
+	map?: SourceMap | string;
 	dependencies?: string[];
 }
 
@@ -72,6 +74,7 @@ export default async function preprocess(
 	preprocessor: PreprocessorGroup | PreprocessorGroup[],
 	options?: { filename?: string }
 ) {
+	// @ts-ignore todo: doublecheck
 	const filename = (options && options.filename) || preprocessor.filename; // legacy
 	const dependencies = [];
 

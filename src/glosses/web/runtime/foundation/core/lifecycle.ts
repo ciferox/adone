@@ -1,4 +1,4 @@
-import { custom_event } from "./dom";
+import { custom_event } from './dom';
 
 export let current_component;
 
@@ -7,7 +7,7 @@ export function set_current_component(component) {
 }
 
 function get_current_component() {
-	if (!current_component) throw new Error("Function called outside component initialization");
+	if (!current_component) throw new Error(`Function called outside component initialization`);
 	return current_component;
 }
 
