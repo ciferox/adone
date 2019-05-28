@@ -2,12 +2,11 @@ import { GitRefManager } from '../managers/GitRefManager.js'
 import { readObject } from '../storage/readObject.js'
 import { join } from '../utils/join'
 import { resolveTree } from '../utils/resolveTree.js'
-import { GitWalkerSymbol } from '../utils/symbols.js'
 
 import { FileSystem } from './FileSystem.js'
 import { GitTree } from './GitTree.js'
 
-class GitWalkerRepo {
+export class GitWalkerRepo {
   constructor ({ fs: _fs, gitdir, ref }) {
     const fs = new FileSystem(_fs)
     this.fs = fs
@@ -47,6 +46,10 @@ class GitWalkerRepo {
     if (!obj) throw new Error(`No obj for ${filepath}`)
     let oid = obj.oid
     if (!oid) throw new Error(`No oid for obj ${JSON.stringify(obj)}`)
+    if (obj.type === 'commit') {
+      // TODO: support submodules
+      return null
+    }
     let { type, object } = await readObject({ fs, gitdir, oid })
     if (type === 'blob') return null
     if (type !== 'tree') {
@@ -99,15 +102,4 @@ class GitWalkerRepo {
     let oid = obj.oid
     Object.assign(entry, { oid })
   }
-}
-
-export function TREE ({ fs, gitdir, ref }) {
-  let o = Object.create(null)
-  Object.defineProperty(o, GitWalkerSymbol, {
-    value: function () {
-      return new GitWalkerRepo({ fs, gitdir, ref })
-    }
-  })
-  Object.freeze(o)
-  return o
 }

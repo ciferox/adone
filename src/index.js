@@ -122,7 +122,6 @@ lazify({
     fast: "./glosses/fast",
     fs: "./glosses/fs",
     fsm: "./glosses/fsm",
-    geoip: "./glosses/geoip",
     git: "./glosses/git",
     github: "./glosses/github",
     glob: "./glosses/glob",

@@ -18,6 +18,9 @@ const refpaths = ref => [
   `refs/remotes/${ref}/HEAD`
 ]
 
+// @see https://git-scm.com/docs/gitrepository-layout
+const GIT_FILES = ['config', 'description', 'index', 'shallow', 'commondir']
+
 export class GitRefManager {
   static async updateRemoteRefs ({
     fs: _fs,
@@ -26,7 +29,7 @@ export class GitRefManager {
     refs,
     symrefs,
     tags,
-    refspecs
+    refspecs = undefined
   }) {
     const fs = new FileSystem(_fs)
     // Validate input
@@ -119,7 +122,7 @@ export class GitRefManager {
       await fs.write(`${gitdir}/packed-refs`, text, { encoding: 'utf8' })
     }
   }
-  static async resolve ({ fs: _fs, gitdir, ref, depth }) {
+  static async resolve ({ fs: _fs, gitdir, ref, depth = undefined }) {
     const fs = new FileSystem(_fs)
     if (depth !== undefined) {
       depth--
@@ -140,7 +143,8 @@ export class GitRefManager {
     // We need to alternate between the file system and the packed-refs
     let packedMap = await GitRefManager.packedRefs({ fs, gitdir })
     // Look in all the proper paths, in this order
-    const allpaths = refpaths(ref)
+    const allpaths = refpaths(ref).filter(p => !GIT_FILES.includes(p)) // exclude git system files (#709)
+
     for (let ref of allpaths) {
       sha =
         (await fs.read(`${gitdir}/${ref}`, { encoding: 'utf8' })) ||
@@ -177,7 +181,7 @@ export class GitRefManager {
     // Do we give up?
     throw new GitError(E.ExpandRefError, { ref })
   }
-  static async expandAgainstMap ({ fs: _fs, gitdir, ref, map }) {
+  static async expandAgainstMap ({ ref, map }) {
     // Look in all the proper paths, in this order
     const allpaths = refpaths(ref)
     for (let ref of allpaths) {
@@ -186,7 +190,7 @@ export class GitRefManager {
     // Do we give up?
     throw new GitError(E.ExpandRefError, { ref })
   }
-  static resolveAgainstMap ({ ref, fullref = ref, depth, map }) {
+  static resolveAgainstMap ({ ref, fullref = ref, depth = undefined, map }) {
     if (depth !== undefined) {
       depth--
       if (depth === -1) {

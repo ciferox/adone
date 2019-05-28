@@ -77,7 +77,6 @@ export default function runRollup(options: any) {
 	let configFile = options.config === true || options.config.length === "" ? 'rollup.config.js' : options.config;
 
 	const cwd = options.cwd || process.cwd();
-	console.log(cwd);
 	delete options.cwd;
 	if (configFile) {
 		if (configFile.slice(0, 5) === 'node:') {
