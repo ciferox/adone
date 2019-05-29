@@ -1,4 +1,4 @@
-import { writable } from '@adone/foundation/store.mjs';
+import { writable } from '@adone/foundation/store';
 import App from '@adone/internal/App.svelte';
 import { root_preload, ErrorComponent, ignore, components, routes } from '@adone/internal/manifest-client';
 import {

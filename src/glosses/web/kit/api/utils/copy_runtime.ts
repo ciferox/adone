@@ -6,7 +6,11 @@ const {
 const foundationFiles = fs.readdirSync(path.join(__dirname, "../../../runtime/foundation"));
 
 const runtime = [
-	...foundationFiles.map((name) => path.join("foundation", name)),
+	...foundationFiles.filter((name) => !name.endsWith(".js")).map((name) => {
+		return (name === "index.mjs")
+			? path.join("foundation", name)
+			: path.join("foundation", name, "index.mjs")
+	}),
 	'app.mjs',
 	'server.mjs',
 	'internal/shared.mjs',

@@ -11,7 +11,7 @@
    width="300"
    height="300"
    version="1.1"
-   sodipodi:docname="logo.svg"
+   sodipodi:docname="logo-outline.svg"
    inkscape:version="0.92.4 (5da689c313, 2019-01-14)">
   <metadata
      id="metadata10">
@@ -21,7 +21,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -57,18 +57,18 @@
     <polygon
        points="210,184.641 150,80.718 90,184.641 "
        id="SvgjsPolygon1008"
-       style="fill:#66bb6a" />
+       style="fill:none;stroke:#808080;stroke-opacity:1" />
     <polygon
        points="254,260.8512 14,191.5692 214,191.5692 "
        id="SvgjsPolygon1009"
-       style="fill:#ab47bc" />
+       style="fill:none;stroke:#808080;stroke-opacity:1" />
     <polygon
        points="2,184.641 182,11.436 82,184.641 "
        id="SvgjsPolygon1010"
-       style="fill:#ba68c8" />
+       style="fill:none;stroke:#808080;stroke-opacity:1" />
     <polygon
        points="194,4.5077968 254,246.9948 154,73.789797 "
        id="SvgjsPolygon1011"
-       style="fill:#ce93d8" />
+       style="fill:none;stroke:#808080;stroke-opacity:1" />
   </g>
 </svg>

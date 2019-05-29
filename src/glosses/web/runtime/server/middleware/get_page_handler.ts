@@ -1,4 +1,4 @@
-import { writable } from '@adone/foundation/store.mjs';
+import { writable } from '@adone/foundation/store';
 import fs from 'fs';
 import path from 'path';
 import cookie from 'cookie';

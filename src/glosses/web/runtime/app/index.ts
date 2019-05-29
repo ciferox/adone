@@ -1,4 +1,4 @@
-import { getContext } from '@adone/foundation/core';
+import { getContext } from '@adone/foundation';
 import { CONTEXT_KEY } from '@adone/internal/shared';
 
 export const stores = () => getContext(CONTEXT_KEY);
