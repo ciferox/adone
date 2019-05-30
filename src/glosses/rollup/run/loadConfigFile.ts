@@ -1,4 +1,5 @@
-import { InputOptions, RollupBuild, RollupOutput } from '../rollup/types';
+import { RollupBuild, RollupOutput } from '../rollup/types';
+import { GenericConfigObject } from '../utils/mergeOptions';
 import relativeId from '../utils/relativeId';
 import { handleError, stderr } from './logging';
 import batchWarnings from './batchWarnings';
@@ -16,7 +17,7 @@ interface NodeModuleWithCompile extends NodeModule {
 export default function loadConfigFile(
 	configFile: string,
 	commandOptions: any = {}
-): Promise<InputOptions[]> {
+): Promise<GenericConfigObject[]> {
 	const silent = commandOptions.silent || false;
 	const warnings = batchWarnings();
 

@@ -7,7 +7,7 @@ import {
 	WarningHandler,
 	WatcherOptions
 } from '../rollup/types';
-import mergeOptions from '../utils/mergeOptions';
+import mergeOptions, { GenericConfigObject }  from '../utils/mergeOptions';
 import relativeId from '../utils/relativeId';
 import { handleError, stderr } from './logging';
 import alternateScreen from './alternateScreen';
@@ -37,7 +37,7 @@ interface Watcher {
 
 export default function watch(
 	configFile: string,
-	configs: RollupWatchOptions[],
+	configs: GenericConfigObject[],
 	command: any,
 	silent = false
 ) {
@@ -58,7 +58,7 @@ export default function watch(
 	let watcher: Watcher;
 	let configWatcher: Watcher;
 
-	function processConfigs(configs: RollupWatchOptions[]): RollupWatchOptions[] {
+	function processConfigs(configs: GenericConfigObject[]): RollupWatchOptions[] {
 		return configs.map(options => {
 			const merged = mergeOptions({
 				command,

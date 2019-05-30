@@ -1,5 +1,5 @@
-import { InputOptions, WarningHandler } from '../rollup/types';
-import mergeOptions from '../utils/mergeOptions';
+import { WarningHandler } from '../rollup/types';
+import mergeOptions, { GenericConfigObject } from '../utils/mergeOptions';
 import { getAliasName } from '../utils/relativeId';
 import { handleError } from './logging';
 import batchWarnings from './batchWarnings';
@@ -11,7 +11,7 @@ const {
 	fs: { realpathSync }
 } = adone;
 
-const execute = (configFile: string, configs: InputOptions[], options: any) => {
+const execute = (configFile: string, configs: GenericConfigObject[], options: any) => {
 	if (options.watch) {
 		watch(configFile, configs, options, options.silent);
 	} else {
