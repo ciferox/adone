@@ -840,11 +840,6 @@ export default {
                     src: "src/glosses/semver/**/*.js",
                     dst: "lib/glosses/semver"
                 },
-                shell: {
-                    task: "transpile",
-                    src: "src/glosses/shell/**/*.js",
-                    dst: "lib/glosses/shell"
-                },
                 sourcemap: {
                     description: "Sourcemaps",
                     task: "transpile",

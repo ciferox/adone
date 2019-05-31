@@ -152,7 +152,6 @@ lazify({
     regex: "./glosses/regex",
     rollup: "./glosses/rollup",
     semver: "./glosses/semver",
-    shell: "./glosses/shell",
     sourcemap: "./glosses/sourcemap",
     stream: "./glosses/streams",
     system: "./glosses/system",
