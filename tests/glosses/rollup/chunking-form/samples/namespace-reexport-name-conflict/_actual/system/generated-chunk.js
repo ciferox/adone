@@ -1,9 +1,9 @@
-System.register([], function (exports, module) {
+System.register([], function (exports) {
 	'use strict';
 	return {
 		execute: function () {
 
-			const reexported = exports('a', 1);
+			const reexported = exports('r', 1);
 
 		}
 	};

@@ -5,16 +5,15 @@ import * as NodeType from './NodeType';
 import { NodeBase } from './shared/Node';
 
 export default class ExportAllDeclaration extends NodeBase {
-	needsBoundaries: true;
-	source: Literal<string>;
-	type: NodeType.tExportAllDeclaration;
+	needsBoundaries!: true;
+	source!: Literal<string>;
+	type!: NodeType.tExportAllDeclaration;
 
 	hasEffects() {
 		return false;
 	}
 
 	initialise() {
-		this.included = false;
 		this.context.addExport(this);
 	}
 

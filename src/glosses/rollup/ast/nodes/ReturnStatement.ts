@@ -5,8 +5,8 @@ import * as NodeType from './NodeType';
 import { ExpressionNode, StatementBase } from './shared/Node';
 
 export default class ReturnStatement extends StatementBase {
-	argument: ExpressionNode | null;
-	type: NodeType.tReturnStatement;
+	argument!: ExpressionNode | null;
+	type!: NodeType.tReturnStatement;
 
 	hasEffects(options: ExecutionPathOptions) {
 		return (
@@ -16,7 +16,6 @@ export default class ReturnStatement extends StatementBase {
 	}
 
 	initialise() {
-		this.included = false;
 		this.scope.addReturnExpression(this.argument || UNKNOWN_EXPRESSION);
 	}
 

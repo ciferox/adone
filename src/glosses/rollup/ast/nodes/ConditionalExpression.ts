@@ -22,16 +22,16 @@ import { MultiExpression } from './shared/MultiExpression';
 import { ExpressionNode, NodeBase } from './shared/Node';
 
 export default class ConditionalExpression extends NodeBase implements DeoptimizableEntity {
-	alternate: ExpressionNode;
-	consequent: ExpressionNode;
-	test: ExpressionNode;
-	type: NodeType.tConditionalExpression;
+	alternate!: ExpressionNode;
+	consequent!: ExpressionNode;
+	test!: ExpressionNode;
+	type!: NodeType.tConditionalExpression;
 
 	// We collect deoptimization information if usedBranch !== null
-	private expressionsToBeDeoptimized: DeoptimizableEntity[];
-	private isBranchResolutionAnalysed: boolean;
-	private unusedBranch: ExpressionNode | null;
-	private usedBranch: ExpressionNode | null;
+	private expressionsToBeDeoptimized: DeoptimizableEntity[] = [];
+	private isBranchResolutionAnalysed = false;
+	private unusedBranch: ExpressionNode | null = null;
+	private usedBranch: ExpressionNode | null = null;
 
 	bind() {
 		super.bind();
@@ -141,14 +141,6 @@ export default class ConditionalExpression extends NodeBase implements Deoptimiz
 		} else {
 			this.usedBranch.include(includeAllChildrenRecursively);
 		}
-	}
-
-	initialise() {
-		this.included = false;
-		this.isBranchResolutionAnalysed = false;
-		this.usedBranch = null;
-		this.unusedBranch = null;
-		this.expressionsToBeDeoptimized = [];
 	}
 
 	render(

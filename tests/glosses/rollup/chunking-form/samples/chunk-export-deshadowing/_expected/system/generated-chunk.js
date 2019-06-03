@@ -1,11 +1,11 @@
-System.register([], function (exports, module) {
+System.register([], function (exports) {
   'use strict';
   return {
     execute: function () {
 
       exports({
-        a: fn$2,
-        b: fn$1
+        a: fn$1,
+        f: fn$2
       });
 
       function fn () {

@@ -1,9 +1,9 @@
-System.register([], function (exports, module) {
+System.register([], function (exports) {
   'use strict';
   return {
     execute: function () {
 
-      exports('a', fn);
+      exports('f', fn);
 
       function fn () {
         console.log('lib1 fn');

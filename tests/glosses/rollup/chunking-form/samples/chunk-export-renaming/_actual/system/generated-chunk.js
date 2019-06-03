@@ -1,4 +1,4 @@
-System.register([], function (exports, module) {
+System.register([], function (exports) {
   'use strict';
   return {
     execute: function () {
@@ -7,7 +7,7 @@ System.register([], function (exports, module) {
         test() {
             return ONE_CONSTANT;
         }
-      } exports('b', One);
+      } exports('O', One);
 
       const ONE_CONSTANT = exports('a', 'oneconstant');
 

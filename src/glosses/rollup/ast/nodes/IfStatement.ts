@@ -8,12 +8,12 @@ import * as NodeType from './NodeType';
 import { ExpressionNode, StatementBase, StatementNode } from './shared/Node';
 
 export default class IfStatement extends StatementBase implements DeoptimizableEntity {
-	alternate: StatementNode | null;
-	consequent: StatementNode;
-	test: ExpressionNode;
-	type: NodeType.tIfStatement;
+	alternate!: StatementNode | null;
+	consequent!: StatementNode;
+	test!: ExpressionNode;
+	type!: NodeType.tIfStatement;
 
-	private isTestValueAnalysed: boolean;
+	private isTestValueAnalysed = false;
 	private testValue: LiteralValueOrUnknown;
 
 	bind() {
@@ -65,11 +65,6 @@ export default class IfStatement extends StatementBase implements DeoptimizableE
 		) {
 			this.alternate.include(false);
 		}
-	}
-
-	initialise() {
-		this.included = false;
-		this.isTestValueAnalysed = false;
 	}
 
 	render(code: adone.text.MagicString, options: RenderOptions) {

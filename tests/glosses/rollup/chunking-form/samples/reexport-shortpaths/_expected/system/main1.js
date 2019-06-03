@@ -1,9 +1,9 @@
-System.register(['./generated-chunk.js'], function (exports, module) {
+System.register(['./generated-chunk.js'], function (exports) {
 	'use strict';
 	var foo;
 	return {
 		setters: [function (module) {
-			foo = module.a;
+			foo = module.f;
 		}],
 		execute: function () {
 

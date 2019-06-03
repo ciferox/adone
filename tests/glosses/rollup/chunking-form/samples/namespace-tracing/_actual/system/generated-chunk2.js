@@ -1,10 +1,10 @@
-System.register(['./generated-chunk.js'], function (exports, module) {
+System.register(['./generated-chunk.js'], function (exports) {
   'use strict';
   return {
     setters: [function () {}],
     execute: function () {
 
-      exports('a', foo);
+      exports('f', foo);
 
       function foo() {
         console.log('foo');

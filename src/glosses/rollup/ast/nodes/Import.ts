@@ -46,22 +46,28 @@ const getDynamicImportMechanism = (options: RenderOptions): DynamicImportMechani
 	return undefined as any;
 };
 
-export default class Import extends NodeBase {
-	parent: CallExpression;
-	type: NodeType.tImport;
+const accessedImportGlobals = {
+	amd: ['require'],
+	cjs: ['require'],
+	system: ['module']
+};
 
-	private resolutionInterop: boolean;
-	private resolutionNamespace: string;
+export default class Import extends NodeBase {
+	parent!: CallExpression;
+	type!: NodeType.tImport;
+
+	private resolutionInterop = false;
+	private resolutionNamespace?: string;
 
 	include() {
-		this.included = true;
-		this.context.includeDynamicImport(this);
+		if (!this.included) {
+			this.included = true;
+			this.context.includeDynamicImport(this);
+			this.scope.addAccessedGlobalsByFormat(accessedImportGlobals);
+		}
 	}
 
 	initialise() {
-		this.included = false;
-		this.resolutionNamespace = undefined as any;
-		this.resolutionInterop = false;
 		this.context.addDynamicImport(this);
 	}
 

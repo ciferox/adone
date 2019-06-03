@@ -1,9 +1,9 @@
-System.register([], function (exports, module) {
+System.register([], function (exports) {
 	'use strict';
 	return {
 		execute: function () {
 
-			var num = exports('a', 1);
+			var num = exports('n', 1);
 
 		}
 	};

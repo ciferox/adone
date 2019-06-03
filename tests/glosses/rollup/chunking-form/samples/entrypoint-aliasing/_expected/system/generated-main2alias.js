@@ -1,11 +1,11 @@
-System.register([], function (exports, module) {
+System.register([], function (exports) {
   'use strict';
   return {
     execute: function () {
 
-      exports('a', log);
+      exports('l', log);
 
-      var dep = exports('b', { x: 42 });
+      var dep = exports('d', { x: 42 });
 
       function log (x) {
         if (dep) {

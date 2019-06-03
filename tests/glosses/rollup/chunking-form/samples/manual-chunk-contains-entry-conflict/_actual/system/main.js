@@ -1,8 +1,8 @@
-System.register(['./generated-outer.js'], function (exports, module) {
+System.register(['./generated-outer.js'], function (exports) {
 	'use strict';
 	return {
 		setters: [function (module) {
-			exports('value', module.a);
+			exports('value', module.v);
 		}],
 		execute: function () {
 

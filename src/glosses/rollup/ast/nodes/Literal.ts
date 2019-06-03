@@ -17,10 +17,10 @@ import { NodeBase } from './shared/Node';
 export type LiteralValue = string | boolean | null | number | RegExp | undefined;
 
 export default class Literal<T = LiteralValue> extends NodeBase {
-	type: NodeType.tLiteral;
-	value: T;
+	type!: NodeType.tLiteral;
+	value!: T;
 
-	private members: { [key: string]: MemberDescription };
+	private members!: { [key: string]: MemberDescription };
 
 	getLiteralValueAtPath(path: ObjectPath): LiteralValueOrUnknown {
 		if (
@@ -62,7 +62,6 @@ export default class Literal<T = LiteralValue> extends NodeBase {
 	}
 
 	initialise() {
-		this.included = false;
 		this.members = getLiteralMembersForValue(this.value);
 	}
 

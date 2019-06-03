@@ -80,13 +80,13 @@ const NEW_EXECUTION_PATH = ExecutionPathOptions.create();
 
 export class NodeBase implements ExpressionNode {
 	context: AstContext;
-	end: number;
-	included: boolean;
+	end!: number;
+	included = false;
 	keys: string[];
 	parent: Node | { context: AstContext; type: string };
-	scope: ChildScope;
-	start: number;
-	type: string;
+	scope!: ChildScope;
+	start!: number;
+	type!: string;
 
 	constructor(
 		esTreeNode: GenericEsTreeNode,
@@ -199,9 +199,7 @@ export class NodeBase implements ExpressionNode {
 	/**
 	 * Override to perform special initialisation steps after the scope is initialised
 	 */
-	initialise() {
-		this.included = false;
-	}
+	initialise() {}
 
 	insertSemicolon(code: adone.text.MagicString) {
 		if (code.original[this.end - 1] !== ';') {

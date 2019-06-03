@@ -1,10 +1,10 @@
-System.register(['./generated-deps2and3.js', './generated-lib1.js'], function (exports, module) {
+System.register(['./generated-deps2and3.js', './generated-lib1.js'], function (exports) {
   'use strict';
   var fn$1, fn$2;
   return {
     setters: [function (module) {
-      fn$1 = module.a;
-      fn$2 = module.b;
+      fn$1 = module.f;
+      fn$2 = module.a;
     }, function () {}],
     execute: function () {
 

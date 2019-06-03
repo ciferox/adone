@@ -1,3 +1,4 @@
+import { accessedFileUrlGlobals, accessedMetaUrlGlobals } from '../../utils/defaultPlugin';
 import { dirname, normalize, relative } from '../../utils/path';
 import { PluginDriver } from '../../utils/pluginDriver';
 import { ObjectPathKey } from '../values';
@@ -10,19 +11,38 @@ const ASSET_PREFIX = 'ROLLUP_ASSET_URL_';
 const CHUNK_PREFIX = 'ROLLUP_CHUNK_URL_';
 
 export default class MetaProperty extends NodeBase {
-	meta: Identifier;
-	property: Identifier;
-	type: NodeType.tMetaProperty;
+	meta!: Identifier;
+	property!: Identifier;
+	type!: NodeType.tMetaProperty;
+
+	private metaProperty?: string | null;
 
 	hasEffectsWhenAccessedAtPath(path: ObjectPathKey[]): boolean {
 		return path.length > 1;
+	}
+
+	include() {
+		if (!this.included) {
+			this.included = true;
+			const parent = this.parent;
+			const metaProperty = (this.metaProperty =
+				parent instanceof MemberExpression && typeof parent.propertyKey === 'string'
+					? parent.propertyKey
+					: null);
+			if (metaProperty) {
+				if (metaProperty === 'url') {
+					this.scope.addAccessedGlobalsByFormat(accessedMetaUrlGlobals);
+				} else if (metaProperty.startsWith(ASSET_PREFIX) || metaProperty.startsWith(CHUNK_PREFIX)) {
+					this.scope.addAccessedGlobalsByFormat(accessedFileUrlGlobals);
+				}
+			}
+		}
 	}
 
 	initialise() {
 		if (this.meta.name === 'import') {
 			this.context.addImportMeta(this);
 		}
-		this.included = false;
 	}
 
 	renderFinalMechanism(
@@ -30,13 +50,10 @@ export default class MetaProperty extends NodeBase {
 		chunkId: string,
 		format: string,
 		pluginDriver: PluginDriver
-	): boolean {
-		if (!this.included) return false;
+	): void {
+		if (!this.included) return;
 		const parent = this.parent;
-		const importMetaProperty =
-			parent instanceof MemberExpression && typeof parent.propertyKey === 'string'
-				? parent.propertyKey
-				: null;
+		const importMetaProperty = this.metaProperty as string | null;
 
 		if (
 			importMetaProperty &&
@@ -85,7 +102,7 @@ export default class MetaProperty extends NodeBase {
 				(parent as MemberExpression).end,
 				replacement
 			);
-			return true;
+			return;
 		}
 
 		const replacement = pluginDriver.hookFirstSync('resolveImportMeta', [
@@ -102,8 +119,6 @@ export default class MetaProperty extends NodeBase {
 			} else {
 				code.overwrite(this.start, this.end, replacement);
 			}
-			return true;
 		}
-		return false;
 	}
 }

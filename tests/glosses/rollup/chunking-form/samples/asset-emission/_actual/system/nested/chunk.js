@@ -1,9 +1,9 @@
-System.register([], function (exports, module) {
+System.register([], function (exports) {
 	'use strict';
 	return {
 		execute: function () {
 
-			exports('a', showImage);
+			exports('s', showImage);
 
 			function showImage(url) {
 				console.log(url);

@@ -22,9 +22,9 @@ import {
 	errInvalidRollupPhaseForEmitChunk,
 	error
 } from './error';
-import { NameCollection } from './reservedNames';
 
 type Args<T> = T extends (...args: infer K) => any ? K : never;
+type EnsurePromise<T> = Promise<T extends Promise<infer K> ? K : T>;
 
 export interface PluginDriver {
 	emitAsset: EmitAsset;
@@ -35,7 +35,7 @@ export interface PluginDriver {
 		args: Args<PluginHooks[H]>,
 		hookContext?: HookContext | null,
 		skip?: number
-	): Promise<R>;
+	): EnsurePromise<R>;
 	hookFirstSync<H extends keyof PluginHooks, R = ReturnType<PluginHooks[H]>>(
 		hook: H,
 		args: Args<PluginHooks[H]>,
@@ -51,7 +51,7 @@ export interface PluginDriver {
 		args: any[],
 		reduce: Reduce<V, R>,
 		hookContext?: HookContext
-	): Promise<R>;
+	): EnsurePromise<R>;
 	hookReduceArg0Sync<H extends keyof PluginHooks, V, R = ReturnType<PluginHooks[H]>>(
 		hook: H,
 		args: any[],
@@ -90,7 +90,7 @@ const deprecatedHookNames: Record<string, string> = {
 export function createPluginDriver(
 	graph: Graph,
 	options: InputOptions,
-	pluginCache: Record<string, SerializablePluginCache>,
+	pluginCache: Record<string, SerializablePluginCache> | void,
 	watcher?: RollupWatcher
 ): PluginDriver {
 	const plugins = [
@@ -98,17 +98,17 @@ export function createPluginDriver(
 		getRollupDefaultPlugin(options.preserveSymlinks as boolean)
 	];
 	const { emitAsset, getAssetFileName, setAssetSource } = createAssetPluginHooks(graph.assetsById);
-	const existingPluginKeys: NameCollection = {};
+	const existingPluginKeys = new Set<string>();
 
 	let hasLoadersOrTransforms = false;
 
 	const pluginContexts: PluginContext[] = plugins.map((plugin, pidx) => {
 		let cacheable = true;
 		if (typeof plugin.cacheKey !== 'string') {
-			if (typeof plugin.name !== 'string' || existingPluginKeys[plugin.name]) {
+			if (typeof plugin.name !== 'string' || existingPluginKeys.has(plugin.name)) {
 				cacheable = false;
 			} else {
-				existingPluginKeys[plugin.name] = true;
+				existingPluginKeys.add(plugin.name);
 			}
 		}
 
@@ -218,10 +218,10 @@ export function createPluginDriver(
 			},
 			watcher: watcher
 				? ({
-						...(watcher as EventEmitter),
-						addListener: deprecatedWatchListener,
-						on: deprecatedWatchListener
-				  } as EventEmitter)
+					...(watcher as EventEmitter),
+					addListener: deprecatedWatchListener,
+					on: deprecatedWatchListener
+				} as EventEmitter)
 				: (undefined as any)
 		};
 		return context;
@@ -367,7 +367,7 @@ export function createPluginDriver(
 				if (!hookPromise) continue;
 				promises.push(hookPromise);
 			}
-			return Promise.all(promises).then(() => {});
+			return Promise.all(promises).then(() => { });
 		},
 
 		// chains, reduces returns of type R, to type T, handling the reduced value as the first hook argument
@@ -388,7 +388,7 @@ export function createPluginDriver(
 		// chains synchronously, reduces returns of type R, to type T, handling the reduced value as the first hook argument
 		hookReduceArg0Sync(name, [arg0, ...args], reduce, hookContext) {
 			for (let i = 0; i < plugins.length; i++) {
-				const result = runHookSync(name, [arg0, ...args], i, false, hookContext);
+				const result: any = runHookSync(name, [arg0, ...args], i, false, hookContext);
 				arg0 = reduce.call(pluginContexts[i], arg0, result, plugins[i]);
 			}
 			return arg0;
@@ -466,7 +466,7 @@ const noCache: PluginCache = {
 	get() {
 		return undefined as any;
 	},
-	set() {},
+	set() { },
 	delete() {
 		return false;
 	}

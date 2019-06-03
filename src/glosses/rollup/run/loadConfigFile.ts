@@ -21,13 +21,14 @@ export default function loadConfigFile(
 	const silent = commandOptions.silent || false;
 	const warnings = batchWarnings();
 
-	return rollup({
-		external: (id: string) =>
-			(id[0] !== '.' && !path.isAbsolute(id)) || id.slice(-5, id.length) === '.json',
-		input: configFile,
-		onwarn: warnings.add,
-		treeshake: false
-	})
+	return rollup
+		.rollup({
+			external: (id: string) =>
+				(id[0] !== '.' && !path.isAbsolute(id)) || id.slice(-5, id.length) === '.json',
+			input: configFile,
+			onwarn: warnings.add,
+			treeshake: false
+		})
 		.then((bundle: RollupBuild) => {
 			if (!silent && warnings.count > 0) {
 				stderr(chalk.bold(`loaded ${relativeId(configFile)} with warnings`));
@@ -42,9 +43,9 @@ export default function loadConfigFile(
 		.then(({ output: [{ code }] }: RollupOutput) => {
 			// temporarily override require
 			const defaultLoader = require.extensions['.js'];
-			require.extensions['.js'] = (module: NodeModuleWithCompile, filename: string) => {
+			require.extensions['.js'] = (module: NodeModule, filename: string) => {
 				if (filename === configFile) {
-					module._compile(code, filename);
+					(module as NodeModuleWithCompile)._compile(code, filename);
 				} else {
 					defaultLoader(module, filename);
 				}

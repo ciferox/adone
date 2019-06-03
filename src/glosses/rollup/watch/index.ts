@@ -10,10 +10,9 @@ import {
 	RollupBuild,
 	RollupCache,
 	RollupWatcher,
-	RollupWatchOptions,
 	WatcherOptions
 } from '../rollup/types';
-import mergeOptions from '../utils/mergeOptions';
+import mergeOptions, { GenericConfigObject } from '../utils/mergeOptions';
 import chokidar from './chokidar';
 import { addTask, deleteTask } from './fileWatchers';
 
@@ -22,14 +21,14 @@ const DELAY = 200;
 export class Watcher {
 	emitter: RollupWatcher;
 
-	private buildTimeout: NodeJS.Timer;
+	private buildTimeout: NodeJS.Timer | null = null;
 	private invalidatedIds: Set<string> = new Set();
 	private rerun = false;
 	private running: boolean;
 	private succeeded = false;
 	private tasks: Task[];
 
-	constructor(configs: RollupWatchOptions[]) {
+	constructor(configs: GenericConfigObject[]) {
 		this.emitter = new (class extends EventEmitter implements RollupWatcher {
 			close: () => void;
 			constructor(close: () => void) {
@@ -72,7 +71,7 @@ export class Watcher {
 		if (this.buildTimeout) clearTimeout(this.buildTimeout);
 
 		this.buildTimeout = setTimeout(() => {
-			this.buildTimeout = undefined as any;
+			this.buildTimeout = null;
 			this.invalidatedIds.forEach(id => this.emit('change', id));
 			this.invalidatedIds.clear();
 			this.emit('restart');
@@ -116,7 +115,7 @@ export class Watcher {
 
 export class Task {
 	cache: RollupCache;
-	watchFiles: string[];
+	watchFiles: string[] = [];
 
 	private chokidarOptions: WatchOptions;
 	private chokidarOptionsHash: string;
@@ -129,7 +128,7 @@ export class Task {
 	private watched: Set<string>;
 	private watcher: Watcher;
 
-	constructor(watcher: Watcher, config: RollupWatchOptions) {
+	constructor(watcher: Watcher, config: GenericConfigObject) {
 		this.cache = null as any;
 		this.watcher = watcher;
 
@@ -280,6 +279,6 @@ export class Task {
 	}
 }
 
-export default function watch(configs: RollupWatchOptions[]): EventEmitter {
+export default function watch(configs: GenericConfigObject[]): EventEmitter {
 	return new Watcher(configs).emitter;
 }

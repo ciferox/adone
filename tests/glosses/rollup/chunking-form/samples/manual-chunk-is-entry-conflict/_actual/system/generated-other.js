@@ -1,4 +1,4 @@
-System.register([], function (exports, module) {
+System.register([], function (exports) {
 	'use strict';
 	return {
 		execute: function () {
@@ -7,7 +7,7 @@ System.register([], function (exports, module) {
 
 			console.log('main');
 
-			const value = exports('a', 42);
+			const value = exports('v', 42);
 
 		}
 	};

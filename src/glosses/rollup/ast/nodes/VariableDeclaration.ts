@@ -34,9 +34,9 @@ function areAllDeclarationsIncludedAndNotExported(declarations: VariableDeclarat
 }
 
 export default class VariableDeclaration extends NodeBase {
-	declarations: VariableDeclarator[];
-	kind: 'var' | 'let' | 'const';
-	type: NodeType.tVariableDeclaration;
+	declarations!: VariableDeclarator[];
+	kind!: 'var' | 'let' | 'const';
+	type!: NodeType.tVariableDeclaration;
 
 	deoptimizePath(_path: ObjectPath) {
 		for (const declarator of this.declarations) {
@@ -64,7 +64,6 @@ export default class VariableDeclaration extends NodeBase {
 	}
 
 	initialise() {
-		this.included = false;
 		for (const declarator of this.declarations) {
 			declarator.declareDeclarator(this.kind);
 		}

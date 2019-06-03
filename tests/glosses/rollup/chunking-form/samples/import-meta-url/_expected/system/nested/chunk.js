@@ -1,9 +1,9 @@
-System.register([], function (exports, module) {
+System.register([], function (exports) {
 	'use strict';
 	return {
 		execute: function () {
 
-			exports('a', log);
+			exports('l', log);
 
 			function log(url) {
 				if (typeof document === 'undefined') {

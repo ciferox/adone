@@ -1,9 +1,9 @@
-System.register([], function (exports, module) {
+System.register([], function (exports) {
 	'use strict';
 	return {
 		execute: function () {
 
-			const shared = exports('a', 'shared');
+			const shared = exports('s', 'shared');
 
 		}
 	};

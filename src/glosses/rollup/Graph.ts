@@ -36,6 +36,10 @@ import { createPluginDriver, PluginDriver } from './utils/pluginDriver';
 import relativeId from './utils/relativeId';
 import { timeEnd, timeStart } from './utils/timers';
 
+const {
+	acorn
+} = adone;
+
 function makeOnwarn() {
 	const warned = Object.create(null);
 
@@ -79,9 +83,7 @@ export default class Graph {
 	preserveModules: boolean;
 	scope: GlobalScope;
 	shimMissingExports: boolean;
-	// deprecated
-	treeshake: boolean;
-	treeshakingOptions: TreeshakingOptions;
+	treeshakingOptions?: TreeshakingOptions;
 	watchFiles: Record<string, true> = Object.create(null);
 
 	private cacheExpiry: number;
@@ -89,7 +91,7 @@ export default class Graph {
 	private externalModules: ExternalModule[] = [];
 	private modules: Module[] = [];
 	private onwarn: WarningHandler;
-	private pluginCache: Record<string, SerializablePluginCache>;
+	private pluginCache?: Record<string, SerializablePluginCache>;
 
 	constructor(options: InputOptions, watcher?: RollupWatcher) {
 		this.curChunkIndex = 0;
@@ -112,8 +114,7 @@ export default class Graph {
 
 		this.cacheExpiry = options.experimentalCacheExpiry as number;
 
-		this.treeshake = options.treeshake !== false;
-		if (this.treeshake) {
+		if (options.treeshake !== false) {
 			this.treeshakingOptions = options.treeshake
 				? {
 						annotations: (options.treeshake as TreeshakingOptions).annotations !== false,
@@ -168,9 +169,9 @@ export default class Graph {
 		this.acornOptions = options.acorn || {};
 		const acornPluginsToInject = [];
 
-		acornPluginsToInject.push(adone.acorn.plugin.dynamicImport);
-		acornPluginsToInject.push(adone.acorn.plugin.importMeta);
-		acornPluginsToInject.push(adone.acorn.plugin.bigint);
+		acornPluginsToInject.push(acorn.plugin.dynamicImport);
+		acornPluginsToInject.push(acorn.plugin.importMeta);
+		acornPluginsToInject.push(acorn.plugin.bigint);
 
 		if (options.experimentalTopLevelAwait) {
 			(this.acornOptions as any).allowAwaitOutsideFunction = true;
@@ -184,17 +185,19 @@ export default class Graph {
 				? [acornInjectPlugins]
 				: [])
 		);
-		this.acornParser = adone.acorn.Parser.extend(...acornPluginsToInject) as any;
+		this.acornParser = acorn.Parser.extend(...acornPluginsToInject) as any;
 		this.moduleLoader = new ModuleLoader(
 			this,
 			this.moduleById,
 			this.pluginDriver,
 			options.external as ExternalOption,
 			(typeof options.manualChunks === 'function' && options.manualChunks) as GetManualChunk | null,
-			(this.treeshake
+			(this.treeshakingOptions
 				? this.treeshakingOptions.moduleSideEffects
 				: null) as ModuleSideEffectsOption,
-			(this.treeshake ? this.treeshakingOptions.pureExternalModules : false) as PureModulesOption
+			(this.treeshakingOptions
+				? this.treeshakingOptions.pureExternalModules
+				: false) as PureModulesOption
 		);
 	}
 
@@ -299,33 +302,14 @@ export default class Graph {
 				}
 			}
 
-			// for each chunk module, set up its imports to other
-			// chunks, if those variables are included after treeshaking
 			for (const chunk of chunks) {
 				chunk.link();
 			}
-
-			// filter out empty dependencies
 			chunks = chunks.filter(isChunkRendered);
-
-			// then go over and ensure all entry chunks export their variables
+			const facades: Chunk[] = [];
 			for (const chunk of chunks) {
-				if (this.preserveModules || chunk.entryModules.length > 0) {
-					chunk.generateEntryExportsOrMarkAsTainted();
-				}
-			}
-
-			// create entry point facades for entry module chunks that have tainted exports
-			const facades = [];
-			if (!this.preserveModules) {
-				for (const chunk of chunks) {
-					for (const entryModule of chunk.entryModules) {
-						if (chunk.facadeModule !== entryModule) {
-							const entryPointFacade = new Chunk(this, []);
-							entryPointFacade.turnIntoFacade(entryModule);
-							facades.push(entryPointFacade);
-						}
-					}
+				for (const facade of chunk.generateFacades()) {
+					facades.push(facade);
 				}
 			}
 
@@ -363,7 +347,7 @@ export default class Graph {
 	}
 
 	includeMarked(modules: Module[]) {
-		if (this.treeshake) {
+		if (this.treeshakingOptions) {
 			let treeshakingPass = 1;
 			do {
 				timeStart(`treeshaking pass ${treeshakingPass}`, 3);
