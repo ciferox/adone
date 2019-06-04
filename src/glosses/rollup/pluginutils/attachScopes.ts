@@ -1,6 +1,10 @@
-import { Node, walk } from 'estree-walker';
+import { Node } from 'estree-walker';
 import extractAssignedNames from './extractAssignedNames';
 import { AttachedScope, AttachScopes } from './pluginutils';
+
+const {
+    acorn: { estreeWalker: { walk } }
+} = adone;
 
 const blockDeclarations = {
 	const: true,

@@ -36,7 +36,9 @@ export const version = "6.1.1";
 
 adone.lazify({
     plugin: "./plugins",
-    walk: "./walk"
+    walk: "./walk",
+    isReference: "./is_reference",
+    estreeWalker: "./estree_walker"
 }, exports, require);
 
 // The main exported interface (under `self.acorn` when in the

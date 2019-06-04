@@ -1,8 +1,11 @@
-import { walk } from "estree-walker";
 import { attachScopes, extractAssignedNames, makeLegalIdentifier } from "../../pluginutils";
 import { flatten, isFalsy, isTruthy } from "./ast-utils.js";
 import { getProxyId, HELPERS_ID } from "./helpers";
 import { getName } from "./utils.js";
+
+const {
+    acorn: { estreeWalker: { walk } }
+} = adone;
 
 const reserved = "process location abstract arguments boolean break byte case catch char class const continue debugger default delete do double else enum eval export extends false final finally float for from function goto if implements import in instanceof int interface let long native new null package private protected public return short static super switch synchronized this throw throws transient true try typeof var void volatile while with yield".split(
     " "
@@ -214,7 +217,7 @@ export function transformCommonjs(
             // rewrite `require` (if not already handled) `global` and `define`, and handle free references to
             // `module` and `exports` as these mean we need to wrap the module in commonjsHelpers.createCommonjsModule
             if (node.type === "Identifier") {
-                if (adone.rollup.isReference(node, parent) && !scope.contains(node.name)) {
+                if (adone.acorn.isReference(node, parent) && !scope.contains(node.name)) {
                     if (node.name in uses) {
                         if (node.name === "require") {
                             if (allowDynamicRequire) return;

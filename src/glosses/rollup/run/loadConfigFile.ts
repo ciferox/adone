@@ -21,8 +21,7 @@ export default function loadConfigFile(
 	const silent = commandOptions.silent || false;
 	const warnings = batchWarnings();
 
-	return rollup
-		.rollup({
+	return rollup({
 			external: (id: string) =>
 				(id[0] !== '.' && !path.isAbsolute(id)) || id.slice(-5, id.length) === '.json',
 			input: configFile,

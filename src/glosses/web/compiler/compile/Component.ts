@@ -1,6 +1,4 @@
-import MagicString, { Bundle } from 'magic-string';
 // @ts-ignore
-import { walk, childKeys } from 'estree-walker';
 import { getLocator } from 'locate-character';
 import Stats from '../Stats';
 import { globals, reserved } from '../utils/names';
@@ -22,6 +20,11 @@ import get_object from './utils/get_object';
 import unwrap_parens from './utils/unwrap_parens';
 import Slot from './nodes/Slot';
 import { Node as ESTreeNode } from 'estree';
+
+const {
+	acorn: { estreeWalker: { walk, childKeys } },
+	text: { MagicString }
+} = adone;
 
 type ComponentOptions = {
 	namespace?: string;
@@ -285,7 +288,7 @@ export default class Component {
 			const parts = module.split('✂]');
 			const final_chunk = parts.pop();
 
-			const compiled = new Bundle({ separator: '' });
+			const compiled = new MagicString.Bundle({ separator: '' });
 
 			function add_string(str: string) {
 				compiled.addSource({
@@ -400,7 +403,7 @@ export default class Component {
 			start: number,
 			end: number
 		},
-		e : {
+		e: {
 			code: string,
 			message: string
 		}
@@ -759,7 +762,7 @@ export default class Component {
 					});
 				}
 
-				if (adone.rollup.isReference(node as ESTreeNode, parent as ESTreeNode)) {
+				if (adone.acorn.isReference(node as ESTreeNode, parent as ESTreeNode)) {
 					const object = get_object(node);
 					const { name } = object;
 
@@ -1027,7 +1030,7 @@ export default class Component {
 						scope = map.get(node);
 					}
 
-					if (adone.rollup.isReference(node as ESTreeNode, parent as ESTreeNode)) {
+					if (adone.acorn.isReference(node as ESTreeNode, parent as ESTreeNode)) {
 						const { name } = flatten_reference(node);
 						const owner = scope.find_owner(name);
 
@@ -1050,7 +1053,7 @@ export default class Component {
 									hoistable = false;
 								} else if (!is_hoistable(other_declaration)) {
 									hoistable = false;
-                }
+								}
 							}
 
 							else {
@@ -1118,7 +1121,7 @@ export default class Component {
 						} else if (node.type === 'UpdateExpression') {
 							const identifier = get_object(node.argument);
 							assignees.add(identifier.name);
-						} else if (adone.rollup.isReference(node as ESTreeNode, parent as ESTreeNode)) {
+						} else if (adone.acorn.isReference(node as ESTreeNode, parent as ESTreeNode)) {
 							const identifier = get_object(node);
 							if (!assignee_nodes.has(identifier)) {
 								const { name } = identifier;

@@ -1,6 +1,9 @@
 import Node from './shared/Node';
 import Component from '../Component';
-import { walk } from 'estree-walker';
+
+const {
+	acorn: { estreeWalker: { walk } }
+} = adone;
 
 const applicable = new Set(['Identifier', 'ObjectExpression', 'ArrayExpression', 'Property']);
 

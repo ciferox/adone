@@ -1,7 +1,10 @@
-import * as mm from 'micromatch';
 import { resolve, sep } from 'path';
 import { CreateFilter } from './pluginutils';
 import ensureArray from './utils/ensureArray';
+
+const {
+	glob: { match }
+} = adone
 
 function getMatcherString(id: string, resolutionBase: string | false | null | undefined) {
 	if (resolutionBase === false) {
@@ -17,19 +20,19 @@ const createFilter: CreateFilter = function createFilter(include?, exclude?, opt
 		return id instanceof RegExp
 			? id
 			: {
-					test: mm.matcher(
-						getMatcherString(id, resolutionBase)
-							.split(sep)
-							.join('/'),
-						{ dot: true }
-					)
-			  };
+				test: match.matcher(
+					getMatcherString(id, resolutionBase)
+						.split(sep)
+						.join('/'),
+					{ dot: true }
+				)
+			};
 	};
 
 	const includeMatchers = ensureArray(include).map(getMatcher);
 	const excludeMatchers = ensureArray(exclude).map(getMatcher);
 
-	return function(id: string | any): boolean {
+	return function (id: string | any): boolean {
 		if (typeof id !== 'string') return false;
 		if (/\0/.test(id)) return false;
 

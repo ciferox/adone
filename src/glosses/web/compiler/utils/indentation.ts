@@ -1,7 +1,10 @@
-import MagicString from 'magic-string';
 import { Node } from '../interfaces';
-import { walk } from 'estree-walker';
 import repeat from './repeat';
+
+const {
+	acorn: { estreeWalker: { walk } },
+	text: { MagicString }
+} = adone;
 
 export function remove_indentation(code: MagicString, node: Node) {
 	const indent = code.getIndentString();

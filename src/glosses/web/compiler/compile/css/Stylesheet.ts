@@ -1,9 +1,12 @@
-import MagicString from 'magic-string';
-import { walk } from 'estree-walker';
 import Selector from './Selector';
 import Element from '../nodes/Element';
 import { Node, Ast } from '../../interfaces';
 import Component from '../Component';
+
+const {
+	acorn: { estreeWalker: { walk } },
+	text: { MagicString }
+} = adone;
 
 function remove_css_prefix(name: string): string {
 	return name.replace(/^-((webkit)|(moz)|(o)|(ms))-/, '');
@@ -140,7 +143,7 @@ class Declaration {
 
 class Atrule {
 	node: Node;
-	children: (Atrule|Rule)[];
+	children: (Atrule | Rule)[];
 
 	constructor(node: Node) {
 		this.node = node;
@@ -253,7 +256,7 @@ export default class Stylesheet {
 	has_styles: boolean;
 	id: string;
 
-	children: (Rule|Atrule)[] = [];
+	children: (Rule | Atrule)[] = [];
 	keyframes: Map<string, string> = new Map();
 
 	nodes_with_css_class: Set<Node> = new Set();
@@ -359,7 +362,7 @@ export default class Stylesheet {
 		});
 
 		if (should_transform_selectors) {
-			this.children.forEach((child: (Atrule|Rule)) => {
+			this.children.forEach((child: (Atrule | Rule)) => {
 				child.transform(code, this.id, this.keyframes);
 			});
 		}

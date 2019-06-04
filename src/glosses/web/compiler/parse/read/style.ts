@@ -1,8 +1,8 @@
-import { walk } from 'estree-walker';
 import { Parser } from '../index';
 import { Node } from '../../interfaces';
 
 const {
+	acorn: { estreeWalker: { walk } },
 	web: { extra: { csstree: { parse } } }
 } = adone;
 

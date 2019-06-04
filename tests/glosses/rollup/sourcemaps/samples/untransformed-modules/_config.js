@@ -1,5 +1,6 @@
-const assert = require('assert');
-const MagicString = require('magic-string');
+const {
+	text: { MagicString }
+} = adone;
 
 module.exports = {
 	description: 'allows sourcemap chains with some untransformed modules (#404)',

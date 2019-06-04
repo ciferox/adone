@@ -14,7 +14,8 @@ export default {
             "!.adone/dev.js"
         ],
         nodeModules: {
-            "ajv-pack": "latest"
+            "ajv-pack": "latest",
+            "@babel/plugin-proposal-class-properties": "latest"
         }
     },
     defaultTask: "copy",
@@ -115,7 +116,16 @@ export default {
                     task: "transpile",
                     src: "src/glosses/acorn/**/*.js",
                     dst: "lib/glosses/acorn",
-                    original: "https://github.com/acornjs/acorn"
+                    original: "https://github.com/acornjs/acorn",
+                    units: {
+                        isReference: {
+                            description: "Utility for determining whether an AST node is a reference",
+                            src: "src/glosses/acorn/is_reference.ts",
+                            dst: "lib/glosses/acorn",
+                            task: "tsc",
+                            original: "https://github.com/Rich-Harris/is-reference"
+                        }
+                    }
                 },
                 app: {
                     description: "Application framework",

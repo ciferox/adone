@@ -4,12 +4,15 @@ import CodeBuilder from '../utils/CodeBuilder';
 import Component from '../Component';
 import Renderer from './Renderer';
 import { CompileOptions } from '../../interfaces';
-import { walk } from 'estree-walker';
 import { stringify_props } from '../utils/stringify_props';
 import add_to_set from '../utils/add_to_set';
 import get_object from '../utils/get_object';
 import { extract_names } from '../utils/scope';
 import { nodes_match } from '../../utils/nodes_match';
+
+const {
+	acorn: { estreeWalker: { walk } }
+} = adone;
 
 export default function dom(
 	component: Component,

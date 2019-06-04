@@ -112,7 +112,6 @@
     "eslint-plugin-flowtype": "^3.2.1",
     "eslint-plugin-import": "^2.16.0",
     "esprima-fb": "^15001.1001.0-dev-harmony-fb",
-    "estree-walker": "^0.6.0",
     "ethereumjs-account": "^3.0.0",
     "ethereumjs-block": "^2.2.0",
     "execa": "^1.0.0",

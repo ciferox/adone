@@ -1,5 +1,4 @@
 import Component from '../../Component';
-import { walk } from 'estree-walker';
 import flatten_reference from '../../utils/flatten_reference';
 import { create_scopes, Scope, extract_names } from '../../utils/scope';
 import { Node } from '../../../interfaces';
@@ -12,6 +11,10 @@ import get_object from '../../utils/get_object';
 import { nodes_match } from '../../../utils/nodes_match';
 import Block from '../../render-dom/Block';
 import { INode } from '../interfaces';
+
+const {
+	acorn: { estreeWalker: { walk } }
+} = adone;
 
 const binary_operators: Record<string, number> = {
 	'**': 15,
@@ -121,7 +124,7 @@ export default class Expression {
 					function_expression = node;
 				}
 
-				if (adone.rollup.isReference(node, parent)) {
+				if (adone.acorn.isReference(node, parent)) {
 					const { name, nodes } = flatten_reference(node);
 
 					if (scope.has(name)) return;
@@ -256,7 +259,7 @@ export default class Expression {
 					scope = map.get(node);
 				}
 
-				if (adone.rollup.isReference(node, parent)) {
+				if (adone.acorn.isReference(node, parent)) {
 					const { name, nodes } = flatten_reference(node);
 
 					if (scope.has(name)) return;

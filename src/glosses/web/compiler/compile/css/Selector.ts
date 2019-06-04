@@ -1,8 +1,11 @@
-import MagicString from 'magic-string';
 import Stylesheet from './Stylesheet';
 import { gather_possible_values, UNKNOWN } from './gather_possible_values';
 import { Node } from '../../interfaces';
 import Component from '../Component';
+
+const {
+	text: { MagicString }
+} = adone;
 
 export default class Selector {
 	node: Node;

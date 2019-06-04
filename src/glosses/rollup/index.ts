@@ -7,6 +7,4 @@ adone.lazify({
     plugin: "./plugins",
     pluginutils: "./pluginutils",
     run: "./run",
-
-    isReference: "./is_reference"
 }, exports, require);
