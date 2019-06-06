@@ -1,11 +1,11 @@
 const log = require('debug')('ipfs:mfs:utils:with-mfs-root')
-const waterfall = require('async/waterfall')
 
 const {
     MFS_ROOT_KEY
 } = require('./constants')
 
 const {
+    async: { waterfall },
     ipfs: { UnixFs, ipld: { dagPb } },
     multiformat: { CID }
 } = adone;

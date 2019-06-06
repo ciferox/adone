@@ -1,5 +1,3 @@
-const waterfall = require('async/waterfall')
-const parallel = require('async/parallel')
 const promisify = require('promisify-es6')
 const defaultsDeep = require('@nodeutils/defaults-deep')
 const defaultConfig = require('../runtime/config-nodejs.js')
@@ -10,6 +8,7 @@ const OfflineDatastore = require('../ipns/routing/offline-datastore')
 const addDefaultAssets = require('./init-assets')
 
 const {
+    async: { waterfall, parallel },
     p2p: { PeerId, Keychain },
     ipfs: { UnixFs, ipld: { dagPb: { DAGNode } } }
 } = adone;

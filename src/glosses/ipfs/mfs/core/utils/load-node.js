@@ -1,6 +1,6 @@
-const waterfall = require('async/waterfall')
 const log = require('debug')('ipfs:mfs:utils:load-node')
 const {
+    async: { waterfall },
     multiformat: { CID }
 } = adone;
 

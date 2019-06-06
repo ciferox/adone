@@ -1,7 +1,8 @@
-
-
 const nacl = require("tweetnacl");
-const nextTick = require("async/nextTick");
+
+const {
+    async: { nextTick }
+} = adone;
 
 exports.publicKeyLength = nacl.sign.publicKeyLength;
 exports.privateKeyLength = nacl.sign.secretKeyLength;

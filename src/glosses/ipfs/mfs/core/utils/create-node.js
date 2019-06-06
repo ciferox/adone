@@ -1,6 +1,5 @@
-const waterfall = require('async/waterfall')
-
 const {
+    async: { waterfall },
     ipfs: { UnixFs, ipld: { dagPb } }
 } = adone;
 

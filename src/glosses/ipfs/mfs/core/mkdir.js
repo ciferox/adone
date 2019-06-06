@@ -1,4 +1,3 @@
-const waterfall = require("async/waterfall");
 const log = require("debug")("ipfs:mfs:mkdir");
 // const {
 //     multiformat: { CID }
@@ -14,6 +13,7 @@ const {
 } = require("./utils");
 
 const {
+    async: { waterfall },
     ipfs: { unixfsExporter: exporter }
 } = adone;
 

@@ -1,11 +1,10 @@
 const debug = require('debug')
 const promisify = require('promisify-es6')
-const waterfall = require('async/waterfall')
-const parallel = require('async/parallel')
 const human = require('human-to-milliseconds')
 const errcode = require('err-code')
 
 const {
+    async: { waterfall, parallel },
     p2p: { crypto }
 } = adone;
 

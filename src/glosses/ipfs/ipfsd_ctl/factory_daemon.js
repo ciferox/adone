@@ -1,13 +1,14 @@
-'use strict'
-
-const defaultsDeep = require('lodash.defaultsdeep')
-const clone = require('lodash.clone')
-const series = require('async/series')
 const path = require('path')
 const tmpDir = require('./utils/tmp-dir')
 const Daemon = require('./ipfsd_daemon')
 const defaultConfig = require('./defaults/config.json')
 const defaultOptions = require('./defaults/options.json')
+
+const {
+    async: { series },
+    is,
+    lodash: { defaultsDeep, clone }
+} = adone;
 
 /** @ignore @typedef {import("./index").SpawnOptions} SpawnOptions */
 

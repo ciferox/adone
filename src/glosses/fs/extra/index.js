@@ -108,6 +108,7 @@ export const improve = (fs) => {
         outputFile: "./output_file",
         outputJson: "./output_json",
         remove: "./remove",
+        writeFileAtomic: "./write_file_atomic",
         which: "./which"
     }, improvedFs, require, {
         mapper: (mod) => {

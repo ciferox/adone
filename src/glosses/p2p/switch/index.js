@@ -1,12 +1,11 @@
 const {
+    event: { Emitter }, 
+    async: { each, eachSeries, series },
+    assert,
     p2p: { Circuit }
 } = adone;
 
 const FSM = require("fsm-event");
-const EventEmitter = require("events").EventEmitter;
-const each = require("async/each");
-const eachSeries = require("async/eachSeries");
-const series = require("async/series");
 const TransportManager = require("./transport");
 const ConnectionManager = require("./connection/manager");
 const getPeerInfo = require("./get-peer-info");
@@ -16,7 +15,6 @@ const ProtocolMuxer = require("./protocol-muxer");
 const plaintext = require("./plaintext");
 const Observer = require("./observer");
 const Stats = require("./stats");
-const assert = require("assert");
 const Errors = require("./errors");
 const debug = require("debug");
 const log = debug("libp2p:switch");
@@ -27,7 +25,7 @@ log.error = debug("libp2p:switch:error");
  * @fires Switch#start Triggered when the switch has started
  * @fires Switch#error Triggered whenever an error occurs
  */
-class Switch extends EventEmitter {
+class Switch extends Emitter {
     constructor(peerInfo, peerBook, options) {
         super();
         assert(peerInfo, "You must provide a `peerInfo`");

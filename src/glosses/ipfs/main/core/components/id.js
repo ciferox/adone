@@ -1,7 +1,7 @@
 const promisify = require("promisify-es6");
-const setImmediate = require("async/setImmediate");
 
 const {
+    async: { setImmediate }, 
     is
 } = adone;
 

@@ -1,11 +1,9 @@
-const doUntil = require("async/doUntil");
 const joinPath = require("path").join;
 const osPathSep = require("path").sep;
-const map = require("async/map");
-const waterfall = require("async/waterfall");
 const mergeOptions = require("merge-options");
 
 const {
+    async: { doUntil, waterfall, map },
     multiformat: { CID },
     ipfs: { Block, ipld: { dagCbor: ipldDagCbor, dagPb: ipldDagPb, raw: ipldRaw } },
     stream: { pull }

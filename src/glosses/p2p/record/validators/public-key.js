@@ -1,6 +1,5 @@
-const setImmediate = require("async/setImmediate");
-
 const {
+    async: { setImmediate },
     is,
     multiformat: { multihashingAsync: multihashing }
 } = adone;

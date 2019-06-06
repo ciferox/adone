@@ -614,7 +614,15 @@ export default {
                     description: "IPFS",
                     task: "transpile",
                     src: "src/glosses/ipfs/**/*.js",
-                    dst: "lib/glosses/ipfs"
+                    dst: "lib/glosses/ipfs",
+                    units: {
+                        jsonAssets: {
+                            description: "JSON assets",
+                            src: "src/glosses/ipfs/**/*.json",
+                            dst: "lib/glosses/ipfs",
+                            task: "copy"
+                        }
+                    }
                 },
                 is: {
                     description: "Implementation of common predicates",

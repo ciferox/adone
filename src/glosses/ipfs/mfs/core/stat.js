@@ -3,10 +3,11 @@ const {
     toMfsPath,
     loadNode
 } = require("./utils");
-const waterfall = require("async/waterfall");
+
 const log = require("debug")("ipfs:mfs:stat");
 
 const {
+    async: { waterfall },
     stream: { pull },
     // multiformat: { CID }
 } = adone;

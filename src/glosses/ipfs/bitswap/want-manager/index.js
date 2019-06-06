@@ -1,6 +1,7 @@
-'use strict'
+const {
+    async: { nextTick }
+} = adone;
 
-const nextTick = require('async/nextTick')
 const Message = require('../types/message')
 const Wantlist = require('../types/wantlist')
 const CONSTANTS = require('../constants')
@@ -8,129 +9,129 @@ const MsgQueue = require('./msg-queue')
 const logger = require('../utils').logger
 
 module.exports = class WantManager {
-  constructor (peerId, network, stats) {
-    this.peers = new Map()
-    this.wantlist = new Wantlist(stats)
+    constructor(peerId, network, stats) {
+        this.peers = new Map()
+        this.wantlist = new Wantlist(stats)
 
-    this.network = network
-    this._stats = stats
+        this.network = network
+        this._stats = stats
 
-    this._peerId = peerId
-    this._log = logger(peerId, 'want')
-  }
+        this._peerId = peerId
+        this._log = logger(peerId, 'want')
+    }
 
-  _addEntries (cids, cancel, force) {
-    const entries = cids.map((cid, i) => {
-      return new Message.Entry(cid, CONSTANTS.kMaxPriority - i, cancel)
-    })
+    _addEntries(cids, cancel, force) {
+        const entries = cids.map((cid, i) => {
+            return new Message.Entry(cid, CONSTANTS.kMaxPriority - i, cancel)
+        })
 
-    entries.forEach((e) => {
-      // add changes to our wantlist
-      if (e.cancel) {
-        if (force) {
-          this.wantlist.removeForce(e.cid)
-        } else {
-          this.wantlist.remove(e.cid)
+        entries.forEach((e) => {
+            // add changes to our wantlist
+            if (e.cancel) {
+                if (force) {
+                    this.wantlist.removeForce(e.cid)
+                } else {
+                    this.wantlist.remove(e.cid)
+                }
+            } else {
+                this._log('adding to wl')
+                this.wantlist.add(e.cid, e.priority)
+            }
+        })
+
+        // broadcast changes
+        for (let p of this.peers.values()) {
+            p.addEntries(entries)
         }
-      } else {
-        this._log('adding to wl')
-        this.wantlist.add(e.cid, e.priority)
-      }
-    })
-
-    // broadcast changes
-    for (let p of this.peers.values()) {
-      p.addEntries(entries)
-    }
-  }
-
-  _startPeerHandler (peerId) {
-    let mq = this.peers.get(peerId.toB58String())
-
-    if (mq) {
-      mq.refcnt++
-      return
     }
 
-    mq = new MsgQueue(this._peerId, peerId, this.network)
+    _startPeerHandler(peerId) {
+        let mq = this.peers.get(peerId.toB58String())
 
-    // new peer, give them the full wantlist
-    const fullwantlist = new Message(true)
+        if (mq) {
+            mq.refcnt++
+            return
+        }
 
-    for (let entry of this.wantlist.entries()) {
-      fullwantlist.addEntry(entry[1].cid, entry[1].priority)
+        mq = new MsgQueue(this._peerId, peerId, this.network)
+
+        // new peer, give them the full wantlist
+        const fullwantlist = new Message(true)
+
+        for (let entry of this.wantlist.entries()) {
+            fullwantlist.addEntry(entry[1].cid, entry[1].priority)
+        }
+
+        mq.addMessage(fullwantlist)
+
+        this.peers.set(peerId.toB58String(), mq)
+        return mq
     }
 
-    mq.addMessage(fullwantlist)
+    _stopPeerHandler(peerId) {
+        const mq = this.peers.get(peerId.toB58String())
 
-    this.peers.set(peerId.toB58String(), mq)
-    return mq
-  }
+        if (!mq) {
+            return
+        }
 
-  _stopPeerHandler (peerId) {
-    const mq = this.peers.get(peerId.toB58String())
+        mq.refcnt--
+        if (mq.refcnt > 0) {
+            return
+        }
 
-    if (!mq) {
-      return
+        this.peers.delete(peerId.toB58String())
     }
 
-    mq.refcnt--
-    if (mq.refcnt > 0) {
-      return
+    // add all the cids to the wantlist
+    wantBlocks(cids) {
+        this._addEntries(cids, false)
     }
 
-    this.peers.delete(peerId.toB58String())
-  }
+    // remove blocks of all the given keys without respecting refcounts
+    unwantBlocks(cids) {
+        this._log('unwant blocks: %s', cids.length)
+        this._addEntries(cids, true, true)
+    }
 
-  // add all the cids to the wantlist
-  wantBlocks (cids) {
-    this._addEntries(cids, false)
-  }
+    // cancel wanting all of the given keys
+    cancelWants(cids) {
+        this._log('cancel wants: %s', cids.length)
+        this._addEntries(cids, true)
+    }
 
-  // remove blocks of all the given keys without respecting refcounts
-  unwantBlocks (cids) {
-    this._log('unwant blocks: %s', cids.length)
-    this._addEntries(cids, true, true)
-  }
+    // Returns a list of all currently connected peers
+    connectedPeers() {
+        return Array.from(this.peers.keys())
+    }
 
-  // cancel wanting all of the given keys
-  cancelWants (cids) {
-    this._log('cancel wants: %s', cids.length)
-    this._addEntries(cids, true)
-  }
+    connected(peerId) {
+        this._startPeerHandler(peerId)
+    }
 
-  // Returns a list of all currently connected peers
-  connectedPeers () {
-    return Array.from(this.peers.keys())
-  }
+    disconnected(peerId) {
+        this._stopPeerHandler(peerId)
+    }
 
-  connected (peerId) {
-    this._startPeerHandler(peerId)
-  }
+    start(callback) {
+        // resend entire wantlist every so often
+        this.timer = setInterval(() => {
+            this._log('resend full-wantlist')
+            const fullwantlist = new Message(true)
+            this.wantlist.forEach((entry) => {
+                fullwantlist.addEntry(entry.cid, entry.priority)
+            })
 
-  disconnected (peerId) {
-    this._stopPeerHandler(peerId)
-  }
+            this.peers.forEach((p) => p.addMessage(fullwantlist))
+        }, 60 * 1000)
 
-  start (callback) {
-    // resend entire wantlist every so often
-    this.timer = setInterval(() => {
-      this._log('resend full-wantlist')
-      const fullwantlist = new Message(true)
-      this.wantlist.forEach((entry) => {
-        fullwantlist.addEntry(entry.cid, entry.priority)
-      })
+        nextTick(() => callback())
+    }
 
-      this.peers.forEach((p) => p.addMessage(fullwantlist))
-    }, 60 * 1000)
+    stop(callback) {
+        this.peers.forEach((mq) => this.disconnected(mq.peerId))
 
-    nextTick(() => callback())
-  }
-
-  stop (callback) {
-    this.peers.forEach((mq) => this.disconnected(mq.peerId))
-
-    clearInterval(this.timer)
-    nextTick(() => callback())
-  }
+        clearInterval(this.timer)
+        nextTick(() => callback())
+    }
 }

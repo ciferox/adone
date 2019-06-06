@@ -1,8 +1,9 @@
-
-
-const crypto = require("crypto");
 const randomBytes = require("../random-bytes");
-const nextTick = require("async/nextTick");
+
+const {
+    async: { nextTick },
+    std: { crypto }
+} = adone;
 
 let keypair;
 try {

@@ -1,7 +1,7 @@
 const promisify = require('promisify-es6')
-const map = require('async/map')
 
 const {
+    async: { map },
     ipfs: { isIPFS },
     multiformat: { CID }
 } = adone;

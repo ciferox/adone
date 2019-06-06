@@ -1,8 +1,8 @@
-const waterfall = require('async/waterfall')
 const defaultsDeep = require('@nodeutils/defaults-deep')
 const NoKeychain = require('./no-keychain')
 
 const {
+    async: { waterfall },
     p2p: { PeerId, PeerInfo, Keychain },
     multiformat: { multiaddr }
 } = adone;

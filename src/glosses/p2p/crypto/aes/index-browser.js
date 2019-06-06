@@ -1,7 +1,8 @@
-
-
 const asm = require("asmcrypto.js");
-const nextTick = require("async/nextTick");
+
+const {
+    async: { nextTick }
+} = adone;
 
 exports.create = function (key, iv, callback) {
     const done = (err, res) => nextTick(() => callback(err, res));

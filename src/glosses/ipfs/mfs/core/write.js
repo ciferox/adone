@@ -1,7 +1,5 @@
-const promisify = require('promisify-es6')
-const waterfall = require('async/waterfall')
-const parallel = require('async/parallel')
-const series = require('async/series')
+const promisify = require('promisify-es6');
+
 const {
     createLock,
     updateMfsRoot,
@@ -15,12 +13,13 @@ const {
     countStreamBytes,
     toTrail,
     zeros
-} = require('./utils')
-const log = require('debug')('ipfs:mfs:write')
-const stat = require('./stat')
-const mkdir = require('./mkdir')
+} = require('./utils');
+const log = require('debug')('ipfs:mfs:write');
+const stat = require('./stat');
+const mkdir = require('./mkdir');
 
 const {
+    async: { waterfall, parallel, series },
     ipfs: { UnixFs: { unmarshal }, unixfsExporter: exporter, unixfsImporter: importer },
     stream: { pull },
     multiformat: { CID }
@@ -43,30 +42,30 @@ const defaultOptions = {
     flush: true,
     leafType: 'raw',
     shardSplitThreshold: 1000
-}
+};
 
 module.exports = function mfsWrite(context) {
     return promisify((path, content, options, callback) => {
         if (typeof options === 'function') {
-            callback = options
-            options = {}
+            callback = options;
+            options = {};
         }
 
-        options = Object.assign({}, defaultOptions, options)
+        options = Object.assign({}, defaultOptions, options);
 
         if (options.offset < 0) {
-            return callback(new Error('cannot have negative write offset'))
+            return callback(new Error('cannot have negative write offset'));
         }
 
         if (options.length < 0) {
-            return callback(new Error('cannot have negative byte count'))
+            return callback(new Error('cannot have negative byte count'));
         }
 
         if (!options.length && options.length !== 0) {
-            options.length = Infinity
+            options.length = Infinity;
         }
 
-        options.cidVersion = options.cidVersion || 0
+        options.cidVersion = options.cidVersion || 0;
 
         waterfall([
             (done) => {
@@ -76,7 +75,7 @@ module.exports = function mfsWrite(context) {
                             parallel({
                                 source: (next) => toPullSource(content, options, next),
                                 path: (next) => toMfsPath(context, path, next)
-                            }, done)
+                            }, done);
                         },
                         ({ source, path: { mfsPath, mfsDirectory } }, done) => {
                             series({
@@ -85,20 +84,20 @@ module.exports = function mfsWrite(context) {
                                     long: true
                                 }, (error, result) => {
                                     if (error && error.message.includes('does not exist')) {
-                                        error = null
+                                        error = null;
                                     }
 
-                                    next(error, result)
+                                    next(error, result);
                                 }),
                                 mfsPath: (next) => stat(context)(mfsPath, {
                                     unsorted: true,
                                     long: true
                                 }, (error, result) => {
                                     if (error && error.message.includes('does not exist')) {
-                                        error = null
+                                        error = null;
                                     }
 
-                                    next(error, result)
+                                    next(error, result);
                                 })
                             }, (error, result = {}) => {
                                 done(error, {
@@ -106,26 +105,26 @@ module.exports = function mfsWrite(context) {
                                     path,
                                     mfsDirectory: result.mfsDirectory,
                                     mfsPath: result.mfsPath
-                                })
-                            })
+                                });
+                            });
                         }
-                    ], callback)
-                })(done)
+                    ], callback);
+                })(done);
             },
             ({ source, path, mfsDirectory, mfsPath }, done) => {
                 if (!options.parents && !mfsDirectory) {
-                    return done(new Error('directory does not exist'))
+                    return done(new Error('directory does not exist'));
                 }
 
                 if (!options.create && !mfsPath) {
-                    return done(new Error('file does not exist'))
+                    return done(new Error('file does not exist'));
                 }
 
-                updateOrImport(context, options, path, source, mfsPath, done)
+                updateOrImport(context, options, path, source, mfsPath, done);
             }
-        ], (error) => callback(error))
-    })
-}
+        ], (error) => callback(error));
+    });
+};
 
 const updateOrImport = (context, options, path, source, existingChild, callback) => {
     waterfall([
@@ -133,59 +132,59 @@ const updateOrImport = (context, options, path, source, existingChild, callback)
             if (existingChild) {
                 return loadNode(context, {
                     cid: existingChild.hash
-                }, next)
+                }, next);
             }
 
-            next(null, null)
+            next(null, null);
         },
 
         (result, next) => {
             const {
                 cid, node
-            } = result || {}
+            } = result || {};
 
-            write(context, cid, node, source, options, next)
+            write(context, cid, node, source, options, next);
         },
 
         // The slow bit is done, now add or replace the DAGLink in the containing directory
         // re-reading the path to the containing folder in case it has changed in the interim
         (child, next) => {
             createLock().writeLock((writeLockCallback) => {
-                const pathComponents = toPathComponents(path)
-                const fileName = pathComponents.pop()
+                const pathComponents = toPathComponents(path);
+                const fileName = pathComponents.pop();
 
                 waterfall([
                     (cb) => stat(context)(`/${pathComponents.join('/')}`, options, (error, result) => {
                         if (error && error.message.includes('does not exist')) {
-                            error = null
+                            error = null;
                         }
 
-                        cb(null, Boolean(result))
+                        cb(null, Boolean(result));
                     }),
                     (parentExists, cb) => {
                         if (parentExists) {
-                            return cb()
+                            return cb();
                         }
 
-                        mkdir(context)(`/${pathComponents.join('/')}`, options, cb)
+                        mkdir(context)(`/${pathComponents.join('/')}`, options, cb);
                     },
                     // get an updated mfs path in case the root changed while we were writing
                     (cb) => toMfsPath(context, path, cb),
                     ({ mfsDirectory, root }, cb) => {
                         toTrail(context, mfsDirectory, options, (err, trail) => {
                             if (err) {
-                                return cb(err)
+                                return cb(err);
                             }
 
-                            const parent = trail[trail.length - 1]
+                            const parent = trail[trail.length - 1];
 
                             if (parent.type !== 'dir') {
-                                return cb(new Error(`cannot write to ${parent.name}: Not a directory`))
+                                return cb(new Error(`cannot write to ${parent.name}: Not a directory`));
                             }
 
                             context.ipld.get(parent.cid, (err, result) => {
                                 if (err) {
-                                    return cb(err)
+                                    return cb(err);
                                 }
 
                                 addLink(context, {
@@ -198,16 +197,16 @@ const updateOrImport = (context, options, path, source, existingChild, callback)
                                     shardSplitThreshold: options.shardSplitThreshold
                                 }, (err, result) => {
                                     if (err) {
-                                        return cb(err)
+                                        return cb(err);
                                     }
 
-                                    parent.cid = result.cid
-                                    parent.size = result.node.size
+                                    parent.cid = result.cid;
+                                    parent.size = result.node.size;
 
-                                    cb(null, trail)
-                                })
-                            })
-                        })
+                                    cb(null, trail);
+                                });
+                            });
+                        });
                     },
 
                     // update the tree with the new child
@@ -215,31 +214,31 @@ const updateOrImport = (context, options, path, source, existingChild, callback)
 
                     // Update the MFS record with the new CID for the root of the tree
                     ({ cid }, cb) => updateMfsRoot(context, cid, cb)
-                ], writeLockCallback)
-            })(next)
-        }], callback)
-}
+                ], writeLockCallback);
+            })(next);
+        }], callback);
+};
 
 const write = (context, existingNodeCid, existingNode, source, options, callback) => {
-    let existingNodeMeta
+    let existingNodeMeta;
 
     if (existingNode) {
-        existingNodeMeta = unmarshal(existingNode.data)
-        log(`Overwriting file ${existingNodeCid.toBaseEncodedString()} offset ${options.offset} length ${options.length}`)
+        existingNodeMeta = unmarshal(existingNode.data);
+        log(`Overwriting file ${existingNodeCid.toBaseEncodedString()} offset ${options.offset} length ${options.length}`);
     } else {
-        log(`Writing file offset ${options.offset} length ${options.length}`)
+        log(`Writing file offset ${options.offset} length ${options.length}`);
     }
 
-    const sources = []
+    const sources = [];
 
     // pad start of file if necessary
     if (options.offset > 0) {
         if (existingNode && existingNodeMeta.fileSize() > options.offset) {
-            log(`Writing first ${options.offset} bytes of original file`)
+            log(`Writing first ${options.offset} bytes of original file`);
 
-            const startFile = deferred.source()
+            const startFile = deferred.source();
 
-            sources.push(startFile)
+            sources.push(startFile);
 
             pull(
                 exporter(existingNodeCid, context.ipld, {
@@ -248,19 +247,19 @@ const write = (context, existingNodeCid, existingNode, source, options, callback
                 }),
                 collect((error, files) => {
                     if (error) {
-                        return startFile.resolve(err(error))
+                        return startFile.resolve(err(error));
                     }
 
-                    startFile.resolve(files[0].content)
+                    startFile.resolve(files[0].content);
                 })
-            )
+            );
         } else {
-            log(`Writing zeros for first ${options.offset} bytes`)
-            sources.push(zeros(options.offset))
+            log(`Writing zeros for first ${options.offset} bytes`);
+            sources.push(zeros(options.offset));
         }
     }
 
-    const endFile = deferred.source()
+    const endFile = deferred.source();
 
     // add the new source
     sources.push(
@@ -268,42 +267,42 @@ const write = (context, existingNodeCid, existingNode, source, options, callback
             source,
             limitStreamBytes(options.length),
             countStreamBytes((bytesRead) => {
-                log(`Wrote ${bytesRead} bytes`)
+                log(`Wrote ${bytesRead} bytes`);
 
                 if (existingNode && !options.truncate) {
                     // if we've done reading from the new source and we are not going
                     // to truncate the file, add the end of the existing file to the output
-                    const fileSize = existingNodeMeta.fileSize()
-                    const offset = options.offset + bytesRead
+                    const fileSize = existingNodeMeta.fileSize();
+                    const offset = options.offset + bytesRead;
 
                     if (fileSize > offset) {
-                        log(`Writing last ${fileSize - offset} of ${fileSize} bytes from original file`)
+                        log(`Writing last ${fileSize - offset} of ${fileSize} bytes from original file`);
                         pull(
                             exporter(existingNodeCid, context.ipld, {
                                 offset
                             }),
                             collect((error, files) => {
                                 if (error) {
-                                    return endFile.resolve(err(error))
+                                    return endFile.resolve(err(error));
                                 }
 
-                                endFile.resolve(files[0].content)
+                                endFile.resolve(files[0].content);
                             })
-                        )
+                        );
                     } else {
-                        log(`Not writing last bytes from original file`)
-                        endFile.resolve(empty())
+                        log(`Not writing last bytes from original file`);
+                        endFile.resolve(empty());
                     }
                 }
             })
         )
-    )
+    );
 
     // add the end of the file if necessary
     if (existingNode && !options.truncate) {
         sources.push(
             endFile
-        )
+        );
     }
 
     pull(
@@ -322,18 +321,18 @@ const write = (context, existingNodeCid, existingNode, source, options, callback
         }),
         collect((error, results) => {
             if (error) {
-                return callback(error)
+                return callback(error);
             }
 
-            const result = results.pop()
-            const cid = new CID(result.multihash)
+            const result = results.pop();
+            const cid = new CID(result.multihash);
 
-            log(`Wrote ${cid.toBaseEncodedString()}`)
+            log(`Wrote ${cid.toBaseEncodedString()}`);
 
             callback(null, {
                 cid,
                 size: result.size
-            })
+            });
         })
-    )
-}
+    );
+};

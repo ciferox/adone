@@ -1,6 +1,5 @@
-const setImmediate = require("async/setImmediate");
-
 const {
+    async: { setImmediate },
     is,
     datastore: { interface: { Key, error, util: { asyncFilter, asyncSort } } },
     stream: { pull }

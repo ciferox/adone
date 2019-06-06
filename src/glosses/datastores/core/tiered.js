@@ -1,7 +1,5 @@
-const each = require("async/each");
-const whilst = require("async/whilst");
-
 const {
+    async: { each, whilst },
     is,
     datastore: { interface: { error } }
 } = adone;

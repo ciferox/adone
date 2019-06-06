@@ -1,7 +1,8 @@
-
-
-const whilst = require("async/whilst");
 const hmac = require("../hmac");
+
+const {
+    async: { whilst }
+} = adone;
 
 const cipherMap = {
     "AES-128": {

@@ -1,4 +1,3 @@
-const series = require('async/series')
 const Receptacle = require('receptacle')
 
 const errcode = require('err-code')
@@ -12,6 +11,7 @@ const IpnsResolver = require('./resolver')
 const path = require('./path')
 
 const {
+    async: { series },
     p2p: { PeerId: { createFromPrivKey } }
 } = adone;
 

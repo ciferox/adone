@@ -1,11 +1,10 @@
-const leftPad = require('left-pad')
-const whilst = require('async/whilst')
-const waterfall = require('async/waterfall')
-const Dir = require('./dir')
-const persist = require('../utils/persist')
-const Bucket = require('hamt-sharding')
+const leftPad = require("left-pad")
+const Dir = require("./dir")
+const persist = require("../utils/persist")
+const Bucket = require("hamt-sharding")
 
 const {
+    async: { whilst, waterfall },
     multiformat: { multihashingAsync: multihashing },
     ipfs: { UnixFs, ipld: { dagPb } },
     stream: { pull }
@@ -19,7 +18,7 @@ const {
 
 const hashFn = function (value) {
     return new Promise((resolve, reject) => {
-        multihashing(value, 'murmur3-128', (err, hash) => {
+        multihashing(value, "murmur3-128", (err, hash) => {
             if (err) {
                 reject(err)
             } else {
@@ -145,7 +144,7 @@ function flush(options, bucket, path, ipld, source, callback) {
     )
 
     function collectChild(child, index, callback) {
-        const labelPrefix = leftPad(index.toString(16).toUpperCase(), 2, '0')
+        const labelPrefix = leftPad(index.toString(16).toUpperCase(), 2, "0")
         if (Bucket.isBucket(child)) {
             flush(options, child, path, ipld, null, (err, { cid, node }) => {
                 if (err) {
@@ -167,7 +166,7 @@ function flush(options, bucket, path, ipld, source, callback) {
         // go-ipfs uses little endian, that's why we have to
         // reverse the bit field before storing it
         const data = Buffer.from(children.bitField().reverse())
-        const dir = new UnixFs('hamt-sharded-directory', data)
+        const dir = new UnixFs("hamt-sharded-directory", data)
         dir.fanout = bucket.tableSize()
         dir.hashType = options.hashFn.code
         waterfall([

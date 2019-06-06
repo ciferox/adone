@@ -1,6 +1,5 @@
-const each = require("async/each");
-
 const {
+    async: { each },
     is,
     datastore: { KeyTransformDatastore, interface: { Key, error, util: { asyncFilter, asyncSort, replaceStartWith } } },
     stream: { pull }

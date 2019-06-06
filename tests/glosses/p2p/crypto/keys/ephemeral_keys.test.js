@@ -1,8 +1,7 @@
-const parallel = require("async/parallel");
-
 const fixtures = require("../fixtures/go-elliptic-key");
 
 const {
+    async: { parallel },
     p2p: { crypto }
 } = adone;
 

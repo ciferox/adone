@@ -1,6 +1,3 @@
-const once = require("once");
-const waterfall = require("async/waterfall");
-
 const utilsFactory = require("./utils");
 const StreamHandler = require("./stream-handler");
 
@@ -12,9 +9,11 @@ const multicodec = require("../multicodec");
 const proto = require("../protocol");
 
 const {
+    async: { waterfall },
     is,
     multiformat: { multiaddr },
-    p2p: { Connection, PeerId }
+    p2p: { Connection, PeerId },
+    util: { once }
 } = adone;
 
 class Dialer {

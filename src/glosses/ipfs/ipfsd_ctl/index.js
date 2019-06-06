@@ -1,5 +1,4 @@
 const isNode = require("detect-node");
-const defaults = require("lodash.defaultsdeep");
 
 const FactoryDaemon = require("./factory_daemon");
 const FactoryInProc = require("./factory_in_proc");
@@ -7,7 +6,8 @@ const FactoryClient = require("./factory_client");
 const Server = require("./endpoint/server");
 
 const {
-    is
+    is,
+    lodash: { defaultsDeep: defaults }
 } = adone;
 
 /**

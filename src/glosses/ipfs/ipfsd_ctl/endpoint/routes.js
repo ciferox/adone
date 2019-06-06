@@ -1,9 +1,12 @@
 const hat = require("hat");
 const boom = require("boom");
 const Joi = require("joi");
-const defaults = require("lodash.defaultsdeep");
 const FactoryDaemon = require("../factory_daemon");
 const tmpDir = require("../utils/tmp-dir");
+
+const {
+    lodash: { defaultsDeep: defaults }
+} = adone;
 
 const routeConfig = {
     validate: {
@@ -73,9 +76,9 @@ module.exports = (server) => {
                     const id = hat();
                     const initialized = ipfsd.initialized;
                     nodes[id] = ipfsd;
-    
+
                     let api = null;
-    
+
                     if (nodes[id].started) {
                         api = {
                             apiAddr: nodes[id].apiAddr
@@ -86,7 +89,7 @@ module.exports = (server) => {
                                 : ""
                         };
                     }
-    
+
                     resolve({ id, api, initialized });
                 });
             });
@@ -109,7 +112,7 @@ module.exports = (server) => {
                     if (err) {
                         return resolve(boom.badRequest(err));
                     }
-    
+
                     resolve({ initialized: nodes[id].initialized });
                 });
             });
@@ -134,7 +137,7 @@ module.exports = (server) => {
                     if (err) {
                         return resolve(boom.badRequest(err));
                     }
-    
+
                     resolve({
                         api: {
                             apiAddr: nodes[id].apiAddr.toString(),
@@ -190,7 +193,7 @@ module.exports = (server) => {
                     if (err) {
                         return resolve(boom.badRequest(err));
                     }
-    
+
                     resolve(h.response().code(200));
                 });
             });
@@ -212,7 +215,7 @@ module.exports = (server) => {
                     if (err) {
                         return resolve(boom.badRequest(err));
                     }
-    
+
                     resolve(h.response().code(200));
                 });
             });
@@ -237,7 +240,7 @@ module.exports = (server) => {
                     if (err) {
                         return resolve(boom.badRequest(err));
                     }
-    
+
                     resolve(h.response().code(200));
                 });
             });
@@ -275,7 +278,7 @@ module.exports = (server) => {
                     if (err) {
                         return resolve(boom.badRequest(err));
                     }
-    
+
                     resolve({ config });
                 });
             });
@@ -305,7 +308,7 @@ module.exports = (server) => {
                     if (err) {
                         return resolve(boom.badRequest(err));
                     }
-    
+
                     resolve(h.response().code(200));
                 });
             });

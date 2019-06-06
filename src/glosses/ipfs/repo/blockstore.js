@@ -1,9 +1,8 @@
 const base32 = require('base32.js')
-const setImmediate = require('async/setImmediate')
-const reject = require('async/reject')
 const pull = require('pull-stream')
 
 const {
+    async: { setImmediate, reject },
     ipfs: { Block },
     datastore: { shard: sh, ShardingDatastore, interface: { Key } },
     multiformat: { CID }

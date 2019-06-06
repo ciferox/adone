@@ -1,5 +1,5 @@
-const waterfall = require('async/waterfall')
 const {
+    async: { waterfall },
     multiformat: { CID }
 } = adone;
 

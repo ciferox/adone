@@ -1,7 +1,3 @@
-const waterfall = require('async/waterfall')
-const series = require('async/series')
-const parallel = require('async/parallel')
-const each = require('async/each')
 const assert = require('assert')
 const path = require('path')
 const debug = require('debug')
@@ -19,6 +15,7 @@ const defaultDatastore = require('./default-datastore')
 const ERRORS = require('./errors')
 
 const {
+    async: { waterfall, series, parallel, each },
     lodash: { get: _get }
 } = adone;
 

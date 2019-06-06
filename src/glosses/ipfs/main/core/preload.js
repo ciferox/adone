@@ -1,9 +1,8 @@
-const setImmediate = require("async/setImmediate");
-const retry = require("async/retry");
 const debug = require("debug");
 const preload = require("./runtime/preload-nodejs");
 
 const {
+    async: { retry, setImmediate },
     multiformat: { CID, multiaddrToUri: toUri }
 } = adone;
 

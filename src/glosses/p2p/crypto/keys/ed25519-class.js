@@ -1,10 +1,10 @@
 const protobuf = require("protons");
-const bs58 = require("bs58");
 
 const crypto = require("./ed25519");
 const pbm = protobuf(require("./keys.proto"));
 
 const {
+    data: { base58 },
     is,
     multiformat: { multihashingAsync }
 } = adone;
@@ -34,9 +34,13 @@ class Ed25519PublicKey {
         return this.bytes.equals(key.bytes);
     }
 
-    hash(callback) {
-        ensure(callback);
-        multihashingAsync(this.bytes, "sha2-256", callback);
+    async hash(callback) {
+        try {
+            ensure(callback);
+            callback(null, await multihashingAsync(this.bytes, "sha2-256"));
+        } catch (err) {
+            callback(err);
+        }
     }
 }
 
@@ -76,9 +80,13 @@ class Ed25519PrivateKey {
         return this.bytes.equals(key.bytes);
     }
 
-    hash(callback) {
-        ensure(callback);
-        multihashingAsync(this.bytes, "sha2-256", callback);
+    async hash(callback) {
+        try {
+            ensure(callback);
+            callback(null, await multihashingAsync(this.bytes, "sha2-256"));
+        } catch (err) {
+            callback(err);
+        }
     }
 
     /**
@@ -96,7 +104,7 @@ class Ed25519PrivateKey {
             if (err) {
                 return callback(err);
             }
-            callback(null, bs58.encode(hash));
+            callback(null, base58.encode(hash));
         });
     }
 }

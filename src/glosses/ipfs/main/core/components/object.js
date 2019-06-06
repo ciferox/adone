@@ -1,10 +1,8 @@
-const waterfall = require('async/waterfall')
-const parallel = require('async/parallel')
-const setImmediate = require('async/setImmediate')
 const promisify = require('promisify-es6')
 const errCode = require('err-code')
 
 const {
+    async: { waterfall, parallel, setImmediate },
     ipfs: { UnixFs, ipld: { dagPb } },
     multiformat: { CID, multihash: mh }
 } = adone;

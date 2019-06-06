@@ -1,8 +1,5 @@
-const waterfall = require("async/waterfall");
-const series = require("async/series");
 const rimraf = require("rimraf");
 const once = require("once");
-const defaults = require("lodash.defaults");
 const debug = require("debug");
 const hat = require("hat");
 const log = debug("ipfsd-ctl:daemon");
@@ -20,8 +17,10 @@ const setConfigValue = require("./utils/set-config-value");
 const run = require("./utils/run");
 
 const {
+    async: { waterfall, series },
     is,
     ipfs: { httpClient: IpfsClient },
+    lodash: { defaults },
     std: { fs, os, path },
     multiformat: { multiaddr }
 } = adone;

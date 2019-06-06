@@ -1,4 +1,3 @@
-const waterfall = require('async/waterfall')
 const log = require('debug')('ipfs:mfs:core:utils:remove-link')
 const {
     generatePath,
@@ -6,6 +5,7 @@ const {
 } = require('./hamt-utils')
 
 const {
+    async: { waterfall },
     ipfs: { UnixFs, ipld: { dagPb } },
     multiformat: { CID }
 } = adone;

@@ -1,8 +1,8 @@
 // const cryptoKeys = require("libp2p-crypto/src/keys");
-const waterfall = require("async/waterfall");
 const withIs = require("class-is");
 
 const {
+    async: { waterfall },
     is,
     multiformat: { multihash: mh },
     p2p: { crypto: { keys: cryptoKeys } }

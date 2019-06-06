@@ -1,9 +1,12 @@
-const tryEach = require("async/tryEach");
 const debug = require("debug");
 
 const log = debug("libp2p:switch:dialer");
 
 const DialQueue = require("./queue");
+
+const {
+    async: { tryEach }
+} = adone;
 
 /**
  * Track dials per peer and limited them.

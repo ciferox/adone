@@ -1,10 +1,9 @@
 const {
+    async: { waterfall },
+    lodash: { defaults, defaultsDeep },
     multiformat: { multiaddr }
 } = adone;
 
-const defaultsDeep = require('lodash.defaultsdeep')
-const defaults = require('lodash.defaults')
-const waterfall = require('async/waterfall')
 const debug = require('debug')
 const EventEmitter = require('events')
 const repoUtils = require('./utils/repo/nodejs')

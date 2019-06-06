@@ -1,4 +1,6 @@
-const asyncMap = require('async/map')
+const {
+    async: { map: asyncMap }
+} = adone;
 
 /**
  * BlockService is a hybrid block datastore. It stores data in a local

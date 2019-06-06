@@ -1,46 +1,47 @@
-'use strict'
+const {
+    async: { series }
+} = adone;
 
-const series = require('async/series')
-const promisify = require('promisify-es6')
+const promisify = require('promisify-es6');
 
 module.exports = (self) => {
-  return promisify((callback) => {
-    callback = callback || function noop () {}
+    return promisify((callback) => {
+        callback = callback || function noop() { };
 
-    self.log('stop')
+        self.log('stop');
 
-    if (self.state.state() === 'stopped') {
-      return callback(new Error('Already stopped'))
-    }
+        if (self.state.state() === 'stopped') {
+            return callback(new Error('Already stopped'));
+        }
 
-    if (self.state.state() !== 'running') {
-      return callback(new Error('Not able to stop from state: ' + self.state.state()))
-    }
+        if (self.state.state() !== 'running') {
+            return callback(new Error('Not able to stop from state: ' + self.state.state()));
+        }
 
-    const done = (err) => {
-      if (err) {
-        self.emit('error', err)
-        return callback(err)
-      }
-      self.state.stopped()
-      self.emit('stop')
-      callback()
-    }
+        const done = (err) => {
+            if (err) {
+                self.emit('error', err);
+                return callback(err);
+            }
+            self.state.stopped();
+            self.emit('stop');
+            callback();
+        };
 
-    self.state.stop()
-    self._blockService.unsetExchange()
-    self._bitswap.stop()
-    self._preload.stop()
+        self.state.stop();
+        self._blockService.unsetExchange();
+        self._bitswap.stop();
+        self._preload.stop();
 
-    series([
-      (cb) => self._ipns.republisher.stop(cb),
-      (cb) => self._mfsPreload.stop(cb),
-      (cb) => {
-        const libp2p = self.libp2p
-        self.libp2p = null
-        libp2p.stop(cb)
-      },
-      (cb) => self._repo.close(cb)
-    ], done)
-  })
-}
+        series([
+            (cb) => self._ipns.republisher.stop(cb),
+            (cb) => self._mfsPreload.stop(cb),
+            (cb) => {
+                const libp2p = self.libp2p;
+                self.libp2p = null;
+                libp2p.stop(cb);
+            },
+            (cb) => self._repo.close(cb)
+        ], done);
+    });
+};

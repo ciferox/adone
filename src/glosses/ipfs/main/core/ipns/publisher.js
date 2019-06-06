@@ -1,8 +1,8 @@
 const {
+    async: { series },
     datastore: { interface: { Key } }
 } = adone;
 
-const series = require('async/series')
 const errcode = require('err-code')
 
 const debug = require('debug')

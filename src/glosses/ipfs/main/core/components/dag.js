@@ -1,11 +1,10 @@
 const promisify = require('promisify-es6')
 const pull = require('pull-stream')
-const mapAsync = require('async/map')
-const setImmediate = require('async/setImmediate')
-const flattenDeep = require('lodash/flattenDeep')
 const errCode = require('err-code')
 
 const {
+    async: { setImmediate, map: mapAsync },
+    lodash: { flattenDeep },
     multiformat: { CID }
 } = adone;
 

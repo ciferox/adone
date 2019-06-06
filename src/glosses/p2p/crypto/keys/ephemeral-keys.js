@@ -1,5 +1,3 @@
-
-
 const ecdh = require("./ecdh");
 
 // Generates an ephemeral public key and returns a function that will compute

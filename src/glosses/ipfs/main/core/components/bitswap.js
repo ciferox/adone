@@ -1,10 +1,10 @@
 const OFFLINE_ERROR = require('../utils').OFFLINE_ERROR
 const promisify = require('promisify-es6')
-const setImmediate = require('async/setImmediate')
 const Big = require('bignumber.js')
 const errCode = require('err-code')
 
 const {
+    async: { setImmediate },
     p2p: { PeerId },
     multiformat: { CID }
 } = adone;

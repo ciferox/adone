@@ -1,10 +1,9 @@
-const waterfall = require('async/waterfall')
-const whilst = require('async/whilst')
 const Bucket = require('hamt-sharding/src/bucket')
 const DirSharded = require('../../../unixfs_importer/importer/dir-sharded')
 const log = require('debug')('ipfs:mfs:core:utils:hamt-utils')
 
 const {
+    async: { waterfall, whilst },
     ipfs: { UnixFs, ipld: { dagPb } }
 } = adone;
 

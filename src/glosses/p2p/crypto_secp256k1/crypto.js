@@ -1,7 +1,7 @@
 const secp256k1 = require("secp256k1");
-const setImmediate = require("async/setImmediate");
 
 const {
+    async: { setImmediate },
     multiformat: { multihashingAsync }
 } = adone;
 
@@ -26,7 +26,7 @@ module.exports = (randomBytes) => {
 
         multihashingAsync.digest(msg, HASH_ALGORITHM, (err, digest) => {
             if (err) {
-                return done(err); 
+                return done(err);
             }
 
             try {
@@ -34,7 +34,7 @@ module.exports = (randomBytes) => {
                 const sigDER = secp256k1.signatureExport(sig.signature);
                 return done(null, sigDER);
             } catch (err) {
-                done(err); 
+                done(err);
             }
         });
     }
@@ -44,14 +44,14 @@ module.exports = (randomBytes) => {
 
         multihashingAsync.digest(msg, HASH_ALGORITHM, (err, digest) => {
             if (err) {
-                return done(err); 
+                return done(err);
             }
             try {
                 sig = secp256k1.signatureImport(sig);
                 const valid = secp256k1.verify(digest, sig, key);
                 return done(null, valid);
             } catch (err) {
-                done(err); 
+                done(err);
             }
         });
     }

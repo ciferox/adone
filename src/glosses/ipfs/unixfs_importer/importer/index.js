@@ -1,9 +1,9 @@
-const setImmediate = require("async/setImmediate");
 const DAGBuilder = require("../builder");
 const createTreeBuilder = require("./tree-builder");
 const chunkers = require("../chunker");
 
 const {
+    async: { setImmediate },
     assertion: { assert },
     stream: { pull }
 } = adone;

@@ -2,9 +2,9 @@ const isStream = require('is-stream')
 const fileReaderStream = require('filereader-stream')
 const fs = require('fs')
 const log = require('debug')('ipfs:mfs:utils:to-pull-source')
-const waterfall = require('async/waterfall')
 
 const {
+    async: { waterfall },
     stream: { pull }
 } = adone;
 const { streamToPullStream: toPull, is: { source: isSource } } = pull;

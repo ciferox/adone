@@ -1,10 +1,7 @@
-
-
-const crypto = require("crypto");
-const nextTick = require("async/nextTick");
-
 const {
-    is
+    async: { nextTick },
+    is,
+    std: { crypto }
 } = adone;
 
 const curves = {

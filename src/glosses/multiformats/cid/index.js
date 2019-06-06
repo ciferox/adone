@@ -59,13 +59,14 @@ class CID {
      * new CID(<cid>)
      */
     constructor(version, codec, multihash, multibaseName) {
-        if (module.exports.isCID(version)) {
+        if (_CID.isCID(version)) {
             // version is an exising CID instance
             const cid = version;
             this.version = cid.version;
             this.codec = cid.codec;
             this.multihash = Buffer.from(cid.multihash);
-            this.multibaseName = cid.multibaseName;
+            // Default guard for when a CID < 0.7 is passed with no multibaseName
+            this.multibaseName = cid.multibaseName || (cid.version === 0 ? "base58btc" : "base32");
             return;
         }
 
@@ -267,8 +268,8 @@ class CID {
      */
     equals(other) {
         return this.codec === other.codec &&
-      this.version === other.version &&
-      this.multihash.equals(other.multihash);
+            this.version === other.version &&
+            this.multihash.equals(other.multihash);
     }
 
     /**
@@ -290,7 +291,7 @@ const _CID = adone.util.withIs(CID, {
     className: "CID",
     symbolName: "@ipld/js-cid/CID"
 });
-  
+
 _CID.codecs = codecs;
-  
+
 module.exports = _CID;    

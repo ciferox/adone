@@ -3,9 +3,9 @@ const proto = protons(require('./dag.proto.js'))
 const resolver = require('./resolver')
 const DAGLink = require('./dag-link')
 const DAGNode = require('./dag-node')
-const waterfall = require('async/waterfall')
 
 const {
+    async: { waterfall },
     multiformat: { CID, multihashingAsync: multihashing }
 } = adone;
 

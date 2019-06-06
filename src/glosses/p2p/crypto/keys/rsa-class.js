@@ -1,11 +1,11 @@
 const protobuf = require("protons");
-const bs58 = require("bs58");
-const nextTick = require("async/nextTick");
 
 const rsa = require("./rsa");
 const pbm = protobuf(require("./keys.proto"));
 
 const {
+    async: { nextTick },
+    data: { base58 },
     crypto,
     is,
     multiformat: { multihashingAsync }
@@ -40,9 +40,13 @@ class RsaPublicKey {
         return this.bytes.equals(key.bytes);
     }
 
-    hash(callback) {
-        ensure(callback);
-        multihashingAsync(this.bytes, "sha2-256", callback);
+    async hash(callback) {
+        try {
+            ensure(callback);
+            callback(null, await multihashingAsync(this.bytes, "sha2-256"));
+        } catch (err) {
+            callback(err);
+        }
     }
 }
 
@@ -90,9 +94,13 @@ class RsaPrivateKey {
         return this.bytes.equals(key.bytes);
     }
 
-    hash(callback) {
-        ensure(callback);
-        multihashingAsync(this.bytes, "sha2-256", callback);
+    async hash(callback) {
+        try {
+            ensure(callback);
+            callback(null, await multihashingAsync(this.bytes, "sha2-256"));
+        } catch (err) {
+            callback(err);
+        }
     }
 
     /**
@@ -110,7 +118,7 @@ class RsaPrivateKey {
             if (err) {
                 return callback(err);
             }
-            callback(null, bs58.encode(hash));
+            callback(null, base58.encode(hash));
         });
     }
 

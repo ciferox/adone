@@ -1,10 +1,8 @@
 const errcode = require('err-code')
-
 const debug = require('debug')
-const each = require('async/each')
-const waterfall = require('async/waterfall')
 
 const {
+    async: { each, waterfall },
     p2p: { crypto, PeerId },
     ipfs: { ipns }
 } = adone;

@@ -1,10 +1,7 @@
-const setImmediate = require("async/setImmediate");
-const series = require("async/series");
-const detect = require("async/detect");
-const waterfall = require("async/waterfall");
 const util = require("./util");
 
 const {
+    async: { setImmediate, series, detect, waterfall },
     crypto,
     is
 } = adone;
@@ -55,7 +52,7 @@ class CMS {
             (cb) => self.keychain._getPrivateKey(name, cb)
         ], (err, results) => {
             if (err) {
-                return done(err); 
+                return done(err);
             }
 
             const key = results[0];
@@ -64,7 +61,7 @@ class CMS {
                 const privateKey = crypto.pki.decryptRsaPrivateKey(pem, self.keychain._());
                 util.certificateForKey(key, privateKey, (err, certificate) => {
                     if (err) {
-                        return callback(err); 
+                        return callback(err);
                     }
 
                     // create a p7 enveloped message
@@ -126,7 +123,7 @@ class CMS {
             (r, cb) => self.keychain.findKeyById(r.keyId, (err, info) => cb(null, !err && info)),
             (err, r) => {
                 if (err) {
-                    return done(err); 
+                    return done(err);
                 }
                 if (!r) {
                     const missingKeys = recipients.map((r) => r.keyId);
@@ -140,7 +137,7 @@ class CMS {
                     (key, cb) => self.keychain._getPrivateKey(key.name, cb)
                 ], (err, pem) => {
                     if (err) {
-                        return done(err); 
+                        return done(err);
                     }
 
                     const privateKey = crypto.pki.decryptRsaPrivateKey(pem, self.keychain._());

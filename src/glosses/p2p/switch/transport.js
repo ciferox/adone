@@ -1,12 +1,10 @@
-/**
- * eslint-disable func-style
- */
+/* eslint-disable func-style */
 const {
+    async: { parallel },
+    util: { once },
     is
 } = adone;
 
-const parallel = require("async/parallel");
-const once = require("once");
 const debug = require("debug");
 const log = debug("libp2p:switch:transport");
 

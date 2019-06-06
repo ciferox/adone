@@ -1,10 +1,8 @@
 const sinon = require("sinon");
-
 const isNode = require("detect-node");
-const parallel = require("async/parallel");
-const series = require("async/series");
 
 const {
+    async: { parallel, series },
     datastore: { interface: { Key }, backend: { PubsubDatastore } },
     p2p: { record: { Record } }
 } = adone;

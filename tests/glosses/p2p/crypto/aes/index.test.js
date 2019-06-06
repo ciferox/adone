@@ -1,9 +1,8 @@
-const series = require("async/series");
-
 const fixtures = require("../fixtures/aes");
 const goFixtures = require("../fixtures/go-aes");
 
 const {
+    async: { series },
     p2p: { crypto }
 } = adone;
 

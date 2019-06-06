@@ -1,7 +1,5 @@
-const queue = require('async/queue')
-const waterfall = require('async/waterfall')
-
 const {
+    async: { queue, waterfall },
     lodash: { get: _get, set: _set, has: _has },
     datastore: { interface: { Key } }
 } = adone;

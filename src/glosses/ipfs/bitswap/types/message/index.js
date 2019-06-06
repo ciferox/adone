@@ -1,14 +1,13 @@
 const protons = require('protons')
 const assert = require('assert')
-const each = require('async/each')
-const nextTick = require('async/nextTick')
-const codecName = require('../../../../multiformats/multicodec/name-table')
+const codecName = require('../../../../multiformats/multicodec/name_table')
 const vd = require('varint-decoder')
 
 const pbm = protons(require('./message.proto'))
 const Entry = require('./entry')
 
 const {
+    async: { each, nextTick },
     ipfs: { Block },
     lodash: { isEqualWith },
     multiformat: { CID, multihashingAsync: multihashing }

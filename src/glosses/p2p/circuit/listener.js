@@ -1,5 +1,3 @@
-const setImmediate = require("async/setImmediate");
-
 const multicodec = require("./multicodec");
 const EE = require("events").EventEmitter;
 const Stop = require("./circuit/stop");
@@ -10,6 +8,7 @@ const utilsFactory = require("./circuit/utils");
 const StreamHandler = require("./circuit/stream-handler");
 
 const {
+    async: { setImmediate },
     multiformat: { multiaddr, mafmt }
 } = adone;
 

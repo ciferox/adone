@@ -1,7 +1,4 @@
-const waterfall = require("async/waterfall");
 const DirSharded = require("../../../unixfs_importer/importer/dir-sharded");
-const series = require("async/series");
-const whilst = require('async/whilst');
 const log = require("debug")("ipfs:mfs:core:utils:add-link");
 const {
     generatePath,
@@ -9,6 +6,7 @@ const {
 } = require("./hamt-utils");
 
 const {
+    async: { series, whilst, waterfall },
     ipfs: { UnixFs, ipld: { dagPb } },
     multiformat: { CID }
 } = adone;

@@ -1,7 +1,7 @@
-const setImmediate = require("async/setImmediate");
 const utils = require("../utils");
 
 const {
+    async: { setImmediate },
     multiformat: { multiaddr },
     stream: { pull }
 } = adone;

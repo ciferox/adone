@@ -1,9 +1,8 @@
 const promisify = require('promisify-es6')
-const setImmediate = require('async/setImmediate')
-const doUntil = require('async/doUntil')
 const { cidToString } = require('../../utils/cid')
 
 const {
+    async: { setImmediate, doUntil },
     ipfs: { isIPFS },
     multiformat: { CID }
 } = adone;

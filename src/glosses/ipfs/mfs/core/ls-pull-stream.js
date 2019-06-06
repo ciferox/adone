@@ -1,4 +1,3 @@
-const waterfall = require("async/waterfall");
 const {
     loadNode,
     formatCid,
@@ -8,6 +7,7 @@ const {
 } = require("./utils");
 
 const {
+    async: { waterfall },
     ipfs: { UnixFs, unixfsExporter: exporter }
 } = adone;
 

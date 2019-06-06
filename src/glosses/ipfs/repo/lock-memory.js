@@ -1,7 +1,8 @@
-'use strict'
-
 const debug = require('debug')
-const setImmediate = require('async/setImmediate')
+
+const {
+  async: { setImmediate }
+} = adone;
 
 const log = debug('repo:lock')
 
@@ -21,7 +22,7 @@ exports.lock = (dir, callback) => {
   log('locking %s', file)
   LOCKS[file] = true
   const closer = {
-    close (cb) {
+    close(cb) {
       if (LOCKS[file]) {
         delete LOCKS[file]
       }

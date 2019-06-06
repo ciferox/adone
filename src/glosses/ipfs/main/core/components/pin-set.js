@@ -1,10 +1,9 @@
 const protobuf = require('protons')
 const fnv1a = require('fnv1a')
 const varint = require('varint')
-const someSeries = require('async/someSeries')
-const eachOfSeries = require('async/eachOfSeries')
 
 const {
+    async: { someSeries, eachOfSeries },
     ipfs: { ipld: { dagPb } },
     multiformat: { CID, multihash: multihashes }
 } = adone;

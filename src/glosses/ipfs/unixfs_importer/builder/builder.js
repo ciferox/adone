@@ -1,10 +1,9 @@
 const extend = require('deep-extend')
-const parallel = require('async/parallel')
-const waterfall = require('async/waterfall')
 const persist = require('../utils/persist')
 const reduce = require('./reduce')
 
 const {
+    async: { parallel, waterfall },
     ipfs: { UnixFs, ipld: { dagPb } }
 } = adone;
 

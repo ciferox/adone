@@ -1,6 +1,3 @@
-const series = require('async/series')
-const get = require('lodash/get')
-const setImmediate = require('async/setImmediate')
 const promisify = require('promisify-es6')
 
 const IPNS = require('../ipns')
@@ -9,7 +6,9 @@ const OfflineDatastore = require('../ipns/routing/offline-datastore')
 const createLibp2pBundle = require('./libp2p')
 
 const {
+    async: { series, setImmediate },
     ipfs: { Bitswap },
+    lodash: { get },
     datastore: { TieredDatastore }
 } = adone;
 

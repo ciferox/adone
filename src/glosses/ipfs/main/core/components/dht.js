@@ -1,11 +1,9 @@
 const promisify = require('promisify-es6')
-const every = require('async/every')
-const each = require('async/each')
-const nextTick = require('async/nextTick')
 
 const errcode = require('err-code')
 
 const {
+    async: { every, each, nextTick },
     p2p: { PeerId, PeerInfo },
     multiformat: { CID }
 } = adone;
