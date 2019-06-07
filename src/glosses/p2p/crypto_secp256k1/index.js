@@ -1,7 +1,6 @@
-const bs58 = require("bs58");
-
 const {
     is,
+    data: { base58 },
     multiformat: { multihashingAsync }
 } = adone;
 
@@ -34,9 +33,15 @@ module.exports = (keysProtobuf, randomBytes, crypto) => {
             return this.bytes.equals(key.bytes);
         }
 
-        hash(callback) {
-            ensure(callback);
-            multihashingAsync(this.bytes, "sha2-256", callback);
+        async hash(callback) {
+            try {
+                ensure(callback);
+                callback(null, await multihashingAsync(this.bytes, "sha2-256"));
+            } catch (err) {
+                callback(err);
+            }
+            // ensure(callback);
+            // multihashingAsync(this.bytes, "sha2-256", callback);
         }
     }
 
@@ -72,9 +77,15 @@ module.exports = (keysProtobuf, randomBytes, crypto) => {
             return this.bytes.equals(key.bytes);
         }
 
-        hash(callback) {
-            ensure(callback);
-            multihashingAsync(this.bytes, "sha2-256", callback);
+        async hash(callback) {
+            try {
+                ensure(callback);
+                callback(null, await multihashingAsync(this.bytes, "sha2-256"));
+            } catch (err) {
+                callback(err);
+            }
+            // ensure(callback);
+            // multihashingAsync(this.bytes, "sha2-256", callback);
         }
 
         /**
@@ -92,7 +103,7 @@ module.exports = (keysProtobuf, randomBytes, crypto) => {
                 if (err) {
                     return callback(err);
                 }
-                callback(null, bs58.encode(hash));
+                callback(null, base58.encode(hash));
             });
         }
     }

@@ -1,10 +1,6 @@
-
-
 const FSM = require("fsm-event");
 const withIs = require("class-is");
 const BaseConnection = require("./base");
-const parallel = require("async/parallel");
-const nextTick = require("async/nextTick");
 const errCode = require("err-code");
 const { msHandle, msSelect, identifyDialer } = require("../utils");
 
@@ -18,6 +14,7 @@ const {
 } = require("../errors");
 
 const {
+    async: { parallel, nextTick },
     multiformat: { multistream },
     p2p: { Circuit, identify }
 } = adone;

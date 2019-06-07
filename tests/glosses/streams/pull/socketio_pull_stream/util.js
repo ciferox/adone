@@ -1,4 +1,5 @@
 const {
+    async: { parallel },
     stream: { pull: { socketioPullStream } }
 } = adone;
 
@@ -7,7 +8,6 @@ const sioOptions = {
     transports: ["websocket"],
     "force new connection": true
 };
-const parallel = require("async/parallel");
 
 const connectNClients = (count, url, cb) => {
     const clients = [];

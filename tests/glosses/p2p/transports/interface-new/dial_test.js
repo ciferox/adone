@@ -18,7 +18,9 @@ module.exports = (common) => {
             ({ addrs, transport, connector } = await common.setup());
         });
 
-        after(() => common.teardown && common.teardown());
+        after(async () => {
+            common.teardown && await common.teardown();
+        });
 
         beforeEach(() => {
             listener = transport.createListener((conn) => pipe(conn, conn));

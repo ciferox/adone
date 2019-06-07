@@ -1,8 +1,12 @@
 /* eslint-disable func-style */
 const ConnectionFSM = require("../connection");
 const { DIAL_ABORTED, ERR_BLACKLISTED } = require("../errors");
-const nextTick = require("async/nextTick");
-const once = require("once");
+
+const {
+    async: { nextTick },
+    util: { once }
+} = adone;
+
 const debug = require("debug");
 const log = debug("libp2p:switch:dial");
 log.error = debug("libp2p:switch:dial:error");

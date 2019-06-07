@@ -51,7 +51,7 @@ class TieredDatastore /* :: <Value> */ {
         const storeLength = this.stores.length;
         let done = false;
         let i = 0;
-        whilst(() => !done && i < storeLength, (cb) => {
+        whilst((cb) => cb(null, !done && i < storeLength), (cb) => {
             const store = this.stores[i++];
             store.get(key, (err, res) => {
                 if (is.nil(err)) {
@@ -72,7 +72,7 @@ class TieredDatastore /* :: <Value> */ {
         const storeLength = this.stores.length;
         let done = false;
         let i = 0;
-        whilst(() => !done && i < storeLength, (cb) => {
+        whilst((cb) => cb(null, !done && i < storeLength), (cb) => {
             const store = this.stores[i++];
             store.has(key, (err, exists) => {
                 if (is.nil(err)) {

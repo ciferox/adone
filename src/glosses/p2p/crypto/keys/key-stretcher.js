@@ -51,13 +51,7 @@ module.exports = (cipherType, hash, secret, callback) => {
             const result = [];
             let j = 0;
 
-            whilst(
-                () => j < resultLength,
-                stretch,
-                finish
-            );
-
-            function stretch(cb) {
+            const stretch = (cb) => {
                 m.digest(Buffer.concat([a, seed]), (err, b) => {
                     if (err) {
                         return cb(err);
@@ -81,9 +75,9 @@ module.exports = (cipherType, hash, secret, callback) => {
                         cb();
                     });
                 });
-            }
+            };
 
-            function finish(err) {
+            const finish = (err) => {
                 if (err) {
                     return callback(err);
                 }
@@ -103,7 +97,13 @@ module.exports = (cipherType, hash, secret, callback) => {
                     k1: createKey(r1),
                     k2: createKey(r2)
                 });
-            }
+            };
+
+            whilst(
+                (cb) => cb(null, j < resultLength),
+                stretch,
+                finish
+            );
         });
     });
 };

@@ -1,10 +1,11 @@
-
-
 const debug = require("debug");
-const waterfall = require("async/waterfall");
 
 const support = require("../support");
 const crypto = require("./crypto");
+
+const {
+    async: { waterfall }
+} = adone;
 
 const log = debug("libp2p:secio");
 log.error = debug("libp2p:secio:error");
@@ -28,7 +29,7 @@ module.exports = function exchange(state, callback) {
         (cb) => crypto.generateKeys(state, cb)
     ], (err) => {
         if (err) {
-            return callback(err); 
+            return callback(err);
         }
 
         log("2. exchange - finish");

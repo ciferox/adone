@@ -1,18 +1,17 @@
 const debug = require("debug");
 const EE = require("events").EventEmitter;
-const once = require("once");
 const utilsFactory = require("./utils");
 const StreamHandler = require("./stream-handler");
 const proto = require("../protocol").CircuitRelay;
-const series = require("async/series");
-const waterfall = require("async/waterfall");
 
 const multicodec = require("./../multicodec");
 
 const {
+    async: { series, waterfall },
     multiformat: { multiaddr },
     p2p: { PeerId, PeerInfo },
-    stream: { pull }
+    stream: { pull },
+    util: { once }
 } = adone;
 
 const log = debug("libp2p:circuit:relay");

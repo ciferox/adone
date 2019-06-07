@@ -1,7 +1,7 @@
 const sinon = require("sinon");
-const parallel = require("async/parallel");
 
 const {
+    async: { parallel },
     p2p: { Protector, Switch, Connection, secio, PeerBook, transport: { WS }, muxer: { spdy, pullMplex } },
     stream: { pull }
 } = adone;

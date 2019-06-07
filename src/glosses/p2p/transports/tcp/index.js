@@ -1,6 +1,4 @@
-const net = require("net");
 const withIs = require("class-is");
-const once = require("once");
 const debug = require("debug");
 const log = debug("libp2p:tcp:dial");
 
@@ -12,7 +10,9 @@ const {
     multiformat: { mafmt },
     noop,
     p2p: { Connection },
-    stream: { pull: { streamToPullStream } }
+    stream: { pull: { streamToPullStream } },
+    std: { net },
+    util: { once }
 } = adone;
 
 class TCP {

@@ -5,7 +5,7 @@ const map = require("async/map");
 const setImmediate = require("async/setImmediate");
 
 const {
-    multiformat: { multihashingAsync: multihashing, multihash: mh },
+    multiformat: { multihashingAsync, multihash: mh },
     datastore: { interface: { Key } },
     p2p: { PeerId, record: { Record } }
 } = adone;
@@ -17,8 +17,13 @@ const {
  * @param {function(Error, Buffer)} callback
  * @returns {void}
  */
-exports.convertBuffer = (buf, callback) => {
-    multihashing.digest(buf, "sha2-256", callback);
+exports.convertBuffer = async (buf, callback) => {
+    try {
+        const digest = await multihashingAsync.digest(buf, "sha2-256");
+        callback(null, digest);
+    } catch (err) {
+        callback(err);
+    }
 };
 
 /**
@@ -28,8 +33,13 @@ exports.convertBuffer = (buf, callback) => {
  * @param {function(Error, Buffer)} callback
  * @returns {void}
  */
-exports.convertPeerId = (peer, callback) => {
-    multihashing.digest(peer.id, "sha2-256", callback);
+exports.convertPeerId = async (peer, callback) => {
+    try {
+        const digest = await multihashingAsync.digest(peer.id, "sha2-256");
+        callback(null, digest);
+    } catch (err) {
+        callback(err);
+    }
 };
 
 /**

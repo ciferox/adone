@@ -1,12 +1,8 @@
-const parallel = require("async/parallel");
-const each = require("async/each");
-const map = require("async/map");
-const series = require("async/series");
-
 const utils = require("../utils");
 const { createInfos, tryEcho } = utils;
 
 const {
+    async: { parallel, each, map, series },
     p2p: { secio, Switch, PeerBook, transport: { TCP }, muxer: { mplex } },
     stream: { pull }
 } = adone;
@@ -212,16 +208,16 @@ describe("Stats", () => {
                     expect(err).to.not.exist();
                 });
             },
-            (err) => {
-                expect(err).to.not.exist();
-                switches.forEach((swtch, index) => {
-                    const other = selectOther(switches, index);
-                    const snapshot = swtch.stats.forPeer(other._peerInfo.id.toB58String()).snapshot;
-                    expect(snapshot.dataReceived.toFixed()).to.equal("2210");
-                    expect(snapshot.dataSent.toFixed()).to.equal("2210");
+                (err) => {
+                    expect(err).to.not.exist();
+                    switches.forEach((swtch, index) => {
+                        const other = selectOther(switches, index);
+                        const snapshot = swtch.stats.forPeer(other._peerInfo.id.toB58String()).snapshot;
+                        expect(snapshot.dataReceived.toFixed()).to.equal("2210");
+                        expect(snapshot.dataSent.toFixed()).to.equal("2210");
+                    });
+                    teardown(switches, done);
                 });
-                teardown(switches, done);
-            });
         });
     });
 

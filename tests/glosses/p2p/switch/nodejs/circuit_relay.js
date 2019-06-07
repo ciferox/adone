@@ -1,13 +1,12 @@
 const sinon = require("sinon");
 const once = require("once");
-const parallel = require("async/parallel");
-const series = require("async/series");
-const getPorts = require("portfinder").getPorts;
+const { getPorts } = require("portfinder");
 
 const utils = require("../utils");
 const { createInfos } = utils;
 
 const {
+    async: { parallel, series },
     p2p: { Switch, PeerBook, transport: { TCP, WS }, muxer: { pullMplex, spdy } }
 } = adone;
 

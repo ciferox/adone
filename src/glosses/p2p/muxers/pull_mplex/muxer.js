@@ -1,8 +1,8 @@
-const EventEmitter = require("events").EventEmitter;
-const nextTick = require("async/nextTick");
+const { EventEmitter } = require("events");
 const debug = require("debug");
 
 const {
+    async: { nextTick },
     noop,
     p2p: { Connection }
 } = adone;

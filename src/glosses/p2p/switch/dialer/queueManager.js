@@ -1,11 +1,13 @@
-
-
-const once = require("once");
 const Queue = require("./queue");
 const { DIAL_ABORTED } = require("../errors");
-const nextTick = require("async/nextTick");
 const retimer = require("retimer");
 const { QUARTER_HOUR, PRIORITY_HIGH } = require("../constants");
+
+const {
+    async: { nextTick },
+    util: { once }
+} = adone;
+
 const debug = require("debug");
 const log = debug("libp2p:switch:dial:manager");
 const noop = () => { };

@@ -1,7 +1,6 @@
-const parallel = require("async/parallel");
-
 const {
-    multiformat: { multihashingAsync: mh },
+    async: { parallel },
+    multiformat: { multihashingAsync },
     p2p: { crypto },
     stream: { pull }
 } = adone;
@@ -111,7 +110,12 @@ exports.selectBest = (local, remote, cb) => {
 };
 
 exports.digest = (buf, cb) => {
-    mh.digest(buf, "sha2-256", buf.length, cb);
+    try {
+        const result = multihashingAsync.digest(buf, "sha2-256", buf.length);
+        cb(null, result);
+    } catch (err) {
+        cb(err);
+    }
 };
 
 exports.write = function write(state, msg, cb) {

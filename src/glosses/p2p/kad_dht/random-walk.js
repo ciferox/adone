@@ -9,7 +9,7 @@ const AbortController = require("abort-controller");
 
 const {
     p2p: { crypto, PeerId },
-    multiformat: { multihashingAsync: multihashing }
+    multiformat: { multihashingAsync }
 } = adone;
 
 class RandomWalk {
@@ -174,13 +174,13 @@ class RandomWalk {
      *
      * @private
      */
-    _randomPeerId(callback) {
-        multihashing(crypto.randomBytes(16), "sha2-256", (err, digest) => {
-            if (err) {
-                return callback(err);
-            }
+    async _randomPeerId(callback) {
+        try {
+            const digest = await multihashingAsync(crypto.randomBytes(16), "sha2-256");
             callback(null, new PeerId(digest));
-        });
+        } catch (err) {
+            callback(err);
+        }
     }
 }
 

@@ -1,10 +1,9 @@
-const parallel = require("async/parallel");
-
 const utils = require("../utils");
 const createInfos = utils.createInfos;
 const tryEcho = utils.tryEcho;
 
 const {
+    async: { parallel },
     p2p: { Switch, PeerBook, transport: { WS, TCP } },
     stream: { pull }
 } = adone;

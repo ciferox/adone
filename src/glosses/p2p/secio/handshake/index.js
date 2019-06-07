@@ -1,10 +1,10 @@
-
-
-const series = require("async/series");
-
 const propose = require("./propose");
 const exchange = require("./exchange");
 const finish = require("./finish");
+
+const {
+    async: { series }
+} = adone;
 
 // Performs initial communication over insecure channel to share keys, IDs,
 // and initiate communication, assigning all necessary params.

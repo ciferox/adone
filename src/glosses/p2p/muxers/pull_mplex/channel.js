@@ -1,9 +1,9 @@
 import looper from "../../../streams/pull/looper4";
-const nextTick = require("async/nextTick");
 const EE = require("events");
 const debug = require("debug");
 
 const {
+    async: { nextTick },
     is,
     stream: { pull: { pushable } }
 } = adone;

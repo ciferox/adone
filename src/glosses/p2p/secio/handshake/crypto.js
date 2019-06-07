@@ -1,6 +1,4 @@
 const protons = require("protons");
-const parallel = require("async/parallel");
-const waterfall = require("async/waterfall");
 const debug = require("debug");
 const log = debug("libp2p:secio");
 log.error = debug("libp2p:secio:error");
@@ -10,6 +8,7 @@ const pbm = protons(require("./secio.proto"));
 const support = require("../support");
 
 const {
+    async: { parallel, waterfall },
     p2p: { crypto, PeerId }
 } = adone;
 
@@ -199,7 +198,7 @@ exports.verifyNonce = (state, n2) => {
     const n1 = state.proposal.out.rand;
 
     if (n1.equals(n2)) {
-        return; 
+        return;
     }
 
     throw new Error(

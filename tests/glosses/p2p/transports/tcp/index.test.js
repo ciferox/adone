@@ -561,7 +561,7 @@ describe("p2p", "transport", "TCP", () => {
         it("listener - emits error on the other end is terminated abruptly", (done) => { });
     });
 
-    describe.only("interface-transport compliance", () => {
+    describe("interface-transport compliance", () => {
         const tests = require("../interface");
 
         tests({
@@ -575,7 +575,8 @@ describe("p2p", "transport", "TCP", () => {
                 ];
                 cb(null, tcp, addrs);
             },
-            teardown() {
+            teardown(cb) {
+                cb();
             }
         });
     });

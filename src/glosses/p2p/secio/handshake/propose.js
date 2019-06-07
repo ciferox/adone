@@ -1,10 +1,11 @@
-
-
 const debug = require("debug");
-const waterfall = require("async/waterfall");
 
 const support = require("../support");
 const crypto = require("./crypto");
+
+const {
+    async: { waterfall }
+} = adone;
 
 const log = debug("libp2p:secio");
 log.error = debug("libp2p:secio:error");

@@ -21,39 +21,29 @@ module.exports = (randomBytes) => {
         done(null, privateKey);
     }
 
-    function hashAndSign(key, msg, callback) {
+    async function hashAndSign(key, msg, callback) {
         const done = (err, res) => setImmediate(() => callback(err, res));
 
-        multihashingAsync.digest(msg, HASH_ALGORITHM, (err, digest) => {
-            if (err) {
-                return done(err);
-            }
-
-            try {
-                const sig = secp256k1.sign(digest, key);
-                const sigDER = secp256k1.signatureExport(sig.signature);
-                return done(null, sigDER);
-            } catch (err) {
-                done(err);
-            }
-        });
+        try {
+            const digest = await multihashingAsync.digest(msg, HASH_ALGORITHM);
+            const sig = secp256k1.sign(digest, key);
+            const sigDER = secp256k1.signatureExport(sig.signature);
+            return done(null, sigDER);
+        } catch (err) {
+            done(err);
+        }
     }
 
-    function hashAndVerify(key, sig, msg, callback) {
+    async function hashAndVerify(key, sig, msg, callback) {
         const done = (err, res) => setImmediate(() => callback(err, res));
-
-        multihashingAsync.digest(msg, HASH_ALGORITHM, (err, digest) => {
-            if (err) {
-                return done(err);
-            }
-            try {
-                sig = secp256k1.signatureImport(sig);
-                const valid = secp256k1.verify(digest, sig, key);
-                return done(null, valid);
-            } catch (err) {
-                done(err);
-            }
-        });
+        try {
+            const digest = await multihashingAsync.digest(msg, HASH_ALGORITHM);
+            sig = secp256k1.signatureImport(sig);
+            const valid = secp256k1.verify(digest, sig, key);
+            return done(null, valid);
+        } catch (err) {
+            done(err);
+        }
     }
 
     function compressPublicKey(key) {

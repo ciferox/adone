@@ -1,8 +1,7 @@
 const {
+    async: { setImmediate },
     is
 } = adone;
-
-const setImmediate = require("async/setImmediate");
 
 /**
  * An encryption stub in the instance that the default crypto

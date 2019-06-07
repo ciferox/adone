@@ -1,11 +1,9 @@
-const setImmediate = require("async/setImmediate");
-
 const EE = require("events").EventEmitter;
 const utilsFactory = require("./utils");
 const proto = require("../protocol").CircuitRelay;
-const series = require("async/series");
 
 const {
+    async: { setImmediate, series },
     p2p: { Connection, PeerInfo }
 } = adone;
 

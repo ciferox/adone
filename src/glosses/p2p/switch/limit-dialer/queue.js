@@ -1,12 +1,11 @@
-const timeout = require("async/timeout");
-const queue = require("async/queue");
 const debug = require("debug");
-const once = require("once");
 
 const {
+    async: { timeout, queue },
     is,
     p2p: { Connection },
-    stream: { pull }
+    stream: { pull },
+    util: { once }
 } = adone;
 const { empty } = pull;
 

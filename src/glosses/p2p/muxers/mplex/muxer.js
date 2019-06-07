@@ -1,5 +1,9 @@
-const EventEmitter = require("events").EventEmitter;
-const setImmediate = require("async/setImmediate");
+const { EventEmitter } = require("events");
+
+const {
+    async: { setImmediate }
+} = adone;
+
 const debug = require("debug");
 const log = debug("mplex");
 log.error = debug("mplex:error");

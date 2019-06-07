@@ -1,7 +1,7 @@
 const {
     async: { setImmediate },
     is,
-    multiformat: { multihashingAsync: multihashing }
+    multiformat: { multihashingAsync }
 } = adone;
 
 /**
@@ -14,7 +14,7 @@ const {
  * @param {function(Error)} callback
  * @returns {undefined}
  */
-const validatePublicKeyRecord = (key, publicKey, callback) => {
+const validatePublicKeyRecord = async (key, publicKey, callback) => {
     const done = (err) => setImmediate(() => callback(err));
 
     if (!is.buffer(key)) {
@@ -33,17 +33,16 @@ const validatePublicKeyRecord = (key, publicKey, callback) => {
 
     const keyhash = key.slice(4);
 
-    multihashing(publicKey, "sha2-256", (err, publicKeyHash) => {
-        if (err) {
-            return done(err);
-        }
-
+    try {
+        const publicKeyHash = await multihashingAsync(publicKey, "sha2-256");
         if (!keyhash.equals(publicKeyHash)) {
             return done(new Error("public key does not match passed in key"));
         }
 
         done();
-    });
+    } catch (err) {
+        done(err);
+    }
 };
 
 module.exports = {

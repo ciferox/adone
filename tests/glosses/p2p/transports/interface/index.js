@@ -1,8 +1,8 @@
-const dial = require("./dial_test");
-const listen = require("./listen_test");
+const dial = require("./dial");
+const listen = require("./listen");
 
 module.exports = (common) => {
-    describe("transport interface", () => {
+    describe("interface-transport", () => {
         dial(common);
         listen(common);
     });
