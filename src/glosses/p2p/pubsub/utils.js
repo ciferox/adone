@@ -1,9 +1,8 @@
 const {
     is,
+    data: { base58 },
     p2p: { crypto }
 } = adone;
-
-const bs58 = require("bs58");
 
 exports = module.exports;
 
@@ -77,7 +76,7 @@ exports.normalizeInRpcMessages = (messages) => {
     return messages.map((msg) => {
         const m = Object.assign({}, msg);
         if (is.buffer(msg.from)) {
-            m.from = bs58.encode(msg.from);
+            m.from = base58.encode(msg.from);
         }
         return m;
     });
@@ -86,7 +85,7 @@ exports.normalizeInRpcMessages = (messages) => {
 exports.normalizeOutRpcMessage = (message) => {
     const m = Object.assign({}, message);
     if (is.string(message.from) || message.from instanceof String) {
-        m.from = bs58.decode(message.from);
+        m.from = base58.decode(message.from);
     }
     return m;
 };

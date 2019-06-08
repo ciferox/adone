@@ -1,7 +1,7 @@
-const tryEach = require("async/tryEach");
 const errCode = require("err-code");
 
 const {
+    async: { tryEach },
     is
 } = adone;
 
@@ -14,15 +14,15 @@ module.exports = (node) => {
     }
 
     return {
-    /**
-     * Iterates over all peer routers in series to find the given peer.
-     *
-     * @param {String} id The id of the peer to find
-     * @param {object} options
-     * @param {number} options.maxTimeout How long the query should run
-     * @param {function(Error, Result<Array>)} callback
-     * @returns {void}
-     */
+        /**
+         * Iterates over all peer routers in series to find the given peer.
+         *
+         * @param {String} id The id of the peer to find
+         * @param {object} options
+         * @param {number} options.maxTimeout How long the query should run
+         * @param {function(Error, Result<Array>)} callback
+         * @returns {void}
+         */
         findPeer: (id, options, callback) => {
             if (is.function(options)) {
                 callback = options;

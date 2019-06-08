@@ -1,9 +1,8 @@
-const nextTick = require("async/nextTick");
 const errCode = require("err-code");
-
 const { messages, codes } = require("./errors");
 
 const {
+    async: { nextTick },
     is
 } = adone;
 

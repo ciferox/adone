@@ -1,7 +1,5 @@
-const waterfall = require("async/waterfall");
-const each = require("async/each");
-
 const {
+    async: { waterfall, each },
     p2p: { crypto, PeerId, record: { selection, validator, Record } }
 } = adone;
 

@@ -1,5 +1,4 @@
 const EventEmitter = require("events");
-const asyncEach = require("async/each");
 const TimeCache = require("time-cache");
 const debug = require("debug");
 const errcode = require("err-code");
@@ -9,9 +8,8 @@ const message = require("./message");
 const { signMessage } = require("./message/sign");
 const utils = require("./utils");
 
-const nextTick = require("async/nextTick");
-
 const {
+    async: { each: asyncEach, nextTick },
     stream: { pull }
 } = adone;
 const { empty } = pull;

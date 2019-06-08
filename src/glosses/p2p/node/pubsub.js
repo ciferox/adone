@@ -1,8 +1,8 @@
-const nextTick = require("async/nextTick");
 const { messages, codes } = require("./errors");
 const errCode = require("err-code");
 
 const {
+    async: { nextTick },
     is,
     p2p: { FloodSub }
 } = adone;

@@ -1,7 +1,5 @@
-const series = require("async/series");
-const parallel = require("async/parallel");
-
 const {
+    async: { series, parallel },
     assertion,
     p2p: { PubsubBaseProtocol }
 } = adone;
@@ -45,8 +43,8 @@ describe("pubsub base protocol", () => {
 
         before((done) => {
             series([
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb),
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb)
+                (cb) => createNode(cb),
+                (cb) => createNode(cb)
             ], (err, nodes) => {
                 if (err) {
                     return done(err);
@@ -125,8 +123,8 @@ describe("pubsub base protocol", () => {
 
         before((done) => {
             series([
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb),
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb)
+                (cb) => createNode(cb),
+                (cb) => createNode(cb)
             ], (cb, nodes) => {
                 nodeA = nodes[0];
                 nodeB = nodes[1];
@@ -176,8 +174,8 @@ describe("pubsub base protocol", () => {
             sandbox = assertion.spy.sandbox();
 
             series([
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb),
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb)
+                (cb) => createNode(cb),
+                (cb) => createNode(cb)
             ], (err, nodes) => {
                 if (err) {
                     return done(err);
@@ -239,8 +237,8 @@ describe("pubsub base protocol", () => {
             sandbox = assertion.spy.sandbox();
 
             series([
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb),
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb)
+                (cb) => createNode(cb),
+                (cb) => createNode(cb)
             ], (err, nodes) => {
                 if (err) {
                     return done(err);
@@ -313,8 +311,8 @@ describe("pubsub base protocol", () => {
             sandbox = assertion.spy.sandbox();
 
             series([
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb),
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb)
+                (cb) => createNode(cb),
+                (cb) => createNode(cb)
             ], (err, nodes) => {
                 if (err) {
                     return done(err);

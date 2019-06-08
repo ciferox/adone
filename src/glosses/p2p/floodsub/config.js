@@ -1,5 +1,3 @@
-
-
 const debug = require("debug");
 
 const log = debug("libp2p:floodsub");

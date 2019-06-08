@@ -1,8 +1,8 @@
-const assert = require("assert");
-
 const config = require("./config");
 
 const {
+    assert,
+    async: { setImmediate, map: asyncMap },
     noop,
     p2p: { PubsubBaseProtocol },
     stream: { pull }
@@ -13,8 +13,6 @@ const { message, utils } = PubsubBaseProtocol;
 
 const multicodec = config.multicodec;
 const ensureArray = utils.ensureArray;
-const setImmediate = require("async/setImmediate");
-const asyncMap = require("async/map");
 
 /**
  * FloodSub (aka dumbsub is an implementation of pubsub focused on

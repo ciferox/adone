@@ -109,9 +109,9 @@ exports.selectBest = (local, remote, cb) => {
     });
 };
 
-exports.digest = (buf, cb) => {
+exports.digest = async (buf, cb) => {
     try {
-        const result = multihashingAsync.digest(buf, "sha2-256", buf.length);
+        const result = await multihashingAsync.digest(buf, "sha2-256", buf.length);
         cb(null, result);
     } catch (err) {
         cb(err);

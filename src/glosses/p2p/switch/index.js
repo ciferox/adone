@@ -256,12 +256,16 @@ class Switch extends Emitter {
             (cb) => {
                 each(this.transports, (transport, cb) => {
                     each(transport.listeners, (listener, cb) => {
-                        listener.close((err) => {
-                            if (err) {
-                                log.error(err);
-                            }
+                        if (listener) { // workaround
+                            listener.close((err) => {
+                                if (err) {
+                                    log.error(err);
+                                }
+                                cb();
+                            });
+                        } else {
                             cb();
-                        });
+                        }
                     }, cb);
                 }, cb);
             },

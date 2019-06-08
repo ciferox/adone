@@ -1,8 +1,7 @@
-const tryEach = require("async/tryEach");
-const parallel = require("async/parallel");
 const errCode = require("err-code");
 
 const {
+    async: { tryEach, parallel },
     is
 } = adone;
 
@@ -15,17 +14,17 @@ module.exports = (node) => {
     }
 
     return {
-    /**
-     * Iterates over all content routers in series to find providers of the given key.
-     * Once a content router succeeds, iteration will stop.
-     *
-     * @param {CID} key The CID key of the content to find
-     * @param {object} options
-     * @param {number} options.maxTimeout How long the query should run
-     * @param {number} options.maxNumProviders - maximum number of providers to find
-     * @param {function(Error, Result<Array>)} callback
-     * @returns {void}
-     */
+        /**
+         * Iterates over all content routers in series to find providers of the given key.
+         * Once a content router succeeds, iteration will stop.
+         *
+         * @param {CID} key The CID key of the content to find
+         * @param {object} options
+         * @param {number} options.maxTimeout How long the query should run
+         * @param {number} options.maxNumProviders - maximum number of providers to find
+         * @param {function(Error, Result<Array>)} callback
+         * @returns {void}
+         */
         findProviders: (key, options, callback) => {
             if (is.function(options)) {
                 callback = options;

@@ -1,9 +1,9 @@
-const setImmediate = require("async/setImmediate");
 const EventEmitter = require("events");
 
-const { RPC } = require('./message')
+const { RPC } = require("./message");
 
 const {
+    async: { setImmediate },
     stream: { pull }
 } = adone;
 const { pushable: Pushable, lengthPrefixed: lp } = pull;

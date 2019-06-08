@@ -4,10 +4,6 @@ const log = debug("libp2p");
 log.error = debug("libp2p:error");
 const errCode = require("err-code");
 
-const each = require("async/each");
-const series = require("async/series");
-const parallel = require("async/parallel");
-
 const { emitFirst } = require("./util");
 const peerRouting = require("./peer-routing");
 const contentRouting = require("./content-routing");
@@ -18,6 +14,7 @@ const validateConfig = require("./config").validate;
 const { codes } = require("./errors");
 
 const {
+    async: { each, series, parallel },
     event,
     is,
     p2p: { PeerBook, ConnectionManager, Switch, Ping, transport: { WS } }

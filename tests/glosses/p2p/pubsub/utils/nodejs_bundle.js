@@ -1,5 +1,5 @@
 const {
-    p2p: { KadDHT, transport: { TCP }, muxer: { spdy }, secio, Node }
+    p2p: { transport: { TCP }, muxer: { spdy }, secio, Node }
 } = adone;
 
 class TestNode extends Node {
@@ -7,19 +7,15 @@ class TestNode extends Node {
         const modules = {
             transport: [TCP],
             streamMuxer: [spdy],
-            connEncryption: [secio],
-            dht: KadDHT
+            connEncryption: [secio]
         };
+
+        peerInfo.multiaddrs.add("/ip4/127.0.0.1/tcp/0");
 
         super({
             modules,
             peerInfo,
-            peerBook,
-            config: {
-                EXPERIMENTAL: {
-                    pubsub: true
-                }
-            }
+            peerBook
         });
     }
 }
