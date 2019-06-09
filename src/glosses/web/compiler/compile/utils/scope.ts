@@ -2,7 +2,7 @@ import { Node } from '../../interfaces';
 import { Node as ESTreeNode } from 'estree';
 
 const {
-	acorn: { estreeWalker: { walk } }
+	acorn: { isReference, estreeWalker: { walk } }
 } = adone;
 
 export function create_scopes(expression: Node) {
@@ -41,7 +41,7 @@ export function create_scopes(expression: Node) {
 				map.set(node, scope);
 			} else if (/(Class|Variable)Declaration/.test(node.type)) {
 				scope.add_declaration(node);
-			} else if (node.type === 'Identifier' && adone.acorn.isReference(node as ESTreeNode, parent as ESTreeNode)) {
+			} else if (node.type === 'Identifier' && isReference(node as ESTreeNode, parent as ESTreeNode)) {
 				if (!scope.has(node.name) && !globals.has(node.name)) {
 					globals.set(node.name, node);
 				}
@@ -52,10 +52,10 @@ export function create_scopes(expression: Node) {
 			if (map.has(node)) {
 				scope = scope.parent;
 			}
-		},
+		}
 	});
 
-	scope.declarations.forEach((node, name) => {
+	scope.declarations.forEach((_node, name) => {
 		globals.delete(name);
 	});
 

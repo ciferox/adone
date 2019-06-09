@@ -2,7 +2,7 @@ import Stats from '../Stats';
 import parse from '../parse/index';
 import render_dom from './render-dom/index';
 import render_ssr from './render-ssr/index';
-import { CompileOptions, Ast, Warning } from '../interfaces';
+import { CompileOptions, Warning } from '../interfaces';
 import Component from './Component';
 import fuzzymatch from '../utils/fuzzymatch';
 
@@ -56,6 +56,7 @@ function validate_options(options: CompileOptions, warnings: Warning[]) {
 
 function get_name(filename: string) {
 	if (!filename) return null;
+	// eslint-disable-next-line no-useless-escape
 	const parts = filename.split(/[\/\\]/);
 
 	if (parts.length > 1 && /^index\.\w+/.test(parts[parts.length - 1])) {
@@ -78,12 +79,10 @@ export default function compile(source: string, options: CompileOptions = {}) {
 	const stats = new Stats();
 	const warnings = [];
 
-	let ast: Ast;
-
 	validate_options(options, warnings);
 
 	stats.start('parse');
-	ast = parse(source, options);
+	const ast = parse(source, options);
 	stats.stop('parse');
 
 	stats.start('create component');

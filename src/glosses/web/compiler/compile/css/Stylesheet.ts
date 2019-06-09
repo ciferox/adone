@@ -46,11 +46,11 @@ class Rule {
 		return this.selectors.some(s => s.used);
 	}
 
-	minify(code: MagicString, dev: boolean) {
+	minify(code: MagicString, _dev: boolean) {
 		let c = this.node.start;
 		let started = false;
 
-		this.selectors.forEach((selector, i) => {
+		this.selectors.forEach((selector) => {
 			if (selector.used) {
 				const separator = started ? ',' : '';
 				if ((selector.node.start - c) > separator.length) {
@@ -143,7 +143,7 @@ class Declaration {
 
 class Atrule {
 	node: Node;
-	children: (Atrule | Rule)[];
+	children: Array<Atrule|Rule>;
 
 	constructor(node: Node) {
 		this.node = node;
@@ -166,7 +166,7 @@ class Atrule {
 		}
 	}
 
-	is_used(dev: boolean) {
+	is_used(_dev: boolean) {
 		return true; // TODO
 	}
 
@@ -256,7 +256,7 @@ export default class Stylesheet {
 	has_styles: boolean;
 	id: string;
 
-	children: (Rule | Atrule)[] = [];
+	children: Array<Rule|Atrule> = [];
 	keyframes: Map<string, string> = new Map();
 
 	nodes_with_css_class: Set<Node> = new Set();
@@ -272,7 +272,7 @@ export default class Stylesheet {
 
 			this.has_styles = true;
 
-			const stack: (Rule | Atrule)[] = [];
+			const stack: Array<Rule | Atrule> = [];
 			let current_atrule: Atrule = null;
 
 			walk(ast.css, {
@@ -362,7 +362,7 @@ export default class Stylesheet {
 		});
 
 		if (should_transform_selectors) {
-			this.children.forEach((child: (Atrule | Rule)) => {
+			this.children.forEach((child: (Atrule|Rule)) => {
 				child.transform(code, this.id, this.keyframes);
 			});
 		}

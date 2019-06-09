@@ -2,10 +2,10 @@ import Component from '../../Component';
 import flatten_reference from '../../utils/flatten_reference';
 import { create_scopes, Scope, extract_names } from '../../utils/scope';
 import { Node } from '../../../interfaces';
-import { globals } from '../../../utils/names';
+import { globals , sanitize } from '../../../utils/names';
 import deindent from '../../utils/deindent';
 import Wrapper from '../../render-dom/wrappers/shared/Wrapper';
-import { sanitize } from '../../../utils/names';
+
 import TemplateScope from './TemplateScope';
 import get_object from '../../utils/get_object';
 import { nodes_match } from '../../../utils/nodes_match';
@@ -13,7 +13,7 @@ import Block from '../../render-dom/Block';
 import { INode } from '../interfaces';
 
 const {
-	acorn: { estreeWalker: { walk } }
+	acorn: { isReference, estreeWalker: { walk } }
 } = adone;
 
 const binary_operators: Record<string, number> = {
@@ -30,8 +30,8 @@ const binary_operators: Record<string, number> = {
 	'<=': 11,
 	'>': 11,
 	'>=': 11,
-	'in': 11,
-	'instanceof': 11,
+	in: 11,
+	instanceof: 11,
 	'==': 10,
 	'!=': 10,
 	'===': 10,
@@ -124,7 +124,7 @@ export default class Expression {
 					function_expression = node;
 				}
 
-				if (adone.acorn.isReference(node, parent)) {
+				if (isReference(node, parent)) {
 					const { name, nodes } = flatten_reference(node);
 
 					if (scope.has(name)) return;
@@ -259,7 +259,7 @@ export default class Expression {
 					scope = map.get(node);
 				}
 
-				if (adone.acorn.isReference(node, parent)) {
+				if (isReference(node, parent)) {
 					const { name, nodes } = flatten_reference(node);
 
 					if (scope.has(name)) return;
@@ -492,7 +492,7 @@ export default class Expression {
 	}
 }
 
-function get_function_name(node, parent) {
+function get_function_name(_node, parent) {
 	if (parent.type === 'EventHandler') {
 		return `${parent.name}_handler`;
 	}
