@@ -1,5 +1,3 @@
-
-
 const bsplit = require("buffer-split");
 const errcode = require("err-code");
 

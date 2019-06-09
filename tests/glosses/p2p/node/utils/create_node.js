@@ -1,7 +1,7 @@
-const waterfall = require("async/waterfall");
 const Node = require("./bundle_nodejs");
 
 const {
+    async: { waterfall },
     is,
     p2p: { PeerId, PeerInfo }
 } = adone;

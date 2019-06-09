@@ -1,9 +1,10 @@
 const {
+    async: { each },
     p2p: { PeerBook, KadDHT }
 } = adone;
 
 const sinon = require("sinon");
-const each = require("async/each");
+const promiseToCallback = require("promise-to-callback");
 
 const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", ...args);
 
@@ -37,7 +38,10 @@ describe("Query", () => {
 
         before("get sorted peers", (done) => {
             convertBuffer(targetKey.key, (err, dhtKey) => {
-                if (err) { return done(err) };
+                if (err) {
+
+                    return done(err);
+                }
                 targetKey.dhtKey = dhtKey;
 
                 sortClosestPeerInfos(peerInfos, targetKey.dhtKey, (err, peers) => {
@@ -62,12 +66,12 @@ describe("Query", () => {
             const PATHS = 5;
             sinon.stub(dht, "disjointPaths").value(PATHS);
             sinon.stub(dht._queryManager, "running").value(true);
-            const querySpy = sinon.stub().callsArgWith(1, null, {});
+            const querySpy = sinon.stub().resolves({});
 
             const query = new Query(dht, targetKey.key, () => querySpy);
 
             const run = new Run(query);
-            run.init(() => {
+            promiseToCallback(run.init())(() => {
                 // Add the sorted peers into 5 paths. This will weight
                 // the paths with increasingly further peers
                 const sortedPeerIds = sortedPeers.map((peerInfo) => peerInfo.id);
@@ -87,12 +91,14 @@ describe("Query", () => {
                 each(queriedPeers, (peerId, cb) => {
                     run.peersQueried.add(peerId, cb);
                 }, (err) => {
-                    if (err) { return done(err) };
+                    if (err) {
+                        return done(err);
+                    }
 
                     const continueSpy = sinon.spy(run, "continueQuerying");
 
                     // Run the 4 paths
-                    run.executePaths(paths, (err) => {
+                    promiseToCallback(run.executePaths(paths))((err) => {
                         expect(err).to.not.exist();
                         // The resulting peers should all be from path 0 as it had the closest
                         expect(run.peersQueried.peers).to.eql(paths[0].initialPeers);
@@ -117,11 +123,11 @@ describe("Query", () => {
             sinon.stub(dht, "disjointPaths").value(1);
             sinon.stub(dht._queryManager, "running").value(true);
 
-            const querySpy = sinon.stub().callsArgWith(1, null, {});
+            const querySpy = sinon.stub().resolves({});
             const query = new Query(dht, targetKey.key, () => querySpy);
 
             const run = new Run(query);
-            run.init(() => {
+            promiseToCallback(run.init())(() => {
                 const sortedPeerIds = sortedPeers.map((peerInfo) => peerInfo.id);
 
                 // Take the top 15 peers and peers 20 - 25 to seed `run.peersQueried`
@@ -142,17 +148,22 @@ describe("Query", () => {
                 const returnPeers = sortedPeers.slice(16, 20);
                 // When the second query happens, which is a further peer,
                 // return peers 16 - 19
-                querySpy.onCall(1).callsArgWith(1, null, {
-                    closerPeers: returnPeers
+                querySpy.onCall(1).callsFake(async () => {
+                    // this timeout ensures the queries finish in serial
+                    // see https://github.com/libp2p/js-libp2p-kad-dht/pull/121#discussion_r286437978
+                    await new Promise((resolve) => setTimeout(resolve, 10));
+                    return { closerPeers: returnPeers };
                 });
 
                 each(queriedPeers, (peerId, cb) => {
                     run.peersQueried.add(peerId, cb);
                 }, (err) => {
-                    if (err) { return done(err) };
+                    if (err) {
+                        return done(err);
+                    }
 
                     // Run the path
-                    run.executePaths([path], (err) => {
+                    promiseToCallback(run.executePaths([path]))((err) => {
                         expect(err).to.not.exist();
 
                         // Querying will stop after the first ALPHA peers are queried

@@ -1,7 +1,6 @@
 export default (ctx) => {
-    const parallel = require("async/parallel");
-
     const {
+        async: { parallel },
         p2p: { rendezvous }
     } = adone;
 

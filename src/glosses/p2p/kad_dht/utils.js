@@ -1,10 +1,10 @@
 const debug = require("debug");
 const base32 = require("base32.js");
 const distance = require("xor-distance");
-const map = require("async/map");
-const setImmediate = require("async/setImmediate");
+const errcode = require("err-code");
 
 const {
+    async: { map, setImmediate },
     multiformat: { multihashingAsync, multihash: mh },
     datastore: { interface: { Key } },
     p2p: { PeerId, record: { Record } }
@@ -198,4 +198,33 @@ exports.logger = (id, subsystem) => {
     logger.error = debug(name.concat(["error"]).join(":"));
 
     return logger;
+};
+
+exports.TimeoutError = class TimeoutError extends Error {
+    get code() {
+        return "ETIMEDOUT";
+    }
+};
+
+/**
+ * Creates an async function that calls the given `asyncFn` and Errors
+ * if it does not resolve within `time` ms
+ *
+ * @param {Function} [asyncFn]
+ * @param {Number} [time]
+ * @returns {Function}
+ *
+ * @private
+ */
+exports.withTimeout = (asyncFn, time) => {
+    return async (...args) => {
+        return Promise.race([
+            asyncFn(...args),
+            new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    reject(errcode(new Error("Async function did not complete before timeout"), "ETIMEDOUT"));
+                }, time);
+            })
+        ]);
+    };
 };

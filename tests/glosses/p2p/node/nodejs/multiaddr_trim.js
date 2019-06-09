@@ -1,5 +1,8 @@
-const series = require("async/series");
 const createNode = require("../utils/create_node");
+
+const {
+    async: { series }
+} = adone;
 
 describe("multiaddr trim", () => {
     it("non used multiaddrs get trimmed", (done) => {

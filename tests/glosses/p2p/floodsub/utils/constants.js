@@ -1,10 +1,10 @@
-const peerJSON = require("../fixtures/test-peer");
-
 const {
     async: { nextTick },
     multiformat: { multiaddr },
     p2p: { PeerId, PeerInfo }
 } = adone;
+
+const peerJSON = require("../fixtures/test-peer");
 
 let peerRelay = null;
 
@@ -21,9 +21,7 @@ let peerRelay = null;
  * @returns {void}
  */
 module.exports.getPeerRelay = (callback) => {
-    if (peerRelay) {
-        return nextTick(callback, null, peerRelay);
-    }
+    if (peerRelay) { return nextTick(callback, null, peerRelay) };
 
     PeerId.createFromJSON(peerJSON, (err, peerId) => {
         if (err) {
@@ -38,5 +36,5 @@ module.exports.getPeerRelay = (callback) => {
     });
 };
 
+module.exports.WS_STAR_MULTIADDR = multiaddr("/ip4/127.0.0.1/tcp/14444/ws/p2p-websocket-star/");
 module.exports.WS_RENDEZVOUS_MULTIADDR = multiaddr("/ip4/127.0.0.1/tcp/14444/wss");
-module.exports.WRTC_RENDEZVOUS_MULTIADDR = multiaddr("/ip4/127.0.0.1/tcp/15555/wss");

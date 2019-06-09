@@ -9,7 +9,7 @@ const multicodec = require("../multicodec");
 const proto = require("../protocol");
 
 const {
-    async: { waterfall },
+    async: { waterfall, setImmediate },
     is,
     multiformat: { multiaddr },
     p2p: { Connection, PeerId },

@@ -1,5 +1,3 @@
-
-
 /**
  * A list of unique peer infos.
  */

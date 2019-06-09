@@ -1,8 +1,5 @@
-const map = require("async/map");
-const each = require("async/each");
-const series = require("async/series");
-
 const {
+    async: { map, each, series },
     lodash: { range, random },
     p2p: { PeerId }
 } = adone;

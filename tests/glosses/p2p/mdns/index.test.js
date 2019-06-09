@@ -1,7 +1,5 @@
-const parallel = require("async/parallel");
-const series = require("async/series");
-
 const {
+    async: { parallel, series },
     multiformat: { multiaddr },
     p2p: { PeerInfo, MulticastDNS }
 } = adone;
@@ -192,7 +190,7 @@ describe("p2p", "MulticastDNS", () => {
 
     it("should start and stop with go-libp2p-mdns compat", (done) => {
         const mdns = new MulticastDNS({ peerInfo: pA, port: 50004 });
-    
+
         mdns.start((err) => {
             expect(err).to.not.exist();
             mdns.stop((err) => {

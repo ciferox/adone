@@ -1,6 +1,3 @@
-const times = require("async/times");
-const waterfall = require("async/waterfall");
-const assert = require("assert");
 const c = require("./constants");
 const { logger } = require("./utils");
 
@@ -8,6 +5,8 @@ const errcode = require("err-code");
 const AbortController = require("abort-controller");
 
 const {
+    assert,
+    async: { times, waterfall },
     p2p: { crypto, PeerId },
     multiformat: { multihashingAsync }
 } = adone;

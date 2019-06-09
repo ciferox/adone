@@ -7,7 +7,7 @@ const proto = require("../protocol").CircuitRelay;
 const multicodec = require("./../multicodec");
 
 const {
-    async: { series, waterfall },
+    async: { series, waterfall, setImmediate },
     multiformat: { multiaddr },
     p2p: { PeerId, PeerInfo },
     stream: { pull },

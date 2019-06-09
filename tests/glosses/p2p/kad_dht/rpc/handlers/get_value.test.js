@@ -1,4 +1,7 @@
-const waterfall = require("async/waterfall");
+const {
+    async: { waterfall }
+} = adone;
+
 const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", ...args);
 
 const Message = require(srcPath("message"));

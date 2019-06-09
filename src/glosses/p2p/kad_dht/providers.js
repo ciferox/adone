@@ -1,10 +1,10 @@
 const cache = require("hashlru");
-const each = require("async/each");
 
 const c = require("./constants");
 const utils = require("./utils");
 
 const {
+    async: { each },
     data: { varint },
     datastore: { interface: { Key } },
     p2p: { PeerId },

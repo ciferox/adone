@@ -1,13 +1,13 @@
 const {
+    assert,
+    async: { nextTick },
     is,
     p2p: { PeerInfo, PeerId }
 } = adone;
 
-const assert = require("assert");
 const EE = require("events");
 const MDNS = require("multicast-dns");
 const Multiaddr = require("multiaddr");
-const nextTick = require("async/nextTick");
 const log = require("debug")("libp2p:mdns:compat:querier");
 const { SERVICE_TAG_LOCAL, MULTICAST_IP, MULTICAST_PORT } = require("./constants");
 
@@ -40,9 +40,9 @@ class Querier extends EE {
                 id: nextId(), // id > 0 for unicast response
                 questions: [{ name: SERVICE_TAG_LOCAL, type: "PTR", class: "IN" }]
             }, null, {
-                address: MULTICAST_IP,
-                port: MULTICAST_PORT
-            });
+                    address: MULTICAST_IP,
+                    port: MULTICAST_PORT
+                });
 
             return {
                 stop: (callback) => {
@@ -51,9 +51,9 @@ class Querier extends EE {
                 }
             };
         }, {
-            period: this._options.queryPeriod,
-            interval: this._options.queryInterval
-        });
+                period: this._options.queryPeriod,
+                interval: this._options.queryInterval
+            });
 
         nextTick(() => callback());
     }
@@ -63,12 +63,12 @@ class Querier extends EE {
         const ptrRecord = answers.find((a) => a.type === "PTR" && a.name === SERVICE_TAG_LOCAL);
 
         // Only deal with responses for our service tag
-        if (!ptrRecord) {return};
+        if (!ptrRecord) { return };
 
         log("got response", event, info);
 
         const txtRecord = answers.find((a) => a.type === "TXT");
-        if (!txtRecord) {return log('missing TXT record in response')};
+        if (!txtRecord) { return log('missing TXT record in response') };
 
         let peerIdStr;
         try {
@@ -89,10 +89,10 @@ class Querier extends EE {
         }
 
         PeerInfo.create(peerId, (err, info) => {
-            if (err) {return log('failed to create peer info from peer ID', peerId, err)};
+            if (err) { return log('failed to create peer info from peer ID', peerId, err) };
 
             const srvRecord = answers.find((a) => a.type === "SRV");
-            if (!srvRecord) {return log('missing SRV record in response')};
+            if (!srvRecord) { return log('missing SRV record in response') };
 
             log("peer found", peerIdStr);
 
@@ -143,7 +143,7 @@ function periodically(fn, options) {
         handle = fn();
         timeoutId = setTimeout(() => {
             handle.stop((err) => {
-                if (err) {log(err)};
+                if (err) { log(err) };
                 if (!stopped) {
                     timeoutId = setTimeout(reRun, options.interval);
                 }
@@ -171,7 +171,7 @@ const nextId = (() => {
     let id = 0;
     return () => {
         id++;
-        if (id === Number.MAX_SAFE_INTEGER) {id = 1};
+        if (id === Number.MAX_SAFE_INTEGER) { id = 1 };
         return id;
     };
 })();

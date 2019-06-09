@@ -1,12 +1,12 @@
 const {
+    assert,
+    async: { nextTick },
     p2p: { transport: { TCP } }
 } = adone;
 
 const OS = require("os");
-const assert = require("assert");
 const MDNS = require("multicast-dns");
 const log = require("debug")("libp2p:mdns:compat:responder");
-const nextTick = require("async/nextTick");
 const { SERVICE_TAG_LOCAL } = require("./constants");
 
 const tcp = new TCP();

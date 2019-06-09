@@ -1,5 +1,6 @@
-const parallel = require("async/parallel");
-const waterfall = require("async/waterfall");
+const {
+    async: { parallel, waterfall }
+} = adone;
 
 const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", ...args);
 

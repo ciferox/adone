@@ -3,7 +3,7 @@ const {
 } = adone;
 
 describe("p2p", "transport", "WebRTCStar", () => {
-    // require("./sig_server.js");
+    require("./sig_server.js");
 
     describe("with wrtc", () => {
         const wrtc = require("wrtc");

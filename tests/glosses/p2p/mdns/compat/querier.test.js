@@ -1,9 +1,8 @@
 const {
+    async: { parallel, map },
     p2p: { PeerInfo }
 } = adone;
 
-const parallel = require("async/parallel");
-const map = require("async/map");
 const MDNS = require("multicast-dns");
 const OS = require("os");
 
@@ -63,7 +62,7 @@ describe("Querier", () => {
 
         mdns.on("query", (event) => {
             const questions = event.questions || [];
-            if (!questions.some((q) => q.name === SERVICE_TAG_LOCAL)) {return};
+            if (!questions.some((q) => q.name === SERVICE_TAG_LOCAL)) { return };
             queryCount++;
         });
 
@@ -265,7 +264,7 @@ describe("Querier", () => {
 
         mdns.on("query", (event, info) => {
             const questions = event.questions || [];
-            if (!questions.some((q) => q.name === SERVICE_TAG_LOCAL)) {return};
+            if (!questions.some((q) => q.name === SERVICE_TAG_LOCAL)) { return };
             mdns.respond(getResponse(event, info), info);
         });
 
@@ -273,12 +272,12 @@ describe("Querier", () => {
 
         querier.on("peer", (info) => {
             // Ignore non-test peers
-            if (!info.id.isEqual(peerInfos[1].id)) {return};
+            if (!info.id.isEqual(peerInfos[1].id)) { return };
             peerInfo = info;
         });
 
         querier.start((err) => {
-            if (err) {return callback(err)};
+            if (err) { return callback(err) };
             setTimeout(() => {
                 callback(peerInfo ? null : new Error("Missing peer"));
             }, 100);
@@ -296,7 +295,7 @@ describe("Querier", () => {
 
         mdns.on("query", (event, info) => {
             const questions = event.questions || [];
-            if (!questions.some((q) => q.name === SERVICE_TAG_LOCAL)) {return};
+            if (!questions.some((q) => q.name === SERVICE_TAG_LOCAL)) { return };
             mdns.respond(getResponse(event, info), info);
         });
 
@@ -304,14 +303,14 @@ describe("Querier", () => {
 
         querier.on("peer", (info) => {
             // Ignore non-test peers
-            if (!info.id.isEqual(peerInfos[0].id) && !info.id.isEqual(peerInfos[1].id)) {return};
+            if (!info.id.isEqual(peerInfos[0].id) && !info.id.isEqual(peerInfos[1].id)) { return };
             peerInfo = info;
         });
 
         querier.start((err) => {
-            if (err) {return callback(err)};
+            if (err) { return callback(err) };
             setTimeout(() => {
-                if (!peerInfo) {return callback()};
+                if (!peerInfo) { return callback() };
                 callback(Object.assign(new Error("Unexpected peer"), { peerInfo }));
             }, 100);
         });

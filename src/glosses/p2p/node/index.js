@@ -14,10 +14,10 @@ const validateConfig = require("./config").validate;
 const { codes } = require("./errors");
 
 const {
-    async: { each, series, parallel },
+    async: { each, series, parallel, nextTick },
     event,
     is,
-    p2p: { PeerBook, ConnectionManager, Switch, Ping, transport: { WS } }
+    p2p: { PeerBook, PeerInfo, ConnectionManager, Switch, Ping, transport: { WS } }
 } = adone;
 
 const notStarted = (action, state) => {
@@ -347,7 +347,7 @@ export default class Node extends event.Emitter {
             let t;
 
             if (is.function(Transport)) {
-                t = new Transport();
+                t = new Transport({ libp2p: this });
             } else {
                 t = Transport;
             }

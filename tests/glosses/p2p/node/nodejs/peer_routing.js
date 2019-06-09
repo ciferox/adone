@@ -1,10 +1,10 @@
-const parallel = require("async/parallel");
 const sinon = require("sinon");
 const nock = require("nock");
 
 const createNode = require("../utils/create_node");
 
 const {
+    async: { parallel },
     lodash: { times: _times },
     p2p: { DelegatedPeerRouter }
 } = adone;
@@ -74,7 +74,7 @@ describe(".peerRouting", () => {
                     (cb) => nodeC.dial(nodeE.peerInfo.id, cb)
                 ], (err) => {
                     if (err) {
-                        throw err; 
+                        throw err;
                     }
                     expect(err).to.not.exist();
                     nodeB.peerRouting.findPeer(nodeE.peerInfo.id, (err, peerInfo) => {

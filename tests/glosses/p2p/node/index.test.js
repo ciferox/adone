@@ -1,16 +1,18 @@
 const sinon = require("sinon");
-const series = require("async/series");
 const createNode = require("./utils/create_node");
 
-const waterfall = require("async/waterfall");
-
 const {
-    p2p: { Bootstrap, DelegatedPeerRouter, DelegatedContentRouter, PeerId, PeerInfo, KadDHT, transport: { WS } }
+    async: { series, waterfall },
+    p2p: { createLibp2p, Bootstrap, DelegatedPeerRouter, DelegatedContentRouter, PeerId, PeerInfo, KadDHT, transport: { WS } }
 } = adone;
 
 const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "node", ...args);
 
 describe("creation", () => {
+    afterEach(() => {
+        sinon.restore();
+    });
+
     it("should be able to start and stop successfully", (done) => {
         createNode([], {
             config: {
@@ -103,6 +105,36 @@ describe("creation", () => {
             node._switch.emit("error", error);
         });
     });
+
+    it('createLibp2p should create a peerInfo instance', (done) => {
+        createLibp2p({
+            modules: {
+                transport: [WS]
+            }
+        }, (err, libp2p) => {
+            expect(err).to.not.exist()
+            expect(libp2p).to.exist()
+            done()
+        })
+    })
+
+    it('createLibp2p should allow for a provided peerInfo instance', (done) => {
+        PeerInfo.create((err, peerInfo) => {
+            expect(err).to.not.exist()
+            sinon.spy(PeerInfo, 'create')
+            createLibp2p({
+                peerInfo,
+                modules: {
+                    transport: [WS]
+                }
+            }, (err, libp2p) => {
+                expect(err).to.not.exist()
+                expect(libp2p).to.exist()
+                expect(PeerInfo.create.callCount).to.eql(0)
+                done()
+            })
+        })
+    })
 });
 
 describe("configuration", () => {

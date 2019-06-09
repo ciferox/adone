@@ -1,6 +1,5 @@
-const map = require("async/map");
-
 const {
+    async: { map },
     is,
     lodash: { range, random },
     p2p: { PeerInfo, PeerId, record: { Record } },

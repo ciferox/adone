@@ -1,9 +1,5 @@
 const {
-    each,
-    map
-} = require("async");
-
-const {
+    async: { each, map },
     multiformat: { multiaddr },
     p2p: { PeerId, transport: { WSStarMulti } },
     stream: { pull }

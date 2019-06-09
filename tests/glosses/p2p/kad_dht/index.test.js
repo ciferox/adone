@@ -1,20 +1,8 @@
 const sinon = require("sinon");
-const series = require("async/series");
-const times = require("async/times");
-const parallel = require("async/parallel");
-const timeout = require("async/timeout");
-const retry = require("async/retry");
-const each = require("async/each");
-const waterfall = require("async/waterfall");
-
 const errcode = require("err-code");
 
-const createPeerInfo = require("./utils/create_peer_info");
-const createValues = require("./utils/create_values");
-const TestDHT = require("./utils/test_dht");
-
 const {
-    // lodash: { random },
+    async: { series, times, parallel, timeout, retry, each, waterfall },
     p2p: { KadDHT, PeerId, PeerBook, PeerInfo, Switch, transport: { TCP }, muxer: { mplex }, record: { Record } }
 } = adone;
 
@@ -22,16 +10,21 @@ const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", .
 
 const kadUtils = require(srcPath("utils"));
 const c = require(srcPath("constants"));
+const Message = require(srcPath("message"));
+
+const createPeerInfo = require("./utils/create_peer_info");
+const createValues = require("./utils/create_values");
+const TestDHT = require("./utils/test_dht");
 
 // connect two dhts
-const connectNoSync = function (a, b, callback) {
+function connectNoSync(a, b, callback) {
     const publicPeerId = new PeerId(b.peerInfo.id.id, null, b.peerInfo.id.pubKey);
     const target = new PeerInfo(publicPeerId);
     target.multiaddrs = b.peerInfo.multiaddrs;
     a.switch.dial(target, callback);
-};
+}
 
-const find = function (a, b, cb) {
+function find(a, b, cb) {
     retry({ times: 50, interval: 100 }, (cb) => {
         a.routingTable.find(b.peerInfo.id, (err, match) => {
             if (err) {
@@ -51,25 +44,25 @@ const find = function (a, b, cb) {
             cb();
         });
     }, cb);
-};
+}
 
 // connect two dhts and wait for them to have each other
 // in their routing table
-const connect = function (a, b, callback) {
+function connect(a, b, callback) {
     series([
         (cb) => connectNoSync(a, b, cb),
         (cb) => find(a, b, cb),
         (cb) => find(b, a, cb)
     ], (err) => callback(err));
-};
+}
 
-const bootstrap = function (dhts) {
+function bootstrap(dhts) {
     dhts.forEach((dht) => {
         dht.randomWalk._walk(1, 10000, () => { });
     });
-};
+}
 
-const waitForWellFormedTables = function (dhts, minPeers, avgPeers, waitTimeout, callback) {
+function waitForWellFormedTables(dhts, minPeers, avgPeers, waitTimeout, callback) {
     timeout((cb) => {
         retry({ times: 50, interval: 200 }, (cb) => {
             let totalPeers = 0;
@@ -91,17 +84,17 @@ const waitForWellFormedTables = function (dhts, minPeers, avgPeers, waitTimeout,
             cb(done ? null : new Error("not done yet"));
         }, cb);
     }, waitTimeout)(callback);
-};
+}
 
 // Count how many peers are in b but are not in a
-const countDiffPeers = function (a, b) {
+function countDiffPeers(a, b) {
     const s = new Set();
     a.forEach((p) => s.add(p.toB58String()));
 
     return b.filter((p) => !s.has(p.toB58String())).length;
-};
+}
 
-describe("common", () => {
+describe("KadDHT", () => {
     let peerInfos;
     let values;
 
@@ -293,7 +286,7 @@ describe("common", () => {
             const dhtB = dhts[1];
             const dhtC = dhts[2];
             const dhtD = dhts[3];
-            const stub = sinon.stub(dhtD, "_verifyRecordLocally").callsArgWithAsync(1, error);
+            const stub = sinon.stub(dhtD, "_verifyRecordLocallyAsync").rejects(error);
 
             waterfall([
                 (cb) => connect(dhtA, dhtB, cb),
@@ -326,8 +319,8 @@ describe("common", () => {
             const dhtB = dhts[1];
             const dhtC = dhts[2];
             const dhtD = dhts[3];
-            const stub = sinon.stub(dhtD, "_verifyRecordLocally").callsArgWithAsync(1, error);
-            const stub2 = sinon.stub(dhtC, "_verifyRecordLocally").callsArgWithAsync(1, error);
+            const stub = sinon.stub(dhtD, "_verifyRecordLocallyAsync").rejects(error);
+            const stub2 = sinon.stub(dhtC, "_verifyRecordLocallyAsync").rejects(error);
 
             waterfall([
                 (cb) => connect(dhtA, dhtB, cb),
@@ -361,7 +354,7 @@ describe("common", () => {
             const dhtA = dhts[0];
             const dhtB = dhts[1];
             const dhtC = dhts[2];
-            const stub = sinon.stub(dhtC, "_verifyRecordLocally").callsArgWithAsync(1, error);
+            const stub = sinon.stub(dhtC, "_verifyRecordLocallyAsync").rejects(error);
 
             waterfall([
                 (cb) => connect(dhtA, dhtB, cb),
@@ -468,7 +461,7 @@ describe("common", () => {
             const dhtA = dhts[0];
             const dhtB = dhts[1];
 
-            const dhtASpy = sinon.spy(dhtA, "_putValueToPeer");
+            const dhtASpy = sinon.spy(dhtA, "_putValueToPeerAsync");
 
             series([
                 (cb) => dhtA.put(Buffer.from("/v/hello"), Buffer.from("worldA"), cb),
@@ -502,6 +495,8 @@ describe("common", () => {
             expect(err).to.not.exist();
             const addrs = dhts.map((d) => d.peerInfo.multiaddrs.toArray()[0]);
             const ids = dhts.map((d) => d.peerInfo.id);
+            const idsB58 = ids.map((id) => id.toB58String());
+            sinon.spy(dhts[3].network, "sendMessage");
 
             series([
                 (cb) => connect(dhts[0], dhts[1], cb),
@@ -511,6 +506,19 @@ describe("common", () => {
                     dhts[3].provide(v.cid, cb);
                 }, cb),
                 (cb) => {
+                    // Expect an ADD_PROVIDER message to be sent to each peer for each value
+                    const fn = dhts[3].network.sendMessage;
+                    const valuesBuffs = values.map((v) => v.cid.buffer);
+                    const calls = fn.getCalls().map((c) => c.args);
+                    for (const [peerId, msg] of calls) {
+                        expect(idsB58).includes(peerId.toB58String());
+                        expect(msg.type).equals(Message.TYPES.ADD_PROVIDER);
+                        expect(valuesBuffs).includes(msg.key);
+                        expect(msg.providerPeers.length).equals(1);
+                        expect(msg.providerPeers[0].id.toB58String()).equals(idsB58[3]);
+                    }
+
+                    // Expect each DHT to find the provider of each value
                     let n = 0;
                     each(values, (v, cb) => {
                         n = (n + 1) % 3;
@@ -838,7 +846,7 @@ describe("common", () => {
                 waterfall([
                     (cb) => connect(dhts[0], dhts[1], cb),
                     (cb) => {
-                    // remove the pub key to be sure it is fetched
+                        // remove the pub key to be sure it is fetched
                         const p = dhts[0].peerBook.get(ids[1]);
                         p.id._pubKey = null;
                         dhts[0].peerBook.put(p, true);
@@ -986,18 +994,18 @@ describe("common", () => {
             sw.connection.addStreamMuxer(mplex);
             sw.connection.reuse();
             const dht = new KadDHT(sw);
-            dht.start(() => {
+            dht.start((err) => {
+                expect(err).to.not.exist();
+
                 const key = Buffer.from("/v/hello");
                 const value = Buffer.from("world");
                 const rec = new Record(key, value);
 
                 const stubs = [
-                // Simulate returning a peer id to query
+                    // Simulate returning a peer id to query
                     sinon.stub(dht.routingTable, "closestPeers").returns([peerInfos[1].id]),
                     // Simulate going out to the network and returning the record
-                    sinon.stub(dht, "_getValueOrPeers").callsFake((peer, k, cb) => {
-                        cb(null, rec);
-                    })
+                    sinon.stub(dht, "_getValueOrPeersAsync").callsFake(async () => ({ record: rec }))
                 ];
 
                 dht.getMany(key, 1, (err, res) => {
@@ -1046,7 +1054,7 @@ describe("common", () => {
 
                 const dhtA = dhts[0];
                 const dhtB = dhts[1];
-                const stub = sinon.stub(dhtA, "_getValueOrPeers").callsArgWithAsync(2, error);
+                const stub = sinon.stub(dhtA, "_getValueOrPeersAsync").rejects(error);
 
                 waterfall([
                     (cb) => connect(dhtA, dhtB, cb),
@@ -1074,7 +1082,7 @@ describe("common", () => {
 
                 const dhtA = dhts[0];
                 const dhtB = dhts[1];
-                const stub = sinon.stub(dhtA, "_getValueOrPeers").callsArgWithAsync(2, error);
+                const stub = sinon.stub(dhtA, "_getValueOrPeersAsync").rejects(error);
 
                 waterfall([
                     (cb) => connect(dhtA, dhtB, cb),
@@ -1114,6 +1122,127 @@ describe("common", () => {
                         stub.restore();
                         tdht.teardown(done);
                     });
+                });
+            });
+        });
+    });
+
+    describe("multiple nodes", () => {
+        const n = 8;
+        let tdht;
+        let dhts;
+
+        // spawn nodes
+        before(function (done) {
+            this.timeout(10 * 1000);
+
+            tdht = new TestDHT();
+            tdht.spawn(n, (err, res) => {
+                expect(err).to.not.exist();
+                dhts = res;
+
+                done();
+            });
+        });
+
+        // connect nodes
+        before((done) => {
+            // all nodes except the last one
+            const range = Array.from(Array(n - 1).keys());
+
+            // connect the last one with the others one by one
+            parallel(range.map((i) =>
+                (cb) => connect(dhts[n - 1], dhts[i], cb)), done);
+        });
+
+        after(function (done) {
+            this.timeout(10 * 1000);
+
+            tdht.teardown(done);
+        });
+
+        it('put to "bootstrap" node and get with the others', function (done) {
+            this.timeout(10 * 1000);
+
+            dhts[7].put(Buffer.from("/v/hello0"), Buffer.from("world"), (err) => {
+                expect(err).to.not.exist();
+
+                parallel([
+                    (cb) => dhts[0].get(Buffer.from("/v/hello0"), { maxTimeout: 1000 }, cb),
+                    (cb) => dhts[1].get(Buffer.from("/v/hello0"), { maxTimeout: 1000 }, cb),
+                    (cb) => dhts[2].get(Buffer.from("/v/hello0"), { maxTimeout: 1000 }, cb),
+                    (cb) => dhts[3].get(Buffer.from("/v/hello0"), { maxTimeout: 1000 }, cb),
+                    (cb) => dhts[4].get(Buffer.from("/v/hello0"), { maxTimeout: 1000 }, cb),
+                    (cb) => dhts[5].get(Buffer.from("/v/hello0"), { maxTimeout: 1000 }, cb),
+                    (cb) => dhts[6].get(Buffer.from("/v/hello0"), { maxTimeout: 1000 }, cb)
+                ], (err, res) => {
+                    expect(err).to.not.exist();
+                    expect(res[0]).to.eql(Buffer.from("world"));
+                    expect(res[1]).to.eql(Buffer.from("world"));
+                    expect(res[2]).to.eql(Buffer.from("world"));
+                    expect(res[3]).to.eql(Buffer.from("world"));
+                    expect(res[4]).to.eql(Buffer.from("world"));
+                    expect(res[5]).to.eql(Buffer.from("world"));
+                    expect(res[6]).to.eql(Buffer.from("world"));
+                    done();
+                });
+            });
+        });
+
+        it("put to a node and get with the others", function (done) {
+            this.timeout(10 * 1000);
+
+            dhts[1].put(Buffer.from("/v/hello1"), Buffer.from("world"), (err) => {
+                expect(err).to.not.exist();
+
+                parallel([
+                    (cb) => dhts[0].get(Buffer.from("/v/hello1"), { maxTimeout: 1000 }, cb),
+                    (cb) => dhts[2].get(Buffer.from("/v/hello1"), { maxTimeout: 1000 }, cb),
+                    (cb) => dhts[3].get(Buffer.from("/v/hello1"), { maxTimeout: 1000 }, cb),
+                    (cb) => dhts[4].get(Buffer.from("/v/hello1"), { maxTimeout: 1000 }, cb),
+                    (cb) => dhts[5].get(Buffer.from("/v/hello1"), { maxTimeout: 1000 }, cb),
+                    (cb) => dhts[6].get(Buffer.from("/v/hello1"), { maxTimeout: 1000 }, cb),
+                    (cb) => dhts[7].get(Buffer.from("/v/hello1"), { maxTimeout: 1000 }, cb)
+                ], (err, res) => {
+                    expect(err).to.not.exist();
+                    expect(res[0]).to.eql(Buffer.from("world"));
+                    expect(res[1]).to.eql(Buffer.from("world"));
+                    expect(res[2]).to.eql(Buffer.from("world"));
+                    expect(res[3]).to.eql(Buffer.from("world"));
+                    expect(res[4]).to.eql(Buffer.from("world"));
+                    expect(res[5]).to.eql(Buffer.from("world"));
+                    expect(res[6]).to.eql(Buffer.from("world"));
+                    done();
+                });
+            });
+        });
+
+        it("put to several nodes in series with different values and get the last one in a subset of them", function (done) {
+            this.timeout(20 * 1000);
+            const key = Buffer.from("/v/hallo");
+            const result = Buffer.from("world4");
+
+            series([
+                (cb) => dhts[0].put(key, Buffer.from("world0"), cb),
+                (cb) => dhts[1].put(key, Buffer.from("world1"), cb),
+                (cb) => dhts[2].put(key, Buffer.from("world2"), cb),
+                (cb) => dhts[3].put(key, Buffer.from("world3"), cb),
+                (cb) => dhts[4].put(key, Buffer.from("world4"), cb)
+            ], (err) => {
+                expect(err).to.not.exist();
+
+                parallel([
+                    (cb) => dhts[3].get(key, { maxTimeout: 2000 }, cb),
+                    (cb) => dhts[4].get(key, { maxTimeout: 2000 }, cb),
+                    (cb) => dhts[5].get(key, { maxTimeout: 2000 }, cb),
+                    (cb) => dhts[6].get(key, { maxTimeout: 2000 }, cb)
+                ], (err, res) => {
+                    expect(err).to.not.exist();
+                    expect(res[0]).to.eql(result);
+                    expect(res[1]).to.eql(result);
+                    expect(res[2]).to.eql(result);
+                    expect(res[3]).to.eql(result);
+                    done();
                 });
             });
         });

@@ -1,7 +1,5 @@
-const parallel = require("async/parallel");
-const series = require("async/series");
-
 const {
+    async: { parallel, series },
     multiformat: { multistream },
     p2p: { secio, Connection, PeerId },
     stream: { pull }

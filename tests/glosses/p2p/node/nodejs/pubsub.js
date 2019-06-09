@@ -1,11 +1,8 @@
-const parallel = require("async/parallel");
-const series = require("async/series");
-
 const createNode = require("../utils/create_node");
 
 const {
-    lodash: { times: _times },
-    std: { path }
+    async: { parallel, series },
+    lodash: { times: _times }
 } = adone;
 
 const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "node", ...args);

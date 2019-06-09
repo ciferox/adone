@@ -1,7 +1,7 @@
-const waterfall = require("async/waterfall");
 const defaultsDeep = require("@nodeutils/defaults-deep");
 
 const {
+    async: { waterfall },
     p2p: { Node, PeerId, PeerInfo, transport: { WS }, KadDHT }
 } = adone;
 

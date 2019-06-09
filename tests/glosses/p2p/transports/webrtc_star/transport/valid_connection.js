@@ -1,6 +1,5 @@
-const series = require("async/series");
-
 const {
+    async: { series },
     multiformat: { multiaddr },
     stream: { pull }
 } = adone;

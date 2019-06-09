@@ -1,6 +1,3 @@
-const timeout = require("async/timeout");
-const setImmediate = require("async/setImmediate");
-
 const errcode = require("err-code");
 
 const rpc = require("./rpc");
@@ -9,6 +6,7 @@ const Message = require("./message");
 const utils = require("./utils");
 
 const {
+    async: { timeout, setImmediate },
     stream: { pull }
 } = adone;
 const { lengthPrefixed: lp } = pull;

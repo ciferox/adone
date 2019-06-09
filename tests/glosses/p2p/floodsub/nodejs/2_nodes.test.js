@@ -1,10 +1,8 @@
-const parallel = require("async/parallel");
-const series = require("async/series");
-const times = require("lodash/times");
-
 const {
+    async: { parallel, series },
     is,
     assertion,
+    lodash: { times },
     p2p: { FloodSub }
 } = adone;
 
@@ -27,8 +25,8 @@ describe("basics between 2 nodes", () => {
 
         before((done) => {
             series([
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb),
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb)
+                (cb) => createNode(cb),
+                (cb) => createNode(cb)
             ], (err, nodes) => {
                 if (err) {
                     return done(err);
@@ -211,8 +209,8 @@ describe("basics between 2 nodes", () => {
 
         before((done) => {
             parallel([
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb),
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb)
+                (cb) => createNode(cb),
+                (cb) => createNode(cb)
             ], (err, nodes) => {
                 expect(err).to.not.exist();
 
@@ -287,8 +285,8 @@ describe("basics between 2 nodes", () => {
 
         before((done) => {
             series([
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb),
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb)
+                (cb) => createNode(cb),
+                (cb) => createNode(cb)
             ], (cb, nodes) => {
                 nodeA = nodes[0];
                 nodeB = nodes[1];
@@ -354,8 +352,8 @@ describe("basics between 2 nodes", () => {
 
         before((done) => {
             series([
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb),
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb)
+                (cb) => createNode(cb),
+                (cb) => createNode(cb)
             ], (cb, nodes) => {
                 nodeA = nodes[0];
                 nodeB = nodes[1];
@@ -404,8 +402,8 @@ describe("basics between 2 nodes", () => {
             sandbox = assertion.spy.sandbox();
 
             series([
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb),
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb)
+                (cb) => createNode(cb),
+                (cb) => createNode(cb)
             ], (err, nodes) => {
                 if (err) {
                     return done(err);
@@ -467,8 +465,8 @@ describe("basics between 2 nodes", () => {
             sandbox = assertion.spy.sandbox();
 
             series([
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb),
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb)
+                (cb) => createNode(cb),
+                (cb) => createNode(cb)
             ], (err, nodes) => {
                 if (err) {
                     return done(err);
@@ -541,8 +539,8 @@ describe("basics between 2 nodes", () => {
             sandbox = assertion.spy.sandbox();
 
             series([
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb),
-                (cb) => createNode("/ip4/127.0.0.1/tcp/0", cb)
+                (cb) => createNode(cb),
+                (cb) => createNode(cb)
             ], (err, nodes) => {
                 if (err) {
                     return done(err);

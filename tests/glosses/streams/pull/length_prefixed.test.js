@@ -1,5 +1,5 @@
 const {
-    data:{ varint },
+    data: { varint },
     stream: { pull }
 } = adone;
 const { block, pushable: Pushable, lengthPrefixed: lp, reader: Reader } = pull;
@@ -108,16 +108,14 @@ describe("stream", "pull", "lengthPrefixed", () => {
             pull.values(),
             lp.encode(),
             pull.collect((err, encoded) => {
-                if (err) {
-                    throw err;
-                }
-
-                expect(
-                    encoded
-                ).to.be.eql([Buffer.alloc(1, 0)]);
+                expect(err).to.eql(null);
+                expect(encoded).to.eql([]);
 
                 pull(
-                    pull.values(),
+                    pull.values([
+                        Buffer.alloc(0),
+                        Buffer.from("more data")
+                    ]),
                     lp.encode(),
                     lp.decode(),
                     pull.collect((err, decoded) => {
@@ -127,7 +125,10 @@ describe("stream", "pull", "lengthPrefixed", () => {
 
                         expect(
                             decoded
-                        ).to.be.eql([]);
+                        ).to.be.eql([
+                            Buffer.alloc(0),
+                            Buffer.from("more data")
+                        ]);
 
                         done();
                     })

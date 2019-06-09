@@ -1,12 +1,11 @@
 const nodes = require("./fixtures/nodes");
-const waterfall = require("async/waterfall");
 const sinon = require("sinon");
 
 const {
+    async: { waterfall },
     multiformat: { multiaddr },
     p2p: { Connection, PeerId, PeerInfo },
-    stream: { pull },
-    std: { path }
+    stream: { pull }
 } = adone;
 const { collect, handshake, lengthPrefixed: lp, values, asyncMap, pair, protocolBuffers: pb } = pull;
 

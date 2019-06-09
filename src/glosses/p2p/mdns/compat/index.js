@@ -1,9 +1,12 @@
 // Compatibility with Go libp2p MDNS
 
 const EE = require("events");
-const parallel = require("async/parallel");
 const Responder = require("./responder");
 const Querier = require("./querier");
+
+const {
+    async: { parallel }
+} = adone;
 
 class GoMulticastDNS extends EE {
     constructor(peerInfo) {

@@ -4,7 +4,7 @@ export default (ctx) => {
     let firstRun = true;
     let sigS;
 
-    ctx.before((done) => {
+    ctx.before(async () => {
         const options = {
             port: 15555,
             host: "127.0.0.1",
@@ -15,18 +15,11 @@ export default (ctx) => {
             firstRun = false;
         }
 
-        sigServer.start(options, (err, server) => {
-            if (err) {
-                throw err;
-            }
-
-            sigS = server;
-            console.log("signalling on:", server.info.uri);
-            done();
-        });
+        sigS = await sigServer.start(options);
+        console.log("signalling on:", sigS.info.uri);
     });
 
-    ctx.after((done) => {
-        sigS.stop().then(done);
+    ctx.after(async () => {
+        await sigS.stop();
     });
 };

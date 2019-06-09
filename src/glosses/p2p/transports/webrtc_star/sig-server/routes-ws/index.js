@@ -1,26 +1,20 @@
-/**
- * eslint-disable func-style
- */
-/**
- * eslint-disable func-style
- */
+const {
+    is
+} = adone;
+
 const config = require("../config");
 const log = config.log;
 const SocketIO = require("socket.io");
 // const client = require("prom-client");
 
-const {
-    is
-} = adone;
-
-const fake = {
-    gauge: {
-        set: () => { }
-    },
-    counter: {
-        inc: () => { }
-    }
-};
+// const fake = {
+//     gauge: {
+//         set: () => { }
+//     },
+//     counter: {
+//         inc: () => { }
+//     }
+// };
 
 module.exports = function (http, hasMetrics) {
     const io = new SocketIO(http.listener);

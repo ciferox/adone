@@ -3,10 +3,10 @@ const {
 } = adone;
 const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", ...args);
 
-const setImmediate = require("async/setImmediate");
+const promiseToCallback = require("promise-to-callback");
+const promisify = require("promisify-es6");
 
 const Query = require(srcPath("query"));
-
 const createPeerInfo = require("./utils/create_peer_info");
 const createDisjointTracks = require("./utils/create_disjoint_tracks");
 const kadUtils = require(srcPath("utils"));
@@ -36,6 +36,7 @@ describe("Query", () => {
                 if (err) {
                     return done(err);
                 }
+
                 dht = d;
                 done();
             });
@@ -49,23 +50,23 @@ describe("Query", () => {
         dht.switch.dial = (peer, callback) => callback();
 
         let i = 0;
-        const query = (p, cb) => {
+        const queryFunc = async (p) => {
             if (i++ === 1) {
                 expect(p.id).to.eql(peerInfos[2].id.id);
 
-                return cb(null, {
+                return {
                     value: Buffer.from("cool"),
                     pathComplete: true
-                });
+                };
             }
             expect(p.id).to.eql(peerInfos[1].id.id);
-            cb(null, {
+            return {
                 closerPeers: [peerInfos[2]]
-            });
+            };
         };
 
-        const q = new Query(dht, peer.id.id, () => query);
-        q.run([peerInfos[1].id], (err, res) => {
+        const q = new Query(dht, peer.id.id, () => queryFunc);
+        promiseToCallback(q.run([peerInfos[1].id]))((err, res) => {
             expect(err).to.not.exist();
             expect(res.paths[0].value).to.eql(Buffer.from("cool"));
             expect(res.paths[0].success).to.eql(true);
@@ -82,20 +83,20 @@ describe("Query", () => {
 
         let i = 0;
         const visited = [];
-        const query = (p, cb) => {
+        const queryFunc = async (p) => {
             visited.push(p);
 
             if (i++ === 1) {
-                return cb(new Error("fail"));
+                throw new Error("fail");
             }
 
-            cb(null, {
+            return {
                 closerPeers: [peerInfos[2]]
-            });
+            };
         };
 
-        const q = new Query(dht, peer.id.id, () => query);
-        q.run([peerInfos[1].id], (err, res) => {
+        const q = new Query(dht, peer.id.id, () => queryFunc);
+        promiseToCallback(q.run([peerInfos[1].id]))((err, res) => {
             expect(err).not.to.exist();
 
             // Should have visited
@@ -118,10 +119,12 @@ describe("Query", () => {
         // mock this so we can dial non existing peers
         dht.switch.dial = (peer, callback) => callback();
 
-        const query = (p, cb) => cb(new Error("fail"));
+        const queryFunc = async (p) => {
+            throw new Error("fail");
+        };
 
-        const q = new Query(dht, peer.id.id, () => query);
-        q.run([peerInfos[1].id], (err, res) => {
+        const q = new Query(dht, peer.id.id, () => queryFunc);
+        promiseToCallback(q.run([peerInfos[1].id]))((err, res) => {
             expect(err).to.exist();
             expect(err.message).to.eql("fail");
             done();
@@ -131,10 +134,10 @@ describe("Query", () => {
     it("returns empty run if initial peer list is empty", (done) => {
         const peer = peerInfos[0];
 
-        const query = (p, cb) => { };
+        const queryFunc = async (p) => { };
 
-        const q = new Query(dht, peer.id.id, () => query);
-        q.run([], (err, res) => {
+        const q = new Query(dht, peer.id.id, () => queryFunc);
+        promiseToCallback(q.run([]))((err, res) => {
             expect(err).to.not.exist();
 
             // Should not visit any peers
@@ -151,14 +154,14 @@ describe("Query", () => {
         // mock this so we can dial non existing peers
         dht.switch.dial = (peer, callback) => callback();
 
-        const query = (p, cb) => {
-            cb(null, {
+        const queryFunc = async (p) => {
+            return {
                 closerPeers: [peerInfos[2]]
-            });
+            };
         };
 
-        const q = new Query(dht, peer.id.id, () => query);
-        q.run([peerInfos[1].id], (err, res) => {
+        const q = new Query(dht, peer.id.id, () => queryFunc);
+        promiseToCallback(q.run([peerInfos[1].id]))((err, res) => {
             expect(err).to.not.exist();
             expect(res.finalSet.size).to.eql(2);
             done();
@@ -199,15 +202,15 @@ describe("Query", () => {
             ]
         };
 
-        const query = (p, cb) => {
+        const queryFunc = async (p) => {
             const closer = topology[p.toB58String()];
-            cb(null, {
+            return {
                 closerPeers: closer || []
-            });
+            };
         };
 
-        const q = new Query(dht, peer.id.id, () => query);
-        q.run([peerInfos[1].id, peerInfos[2].id, peerInfos[3].id], (err, res) => {
+        const q = new Query(dht, peer.id.id, () => queryFunc);
+        promiseToCallback(q.run([peerInfos[1].id, peerInfos[2].id, peerInfos[3].id]))((err, res) => {
             expect(err).to.not.exist();
 
             // Should visit all peers
@@ -238,17 +241,17 @@ describe("Query", () => {
             }
         };
 
-        const query = (p, cb) => {
+        const queryFunc = async (p) => {
             const res = topology[p.toB58String()] || {};
-            cb(null, {
+            return {
                 closerPeers: res.closer || [],
                 value: res.value,
                 pathComplete: res.pathComplete
-            });
+            };
         };
 
-        const q = new Query(dht, peer.id.id, () => query);
-        q.run([peerInfos[1].id], (err, res) => {
+        const q = new Query(dht, peer.id.id, () => queryFunc);
+        promiseToCallback(q.run([peerInfos[1].id]))((err, res) => {
             expect(err).to.not.exist();
 
             // Should complete successfully
@@ -288,27 +291,30 @@ describe("Query", () => {
             };
 
             const visited = [];
-            const query = (p, cb) => {
+            const queryFunc = async (p) => {
                 visited.push(p);
 
-                const invokeCb = () => {
+                const getResult = async () => {
                     const res = topology[p.toB58String()] || {};
-                    cb(null, {
+                    // this timeout is necesary so `dhtA.stop` has time to stop the
+                    // requests before they all complete
+                    await new Promise((resolve) => setTimeout(resolve, 100));
+                    return {
                         closerPeers: res.closer || []
-                    });
+                    };
                 };
 
                 // Shut down after visiting peerInfos[2]
                 if (p.toB58String() === peerInfos[2].id.toB58String()) {
-                    dhtA.stop(invokeCb);
+                    await promisify((cb) => dhtA.stop(cb));
                     setTimeout(checkExpectations, 100);
-                } else {
-                    invokeCb();
+                    return getResult();
                 }
+                return getResult();
             };
 
-            const q = new Query(dhtA, peer.id.id, () => query);
-            q.run([peerInfos[1].id], (err, res) => {
+            const q = new Query(dhtA, peer.id.id, () => queryFunc);
+            promiseToCallback(q.run([peerInfos[1].id]))((err, res) => {
                 expect(err).to.not.exist();
             });
 
@@ -342,17 +348,17 @@ describe("Query", () => {
                 }
             };
 
-            const query = (p, cb) => {
+            const queryFunc = async (p) => {
                 const res = topology[p.toB58String()] || {};
-                cb(null, {
+                return {
                     closerPeers: res.closer || []
-                });
+                };
             };
 
-            const q = new Query(dhtA, peer.id.id, () => query);
+            const q = new Query(dhtA, peer.id.id, () => queryFunc);
 
             dhtA.stop(() => {
-                q.run([peerInfos[1].id], (err, res) => {
+                promiseToCallback(q.run([peerInfos[1].id]))((err, res) => {
                     expect(err).to.not.exist();
 
                     // Should not visit any peers
@@ -399,19 +405,18 @@ describe("Query", () => {
             }
         };
 
-        const query = (p, cb) => {
+        const queryFunc = async (p) => {
             const res = topology[p.toB58String()] || {};
-            setTimeout(() => {
-                cb(null, {
-                    closerPeers: res.closer || [],
-                    value: res.value,
-                    pathComplete: res.pathComplete
-                });
-            }, res.delay);
+            await new Promise((resolve) => setTimeout(resolve, res.delay));
+            return {
+                closerPeers: res.closer || [],
+                value: res.value,
+                pathComplete: res.pathComplete
+            };
         };
 
-        const q = new Query(dht, peer.id.id, () => query);
-        q.run([peerInfos[1].id, peerInfos[4].id], (err, res) => {
+        const q = new Query(dht, peer.id.id, () => queryFunc);
+        promiseToCallback(q.run([peerInfos[1].id, peerInfos[4].id]))((err, res) => {
             expect(err).to.not.exist();
 
             // We should get back the values from both paths
@@ -465,22 +470,21 @@ describe("Query", () => {
         };
 
         const visited = [];
-        const query = (p, cb) => {
+        const queryFunc = async (p) => {
             visited.push(p);
 
             const res = topology[p.toB58String()] || {};
-            setTimeout(() => {
-                cb(null, {
-                    closerPeers: res.closer || [],
-                    value: res.value,
-                    pathComplete: res.pathComplete,
-                    queryComplete: res.queryComplete
-                });
-            }, res.delay);
+            await new Promise((resolve) => setTimeout(resolve, res.delay));
+            return {
+                closerPeers: res.closer || [],
+                value: res.value,
+                pathComplete: res.pathComplete,
+                queryComplete: res.queryComplete
+            };
         };
 
-        const q = new Query(dht, peer.id.id, () => query);
-        q.run([peerInfos[1].id, peerInfos[4].id], (err, res) => {
+        const q = new Query(dht, peer.id.id, () => queryFunc);
+        promiseToCallback(q.run([peerInfos[1].id, peerInfos[4].id]))((err, res) => {
             expect(err).to.not.exist();
 
             // We should only get back the value from the path 4 -> 5
@@ -542,24 +546,23 @@ describe("Query", () => {
         };
 
         const visited = [];
-        const query = (p, cb) => {
+        const queryFunc = async (p) => {
             visited.push(p);
 
             const res = topology[p.toB58String()] || {};
-            setTimeout(() => {
-                if (res.error) {
-                    return cb(new Error("path error"));
-                }
-                cb(null, {
-                    closerPeers: res.closer || [],
-                    value: res.value,
-                    pathComplete: res.pathComplete
-                });
-            }, res.delay);
+            await new Promise((resolve) => setTimeout(resolve, res.delay));
+            if (res.error) {
+                throw new Error("path error");
+            }
+            return {
+                closerPeers: res.closer || [],
+                value: res.value,
+                pathComplete: res.pathComplete
+            };
         };
 
-        const q = new Query(dht, peer.id.id, () => query);
-        q.run([peerInfos[1].id, peerInfos[4].id], (err, res) => {
+        const q = new Query(dht, peer.id.id, () => queryFunc);
+        promiseToCallback(q.run([peerInfos[1].id, peerInfos[4].id]))((err, res) => {
             expect(err).to.not.exist();
 
             // We should only get back the value from the path 1 -> 2 -> 3
@@ -631,16 +634,16 @@ describe("Query", () => {
                 const peerIdToInfo = (peerId) => peerInfos.find((pi) => pi.id === peerId);
 
                 const visited = [];
-                const query = (peerId, cb) => {
+                const queryFunc = async (peerId) => {
                     visited.push(peerId);
                     const i = peerIndex(peerId);
                     const closerIndexes = topology[i] || [];
                     const closerPeers = closerIndexes.map((j) => peerIdToInfo(sorted[j]));
-                    setTimeout(() => cb(null, { closerPeers }));
+                    return { closerPeers };
                 };
 
-                const q = new Query(dht, peerInfos[0].id.id, () => query);
-                q.run(initial, (err, res) => {
+                const q = new Query(dht, peerInfos[0].id.id, () => queryFunc);
+                promiseToCallback(q.run(initial))((err, res) => {
                     expect(err).to.not.exist();
 
                     // Should query 19 peers, then find some peers closer to the key, and
@@ -698,7 +701,7 @@ describe("Query", () => {
             let targetVisited = false;
 
             const q = new Query(dht, targetId, (trackNum) => {
-                return (p, cb) => {
+                return async (p) => {
                     const response = getResponse(p, trackNum);
                     expect(response).to.exist(); // or we aren't on the right track
                     if (response.end && !response.pathComplete) {
@@ -708,13 +711,13 @@ describe("Query", () => {
                         targetVisited = true;
                         expect(badEndVisited).to.eql(false);
                     }
-                    setImmediate(() => cb(null, response));
+                    return response;
                 };
             });
             q.concurrency = 1;
             // due to round-robin allocation of peers from starts, first
             // path is good, second bad
-            q.run(starts, (err, res) => {
+            promiseToCallback(q.run(starts))((err, res) => {
                 expect(err).to.not.exist();
                 // we should reach the target node
                 expect(targetVisited).to.eql(true);
@@ -733,14 +736,14 @@ describe("Query", () => {
         // mock this so we can dial non existing peers
         dht.switch.dial = (peer, callback) => callback();
 
-        const query = (p, cb) => {
-            cb(null, {
+        const queryFunc = async (p) => {
+            return {
                 closerPeers: [peerInfos[2]]
-            });
+            };
         };
 
-        const q = new Query(dht, peer.id.id, () => query);
-        q.run([peerInfos[1].id], (err, res) => {
+        const q = new Query(dht, peer.id.id, () => queryFunc);
+        promiseToCallback(q.run([peerInfos[1].id]))((err, res) => {
             expect(err).to.not.exist();
         });
 

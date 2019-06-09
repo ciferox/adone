@@ -1,6 +1,5 @@
-const series = require("async/series");
-
 const {
+    async: { series },
     p2p: { KadDHT, transport: { TCP }, Switch, PeerBook, Connection, muxer: { mplex } },
     stream: { pull }
 } = adone;

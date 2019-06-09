@@ -1,9 +1,7 @@
 const {
+    async: { map, series },
     p2p: { PeerInfo }
 } = adone;
-
-const map = require("async/map");
-const series = require("async/series");
 
 const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "mdns", ...args);
 const GoMulticastDNS = require(srcPath("compat"));
@@ -68,7 +66,7 @@ describe("GoMulticastDNS", () => {
         const mdnsB = new GoMulticastDNS(peerInfos[1]);
 
         mdnsA.on("peer", (info) => {
-            if (!info.id.isEqual(peerInfos[1].id)) {return};
+            if (!info.id.isEqual(peerInfos[1].id)) { return };
             expect(info.multiaddrs.has(peerAddrs[1])).to.be.true();
             done();
         });

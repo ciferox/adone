@@ -1,5 +1,7 @@
 /* eslint-disable func-style */
-const waterfall = require("async/waterfall");
+const {
+    async: { waterfall }
+} = adone;
 
 const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", ...args);
 const {
@@ -53,13 +55,13 @@ function createDisjointTracks(peerInfos, goodLength, callback) {
                         end: true,
                         closerPeers: []
                     };
-                    
-                } 
+
+                }
                 const infoIdx = ids.indexOf(track[nextPos]);
                 return {
                     closerPeers: [peerInfos[infoIdx]]
                 };
-                
+
             };
 
             cb(null, target.id, [goodTrack[0], badTrack[0]], next);

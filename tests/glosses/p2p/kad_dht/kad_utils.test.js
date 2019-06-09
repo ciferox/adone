@@ -1,8 +1,8 @@
 const base32 = require("base32.js");
 const distance = require("xor-distance");
-const waterfall = require("async/waterfall");
 
 const {
+    async: { waterfall },
     p2p: { PeerId }
 } = adone;
 
@@ -35,6 +35,24 @@ describe("kad utils", () => {
                     .to.eql(Buffer.from("b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9", "hex"));
                 done();
             });
+        });
+    });
+
+    describe("withTimeout", () => {
+        it("rejects with the error in the original function", async () => {
+            const original = async () => {
+                throw new Error("explode");
+            };
+            const asyncFn = utils.withTimeout(original, 100);
+            let err;
+            try {
+                await asyncFn();
+            } catch (_err) {
+                err = _err;
+            }
+
+            expect(err).to.exist();
+            expect(err.message).to.include("explode");
         });
     });
 

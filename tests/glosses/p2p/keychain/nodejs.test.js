@@ -1,7 +1,7 @@
 const rimraf = require("rimraf");
-const series = require("async/series");
 
 const {
+    async: { series },
     datastore: { backend: { FsDatastore } },
     std: { os, path }
 } = adone;

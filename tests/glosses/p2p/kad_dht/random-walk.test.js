@@ -1,11 +1,13 @@
-
 const sinon = require("sinon");
+
+const {
+    assert: { AssertionError }
+} = adone;
 
 const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", ...args);
 
 const RandomWalk = require(srcPath("random-walk"));
 const { defaultRandomWalk } = require(srcPath("constants"));
-const { AssertionError } = require("assert");
 
 describe("Random Walk", () => {
     const mockDHT = {

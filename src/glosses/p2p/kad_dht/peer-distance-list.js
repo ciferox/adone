@@ -1,6 +1,9 @@
 const distance = require("xor-distance");
 const utils = require("./utils");
-const map = require("async/map");
+
+const {
+    async: { map }
+} = adone;
 
 /**
  * Maintains a list of peerIds sorted by distance from a DHT key.

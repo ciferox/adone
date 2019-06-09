@@ -1,5 +1,3 @@
-
-
 /**
  * @private
  * @param {EventEmitter} that

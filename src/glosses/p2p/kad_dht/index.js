@@ -1,8 +1,13 @@
+const {
+    is,
+    datastore: { backend: { MemoryDatastore } },
+    async: { waterfall, each, filter, timeout },
+    p2p: { crypto, PeerId, PeerInfo, record }
+} = adone;
+
 const { EventEmitter } = require("events");
-const waterfall = require("async/waterfall");
-const each = require("async/each");
-const filter = require("async/filter");
-const timeout = require("async/timeout");
+const promiseToCallback = require("promise-to-callback");
+
 const errcode = require("err-code");
 
 const RoutingTable = require("./routing");
@@ -16,12 +21,6 @@ const Message = require("./message");
 const RandomWalk = require("./random-walk");
 const QueryManager = require("./query-manager");
 const assert = require("assert");
-
-const {
-    is,
-    datastore: { backend: { MemoryDatastore } },
-    p2p: { crypto, record: libp2pRecord, PeerId, PeerInfo }
-} = adone;
 
 /**
  * A DHT implementation modeled after Kademlia with S/Kademlia modifications.
@@ -108,12 +107,12 @@ class KadDHT extends EventEmitter {
         this.providers = new Providers(this.datastore, this.peerInfo.id);
 
         this.validators = {
-            pk: libp2pRecord.validator.validators.pk,
+            pk: record.validator.validators.pk,
             ...options.validators
         };
 
         this.selectors = {
-            pk: libp2pRecord.selection.selectors.pk,
+            pk: record.selection.selectors.pk,
             ...options.selectors
         };
 
@@ -348,37 +347,41 @@ class KadDHT extends EventEmitter {
                         paths.push(pathVals);
 
                         // Here we return the query function to use on this particular disjoint path
-                        return (peer, cb) => {
-                            this._getValueOrPeers(peer, key, (err, rec, peers) => {
-                                if (err) {
-                                    // If we have an invalid record we just want to continue and fetch a new one.
-                                    if (!(err.code === "ERR_INVALID_RECORD")) {
-                                        return cb(err);
-                                    }
+                        return async (peer) => {
+                            let rec; let peers; let lookupErr;
+                            try {
+                                const results = await this._getValueOrPeersAsync(peer, key);
+                                rec = results.record;
+                                peers = results.peers;
+                            } catch (err) {
+                                // If we have an invalid record we just want to continue and fetch a new one.
+                                if (err.code !== "ERR_INVALID_RECORD") {
+                                    throw err;
                                 }
+                                lookupErr = err;
+                            }
 
-                                const res = { closerPeers: peers };
+                            const res = { closerPeers: peers };
 
-                                if ((rec && rec.value) || (err && err.code === "ERR_INVALID_RECORD")) {
-                                    pathVals.push({
-                                        val: rec && rec.value,
-                                        from: peer
-                                    });
-                                }
+                            if ((rec && rec.value) || lookupErr) {
+                                pathVals.push({
+                                    val: rec && rec.value,
+                                    from: peer
+                                });
+                            }
 
-                                // enough is enough
-                                if (pathVals.length >= pathSize) {
-                                    res.pathComplete = true;
-                                }
+                            // enough is enough
+                            if (pathVals.length >= pathSize) {
+                                res.pathComplete = true;
+                            }
 
-                                cb(null, res);
-                            });
+                            return res;
                         };
                     });
 
                     // run our query
                     timeout((_cb) => {
-                        query.run(rtp, _cb);
+                        promiseToCallback(query.run(rtp))(_cb);
                     }, options.timeout)((err, res) => {
                         query.stop();
                         cb(err, res);
@@ -427,20 +430,16 @@ class KadDHT extends EventEmitter {
                 // There is no distinction between the disjoint paths,
                 // so there are no per-path variables in this scope.
                 // Just return the actual query function.
-                return (peer, callback) => {
-                    waterfall([
-                        (cb) => this._closerPeersSingle(key, peer, cb),
-                        (closer, cb) => {
-                            cb(null, {
-                                closerPeers: closer,
-                                pathComplete: options.shallow ? true : undefined
-                            });
-                        }
-                    ], callback);
+                return async (peer) => {
+                    const closer = await this._closerPeersSingleAsync(key, peer);
+                    return {
+                        closerPeers: closer,
+                        pathComplete: options.shallow ? true : undefined
+                    };
                 };
             });
 
-            q.run(tablePeers, (err, res) => {
+            promiseToCallback(q.run(tablePeers))((err, res) => {
                 if (err) {
                     return callback(err);
                 }
@@ -542,7 +541,7 @@ class KadDHT extends EventEmitter {
             (cb) => this.getClosestPeers(key.buffer, cb),
             (peers, cb) => {
                 const msg = new Message(Message.TYPES.ADD_PROVIDER, key.buffer, 0);
-                msg.providerPeers = peers.map((p) => new PeerInfo(p));
+                msg.providerPeers = [this.peerInfo];
 
                 each(peers, (peer, cb) => {
                     this._log("putProvider %s to %s", key.toBaseEncodedString(), peer.toB58String());
@@ -654,30 +653,26 @@ class KadDHT extends EventEmitter {
                         // There is no distinction between the disjoint paths,
                         // so there are no per-path variables in this scope.
                         // Just return the actual query function.
-                        return (peer, cb) => {
-                            waterfall([
-                                (cb) => this._findPeerSingle(peer, id, cb),
-                                (msg, cb) => {
-                                    const match = msg.closerPeers.find((p) => p.id.isEqual(id));
+                        return async (peer) => {
+                            const msg = await this._findPeerSingleAsync(peer, id);
+                            const match = msg.closerPeers.find((p) => p.id.isEqual(id));
 
-                                    // found it
-                                    if (match) {
-                                        return cb(null, {
-                                            peer: match,
-                                            queryComplete: true
-                                        });
-                                    }
+                            // found it
+                            if (match) {
+                                return {
+                                    peer: match,
+                                    queryComplete: true
+                                };
+                            }
 
-                                    cb(null, {
-                                        closerPeers: msg.closerPeers
-                                    });
-                                }
-                            ], cb);
+                            return {
+                                closerPeers: msg.closerPeers
+                            };
                         };
                     });
 
                     timeout((_cb) => {
-                        query.run(peers, _cb);
+                        promiseToCallback(query.run(peers))(_cb);
                     }, options.timeout)((err, res) => {
                         query.stop();
                         cb(err, res);

@@ -1,4 +1,6 @@
-const parallel = require("async/parallel");
+const {
+    async: { parallel }
+} = adone;
 
 const errcode = require("err-code");
 

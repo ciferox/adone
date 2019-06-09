@@ -1,8 +1,7 @@
 const {
-    p2p: { PeerId}
+    async: { series },
+    p2p: { PeerId }
 } = adone;
-
-const series = require("async/series");
 
 const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", ...args);
 

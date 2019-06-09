@@ -1,15 +1,9 @@
-const parallel = require("async/parallel");
-const waterfall = require("async/waterfall");
-const map = require("async/map");
-const timesSeries = require("async/timesSeries");
-const each = require("async/each");
-const eachSeries = require("async/eachSeries");
-
 const {
+    async: { parallel, waterfall, map, timesSeries, each, eachSeries },
     datastore: { backend: { MemoryDatastore, LevelDatastore } },
     lodash: { range },
     std: { os, path },
-    multiformat: { CID, multihashingAsync: multihashing }
+    multiformat: { CID, multihashingAsync }
 } = adone;
 const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", ...args);
 
@@ -59,7 +53,7 @@ describe("Providers", () => {
         waterfall([
             (cb) => map(
                 range(100),
-                (i, cb) => multihashing(Buffer.from(`hello ${i}`), "sha2-256", cb),
+                (i, cb) => multihashingAsync(Buffer.from(`hello ${i}`), "sha2-256").then((result) => cb(null, result), cb),
                 cb
             ),
             (hashes, cb) => {

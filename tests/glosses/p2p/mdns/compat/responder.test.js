@@ -1,9 +1,8 @@
 const {
+    async: { parallel, map },
     p2p: { PeerInfo }
 } = adone;
 
-const parallel = require("async/parallel");
-const map = require("async/map");
 const MDNS = require("multicast-dns");
 
 const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "mdns", ...args);

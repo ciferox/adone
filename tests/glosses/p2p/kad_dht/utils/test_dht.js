@@ -1,11 +1,7 @@
-const each = require("async/each");
-const series = require("async/series");
-const setImmediate = require("async/setImmediate");
-const times = require("async/times");
-
 const createPeerInfo = require("./create_peer_info");
 
 const {
+    async: { each, series, setImmediate, times },
     is,
     p2p: { KadDHT, muxer: { mplex }, transport: { TCP }, Switch, PeerBook }
 } = adone;

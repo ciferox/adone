@@ -1,6 +1,5 @@
-const times = require("async/times");
-
 const {
+    async: { times },
     p2p: { PeerId, PeerInfo }
 } = adone;
 

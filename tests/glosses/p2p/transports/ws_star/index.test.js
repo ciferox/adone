@@ -1,8 +1,5 @@
-const each = require("async/each");
-const series = require("async/series");
-const map = require("async/map");
-
 const {
+    async: { each, series, map },
     multiformat: { multiaddr },
     p2p: { PeerId, transport: { WSStar } },
     stream: { pull }

@@ -1,10 +1,9 @@
-const parallel = require("async/parallel");
-const series = require("async/series");
 const createNode = require("../utils/create_node");
 const tryEcho = require("../utils/try_echo");
 const echo = require("../utils/echo");
 
 const {
+    async: { parallel, series },
     p2p: { muxer: { spdy, mplex, pullMplex } }
 } = adone;
 

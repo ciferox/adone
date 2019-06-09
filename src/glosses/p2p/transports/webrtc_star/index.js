@@ -5,13 +5,13 @@ const io = require("socket.io-client");
 const EE = require("events").EventEmitter;
 const SimplePeer = require("simple-peer");
 const once = require("once");
-const setImmediate = require("async/setImmediate");
 const webrtcSupport = require("webrtcsupport");
 const utils = require("./utils");
 const cleanUrlSIO = utils.cleanUrlSIO;
 const cleanMultiaddr = utils.cleanMultiaddr;
 
 const {
+    async: { setImmediate },
     is,
     p2p: { Connection, PeerId, PeerInfo },
     stream: { pull: { streamToPullStream: toPull } },

@@ -1,12 +1,14 @@
 const multicastDNS = require("multicast-dns");
 const EventEmitter = require("events").EventEmitter;
-const assert = require("assert");
-const nextTick = require("async/nextTick");
-const parallel = require("async/parallel");
 const debug = require("debug");
 const log = debug("libp2p:mdns");
 const query = require("./query");
 const GoMulticastDNS = require("./compat");
+
+const {
+    assert,
+    async: { nextTick, parallel }
+} = adone;
 
 class MulticastDNS extends EventEmitter {
     constructor(options) {

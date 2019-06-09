@@ -1,6 +1,9 @@
-const parallel = require("async/parallel");
 const createNode = require("../utils/create_node.js");
 const echo = require("../utils/echo");
+
+const {
+    async: { parallel }
+} = adone;
 
 describe("ping", () => {
     let nodeA;

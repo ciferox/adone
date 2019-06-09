@@ -1,11 +1,8 @@
 const {
+    async: { each, eachLimit, setImmediate },
     stream: { pull }
 } = adone;
 const { pair, generate } = pull;
-
-const each = require("async/each");
-const eachLimit = require("async/eachLimit");
-const setImmediate = require("async/setImmediate");
 
 const marker = function (n, done) {
     let i = 0;

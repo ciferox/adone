@@ -1,5 +1,3 @@
-
-
 const T = require("../../message").TYPES;
 
 module.exports = (dht) => {
