@@ -1,6 +1,9 @@
 'use strict'
 
-const promisify = require('promisify-es6')
+const {
+  promise: { promisify }
+} = adone;
+
 const streamToValue = require('./utils/stream-to-value')
 const moduleConfig = require('./utils/module-config')
 

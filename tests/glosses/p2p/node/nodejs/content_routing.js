@@ -138,8 +138,8 @@ describe(".contentRouting", () => {
                         protocol: "http",
                         port: 60197
                     }, [
-                            ma("/ip4/0.0.0.0/tcp/60194")
-                        ]);
+                        ma("/ip4/0.0.0.0/tcp/60194")
+                    ]);
                     nodeA = new Node({
                         peerInfo,
                         modules: {
@@ -296,8 +296,8 @@ describe(".contentRouting", () => {
                         protocol: "http",
                         port: 60197
                     }, [
-                            ma("/ip4/0.0.0.0/tcp/60194")
-                        ]);
+                        ma("/ip4/0.0.0.0/tcp/60194")
+                    ]);
                     nodeA = new Node({
                         peerInfo,
                         modules: {

@@ -1,11 +1,9 @@
-const series = require("async/series");
-const each = require("async/each");
-
 const connectAll = require("./connect_all");
 const tryConnectAll = require("./try_connect_all");
 const createNode = require("./create_node");
 
 const {
+    async: { series, each },
     is
 } = adone;
 

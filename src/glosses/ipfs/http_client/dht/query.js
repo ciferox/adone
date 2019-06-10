@@ -1,8 +1,8 @@
-const promisify = require('promisify-es6')
 const streamToValueWithTransformer = require('../utils/stream-to-value-with-transformer')
 
 const {
-    p2p: { PeerId, PeerInfo }
+    p2p: { PeerId, PeerInfo },
+    promise: { promisify }
 } = adone;
 
 module.exports = (send) => {

@@ -1,6 +1,5 @@
-const bs58 = require("bs58");
-
 const {
+    data: { base58 },
     is,
     p2p: { PeerId, PeerInfo }
 } = adone;
@@ -11,7 +10,7 @@ const getB58Str = function (peer) {
     if (is.string(peer)) {
         b58Str = peer;
     } else if (is.buffer(peer)) {
-        b58Str = bs58.encode(peer).toString();
+        b58Str = base58.encode(peer).toString();
     } else if (PeerId.isPeerId(peer)) {
         b58Str = peer.toB58String();
     } else if (PeerInfo.isPeerInfo(peer)) {

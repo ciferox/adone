@@ -1,6 +1,5 @@
-const parallel = require("async/parallel");
-
 const {
+    async: { parallel },
     p2p: { Protector, PeerId, Connection },
     stream: { pull }
 } = adone;

@@ -1,13 +1,13 @@
-const protobuf = require("protons");
-
 const crypto = require("./ed25519");
-const pbm = protobuf(require("./keys.proto"));
 
 const {
-    data: { base58 },
+    data: { base58, protobuf },
     is,
     multiformat: { multihashingAsync }
 } = adone;
+
+const pbm = protobuf.create(require("./keys.proto"));
+
 
 class Ed25519PublicKey {
     constructor(key) {

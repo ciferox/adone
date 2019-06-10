@@ -1,8 +1,11 @@
-const EventEmitter = require("events").EventEmitter;
+const {
+    event: { Emitter }
+} = adone;
+
 const debug = require("debug");
 const withIs = require("class-is");
 
-class BaseConnection extends EventEmitter {
+class BaseConnection extends Emitter {
     constructor({ _switch, name }) {
         super();
 
@@ -20,7 +23,7 @@ class BaseConnection extends EventEmitter {
      */
     close(err) {
         if (this._state._state === "DISCONNECTING") {
-            return; 
+            return;
         }
         this.log("closing connection to %s", this.theirB58Id);
         if (err && this._events.error) {

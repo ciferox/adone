@@ -1,10 +1,10 @@
 const {
     async: { each },
-    p2p: { PeerBook, KadDHT }
+    p2p: { PeerBook, KadDHT },
+    promise: { nodeify }
 } = adone;
 
 const sinon = require("sinon");
-const promiseToCallback = require("promise-to-callback");
 
 const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", ...args);
 
@@ -71,7 +71,7 @@ describe("Query", () => {
             const query = new Query(dht, targetKey.key, () => querySpy);
 
             const run = new Run(query);
-            promiseToCallback(run.init())(() => {
+            nodeify(run.init(), () => {
                 // Add the sorted peers into 5 paths. This will weight
                 // the paths with increasingly further peers
                 const sortedPeerIds = sortedPeers.map((peerInfo) => peerInfo.id);
@@ -98,7 +98,7 @@ describe("Query", () => {
                     const continueSpy = sinon.spy(run, "continueQuerying");
 
                     // Run the 4 paths
-                    promiseToCallback(run.executePaths(paths))((err) => {
+                    nodeify(run.executePaths(paths), (err) => {
                         expect(err).to.not.exist();
                         // The resulting peers should all be from path 0 as it had the closest
                         expect(run.peersQueried.peers).to.eql(paths[0].initialPeers);
@@ -127,7 +127,7 @@ describe("Query", () => {
             const query = new Query(dht, targetKey.key, () => querySpy);
 
             const run = new Run(query);
-            promiseToCallback(run.init())(() => {
+            nodeify(run.init(), () => {
                 const sortedPeerIds = sortedPeers.map((peerInfo) => peerInfo.id);
 
                 // Take the top 15 peers and peers 20 - 25 to seed `run.peersQueried`
@@ -163,7 +163,7 @@ describe("Query", () => {
                     }
 
                     // Run the path
-                    promiseToCallback(run.executePaths([path]))((err) => {
+                    nodeify(run.executePaths([path]), (err) => {
                         expect(err).to.not.exist();
 
                         // Querying will stop after the first ALPHA peers are queried

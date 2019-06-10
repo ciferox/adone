@@ -1,7 +1,10 @@
 const Heap = require("heap");
 const distance = require("xor-distance");
 const debug = require("debug");
-const promisify = require("promisify-es6");
+
+const {
+    promise: { promisify }
+} = adone;
 
 const utils = require("./utils");
 

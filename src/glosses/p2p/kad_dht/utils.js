@@ -1,10 +1,10 @@
 const debug = require("debug");
-const base32 = require("base32.js");
 const distance = require("xor-distance");
 const errcode = require("err-code");
 
 const {
     async: { map, setImmediate },
+    data: { base32 },
     multiformat: { multihashingAsync, multihash: mh },
     datastore: { interface: { Key } },
     p2p: { PeerId, record: { Record } }

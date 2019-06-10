@@ -1,10 +1,10 @@
+const {
+    data: { protobuf }
+} = adone;
 
-
-const protons = require("protons");
-
-const rpcProto = protons(require("./rpc.proto.js"));
+const rpcProto = protobuf.create(require("./rpc.proto.js"));
 const RPC = rpcProto.RPC;
-const topicDescriptorProto = protons(require("./topic-descriptor.proto.js"));
+const topicDescriptorProto = protobuf.create(require("./topic-descriptor.proto.js"));
 
 exports = module.exports;
 exports.rpc = rpcProto;

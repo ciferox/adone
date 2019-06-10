@@ -1,7 +1,5 @@
-const series = require("async/series");
-const parallel = require("async/parallel");
-
 const {
+    async: { series, parallel },
     p2p: { PeerBook, PeerInfo, Switch, transport: { TCP }, Ping }
 } = adone;
 

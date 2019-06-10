@@ -1,5 +1,3 @@
-
-
 module.exports = `enum KeyType {
   RSA = 0;
   Ed25519 = 1;

@@ -1,9 +1,9 @@
-const EE = require("events").EventEmitter;
 const utilsFactory = require("./utils");
 const proto = require("../protocol").CircuitRelay;
 
 const {
     async: { setImmediate, series },
+    event: { Emitter },
     p2p: { Connection, PeerInfo }
 } = adone;
 
@@ -12,7 +12,7 @@ const debug = require("debug");
 const log = debug("libp2p:circuit:stop");
 log.err = debug("libp2p:circuit:error:stop");
 
-class Stop extends EE {
+class Stop extends Emitter {
     constructor(swarm) {
         super();
         this.swarm = swarm;

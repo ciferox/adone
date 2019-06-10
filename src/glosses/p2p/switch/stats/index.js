@@ -1,6 +1,6 @@
-
-
-const EventEmitter = require("events");
+const {
+    event: { Emitter }
+} = adone;
 
 const Stat = require("./stat");
 const OldPeers = require("./old-peers");
@@ -39,7 +39,7 @@ module.exports = (observer, _options) => {
     const options = Object.assign({}, defaultOptions, _options);
     const globalStats = new Stat(initialCounters, options);
 
-    const stats = Object.assign(new EventEmitter(), {
+    const stats = Object.assign(new Emitter(), {
         start,
         stop,
         global: globalStats,

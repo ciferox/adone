@@ -1,8 +1,5 @@
-
-
 const debug = require("debug");
 const log = debug("libp2p:switch:conn-manager");
-const once = require("once");
 const ConnectionFSM = require("../connection");
 const { msHandle, msSelect, identifyDialer } = require("../utils");
 
@@ -10,7 +7,8 @@ const plaintext = require("../plaintext");
 
 const {
     multiformat: { multistream },
-    p2p: { identify, Circuit }
+    p2p: { identify, Circuit },
+    util: { once }
 } = adone;
 
 /**

@@ -1,8 +1,8 @@
-const base32 = require("base32.js");
 const distance = require("xor-distance");
 
 const {
     async: { waterfall },
+    data: { base32 },
     p2p: { PeerId }
 } = adone;
 

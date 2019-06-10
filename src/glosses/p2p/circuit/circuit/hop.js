@@ -1,5 +1,4 @@
 const debug = require("debug");
-const EE = require("events").EventEmitter;
 const utilsFactory = require("./utils");
 const StreamHandler = require("./stream-handler");
 const proto = require("../protocol").CircuitRelay;
@@ -8,6 +7,7 @@ const multicodec = require("./../multicodec");
 
 const {
     async: { series, waterfall, setImmediate },
+    event: { Emitter },
     multiformat: { multiaddr },
     p2p: { PeerId, PeerInfo },
     stream: { pull },
@@ -17,7 +17,7 @@ const {
 const log = debug("libp2p:circuit:relay");
 log.err = debug("libp2p:circuit:error:relay");
 
-class Hop extends EE {
+class Hop extends Emitter {
     /**
      * Construct a Circuit object
      *

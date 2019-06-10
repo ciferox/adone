@@ -1,15 +1,14 @@
-const protobuf = require("protons");
-
 const rsa = require("./rsa");
-const pbm = protobuf(require("./keys.proto"));
 
 const {
     async: { nextTick },
-    data: { base58 },
+    data: { base58, protobuf },
     crypto,
     is,
     multiformat: { multihashingAsync }
 } = adone;
+
+const pbm = protobuf.create(require("./keys.proto"));
 
 class RsaPublicKey {
     constructor(key) {

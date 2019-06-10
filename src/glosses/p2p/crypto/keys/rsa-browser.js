@@ -1,5 +1,3 @@
-
-
 const nodeify = require("../nodeify");
 const webcrypto = require("../webcrypto");
 const randomBytes = require("../random-bytes");

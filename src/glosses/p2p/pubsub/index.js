@@ -1,4 +1,3 @@
-const EventEmitter = require("events");
 const TimeCache = require("time-cache");
 const debug = require("debug");
 const errcode = require("err-code");
@@ -10,6 +9,7 @@ const utils = require("./utils");
 
 const {
     async: { each: asyncEach, nextTick },
+    event: { Emitter },
     stream: { pull }
 } = adone;
 const { empty } = pull;
@@ -17,7 +17,7 @@ const { empty } = pull;
 /**
  * PubsubBaseProtocol handles the peers and connections logic for pubsub routers
  */
-class PubsubBaseProtocol extends EventEmitter {
+class PubsubBaseProtocol extends Emitter {
     /**
      * @param {String} debugName
      * @param {String} multicodec

@@ -1,12 +1,11 @@
 const {
+    async: { waterfall, each, filter, timeout },
     is,
     datastore: { backend: { MemoryDatastore } },
-    async: { waterfall, each, filter, timeout },
-    p2p: { crypto, PeerId, PeerInfo, record }
+    event: { Emitter },
+    p2p: { crypto, PeerId, PeerInfo, record },
+    promise: { nodeify }
 } = adone;
-
-const { EventEmitter } = require("events");
-const promiseToCallback = require("promise-to-callback");
 
 const errcode = require("err-code");
 
@@ -27,7 +26,7 @@ const assert = require("assert");
  *
  * Original implementation in go: https://github.com/libp2p/go-libp2p-kad-dht.
  */
-class KadDHT extends EventEmitter {
+class KadDHT extends Emitter {
     /**
      * Random walk options
      *
@@ -381,7 +380,7 @@ class KadDHT extends EventEmitter {
 
                     // run our query
                     timeout((_cb) => {
-                        promiseToCallback(query.run(rtp))(_cb);
+                        nodeify(query.run(rtp), _cb);
                     }, options.timeout)((err, res) => {
                         query.stop();
                         cb(err, res);
@@ -439,7 +438,7 @@ class KadDHT extends EventEmitter {
                 };
             });
 
-            promiseToCallback(q.run(tablePeers))((err, res) => {
+            nodeify(q.run(tablePeers), (err, res) => {
                 if (err) {
                     return callback(err);
                 }
@@ -672,7 +671,7 @@ class KadDHT extends EventEmitter {
                     });
 
                     timeout((_cb) => {
-                        promiseToCallback(query.run(peers))(_cb);
+                        nodeify(query.run(peers), _cb);
                     }, options.timeout)((err, res) => {
                         query.stop();
                         cb(err, res);

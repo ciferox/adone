@@ -1,7 +1,6 @@
-const { EventEmitter } = require("events");
-
 const {
-    async: { setImmediate }
+    async: { setImmediate },
+    event: { Emitter }
 } = adone;
 
 const debug = require("debug");
@@ -37,7 +36,7 @@ const catchError = function (stream) {
     };
 };
 
-class MultiplexMuxer extends EventEmitter {
+class MultiplexMuxer extends Emitter {
     constructor(conn, multiplex) {
         super();
         this.multiplex = multiplex;

@@ -1,9 +1,8 @@
-const EventEmitter = require("events");
-
 const { RPC } = require("./message");
 
 const {
     async: { setImmediate },
+    event: { Emitter },
     stream: { pull }
 } = adone;
 const { pushable: Pushable, lengthPrefixed: lp } = pull;
@@ -11,7 +10,7 @@ const { pushable: Pushable, lengthPrefixed: lp } = pull;
 /**
  * The known state of a connected peer.
  */
-class Peer extends EventEmitter {
+class Peer extends Emitter {
     /**
      * @param {PeerInfo} info
      */

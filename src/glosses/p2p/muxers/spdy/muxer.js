@@ -1,13 +1,13 @@
-const EventEmitter = require("events").EventEmitter;
-const once = require("once");
 const debug = require("debug");
 const log = debug("spdy");
 log.error = debug("spdy:error");
 
 const {
+    event: { Emitter },
     noop,
     p2p: { Connection },
-    stream: { pull }
+    stream: { pull },
+    util: { once }
 } = adone;
 const { catch: pullCatch, streamToPullStream: toPull } = pull;
 
@@ -23,7 +23,7 @@ const catchError = function (stream) {
 
 const SPDY_CODEC = require("./spdy-codec");
 
-module.exports = class Muxer extends EventEmitter {
+module.exports = class Muxer extends Emitter {
     constructor(conn, spdy) {
         super();
 

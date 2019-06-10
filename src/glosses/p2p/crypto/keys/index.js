@@ -1,10 +1,11 @@
-const protobuf = require("protons");
-const keysPBM = protobuf(require("./keys.proto"));
-
 const {
     crypto,
+    data: { protobuf },
     is
 } = adone;
+
+const keysPBM = protobuf.create(require("./keys.proto"));
+
 
 exports = module.exports;
 
@@ -63,9 +64,9 @@ exports.unmarshalPublicKey = (buf) => {
         case keysPBM.KeyType.Secp256k1:
             if (supportedKeys.secp256k1) {
                 return supportedKeys.secp256k1.unmarshalSecp256k1PublicKey(data);
-            } 
+            }
             throw new Error("secp256k1 support requires libp2p-crypto-secp256k1 package");
-            
+
         default:
             throw new Error("invalid or unsupported key type");
     }
@@ -101,9 +102,9 @@ exports.unmarshalPrivateKey = (buf, callback) => {
         case keysPBM.KeyType.Secp256k1:
             if (supportedKeys.secp256k1) {
                 return supportedKeys.secp256k1.unmarshalSecp256k1PrivateKey(data, callback);
-            } 
+            }
             return callback(new Error("secp256k1 support requires libp2p-crypto-secp256k1 package"));
-            
+
         default:
             callback(new Error("invalid or unsupported key type"));
     }

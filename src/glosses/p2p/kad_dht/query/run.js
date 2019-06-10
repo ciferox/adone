@@ -1,6 +1,9 @@
+const {
+    event: { Emitter },
+    promise: { promisify }
+} = adone;
+
 const PeerDistanceList = require("../peer-distance-list");
-const EventEmitter = require("events");
-const promisify = require("promisify-es6");
 
 const Path = require("./path");
 const WorkerQueue = require("./workerQueue");
@@ -9,7 +12,7 @@ const utils = require("../utils");
 /**
  * Manages a single run of the query.
  */
-class Run extends EventEmitter {
+class Run extends Emitter {
     /**
      * Creates a Run.
      *

@@ -1,7 +1,6 @@
-const waterfall = require("async/waterfall");
-
 const {
-    p2p: { ConnectionManager, Node, KadDHT, secio: SECIO, transport: { TCP }, PeerId, PeerInfo, muxer: { mplex } }
+    async: { waterfall },
+    p2p: { ConnectionManager, Node, secio: SECIO, transport: { TCP }, PeerId, PeerInfo, muxer: { mplex } }
 } = adone;
 
 class TestNode extends Node {

@@ -1,9 +1,9 @@
 import looper from "../../../streams/pull/looper4";
-const EE = require("events");
 const debug = require("debug");
 
 const {
     async: { nextTick },
+    event: { Emitter },
     is,
     stream: { pull: { pushable } }
 } = adone;
@@ -58,7 +58,7 @@ const channelSink = function (channel) {
  * @fires Channel#close
  * @fires Channel#error
  */
-class Channel extends EE {
+class Channel extends Emitter {
     /**
      * @constructor
      * @param {Object} opts

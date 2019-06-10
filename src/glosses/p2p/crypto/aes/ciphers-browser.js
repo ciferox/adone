@@ -1,5 +1,3 @@
-
-
 const crypto = require("browserify-aes");
 
 module.exports = {

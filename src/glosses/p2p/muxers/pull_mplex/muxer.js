@@ -1,8 +1,8 @@
-const { EventEmitter } = require("events");
 const debug = require("debug");
 
 const {
     async: { nextTick },
+    event: { Emitter },
     noop,
     p2p: { Connection }
 } = adone;
@@ -12,7 +12,7 @@ const MULTIPLEX_CODEC = require("./codec");
 const log = debug("libp2p-mplex:muxer");
 log.err = debug("libp2p-mplex:muxer:error");
 
-class MultiplexMuxer extends EventEmitter {
+class MultiplexMuxer extends Emitter {
     /**
      * @constructor
      * @param {Connection} conn

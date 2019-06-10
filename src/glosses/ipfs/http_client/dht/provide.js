@@ -1,6 +1,6 @@
-const promisify = require('promisify-es6')
 const {
-    multiformat: { CID }
+    multiformat: { CID },
+    promise: { promisify }
 } = adone;
 
 module.exports = (send) => {

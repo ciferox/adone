@@ -1,11 +1,10 @@
 const {
     async: { timeout },
     is,
-    p2p: { PeerId, PeerInfo, record }
+    p2p: { PeerId, PeerInfo, record },
+    promise: { promisify, nodeify }
 } = adone;
 
-const promisify = require("promisify-es6");
-const promiseToCallback = require("promise-to-callback");
 const errcode = require("err-code");
 
 const utils = require("./utils");
@@ -27,7 +26,7 @@ module.exports = (dht) => ({
      * @private
      */
     _nearestPeersToQuery(msg, callback) {
-        promiseToCallback(this._nearestPeersToQueryAsync(msg))(callback);
+        nodeify(this._nearestPeersToQueryAsync(msg), callback);
     },
 
     async _nearestPeersToQueryAsync(msg) {
@@ -53,7 +52,7 @@ module.exports = (dht) => ({
      */
 
     _betterPeersToQuery(msg, peer, callback) {
-        promiseToCallback(this._betterPeersToQueryAsync(msg, peer))(callback);
+        nodeify(this._betterPeersToQueryAsync(msg, peer), callback);
     },
 
     async _betterPeersToQueryAsync(msg, peer) {
@@ -85,7 +84,7 @@ module.exports = (dht) => ({
      */
 
     _checkLocalDatastore(key, callback) {
-        promiseToCallback(this._checkLocalDatastoreAsync(key))(callback);
+        nodeify(this._checkLocalDatastoreAsync(key), callback);
     },
 
     async _checkLocalDatastoreAsync(key) {
@@ -132,7 +131,7 @@ module.exports = (dht) => ({
      */
 
     _add(peer, callback) {
-        promiseToCallback(this._addAsync(peer))((err) => callback(err));
+        nodeify(this._addAsync(peer), (err) => callback(err));
     },
 
     async _addAsync(peer) {
@@ -151,7 +150,7 @@ module.exports = (dht) => ({
      */
 
     _verifyRecordLocally(record, callback) {
-        promiseToCallback(this._verifyRecordLocallyAsync(record))((err) => callback(err));
+        nodeify(this._verifyRecordLocallyAsync(record), (err) => callback(err));
     },
 
     async _verifyRecordLocallyAsync(record) {
@@ -175,7 +174,7 @@ module.exports = (dht) => ({
      */
 
     _closerPeersSingle(key, peer, callback) {
-        promiseToCallback(this._closerPeersSingleAsync(key, peer))(callback);
+        nodeify(this._closerPeersSingleAsync(key, peer), callback);
     },
 
     async _closerPeersSingleAsync(key, peer) {
@@ -211,7 +210,7 @@ module.exports = (dht) => ({
      */
 
     _findPeerSingle(peer, target, callback) {
-        promiseToCallback(this._findPeerSingleAsync(peer, target))(callback);
+        nodeify(this._findPeerSingleAsync(peer, target), callback);
     },
 
     async _findPeerSingleAsync(peer, target) {
@@ -233,7 +232,7 @@ module.exports = (dht) => ({
      */
 
     _putValueToPeer(key, rec, target, callback) {
-        promiseToCallback(this._putValueToPeerAsync(key, rec, target))(callback);
+        nodeify(this._putValueToPeerAsync(key, rec, target), callback);
     },
 
     async _putValueToPeerAsync(key, rec, target) {
@@ -258,7 +257,7 @@ module.exports = (dht) => ({
      */
 
     _putLocal(key, rec, callback) {
-        promiseToCallback(this._putLocalAsync(key, rec))((err) => callback(err));
+        nodeify(this._putLocalAsync(key, rec), (err) => callback(err));
     },
 
     async _putLocalAsync(key, rec) {
@@ -279,7 +278,7 @@ module.exports = (dht) => ({
      */
 
     _get(key, options, callback) {
-        promiseToCallback(this._getAsync(key, options))(callback);
+        nodeify(this._getAsync(key, options), callback);
     },
 
     async _getAsync(key, options) {
@@ -360,7 +359,7 @@ module.exports = (dht) => ({
      * @private
      */
     _getLocal(key, callback) {
-        promiseToCallback(this._getLocalAsync(key))(callback);
+        nodeify(this._getLocalAsync(key), callback);
     },
 
     async _getLocalAsync(key) {
@@ -389,7 +388,7 @@ module.exports = (dht) => ({
      */
 
     _getValueOrPeers(peer, key, callback) {
-        promiseToCallback(this._getValueOrPeersAsync(peer, key))((err, result) => {
+        nodeify(this._getValueOrPeersAsync(peer, key), (err, result) => {
             if (err) { return callback(err) };
             callback(null, result.record, result.peers);
         });
@@ -433,7 +432,7 @@ module.exports = (dht) => ({
      */
 
     _getValueSingle(peer, key, callback) {
-        promiseToCallback(this._getValueSingleAsync(peer, key))(callback);
+        nodeify(this._getValueSingleAsync(peer, key), callback);
     },
 
     async _getValueSingleAsync(peer, key) {
@@ -453,7 +452,7 @@ module.exports = (dht) => ({
      */
 
     _verifyRecordOnline(record, callback) {
-        promiseToCallback(this._verifyRecordOnlineAsync(record))((err) => callback(err));
+        nodeify(this._verifyRecordOnlineAsync(record), (err) => callback(err));
     },
 
     async _verifyRecordOnlineAsync(record) {
@@ -471,7 +470,7 @@ module.exports = (dht) => ({
      */
 
     _getPublicKeyFromNode(peer, callback) {
-        promiseToCallback(this._getPublicKeyFromNodeAsync(peer))(callback);
+        nodeify(this._getPublicKeyFromNodeAsync(peer), callback);
     },
 
     async _getPublicKeyFromNodeAsync(peer) {
@@ -505,7 +504,7 @@ module.exports = (dht) => ({
      * @private
      */
     _findNProviders(key, providerTimeout, n, callback) {
-        promiseToCallback(this._findNProvidersAsync(key, providerTimeout, n))(callback);
+        nodeify(this._findNProvidersAsync(key, providerTimeout, n), callback);
     },
 
     async _findNProvidersAsync(key, providerTimeout, n) {
@@ -560,7 +559,7 @@ module.exports = (dht) => ({
 
         try {
             await promisify((callback) => timeout((cb) => {
-                promiseToCallback(query.run(peers))(cb);
+                nodeify(query.run(peers), cb);
             }, providerTimeout)(callback))();
         } catch (err) {
             if (err.code !== "ETIMEDOUT" || out.length === 0) {
@@ -591,7 +590,7 @@ module.exports = (dht) => ({
      * @private
      */
     _findProvidersSingle(peer, key, callback) {
-        promiseToCallback(this._findProvidersSingleAsync(peer, key))(callback);
+        nodeify(this._findProvidersSingleAsync(peer, key), callback);
     },
 
     async _findProvidersSingleAsync(peer, key) {

@@ -1,5 +1,3 @@
-
-
 const errCode = require("err-code");
 
 module.exports = {

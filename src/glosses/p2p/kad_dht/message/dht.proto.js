@@ -1,5 +1,3 @@
-
-
 module.exports = `// can't use, because protocol-buffers doesn't support imports
 // so we have to duplicate for now :(
 // import "record.proto";

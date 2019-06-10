@@ -1,10 +1,26 @@
-/* eslint-disable func-style */
-
 const {
-    is
+    is,
+    std: { util: { inspect } }
 } = adone;
 
 const $kExpandStackSymbol = Symbol("kExpandStackSymbol");
+
+let spliceOne;
+
+function EventEmitter() {
+    EventEmitter.init.call(this);
+}
+module.exports = EventEmitter;
+module.exports.once = once;
+
+// Backwards-compat with node 0.10.x
+EventEmitter.EventEmitter = EventEmitter;
+
+EventEmitter.usingDomains = false;
+
+EventEmitter.prototype._events = undefined;
+EventEmitter.prototype._eventsCount = 0;
+EventEmitter.prototype._maxListeners = undefined;
 
 // By default EventEmitters will print a warning if more than 10 listeners are
 // added to it. This is a useful default which helps finding memory leaks.
@@ -16,12 +32,50 @@ function checkListener(listener) {
     }
 }
 
+Object.defineProperty(EventEmitter, "defaultMaxListeners", {
+    enumerable: true,
+    get() {
+        return defaultMaxListeners;
+    },
+    set(arg) {
+        if (!is.number(arg) || arg < 0 || is.nan(arg)) {
+            throw new adone.error.OutOfRangeException(`The value of "defaultMaxListeners" is out of range. It must be a non-negative number. Received ${arg}`);
+        }
+        defaultMaxListeners = arg;
+    }
+});
+
+EventEmitter.init = function () {
+
+    if (is.undefined(this._events) ||
+        this._events === Object.getPrototypeOf(this)._events) {
+        this._events = Object.create(null);
+        this._eventsCount = 0;
+    }
+
+    this._maxListeners = this._maxListeners || undefined;
+};
+
+// Obviously not all Emitters should be limited to 10. This function allows
+// that to be increased. Set to zero for unlimited.
+EventEmitter.prototype.setMaxListeners = function setMaxListeners(n) {
+    if (!is.number(n) || n < 0 || is.nan(n)) {
+        throw new adone.error.OutOfRangeException(`The value of "n" is out of range. It must be a non-negative number. Received ${n}`);
+    }
+    this._maxListeners = n;
+    return this;
+};
+
 function _getMaxListeners(that) {
     if (is.undefined(that._maxListeners)) {
         return EventEmitter.defaultMaxListeners;
     }
     return that._maxListeners;
 }
+
+EventEmitter.prototype.getMaxListeners = function getMaxListeners() {
+    return _getMaxListeners(this);
+};
 
 // Returns the length and line number of the first sequence of `a` that fully
 // appears in `b` with a length of at least 4.
@@ -63,7 +117,69 @@ function enhanceStackTrace(err, own) {
     err.stack = err.stack + sep + ownStack.join("\n");
 }
 
+EventEmitter.prototype.emit = function emit(type, ...args) {
+    let doError = (type === "error");
 
+    const events = this._events;
+    if (!is.undefined(events)) {
+        doError = (doError && is.undefined(events.error));
+    } else if (!doError) {
+        return false;
+    }
+
+    // If there is no 'error' event listener then throw.
+    if (doError) {
+        let er;
+        if (args.length > 0) {
+            er = args[0];
+        }
+        if (er instanceof Error) {
+            try {
+                const capture = {};
+                // eslint-disable-next-line no-restricted-syntax
+                Error.captureStackTrace(capture, EventEmitter.prototype.emit);
+                Object.defineProperty(er, $kExpandStackSymbol, {
+                    value: enhanceStackTrace.bind(null, er, capture),
+                    configurable: true
+                });
+            } catch { }
+
+            // Note: The comments on the `throw` lines are intentional, they show
+            // up in Node's output if this results in an unhandled exception.
+            throw er; // Unhandled 'error' event
+        }
+
+        let stringifiedEr;
+        try {
+            stringifiedEr = inspect(er);
+        } catch {
+            stringifiedEr = er;
+        }
+
+        // At least give some kind of context to the user
+        const err = new adone.error.Exception(`Unhandled error. (${stringifiedEr})`);
+        err.context = er;
+        throw err; // Unhandled 'error' event
+    }
+
+    const handler = events[type];
+
+    if (is.undefined(handler)) {
+        return false;
+    }
+
+    if (is.function(handler)) {
+        Reflect.apply(handler, this, args);
+    } else {
+        const len = handler.length;
+        const listeners = arrayClone(handler, len);
+        for (let i = 0; i < len; ++i) {
+            Reflect.apply(listeners[i], this, args);
+        }
+    }
+
+    return true;
+};
 
 function _addListener(target, type, listener, prepend) {
     let m;
@@ -114,8 +230,8 @@ function _addListener(target, type, listener, prepend) {
             // eslint-disable-next-line no-restricted-syntax
             const w = new Error("Possible EventEmitter memory leak detected. " +
                 `${existing.length} ${String(type)} listeners ` +
-                "added. Use emitter.setMaxListeners() to " +
-                "increase limit");
+                `added to ${inspect(target, { depth: -1 })}. Use ` +
+                "emitter.setMaxListeners() to increase limit");
             w.name = "MaxListenersExceededWarning";
             w.emitter = target;
             w.type = type;
@@ -126,6 +242,17 @@ function _addListener(target, type, listener, prepend) {
 
     return target;
 }
+
+EventEmitter.prototype.addListener = function addListener(type, listener) {
+    return _addListener(this, type, listener, false);
+};
+
+EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+
+EventEmitter.prototype.prependListener =
+    function prependListener(type, listener) {
+        return _addListener(this, type, listener, true);
+    };
 
 function onceWrapper(...args) {
     if (!this.fired) {
@@ -143,173 +270,26 @@ function _onceWrap(target, type, listener) {
     return wrapped;
 }
 
+EventEmitter.prototype.once = function once(type, listener) {
+    checkListener(listener);
 
-function _listeners(target, type, unwrap) {
-    const events = target._events;
+    this.on(type, _onceWrap(this, type, listener));
+    return this;
+};
 
-    if (is.undefined(events)) {
-        return [];
-    }
-
-    const evlistener = events[type];
-    if (is.undefined(evlistener)) {
-        return [];
-    }
-
-    if (is.function(evlistener)) {
-        return unwrap ? [evlistener.listener || evlistener] : [evlistener];
-    }
-
-    return unwrap ?
-        unwrapListeners(evlistener) : arrayClone(evlistener, evlistener.length);
-}
-
-function listenerCount(type) {
-    const events = this._events;
-
-    if (!is.undefined(events)) {
-        const evlistener = events[type];
-
-        if (is.function(evlistener)) {
-            return 1;
-        } else if (!is.undefined(evlistener)) {
-            return evlistener.length;
-        }
-    }
-
-    return 0;
-}
-
-function arrayClone(arr, n) {
-    const copy = new Array(n);
-    for (let i = 0; i < n; ++i) {
-        copy[i] = arr[i];
-    }
-    return copy;
-}
-
-function unwrapListeners(arr) {
-    const ret = new Array(arr.length);
-    for (let i = 0; i < ret.length; ++i) {
-        ret[i] = arr[i].listener || arr[i];
-    }
-    return ret;
-}
-
-export default class EventEmitter {
-    constructor() {
-        if (is.undefined(this._events) ||
-            this._events === Object.getPrototypeOf(this)._events) {
-            this._events = Object.create(null);
-            this._eventsCount = 0;
-        }
-
-        this._maxListeners = this._maxListeners || undefined;
-    }
-
-    // Obviously not all Emitters should be limited to 10. This function allows
-    // that to be increased. Set to zero for unlimited.
-    setMaxListeners(n) {
-        if (!is.number(n) || n < 0 || is.nan(n)) {
-            throw new adone.error.OutOfRangeException(`The value of "n" is out of range. It must be a non-negative number. Received ${n}`);
-        }
-        this._maxListeners = n;
-        return this;
-    }
-
-    getMaxListeners() {
-        return _getMaxListeners(this);
-    }
-
-    emit(type, ...args) {
-        let doError = (type === "error");
-
-        const events = this._events;
-        if (!is.undefined(events)) {
-            doError = (doError && is.undefined(events.error));
-        } else if (!doError) {
-            return false;
-        }
-
-        // If there is no 'error' event listener then throw.
-        if (doError) {
-            let er;
-            if (args.length > 0) {
-                er = args[0];
-            }
-            if (er instanceof Error) {
-                try {
-                    const capture = {};
-                    Error.captureStackTrace(capture, EventEmitter.prototype.emit);
-                    Object.defineProperty(er, $kExpandStackSymbol, {
-                        value: enhanceStackTrace.bind(null, er, capture),
-                        configurable: true
-                    });
-                } catch { 
-                    //
-                }
-
-                // Note: The comments on the `throw` lines are intentional, they show
-                // up in Node's output if this results in an unhandled exception.
-                throw er; // Unhandled 'error' event
-            }
-
-            let stringifiedEr;
-            try {
-                stringifiedEr = adone.std.util.inspect(er);
-            } catch {
-                stringifiedEr = er;
-            }
-
-            // At least give some kind of context to the user
-            const err = new adone.error.Exception(`Unhandled error. (${stringifiedEr})`);
-            err.context = er;
-            throw err; // Unhandled 'error' event
-        }
-
-        const handler = events[type];
-
-        if (is.undefined(handler)) {
-            return false;
-        }
-
-        if (is.function(handler)) {
-            Reflect.apply(handler, this, args);
-        } else {
-            const len = handler.length;
-            const listeners = arrayClone(handler, len);
-            for (let i = 0; i < len; ++i) {
-                Reflect.apply(listeners[i], this, args);
-            }
-        }
-
-        return true;
-    }
-
-    addListener(type, listener) {
-        return _addListener(this, type, listener, false);
-    }
-
-    prependListener(type, listener) {
-        return _addListener(this, type, listener, true);
-    }
-
-    once(type, listener) {
-        checkListener(listener);
-
-        this.on(type, _onceWrap(this, type, listener));
-        return this;
-    }
-
-    prependOnceListener(type, listener) {
+EventEmitter.prototype.prependOnceListener =
+    function prependOnceListener(type, listener) {
         checkListener(listener);
 
         this.prependListener(type, _onceWrap(this, type, listener));
         return this;
-    }
+    };
 
-    // Emits a 'removeListener' event if and only if the listener was removed.
-    removeListener(type, listener) {
+// Emits a 'removeListener' event if and only if the listener was removed.
+EventEmitter.prototype.removeListener =
+    function removeListener(type, listener) {
+        let originalListener;
+
         checkListener(listener);
 
         const events = this._events;
@@ -332,7 +312,6 @@ export default class EventEmitter {
                 }
             }
         } else if (!is.function(list)) {
-            let originalListener;
             let position = -1;
 
             for (let i = list.length - 1; i >= 0; i--) {
@@ -363,9 +342,12 @@ export default class EventEmitter {
         }
 
         return this;
-    }
+    };
 
-    removeAllListeners(type) {
+EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
+
+EventEmitter.prototype.removeAllListeners =
+    function removeAllListeners(type) {
         const events = this._events;
         if (is.undefined(events)) {
             return this;
@@ -412,76 +394,106 @@ export default class EventEmitter {
         }
 
         return this;
+    };
+
+function _listeners(target, type, unwrap) {
+    const events = target._events;
+
+    if (is.undefined(events)) {
+        return [];
     }
 
-    listeners(type) {
-        return _listeners(this, type, true);
+    const evlistener = events[type];
+    if (is.undefined(evlistener)) {
+        return [];
     }
 
-    rawListeners(type) {
-        return _listeners(this, type, false);
+    if (is.function(evlistener)) {
+        return unwrap ? [evlistener.listener || evlistener] : [evlistener];
     }
 
-    eventNames() {
-        return this._eventsCount > 0 ? Reflect.ownKeys(this._events) : [];
-    }
-
-    static once(emitter, name) {
-        return new Promise((resolve, reject) => {
-            let errorListener;
-
-            const eventListener = (...args) => {
-                if (!is.undefined(errorListener)) {
-                    emitter.removeListener("error", errorListener);
-                }
-                resolve(args);
-            };
-
-            // Adding an error listener is not optional because
-            // if an error is thrown on an event emitter we cannot
-            // guarantee that the actual event we are waiting will
-            // be fired. The result could be a silent way to create
-            // memory or file descriptor leaks, which is something
-            // we should avoid.
-            if (name !== "error") {
-                errorListener = (err) => {
-                    emitter.removeListener(name, eventListener);
-                    reject(err);
-                };
-
-                emitter.once("error", errorListener);
-            }
-
-            emitter.once(name, eventListener);
-        });
-    }
-
-    static listenerCount(emitter, type) {
-        if (is.function(emitter.listenerCount)) {
-            return emitter.listenerCount(type);
-        }
-        return listenerCount.call(emitter, type);
-    }
+    return unwrap ?
+        unwrapListeners(evlistener) : arrayClone(evlistener, evlistener.length);
 }
-EventEmitter.usingDomains = false;
-EventEmitter.prototype._events = undefined;
-EventEmitter.prototype._eventsCount = 0;
-EventEmitter.prototype._maxListeners = undefined;
 
-Object.defineProperty(EventEmitter, "defaultMaxListeners", {
-    enumerable: true,
-    get() {
-        return defaultMaxListeners;
-    },
-    set(arg) {
-        if (!is.number(arg) || arg < 0 || is.nan(arg)) {
-            throw new adone.error.OutOfRangeException(`The value of "defaultMaxListeners" is out of range. It must be a non-negative number. Received ${arg}`);
-        }
-        defaultMaxListeners = arg;
+EventEmitter.prototype.listeners = function listeners(type) {
+    return _listeners(this, type, true);
+};
+
+EventEmitter.prototype.rawListeners = function rawListeners(type) {
+    return _listeners(this, type, false);
+};
+
+EventEmitter.listenerCount = function (emitter, type) {
+    if (is.function(emitter.listenerCount)) {
+        return emitter.listenerCount(type);
     }
-});
+    return listenerCount.call(emitter, type);
 
-EventEmitter.prototype.on = EventEmitter.prototype.addListener;
-EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
+};
 
 EventEmitter.prototype.listenerCount = listenerCount;
+function listenerCount(type) {
+    const events = this._events;
+
+    if (!is.undefined(events)) {
+        const evlistener = events[type];
+
+        if (is.function(evlistener)) {
+            return 1;
+        } else if (!is.undefined(evlistener)) {
+            return evlistener.length;
+        }
+    }
+
+    return 0;
+}
+
+EventEmitter.prototype.eventNames = function eventNames() {
+    return this._eventsCount > 0 ? Reflect.ownKeys(this._events) : [];
+};
+
+function arrayClone(arr, n) {
+    const copy = new Array(n);
+    for (let i = 0; i < n; ++i) {
+        copy[i] = arr[i];
+    }
+    return copy;
+}
+
+function unwrapListeners(arr) {
+    const ret = new Array(arr.length);
+    for (let i = 0; i < ret.length; ++i) {
+        ret[i] = arr[i].listener || arr[i];
+    }
+    return ret;
+}
+
+function once(emitter, name) {
+    return new Promise((resolve, reject) => {
+        const eventListener = (...args) => {
+            if (!is.undefined(errorListener)) {
+                emitter.removeListener("error", errorListener);
+            }
+            resolve(args);
+        };
+        let errorListener;
+
+        // Adding an error listener is not optional because
+        // if an error is thrown on an event emitter we cannot
+        // guarantee that the actual event we are waiting will
+        // be fired. The result could be a silent way to create
+        // memory or file descriptor leaks, which is something
+        // we should avoid.
+        if (name !== "error") {
+            errorListener = (err) => {
+                emitter.removeListener(name, eventListener);
+                reject(err);
+            };
+
+            emitter.once("error", errorListener);
+        }
+
+        emitter.once(name, eventListener);
+    });
+}

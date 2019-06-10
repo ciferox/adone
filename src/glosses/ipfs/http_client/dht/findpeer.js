@@ -1,11 +1,11 @@
-const promisify = require('promisify-es6')
 const streamToValueWithTransformer = require('../utils/stream-to-value-with-transformer')
 
 const errcode = require('err-code')
 
 const {
     p2p: { PeerId, PeerInfo },
-    multiformat: { multiaddr }
+    multiformat: { multiaddr },
+    promise: { promisify }
 } = adone;
 
 module.exports = (send) => {

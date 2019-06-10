@@ -1,9 +1,9 @@
 import looper from "../../../streams/pull/looper4";
-const EE = require("events");
 const debug = require("debug");
 
 const {
     async: { nextTick },
+    event: { Emitter },
     is,
     stream: { pull }
 } = adone;
@@ -29,7 +29,7 @@ log.err = debug("pull-plex:err");
  * @fires Mplex#error Emitted when an error occurs
  * @fires Mplex#stream Emitted when a new stream is opened
  */
-class Mplex extends EE {
+class Mplex extends Emitter {
     /**
      * @constructor
      * @param {Object} opts

@@ -1,6 +1,5 @@
-const base58 = require('bs58')
-
 const {
+    data: { base58 },
     multiformat: { CID, mafmt, multiaddr: Multiaddr, multibase, multihash }
 } = adone;
 

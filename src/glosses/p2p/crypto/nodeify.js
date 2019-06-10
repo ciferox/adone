@@ -1,5 +1,3 @@
-
-
 // Based on npmjs.com/nodeify but without additional `nextTick` calls
 // to keep the overhead low
 module.exports = function nodeify(promise, cb) {

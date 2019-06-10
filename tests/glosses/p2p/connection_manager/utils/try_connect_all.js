@@ -1,8 +1,7 @@
-;
-
-const mapSeries = require("async/mapSeries");
-const eachSeries = require("async/eachSeries");
-const without = require("lodash/without");
+const {
+    async: { mapSeries, eachSeries },
+    lodash: { without }
+} = adone;
 
 module.exports = (nodes, callback) => {
     mapSeries(

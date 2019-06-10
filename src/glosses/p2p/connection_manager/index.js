@@ -1,8 +1,9 @@
-
-
-const EventEmitter = require("events");
 const LatencyMonitor = require("latency-monitor").default;
 const debug = require("debug")("libp2p:connection-manager");
+
+const {
+    event: { Emitter }
+} = adone;
 
 const defaultOptions = {
     maxPeers: Infinity,
@@ -16,7 +17,7 @@ const defaultOptions = {
     defaultPeerValue: 1
 };
 
-class ConnectionManager extends EventEmitter {
+class ConnectionManager extends Emitter {
     constructor(libp2p, options) {
         super();
         this._libp2p = libp2p;

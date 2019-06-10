@@ -1,17 +1,13 @@
 const debug = require("debug");
 const log = debug("libp2p:websocket-star:multi");
-const once = require("once");
-
-const EE = require("events").EventEmitter;
-const {
-    map,
-    parallel
-} = require("async");
 
 const {
+    async: { map, parallel },
+    event: { Emitter },
     is,
     p2p: { transport: { WSStar } },
-    multiformat: { multiaddr, mafmt }
+    multiformat: { multiaddr, mafmt },
+    util: { once }
 } = adone;
 
 
@@ -35,7 +31,7 @@ class WebsocketStarMulti { // listen on multiple websocket star servers without 
             options = {};
         }
 
-        const listener = new EE();
+        const listener = new Emitter();
         listener.servers = {};
         listener.online = [];
         this.servers.forEach((ser) => {
@@ -62,15 +58,15 @@ class WebsocketStarMulti { // listen on multiple websocket star servers without 
                     setTimeout(next, this.opt.timeout || 5000, new Error("Timeout"));
                     server.listen(multiaddr(server.url).encapsulate(`/ipfs/${id}`), next);
                 }), () => {
-                if (!listener.online.length && !this.opt.ignore_no_online) {
-                    const e = new Error("Couldn't listen on any of the servers");
-                    listener.emit("error", e);
-                    cb(e);
-                } else {
-                    listener.emit("listening");
-                    cb();
-                }
-            });
+                    if (!listener.online.length && !this.opt.ignore_no_online) {
+                        const e = new Error("Couldn't listen on any of the servers");
+                        listener.emit("error", e);
+                        cb(e);
+                    } else {
+                        listener.emit("listening");
+                        cb();
+                    }
+                });
         };
 
         listener.close = (cb) =>

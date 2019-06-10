@@ -1,12 +1,12 @@
-const protons = require("protons");
-const assert = require("assert");
-
-const pb = protons(require("./record.proto")).Record;
 const utils = require("./utils");
 
 const {
+    assert,
+    data: { protobuf },
     is
 } = adone;
+
+const pb = protobuf.create(require("./record.proto")).Record;
 
 class Record {
     /**

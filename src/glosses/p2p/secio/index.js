@@ -1,6 +1,4 @@
-const assert = require("assert");
 const debug = require("debug");
-const once = require("once");
 const log = debug("libp2p:secio");
 log.error = debug("libp2p:secio:error");
 
@@ -8,9 +6,11 @@ const handshake = require("./handshake");
 const State = require("./state");
 
 const {
+    assert,
     is,
     p2p: { Connection, PeerInfo },
-    stream: { pull }
+    stream: { pull },
+    util: { once }
 } = adone;
 
 module.exports = {

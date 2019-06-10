@@ -1,5 +1,4 @@
 const multicodec = require("./multicodec");
-const EE = require("events").EventEmitter;
 const Stop = require("./circuit/stop");
 const Hop = require("./circuit/hop");
 const proto = require("./protocol");
@@ -9,6 +8,7 @@ const StreamHandler = require("./circuit/stream-handler");
 
 const {
     async: { setImmediate },
+    event: { Emitter },
     multiformat: { multiaddr, mafmt }
 } = adone;
 
@@ -18,7 +18,7 @@ const log = debug("libp2p:circuit:listener");
 log.err = debug("libp2p:circuit:error:listener");
 
 module.exports = (swarm, options, connHandler) => {
-    const listener = new EE();
+    const listener = new Emitter();
     const utils = utilsFactory(swarm);
 
     listener.stopHandler = new Stop(swarm);

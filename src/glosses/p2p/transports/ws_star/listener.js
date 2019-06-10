@@ -2,18 +2,18 @@ const debug = require("debug");
 const log = debug("libp2p:websocket-star:listener");
 const io = require("socket.io-client");
 const uuid = require("uuid");
-const EE = require("events").EventEmitter;
-const once = require("once");
 const utils = require("./utils");
 const cleanUrlSIO = utils.cleanUrlSIO;
 const ERRORS = require("./errors");
 
 const {
     async: { series, setImmediate },
+    event: { Emitter },
     is,
     p2p: { crypto, Connection },
     stream: { pull },
-    multiformat: { multiaddr }
+    multiformat: { multiaddr },
+    util: { once }
 } = adone;
 const { through, socketioPullStream: sp } = pull;
 
@@ -31,7 +31,7 @@ const sioOptions = {
  * @param {PeerId} options.id - Id for the crypto challenge
  * @param {function} options.handler - Incomming connection handler
  */
-class Listener extends EE {
+class Listener extends Emitter {
     constructor(options) {
         super();
         this.id = options.id;

@@ -1,8 +1,8 @@
-const EventEmitter = require("events").EventEmitter;
 const constants = require("./constants");
 const util = require("./util");
 
 const {
+    event: { Emitter },
     stream: { pull }
 } = adone;
 const { empty, handshake } = pull;
@@ -15,7 +15,7 @@ log.error = debug("libp2p-ping:error");
 const PROTOCOL = constants.PROTOCOL;
 const PING_LENGTH = constants.PING_LENGTH;
 
-class Ping extends EventEmitter {
+class Ping extends Emitter {
     constructor(swarm, peer) {
         super();
 

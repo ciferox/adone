@@ -1,8 +1,8 @@
-const EventEmitter = require("events").EventEmitter;
 const debug = require("debug");
 
 const {
     async: { nextTick },
+    event: { Emitter },
     multiformat: { multiaddr, mafmt },
     p2p: { PeerId, PeerInfo }
 } = adone;
@@ -18,7 +18,7 @@ const isIPFS = function (addr) {
     }
 };
 
-class Bootstrap extends EventEmitter {
+class Bootstrap extends Emitter {
     constructor(options) {
         super();
         this._list = options.list;

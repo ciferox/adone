@@ -1,16 +1,17 @@
-const protons = require("protons");
 const debug = require("debug");
 const log = debug("libp2p:secio");
 log.error = debug("libp2p:secio:error");
-
-const pbm = protons(require("./secio.proto"));
 
 const support = require("../support");
 
 const {
     async: { parallel, waterfall },
+    data: { protobuf },
     p2p: { crypto, PeerId }
 } = adone;
+
+const pbm = protobuf.create(require("./secio.proto"));
+
 
 // nonceSize is the size of our nonces (in bytes)
 const nonceSize = 16;

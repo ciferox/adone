@@ -1,5 +1,4 @@
-const protobuf = require("protons");
-module.exports = protobuf(`
+module.exports = adone.data.protobuf.create(`
 message CircuitRelay {
 
   enum Status {

@@ -1,5 +1,7 @@
-const eachSeries = require("async/eachSeries");
-const without = require("lodash/without");
+const {
+    async: { eachSeries },
+    lodash: { without }
+} = adone;
 
 module.exports = (nodes, callback) => {
     eachSeries(

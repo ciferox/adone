@@ -1,5 +1,3 @@
-
-
 const asn1 = require("asn1.js");
 
 const util = require("./../util");

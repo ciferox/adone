@@ -1,10 +1,8 @@
 const {
-    p2p: { KadDHT, PeerBook, Switch, transport: { TCP }, muxer: { mplex } }
+    p2p: { KadDHT, PeerBook, Switch, transport: { TCP }, muxer: { mplex } },
+    promise: { promisify, nodeify }
 } = adone;
 const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", ...args);
-
-const promiseToCallback = require("promise-to-callback");
-const promisify = require("promisify-es6");
 
 const Query = require(srcPath("query"));
 const createPeerInfo = require("./utils/create_peer_info");
@@ -66,7 +64,7 @@ describe("Query", () => {
         };
 
         const q = new Query(dht, peer.id.id, () => queryFunc);
-        promiseToCallback(q.run([peerInfos[1].id]))((err, res) => {
+        nodeify(q.run([peerInfos[1].id]), (err, res) => {
             expect(err).to.not.exist();
             expect(res.paths[0].value).to.eql(Buffer.from("cool"));
             expect(res.paths[0].success).to.eql(true);
@@ -96,7 +94,7 @@ describe("Query", () => {
         };
 
         const q = new Query(dht, peer.id.id, () => queryFunc);
-        promiseToCallback(q.run([peerInfos[1].id]))((err, res) => {
+        nodeify(q.run([peerInfos[1].id]), (err, res) => {
             expect(err).not.to.exist();
 
             // Should have visited
@@ -124,7 +122,7 @@ describe("Query", () => {
         };
 
         const q = new Query(dht, peer.id.id, () => queryFunc);
-        promiseToCallback(q.run([peerInfos[1].id]))((err, res) => {
+        nodeify(q.run([peerInfos[1].id]), (err, res) => {
             expect(err).to.exist();
             expect(err.message).to.eql("fail");
             done();
@@ -137,7 +135,7 @@ describe("Query", () => {
         const queryFunc = async (p) => { };
 
         const q = new Query(dht, peer.id.id, () => queryFunc);
-        promiseToCallback(q.run([]))((err, res) => {
+        nodeify(q.run([]), (err, res) => {
             expect(err).to.not.exist();
 
             // Should not visit any peers
@@ -161,7 +159,7 @@ describe("Query", () => {
         };
 
         const q = new Query(dht, peer.id.id, () => queryFunc);
-        promiseToCallback(q.run([peerInfos[1].id]))((err, res) => {
+        nodeify(q.run([peerInfos[1].id]), (err, res) => {
             expect(err).to.not.exist();
             expect(res.finalSet.size).to.eql(2);
             done();
@@ -210,7 +208,7 @@ describe("Query", () => {
         };
 
         const q = new Query(dht, peer.id.id, () => queryFunc);
-        promiseToCallback(q.run([peerInfos[1].id, peerInfos[2].id, peerInfos[3].id]))((err, res) => {
+        nodeify(q.run([peerInfos[1].id, peerInfos[2].id, peerInfos[3].id]), (err, res) => {
             expect(err).to.not.exist();
 
             // Should visit all peers
@@ -251,7 +249,7 @@ describe("Query", () => {
         };
 
         const q = new Query(dht, peer.id.id, () => queryFunc);
-        promiseToCallback(q.run([peerInfos[1].id]))((err, res) => {
+        nodeify(q.run([peerInfos[1].id]), (err, res) => {
             expect(err).to.not.exist();
 
             // Should complete successfully
@@ -314,7 +312,7 @@ describe("Query", () => {
             };
 
             const q = new Query(dhtA, peer.id.id, () => queryFunc);
-            promiseToCallback(q.run([peerInfos[1].id]))((err, res) => {
+            nodeify(q.run([peerInfos[1].id]), (err, res) => {
                 expect(err).to.not.exist();
             });
 
@@ -358,7 +356,7 @@ describe("Query", () => {
             const q = new Query(dhtA, peer.id.id, () => queryFunc);
 
             dhtA.stop(() => {
-                promiseToCallback(q.run([peerInfos[1].id]))((err, res) => {
+                nodeify(q.run([peerInfos[1].id]), (err, res) => {
                     expect(err).to.not.exist();
 
                     // Should not visit any peers
@@ -416,7 +414,7 @@ describe("Query", () => {
         };
 
         const q = new Query(dht, peer.id.id, () => queryFunc);
-        promiseToCallback(q.run([peerInfos[1].id, peerInfos[4].id]))((err, res) => {
+        nodeify(q.run([peerInfos[1].id, peerInfos[4].id]), (err, res) => {
             expect(err).to.not.exist();
 
             // We should get back the values from both paths
@@ -484,7 +482,7 @@ describe("Query", () => {
         };
 
         const q = new Query(dht, peer.id.id, () => queryFunc);
-        promiseToCallback(q.run([peerInfos[1].id, peerInfos[4].id]))((err, res) => {
+        nodeify(q.run([peerInfos[1].id, peerInfos[4].id]), (err, res) => {
             expect(err).to.not.exist();
 
             // We should only get back the value from the path 4 -> 5
@@ -562,7 +560,7 @@ describe("Query", () => {
         };
 
         const q = new Query(dht, peer.id.id, () => queryFunc);
-        promiseToCallback(q.run([peerInfos[1].id, peerInfos[4].id]))((err, res) => {
+        nodeify(q.run([peerInfos[1].id, peerInfos[4].id]), (err, res) => {
             expect(err).to.not.exist();
 
             // We should only get back the value from the path 1 -> 2 -> 3
@@ -643,7 +641,7 @@ describe("Query", () => {
                 };
 
                 const q = new Query(dht, peerInfos[0].id.id, () => queryFunc);
-                promiseToCallback(q.run(initial))((err, res) => {
+                nodeify(q.run(initial), (err, res) => {
                     expect(err).to.not.exist();
 
                     // Should query 19 peers, then find some peers closer to the key, and
@@ -717,7 +715,7 @@ describe("Query", () => {
             q.concurrency = 1;
             // due to round-robin allocation of peers from starts, first
             // path is good, second bad
-            promiseToCallback(q.run(starts))((err, res) => {
+            nodeify(q.run(starts), (err, res) => {
                 expect(err).to.not.exist();
                 // we should reach the target node
                 expect(targetVisited).to.eql(true);
@@ -743,7 +741,7 @@ describe("Query", () => {
         };
 
         const q = new Query(dht, peer.id.id, () => queryFunc);
-        promiseToCallback(q.run([peerInfos[1].id]))((err, res) => {
+        nodeify(q.run([peerInfos[1].id]), (err, res) => {
             expect(err).to.not.exist();
         });
 

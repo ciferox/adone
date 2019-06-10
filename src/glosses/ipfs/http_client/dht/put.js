@@ -1,6 +1,8 @@
 'use strict'
 
-const promisify = require('promisify-es6')
+const {
+  promise: { promisify }
+} = adone;
 
 module.exports = (send) => {
   return promisify((key, value, opts, callback) => {

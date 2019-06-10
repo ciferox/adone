@@ -1,7 +1,8 @@
 const {
+    event: { Emitter },
     multiformat: { multiaddr }
 } = adone;
-const EventEmitter = require("events").EventEmitter;
+
 const debug = require("debug");
 const log = debug("libp2p:tcp:listen");
 
@@ -35,7 +36,7 @@ const trackSocket = function (server, socket) {
 };
 
 module.exports = (handler) => {
-    const listener = new EventEmitter();
+    const listener = new Emitter();
 
     const server = net.createServer((socket) => {
         // Avoid uncaught errors cause by unstable connections

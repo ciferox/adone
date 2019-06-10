@@ -1,12 +1,11 @@
-const assert = require("assert");
-const protons = require("protons");
-
-const pbm = protons(require("./dht.proto"));
-
 const {
+    assert,
+    data: { protobuf },
     is,
     p2p: { record: { Record }, PeerInfo, PeerId }
 } = adone;
+
+const pbm = protobuf.create(require("./dht.proto"));
 
 const MESSAGE_TYPE = pbm.Message.MessageType;
 const CONNECTION_TYPE = pbm.Message.ConnectionType;

@@ -1,4 +1,3 @@
-
 module.exports = `// Record represents a dht record that contains a value
 // for a key value pair
 message Record {

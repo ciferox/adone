@@ -1,5 +1,3 @@
-
-
 module.exports = {
     Record: require("./record"),
     validator: require("./validator"),

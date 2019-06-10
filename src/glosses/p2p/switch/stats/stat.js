@@ -1,9 +1,9 @@
-const EventEmitter = require("events");
 const Big = require("bignumber.js");
 const MovingAverage = require("moving-average");
 const retimer = require("retimer");
 
 const {
+    event: { Emitter },
     is
 } = adone;
 
@@ -13,7 +13,7 @@ const {
  * @param {Array<string>} initialCounters
  * @param {any} options
  */
-class Stats extends EventEmitter {
+class Stats extends Emitter {
     constructor(initialCounters, options) {
         super();
 
@@ -120,7 +120,7 @@ class Stats extends EventEmitter {
      * @returns {number}
      */
     _nextTimeout() {
-    // calculate the need for an update, depending on the queue length
+        // calculate the need for an update, depending on the queue length
         const urgency = this._queue.length / this._options.computeThrottleMaxQueueSize;
         const timeout = Math.max(this._options.computeThrottleTimeout * (1 - urgency), 0);
         return timeout;

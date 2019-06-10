@@ -1,6 +1,5 @@
 const debug = require("debug");
 const log = debug("libp2p:websocket-star");
-const EE = require("events").EventEmitter;
 const utils = require("./utils");
 const Listener = require("./listener");
 const cleanUrlSIO = utils.cleanUrlSIO;
@@ -8,6 +7,7 @@ const withIs = require("class-is");
 
 const {
     async: { setImmediate },
+    event: { Emitter },
     is,
     p2p: { Connection, PeerId, PeerInfo },
     multiformat: { multiaddr, mafmt }
@@ -26,7 +26,7 @@ class WebsocketStar {
         this.id = options.id;
         this.flag = options.allowJoinWithDisabledChallenge; // let's just refer to it as "flag"
 
-        this.discovery = new EE();
+        this.discovery = new Emitter();
         this.discovery.tag = "websocketStar";
         this.discovery.start = (callback) => {
             setImmediate(callback);

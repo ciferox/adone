@@ -2,9 +2,7 @@ const debug = require("debug");
 const log = debug("libp2p:webrtc-star");
 const withIs = require("class-is");
 const io = require("socket.io-client");
-const EE = require("events").EventEmitter;
 const SimplePeer = require("simple-peer");
-const once = require("once");
 const webrtcSupport = require("webrtcsupport");
 const utils = require("./utils");
 const cleanUrlSIO = utils.cleanUrlSIO;
@@ -12,10 +10,12 @@ const cleanMultiaddr = utils.cleanMultiaddr;
 
 const {
     async: { setImmediate },
+    event: { Emitter },
     is,
     p2p: { Connection, PeerId, PeerInfo },
     stream: { pull: { streamToPullStream: toPull } },
-    multiformat: { multiaddr, mafmt }
+    multiformat: { multiaddr, mafmt },
+    util: { once }
 } = adone;
 
 const noop = once(() => { });
@@ -40,7 +40,7 @@ class WebRTCStar {
             this.wrtc = options.wrtc;
         }
 
-        this.discovery = new EE();
+        this.discovery = new Emitter();
         this.discovery.tag = "webRTCStar";
         this.discovery.start = (callback) => {
             setImmediate(callback);
@@ -135,7 +135,7 @@ class WebRTCStar {
             options = {};
         }
 
-        const listener = new EE();
+        const listener = new Emitter();
 
         listener.listen = (ma, callback) => {
             callback = callback ? once(callback) : noop;

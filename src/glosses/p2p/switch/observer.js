@@ -1,8 +1,7 @@
 const {
+    event: { Emitter },
     stream: { pull: { map } }
 } = adone;
-
-const EventEmitter = require("events");
 
 /**
  * Takes a Switch and returns an Observer that can be used in conjunction with
@@ -14,7 +13,7 @@ const EventEmitter = require("events");
  * @returns {EventEmitter}
  */
 module.exports = (swtch) => {
-    const observer = Object.assign(new EventEmitter(), {
+    const observer = Object.assign(new Emitter(), {
         incoming: observe("in"),
         outgoing: observe("out")
     });

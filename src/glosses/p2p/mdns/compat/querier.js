@@ -1,17 +1,17 @@
 const {
     assert,
     async: { nextTick },
+    event: { Emitter },
     is,
+    multiformat: { multiaddr },
     p2p: { PeerInfo, PeerId }
 } = adone;
 
-const EE = require("events");
 const MDNS = require("multicast-dns");
-const Multiaddr = require("multiaddr");
 const log = require("debug")("libp2p:mdns:compat:querier");
 const { SERVICE_TAG_LOCAL, MULTICAST_IP, MULTICAST_PORT } = require("./constants");
 
-class Querier extends EE {
+class Querier extends Emitter {
     constructor(peerId, options) {
         super();
         assert(peerId, "missing peerId parameter");
@@ -63,12 +63,16 @@ class Querier extends EE {
         const ptrRecord = answers.find((a) => a.type === "PTR" && a.name === SERVICE_TAG_LOCAL);
 
         // Only deal with responses for our service tag
-        if (!ptrRecord) { return };
+        if (!ptrRecord) {
+            return;
+        }
 
         log("got response", event, info);
 
         const txtRecord = answers.find((a) => a.type === "TXT");
-        if (!txtRecord) { return log('missing TXT record in response') };
+        if (!txtRecord) {
+            return log("missing TXT record in response");
+        }
 
         let peerIdStr;
         try {
@@ -89,10 +93,14 @@ class Querier extends EE {
         }
 
         PeerInfo.create(peerId, (err, info) => {
-            if (err) { return log('failed to create peer info from peer ID', peerId, err) };
+            if (err) {
+                return log("failed to create peer info from peer ID", peerId, err);
+            }
 
             const srvRecord = answers.find((a) => a.type === "SRV");
-            if (!srvRecord) { return log('missing SRV record in response') };
+            if (!srvRecord) {
+                return log("missing SRV record in response");
+            }
 
             log("peer found", peerIdStr);
 
@@ -104,7 +112,7 @@ class Querier extends EE {
                 .reduce((addrs, a) => {
                     const maStr = `/${protos[a.type]}/${a.data}/tcp/${port}`;
                     try {
-                        addrs.push(new Multiaddr(maStr));
+                        addrs.push(new multiaddr(maStr));
                         log(maStr);
                     } catch (err) {
                         log(`failed to create multiaddr from ${a.type} record data`, maStr, port, err);
@@ -143,7 +151,9 @@ function periodically(fn, options) {
         handle = fn();
         timeoutId = setTimeout(() => {
             handle.stop((err) => {
-                if (err) { log(err) };
+                if (err) {
+                    log(err);
+                }
                 if (!stopped) {
                     timeoutId = setTimeout(reRun, options.interval);
                 }
@@ -171,7 +181,9 @@ const nextId = (() => {
     let id = 0;
     return () => {
         id++;
-        if (id === Number.MAX_SAFE_INTEGER) { id = 1 };
+        if (id === Number.MAX_SAFE_INTEGER) {
+            id = 1;
+        }
         return id;
     };
 })();

@@ -1,6 +1,8 @@
 'use strict'
 
-const promisify = require('promisify-es6')
+const {
+  promise: { promisify }
+} = adone;
 
 module.exports = (send) => {
   return promisify((key, opts, callback) => {
@@ -16,7 +18,7 @@ module.exports = (send) => {
       opts = {}
     }
 
-    function handleResult (done, err, res) {
+    function handleResult(done, err, res) {
       if (err) {
         return done(err)
       }

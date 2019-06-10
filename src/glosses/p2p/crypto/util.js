@@ -1,5 +1,3 @@
-
-
 const BN = require("asn1.js").bignum;
 
 // Convert a BN.js instance to a base64 encoded string without padding

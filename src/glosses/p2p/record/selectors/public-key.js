@@ -1,5 +1,3 @@
-
-
 /**
  * Best record selector, for public key records.
  * Simply returns the first record, as all valid public key

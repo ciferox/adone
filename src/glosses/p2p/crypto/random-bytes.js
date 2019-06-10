@@ -1,4 +1,3 @@
-
 const randomBytes = require("iso-random-stream/src/random");
 
 module.exports = function (number) {
