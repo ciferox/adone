@@ -1,4 +1,5 @@
 const {
+    assert,
     async: { waterfall, each, filter, timeout },
     is,
     datastore: { backend: { MemoryDatastore } },
@@ -19,7 +20,6 @@ const Providers = require("./providers");
 const Message = require("./message");
 const RandomWalk = require("./random-walk");
 const QueryManager = require("./query-manager");
-const assert = require("assert");
 
 /**
  * A DHT implementation modeled after Kademlia with S/Kademlia modifications.
@@ -536,7 +536,8 @@ class KadDHT extends Emitter {
 
         const errors = [];
         waterfall([
-            (cb) => this.providers.addProvider(key, this.peerInfo.id, cb),
+            // TODO: refactor this in method in async and remove this wrapper
+            (cb) => nodeify(this.providers.addProvider(key, this.peerInfo.id), (err) => cb(err)),
             (cb) => this.getClosestPeers(key.buffer, cb),
             (peers, cb) => {
                 const msg = new Message(Message.TYPES.ADD_PROVIDER, key.buffer, 0);

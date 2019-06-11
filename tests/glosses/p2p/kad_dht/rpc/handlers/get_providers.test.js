@@ -1,5 +1,6 @@
 const {
-    async: { parallel, waterfall }
+    async: { parallel, waterfall },
+    promise: { nodeify }
 } = adone;
 
 const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", ...args);
@@ -86,7 +87,7 @@ describe("rpc - handlers - GetProviders", () => {
 
         waterfall([
             (cb) => dht._add(closer, cb),
-            (cb) => dht.providers.addProvider(v.cid, prov, cb),
+            (cb) => nodeify(dht.providers.addProvider(v.cid, prov), (err) => cb(err)),
             (cb) => handler(dht)(peers[0], msg, cb)
         ], (err, response) => {
             expect(err).to.not.exist();

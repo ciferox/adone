@@ -9,7 +9,8 @@ const utils = require("../../utils");
 
 const {
     p2p: { PeerInfo },
-    multiformat: { CID }
+    multiformat: { CID },
+    promise: { nodeify }
 } = adone;
 
 module.exports = (dht) => {
@@ -44,7 +45,7 @@ module.exports = (dht) => {
 
                 cb(null, exists);
             }),
-            (cb) => dht.providers.getProviders(cid, cb),
+            (cb) => nodeify(dht.providers.getProviders(cid), cb),
             (cb) => dht._betterPeersToQuery(msg, peer, cb)
         ], (err, res) => {
             if (err) {

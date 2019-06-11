@@ -1,5 +1,6 @@
 const {
-    multiformat: { CID }
+    multiformat: { CID },
+    promise: { nodeify }
 } = adone;
 
 const utils = require("../../utils");
@@ -12,7 +13,7 @@ module.exports = (dht) => {
      *
      * @param {PeerInfo} peer
      * @param {Message} msg
-     * @param {function(Error, Message)} callback
+     * @param {function(Error)} callback
      * @returns {undefined}
      */
     return function addProvider(peer, msg, callback) {
@@ -49,7 +50,7 @@ module.exports = (dht) => {
             if (!dht._isSelf(pi.id)) {
                 foundProvider = true;
                 dht.peerBook.put(pi);
-                dht.providers.addProvider(cid, pi.id, callback);
+                nodeify(dht.providers.addProvider(cid, pi.id), (err) => callback(err));
             }
         });
 
@@ -60,7 +61,7 @@ module.exports = (dht) => {
         // https://github.com/libp2p/js-libp2p-kad-dht/pull/127
         // https://github.com/libp2p/js-libp2p-kad-dht/issues/128
         if (!foundProvider) {
-            dht.providers.addProvider(cid, peer.id, callback);
+            nodeify(dht.providers.addProvider(cid, peer.id), (err) => callback(err));
         }
     };
 };

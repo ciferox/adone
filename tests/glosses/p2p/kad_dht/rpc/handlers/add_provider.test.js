@@ -1,6 +1,7 @@
 const {
     async: { parallel, waterfall },
-    lodash: _
+    lodash: _,
+    promise: { nodeify }
 } = adone;
 const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", ...args);
 
@@ -77,7 +78,7 @@ describe("rpc - handlers - AddProvider", () => {
 
         waterfall([
             (cb) => handler(dht)(sender, msg, cb),
-            (cb) => dht.providers.getProviders(cid, cb),
+            (cb) => nodeify(dht.providers.getProviders(cid), cb),
             (provs, cb) => {
                 expect(provs).to.have.length(1);
                 expect(provs[0].id).to.eql(provider.id.id);
@@ -101,7 +102,7 @@ describe("rpc - handlers - AddProvider", () => {
 
         waterfall([
             (cb) => handler(dht)(sender, msg, cb),
-            (cb) => dht.providers.getProviders(cid, cb),
+            (cb) => nodeify(dht.providers.getProviders(cid), cb),
             (provs, cb) => {
                 expect(dht.peerBook.has(provider.id)).to.equal(false);
                 expect(provs).to.have.length(1);

@@ -214,6 +214,7 @@
     "on-finished": "^2.3.0",
     "one-time": "^0.0.4",
     "osenv": "^0.1.5",
+    "p-times": "^2.1.0",
     "pem-jwk": "^2.0.0",
     "permaproxy": "^0.0.2",
     "pkg-conf": "^2.1.0",
