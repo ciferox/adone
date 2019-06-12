@@ -37,7 +37,7 @@ describe('incremental', () => {
 		};
 	});
 
-	it('does not resolves id and transforms in the second time', () => {
+	it('does not resolve ids and transforms in the second time', () => {
 		return rollup
 			.rollup({
 				input: 'entry',
@@ -60,6 +60,31 @@ describe('incremental', () => {
 			})
 			.then(result => {
 				assert.equal(result, 42);
+			});
+	});
+
+	it('does not resolve dynamic ids and transforms in the second time', () => {
+		modules = {
+			entry: `export default import('foo');`,
+			foo: `export default 42`
+		};
+		return rollup
+			.rollup({
+				input: 'entry',
+				plugins: [plugin]
+			})
+			.then(bundle => {
+				assert.equal(resolveIdCalls, 2);
+				assert.equal(transformCalls, 2);
+				return rollup.rollup({
+					input: 'entry',
+					plugins: [plugin],
+					cache: bundle
+				});
+			})
+			.then(bundle => {
+				assert.equal(resolveIdCalls, 3); // +1 for entry point which is resolved every time
+				assert.equal(transformCalls, 2);
 			});
 	});
 

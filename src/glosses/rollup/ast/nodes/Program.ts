@@ -1,7 +1,7 @@
 import { RenderOptions, renderStatementList } from '../../utils/renderHelpers';
 import { ExecutionPathOptions } from '../ExecutionPathOptions';
 import * as NodeType from './NodeType';
-import { NodeBase, StatementNode } from './shared/Node';
+import { IncludeChildren, NodeBase, StatementNode } from './shared/Node';
 
 export default class Program extends NodeBase {
 	body!: StatementNode[];
@@ -15,11 +15,11 @@ export default class Program extends NodeBase {
 		return false;
 	}
 
-	include(includeAllChildrenRecursively: boolean) {
+	include(includeChildrenRecursively: IncludeChildren) {
 		this.included = true;
 		for (const node of this.body) {
-			if (includeAllChildrenRecursively || node.shouldBeIncluded()) {
-				node.include(includeAllChildrenRecursively);
+			if (includeChildrenRecursively || node.shouldBeIncluded()) {
+				node.include(includeChildrenRecursively);
 			}
 		}
 	}

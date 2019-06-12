@@ -1,6 +1,4 @@
-const {
-	text: { MagicString }
-} = adone;
+const MagicString = require('magic-string');
 
 module.exports = {
 	description: 'plugin transform hooks can use `this.parse(code, options)`',

@@ -51,6 +51,10 @@ import { timeEnd, timeStart } from './utils/timers';
 import { markModuleAndImpureDependenciesAsExecuted } from './utils/traverseStaticDependencies';
 import { MISSING_EXPORT_SHIM_VARIABLE } from './utils/variableNames';
 
+const {
+	text: { MagicString }
+} = adone;
+
 export interface CommentDescription {
 	block: boolean;
 	end: number;
@@ -99,7 +103,7 @@ export interface AstContext {
 	includeDynamicImport: (node: Import) => void;
 	includeVariable: (variable: Variable) => void;
 	isCrossChunkImport: (importDescription: ImportDescription) => boolean;
-	magicString: adone.text.MagicString;
+	magicString: MagicString;
 	module: Module; // not to be used for tree-shaking
 	moduleContext: string;
 	nodeConstructors: { [name: string]: typeof NodeBase };
@@ -108,6 +112,7 @@ export interface AstContext {
 	traceExport: (name: string) => Variable;
 	traceVariable: (name: string) => Variable | null;
 	treeshake: boolean;
+	tryCatchDeoptimization: boolean;
 	usesTopLevelAwait: boolean;
 	warn: (warning: RollupWarning, pos: number) => void;
 }
@@ -211,7 +216,7 @@ export default class Module {
 	private context: string;
 	private esTreeAst!: ESTree.Program;
 	private graph: Graph;
-	private magicString!: adone.text.MagicString;
+	private magicString!: MagicString;
 	private namespaceVariable: NamespaceVariable = undefined as any;
 	private transformDependencies!: string[];
 	private transitiveReexports?: string[];
@@ -454,7 +459,6 @@ export default class Module {
 
 		for (const exportName of this.getExports()) {
 			const variable = this.getVariableForExportName(exportName);
-
 			variable.deoptimizePath(UNKNOWN_PATH);
 			if (!variable.included) {
 				variable.include();
@@ -464,13 +468,13 @@ export default class Module {
 
 		for (const name of this.getReexports()) {
 			const variable = this.getVariableForExportName(name);
-
-			if (variable instanceof ExternalVariable) {
-				variable.reexported = variable.module.reexported = true;
-			} else if (!variable.included) {
+			variable.deoptimizePath(UNKNOWN_PATH);
+			if (!variable.included) {
 				variable.include();
-				variable.deoptimizePath(UNKNOWN_PATH);
 				this.graph.needsTreeshakingPass = true;
+			}
+			if (variable instanceof ExternalVariable) {
+				variable.module.reexported = true;
 			}
 		}
 	}
@@ -507,7 +511,7 @@ export default class Module {
 		});
 	}
 
-	render(options: RenderOptions): adone.text.MagicString {
+	render(options: RenderOptions): MagicString {
 		const magicString = this.magicString.clone();
 		this.ast.render(magicString, options);
 		this.usesTopLevelAwait = this.astContext.usesTopLevelAwait;
@@ -548,7 +552,7 @@ export default class Module {
 		// can change that, but it makes sense to use it for the source file name
 		const fileName = this.id;
 
-		this.magicString = new adone.text.MagicString(code, {
+		this.magicString = new MagicString(code, {
 			filename: (this.excludeFromSourcemap ? null : fileName) as string, // don't include plugin helpers in sourcemap
 			indentExclusionRanges: []
 		});
@@ -588,6 +592,8 @@ export default class Module {
 			traceExport: this.getVariableForExportName.bind(this),
 			traceVariable: this.traceVariable.bind(this),
 			treeshake: !!this.graph.treeshakingOptions,
+			tryCatchDeoptimization: (!this.graph.treeshakingOptions ||
+				this.graph.treeshakingOptions.tryCatchDeoptimization) as boolean,
 			usesTopLevelAwait: false,
 			warn: this.warn.bind(this)
 		};
@@ -630,7 +636,7 @@ export default class Module {
 			const otherModule = importDeclaration.module as Module | ExternalModule;
 
 			if (otherModule instanceof Module && importDeclaration.name === '*') {
-				return (otherModule).getOrCreateNamespace();
+				return otherModule.getOrCreateNamespace();
 			}
 
 			const declaration = otherModule.getVariableForExportName(importDeclaration.name);

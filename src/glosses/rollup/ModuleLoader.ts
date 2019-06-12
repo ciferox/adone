@@ -216,12 +216,18 @@ export class ModuleLoader {
 		return fileName;
 	}
 
-	resolveId(source: string, importer: string, skip?: number | null): Promise<ResolvedId | null> {
-		return Promise.resolve(
+	async resolveId(
+		source: string,
+		importer: string,
+		skip?: number | null
+	): Promise<ResolvedId | null> {
+		return this.normalizeResolveIdResult(
 			this.isExternal(source, importer, false)
-				? { id: source, external: true }
-				: this.pluginDriver.hookFirst('resolveId', [source, importer], null, skip as number)
-		).then(result => this.normalizeResolveIdResult(result, importer, source));
+				? false
+				: await this.pluginDriver.hookFirst('resolveId', [source, importer], null, skip),
+			importer,
+			source
+		);
 	}
 
 	private addToManualChunk(alias: string, module: Module) {
@@ -256,21 +262,23 @@ export class ModuleLoader {
 	private fetchAllDependencies(module: Module) {
 		const fetchDynamicImportsPromise = Promise.all(
 			module.getDynamicImportExpressions().map((specifier, index) =>
-				this.resolveDynamicImport(specifier as string | ESTree.Node, module.id).then(resolvedId => {
-					if (resolvedId === null) return;
-					const dynamicImport = module.dynamicImports[index];
-					if (typeof resolvedId === 'string') {
-						dynamicImport.resolution = resolvedId;
-						return;
+				this.resolveDynamicImport(module, specifier as string | ESTree.Node, module.id).then(
+					resolvedId => {
+						if (resolvedId === null) return;
+						const dynamicImport = module.dynamicImports[index];
+						if (typeof resolvedId === 'string') {
+							dynamicImport.resolution = resolvedId;
+							return;
+						}
+						return this.fetchResolvedDependency(
+							relativeId(resolvedId.id),
+							module.id,
+							resolvedId
+						).then(module => {
+							dynamicImport.resolution = module;
+						});
 					}
-					return this.fetchResolvedDependency(
-						relativeId(resolvedId.id),
-						module.id,
-						resolvedId
-					).then(module => {
-						dynamicImport.resolution = module;
-					});
-				})
+				)
 			)
 		);
 		fetchDynamicImportsPromise.catch(() => {});
@@ -398,7 +406,11 @@ export class ModuleLoader {
 				error(errUnresolvedImport(source, importer));
 			}
 			this.graph.warn(errUnresolvedImportTreatedAsExternal(source, importer));
-			return { id: source, external: true, moduleSideEffects: true };
+			return {
+				external: true,
+				id: source,
+				moduleSideEffects: this.hasModuleSideEffects(source, true)
+			};
 		}
 		return resolvedId;
 	}
@@ -451,13 +463,10 @@ export class ModuleLoader {
 					moduleSideEffects = resolveIdResult.moduleSideEffects;
 				}
 			} else {
-				id = resolveIdResult;
-				if (this.isExternal(id, importer, true)) {
+				if (this.isExternal(resolveIdResult, importer, true)) {
 					external = true;
 				}
-			}
-			if (external) {
-				id = normalizeRelativeExternalId(importer, id);
+				id = external ? normalizeRelativeExternalId(importer, resolveIdResult) : resolveIdResult;
 			}
 		} else {
 			id = normalizeRelativeExternalId(importer, source);
@@ -476,52 +485,55 @@ export class ModuleLoader {
 		};
 	}
 
-	private resolveAndFetchDependency(
+	private async resolveAndFetchDependency(
 		module: Module,
 		source: string
 	): Promise<Module | ExternalModule> {
-		return Promise.resolve(
-			module.resolvedIds[source] ||
-				this.resolveId(source, module.id).then(resolvedId =>
-					this.handleMissingImports(resolvedId, source, module.id)
-				)
-		).then(resolvedId => {
-			module.resolvedIds[source] = resolvedId;
-			return this.fetchResolvedDependency(source, module.id, resolvedId);
-		});
+		return this.fetchResolvedDependency(
+			source,
+			module.id,
+			(module.resolvedIds[source] =
+				module.resolvedIds[source] ||
+				this.handleMissingImports(await this.resolveId(source, module.id), source, module.id))
+		);
 	}
 
-	private resolveDynamicImport(
+	private async resolveDynamicImport(
+		module: Module,
 		specifier: string | ESTree.Node,
 		importer: string
 	): Promise<ResolvedId | string | null> {
 		// TODO we only should expose the acorn AST here
-		return this.pluginDriver
-			.hookFirst('resolveDynamicImport', [specifier, importer])
-			.then(resolution => {
-				if (typeof specifier !== 'string') {
-					if (typeof resolution === 'string') {
-						return resolution;
-					}
-					if (!resolution) {
-						return null as any;
-					}
-					return {
-						external: false,
-						moduleSideEffects: true,
-						...resolution
-					};
-				}
-				if (resolution == null) {
-					return this.resolveId(specifier, importer).then(resolvedId =>
-						this.handleMissingImports(resolvedId, specifier, importer)
-					);
-				}
-				return this.handleMissingImports(
-					this.normalizeResolveIdResult(resolution, importer, specifier),
+		const resolution = await this.pluginDriver.hookFirst('resolveDynamicImport', [
+			specifier,
+			importer
+		]);
+		if (typeof specifier !== 'string') {
+			if (typeof resolution === 'string') {
+				return resolution;
+			}
+			if (!resolution) {
+				return null;
+			}
+			return {
+				external: false,
+				moduleSideEffects: true,
+				...resolution
+			} as ResolvedId;
+		}
+		if (resolution == null) {
+			return (module.resolvedIds[specifier] =
+				module.resolvedIds[specifier] ||
+				this.handleMissingImports(
+					await this.resolveId(specifier, module.id),
 					specifier,
-					importer
-				);
-			});
+					module.id
+				));
+		}
+		return this.handleMissingImports(
+			this.normalizeResolveIdResult(resolution, importer, specifier),
+			specifier,
+			importer
+		);
 	}
 }

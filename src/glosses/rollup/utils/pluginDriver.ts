@@ -34,7 +34,7 @@ export interface PluginDriver {
 		hook: H,
 		args: Args<PluginHooks[H]>,
 		hookContext?: HookContext | null,
-		skip?: number
+		skip?: number | null
 	): EnsurePromise<R>;
 	hookFirstSync<H extends keyof PluginHooks, R = ReturnType<PluginHooks[H]>>(
 		hook: H,
@@ -218,10 +218,10 @@ export function createPluginDriver(
 			},
 			watcher: watcher
 				? ({
-					...(watcher as EventEmitter),
-					addListener: deprecatedWatchListener,
-					on: deprecatedWatchListener
-				} as EventEmitter)
+						...(watcher as EventEmitter),
+						addListener: deprecatedWatchListener,
+						on: deprecatedWatchListener
+				  } as EventEmitter)
 				: (undefined as any)
 		};
 		return context;
@@ -367,7 +367,7 @@ export function createPluginDriver(
 				if (!hookPromise) continue;
 				promises.push(hookPromise);
 			}
-			return Promise.all(promises).then(() => { });
+			return Promise.all(promises).then(() => {});
 		},
 
 		// chains, reduces returns of type R, to type T, handling the reduced value as the first hook argument
@@ -466,7 +466,7 @@ const noCache: PluginCache = {
 	get() {
 		return undefined as any;
 	},
-	set() { },
+	set() {},
 	delete() {
 		return false;
 	}

@@ -1,3 +1,4 @@
+import { relative } from './browser/path';
 import ExportDefaultDeclaration from './ast/nodes/ExportDefaultDeclaration';
 import FunctionDeclaration from './ast/nodes/FunctionDeclaration';
 import { UNDEFINED_EXPRESSION } from './ast/values';
@@ -26,7 +27,7 @@ import { error } from './utils/error';
 import { sortByExecutionOrder } from './utils/executionOrder';
 import getIndentString from './utils/getIndentString';
 import { makeLegal } from './utils/identifierHelpers';
-import { basename, dirname, isAbsolute, normalize, relative, resolve } from './utils/path';
+import { basename, dirname, isAbsolute, normalize, resolve } from './utils/path';
 import relativeId, { getAliasName } from './utils/relativeId';
 import renderChunk from './utils/renderChunk';
 import { RenderOptions } from './utils/renderHelpers';
@@ -38,8 +39,9 @@ import { INTEROP_DEFAULT_VARIABLE, MISSING_EXPORT_SHIM_VARIABLE } from './utils/
 
 const {
 	crypto: { sha256 },
-	text: { MagicString: { Bundle: MagicStringBundle, SourceMap } }
+	text: { MagicString }
 } = adone;
+const { Bundle: MagicStringBundle, SourceMap } = MagicString;
 
 
 export interface ModuleDeclarations {
@@ -101,9 +103,7 @@ function getGlobalName(
 		graph.warn({
 			code: 'MISSING_GLOBAL_NAME',
 			guess: module.variableName,
-			message: `No name was provided for external module '${
-				module.id
-			}' in output.globals – guessing '${module.variableName}'`,
+			message: `No name was provided for external module '${module.id}' in output.globals – guessing '${module.variableName}'`,
 			source: module.id
 		});
 		return module.variableName;
@@ -157,7 +157,7 @@ export default class Chunk {
 		exports: ChunkExports;
 	} = undefined as any;
 	private renderedHash: string = undefined as any;
-	private renderedModuleSources: adone.text.MagicString[] = undefined as any;
+	private renderedModuleSources: MagicString[] = undefined as any;
 	private renderedSource: MagicStringBundle | null = null;
 	private renderedSourceLength: number = undefined as any;
 	private sortedExportNames: string[] | null = null;
@@ -554,7 +554,7 @@ export default class Chunk {
 				if (namespace.included && !this.graph.preserveModules) {
 					const rendered = namespace.renderBlock(renderOptions);
 					if (namespace.renderFirst()) hoistedSource += n + rendered;
-					else magicString.addSource(new adone.text.MagicString(rendered));
+					else magicString.addSource(new MagicString(rendered));
 				}
 			}
 		}
@@ -1091,7 +1091,10 @@ export default class Chunk {
 				}
 			}
 		}
-		if (module.isEntryPoint) {
+		if (
+			module.isEntryPoint ||
+			module.dynamicallyImportedBy.some(importer => importer.chunk !== this)
+		) {
 			const map = module.getExportNamesByVariable();
 			for (const exportedVariable of map.keys()) {
 				this.exports.add(exportedVariable);

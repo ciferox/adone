@@ -1,7 +1,5 @@
-const {
-	path,
-	text: { MagicString }
-} = adone;
+const path = require('path');
+const MagicString = require('magic-string');
 
 module.exports = {
 	description: 'error after transform should throw with correct location of file',

@@ -11,7 +11,9 @@ module.exports = (common) => {
 
         before((done) => {
             common.setup((err, _transport, _addrs) => {
-                if (err) { return done(err) };
+                if (err) {
+                    return done(err);
+                }
                 transport = _transport;
                 addrs = _addrs;
                 done();
