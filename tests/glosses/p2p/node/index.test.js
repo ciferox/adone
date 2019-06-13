@@ -106,35 +106,37 @@ describe("creation", () => {
         });
     });
 
-    it('createLibp2p should create a peerInfo instance', (done) => {
+    it("createLibp2p should create a peerInfo instance", function (done) {
+        this.timeout(10e3);
         createLibp2p({
             modules: {
                 transport: [WS]
             }
         }, (err, libp2p) => {
-            expect(err).to.not.exist()
-            expect(libp2p).to.exist()
-            done()
-        })
-    })
+            expect(err).to.not.exist();
+            expect(libp2p).to.exist();
+            done();
+        });
+    });
 
-    it('createLibp2p should allow for a provided peerInfo instance', (done) => {
+    it("createLibp2p should allow for a provided peerInfo instance", function (done) {
+        this.timeout(10e3);
         PeerInfo.create((err, peerInfo) => {
-            expect(err).to.not.exist()
-            sinon.spy(PeerInfo, 'create')
+            expect(err).to.not.exist();
+            sinon.spy(PeerInfo, "create");
             createLibp2p({
                 peerInfo,
                 modules: {
                     transport: [WS]
                 }
             }, (err, libp2p) => {
-                expect(err).to.not.exist()
-                expect(libp2p).to.exist()
-                expect(PeerInfo.create.callCount).to.eql(0)
-                done()
-            })
-        })
-    })
+                expect(err).to.not.exist();
+                expect(libp2p).to.exist();
+                expect(PeerInfo.create.callCount).to.eql(0);
+                done();
+            });
+        });
+    });
 });
 
 describe("configuration", () => {
