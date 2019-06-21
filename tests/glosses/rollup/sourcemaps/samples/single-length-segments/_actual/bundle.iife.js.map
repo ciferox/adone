@@ -1,1 +1,0 @@
-{"version":3,"file":"bundle.iife.js","sources":["../main.js"],"sourcesContent":["class Foo {\n\tbar () {\n\t\tconsole.log( 42 );\n\t}\n}\n\nexport { Foo };\n"],"names":[],"mappings":";;;KAAM;;;;;;;yBACE;CACN,WAAQ,GAAR,CAAa,EAAb;CACA;;;;;;;;;;;;;"}

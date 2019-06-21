@@ -1,1 +1,0 @@
-{"version":3,"file":"bundle.cjs.js","sources":["../foo.js","../main.js"],"sourcesContent":["export var bar = 42;\n","import * as foo from './foo.js';\n\nassert.deepEqual( foo, { bar: 42 });\n"],"names":[],"mappings":";;AAAO,IAAI,GAAG,GAAG,EAAE,CAAC;;;;;;ACEpB,MAAM,CAAC,SAAS,EAAE,GAAG,EAAE,EAAE,GAAG,EAAE,EAAE,EAAE,CAAC,CAAC"}

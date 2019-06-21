@@ -1,1 +1,0 @@
-{"version":3,"file":"bundle.iife.js","sources":["../main.js"],"sourcesContent":["console.log( 42 );\n"],"names":["console","log"],"mappings":"yBAAAA,QAAQC,GAAR,CAAa,EAAb"}

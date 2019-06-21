@@ -1,4 +1,5 @@
 module.exports = {
+        skip: true,
 	description: 'allows to configure asset urls',
 	options: {
 		plugins: [

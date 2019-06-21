@@ -31,6 +31,7 @@ import ExternalModule from './ExternalModule';
 import Graph from './Graph';
 import {
 	Asset,
+	EmittedChunk,
 	ModuleJSON,
 	RawSourceMap,
 	ResolvedIdMap,
@@ -201,13 +202,14 @@ export default class Module {
 	manualChunkAlias: string = null as any;
 	moduleSideEffects: boolean;
 	originalCode!: string;
-	originalSourcemap!: RawSourceMap | void;
+	originalSourcemap!: RawSourceMap | null;
 	reexports: { [name: string]: ReexportDescription } = Object.create(null);
 	resolvedIds!: ResolvedIdMap;
 	scope!: ModuleScope;
 	sourcemapChain!: RawSourceMap[];
 	sources: string[] = [];
 	transformAssets?: Asset[];
+	transformChunks?: EmittedChunk[];
 	usesTopLevelAwait = false;
 
 	private allExportNames?: Set<string>;
@@ -218,7 +220,7 @@ export default class Module {
 	private graph: Graph;
 	private magicString!: MagicString;
 	private namespaceVariable: NamespaceVariable = undefined as any;
-	private transformDependencies!: string[];
+	private transformDependencies: string[] | null = null;
 	private transitiveReexports?: string[];
 
 	constructor(graph: Graph, id: string, moduleSideEffects: boolean, isEntry: boolean) {
@@ -430,8 +432,7 @@ export default class Module {
 		}
 
 		if (name !== 'default') {
-			for (let i = 0; i < this.exportAllModules.length; i += 1) {
-				const module = this.exportAllModules[i];
+			for (const module of this.exportAllModules) {
 				const declaration = module.getVariableForExportName(name, true);
 
 				if (declaration) return declaration;
@@ -505,10 +506,16 @@ export default class Module {
 		this.addModulesToSpecifiers(this.importDescriptions);
 		this.addModulesToSpecifiers(this.reexports);
 
-		this.exportAllModules = this.exportAllSources.map(source => {
-			const id = this.resolvedIds[source].id;
-			return this.graph.moduleById.get(id) as any;
-		});
+		this.exportAllModules = this.exportAllSources
+			.map(source => {
+				const id = this.resolvedIds[source].id;
+				return this.graph.moduleById.get(id) as Module | ExternalModule;
+			})
+			.sort((moduleA, moduleB) => {
+				const aExternal = moduleA instanceof ExternalModule;
+				const bExternal = moduleB instanceof ExternalModule;
+				return aExternal === bExternal ? 0 : aExternal ? 1 : -1;
+			});
 	}
 
 	render(options: RenderOptions): MagicString {
@@ -527,13 +534,24 @@ export default class Module {
 		originalSourcemap,
 		resolvedIds,
 		sourcemapChain,
+		transformAssets,
+		transformChunks,
 		transformDependencies
-	}: TransformModuleJSON) {
+	}: TransformModuleJSON & {
+		transformAssets?: Asset[] | undefined;
+		transformChunks?: EmittedChunk[] | undefined;
+	}) {
 		this.code = code;
 		this.originalCode = originalCode;
 		this.originalSourcemap = originalSourcemap;
 		this.sourcemapChain = sourcemapChain as RawSourceMap[];
-		this.transformDependencies = transformDependencies as string[];
+		if (transformAssets) {
+			this.transformAssets = transformAssets;
+		}
+		if (transformChunks) {
+			this.transformChunks = transformChunks;
+		}
+		this.transformDependencies = transformDependencies;
 		this.customTransformCache = customTransformCache;
 		if (typeof moduleSideEffects === 'boolean') {
 			this.moduleSideEffects = moduleSideEffects;
@@ -621,6 +639,7 @@ export default class Module {
 			resolvedIds: this.resolvedIds,
 			sourcemapChain: this.sourcemapChain,
 			transformAssets: this.transformAssets,
+			transformChunks: this.transformChunks,
 			transformDependencies: this.transformDependencies
 		};
 	}
