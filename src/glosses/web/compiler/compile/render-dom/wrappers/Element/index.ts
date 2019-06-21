@@ -28,6 +28,12 @@ const events = [
 			node.name === 'input' && !/radio|checkbox|range/.test(node.get_static_attribute_value('type') as string)
 	},
 	{
+		event_names: ['input'],
+		filter: (node: Element, name: string) =>
+			(name === 'text' || name === 'html') &&
+			node.attributes.some(attribute => attribute.name === 'contenteditable')
+	},
+	{
 		event_names: ['change'],
 		filter: (node: Element, _name: string) =>
 			node.name === 'select' ||
@@ -329,6 +335,8 @@ export default class ElementWrapper extends Wrapper {
 
 		function to_html(wrapper: ElementWrapper | TextWrapper) {
 			if (wrapper.node.type === 'Text') {
+				if (wrapper.node.use_space) return ' ';
+
 				const parent = wrapper.node.parent as Element;
 
 				const raw = parent && (
@@ -336,9 +344,9 @@ export default class ElementWrapper extends Wrapper {
 					parent.name === 'style'
 				);
 
-				return raw
+				return (raw
 					? wrapper.node.data
-					: escape_html(wrapper.node.data)
+					: escape_html(wrapper.node.data))
 						.replace(/\\/g, '\\\\')
 						.replace(/`/g, '\\`')
 						.replace(/\$/g, '\\$');
