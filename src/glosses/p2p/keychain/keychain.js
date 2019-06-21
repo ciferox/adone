@@ -3,6 +3,7 @@
 const sanitize = require("sanitize-filename");
 const mergeOptions = require("merge-options");
 const CMS = require("./cms");
+const errcode = require("err-code");
 
 const {
     is,
@@ -33,12 +34,8 @@ const defaultOptions = {
 };
 
 function validateKeyName(name) {
-    if (!name) {
-        return false; 
-    }
-    if (!is.string(name)) {
-        return false; 
-    }
+    if (!name) { return false };
+    if (!is.string(name)) { return false };
     return name === sanitize(name.trim());
 }
 
@@ -57,9 +54,7 @@ function _error(callback, err) {
     const min = 200;
     const max = 1000;
     const delay = Math.random() * (max - min) + min;
-    if (is.string(err)) {
-        err = new Error(err); 
-    }
+
     setTimeout(callback, delay, err, null);
 }
 
@@ -190,30 +185,26 @@ class Keychain {
         const self = this;
 
         if (!validateKeyName(name) || name === "self") {
-            return _error(callback, `Invalid key name '${name}'`);
+            return _error(callback, errcode(new Error(`Invalid key name '${name}'`), "ERR_INVALID_KEY_NAME"));
         }
 
         if (!is.string(type)) {
-            return _error(callback, `Invalid key type '${type}'`);
+            return _error(callback, errcode(new Error(`Invalid key type '${type}'`), "ERR_INVALID_KEY_TYPE"));
         }
 
         if (!is.safeInteger(size)) {
-            return _error(callback, `Invalid key size '${size}'`);
+            return _error(callback, errcode(new Error(`Invalid key size '${size}'`), "ERR_INVALID_KEY_SIZE"));
         }
 
         const dsname = DsName(name);
         self.store.has(dsname, (err, exists) => {
-            if (err) {
-                return _error(callback, err); 
-            }
-            if (exists) {
-                return _error(callback, `Key '${name}' already exists`); 
-            }
+            if (err) { return _error(callback, err) };
+            if (exists) { return _error(callback, errcode(new Error(`Key '${name}' already exists`), 'ERR_KEY_ALREADY_EXISTS')) };
 
             switch (type.toLowerCase()) {
                 case "rsa":
                     if (size < 2048) {
-                        return _error(callback, `Invalid RSA key size ${size}`);
+                        return _error(callback, errcode(new Error(`Invalid RSA key size ${size}`), "ERR_INVALID_KEY_SIZE"));
                     }
                     break;
                 default:
@@ -221,17 +212,11 @@ class Keychain {
             }
 
             crypto.keys.generateKeyPair(type, size, (err, keypair) => {
-                if (err) {
-                    return _error(callback, err); 
-                }
+                if (err) { return _error(callback, err) };
                 keypair.id((err, kid) => {
-                    if (err) {
-                        return _error(callback, err); 
-                    }
+                    if (err) { return _error(callback, err) };
                     keypair.export(this._(), (err, pem) => {
-                        if (err) {
-                            return _error(callback, err); 
-                        }
+                        if (err) { return _error(callback, err) };
                         const keyInfo = {
                             name,
                             id: kid
@@ -240,9 +225,7 @@ class Keychain {
                         batch.put(dsname, pem);
                         batch.put(DsInfoName(name), JSON.stringify(keyInfo));
                         batch.commit((err) => {
-                            if (err) {
-                                return _error(callback, err); 
-                            }
+                            if (err) { return _error(callback, err) };
 
                             callback(null, keyInfo);
                         });
@@ -266,9 +249,7 @@ class Keychain {
         pull(
             self.store.query(query),
             collect((err, res) => {
-                if (err) {
-                    return _error(callback, err); 
-                }
+                if (err) { return _error(callback, err) };
 
                 const info = res.map((r) => JSON.parse(r.value));
                 callback(null, info);
@@ -285,9 +266,7 @@ class Keychain {
      */
     findKeyById(id, callback) {
         this.listKeys((err, keys) => {
-            if (err) {
-                return _error(callback, err); 
-            }
+            if (err) { return _error(callback, err) };
 
             const key = keys.find((k) => k.id === id);
             callback(null, key);
@@ -303,13 +282,13 @@ class Keychain {
      */
     findKeyByName(name, callback) {
         if (!validateKeyName(name)) {
-            return _error(callback, `Invalid key name '${name}'`);
+            return _error(callback, errcode(new Error(`Invalid key name '${name}'`), "ERR_INVALID_KEY_NAME"));
         }
 
         const dsname = DsInfoName(name);
         this.store.get(dsname, (err, res) => {
             if (err) {
-                return _error(callback, `Key '${name}' does not exist. ${err.message}`);
+                return _error(callback, errcode(new Error(`Key '${name}' does not exist. ${err.message}`), "ERR_KEY_NOT_FOUND"));
             }
 
             callback(null, JSON.parse(res.toString()));
@@ -326,20 +305,16 @@ class Keychain {
     removeKey(name, callback) {
         const self = this;
         if (!validateKeyName(name) || name === "self") {
-            return _error(callback, `Invalid key name '${name}'`);
+            return _error(callback, errcode(new Error(`Invalid key name '${name}'`), "ERR_INVALID_KEY_NAME"));
         }
         const dsname = DsName(name);
         self.findKeyByName(name, (err, keyinfo) => {
-            if (err) {
-                return _error(callback, err); 
-            }
+            if (err) { return _error(callback, err) };
             const batch = self.store.batch();
             batch.delete(dsname);
             batch.delete(DsInfoName(name));
             batch.commit((err) => {
-                if (err) {
-                    return _error(callback, err); 
-                }
+                if (err) { return _error(callback, err) };
                 callback(null, keyinfo);
             });
         });
@@ -356,10 +331,10 @@ class Keychain {
     renameKey(oldName, newName, callback) {
         const self = this;
         if (!validateKeyName(oldName) || oldName === "self") {
-            return _error(callback, `Invalid old key name '${oldName}'`);
+            return _error(callback, errcode(new Error(`Invalid old key name '${oldName}'`), "ERR_OLD_KEY_NAME_INVALID"));
         }
         if (!validateKeyName(newName) || newName === "self") {
-            return _error(callback, `Invalid new key name '${newName}'`);
+            return _error(callback, errcode(new Error(`Invalid new key name '${newName}'`), "ERR_NEW_KEY_NAME_INVALID"));
         }
         const oldDsname = DsName(oldName);
         const newDsname = DsName(newName);
@@ -367,21 +342,15 @@ class Keychain {
         const newInfoName = DsInfoName(newName);
         this.store.get(oldDsname, (err, res) => {
             if (err) {
-                return _error(callback, `Key '${oldName}' does not exist. ${err.message}`);
+                return _error(callback, errcode(new Error(`Key '${oldName}' does not exist. ${err.message}`), "ERR_KEY_NOT_FOUND"));
             }
             const pem = res.toString();
             self.store.has(newDsname, (err, exists) => {
-                if (err) {
-                    return _error(callback, err); 
-                }
-                if (exists) {
-                    return _error(callback, `Key '${newName}' already exists`); 
-                }
+                if (err) { return _error(callback, err) };
+                if (exists) { return _error(callback, errcode(new Error(`Key '${newName}' already exists`), 'ERR_KEY_ALREADY_EXISTS')) };
 
                 self.store.get(oldInfoName, (err, res) => {
-                    if (err) {
-                        return _error(callback, err); 
-                    }
+                    if (err) { return _error(callback, err) };
 
                     const keyInfo = JSON.parse(res.toString());
                     keyInfo.name = newName;
@@ -391,9 +360,7 @@ class Keychain {
                     batch.delete(oldDsname);
                     batch.delete(oldInfoName);
                     batch.commit((err) => {
-                        if (err) {
-                            return _error(callback, err); 
-                        }
+                        if (err) { return _error(callback, err) };
                         callback(null, keyInfo);
                     });
                 });
@@ -411,22 +378,20 @@ class Keychain {
      */
     exportKey(name, password, callback) {
         if (!validateKeyName(name)) {
-            return _error(callback, `Invalid key name '${name}'`);
+            return _error(callback, errcode(new Error(`Invalid key name '${name}'`), "ERR_INVALID_KEY_NAME"));
         }
         if (!password) {
-            return _error(callback, "Password is required");
+            return _error(callback, errcode(new Error("Password is required"), "ERR_PASSWORD_REQUIRED"));
         }
 
         const dsname = DsName(name);
         this.store.get(dsname, (err, res) => {
             if (err) {
-                return _error(callback, `Key '${name}' does not exist. ${err.message}`);
+                return _error(callback, errcode(new Error(`Key '${name}' does not exist. ${err.message}`), "ERR_KEY_NOT_FOUND"));
             }
             const pem = res.toString();
             crypto.keys.import(pem, this._(), (err, privateKey) => {
-                if (err) {
-                    return _error(callback, err); 
-                }
+                if (err) { return _error(callback, err) };
                 privateKey.export(password, callback);
             });
         });
@@ -444,31 +409,21 @@ class Keychain {
     importKey(name, pem, password, callback) {
         const self = this;
         if (!validateKeyName(name) || name === "self") {
-            return _error(callback, `Invalid key name '${name}'`);
+            return _error(callback, errcode(new Error(`Invalid key name '${name}'`), "ERR_INVALID_KEY_NAME"));
         }
         if (!pem) {
             return _error(callback, "PEM encoded key is required");
         }
         const dsname = DsName(name);
         self.store.has(dsname, (err, exists) => {
-            if (err) {
-                return _error(callback, err); 
-            }
-            if (exists) {
-                return _error(callback, `Key '${name}' already exists`); 
-            }
+            if (err) { return _error(callback, err) };
+            if (exists) { return _error(callback, errcode(new Error(`Key '${name}' already exists`), 'ERR_KEY_ALREADY_EXISTS')) };
             crypto.keys.import(pem, password, (err, privateKey) => {
-                if (err) {
-                    return _error(callback, "Cannot read the key, most likely the password is wrong"); 
-                }
+                if (err) { return _error(callback, errcode(new Error('Cannot read the key, most likely the password is wrong'), 'ERR_CANNOT_READ_KEY')) };
                 privateKey.id((err, kid) => {
-                    if (err) {
-                        return _error(callback, err); 
-                    }
+                    if (err) { return _error(callback, err) };
                     privateKey.export(this._(), (err, pem) => {
-                        if (err) {
-                            return _error(callback, err); 
-                        }
+                        if (err) { return _error(callback, err) };
                         const keyInfo = {
                             name,
                             id: kid
@@ -477,9 +432,7 @@ class Keychain {
                         batch.put(dsname, pem);
                         batch.put(DsInfoName(name), JSON.stringify(keyInfo));
                         batch.commit((err) => {
-                            if (err) {
-                                return _error(callback, err); 
-                            }
+                            if (err) { return _error(callback, err) };
 
                             callback(null, keyInfo);
                         });
@@ -492,30 +445,22 @@ class Keychain {
     importPeer(name, peer, callback) {
         const self = this;
         if (!validateKeyName(name)) {
-            return _error(callback, `Invalid key name '${name}'`);
+            return _error(callback, errcode(new Error(`Invalid key name '${name}'`), "ERR_INVALID_KEY_NAME"));
         }
         if (!peer || !peer.privKey) {
-            return _error(callback, "Peer.privKey is required");
+            return _error(callback, errcode(new Error("Peer.privKey is required"), "ERR_MISSING_PRIVATE_KEY"));
         }
 
         const privateKey = peer.privKey;
         const dsname = DsName(name);
         self.store.has(dsname, (err, exists) => {
-            if (err) {
-                return _error(callback, err); 
-            }
-            if (exists) {
-                return _error(callback, `Key '${name}' already exists`); 
-            }
+            if (err) { return _error(callback, err) };
+            if (exists) { return _error(callback, errcode(new Error(`Key '${name}' already exists`), 'ERR_KEY_ALREADY_EXISTS')) };
 
             privateKey.id((err, kid) => {
-                if (err) {
-                    return _error(callback, err); 
-                }
+                if (err) { return _error(callback, err) };
                 privateKey.export(this._(), (err, pem) => {
-                    if (err) {
-                        return _error(callback, err); 
-                    }
+                    if (err) { return _error(callback, err) };
                     const keyInfo = {
                         name,
                         id: kid
@@ -524,9 +469,7 @@ class Keychain {
                     batch.put(dsname, pem);
                     batch.put(DsInfoName(name), JSON.stringify(keyInfo));
                     batch.commit((err) => {
-                        if (err) {
-                            return _error(callback, err); 
-                        }
+                        if (err) { return _error(callback, err) };
 
                         callback(null, keyInfo);
                     });
@@ -545,11 +488,11 @@ class Keychain {
      */
     _getPrivateKey(name, callback) {
         if (!validateKeyName(name)) {
-            return _error(callback, `Invalid key name '${name}'`);
+            return _error(callback, errcode(new Error(`Invalid key name '${name}'`), "ERR_INVALID_KEY_NAME"));
         }
         this.store.get(DsName(name), (err, res) => {
             if (err) {
-                return _error(callback, `Key '${name}' does not exist. ${err.message}`);
+                return _error(callback, errcode(new Error(`Key '${name}' does not exist. ${err.message}`), "ERR_KEY_NOT_FOUND"));
             }
             callback(null, res.toString());
         });
