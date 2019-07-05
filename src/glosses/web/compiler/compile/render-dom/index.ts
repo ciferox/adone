@@ -31,7 +31,7 @@ export default function dom(
 	const builder = new CodeBuilder();
 
 	if (component.compile_options.dev) {
-		builder.add_line(`const ${renderer.file_var} = ${JSON.stringify(component.file)};`);
+		builder.add_line(`const ${renderer.file_var} = ${component.file && stringify(component.file, { only_escape_at_symbol: true })};`);
 	}
 
 	const css = component.stylesheet.render(options.filename, !options.customElement);
@@ -39,13 +39,15 @@ export default function dom(
 		`${css.code}\n/*# sourceMappingURL=${css.map.toUrl()} */` :
 		css.code, { only_escape_at_symbol: true });
 
+	const add_css = component.get_unique_name('add_css');
+
 	if (styles && component.compile_options.css !== false && !options.customElement) {
 		builder.add_block(deindent`
-			function @add_css() {
+			function ${add_css}() {
 				var style = @element("style");
 				style.id = '${component.stylesheet.id}-style';
 				style.textContent = ${styles};
-				@append(document.head, style);
+				@append(@_document.head, style);
 			}
 		`);
 	}
@@ -60,7 +62,7 @@ export default function dom(
 
 	if (options.dev && !options.hydratable) {
 		block.builders.claim.add_line(
-			'throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");'
+			'throw new @_Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");'
 		);
 	}
 
@@ -83,7 +85,7 @@ export default function dom(
 			${$$props} => {
 				${uses_props && component.invalidate('$$props', `$$props = @assign(@assign({}, $$props), $$new_props)`)}
 				${writable_props.map(prop =>
-					`if ('${prop.export_name}' in $$props) ${component.invalidate(prop.name, `${prop.name} = $$props.${prop.export_name}`)};`
+					`if ('${prop.export_name}' in ${$$props}) ${component.invalidate(prop.name, `${prop.name} = ${$$props}.${prop.export_name}`)};`
 				)}
 				${component.slots.size > 0 &&
 				`if ('$$scope' in ${$$props}) ${component.invalidate('$$scope', `$$scope = ${$$props}.$$scope`)};`}
@@ -109,7 +111,7 @@ export default function dom(
 		} else if (component.compile_options.dev) {
 			body.push(deindent`
 				get ${x.export_name}() {
-					throw new Error("<${component.tag}>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+					throw new @_Error("<${component.tag}>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
 				}
 			`);
 		}
@@ -125,14 +127,14 @@ export default function dom(
 			} else if (component.compile_options.dev) {
 				body.push(deindent`
 					set ${x.export_name}(value) {
-						throw new Error("<${component.tag}>: Cannot set read-only property '${x.export_name}'");
+						throw new @_Error("<${component.tag}>: Cannot set read-only property '${x.export_name}'");
 					}
 				`);
 			}
 		} else if (component.compile_options.dev) {
 			body.push(deindent`
 				set ${x.export_name}(value) {
-					throw new Error("<${component.tag}>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+					throw new @_Error("<${component.tag}>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
 				}
 			`);
 		}
@@ -148,7 +150,7 @@ export default function dom(
 				const props = ${options.customElement ? `this.attributes` : `options.props || {}`};
 				${expected.map(prop => deindent`
 				if (ctx.${prop.name} === undefined && !('${prop.export_name}' in props)) {
-					console.warn("<${component.tag}> was created without expected prop '${prop.export_name}'");
+					@_console.warn("<${component.tag}> was created without expected prop '${prop.export_name}'");
 				}`)}
 			`;
 		}
@@ -405,8 +407,8 @@ export default function dom(
 		if (component.compile_options.dev && !component.var_lookup.has('$$props') && writable_props.length) {
 			unknown_props_check = deindent`
 				const writable_props = [${writable_props.map(prop => `'${prop.export_name}'`).join(', ')}];
-				Object.keys($$props).forEach(key => {
-					if (!writable_props.includes(key) && !key.startsWith('$$')) console.warn(\`<${component.tag}> was created with unknown prop '\${key}'\`);
+				@_Object.keys($$props).forEach(key => {
+					if (!writable_props.includes(key) && !key.startsWith('$$')) @_console.warn(\`<${component.tag}> was created with unknown prop '\${key}'\`);
 				});
 			`;
 		}
@@ -484,7 +486,7 @@ export default function dom(
 
 		if (component.tag != null) {
 			builder.add_block(deindent`
-				customElements.define("${component.tag}", ${name});
+				@_customElements.define("${component.tag}", ${name});
 			`);
 		}
 	} else {
@@ -494,7 +496,7 @@ export default function dom(
 			class ${name} extends @${superclass} {
 				constructor(options) {
 					super(${options.dev && `options`});
-					${should_add_css && `if (!document.getElementById("${component.stylesheet.id}-style")) @add_css();`}
+					${should_add_css && `if (!@_document.getElementById("${component.stylesheet.id}-style")) ${add_css}();`}
 					@init(this, options, ${definition}, create_fragment, ${not_equal}, ${prop_names});
 
 					${dev_props_check}

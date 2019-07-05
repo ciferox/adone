@@ -19,6 +19,7 @@ import add_event_handlers from '../shared/add_event_handlers';
 import add_actions from '../shared/add_actions';
 import create_debugging_comment from '../shared/create_debugging_comment';
 import { get_context_merger } from '../shared/get_context_merger';
+import bind_this from '../shared/bind_this';
 
 const events = [
 	{
@@ -30,7 +31,7 @@ const events = [
 	{
 		event_names: ['input'],
 		filter: (node: Element, name: string) =>
-			(name === 'text' || name === 'html') &&
+			(name === 'textContent' || name === 'innerHTML') &&
 			node.attributes.some(attribute => attribute.name === 'contenteditable')
 	},
 	{
@@ -270,7 +271,7 @@ export default class ElementWrapper extends Wrapper {
 				`@append(${parent_node}, ${node});`
 			);
 
-			if (parent_node === 'document.head') {
+			if (parent_node === '@_document.head') {
 				block.builders.destroy.add_line(`@detach(${node});`);
 			}
 		} else {
@@ -335,7 +336,7 @@ export default class ElementWrapper extends Wrapper {
 
 		function to_html(wrapper: ElementWrapper | TextWrapper) {
 			if (wrapper.node.type === 'Text') {
-				if (wrapper.node.use_space) return ' ';
+				if ((wrapper as TextWrapper).use_space()) return ' ';
 
 				const parent = wrapper.node.parent as Element;
 
@@ -344,12 +345,10 @@ export default class ElementWrapper extends Wrapper {
 					parent.name === 'style'
 				);
 
-				return (raw
-					? wrapper.node.data
-					: escape_html(wrapper.node.data))
-						.replace(/\\/g, '\\\\')
-						.replace(/`/g, '\\`')
-						.replace(/\$/g, '\\$');
+				return (raw ? wrapper.node.data : escape_html(wrapper.node.data))
+					.replace(/\\/g, '\\\\')
+					.replace(/`/g, '\\`')
+					.replace(/\$/g, '\\$');
 			}
 
 			if (wrapper.node.name === 'noscript') return '';
@@ -381,7 +380,7 @@ export default class ElementWrapper extends Wrapper {
 		}
 
 		if (namespace) {
-			return `document.createElementNS("${namespace}", "${name}")`;
+			return `@_document.createElementNS("${namespace}", "${name}")`;
 		}
 
 		return `@element("${name}")`;
@@ -467,7 +466,7 @@ export default class ElementWrapper extends Wrapper {
 				block.builders.init.add_block(deindent`
 					function ${handler}() {
 						${animation_frame && deindent`
-						cancelAnimationFrame(${animation_frame});
+						@_cancelAnimationFrame(${animation_frame});
 						if (!${this.var}.paused) ${animation_frame} = @raf(${handler});`}
 						${needs_lock && `${lock} = true;`}
 						ctx.${handler}.call(${this.var}${contextual_dependencies.size > 0 ? ', ctx' : ''});
@@ -510,7 +509,19 @@ export default class ElementWrapper extends Wrapper {
 				.map(binding => `${binding.snippet} === void 0`)
 				.join(' || ');
 
-			if (this.node.name === 'select' || group.bindings.find(binding => binding.node.name === 'indeterminate' || binding.is_readonly_media_attribute())) {
+			const should_initialise = (
+				this.node.name === 'select' ||
+				group.bindings.find(binding => {
+					return (
+						binding.node.name === 'indeterminate' ||
+						binding.node.name === 'textContent' ||
+						binding.node.name === 'innerHTML' ||
+						binding.is_readonly_media_attribute()
+					);
+				})
+			);
+
+			if (should_initialise) {
 				const callback = has_local_function ? handler : `() => ${callee}.call(${this.var})`;
 				block.builders.hydrate.add_line(
 					`if (${some_initial_state_is_undefined}) @add_render_callback(${callback});`
@@ -530,38 +541,9 @@ export default class ElementWrapper extends Wrapper {
 
 		const this_binding = this.bindings.find(b => b.node.name === 'this');
 		if (this_binding) {
-			const name = renderer.component.get_unique_name(`${this.var}_binding`);
+			const binding_callback = bind_this(renderer.component, block, this_binding.node, this.var);
 
-			renderer.component.add_var({
-				name,
-				internal: true,
-				referenced: true
-			});
-
-			const { handler, object } = this_binding;
-
-			const args = [];
-			for (const arg of handler.contextual_dependencies) {
-				args.push(arg);
-				block.add_variable(arg, `ctx.${arg}`);
-			}
-
-			renderer.component.partly_hoisted.push(deindent`
-				function ${name}(${['$$node', 'check'].concat(args).join(', ')}) {
-					${handler.snippet ? `if ($$node || (!$$node && ${handler.snippet} === check)) ` : ''}${handler.mutation}
-					${renderer.component.invalidate(object)};
-				}
-			`);
-
-			block.builders.mount.add_line(`@add_binding_callback(() => ctx.${name}(${[this.var, 'null'].concat(args).join(', ')}));`);
-			block.builders.destroy.add_line(`ctx.${name}(${['null', this.var].concat(args).join(', ')});`);
-			block.builders.update.add_line(deindent`
-				if (changed.items) {
-					ctx.${name}(${['null', this.var].concat(args).join(', ')});
-					${args.map(a => `${a} = ctx.${a}`).join(', ')};
-					ctx.${name}(${[this.var, 'null'].concat(args).join(', ')});
-				}`
-			);
+			block.builders.mount.add_line(binding_callback);
 		}
 	}
 

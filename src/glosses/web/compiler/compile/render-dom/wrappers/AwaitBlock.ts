@@ -137,12 +137,13 @@ export default class AwaitBlockWrapper extends Wrapper {
 		const info_props = [
 			'ctx',
 			'current: null',
+			'token: null',
 			this.pending.block.name && `pending: ${this.pending.block.name}`,
 			this.then.block.name && `then: ${this.then.block.name}`,
 			this.catch.block.name && `catch: ${this.catch.block.name}`,
 			this.then.block.name && `value: '${this.node.value}'`,
 			this.catch.block.name && `error: '${this.node.error}'`,
-			this.pending.block.has_outro_method && `blocks: Array(3)`
+			this.pending.block.has_outro_method && `blocks: [,,,]`
 		].filter(Boolean);
 
 		block.builders.init.add_block(deindent`
@@ -223,6 +224,7 @@ export default class AwaitBlockWrapper extends Wrapper {
 
 		block.builders.destroy.add_block(deindent`
 			${info}.block.d(${parent_node ? '' : 'detaching'});
+			${info}.token = null;
 			${info} = null;
 		`);
 

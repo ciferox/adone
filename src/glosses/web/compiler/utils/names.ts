@@ -13,7 +13,10 @@ export const globals = new Set([
 	'document',
 	'encodeURI',
 	'encodeURIComponent',
+	'Error',
+	'EvalError',
 	'Infinity',
+	'InternalError',
 	'Intl',
 	'isFinite',
 	'isNaN',
@@ -28,11 +31,16 @@ export const globals = new Set([
 	'process',
 	'Promise',
 	'prompt',
+	'RangeError',
+	'ReferenceError',
 	'RegExp',
 	'Set',
 	'String',
+	'SyntaxError',
+	'TypeError',
 	'undefined',
-	'window',
+	'URIError',
+	'window'
 ]);
 
 export const reserved = new Set([

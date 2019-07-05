@@ -9,11 +9,12 @@ import add_to_set from '../../../utils/add_to_set';
 import deindent from '../../../utils/deindent';
 import Attribute from '../../../nodes/Attribute';
 import get_object from '../../../utils/get_object';
-import flatten_reference from '../../../utils/flatten_reference';
 import create_debugging_comment from '../shared/create_debugging_comment';
 import { get_context_merger } from '../shared/get_context_merger';
 import EachBlock from '../../../nodes/EachBlock';
 import TemplateScope from '../../../nodes/shared/TemplateScope';
+import is_dynamic from '../shared/is_dynamic';
+import bind_this from '../shared/bind_this';
 
 export default class InlineComponentWrapper extends Wrapper {
 	var: string;
@@ -161,11 +162,7 @@ export default class InlineComponentWrapper extends Wrapper {
 				const is_let = slot.scope.is_let(name);
 				const variable = renderer.component.var_lookup.get(name);
 
-				if (is_let) fragment_dependencies.add(name);
-
-				if (!variable) return;
-				if (variable.mutated || variable.reassigned) fragment_dependencies.add(name);
-				if (!variable.module && variable.writable && variable.export_name) fragment_dependencies.add(name);
+				if (is_let || is_dynamic(variable)) fragment_dependencies.add(name);
 			});
 		});
 
@@ -252,39 +249,7 @@ export default class InlineComponentWrapper extends Wrapper {
 			component.has_reactive_assignments = true;
 
 			if (binding.name === 'this') {
-				const fn = component.get_unique_name(`${this.var}_binding`);
-
-				component.add_var({
-					name: fn,
-					internal: true,
-					referenced: true
-				});
-
-				let lhs;
-				let object;
-
-				if (binding.is_contextual && binding.expression.node.type === 'Identifier') {
-					// bind:x={y} — we can't just do `y = x`, we need to
-					// to `array[index] = x;
-					const { name } = binding.expression.node;
-					const { snippet } = block.bindings.get(name);
-					lhs = snippet;
-
-					// TODO we need to invalidate... something
-				} else {
-					object = flatten_reference(binding.expression.node).name;
-					lhs = component.source.slice(binding.expression.node.start, binding.expression.node.end).trim();
-				}
-
-				component.partly_hoisted.push(deindent`
-					function ${fn}($$component) {
-						${lhs} = $$component;
-						${object && component.invalidate(object)}
-					}
-				`);
-
-				block.builders.destroy.add_line(`ctx.${fn}(null);`);
-				return `@add_binding_callback(() => ctx.${fn}(${this.var}));`;
+				return bind_this(component, block, binding, this.var);
 			}
 
 			const name = component.get_unique_name(`${this.var}_${binding.name}_binding`);
@@ -359,7 +324,7 @@ export default class InlineComponentWrapper extends Wrapper {
 
 			component.partly_hoisted.push(body);
 
-			return `@add_binding_callback(() => @bind(${this.var}, '${binding.name}', ${name}));`;
+			return `@binding_callbacks.push(() => @bind(${this.var}, '${binding.name}', ${name}));`;
 		});
 
 		const munged_handlers = this.node.handlers.map(handler => {
@@ -445,7 +410,7 @@ export default class InlineComponentWrapper extends Wrapper {
 			`);
 
 			block.builders.intro.add_block(deindent`
-				@transition_in(${name}.$$.fragment, #local);
+				if (${name}) @transition_in(${name}.$$.fragment, #local);
 			`);
 
 			if (updates.length) {
