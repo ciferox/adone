@@ -7,3 +7,5 @@ const {
 } = adone;
 
 export { walk };
+
+export const VERSION = '__VERSION__';

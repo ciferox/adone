@@ -27,17 +27,17 @@ type Opts = {
 	live?: boolean,
 	hot?: boolean,
 	'devtools-port'?: number,
-	bundler?: 'rollup' | 'webpack',
+	bundler?: 'rollup',
 	port?: number,
 	ext: string
 };
 
-export default function (opts: Opts) {
+export function dev(opts: Opts) {
 	return new Watcher(opts);
 }
 
 class Watcher extends EventEmitter {
-	bundler: 'rollup' | 'webpack';
+	bundler: 'rollup';
 	dirs: {
 		cwd: string;
 		src: string;
@@ -48,7 +48,7 @@ class Watcher extends EventEmitter {
 	}
 	port: number;
 	closed: boolean;
-	
+
 	dev_port: number;
 	live: boolean;
 	hot: boolean;
@@ -74,7 +74,7 @@ class Watcher extends EventEmitter {
 		cwd = '.',
 		src = 'src',
 		routes = 'src/routes',
-		output = 'src/node_modules/@adone',
+		output = 'src/node_modules/@sapper',
 		static: static_files = 'static',
 		dest = '__sapper__/dev',
 		'dev-port': dev_port,
@@ -82,7 +82,7 @@ class Watcher extends EventEmitter {
 		hot,
 		'devtools-port': devtools_port,
 		bundler,
-		port = +process.env.PORT, 
+		port = +process.env.PORT,
 		ext
 	}: Opts) {
 		super();
@@ -192,16 +192,14 @@ class Watcher extends EventEmitter {
 				},
 				() => {
 					try {
-						const new_manifest_data = create_manifest_data(routes, this.ext);
+						manifest_data = create_manifest_data(routes, this.ext);
 						create_app({
 							bundler: this.bundler,
-							manifest_data, // TODO is this right? not new_manifest_data?
+							manifest_data,
 							dev: true,
 							dev_port: this.dev_port,
 							cwd, src, dest, routes, output
 						});
-
-						manifest_data = new_manifest_data;
 					} catch (error) {
 						this.emit('error', <ErrorEvent>{
 							type: 'manifest',
@@ -225,7 +223,7 @@ class Watcher extends EventEmitter {
 		let deferred = new Deferred();
 
 		// TODO watch the configs themselves?
-		const compilers: Compilers = await create_compilers(this.bundler, cwd, src, dest, false);
+		const compilers: Compilers = await create_compilers(this.bundler, cwd, src, dest, true);
 
 		const emitFatal = () => {
 			this.emit('fatal', <FatalEvent>{
@@ -255,11 +253,7 @@ class Watcher extends EventEmitter {
 									process: this.proc
 								});
 
-								if (this.hot && this.bundler === 'webpack') {
-									this.dev_server.send({
-										status: 'completed'
-									});
-								} else if (this.live) {
+								if (this.live) {
 									this.dev_server.send({
 										action: 'reload'
 									});

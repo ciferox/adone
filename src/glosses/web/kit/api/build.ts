@@ -11,7 +11,7 @@ import { CompileResult } from '../core/create_compilers/interfaces';
 import { noop } from './utils/noop';
 import validate_bundler from './utils/validate_bundler';
 import { copy_runtime } from './utils/copy_runtime';
-import { rimraf,  } from './utils/fs_utils';
+import { rimraf, mkdirp } from './utils/fs_utils';
 
 type Opts = {
 	cwd?: string;
@@ -26,7 +26,7 @@ type Opts = {
 	oncompile?: ({ type, result }: { type: string, result: CompileResult }) => void;
 };
 
-export default async function ({
+export async function build({
 	cwd,
 	src = 'src',
 	routes = 'src/routes',
@@ -49,11 +49,11 @@ export default async function ({
 	static_files = path.resolve(cwd, static_files);
 
 	rimraf(output);
-	fs.mkdirpSync(output);
+	mkdirp(output);
 	copy_runtime(output);
 
 	rimraf(dest);
-	fs.mkdirpSync(`${dest}/client`);
+	mkdirp(`${dest}/client`);
 	copy_shimport(dest);
 
 	// minify src/template.html
@@ -71,7 +71,7 @@ export default async function ({
 
 	const manifest_data = create_manifest_data(routes, ext);
 
-	// create src/node_modules/@adone/app.mjs and server.mjs
+	// create src/node_modules/@sapper/app.mjs and server.mjs
 	create_app({
 		bundler,
 		manifest_data,
@@ -83,10 +83,9 @@ export default async function ({
 		dev: false
 	});
 
-	const { client, server, serviceworker } = await create_compilers(bundler, cwd, src, dest, true);
+	const { client, server, serviceworker } = await create_compilers(bundler, cwd, src, dest, false);
 
 	const client_result = await client.compile();
-
 	oncompile({
 		type: 'client',
 		result: client_result
@@ -96,7 +95,7 @@ export default async function ({
 
 	if (legacy) {
 		process.env.SAPPER_LEGACY_BUILD = 'true';
-		const { client } = await create_compilers(bundler, cwd, src, dest, true);
+		const { client } = await create_compilers(bundler, cwd, src, dest, false);
 
 		const client_result = await client.compile();
 
@@ -121,6 +120,7 @@ export default async function ({
 	let serviceworker_stats;
 
 	if (serviceworker) {
+
 		const client_files = client_result.chunks
 			.filter(chunk => !chunk.file.endsWith('.map')) // SW does not need to cache sourcemap files
 			.map(chunk => `client/${chunk.file}`);

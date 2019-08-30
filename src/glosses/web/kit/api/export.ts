@@ -18,10 +18,12 @@ type Opts = {
 	cwd?: string,
 	static?: string,
 	basepath?: string,
+	host_header?: string,
 	timeout?: number | false,
 	concurrent?: number,
 	oninfo?: ({ message }: { message: string }) => void;
 	onfile?: ({ file, size, status }: { file: string, size: number, status: number }) => void;
+	entry?: string;
 };
 
 type Ref = {
@@ -34,9 +36,13 @@ function resolve(from: string, to: string) {
 	return url.parse(url.resolve(from, to));
 }
 
+function cleanPath(path: string) {
+	return path.replace(/^\/|\/$|\/*index(.html)*$|.html$/g, '')
+}
+
 type URL = url.UrlWithStringQuery;
 
-export default _export;
+export { _export as export };
 
 async function _export({
 	cwd,
@@ -44,10 +50,12 @@ async function _export({
 	build_dir = '__sapper__/build',
 	export_dir = '__sapper__/export',
 	basepath = '',
+	host_header,
 	timeout = 5000,
 	concurrent = 8,
 	oninfo = noop,
-	onfile = noop
+	onfile = noop,
+	entry = '/'
 }: Opts = {}) {
 	basepath = basepath.replace(/^\//, '')
 
@@ -74,8 +82,11 @@ async function _export({
 	const root = resolve(origin, basepath);
 	if (!root.href.endsWith('/')) root.href += '/';
 
-	oninfo({
-		message: `Crawling ${root.href}`
+	const entryPoints = entry.split(' ').map(entryPoint => {
+		const entry = resolve(origin, `${basepath}/${cleanPath(entryPoint)}`);
+		if (!entry.href.endsWith('/')) entry.href += '/';
+
+		return entry;
 	});
 
 	const proc = child_process.fork(path.resolve(`${build_dir}/server/server.js`), [], {
@@ -114,6 +125,7 @@ async function _export({
 		});
 
 		const export_file = path.join(export_dir, file);
+		if (fs.existsSync(export_file)) return;
 		mkdirp(path.dirname(export_file));
 		fs.writeFileSync(export_file, body);
 	}
@@ -140,6 +152,7 @@ async function _export({
 
 			const r = await Promise.race([
 				fetch(url.href, {
+					headers: { host: host_header || host },
 					redirect: 'manual'
 				}),
 				timeout_deferred.promise
@@ -211,7 +224,14 @@ async function _export({
 
 	try {
 		await ports.wait(port);
-		await handle(root);
+
+		for (const entryPoint of entryPoints) {
+			oninfo({
+				message: `Crawling ${entryPoint.href}`
+			});
+			await handle(entryPoint);
+		}
+
 		await handle(resolve(root.href, 'service-worker-index.html'));
 		await q.close();
 

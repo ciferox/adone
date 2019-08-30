@@ -65,7 +65,9 @@ export default class Selector {
 			while (i--) {
 				const selector = block.selectors[i];
 				if (selector.type === 'PseudoElementSelector' || selector.type === 'PseudoClassSelector') {
-					if (i === 0) code.prependRight(selector.start, attr);
+					if (selector.name !== 'root') {
+						if (i === 0) code.prependRight(selector.start, attr);
+					}
 					continue;
 				}
 
@@ -219,6 +221,8 @@ const operators = {
 function attribute_matches(node: Node, name: string, expected_value: string, operator: string, case_insensitive: boolean) {
 	const spread = node.attributes.find(attr => attr.type === 'Spread');
 	if (spread) return true;
+
+	if (node.bindings.some((binding: Node) => binding.name === name)) return true;
 
 	const attr = node.attributes.find((attr: Node) => attr.name === name);
 	if (!attr) return false;

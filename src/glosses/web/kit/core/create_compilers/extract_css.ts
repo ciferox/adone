@@ -1,3 +1,4 @@
+const hash = require('string-hash');
 import { PageComponent, Dirs } from '../../interfaces';
 import { CompileResult, Chunk } from './interfaces';
 import { posixify } from '../../utils'
@@ -7,21 +8,6 @@ const {
 	path,
 	sourcemap: { codec }
 } = adone;
-
-// from 'string-hash' module
-function hash(str) {
-	var hash = 5381,
-		i = str.length;
-
-	while (i) {
-		hash = (hash * 33) ^ str.charCodeAt(--i);
-	}
-
-	/* JavaScript does bitwise operations (like XOR, above) on 32-bit signed
-	 * integers. Since we want the results to be always positive, convert the
-	 * signed int to an unsigned by doing an unsigned bitshift. */
-	return hash >>> 0;
-}
 
 const inline_sourcemap_header = 'data:application/json;charset=utf-8;base64,';
 
@@ -63,7 +49,7 @@ type SourceMap = {
 	mappings: string;
 };
 
-function get_css_from_modules(modules: string[], css_map: Map<string, string>, dirs: Dirs) {
+function get_css_from_modules(modules: string[], css_map: Map<string, string>, asset_dir: string) {
 	const parts: string[] = [];
 	const mappings: number[][][] = [];
 
@@ -111,7 +97,7 @@ function get_css_from_modules(modules: string[], css_map: Map<string, string>, d
 	if (parts.length > 0) {
 		combined_map.mappings = codec.encode(mappings);
 
-		combined_map.sources = combined_map.sources.map(source => path.relative(`${dirs.dest}/client`, source));
+		combined_map.sources = combined_map.sources.map(source => path.relative(asset_dir, source).replace(/\\/g, '/'));
 
 		return {
 			code: parts.join('\n'),
@@ -122,7 +108,12 @@ function get_css_from_modules(modules: string[], css_map: Map<string, string>, d
 	return null;
 }
 
-export default function extract_css(client_result: CompileResult, components: PageComponent[], dirs: Dirs) {
+export default function extract_css(
+	client_result: CompileResult,
+	components: PageComponent[],
+	dirs: Dirs,
+	sourcemap: boolean | 'inline'
+) {
 	const result: {
 		main: string | null;
 		chunks: Record<string, string[]>
@@ -155,17 +146,25 @@ export default function extract_css(client_result: CompileResult, components: Pa
 		const css_modules = chunk.modules.filter(m => css_map.has(m));
 		if (!css_modules.length) return;
 
-		const css = get_css_from_modules(css_modules, css_map, dirs);
+		const css = get_css_from_modules(css_modules, css_map, asset_dir);
 
-		const { code, map } = css;
+		let { code, map } = css;
 
 		const output_file_name = chunk.file.replace(/\.js$/, '.css');
 
 		map.file = output_file_name;
-		map.sources = map.sources.map(source => path.relative(`${asset_dir}`, source));
 
-		fs.writeFileSync(`${asset_dir}/${output_file_name}`, `${code}\n/* sourceMappingURL=./${output_file_name}.map */`);
-		fs.writeFileSync(`${asset_dir}/${output_file_name}.map`, JSON.stringify(map, null, '  '));
+		if (sourcemap === true) {
+			fs.writeFileSync(`${asset_dir}/${output_file_name}.map`, JSON.stringify(map, null, '  '));
+			code += `\n/*# sourceMappingURL=${output_file_name}.map */`;
+		}
+
+		if (sourcemap === 'inline') {
+			const base64 = Buffer.from(JSON.stringify(map), 'utf8').toString('base64')
+			code += `\n/*# sourceMappingURL=${inline_sourcemap_header}${base64} */`;
+		}
+
+		fs.writeFileSync(`${asset_dir}/${output_file_name}`, code);
 
 		chunks_with_css.add(chunk);
 	});
@@ -233,8 +232,25 @@ export default function extract_css(client_result: CompileResult, components: Pa
 
 		const source = fs.readFileSync(`${asset_dir}/${file}`, 'utf-8');
 
-		const replaced = source.replace(/["']__SAPPER_CSS_PLACEHOLDER:(.+?)__["']/g, (m, route) => {
-			return JSON.stringify(result.chunks[route]);
+		const replaced = source.replace(/(\\?["'])__SAPPER_CSS_PLACEHOLDER:([^"']+?)__\1/g, (m, quotes, route) => {
+			let replacement = JSON.stringify(
+				process.env.SAPPER_LEGACY_BUILD && result.chunks[route] ?
+					result.chunks[route].map(_ => `legacy/${_}`) :
+					result.chunks[route]
+			);
+
+			// If the quotation marks are escaped, then
+			// the source code is in a string literal
+			// (e.g., source maps) rather than raw
+			// JavaScript source. We need to stringify
+			// again and then remove the extra quotation
+			// marks so that replacement is correct.
+			if (quotes[0] === '\\') {
+				replacement = JSON.stringify(replacement);
+				replacement = replacement.substring(1, replacement.length - 1);
+			}
+
+			return replacement;
 		});
 
 		fs.writeFileSync(`${asset_dir}/${file}`, replaced);
@@ -244,19 +260,27 @@ export default function extract_css(client_result: CompileResult, components: Pa
 		entry_css_modules.push(file);
 	});
 
-	const leftover = get_css_from_modules(entry_css_modules, css_map, dirs);
+	const leftover = get_css_from_modules(entry_css_modules, css_map, asset_dir);
 	if (leftover) {
-		const { code, map } = leftover;
+		let { code, map } = leftover;
 
 		const main_hash = hash(code);
 
 		const output_file_name = `main.${main_hash}.css`;
 
 		map.file = output_file_name;
-		map.sources = map.sources.map(source => path.relative(asset_dir, source));
 
-		fs.writeFileSync(`${asset_dir}/${output_file_name}`, `${code}\n/* sourceMappingURL=client/${output_file_name}.map */`);
-		fs.writeFileSync(`${asset_dir}/${output_file_name}.map`, JSON.stringify(map, null, '  '));
+		if (sourcemap === true) {
+			fs.writeFileSync(`${asset_dir}/${output_file_name}.map`, JSON.stringify(map, null, '  '));
+			code += `\n/*# sourceMappingURL=client/${output_file_name}.map */`;
+		}
+
+		if (sourcemap === 'inline') {
+			const base64 = Buffer.from(JSON.stringify(map), 'utf8').toString('base64')
+			code += `\n/*# sourceMappingURL=${inline_sourcemap_header}${base64} */`;
+		}
+
+		fs.writeFileSync(`${asset_dir}/${output_file_name}`, code);
 
 		result.main = output_file_name;
 	}

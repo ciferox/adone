@@ -140,7 +140,8 @@ export default class Expression {
 					}
 
 					if (template_scope.is_let(name)) {
-						if (!function_expression) {
+						if (!function_expression) { // TODO should this be `!lazy` ?
+							contextual_dependencies.add(name);
 							dependencies.add(name);
 						}
 					} else if (template_scope.names.has(name)) {
@@ -148,7 +149,10 @@ export default class Expression {
 
 						contextual_dependencies.add(name);
 
-						if (!lazy) {
+						const owner = template_scope.get_owner(name);
+						const is_index = owner.type === 'EachBlock' && owner.key && name === owner.index;
+
+						if (!lazy || is_index) {
 							template_scope.dependencies_for_name.get(name).forEach(name => dependencies.add(name));
 						}
 					} else {
@@ -239,7 +243,7 @@ export default class Expression {
 		const { code } = component;
 
 		let function_expression;
-		let pending_assignments = new Set();
+		let pending_assignments: Set<string> = new Set();
 
 		let dependencies: Set<string>;
 		let contextual_dependencies: Set<string>;
@@ -364,7 +368,7 @@ export default class Expression {
 					}
 
 					const fn = deindent`
-						function ${name}(${args.join(', ')}) ${body}
+						${node.async && 'async '}function${node.generator && '*'} ${name}(${args.join(', ')}) ${body}
 					`;
 
 					if (dependencies.size === 0 && contextual_dependencies.size === 0) {

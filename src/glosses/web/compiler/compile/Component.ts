@@ -20,11 +20,13 @@ import get_object from './utils/get_object';
 import unwrap_parens from './utils/unwrap_parens';
 import Slot from './nodes/Slot';
 import { Node as ESTreeNode } from 'estree';
+import add_to_set from './utils/add_to_set';
 
 const {
 	acorn: { isReference, estreeWalker: { walk, childKeys } },
 	text: { MagicString }
 } = adone;
+const { Bundle } = MagicString;
 
 interface ComponentOptions {
 	namespace?: string;
@@ -72,6 +74,8 @@ function remove_node(code: MagicString, start: number, end: number, body: Node, 
 export default class Component {
 	stats: Stats;
 	warnings: Warning[];
+	ignores: Set<string>;
+	ignore_stack: Array<Set<string>> = [];
 
 	ast: Ast;
 	source: string;
@@ -304,7 +308,7 @@ export default class Component {
 			const parts = module.split('✂]');
 			const final_chunk = parts.pop();
 
-			const compiled = new MagicString.Bundle({ separator: '' });
+			const compiled = new Bundle({ separator: '' });
 
 			function add_string(str: string) {
 				compiled.addSource({
@@ -444,6 +448,10 @@ export default class Component {
 			message: string;
 		}
 	) {
+		if (this.ignores && this.ignores.has(warning.code)) {
+			return;
+		}
+
 		if (!this.locator) {
 			this.locator = getLocator(this.source, { offsetLine: 1 });
 		}
@@ -664,7 +672,7 @@ export default class Component {
 			this.node_for_declaration.set(name, node);
 		});
 
-		globals.forEach((_node, name) => {
+		globals.forEach((node, name) => {
 			if (this.var_lookup.has(name)) return;
 
 			if (this.injected_reactive_declaration_vars.has(name)) {
@@ -681,6 +689,13 @@ export default class Component {
 					injected: true
 				});
 			} else if (name[0] === '$') {
+				if (name === '$' || name[1] === '$') {
+					this.error(node, {
+						code: 'illegal-global',
+						message: `${name} is an illegal variable name`
+					});
+				}
+
 				this.add_var({
 					name,
 					injected: true,
@@ -1237,10 +1252,18 @@ export default class Component {
 
 	warn_if_undefined(name: string, node, template_scope: TemplateScope) {
 		if (name[0] === '$') {
-			name = name.slice(1);
+			if (name === '$' || name[1] === '$' && name !== '$$props') {
+				this.error(node, {
+					code: 'illegal-global',
+					message: `${name} is an illegal variable name`
+				});
+			}
+
 			this.has_reactive_assignments = true; // TODO does this belong here?
 
-			if (name[0] === '$') return; // $$props
+			if (name === '$$props') return;
+
+			name = name.slice(1);
 		}
 
 		if (this.var_lookup.has(name) && !this.var_lookup.get(name).global) return;
@@ -1254,6 +1277,17 @@ export default class Component {
 			code: 'missing-declaration',
 			message
 		});
+	}
+
+	push_ignores(ignores) {
+		this.ignores = new Set(this.ignores || []);
+		add_to_set(this.ignores, ignores);
+		this.ignore_stack.push(this.ignores);
+	}
+
+	pop_ignores() {
+		this.ignore_stack.pop();
+		this.ignores = this.ignore_stack[this.ignore_stack.length - 1];
 	}
 }
 

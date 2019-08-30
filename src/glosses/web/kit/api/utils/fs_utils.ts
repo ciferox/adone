@@ -1,6 +1,19 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+export function mkdirp(dir: string) {
+	const parent = path.dirname(dir);
+	if (parent === dir) return;
+
+	mkdirp(parent);
+
+	try {
+		fs.mkdirSync(dir);
+	} catch (err) {
+		// ignore
+	}
+}
+
 export function rimraf(thing: string) {
 	if (!fs.existsSync(thing)) return;
 
