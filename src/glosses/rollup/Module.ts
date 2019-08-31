@@ -8,8 +8,8 @@ import ExportDefaultDeclaration from './ast/nodes/ExportDefaultDeclaration';
 import ExportNamedDeclaration from './ast/nodes/ExportNamedDeclaration';
 import FunctionDeclaration from './ast/nodes/FunctionDeclaration';
 import Identifier from './ast/nodes/Identifier';
-import Import from './ast/nodes/Import';
 import ImportDeclaration from './ast/nodes/ImportDeclaration';
+import ImportExpression from './ast/nodes/ImportExpression';
 import ImportSpecifier from './ast/nodes/ImportSpecifier';
 import { nodeConstructors } from './ast/nodes/index';
 import Literal from './ast/nodes/Literal';
@@ -30,10 +30,10 @@ import Chunk from './Chunk';
 import ExternalModule from './ExternalModule';
 import Graph from './Graph';
 import {
-	Asset,
-	EmittedChunk,
+	DecodedSourceMapOrMissing,
+	EmittedFile,
+	ExistingDecodedSourceMap,
 	ModuleJSON,
-	RawSourceMap,
 	ResolvedIdMap,
 	RollupError,
 	RollupWarning,
@@ -83,7 +83,7 @@ export interface ReexportDescription {
 }
 
 export interface AstContext {
-	addDynamicImport: (node: Import) => void;
+	addDynamicImport: (node: ImportExpression) => void;
 	addExport: (
 		node: ExportAllDeclaration | ExportNamedDeclaration | ExportDefaultDeclaration
 	) => void;
@@ -94,14 +94,13 @@ export interface AstContext {
 	deoptimizationTracker: EntityPathTracker;
 	error: (props: RollupError, pos: number) => void;
 	fileName: string;
-	getAssetFileName: (assetReferenceId: string) => string;
-	getChunkFileName: (chunkReferenceId: string) => string;
 	getExports: () => string[];
+	getFileName: (fileReferenceId: string) => string;
 	getModuleExecIndex: () => number;
 	getModuleName: () => string;
 	getReexports: () => string[];
 	importDescriptions: { [name: string]: ImportDescription };
-	includeDynamicImport: (node: Import) => void;
+	includeDynamicImport: (node: ImportExpression) => void;
 	includeVariable: (variable: Variable) => void;
 	isCrossChunkImport: (importDescription: ImportDescription) => boolean;
 	magicString: MagicString;
@@ -116,10 +115,11 @@ export interface AstContext {
 	tryCatchDeoptimization: boolean;
 	usesTopLevelAwait: boolean;
 	warn: (warning: RollupWarning, pos: number) => void;
+	warnDeprecation: (deprecation: string | RollupWarning, activeDeprecation: boolean) => void;
 }
 
 export const defaultAcornOptions: acorn.Options = {
-	ecmaVersion: 2019,
+	ecmaVersion: 2020 as any,
 	preserveParens: false,
 	sourceType: 'module'
 };
@@ -159,7 +159,7 @@ function handleMissingExport(
 		{
 			code: 'MISSING_EXPORT',
 			message: `'${exportName}' is not exported by ${relativeId(importedModule)}`,
-			url: `https://rollupjs.org/guide/en#error-name-is-not-exported-by-module-`
+			url: `https://rollupjs.org/guide/en/#error-name-is-not-exported-by-module`
 		},
 		importerStart as number
 	);
@@ -172,7 +172,8 @@ const MISSING_EXPORT_SHIM_DESCRIPTION: ExportDescription = {
 
 export default class Module {
 	chunk?: Chunk;
-	chunkAlias: string = null as any;
+	chunkFileNames = new Set<string>();
+	chunkName: string | null = null;
 	code!: string;
 	comments: CommentDescription[] = [];
 	customTransformCache!: boolean;
@@ -180,8 +181,8 @@ export default class Module {
 	dynamicallyImportedBy: Module[] = [];
 	dynamicDependencies: (Module | ExternalModule)[] = [];
 	dynamicImports: {
-		node: Import;
-		resolution: Module | ExternalModule | string | void;
+		node: ImportExpression;
+		resolution: Module | ExternalModule | string | null;
 	}[] = [];
 	entryPointsHash: Uint8Array = new Uint8Array(10);
 	excludeFromSourcemap: boolean;
@@ -202,14 +203,14 @@ export default class Module {
 	manualChunkAlias: string = null as any;
 	moduleSideEffects: boolean;
 	originalCode!: string;
-	originalSourcemap!: RawSourceMap | null;
+	originalSourcemap!: ExistingDecodedSourceMap | null;
 	reexports: { [name: string]: ReexportDescription } = Object.create(null);
 	resolvedIds!: ResolvedIdMap;
 	scope!: ModuleScope;
-	sourcemapChain!: RawSourceMap[];
+	sourcemapChain!: DecodedSourceMapOrMissing[];
 	sources: string[] = [];
-	transformAssets?: Asset[];
-	transformChunks?: EmittedChunk[];
+	transformFiles?: EmittedFile[];
+	userChunkNames = new Set<string>();
 	usesTopLevelAwait = false;
 
 	private allExportNames?: Set<string>;
@@ -304,19 +305,18 @@ export default class Module {
 
 	getDynamicImportExpressions(): (string | Node)[] {
 		return this.dynamicImports.map(({ node }) => {
-			const importArgument = node.parent.arguments[0];
-			if (importArgument instanceof TemplateLiteral) {
-				if (importArgument.expressions.length === 0 && importArgument.quasis.length === 1) {
-					return importArgument.quasis[0].value.cooked;
-				}
-			} else if (importArgument instanceof Literal) {
-				if (typeof importArgument.value === 'string') {
-					return importArgument.value;
-				}
-			} else {
-				return importArgument;
+			const importArgument = node.source;
+			if (
+				importArgument instanceof TemplateLiteral &&
+				importArgument.quasis.length === 1 &&
+				importArgument.quasis[0].value.cooked
+			) {
+				return importArgument.quasis[0].value.cooked;
 			}
-			return undefined as any;
+			if (importArgument instanceof Literal && typeof importArgument.value === 'string') {
+				return importArgument.value;
+			}
+			return importArgument;
 		});
 	}
 
@@ -345,9 +345,11 @@ export default class Module {
 	}
 
 	getOrCreateNamespace(): NamespaceVariable {
-		return (
-			this.namespaceVariable || (this.namespaceVariable = new NamespaceVariable(this.astContext))
-		);
+		if (!this.namespaceVariable) {
+			this.namespaceVariable = new NamespaceVariable(this.astContext);
+			this.namespaceVariable.initialise();
+		}
+		return this.namespaceVariable;
 	}
 
 	getReexports(): string[] {
@@ -534,22 +536,17 @@ export default class Module {
 		originalSourcemap,
 		resolvedIds,
 		sourcemapChain,
-		transformAssets,
-		transformChunks,
-		transformDependencies
+		transformDependencies,
+		transformFiles
 	}: TransformModuleJSON & {
-		transformAssets?: Asset[] | undefined;
-		transformChunks?: EmittedChunk[] | undefined;
+		transformFiles?: EmittedFile[] | undefined;
 	}) {
 		this.code = code;
 		this.originalCode = originalCode;
 		this.originalSourcemap = originalSourcemap;
-		this.sourcemapChain = sourcemapChain as RawSourceMap[];
-		if (transformAssets) {
-			this.transformAssets = transformAssets;
-		}
-		if (transformChunks) {
-			this.transformChunks = transformChunks;
+		this.sourcemapChain = sourcemapChain;
+		if (transformFiles) {
+			this.transformFiles = transformFiles;
 		}
 		this.transformDependencies = transformDependencies;
 		this.customTransformCache = customTransformCache;
@@ -589,9 +586,8 @@ export default class Module {
 			deoptimizationTracker: this.graph.deoptimizationTracker,
 			error: this.error.bind(this),
 			fileName, // Needed for warnings
-			getAssetFileName: this.graph.pluginDriver.getAssetFileName,
-			getChunkFileName: this.graph.moduleLoader.getChunkFileName.bind(this.graph.moduleLoader),
 			getExports: this.getExports.bind(this),
+			getFileName: this.graph.pluginDriver.getFileName,
 			getModuleExecIndex: () => this.execIndex,
 			getModuleName: this.basename.bind(this),
 			getReexports: this.getReexports.bind(this),
@@ -613,7 +609,8 @@ export default class Module {
 			tryCatchDeoptimization: (!this.graph.treeshakingOptions ||
 				this.graph.treeshakingOptions.tryCatchDeoptimization) as boolean,
 			usesTopLevelAwait: false,
-			warn: this.warn.bind(this)
+			warn: this.warn.bind(this),
+			warnDeprecation: this.graph.warnDeprecation.bind(this.graph)
 		};
 
 		this.scope = new ModuleScope(this.graph.scope, this.astContext);
@@ -638,9 +635,8 @@ export default class Module {
 			originalSourcemap: this.originalSourcemap,
 			resolvedIds: this.resolvedIds,
 			sourcemapChain: this.sourcemapChain,
-			transformAssets: this.transformAssets,
-			transformChunks: this.transformChunks,
-			transformDependencies: this.transformDependencies
+			transformDependencies: this.transformDependencies,
+			transformFiles: this.transformFiles
 		};
 	}
 
@@ -684,8 +680,8 @@ export default class Module {
 		this.graph.warn(warning);
 	}
 
-	private addDynamicImport(node: Import) {
-		this.dynamicImports.push({ node, resolution: undefined });
+	private addDynamicImport(node: ImportExpression) {
+		this.dynamicImports.push({ node, resolution: null });
 	}
 
 	private addExport(
@@ -828,7 +824,7 @@ export default class Module {
 		}
 	}
 
-	private includeDynamicImport(node: Import) {
+	private includeDynamicImport(node: ImportExpression) {
 		const resolution = (this.dynamicImports.find(dynamicImport => dynamicImport.node === node) as {
 			resolution: string | Module | ExternalModule | undefined;
 		}).resolution;

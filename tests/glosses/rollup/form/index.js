@@ -1,10 +1,10 @@
-const {
-	rollup 
-} = adone;
-
 const path = require('path');
 const sander = require('sander');
 const { extend, normaliseOutput, runTestSuiteWithSamples } = require('../utils.js');
+
+const {
+	rollup
+} = adone;
 
 const FORMATS = ['amd', 'cjs', 'system', 'es', 'iife', 'umd'];
 
@@ -23,11 +23,17 @@ runTestSuiteWithSamples('form', path.resolve(__dirname, 'samples'), (dir, config
 						extend(
 							{
 								input: dir + '/main.js',
-								onwarn: msg => {
-									if (/No name was provided for/.test(msg)) return;
-									if (/as external dependency/.test(msg)) return;
-									console.error(msg);
-								}
+								onwarn: warning => {
+									if (
+										!(config.expectedWarnings && config.expectedWarnings.indexOf(warning.code) >= 0)
+									) {
+										throw new Error(
+											`Unexpected warnings (${warning.code}): ${warning.message}\n` +
+												'If you expect warnings, list their codes in config.expectedWarnings'
+										);
+									}
+								},
+								strictDeprecations: true
 							},
 							config.options || {}
 						)

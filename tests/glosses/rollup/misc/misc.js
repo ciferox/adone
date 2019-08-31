@@ -1,9 +1,31 @@
 const {
 	rollup
 } = adone;
+
 const { loader } = require('../utils.js');
 
 describe('misc', () => {
+	it('throw modification of options or its property', () => {
+		const { freeze } = Object;
+		return rollup.rollup(
+			freeze({
+				input: 'input',
+				external: freeze([]),
+				plugins: freeze([
+					{
+						name: 'loader',
+						resolveId: freeze(() => 'input'),
+						load: freeze(() => `export default 0;`)
+					}
+				]),
+				acornInjectPlugins: freeze([]),
+				acorn: freeze({}),
+				experimentalTopLevelAwait: true,
+				treeshake: freeze({})
+			})
+		);
+	});
+
 	it('warns if node builtins are unresolved in a non-CJS, non-ES bundle (#1051)', () => {
 		const warnings = [];
 
@@ -92,8 +114,8 @@ describe('misc', () => {
 				assert.deepEqual(output.map(({ fileName }) => fileName), [
 					'main1.js',
 					'main2.js',
-					'chunk-9d1272f4.js',
-					'dyndep-80285050.js'
+					'dep-f8bec8a7.js',
+					'dyndep-b0a9ee12.js'
 				]);
 			});
 	});

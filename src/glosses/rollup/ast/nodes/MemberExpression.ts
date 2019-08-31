@@ -1,3 +1,4 @@
+import MagicString from 'magic-string';
 import { BLANK } from '../../utils/blank';
 import relativeId from '../../utils/relativeId';
 import { NodeRenderOptions, RenderOptions } from '../../utils/renderHelpers';
@@ -237,7 +238,7 @@ export default class MemberExpression extends NodeBase implements DeoptimizableE
 	}
 
 	render(
-		code: adone.text.MagicString,
+		code: MagicString,
 		options: RenderOptions,
 		{ renderedParentType, isCalleeOfRenderedParent }: NodeRenderOptions = BLANK
 	) {
@@ -302,7 +303,7 @@ export default class MemberExpression extends NodeBase implements DeoptimizableE
 					importer: relativeId(this.context.fileName),
 					message: `'${exportName}' is not exported by '${relativeId(fileName)}'`,
 					missing: exportName,
-					url: `https://rollupjs.org/guide/en#error-name-is-not-exported-by-module-`
+					url: `https://rollupjs.org/guide/en/#error-name-is-not-exported-by-module`
 				},
 				path[0].pos
 			);

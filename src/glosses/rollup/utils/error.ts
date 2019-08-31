@@ -1,26 +1,26 @@
 import { locate } from 'locate-character';
 import Module from '../Module';
-import { Asset, RollupError, RollupWarning } from '../rollup/types';
+import { RollupError, RollupWarning } from '../rollup/types';
 import getCodeFrame from './getCodeFrame';
 import relativeId from './relativeId';
 
 export function error(base: Error | RollupError, props?: RollupError): never {
-	if (base instanceof Error === false) base = Object.assign(new Error(base.message), base);
+	if (!(base instanceof Error)) base = Object.assign(new Error(base.message), base);
 	if (props) Object.assign(base, props);
 	throw base;
 }
 
 export function augmentCodeLocation(
 	object: RollupError | RollupWarning,
-	pos: { column: number; line: number },
+	pos: number | { column: number; line: number },
 	source: string,
 	id: string
 ): void {
-	if (pos.line !== undefined && pos.column !== undefined) {
+	if (typeof pos === 'object') {
 		const { line, column } = pos;
 		object.loc = { file: id, line, column };
 	} else {
-		object.pos = pos as any;
+		object.pos = pos;
 		const { line, column } = locate(source, pos, { offsetLine: 1 });
 		object.loc = { file: id, line, column };
 	}
@@ -37,41 +37,41 @@ export enum Errors {
 	ASSET_SOURCE_ALREADY_SET = 'ASSET_SOURCE_ALREADY_SET',
 	ASSET_SOURCE_MISSING = 'ASSET_SOURCE_MISSING',
 	BAD_LOADER = 'BAD_LOADER',
-	CHUNK_NOT_FOUND = 'CHUNK_NOT_FOUND',
+	CANNOT_EMIT_FROM_OPTIONS_HOOK = 'CANNOT_EMIT_FROM_OPTIONS_HOOK',
 	CHUNK_NOT_GENERATED = 'CHUNK_NOT_GENERATED',
-	INVALID_ASSET_NAME = 'INVALID_ASSET_NAME',
+	DEPRECATED_FEATURE = 'DEPRECATED_FEATURE',
+	FILE_NOT_FOUND = 'FILE_NOT_FOUND',
+	FILE_NAME_CONFLICT = 'FILE_NAME_CONFLICT',
 	INVALID_CHUNK = 'INVALID_CHUNK',
 	INVALID_EXTERNAL_ID = 'INVALID_EXTERNAL_ID',
 	INVALID_OPTION = 'INVALID_OPTION',
 	INVALID_PLUGIN_HOOK = 'INVALID_PLUGIN_HOOK',
 	INVALID_ROLLUP_PHASE = 'INVALID_ROLLUP_PHASE',
 	NAMESPACE_CONFLICT = 'NAMESPACE_CONFLICT',
+	PLUGIN_ERROR = 'PLUGIN_ERROR',
 	UNRESOLVED_ENTRY = 'UNRESOLVED_ENTRY',
-	UNRESOLVED_IMPORT = 'UNRESOLVED_IMPORT'
+	UNRESOLVED_IMPORT = 'UNRESOLVED_IMPORT',
+	VALIDATION_ERROR = 'VALIDATION_ERROR'
 }
 
-export function errAssetNotFinalisedForFileName(asset: Asset) {
+export function errAssetNotFinalisedForFileName(name: string) {
 	return {
 		code: Errors.ASSET_NOT_FINALISED,
-		message: `Plugin error - Unable to get file name for asset "${
-			asset.name
-		}". Ensure that the source is set and that generate is called first.`
+		message: `Plugin error - Unable to get file name for asset "${name}". Ensure that the source is set and that generate is called first.`
 	};
 }
 
-export function errChunkNotGeneratedForFileName(entry: { name: string }) {
+export function errCannotEmitFromOptionsHook() {
+	return {
+		code: Errors.CANNOT_EMIT_FROM_OPTIONS_HOOK,
+		message: `Cannot emit files or set asset sources in the "outputOptions" hook, use the "renderStart" hook instead.`
+	};
+}
+
+export function errChunkNotGeneratedForFileName(name: string) {
 	return {
 		code: Errors.CHUNK_NOT_GENERATED,
-		message: `Plugin error - Unable to get file name for chunk "${
-			entry.name
-		}". Ensure that generate is called first.`
-	};
-}
-
-export function errAssetReferenceIdNotFoundForFilename(assetReferenceId: string) {
-	return {
-		code: Errors.ASSET_NOT_FOUND,
-		message: `Plugin error - Unable to get file name for unknown asset "${assetReferenceId}".`
+		message: `Plugin error - Unable to get file name for chunk "${name}". Ensure that generate is called first.`
 	};
 }
 
@@ -82,26 +82,17 @@ export function errAssetReferenceIdNotFoundForSetSource(assetReferenceId: string
 	};
 }
 
-export function errAssetSourceAlreadySet(asset: Asset) {
+export function errAssetSourceAlreadySet(name: string) {
 	return {
 		code: Errors.ASSET_SOURCE_ALREADY_SET,
-		message: `Plugin error - Unable to set the source for asset "${
-			asset.name
-		}", source already set.`
+		message: `Unable to set the source for asset "${name}", source already set.`
 	};
 }
 
-export function errAssetSourceMissingForSetSource(asset: Asset) {
+export function errNoAssetSourceSet(assetName: string) {
 	return {
 		code: Errors.ASSET_SOURCE_MISSING,
-		message: `Plugin error creating asset "${asset.name}", setAssetSource call without a source.`
-	};
-}
-
-export function errNoAssetSourceSet(asset: Asset) {
-	return {
-		code: Errors.ASSET_SOURCE_MISSING,
-		message: `Plugin error creating asset "${asset.name}" - no asset source set.`
+		message: `Plugin error creating asset "${assetName}" - no asset source set.`
 	};
 }
 
@@ -114,17 +105,24 @@ export function errBadLoader(id: string) {
 	};
 }
 
-export function errChunkReferenceIdNotFoundForFilename(chunkReferenceId: string) {
+export function errDeprecation(deprecation: string | RollupWarning) {
 	return {
-		code: Errors.CHUNK_NOT_FOUND,
-		message: `Plugin error - Unable to get file name for unknown chunk "${chunkReferenceId}".`
+		code: Errors.DEPRECATED_FEATURE,
+		...(typeof deprecation === 'string' ? { message: deprecation } : deprecation)
 	};
 }
 
-export function errInvalidAssetName(name: string) {
+export function errFileReferenceIdNotFoundForFilename(assetReferenceId: string) {
 	return {
-		code: Errors.INVALID_ASSET_NAME,
-		message: `Plugin error creating asset, name "${name}" is not a plain (non relative or absolute URL) string name.`
+		code: Errors.FILE_NOT_FOUND,
+		message: `Plugin error - Unable to get file name for unknown file "${assetReferenceId}".`
+	};
+}
+
+export function errFileNameConflict(fileName: string) {
+	return {
+		code: Errors.FILE_NAME_CONFLICT,
+		message: `Could not emit file "${fileName}" as it conflicts with an already emitted file.`
 	};
 }
 
@@ -164,10 +162,10 @@ export function errInvalidRollupPhaseForAddWatchFile() {
 	};
 }
 
-export function errInvalidRollupPhaseForEmitChunk() {
+export function errInvalidRollupPhaseForChunkEmission() {
 	return {
 		code: Errors.INVALID_ROLLUP_PHASE,
-		message: `Cannot call emitChunk after module loading has finished.`
+		message: `Cannot emit chunks after module loading has finished.`
 	};
 }
 
@@ -218,6 +216,13 @@ export function errUnresolvedImportTreatedAsExternal(source: string, importer: s
 			importer
 		)}, but could not be resolved – treating it as an external dependency`,
 		source,
-		url: 'https://rollupjs.org/guide/en#warning-treating-module-as-external-dependency'
+		url: 'https://rollupjs.org/guide/en/#warning-treating-module-as-external-dependency'
+	};
+}
+
+export function errFailedValidation(message: string) {
+	return {
+		code: Errors.VALIDATION_ERROR,
+		message
 	};
 }

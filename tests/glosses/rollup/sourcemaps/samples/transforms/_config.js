@@ -1,9 +1,8 @@
 const buble = require('buble');
+const MagicString = require('magic-string');
+const assert = require('assert');
 const getLocation = require('../../getLocation');
-const {
-	sourcemap: { SourceMapConsumer },
-	text: { MagicString }
-} = adone;
+const SourceMapConsumer = require('source-map').SourceMapConsumer;
 
 module.exports = {
 	description: 'preserves sourcemap chains when transforming',

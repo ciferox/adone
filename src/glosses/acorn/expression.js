@@ -272,7 +272,7 @@ pp.parseSubscript = function(base, startPos, startLoc, noCalls, maybeAsyncArrow)
   if (computed || this.eat(tt.dot)) {
     let node = this.startNodeAt(startPos, startLoc)
     node.object = base
-    node.property = computed ? this.parseExpression() : this.parseIdent(true)
+    node.property = computed ? this.parseExpression() : this.parseIdent(this.options.allowReserved !== "never")
     node.computed = !!computed
     if (computed) this.expect(tt.bracketR)
     base = this.finishNode(node, "MemberExpression")
@@ -333,7 +333,7 @@ pp.parseExprAtom = function(refDestructuringErrors) {
     //     super [ Expression ]
     //     super . IdentifierName
     // SuperCall:
-    //     super Arguments
+    //     super ( Arguments )
     if (this.type !== tt.dot && this.type !== tt.bracketL && this.type !== tt.parenL)
       this.unexpected()
     return this.finishNode(node, "Super")
@@ -409,15 +409,53 @@ pp.parseExprAtom = function(refDestructuringErrors) {
   case tt.backQuote:
     return this.parseTemplate()
 
+  case tt._import:
+    if (this.options.ecmaVersion >= 11) {
+      return this.parseExprImport()
+    } else {
+      return this.unexpected()
+    }
+
   default:
     this.unexpected()
   }
+}
+
+pp.parseExprImport = function() {
+  const node = this.startNode()
+  this.next() // skip `import`
+  switch (this.type) {
+  case tt.parenL:
+    return this.parseDynamicImport(node)
+  default:
+    this.unexpected()
+  }
+}
+
+pp.parseDynamicImport = function(node) {
+  this.next() // skip `(`
+
+  // Parse node.source.
+  node.source = this.parseMaybeAssign()
+
+  // Verify ending.
+  if (!this.eat(tt.parenR)) {
+    const errorPos = this.start
+    if (this.eat(tt.comma) && this.eat(tt.parenR)) {
+      this.raiseRecoverable(errorPos, "Trailing comma is not allowed in import()")
+    } else {
+      this.unexpected(errorPos)
+    }
+  }
+
+  return this.finishNode(node, "ImportExpression")
 }
 
 pp.parseLiteral = function(value) {
   let node = this.startNode()
   node.value = value
   node.raw = this.input.slice(this.start, this.end)
+  if (node.raw.charCodeAt(node.raw.length - 1) === 110) node.bigint = node.raw.slice(0, -1)
   this.next()
   return this.finishNode(node, "Literal")
 }
@@ -520,8 +558,11 @@ pp.parseNew = function() {
       this.raiseRecoverable(node.start, "new.target can only be used in functions")
     return this.finishNode(node, "MetaProperty")
   }
-  let startPos = this.start, startLoc = this.startLoc
+  let startPos = this.start, startLoc = this.startLoc, isImport = this.type === tt._import
   node.callee = this.parseSubscripts(this.parseExprAtom(), startPos, startLoc, true)
+  if (isImport && node.callee.type === "ImportExpression") {
+    this.raise(startPos, "Cannot use new with import()")
+  }
   if (this.eat(tt.parenL)) node.arguments = this.parseExprList(tt.parenR, this.options.ecmaVersion >= 8, false)
   else node.arguments = empty
   return this.finishNode(node, "NewExpression")
@@ -582,7 +623,7 @@ pp.parseObj = function(isPattern, refDestructuringErrors) {
   while (!this.eat(tt.braceR)) {
     if (!first) {
       this.expect(tt.comma)
-      if (this.afterTrailingComma(tt.braceR)) break
+      if (this.options.ecmaVersion >= 5 && this.afterTrailingComma(tt.braceR)) break
     } else first = false
 
     const prop = this.parseProperty(isPattern, refDestructuringErrors)
@@ -704,7 +745,7 @@ pp.parsePropertyName = function(prop) {
       prop.computed = false
     }
   }
-  return prop.key = this.type === tt.num || this.type === tt.string ? this.parseExprAtom() : this.parseIdent(true)
+  return prop.key = this.type === tt.num || this.type === tt.string ? this.parseExprAtom() : this.parseIdent(this.options.allowReserved !== "never")
 }
 
 // Initialize empty function node.
@@ -872,7 +913,6 @@ pp.checkUnreserved = function({start, end, name}) {
 
 pp.parseIdent = function(liberal, isBinding) {
   let node = this.startNode()
-  if (liberal && this.options.allowReserved === "never") liberal = false
   if (this.type === tt.name) {
     node.name = this.value
   } else if (this.type.keyword) {

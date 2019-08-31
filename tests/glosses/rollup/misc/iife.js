@@ -1,6 +1,7 @@
 const {
 	rollup
 } = adone;
+
 const { loader } = require('../utils.js');
 
 function runTestCode(code, globals) {

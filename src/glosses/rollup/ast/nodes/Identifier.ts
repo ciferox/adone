@@ -1,3 +1,5 @@
+import isReference from 'is-reference';
+import MagicString from 'magic-string';
 import { BLANK } from '../../utils/blank';
 import { NodeRenderOptions, RenderOptions } from '../../utils/renderHelpers';
 import CallOptions from '../CallOptions';
@@ -32,7 +34,7 @@ export default class Identifier extends NodeBase implements PatternNode {
 	bind() {
 		if (this.bound) return;
 		this.bound = true;
-		if (this.variable === null && adone.acorn.isReference(this, this.parent)) {
+		if (this.variable === null && isReference(this, this.parent)) {
 			this.variable = this.scope.findVariable(this.name);
 			this.variable.addReference(this);
 		}
@@ -136,7 +138,7 @@ export default class Identifier extends NodeBase implements PatternNode {
 	}
 
 	render(
-		code: adone.text.MagicString,
+		code: MagicString,
 		_options: RenderOptions,
 		{ renderedParentType, isCalleeOfRenderedParent, isShorthandProperty }: NodeRenderOptions = BLANK
 	) {

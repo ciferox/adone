@@ -1,3 +1,4 @@
+import { Bundle as MagicStringBundle } from 'magic-string';
 import { GlobalsOption, OutputOptions } from '../rollup/types';
 import { error } from '../utils/error';
 import { FinaliserOptions } from './index';
@@ -22,7 +23,7 @@ function safeAccess(name: string, globalVar: string, _: string) {
 }
 
 export default function umd(
-	magicString: adone.text.MagicString.Bundle,
+	magicString: MagicStringBundle,
 	{
 		dependencies,
 		exports,

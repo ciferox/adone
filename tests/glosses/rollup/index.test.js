@@ -1,5 +1,5 @@
-// adone.sourcemap.support.install();
-require("console-group").install();
+adone.sourcemap.support.install();
+// require("console-group").install();
 
 describe("rollup", function () {
     this.timeout(10000);
@@ -17,5 +17,5 @@ describe("rollup", function () {
     require("./incremental/index.js");
     require("./hooks/index.js");
     // require("./cli/index.js");
-    require("./watch/index.js");
+    // require("./watch/index.js");
 });

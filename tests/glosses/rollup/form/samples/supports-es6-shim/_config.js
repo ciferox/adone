@@ -1,5 +1,5 @@
 module.exports = {
-        skip: true,
+	skip: true,
 	description: 'supports es6-shim',
 	options: {
 		onwarn(warning) {

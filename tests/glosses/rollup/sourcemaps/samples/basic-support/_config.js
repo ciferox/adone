@@ -1,8 +1,6 @@
+const assert = require('assert');
 const getLocation = require('../../getLocation');
-
-const {
-	sourcemap: { SourceMapConsumer }
-} = adone;
+const SourceMapConsumer = require('source-map').SourceMapConsumer;
 
 module.exports = {
 	description: 'basic sourcemap support',

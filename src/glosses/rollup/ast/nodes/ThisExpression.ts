@@ -1,3 +1,4 @@
+import MagicString from 'magic-string';
 import { RenderOptions } from '../../utils/renderHelpers';
 import { ExecutionPathOptions } from '../ExecutionPathOptions';
 import ModuleScope from '../scopes/ModuleScope';
@@ -33,14 +34,14 @@ export default class ThisExpression extends NodeBase {
 				{
 					code: 'THIS_IS_UNDEFINED',
 					message: `The 'this' keyword is equivalent to 'undefined' at the top level of an ES module, and has been rewritten`,
-					url: `https://rollupjs.org/guide/en#error-this-is-undefined`
+					url: `https://rollupjs.org/guide/en/#error-this-is-undefined`
 				},
 				this.start
 			);
 		}
 	}
 
-	render(code: adone.text.MagicString, _options: RenderOptions) {
+	render(code: MagicString, _options: RenderOptions) {
 		if (this.alias !== null) {
 			code.overwrite(this.start, this.end, this.alias, {
 				contentOnly: false,

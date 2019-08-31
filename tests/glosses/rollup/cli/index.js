@@ -1,5 +1,4 @@
 const path = require('path');
-const assert = require('assert');
 const sander = require('sander');
 const buble = require('buble');
 const { exec } = require('child_process');
@@ -23,9 +22,10 @@ runTestSuiteWithSamples(
 			done => {
 				process.chdir(config.cwd || dir);
 
-				const command = 'node ' + path.resolve(__dirname, '../../bin') + path.sep + config.command;
+				const command =
+					'node ' + path.resolve(__dirname, '../../dist/bin') + path.sep + config.command;
 
-				const childProcess = exec(command, { timeout: 2000 }, (err, code, stderr) => {
+				const childProcess = exec(command, { timeout: 40000 }, (err, code, stderr) => {
 					if (err && !err.killed) {
 						if (config.error) {
 							const shouldContinue = config.error(err);
@@ -118,7 +118,7 @@ runTestSuiteWithSamples(
 					}
 				});
 			}
-		);
+		).timeout(50000);
 	},
 	() => process.chdir(cwd)
 );

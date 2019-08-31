@@ -1,6 +1,6 @@
-// import * as acorn from 'acorn';
+import * as acorn from 'acorn';
 // @ts-ignore
-// import { base as basicWalker } from 'acorn-walk';
+import { base as basicWalker } from 'acorn-walk';
 import * as ESTree from 'estree';
 import { CommentDescription } from '../Module';
 
@@ -15,7 +15,7 @@ function handlePureAnnotationsOfNode(
 		commentNode = state.commentNodes[++state.commentIndex];
 	}
 	if (commentNode && commentNode.end <= node.end) {
-		adone.acorn.walk.base[type](node, state, handlePureAnnotationsOfNode);
+		basicWalker[type](node, state, handlePureAnnotationsOfNode);
 	}
 }
 

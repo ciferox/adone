@@ -1,3 +1,4 @@
+import MagicString from 'magic-string';
 import { BLANK } from '../../utils/blank';
 import {
 	findFirstOccurrenceOutsideComment,
@@ -56,7 +57,7 @@ export default class CallExpression extends NodeBase implements DeoptimizableEnt
 					{
 						code: 'EVAL',
 						message: `Use of eval is strongly discouraged, as it poses security risks and may cause issues with minification`,
-						url: 'https://rollupjs.org/guide/en#avoiding-eval'
+						url: 'https://rollupjs.org/guide/en/#avoiding-eval'
 					},
 					this.start
 				);
@@ -228,7 +229,7 @@ export default class CallExpression extends NodeBase implements DeoptimizableEnt
 	}
 
 	render(
-		code: adone.text.MagicString,
+		code: MagicString,
 		options: RenderOptions,
 		{ renderedParentType }: NodeRenderOptions = BLANK
 	) {

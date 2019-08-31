@@ -1,10 +1,13 @@
-const {
-	rollup,
-	sourcemap: { SourceMapConsumer }
-} = adone;
 const path = require('path');
 const { loader } = require('../utils.js');
+const { SourceMapConsumer } = require('source-map');
 const { getLocator } = require('locate-character');
+
+const {
+	assert,
+	rollup
+} = adone;
+
 
 describe('in-memory sourcemaps', () => {
 	it('generates an in-memory sourcemap', () => {

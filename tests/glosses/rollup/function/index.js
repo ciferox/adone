@@ -1,10 +1,10 @@
-const {
-    rollup
-} = adone;
-
 const path = require('path');
 const buble = require('buble');
 const { compareError, compareWarnings, extend, runTestSuiteWithSamples } = require('../utils.js');
+
+const {
+	rollup
+} = adone;
 
 function requireWithContext(code, context) {
 	const module = { exports: {} };
@@ -54,7 +54,6 @@ runTestSuiteWithSamples('function', path.resolve(__dirname, 'samples'), (dir, co
 		() => {
 			if (config.show) console.group(path.basename(dir));
 			if (config.before) config.before();
-
 			process.chdir(dir);
 			const warnings = [];
 
@@ -63,7 +62,8 @@ runTestSuiteWithSamples('function', path.resolve(__dirname, 'samples'), (dir, co
 					extend(
 						{
 							input: dir + '/main.js',
-							onwarn: warning => warnings.push(warning)
+							onwarn: warning => warnings.push(warning),
+							strictDeprecations: true
 						},
 						config.options || {}
 					)
@@ -77,13 +77,15 @@ runTestSuiteWithSamples('function', path.resolve(__dirname, 'samples'), (dir, co
 
 					let result;
 
-					return bundle
-						.generate(
-							extend(
-								{
-									format: 'cjs'
-								},
-								(config.options || {}).output || {}
+					return Promise.resolve()
+						.then(() =>
+							bundle.generate(
+								extend(
+									{
+										format: 'cjs'
+									},
+									(config.options || {}).output || {}
+								)
 							)
 						)
 						.then(({ output }) => {

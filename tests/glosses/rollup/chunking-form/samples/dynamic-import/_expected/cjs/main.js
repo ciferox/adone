@@ -2,11 +2,11 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-var __chunk_1 = require('./chunks/chunk.js');
+var shared = require('./chunks/shared.js');
 
-assert.equal(__chunk_1.sharedValue, 'shared');
+assert.equal(shared.sharedValue, 'shared');
 
-const promise = Promise.resolve(require('./chunks/other.js')).then(result =>
+const promise = new Promise(function (resolve) { resolve(require('./chunks/other.js')); }).then(result =>
 	assert.deepEqual(result, { value: 'shared' })
 );
 

@@ -1,3 +1,4 @@
+import { Bundle as MagicStringBundle } from 'magic-string';
 import { ChunkDependencies, ChunkExports } from '../Chunk';
 import { OutputOptions, RollupWarning } from '../rollup/types';
 import amd from './amd';
@@ -23,10 +24,10 @@ export interface FinaliserOptions {
 }
 
 export type Finaliser = (
-	magicString: adone.text.MagicString.Bundle,
+	magicString: MagicStringBundle,
 	finaliserOptions: FinaliserOptions,
 	options: OutputOptions
-) => adone.text.MagicString.Bundle;
+) => MagicStringBundle;
 
 export default { system, amd, cjs, es: esm, iife, umd } as {
 	[format: string]: Finaliser;

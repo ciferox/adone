@@ -1,9 +1,9 @@
+const { executeBundle } = require('../utils.js');
+
 const {
 	acorn,
 	rollup
 } = adone;
-
-const { executeBundle } = require('../utils.js');
 
 describe('incremental', () => {
 	let resolveIdCalls;

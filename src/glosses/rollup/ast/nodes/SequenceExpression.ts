@@ -1,7 +1,9 @@
+import MagicString from 'magic-string';
 import { BLANK } from '../../utils/blank';
 import {
 	getCommaSeparatedNodesWithBoundaries,
 	NodeRenderOptions,
+	removeLineBreaks,
 	RenderOptions
 } from '../../utils/renderHelpers';
 import { treeshakeNode } from '../../utils/treeshakeNode';
@@ -78,13 +80,11 @@ export default class SequenceExpression extends NodeBase {
 	}
 
 	render(
-		code: adone.text.MagicString,
+		code: MagicString,
 		options: RenderOptions,
-		{ renderedParentType, isCalleeOfRenderedParent }: NodeRenderOptions = BLANK
+		{ renderedParentType, isCalleeOfRenderedParent, preventASI }: NodeRenderOptions = BLANK
 	) {
-		let firstStart = 0,
-			lastEnd,
-			includedNodes = 0;
+		let includedNodes = 0;
 		for (const { node, start, end } of getCommaSeparatedNodesWithBoundaries(
 			this.expressions,
 			code,
@@ -96,8 +96,9 @@ export default class SequenceExpression extends NodeBase {
 				continue;
 			}
 			includedNodes++;
-			if (firstStart === 0) firstStart = start;
-			lastEnd = end;
+			if (includedNodes === 1 && preventASI) {
+				removeLineBreaks(code, start, node.start);
+			}
 			if (node === this.expressions[this.expressions.length - 1] && includedNodes === 1) {
 				node.render(code, options, {
 					isCalleeOfRenderedParent: renderedParentType
@@ -108,11 +109,6 @@ export default class SequenceExpression extends NodeBase {
 			} else {
 				node.render(code, options);
 			}
-		}
-		// Round brackets are part of the actual parent and should be re-added in case the parent changed
-		if (includedNodes > 1 && renderedParentType) {
-			code.prependRight(firstStart, '(');
-			code.appendLeft(lastEnd as number, ')');
 		}
 	}
 }

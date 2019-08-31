@@ -1,3 +1,4 @@
+import MagicString from 'magic-string';
 import { RenderOptions, renderStatementList } from '../../utils/renderHelpers';
 import { ExecutionPathOptions } from '../ExecutionPathOptions';
 import BlockScope from '../scopes/BlockScope';
@@ -39,7 +40,7 @@ export default class BlockStatement extends StatementBase {
 		}
 	}
 
-	render(code: adone.text.MagicString, options: RenderOptions) {
+	render(code: MagicString, options: RenderOptions) {
 		if (this.body.length) {
 			renderStatementList(this.body, code, this.start + 1, this.end - 1, options);
 		} else {

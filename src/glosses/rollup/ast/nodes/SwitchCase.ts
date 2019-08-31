@@ -1,3 +1,4 @@
+import MagicString from 'magic-string';
 import {
 	findFirstOccurrenceOutsideComment,
 	RenderOptions,
@@ -20,7 +21,7 @@ export default class SwitchCase extends NodeBase {
 		}
 	}
 
-	render(code: adone.text.MagicString, options: RenderOptions) {
+	render(code: MagicString, options: RenderOptions) {
 		if (this.consequent.length) {
 			this.test && this.test.render(code, options);
 			const testEnd = this.test

@@ -1,6 +1,7 @@
 const {
 	rollup
 } = adone;
+
 const { loader } = require('../utils.js');
 
 describe('The bundle object', () => {
@@ -27,21 +28,21 @@ describe('The bundle object', () => {
 			.then(({ output }) => {
 				assert.deepEqual(
 					output.map(chunk => chunk.fileName),
-					['input1-91cf8b5e.js', 'input2-28e1210a.js', 'generated-chunk-e9283962.js'],
+					['input1-3810e839.js', 'input2-14354d1f.js', 'generated-shared-f6027271.js'],
 					'fileName'
 				);
 				assert.deepEqual(
 					output.map(chunk => chunk.code),
 					[
-						`import './generated-chunk-e9283962.js';\n\nconsole.log("input1");const out = true;\n\nexport { out };\n`,
-						`import './generated-chunk-e9283962.js';\n\nconsole.log("input2");var input2 = 42;\n\nexport default input2;\n`,
+						`import './generated-shared-f6027271.js';\n\nconsole.log("input1");const out = true;\n\nexport { out };\n`,
+						`import './generated-shared-f6027271.js';\n\nconsole.log("input2");var input2 = 42;\n\nexport default input2;\n`,
 						'console.log("shared");\n'
 					],
 					'code'
 				);
 				assert.deepEqual(output.map(chunk => chunk.map), [null, null, null], 'map');
 				assert.deepEqual(output.map(chunk => chunk.isEntry), [true, true, false], 'isEntry');
-				assert.deepEqual(output.map(chunk => chunk.name), ['input1', 'input2', 'chunk'], 'name');
+				assert.deepEqual(output.map(chunk => chunk.name), ['input1', 'input2', 'shared'], 'name');
 				assert.deepEqual(
 					output.map(chunk => chunk.facadeModuleId),
 					['input1', 'input2', null],
@@ -49,7 +50,7 @@ describe('The bundle object', () => {
 				);
 				assert.deepEqual(
 					output.map(chunk => chunk.imports),
-					[['generated-chunk-e9283962.js'], ['generated-chunk-e9283962.js'], []],
+					[['generated-shared-f6027271.js'], ['generated-shared-f6027271.js'], []],
 					'imports'
 				);
 				assert.deepEqual(output.map(chunk => chunk.dynamicImports), [[], [], []], 'dynamicImports');
@@ -110,7 +111,7 @@ describe('The bundle object', () => {
 			.then(({ output }) => {
 				assert.deepEqual(
 					output.map(chunk => chunk.fileName),
-					['input1.js', 'input2.js', 'generated-chunk.js'],
+					['input1.js', 'input2.js', 'generated-input2.js'],
 					'fileName'
 				);
 				assert.deepEqual(
@@ -151,7 +152,7 @@ describe('The bundle object', () => {
 			.then(({ output }) => {
 				assert.deepEqual(
 					output.map(chunk => chunk.fileName),
-					['input1.js', 'input2.js', 'chunk.js'],
+					['input1.js', 'input2.js', 'input22.js'],
 					'fileName'
 				);
 				assert.deepEqual(
@@ -240,7 +241,7 @@ describe('The bundle object', () => {
 			.then(({ output }) => {
 				assert.deepEqual(
 					output.map(chunk => chunk.fileName),
-					['input1.js', 'input2.js', 'generated-chunk.js', 'generated-dynamic.js'],
+					['input1.js', 'input2.js', 'generated-dynamic.js', 'generated-dynamic2.js'],
 					'fileName'
 				);
 				assert.deepEqual(
@@ -260,7 +261,7 @@ describe('The bundle object', () => {
 				);
 				assert.deepEqual(
 					output.map(chunk => chunk.dynamicImports),
-					[['generated-chunk.js'], [], [], []],
+					[['generated-dynamic.js'], [], [], []],
 					'dynamicImports'
 				);
 			});
@@ -297,7 +298,7 @@ describe('The bundle object', () => {
 								originalLength: 47,
 								removedExports: [],
 								renderedExports: ['default'],
-								renderedLength: 17
+								renderedLength: 18
 							}
 						}
 					],

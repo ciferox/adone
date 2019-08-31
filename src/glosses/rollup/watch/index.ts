@@ -28,7 +28,7 @@ export class Watcher {
 	private succeeded = false;
 	private tasks: Task[];
 
-	constructor(configs: GenericConfigObject[]) {
+	constructor(configs: GenericConfigObject[] | GenericConfigObject) {
 		this.emitter = new (class extends EventEmitter implements RollupWatcher {
 			close: () => void;
 			constructor(close: () => void) {
@@ -211,26 +211,26 @@ export class Task {
 		return rollup(options)
 			.then(result => {
 				if (this.closed) return undefined as any;
-
+				const previouslyWatched = this.watched;
 				const watched = (this.watched = new Set());
 
 				this.cache = result.cache;
 				this.watchFiles = result.watchFiles;
-				(this.cache.modules as ModuleJSON[]).forEach(module => {
+				for (const module of this.cache.modules as ModuleJSON[]) {
 					if (module.transformDependencies) {
 						module.transformDependencies.forEach(depId => {
 							watched.add(depId);
 							this.watchFile(depId, true);
 						});
 					}
-				});
-				this.watchFiles.forEach(id => {
+				}
+				for (const id of this.watchFiles) {
 					watched.add(id);
 					this.watchFile(id);
-				});
-				this.watched.forEach(id => {
+				}
+				for (const id of previouslyWatched) {
 					if (!watched.has(id)) deleteTask(id, this, this.chokidarOptionsHash);
-				});
+				}
 
 				return Promise.all(this.outputs.map(output => result.write(output))).then(() => result);
 			})
@@ -279,6 +279,6 @@ export class Task {
 	}
 }
 
-export default function watch(configs: GenericConfigObject[]): EventEmitter {
+export default function watch(configs: GenericConfigObject[] | GenericConfigObject): RollupWatcher {
 	return new Watcher(configs).emitter;
 }

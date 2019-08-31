@@ -38,6 +38,21 @@ export interface RollupLogProps {
 	url?: string;
 }
 
+export type SourceMapSegment =
+	| [number]
+	| [number, number, number, number]
+	| [number, number, number, number, number];
+
+export interface ExistingDecodedSourceMap {
+	file?: string;
+	mappings: SourceMapSegment[][];
+	names: string[];
+	sourceRoot?: string;
+	sources: string[];
+	sourcesContent?: string[];
+	version: number;
+}
+
 export interface ExistingRawSourceMap {
 	file?: string;
 	mappings: string;
@@ -48,7 +63,13 @@ export interface ExistingRawSourceMap {
 	version: number;
 }
 
-export type RawSourceMap = { mappings: '' } | ExistingRawSourceMap;
+export type DecodedSourceMapOrMissing =
+	| {
+			mappings?: never;
+			missing: true;
+			plugin: string;
+	  }
+	| ExistingDecodedSourceMap;
 
 export interface SourceMap {
 	file: string;
@@ -56,15 +77,17 @@ export interface SourceMap {
 	names: string[];
 	sources: string[];
 	sourcesContent: string[];
-	version: string;
+	version: number;
 	toString(): string;
 	toUrl(): string;
 }
 
+export type SourceMapInput = ExistingRawSourceMap | string | null | { mappings: '' };
+
 export interface SourceDescription {
 	ast?: ESTree.Program;
 	code: string;
-	map?: string | RawSourceMap;
+	map?: SourceMapInput;
 	moduleSideEffects?: boolean | null;
 }
 
@@ -79,28 +102,16 @@ export interface TransformModuleJSON {
 	customTransformCache: boolean;
 	moduleSideEffects: boolean | null;
 	originalCode: string;
-	originalSourcemap: RawSourceMap | null;
+	originalSourcemap: ExistingDecodedSourceMap | null;
 	resolvedIds?: ResolvedIdMap;
-	sourcemapChain: (RawSourceMap | { missing: true; plugin: string })[];
+	sourcemapChain: DecodedSourceMapOrMissing[];
 	transformDependencies: string[] | null;
 }
 
 export interface ModuleJSON extends TransformModuleJSON {
 	dependencies: string[];
 	id: string;
-	transformAssets: Asset[] | undefined;
-	transformChunks: EmittedChunk[] | undefined;
-}
-
-export interface EmittedChunk {
-	id: string;
-	options: { name?: string } | undefined;
-}
-
-export interface Asset {
-	fileName: string;
-	name: string;
-	source: string | Buffer;
+	transformFiles: EmittedFile[] | undefined;
 }
 
 export interface PluginCache {
@@ -114,17 +125,42 @@ export interface MinimalPluginContext {
 	meta: PluginContextMeta;
 }
 
+export interface EmittedAsset {
+	fileName?: string;
+	name?: string;
+	source?: string | Buffer;
+	type: 'asset';
+}
+
+export interface EmittedChunk {
+	fileName?: string;
+	id: string;
+	name?: string;
+	type: 'chunk';
+}
+
+export type EmittedFile = EmittedAsset | EmittedChunk;
+
 export type EmitAsset = (name: string, source?: string | Buffer) => string;
-export type EmitChunk = (name: string, options?: { name?: string }) => string;
+
+export type EmitChunk = (id: string, options?: { name?: string }) => string;
+
+export type EmitFile = (emittedFile: EmittedFile) => string;
 
 export interface PluginContext extends MinimalPluginContext {
 	addWatchFile: (id: string) => void;
 	cache: PluginCache;
+	/** @deprecated Use `this.emitFile` instead */
 	emitAsset: EmitAsset;
+	/** @deprecated Use `this.emitFile` instead */
 	emitChunk: EmitChunk;
-	error: (err: RollupError | string, pos?: { column: number; line: number }) => never;
+	emitFile: EmitFile;
+	error: (err: RollupError | string, pos?: number | { column: number; line: number }) => never;
+	/** @deprecated Use `this.getFileName` instead */
 	getAssetFileName: (assetReferenceId: string) => string;
+	/** @deprecated Use `this.getFileName` instead */
 	getChunkFileName: (chunkReferenceId: string) => string;
+	getFileName: (fileReferenceId: string) => string;
 	getModuleInfo: (
 		moduleId: string
 	) => {
@@ -146,7 +182,7 @@ export interface PluginContext extends MinimalPluginContext {
 	/** @deprecated Use `this.resolve` instead */
 	resolveId: (source: string, importer: string) => Promise<string | null>;
 	setAssetSource: (assetReferenceId: string, source: string | Buffer) => void;
-	warn: (warning: RollupWarning | string, pos?: { column: number; line: number }) => void;
+	warn: (warning: RollupWarning | string, pos?: number | { column: number; line: number }) => void;
 	/** @deprecated Use `this.addWatchFile` and the `watchChange` hook instead  */
 	watcher: EventEmitter;
 }
@@ -207,8 +243,8 @@ export type TransformChunkHook = (
 	code: string,
 	options: OutputOptions
 ) =>
-	| Promise<{ code: string; map: RawSourceMap } | null | undefined>
-	| { code: string; map: RawSourceMap }
+	| Promise<{ code: string; map?: SourceMapInput } | null | undefined>
+	| { code: string; map?: SourceMapInput }
 	| null
 	| undefined;
 
@@ -218,8 +254,8 @@ export type RenderChunkHook = (
 	chunk: RenderedChunk,
 	options: OutputOptions
 ) =>
-	| Promise<{ code: string; map: RawSourceMap } | null>
-	| { code: string; map: RawSourceMap }
+	| Promise<{ code: string; map?: SourceMapInput } | null>
+	| { code: string; map?: SourceMapInput }
 	| string
 	| null;
 
@@ -255,6 +291,7 @@ export type ResolveFileUrlHook = (
 		fileName: string;
 		format: string;
 		moduleId: string;
+		referenceId: string;
 		relativePath: string;
 	}
 ) => string | null | undefined;
@@ -277,6 +314,10 @@ export interface OutputBundle {
 	[fileName: string]: OutputAsset | OutputChunk;
 }
 
+export interface OutputBundleWithPlaceholders {
+	[fileName: string]: OutputAsset | OutputChunk | {};
+}
+
 interface OnGenerateOptions extends OutputOptions {
 	bundle: OutputChunk;
 }
@@ -286,6 +327,7 @@ interface OnWriteOptions extends OutputOptions {
 }
 
 export interface PluginHooks {
+	augmentChunkHash: (this: PluginContext, chunk: PreRenderedChunk) => string | void;
 	buildEnd: (this: PluginContext, err?: Error) => Promise<void> | void;
 	buildStart: (this: PluginContext, options: InputOptions) => Promise<void> | void;
 	generateBundle: (
@@ -374,6 +416,7 @@ export interface InputOptions {
 	preserveModules?: boolean;
 	preserveSymlinks?: boolean;
 	shimMissingExports?: boolean;
+	strictDeprecations?: boolean;
 	treeshake?: boolean | TreeshakingOptions;
 	watch?: WatcherOptions;
 }
@@ -407,6 +450,7 @@ export interface OutputOptions {
 	esModule?: boolean;
 	exports?: 'default' | 'named' | 'none' | 'auto';
 	extend?: boolean;
+	externalLiveBindings?: boolean;
 	// only required for bundle.write
 	file?: string;
 	footer?: string | (() => string | Promise<string>);
@@ -456,11 +500,10 @@ export interface RenderedModule {
 	renderedLength: number;
 }
 
-export interface RenderedChunk {
+export interface PreRenderedChunk {
 	dynamicImports: string[];
 	exports: string[];
 	facadeModuleId: string | null;
-	fileName: string;
 	imports: string[];
 	isDynamicEntry: boolean;
 	isEntry: boolean;
@@ -468,6 +511,10 @@ export interface RenderedChunk {
 		[id: string]: RenderedModule;
 	};
 	name: string;
+}
+
+export interface RenderedChunk extends PreRenderedChunk {
+	fileName: string;
 }
 
 export interface OutputChunk extends RenderedChunk {
@@ -480,7 +527,6 @@ export interface SerializablePluginCache {
 }
 
 export interface RollupCache {
-	// to be deprecated
 	modules?: ModuleJSON[];
 	plugins?: Record<string, SerializablePluginCache>;
 }

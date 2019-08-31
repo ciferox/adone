@@ -1,6 +1,6 @@
-const path = require("path");
-const sander = require("sander");
-const fixturify = require("fixturify");
+const path = require('path');
+const sander = require('sander');
+const fixturify = require('fixturify');
 
 exports.compareError = compareError;
 exports.compareWarnings = compareWarnings;
@@ -19,7 +19,7 @@ function compareError(actual, expected) {
 	});
 
 	if (actual.frame) {
-		actual.frame = actual.frame.replace(/\s+$/gm, "");
+		actual.frame = actual.frame.replace(/\s+$/gm, '');
 	}
 
 	if (expected.frame) {
@@ -36,7 +36,7 @@ function compareWarnings(actual, expected) {
 			delete clone.toString;
 
 			if (clone.frame) {
-				clone.frame = clone.frame.replace(/\s+$/gm, "");
+				clone.frame = clone.frame.replace(/\s+$/gm, '');
 			}
 
 			return clone;
@@ -53,18 +53,18 @@ function compareWarnings(actual, expected) {
 function deindent(str) {
 	return str
 		.slice(1)
-		.replace(/^\t+/gm, "")
-		.replace(/\s+$/gm, "")
+		.replace(/^\t+/gm, '')
+		.replace(/\s+$/gm, '')
 		.trim();
 }
 
 function executeBundle(bundle, require) {
 	return bundle
 		.generate({
-			format: "cjs"
+			format: 'cjs'
 		})
 		.then(({ output: [cjs] }) => {
-			const m = new Function("module", "exports", "require", cjs.code);
+			const m = new Function('module', 'exports', 'require', cjs.code);
 
 			const module = { exports: {} };
 			m(module, module.exports, require);
@@ -88,7 +88,7 @@ function loadConfig(configFile) {
 	try {
 		return require(configFile);
 	} catch (err) {
-		if (err.code === "MODULE_NOT_FOUND") {
+		if (err.code === 'MODULE_NOT_FOUND') {
 			const dir = path.dirname(configFile);
 			removeOldTest(dir);
 		} else {
@@ -98,11 +98,11 @@ function loadConfig(configFile) {
 }
 
 function removeOldOutput(dir) {
-	if (sander.existsSync(path.join(dir, "_actual"))) {
-		sander.rimrafSync(path.join(dir, "_actual"));
+	if (sander.existsSync(path.join(dir, '_actual'))) {
+		sander.rimrafSync(path.join(dir, '_actual'));
 	}
-	if (sander.existsSync(path.join(dir, "_actual.js"))) {
-		sander.unlinkSync(path.join(dir, "_actual.js"));
+	if (sander.existsSync(path.join(dir, '_actual.js'))) {
+		sander.unlinkSync(path.join(dir, '_actual.js'));
 	}
 }
 
@@ -112,10 +112,11 @@ function removeOldTest(dir) {
 		`Test configuration in ${dir} not found.\nTrying to clean up no longer existing test...`
 	);
 	sander.rmdirSync(dir);
-	console.warn("Directory removed.");
+	console.warn('Directory removed.');
 }
 
 function loader(modules) {
+	modules = Object.assign(Object.create(null), modules);
 	return {
 		resolveId(id) {
 			return id in modules ? id : null;
@@ -131,7 +132,7 @@ function normaliseOutput(code) {
 	return code
 		.toString()
 		.trim()
-		.replace(/\r\n/g, "\n");
+		.replace(/\r\n/g, '\n');
 }
 
 function runTestSuiteWithSamples(suiteName, samplesDir, runTest, onTeardown) {
@@ -153,37 +154,37 @@ function runSamples(samplesDir, runTest, onTeardown) {
 	}
 	sander
 		.readdirSync(samplesDir)
-		.filter(name => name[0] !== ".")
+		.filter(name => name[0] !== '.')
 		.sort()
-		.forEach(fileName => runTestsInDir(samplesDir + "/" + fileName, runTest));
+		.forEach(fileName => runTestsInDir(samplesDir + '/' + fileName, runTest));
 }
 
 function runTestsInDir(dir, runTest) {
 	const fileNames = sander.readdirSync(dir);
 
-	if (fileNames.indexOf("_config.js") >= 0) {
+	if (fileNames.indexOf('_config.js') >= 0) {
 		removeOldOutput(dir);
 		loadConfigAndRunTest(dir, runTest);
-	} else if (fileNames.indexOf("_actual") >= 0 || fileNames.indexOf("_actual.js") >= 0) {
+	} else if (fileNames.indexOf('_actual') >= 0 || fileNames.indexOf('_actual.js') >= 0) {
 		removeOldOutput(dir);
 		removeOldTest(dir);
 	} else {
 		describe(path.basename(dir), () => {
 			fileNames
-				.filter(name => name[0] !== ".")
+				.filter(name => name[0] !== '.')
 				.sort()
-				.forEach(fileName => runTestsInDir(dir + "/" + fileName, runTest));
+				.forEach(fileName => runTestsInDir(dir + '/' + fileName, runTest));
 		});
 	}
 }
 
 function loadConfigAndRunTest(dir, runTest) {
-	const config = loadConfig(dir + "/_config.js");
+	const config = loadConfig(dir + '/_config.js');
 	if (
 		config &&
 		(!config.minNodeVersion ||
 			config.minNodeVersion <= Number(/^v(\d+)/.exec(process.version)[1])) &&
-		(!config.skipIfWindows || process.platform !== "win32")
+		(!config.skipIfWindows || process.platform !== 'win32')
 	)
 		runTest(dir, config);
 }
@@ -203,11 +204,11 @@ function assertDirectoriesAreEqual(actualDir, expectedDir) {
 function assertFilesAreEqual(actualFiles, expectedFiles, dirs = []) {
 	Object.keys(Object.assign({}, actualFiles, expectedFiles)).forEach(fileName => {
 		const pathSegments = dirs.concat(fileName);
-		if (typeof actualFiles[fileName] === "object" && typeof expectedFiles[fileName] === "object") {
+		if (typeof actualFiles[fileName] === 'object' && typeof expectedFiles[fileName] === 'object') {
 			return assertFilesAreEqual(actualFiles[fileName], expectedFiles[fileName], pathSegments);
 		}
 
-		const shortName = pathSegments.join("/");
+		const shortName = pathSegments.join('/');
 		assert.strictEqual(
 			`${shortName}: ${actualFiles[fileName]}`,
 			`${shortName}: ${expectedFiles[fileName]}`

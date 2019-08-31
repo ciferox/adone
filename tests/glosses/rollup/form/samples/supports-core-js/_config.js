@@ -1,5 +1,5 @@
 module.exports = {
-        skip: true,
+	skip: true,
 	description: 'supports core-js',
 	options: {
 		// check against tree-shake: false when updating the polyfill

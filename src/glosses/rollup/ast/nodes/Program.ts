@@ -1,3 +1,4 @@
+import MagicString from 'magic-string';
 import { RenderOptions, renderStatementList } from '../../utils/renderHelpers';
 import { ExecutionPathOptions } from '../ExecutionPathOptions';
 import * as NodeType from './NodeType';
@@ -24,7 +25,7 @@ export default class Program extends NodeBase {
 		}
 	}
 
-	render(code: adone.text.MagicString, options: RenderOptions) {
+	render(code: MagicString, options: RenderOptions) {
 		if (this.body.length) {
 			renderStatementList(this.body, code, this.start, this.end, options);
 		} else {

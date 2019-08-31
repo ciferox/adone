@@ -1,9 +1,9 @@
+const path = require('path');
+const { compareWarnings, extend, runTestSuiteWithSamples } = require('../utils.js');
+
 const {
 	rollup
 } = adone;
-
-const path = require('path');
-const { compareWarnings, extend, runTestSuiteWithSamples } = require('../utils.js');
 
 const FORMATS = ['amd', 'cjs', 'system', 'es', 'iife', 'umd'];
 
@@ -18,7 +18,8 @@ runTestSuiteWithSamples('sourcemaps', path.resolve(__dirname, 'samples'), (dir, 
 					const inputOptions = extend(
 						{
 							input: dir + '/main.js',
-							onwarn: warning => warnings.push(warning)
+							onwarn: warning => warnings.push(warning),
+							strictDeprecations: true
 						},
 						config.options || {}
 					);

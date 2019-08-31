@@ -1,6 +1,7 @@
 const {
 	rollup
 } = adone;
+
 const { loader } = require('../utils.js');
 
 describe('bundle.write()', () => {

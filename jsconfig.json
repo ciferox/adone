@@ -10,6 +10,8 @@
     "include": [
         "./.adone/**/*.js",
         "./src/**/*.js",
+        "./src/**/*.ts",
+        "./tests/**/*.ts",
         "./tests/**/*.js"
     ]
 }

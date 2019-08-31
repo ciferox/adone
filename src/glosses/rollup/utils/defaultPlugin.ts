@@ -1,6 +1,6 @@
 import { Plugin, ResolveIdHook } from '../rollup/types';
 import { error } from './error';
-import { lstatSync, readdirSync, readFileSync, realpathSync } from './fs';
+import { lstatSync, readdirSync, readFile, realpathSync } from './fs';
 import { basename, dirname, isAbsolute, resolve } from './path';
 
 export function getRollupDefaultPlugin(preserveSymlinks: boolean): Plugin {
@@ -8,7 +8,7 @@ export function getRollupDefaultPlugin(preserveSymlinks: boolean): Plugin {
 		name: 'Rollup Core',
 		resolveId: createResolveId(preserveSymlinks) as ResolveIdHook,
 		load(id) {
-			return readFileSync(id, 'utf-8');
+			return readFile(id);
 		},
 		resolveFileUrl({ relativePath, format }) {
 			return relativeUrlMechanisms[format](relativePath);
@@ -54,7 +54,7 @@ function createResolveId(preserveSymlinks: boolean) {
 			error({
 				code: 'MISSING_PROCESS',
 				message: `It looks like you're using Rollup in a non-Node.js environment. This means you must supply a plugin with custom resolveId and load functions`,
-				url: 'https://rollupjs.org/guide/en#a-simple-example'
+				url: 'https://rollupjs.org/guide/en/#a-simple-example'
 			});
 		}
 
@@ -112,7 +112,10 @@ const getRelativeUrlFromDocument = (relativePath: string) =>
 	);
 
 const relativeUrlMechanisms: Record<string, (relativePath: string) => string> = {
-	amd: relativePath => getResolveUrl(`require.toUrl('${relativePath}'), document.baseURI`),
+	amd: relativePath => {
+		if (relativePath[0] !== '.') relativePath = './' + relativePath;
+		return getResolveUrl(`require.toUrl('${relativePath}'), document.baseURI`);
+	},
 	cjs: relativePath =>
 		`(typeof document === 'undefined' ? ${getResolveUrl(
 			`'file:' + __dirname + '/${relativePath}'`,

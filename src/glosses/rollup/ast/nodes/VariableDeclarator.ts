@@ -1,3 +1,4 @@
+import MagicString from 'magic-string';
 import { RenderOptions } from '../../utils/renderHelpers';
 import { ObjectPath, UNDEFINED_EXPRESSION } from '../values';
 import * as NodeType from './NodeType';
@@ -17,7 +18,7 @@ export default class VariableDeclarator extends NodeBase {
 		this.id.deoptimizePath(path);
 	}
 
-	render(code: adone.text.MagicString, options: RenderOptions) {
+	render(code: MagicString, options: RenderOptions) {
 		// This can happen for hoisted variables in dead branches
 		if (this.init !== null && !this.init.included) {
 			code.remove(this.id.end, this.end);

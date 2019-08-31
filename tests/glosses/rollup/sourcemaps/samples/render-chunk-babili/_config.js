@@ -1,8 +1,7 @@
 const babiliResults = require('./babili-results');
+const assert = require('assert');
 const getLocation = require('../../getLocation');
-const {
-	sourcemap: { SourceMapConsumer }
-} = adone;
+const SourceMapConsumer = require('source-map').SourceMapConsumer;
 
 module.exports = {
 	description: 'generates valid sourcemap when source could not be determined',

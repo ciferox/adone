@@ -27,9 +27,7 @@ pp.parseTopLevel = function(node) {
       this.raiseRecoverable(this.undefinedExports[name].start, `Export '${name}' is not defined`)
   this.adaptDirectivePrologue(node.body)
   this.next()
-  if (this.options.ecmaVersion >= 6) {
-    node.sourceType = this.options.sourceType
-  }
+  node.sourceType = this.options.sourceType
   return this.finishNode(node, "Program")
 }
 
@@ -120,6 +118,14 @@ pp.parseStatement = function(context, topLevel, exports) {
   case tt.semi: return this.parseEmptyStatement(node)
   case tt._export:
   case tt._import:
+    if (this.options.ecmaVersion > 10 && starttype === tt._import) {
+      skipWhiteSpace.lastIndex = this.pos
+      let skip = skipWhiteSpace.exec(this.input)
+      let next = this.pos + skip[0].length, nextCh = this.input.charCodeAt(next)
+      if (nextCh === 40) // '('
+        return this.parseExpressionStatement(node, this.parseExpression())
+    }
+
     if (!this.options.allowImportExportEverywhere) {
       if (!topLevel)
         this.raise(this.start, "'import' and 'export' may only appear at the top level")
@@ -501,9 +507,6 @@ pp.parseVar = function(node, isFor, kind) {
 }
 
 pp.parseVarId = function(decl, kind) {
-  if ((kind === "const" || kind === "let") && this.isContextual("let")) {
-    this.raiseRecoverable(this.start, "let is disallowed as a lexically bound name")
-  }
   decl.id = this.parseBindingAtom()
   this.checkLVal(decl.id, kind === "var" ? BIND_VAR : BIND_LEXICAL, false)
 }

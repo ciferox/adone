@@ -1,6 +1,4 @@
-const {
-	rollup: { plugin: { commonjs } }
-} = adone;
+// const commonjs = require('rollup-plugin-commonjs');
 
 module.exports = {
 	description: 'Handles output from rollup-plugin-commonjs',
@@ -8,6 +6,6 @@ module.exports = {
 		input: 'main.js',
 		preserveModules: true,
 		external: ['external'],
-		plugins: [commonjs()]
+		plugins: [adone.rollup.plugin.commonjs()]
 	}
 };

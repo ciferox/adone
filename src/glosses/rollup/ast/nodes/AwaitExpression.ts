@@ -1,3 +1,4 @@
+import MagicString from 'magic-string';
 import { RenderOptions } from '../../utils/renderHelpers';
 import { ExecutionPathOptions } from '../ExecutionPathOptions';
 import ArrowFunctionExpression from './ArrowFunctionExpression';
@@ -25,7 +26,7 @@ export default class AwaitExpression extends NodeBase {
 		super.include(includeChildrenRecursively);
 	}
 
-	render(code: adone.text.MagicString, options: RenderOptions) {
+	render(code: MagicString, options: RenderOptions) {
 		super.render(code, options);
 	}
 }

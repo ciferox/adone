@@ -1,9 +1,8 @@
 const fs = require('fs');
 const path = require('path');
+const assert = require('assert');
 const getLocation = require('../../getLocation');
-const {
-	sourcemap: { SourceMapConsumer }
-} = adone;
+const SourceMapConsumer = require('source-map').SourceMapConsumer;
 
 const original = fs.readFileSync(path.resolve(__dirname, 'main.js'), 'utf-8');
 

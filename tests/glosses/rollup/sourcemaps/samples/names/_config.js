@@ -1,8 +1,6 @@
-
+const assert = require('assert');
 const getLocation = require('../../getLocation');
-const {
-	sourcemap: { SourceMapConsumer }
-} = adone;
+const SourceMapConsumer = require('source-map').SourceMapConsumer;
 
 module.exports = {
 	description: 'names are recovered (https://github.com/rollup/rollup/issues/101)',

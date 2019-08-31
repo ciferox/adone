@@ -1,3 +1,4 @@
+import MagicString from 'magic-string';
 import { BLANK } from '../../utils/blank';
 import { NodeRenderOptions, RenderOptions } from '../../utils/renderHelpers';
 import { ExecutionPathOptions } from '../ExecutionPathOptions';
@@ -29,7 +30,7 @@ export default class ExportNamedDeclaration extends NodeBase {
 		this.context.addExport(this);
 	}
 
-	render(code: adone.text.MagicString, options: RenderOptions, { start, end }: NodeRenderOptions = BLANK) {
+	render(code: MagicString, options: RenderOptions, { start, end }: NodeRenderOptions = BLANK) {
 		if (this.declaration === null) {
 			code.remove(start as number, end as number);
 		} else {

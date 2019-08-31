@@ -4,16 +4,14 @@ import { EntityPathTracker } from './ast/utils/EntityPathTracker';
 import Chunk, { isChunkRendered } from './Chunk';
 import ExternalModule from './ExternalModule';
 import Module, { defaultAcornOptions } from './Module';
-import { ModuleLoader, UnresolvedModuleWithAlias } from './ModuleLoader';
+import { ModuleLoader, UnresolvedModule } from './ModuleLoader';
 import {
-	Asset,
 	ExternalOption,
 	GetManualChunk,
 	InputOptions,
 	ManualChunksOption,
 	ModuleJSON,
 	ModuleSideEffectsOption,
-	OutputBundle,
 	PureModulesOption,
 	RollupCache,
 	RollupWarning,
@@ -22,10 +20,10 @@ import {
 	TreeshakingOptions,
 	WarningHandler
 } from './rollup/types';
-import { finaliseAsset } from './utils/assetHooks';
 import { BuildPhase } from './utils/buildPhase';
 import { assignChunkColouringHashes } from './utils/chunkColouring';
 import { Uint8ArrayToHexString } from './utils/entryHashing';
+import { errDeprecation, error } from './utils/error';
 import { analyseModuleExecution, sortByExecutionOrder } from './utils/executionOrder';
 import { resolve } from './utils/path';
 import { createPluginDriver, PluginDriver } from './utils/pluginDriver';
@@ -49,26 +47,25 @@ function makeOnwarn() {
 
 function normalizeEntryModules(
 	entryModules: string | string[] | Record<string, string>
-): UnresolvedModuleWithAlias[] {
+): UnresolvedModule[] {
 	if (typeof entryModules === 'string') {
-		return [{ alias: null, unresolvedId: entryModules }];
+		return [{ fileName: null, name: null, id: entryModules }];
 	}
 	if (Array.isArray(entryModules)) {
-		return entryModules.map(unresolvedId => ({ alias: null, unresolvedId }));
+		return entryModules.map(id => ({ fileName: null, name: null, id }));
 	}
-	return Object.keys(entryModules).map(alias => ({
-		alias,
-		unresolvedId: entryModules[alias]
+	return Object.keys(entryModules).map(name => ({
+		fileName: null,
+		id: entryModules[name],
+		name
 	}));
 }
 
 export default class Graph {
 	acornOptions: acorn.Options;
 	acornParser: typeof acorn.Parser;
-	assetsById = new Map<string, Asset>();
 	cachedModules: Map<string, ModuleJSON>;
 	contextParse: (code: string, acornOptions?: acorn.Options) => ESTree.Program;
-	curChunkIndex = 0;
 	deoptimizationTracker: EntityPathTracker;
 	getModuleContext: (id: string) => string;
 	moduleById = new Map<string, Module | ExternalModule>();
@@ -88,9 +85,10 @@ export default class Graph {
 	private modules: Module[] = [];
 	private onwarn: WarningHandler;
 	private pluginCache?: Record<string, SerializablePluginCache>;
+	private strictDeprecations: boolean;
 
 	constructor(options: InputOptions, watcher?: RollupWatcher) {
-		this.curChunkIndex = 0;
+		this.onwarn = (options.onwarn as WarningHandler) || makeOnwarn();
 		this.deoptimizationTracker = new EntityPathTracker();
 		this.cachedModules = new Map();
 		if (options.cache) {
@@ -107,6 +105,7 @@ export default class Graph {
 			}
 		}
 		this.preserveModules = options.preserveModules as boolean;
+		this.strictDeprecations = options.strictDeprecations as boolean;
 
 		this.cacheExpiry = options.experimentalCacheExpiry as number;
 
@@ -125,9 +124,14 @@ export default class Graph {
 						annotations: true,
 						moduleSideEffects: true,
 						propertyReadSideEffects: true,
-						pureExternalModules: false,
 						tryCatchDeoptimization: true
 				  };
+			if (typeof this.treeshakingOptions.pureExternalModules !== 'undefined') {
+				this.warnDeprecation(
+					`The "treeshake.pureExternalModules" option is deprecated. The "treeshake.moduleSideEffects" option should be used instead. "treeshake.pureExternalModules: true" is equivalent to "treeshake.moduleSideEffects: 'no-external'"`,
+					false
+				);
+			}
 		}
 
 		this.contextParse = (code: string, options: acorn.Options = {}) =>
@@ -164,13 +168,10 @@ export default class Graph {
 			this.getModuleContext = () => this.context;
 		}
 
-		this.onwarn = (options.onwarn as WarningHandler) || makeOnwarn();
-		this.acornOptions = options.acorn || {};
+		this.acornOptions = options.acorn ? { ...options.acorn } : {};
 		const acornPluginsToInject = [];
 
-		acornPluginsToInject.push(acorn.plugin.dynamicImport);
 		acornPluginsToInject.push(acorn.plugin.importMeta);
-		acornPluginsToInject.push(acorn.plugin.bigint);
 
 		if (options.experimentalTopLevelAwait) {
 			(this.acornOptions as any).allowAwaitOutsideFunction = true;
@@ -307,9 +308,7 @@ export default class Graph {
 			chunks = chunks.filter(isChunkRendered);
 			const facades: Chunk[] = [];
 			for (const chunk of chunks) {
-				for (const facade of chunk.generateFacades()) {
-					facades.push(facade);
-				}
+				facades.push(...chunk.generateFacades());
 			}
 
 			timeEnd('generate chunks', 2);
@@ -317,14 +316,6 @@ export default class Graph {
 			this.phase = BuildPhase.GENERATE;
 			return chunks.concat(facades);
 		});
-	}
-
-	finaliseAssets(assetFileNames: string) {
-		const outputBundle: OutputBundle = Object.create(null);
-		this.assetsById.forEach(asset => {
-			if (asset.source !== undefined) finaliseAsset(asset, outputBundle, assetFileNames);
-		});
-		return outputBundle;
 	}
 
 	getCache(): RollupCache {
@@ -377,6 +368,16 @@ export default class Graph {
 		};
 
 		this.onwarn(warning);
+	}
+
+	warnDeprecation(deprecation: string | RollupWarning, activeDeprecation: boolean): void {
+		if (activeDeprecation || this.strictDeprecations) {
+			const warning = errDeprecation(deprecation);
+			if (this.strictDeprecations) {
+				return error(warning);
+			}
+			this.warn(warning);
+		}
 	}
 
 	private link(entryModules: Module[]) {

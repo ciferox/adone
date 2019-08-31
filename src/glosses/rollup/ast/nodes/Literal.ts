@@ -1,3 +1,4 @@
+import MagicString from 'magic-string';
 import { RenderOptions } from '../../utils/renderHelpers';
 import CallOptions from '../CallOptions';
 import { ExecutionPathOptions } from '../ExecutionPathOptions';
@@ -67,7 +68,7 @@ export default class Literal<T = LiteralValue> extends NodeBase {
 		this.members = getLiteralMembersForValue(this.value);
 	}
 
-	render(code: adone.text.MagicString, _options: RenderOptions) {
+	render(code: MagicString, _options: RenderOptions) {
 		if (typeof this.value === 'string') {
 			(code.indentExclusionRanges as [number, number][]).push([this.start + 1, this.end - 1]);
 		}

@@ -1,5 +1,11 @@
+import MagicString from 'magic-string';
 import { BLANK } from '../../utils/blank';
-import { NodeRenderOptions, RenderOptions } from '../../utils/renderHelpers';
+import {
+	findFirstOccurrenceOutsideComment,
+	NodeRenderOptions,
+	removeLineBreaks,
+	RenderOptions
+} from '../../utils/renderHelpers';
 import { removeAnnotations } from '../../utils/treeshakeNode';
 import CallOptions from '../CallOptions';
 import { DeoptimizableEntity } from '../DeoptimizableEntity';
@@ -144,13 +150,23 @@ export default class ConditionalExpression extends NodeBase implements Deoptimiz
 	}
 
 	render(
-		code: adone.text.MagicString,
+		code: MagicString,
 		options: RenderOptions,
-		{ renderedParentType, isCalleeOfRenderedParent }: NodeRenderOptions = BLANK
+		{ renderedParentType, isCalleeOfRenderedParent, preventASI }: NodeRenderOptions = BLANK
 	) {
 		if (!this.test.included) {
-			code.remove(this.start, (this.usedBranch as ExpressionNode).start);
-			code.remove((this.usedBranch as ExpressionNode).end, this.end);
+			const colonPos = findFirstOccurrenceOutsideComment(code.original, ':', this.consequent.end);
+			const inclusionStart =
+				(this.consequent.included
+					? findFirstOccurrenceOutsideComment(code.original, '?', this.test.end)
+					: colonPos) + 1;
+			if (preventASI) {
+				removeLineBreaks(code, inclusionStart, (this.usedBranch as ExpressionNode).start);
+			}
+			code.remove(this.start, inclusionStart);
+			if (this.consequent.included) {
+				code.remove(colonPos, this.end);
+			}
 			removeAnnotations(this, code);
 			(this.usedBranch as ExpressionNode).render(code, options, {
 				isCalleeOfRenderedParent: renderedParentType

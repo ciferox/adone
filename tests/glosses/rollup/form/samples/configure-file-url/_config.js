@@ -1,5 +1,4 @@
 module.exports = {
-skip: true,
 	description: 'allows to configure file urls',
 	options: {
 		plugins: [
@@ -11,19 +10,15 @@ skip: true,
 				},
 				load(id) {
 					if (id.endsWith('solved')) {
-						const assetId = this.emitAsset(`asset-${id}.txt`, `Asset for: ${id}`);
-						return `export default import.meta.ROLLUP_ASSET_URL_${assetId};`;
+						const assetId = this.emitFile({
+							type: 'asset',
+							name: `asset-${id}.txt`,
+							source: `Asset for: ${id}`
+						});
+						return `export default import.meta.ROLLUP_FILE_URL_${assetId};`;
 					}
 				},
-				resolveFileUrl({
-					assetReferenceId,
-					chunkId,
-					chunkReferenceId,
-					fileName,
-					format,
-					moduleId,
-					relativePath
-				}) {
+				resolveFileUrl({ chunkId, fileName, format, moduleId, referenceId, relativePath }) {
 					if (!moduleId.endsWith('resolved')) {
 						return `'chunkId=${chunkId}:moduleId=${moduleId
 							.replace(/\\/g, '/')
@@ -31,7 +26,7 @@ skip: true,
 							.slice(-2)
 							.join(
 								'/'
-							)}:fileName=${fileName}:format=${format}:relativePath=${relativePath}:assetReferenceId=${assetReferenceId}:chunkReferenceId=${chunkReferenceId}'`;
+							)}:fileName=${fileName}:format=${format}:relativePath=${relativePath}:referenceId=${referenceId}'`;
 					}
 					return null;
 				}

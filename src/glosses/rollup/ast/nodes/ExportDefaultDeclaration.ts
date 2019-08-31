@@ -1,3 +1,4 @@
+import MagicString from 'magic-string';
 import { BLANK } from '../../utils/blank';
 import {
 	findFirstOccurrenceOutsideComment,
@@ -61,7 +62,7 @@ export default class ExportDefaultDeclaration extends NodeBase {
 		this.context.addExport(this);
 	}
 
-	render(code: adone.text.MagicString, options: RenderOptions, { start, end }: NodeRenderOptions = BLANK) {
+	render(code: MagicString, options: RenderOptions, { start, end }: NodeRenderOptions = BLANK) {
 		const declarationStart = getDeclarationStart(code.original, this.start);
 
 		if (this.declaration instanceof FunctionDeclaration) {
@@ -109,7 +110,7 @@ export default class ExportDefaultDeclaration extends NodeBase {
 	}
 
 	private renderNamedDeclaration(
-		code: adone.text.MagicString,
+		code: MagicString,
 		declarationStart: number,
 		declarationKeyword: string,
 		needsId: boolean,
@@ -135,7 +136,7 @@ export default class ExportDefaultDeclaration extends NodeBase {
 	}
 
 	private renderVariableDeclaration(
-		code: adone.text.MagicString,
+		code: MagicString,
 		declarationStart: number,
 		options: RenderOptions
 	) {

@@ -1,3 +1,4 @@
+import MagicString from 'magic-string';
 import { RenderOptions } from '../../utils/renderHelpers';
 import { removeAnnotations } from '../../utils/treeshakeNode';
 import { DeoptimizableEntity } from '../DeoptimizableEntity';
@@ -67,7 +68,7 @@ export default class IfStatement extends StatementBase implements DeoptimizableE
 		}
 	}
 
-	render(code: adone.text.MagicString, options: RenderOptions) {
+	render(code: MagicString, options: RenderOptions) {
 		// Note that unknown test values are always included
 		if (
 			!this.test.included &&

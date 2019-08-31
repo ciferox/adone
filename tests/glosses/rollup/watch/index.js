@@ -1,8 +1,7 @@
+const assert = require('assert');
 const path = require('path');
 const sander = require('sander');
-const {
-	rollup
-} = adone;
+const rollup = require('../../dist/rollup');
 
 const cwd = process.cwd();
 
@@ -12,7 +11,7 @@ function wait(ms) {
 	});
 }
 
-describe.todo('rollup.watch', () => {
+describe('rollup.watch', () => {
 	beforeEach(() => {
 		process.chdir(cwd);
 		return sander.rimraf('test/_tmp');
