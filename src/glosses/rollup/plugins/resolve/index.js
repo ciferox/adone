@@ -4,7 +4,7 @@ import resolveId from "resolve";
 import isModule from "./is_module";
 import fs from "fs";
 import { createFilter } from "../../pluginutils";
-// import { peerDependencies } from '../package.json';
+// import { peerDependencies } from "../package.json";
 
 const builtins = new Set(builtinList);
 
@@ -13,7 +13,11 @@ const ES6_BROWSER_EMPTY = "\0node-resolve:empty.js";
 // which deploy both ESM .mjs and CommonJS .js files as ESM.
 const DEFAULT_EXTS = [".mjs", ".js", ".json", ".node"];
 
+const existsAsync = (file) => new Promise((fulfil) => fs.exists(file, fulfil));
+
 const readFileAsync = (file) => new Promise((fulfil, reject) => fs.readFile(file, (err, contents) => err ? reject(err) : fulfil(contents)));
+
+const realpathAsync = (file) => new Promise((fulfil, reject) => fs.realpath(file, (err, contents) => err ? reject(err) : fulfil(contents)));
 
 const statAsync = (file) => new Promise((fulfil, reject) => fs.stat(file, (err, contents) => err ? reject(err) : fulfil(contents)));
 
@@ -33,7 +37,9 @@ const cache = (fn) => {
 };
 
 const ignoreENOENT = (err) => {
-    if (err.code === "ENOENT") return false;
+    if (err.code === "ENOENT") {
+        return false;
+    }
     throw err;
 };
 
@@ -77,6 +83,34 @@ const alwaysNull = () => null;
 
 const resolveIdAsync = (file, opts) => new Promise((fulfil, reject) => resolveId(file, opts, (err, contents) => err ? reject(err) : fulfil(contents)));
 
+// Resolve module specifiers in order. Promise resolves to the first
+// module that resolves successfully, or the error that resulted from
+// the last attempted module resolution.
+function resolveImportSpecifiers(importSpecifierList, resolveOptions) {
+    let p = Promise.resolve();
+    for (let i = 0; i < importSpecifierList.length; i++) {
+        p = p.then((v) => {
+            // if we've already resolved to something, just return it.
+            if (v) {
+                return v;
+            }
+
+            return resolveIdAsync(importSpecifierList[i], resolveOptions);
+        });
+
+        if (i < importSpecifierList.length - 1) {
+            // swallow MODULE_NOT_FOUND errors from all but the last resolution
+            p = p.catch((err) => {
+                if (err.code !== "MODULE_NOT_FOUND") {
+                    throw err;
+                }
+            });
+        }
+    }
+
+    return p;
+}
+
 export default function nodeResolve(options = {}) {
     const mainFields = getMainFields(options);
     const useBrowserOverrides = mainFields.indexOf("browser") !== -1;
@@ -99,6 +133,10 @@ export default function nodeResolve(options = {}) {
 
     const extensions = options.extensions || DEFAULT_EXTS;
     const packageInfoCache = new Map();
+
+    const shouldDedupe = typeof dedupe === "function"
+        ? dedupe
+        : (importee) => dedupe.includes(importee);
 
     function getCachedPackageInfo(pkg, pkgPath) {
         if (packageInfoCache.has(pkgPath)) {
@@ -145,8 +183,7 @@ export default function nodeResolve(options = {}) {
         if (typeof packageSideEffects === "boolean") {
             packageInfo.hasModuleSideEffects = () => packageSideEffects;
         } else if (Array.isArray(packageSideEffects)) {
-            const filter = createFilter(packageSideEffects, null, { resolve: pkgRoot });
-            packageInfo.hasModuleSideEffects = (id) => !filter(id);
+            packageInfo.hasModuleSideEffects = createFilter(packageSideEffects, null, { resolve: pkgRoot });
         }
 
         packageInfoCache.set(pkgPath, packageInfo);
@@ -158,7 +195,7 @@ export default function nodeResolve(options = {}) {
     return {
         name: "node-resolve",
 
-        options(options) {
+        buildStart(options) {
             preserveSymlinks = options.preserveSymlinks;
             const [major, minor] = this.meta.rollupVersion.split(".").map(Number);
             const minVersion = adone.rollup.VERSION; //peerDependencies.rollup.slice(2);
@@ -183,11 +220,13 @@ export default function nodeResolve(options = {}) {
                 return importee;
             }
 
-            if (/\0/.test(importee)) return null; // ignore IDs with null character, these belong to other plugins
+            if (/\0/.test(importee)) {
+                return null;
+            } // ignore IDs with null character, these belong to other plugins
 
             const basedir = importer ? dirname(importer) : process.cwd();
 
-            if (dedupe.indexOf(importee) !== -1) {
+            if (shouldDedupe(importee)) {
                 importee = join(process.cwd(), "node_modules", importee);
             }
 
@@ -215,7 +254,9 @@ export default function nodeResolve(options = {}) {
                 id = resolve(basedir, importee);
             }
 
-            if (only && !only.some((pattern) => pattern.test(id))) return null;
+            if (only && !only.some((pattern) => pattern.test(id))) {
+                return null;
+            }
 
             let hasModuleSideEffects = alwaysNull;
             let hasPackageEntry = true;
@@ -239,32 +280,39 @@ export default function nodeResolve(options = {}) {
                 resolveOptions.preserveSymlinks = preserveSymlinks;
             }
 
-            const importeeIsBuiltin = builtins.has(importee);
-            const forceLocalLookup = importeeIsBuiltin && (!preferBuiltins || !isPreferBuiltinsSet);
-            let importSpecifier = importee;
+            const importSpecifierList = [];
 
-            if (forceLocalLookup) {
-                // need to attempt to look up a local module
-                importSpecifier += "/";
+            if (importer === undefined && !importee[0].match(/^\.?\.?\//)) {
+                // For module graph roots (i.e. when importer is undefined), we
+                // need to handle 'path fragments` like `foo/bar` that are commonly
+                // found in rollup config files. If importee doesn't look like a
+                // relative or absolute path, we make it relative and attempt to
+                // resolve it. If we don't find anything, we try resolving it as we
+                // got it.
+                importSpecifierList.push(`./${importee}`);
             }
 
-            return resolveIdAsync(
-                importSpecifier,
+            const importeeIsBuiltin = builtins.has(importee);
+
+            if (importeeIsBuiltin && (!preferBuiltins || !isPreferBuiltinsSet)) {
+                // The `resolve` library will not resolve packages with the same
+                // name as a node built-in module. If we're resolving something
+                // that's a builtin, and we don't prefer to find built-ins, we
+                // first try to look up a local module with that name. If we don't
+                // find anything, we resolve the builtin which just returns back
+                // the built-in's name.
+                importSpecifierList.push(`${importee}/`);
+            }
+
+            importSpecifierList.push(importee);
+
+            return resolveImportSpecifiers(
+                importSpecifierList,
                 Object.assign(resolveOptions, customResolveOptions)
             )
-                .catch((err) => {
-                    if (forceLocalLookup && err.code === "MODULE_NOT_FOUND") {
-                        // didn't find a local module, so fall back to the importee
-                        // (i.e. the builtin's name)
-                        return importee;
-                    }
-
-                    // some other error, just forward it
-                    throw err;
-                })
                 .then((resolved) => {
                     if (resolved && packageBrowserField) {
-                        if (packageBrowserField.hasOwnProperty(resolved)) {
+                        if (Object.prototype.hasOwnProperty.call(packageBrowserField, resolved)) {
                             if (!packageBrowserField[resolved]) {
                                 browserMapCache.set(resolved, packageBrowserField);
                                 return ES6_BROWSER_EMPTY;
@@ -274,11 +322,14 @@ export default function nodeResolve(options = {}) {
                         browserMapCache.set(resolved, packageBrowserField);
                     }
 
+                    if (hasPackageEntry && !preserveSymlinks && resolved) {
+                        return existsAsync(resolved)
+                            .then((exists) => exists ? realpathAsync(resolved) : resolved);
+                    }
+                    return resolved;
+                })
+                .then((resolved) => {
                     if (hasPackageEntry) {
-                        if (!preserveSymlinks && resolved && fs.existsSync(resolved)) {
-                            resolved = fs.realpathSync(resolved);
-                        }
-
                         if (builtins.has(resolved) && preferBuiltins && isPreferBuiltinsSet) {
                             return null;
                         } else if (importeeIsBuiltin && preferBuiltins) {
@@ -298,9 +349,8 @@ export default function nodeResolve(options = {}) {
                     if (resolved && options.modulesOnly) {
                         return readFileAsync(resolved, "utf-8")
                             .then((code) => isModule(code) ? { id: resolved, moduleSideEffects: hasModuleSideEffects(resolved) } : null);
-                    } else {
-                        return { id: resolved, moduleSideEffects: hasModuleSideEffects(resolved) };
                     }
+                    return { id: resolved, moduleSideEffects: hasModuleSideEffects(resolved) };
                 })
                 .catch(() => null);
         },

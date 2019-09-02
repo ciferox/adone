@@ -1,8 +1,10 @@
-import * as acorn from 'acorn';
 // @ts-ignore
-import { base as basicWalker } from 'acorn-walk';
 import * as ESTree from 'estree';
 import { CommentDescription } from '../Module';
+
+const {
+	acorn: { walk: { base: basicWalker } }
+} = adone;
 
 function handlePureAnnotationsOfNode(
 	node: ESTree.Node & acorn.Node,

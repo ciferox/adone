@@ -16,6 +16,10 @@ import { ExpressionNode, NodeBase } from './shared/Node';
 import { PatternNode } from './shared/Pattern';
 import SpreadElement from './SpreadElement';
 
+const {
+	acorn: { isReference }
+} = adone;
+
 export type IdentifierWithVariable = Identifier & { variable: Variable };
 
 export default class Identifier extends NodeBase implements PatternNode {

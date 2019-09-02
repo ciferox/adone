@@ -1,8 +1,16 @@
-import { extname, resolve } from "path";
-import { sync as nodeResolveSync } from "resolve";
+import { realpathSync, existsSync } from "fs";
+import { extname, resolve, normalize } from "path";
+import { sync as nodeResolveSync, isCore } from "resolve";
 import { createFilter } from "../../pluginutils";
-// import { peerDependencies } from '../package.json';
-import { EXTERNAL_SUFFIX, getIdFromExternalProxyId, getIdFromProxyId, HELPERS, HELPERS_ID, PROXY_SUFFIX } from "./helpers";
+// import { peerDependencies } from "../package.json";
+import {
+    EXTERNAL_SUFFIX,
+    getIdFromExternalProxyId,
+    getIdFromProxyId,
+    HELPERS,
+    HELPERS_ID,
+    PROXY_SUFFIX
+} from "./helpers";
 import { getIsCjsPromise, setIsCjsPromise } from "./is-cjs";
 import { getResolveId } from "./resolve-id";
 import { checkEsModule, hasCjsKeywords, transformCommonjs } from "./transform.js";
@@ -16,15 +24,34 @@ export default function commonjs(options = {}) {
     const customNamedExports = {};
     if (options.namedExports) {
         Object.keys(options.namedExports).forEach((id) => {
+            let resolveId = id;
             let resolvedId;
 
+            if (isCore(id)) {
+                // resolve will not find npm modules with the same name as
+                // core modules without a trailing slash. Since core modules
+                // must be external, we can assume any core modules defined
+                // here are npm modules by that name.
+                resolveId += "/";
+            }
+
             try {
-                resolvedId = nodeResolveSync(id, { basedir: process.cwd() });
+                resolvedId = nodeResolveSync(resolveId, { basedir: process.cwd() });
             } catch (err) {
                 resolvedId = resolve(id);
             }
 
+            // Note: customNamedExport's keys must be normalized file paths.
+            // resolve and nodeResolveSync both return normalized file paths
+            // so no additional normalization is necessary.
             customNamedExports[resolvedId] = options.namedExports[id];
+
+            if (existsSync(resolvedId)) {
+                const realpath = realpathSync(resolvedId);
+                if (realpath !== resolvedId) {
+                    customNamedExports[realpath] = options.namedExports[id];
+                }
+            }
         });
     }
 
@@ -57,6 +84,8 @@ export default function commonjs(options = {}) {
                 return null;
             }
 
+            const normalizedId = normalize(id);
+
             const transformed = transformCommonjs(
                 this.parse,
                 code,
@@ -64,7 +93,7 @@ export default function commonjs(options = {}) {
                 this.getModuleInfo(id).isEntry,
                 ignoreGlobal,
                 ignoreRequire,
-                customNamedExports[id],
+                customNamedExports[normalizedId],
                 sourceMap,
                 allowDynamicRequire,
                 ast
@@ -87,9 +116,7 @@ export default function commonjs(options = {}) {
             const [minMajor, minMinor] = minVersion.split(".").map(Number);
             if (major < minMajor || (major === minMajor && minor < minMinor)) {
                 this.error(
-                    `Insufficient Rollup version: "rollup-plugin-commonjs" requires at least rollup@${minVersion} but found rollup@${
-                    this.meta.rollupVersion
-                    }.`
+                    `Insufficient Rollup version: "rollup-plugin-commonjs" requires at least rollup@${minVersion} but found rollup@${this.meta.rollupVersion}.`
                 );
             }
         },
@@ -97,7 +124,9 @@ export default function commonjs(options = {}) {
         resolveId,
 
         load(id) {
-            if (id === HELPERS_ID) return HELPERS;
+            if (id === HELPERS_ID) {
+                return HELPERS;
+            }
 
             // generate proxy modules
             if (id.endsWith(EXTERNAL_SUFFIX)) {
@@ -112,24 +141,25 @@ export default function commonjs(options = {}) {
                 const name = getName(actualId);
 
                 return getIsCjsPromise(actualId).then((isCjs) => {
-                    if (isCjs)
+                    if (isCjs) {
                         return `import { __moduleExports } from ${JSON.stringify(
                             actualId
                         )}; export default __moduleExports;`;
-                    else if (esModulesWithoutDefaultExport.has(actualId))
+                    } else if (esModulesWithoutDefaultExport.has(actualId)) {
                         return `import * as ${name} from ${JSON.stringify(actualId)}; export default ${name};`;
-                    else if (esModulesWithDefaultExport.has(actualId)) {
+                    } else if (esModulesWithDefaultExport.has(actualId)) {
                         return `export {default} from ${JSON.stringify(actualId)};`;
-                    } else
-                        return `import * as ${name} from ${JSON.stringify(
-                            actualId
-                        )}; import {getCjsExportFromNamespace} from "${HELPERS_ID}"; export default getCjsExportFromNamespace(${name})`;
+                    }
+                    return `import * as ${name} from ${JSON.stringify(
+                        actualId
+                    )}; import {getCjsExportFromNamespace} from "${HELPERS_ID}"; export default getCjsExportFromNamespace(${name})`;
+
                 });
             }
         },
 
         transform(code, id) {
-            if (!filter(id) || extensions.indexOf(extname(id)) === -1) {
+            if (!filter(id) || !extensions.includes(extname(id))) {
                 setIsCjsPromise(id, null);
                 return null;
             }

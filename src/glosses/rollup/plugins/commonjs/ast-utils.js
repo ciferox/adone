@@ -1,56 +1,62 @@
+const {
+    acorn: { isReference }
+} = adone;
+
+export { isReference };
+
 export function flatten(node) {
-	const parts = [];
+    const parts = [];
 
-	while (node.type === "MemberExpression") {
-		if (node.computed) return null;
+    while (node.type === "MemberExpression") {
+        if (node.computed) return null;
 
-		parts.unshift(node.property.name);
-		node = node.object;
-	}
+        parts.unshift(node.property.name);
+        node = node.object;
+    }
 
-	if (node.type !== "Identifier") return null;
+    if (node.type !== "Identifier") return null;
 
-	const name = node.name;
-	parts.unshift(name);
+    const name = node.name;
+    parts.unshift(name);
 
-	return { name, keypath: parts.join(".") };
+    return { name, keypath: parts.join(".") };
 }
 
 export function isTruthy(node) {
-	if (node.type === "Literal") return !!node.value;
-	if (node.type === "ParenthesizedExpression") return isTruthy(node.expression);
-	if (node.operator in operators) return operators[node.operator](node);
+    if (node.type === "Literal") return !!node.value;
+    if (node.type === "ParenthesizedExpression") return isTruthy(node.expression);
+    if (node.operator in operators) return operators[node.operator](node);
 }
 
 export function isFalsy(node) {
-	return not(isTruthy(node));
+    return not(isTruthy(node));
 }
 
 function not(value) {
-	return value === undefined ? value : !value;
+    return value === undefined ? value : !value;
 }
 
 function equals(a, b, strict) {
-	if (a.type !== b.type) return undefined;
-	if (a.type === "Literal") return strict ? a.value === b.value : a.value == b.value;
+    if (a.type !== b.type) return undefined;
+    if (a.type === "Literal") return strict ? a.value === b.value : a.value == b.value;
 }
 
 const operators = {
-	"==": x => {
-		return equals(x.left, x.right, false);
-	},
+    "==": x => {
+        return equals(x.left, x.right, false);
+    },
 
-	"!=": x => not(operators["=="](x)),
+    "!=": x => not(operators["=="](x)),
 
-	"===": x => {
-		return equals(x.left, x.right, true);
-	},
+    "===": x => {
+        return equals(x.left, x.right, true);
+    },
 
-	"!==": x => not(operators["==="](x)),
+    "!==": x => not(operators["==="](x)),
 
-	"!": x => isFalsy(x.argument),
+    "!": x => isFalsy(x.argument),
 
-	"&&": x => isTruthy(x.left) && isTruthy(x.right),
+    "&&": x => isTruthy(x.left) && isTruthy(x.right),
 
-	"||": x => isTruthy(x.left) || isTruthy(x.right)
+    "||": x => isTruthy(x.left) || isTruthy(x.right)
 };
