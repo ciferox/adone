@@ -1,8 +1,8 @@
 const {
-    is,
-    data: { base58 },
     multiformat: { multihashingAsync }
 } = adone;
+
+const bs58 = require("bs58");
 
 module.exports = (keysProtobuf, randomBytes, crypto) => {
     crypto = crypto || require("./crypto")(randomBytes);
@@ -13,9 +13,8 @@ module.exports = (keysProtobuf, randomBytes, crypto) => {
             this._key = key;
         }
 
-        verify(data, sig, callback) {
-            ensure(callback);
-            crypto.hashAndVerify(this._key, sig, data, callback);
+        verify(data, sig) {
+            return crypto.hashAndVerify(this._key, sig, data);
         }
 
         marshal() {
@@ -33,15 +32,8 @@ module.exports = (keysProtobuf, randomBytes, crypto) => {
             return this.bytes.equals(key.bytes);
         }
 
-        async hash(callback) {
-            try {
-                ensure(callback);
-                callback(null, await multihashingAsync(this.bytes, "sha2-256"));
-            } catch (err) {
-                callback(err);
-            }
-            // ensure(callback);
-            // multihashingAsync(this.bytes, "sha2-256", callback);
+        hash() {
+            return multihashingAsync(this.bytes, "sha2-256");
         }
     }
 
@@ -53,9 +45,8 @@ module.exports = (keysProtobuf, randomBytes, crypto) => {
             crypto.validatePublicKey(this._publicKey);
         }
 
-        sign(message, callback) {
-            ensure(callback);
-            crypto.hashAndSign(this._key, message, callback);
+        sign(message) {
+            return crypto.hashAndSign(this._key, message);
         }
 
         get public() {
@@ -77,15 +68,8 @@ module.exports = (keysProtobuf, randomBytes, crypto) => {
             return this.bytes.equals(key.bytes);
         }
 
-        async hash(callback) {
-            try {
-                ensure(callback);
-                callback(null, await multihashingAsync(this.bytes, "sha2-256"));
-            } catch (err) {
-                callback(err);
-            }
-            // ensure(callback);
-            // multihashingAsync(this.bytes, "sha2-256", callback);
+        hash() {
+            return multihashingAsync(this.bytes, "sha2-256");
         }
 
         /**
@@ -98,51 +82,24 @@ module.exports = (keysProtobuf, randomBytes, crypto) => {
          * @param {function(Error, id)} callback
          * @returns {undefined}
          */
-        id(callback) {
-            this.public.hash((err, hash) => {
-                if (err) {
-                    return callback(err);
-                }
-                callback(null, base58.encode(hash));
-            });
+        async id() {
+            const hash = await this.public.hash();
+
+            return bs58.encode(hash);
         }
     }
 
-    function unmarshalSecp256k1PrivateKey(bytes, callback) {
-        callback(null, new Secp256k1PrivateKey(bytes), null);
+    function unmarshalSecp256k1PrivateKey(bytes) {
+        return new Secp256k1PrivateKey(bytes);
     }
 
     function unmarshalSecp256k1PublicKey(bytes) {
         return new Secp256k1PublicKey(bytes);
     }
 
-    function generateKeyPair(_bits, callback) {
-        if (is.undefined(callback) && is.function(_bits)) {
-            callback = _bits;
-        }
-
-        ensure(callback);
-
-        crypto.generateKey((err, privateKeyBytes) => {
-            if (err) {
-                return callback(err);
-            }
-
-            let privkey;
-            try {
-                privkey = new Secp256k1PrivateKey(privateKeyBytes);
-            } catch (err) {
-                return callback(err);
-            }
-
-            callback(null, privkey);
-        });
-    }
-
-    function ensure(callback) {
-        if (!is.function(callback)) {
-            throw new Error("callback is required");
-        }
+    async function generateKeyPair() {
+        const privateKeyBytes = await crypto.generateKey();
+        return new Secp256k1PrivateKey(privateKeyBytes);
     }
 
     return {

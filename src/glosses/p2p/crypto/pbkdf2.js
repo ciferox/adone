@@ -1,6 +1,8 @@
 const {
-    crypto: { pbkdf2, util }
+    crypto
 } = adone;
+
+const errcode = require("err-code");
 
 /**
  * Maps an IPFS hash name to its node-forge equivalent.
@@ -25,16 +27,19 @@ const hashName = {
  * @param {string} hash - The hash name ('sha1', 'sha2-512, ...)
  * @returns {string} - A new password
  */
-module.exports = function (password, salt, iterations, keySize, hash) {
+function pbkdf2(password, salt, iterations, keySize, hash) {
     const hasher = hashName[hash];
     if (!hasher) {
-        throw new Error(`Hash '${hash}' is unknown or not supported`);
+        const types = Object.keys(hashName).join(" / ");
+        throw errcode(new Error(`Hash '${hash}' is unknown or not supported. Must be ${types}`), "ERR_UNSUPPORTED_HASH_TYPE");
     }
-    const dek = pbkdf2(
+    const dek = crypto.pbkdf2(
         password,
         salt,
         iterations,
         keySize,
         hasher);
-    return util.encode64(dek);
-};
+    return crypto.util.encode64(dek);
+}
+
+module.exports = pbkdf2;

@@ -1,13 +1,13 @@
-const rsa = require("./rsa");
-
 const {
-    async: { nextTick },
-    data: { base58, protobuf },
     crypto,
-    is,
+    data: { protobuf },
     multiformat: { multihashingAsync }
 } = adone;
 
+const bs58 = require("bs58");
+const errcode = require("err-code");
+
+const cryptoInternal = require("./rsa");
 const pbm = protobuf.create(require("./keys.proto"));
 
 class RsaPublicKey {
@@ -15,13 +15,12 @@ class RsaPublicKey {
         this._key = key;
     }
 
-    verify(data, sig, callback) {
-        ensure(callback);
-        rsa.hashAndVerify(this._key, sig, data, callback);
+    async verify(data, sig) { // eslint-disable-line require-await
+        return cryptoInternal.hashAndVerify(this._key, sig, data);
     }
 
     marshal() {
-        return rsa.utils.jwkToPkix(this._key);
+        return cryptoInternal.utils.jwkToPkix(this._key);
     }
 
     get bytes() {
@@ -39,13 +38,8 @@ class RsaPublicKey {
         return this.bytes.equals(key.bytes);
     }
 
-    async hash(callback) {
-        try {
-            ensure(callback);
-            callback(null, await multihashingAsync(this.bytes, "sha2-256"));
-        } catch (err) {
-            callback(err);
-        }
+    async hash() { // eslint-disable-line require-await
+        return multihashingAsync(this.bytes, "sha2-256");
     }
 }
 
@@ -58,28 +52,23 @@ class RsaPrivateKey {
     }
 
     genSecret() {
-        return rsa.getRandomValues(16);
+        return cryptoInternal.getRandomValues(16);
     }
 
-    sign(message, callback) {
-        ensure(callback);
-        rsa.hashAndSign(this._key, message, callback);
+    async sign(message) { // eslint-disable-line require-await
+        return cryptoInternal.hashAndSign(this._key, message);
     }
 
     get public() {
         if (!this._publicKey) {
-            throw new Error("public key not provided");
+            throw errcode(new Error("public key not provided"), "ERR_PUBKEY_NOT_PROVIDED");
         }
 
         return new RsaPublicKey(this._publicKey);
     }
 
-    decrypt(msg, callback) {
-        rsa.decrypt(this._key, msg, callback);
-    }
-
     marshal() {
-        return rsa.utils.jwkToPkcs1(this._key);
+        return cryptoInternal.utils.jwkToPkcs1(this._key);
     }
 
     get bytes() {
@@ -93,13 +82,8 @@ class RsaPrivateKey {
         return this.bytes.equals(key.bytes);
     }
 
-    async hash(callback) {
-        try {
-            ensure(callback);
-            callback(null, await multihashingAsync(this.bytes, "sha2-256"));
-        } catch (err) {
-            callback(err);
-        }
+    async hash() { // eslint-disable-line require-await
+        return multihashingAsync(this.bytes, "sha2-256");
     }
 
     /**
@@ -109,104 +93,62 @@ class RsaPrivateKey {
      * The public key is a protobuf encoding containing a type and the DER encoding
      * of the PKCS SubjectPublicKeyInfo.
      *
-     * @param {function(Error, id)} callback
-     * @returns {undefined}
+     * @returns {Promise<String>}
      */
-    id(callback) {
-        this.public.hash((err, hash) => {
-            if (err) {
-                return callback(err);
-            }
-            callback(null, base58.encode(hash));
-        });
+    async id() {
+        const hash = await this.public.hash();
+        return bs58.encode(hash);
     }
 
     /**
      * Exports the key into a password protected PEM format
      *
-     * @param {string} [format] - Defaults to 'pkcs-8'.
      * @param {string} password - The password to read the encrypted PEM
-     * @param {function(Error, KeyInfo)} callback
-     * @returns {undefined}
+     * @param {string} [format] - Defaults to 'pkcs-8'.
+     * @returns {KeyInfo}
      */
-    export(format, password, callback) {
-        if (is.function(password)) {
-            callback = password;
-            password = format;
-            format = "pkcs-8";
+    async export(password, format = "pkcs-8") { // eslint-disable-line require-await
+        let pem = null;
+
+        const buffer = new crypto.util.ByteBuffer(this.marshal());
+        const asn1 = crypto.asn1.fromDer(buffer);
+        const privateKey = crypto.pki.privateKeyFromAsn1(asn1);
+
+        if (format === "pkcs-8") {
+            const options = {
+                algorithm: "aes256",
+                count: 10000,
+                saltSize: 128 / 8,
+                prfAlgorithm: "sha512"
+            };
+            pem = crypto.pki.encryptRsaPrivateKey(privateKey, password, options);
+        } else {
+            throw errcode(new Error(`Unknown export format '${format}'. Must be pkcs-8`), "ERR_INVALID_EXPORT_FORMAT");
         }
 
-        ensure(callback);
-
-        nextTick(() => {
-            let err = null;
-            let pem = null;
-            try {
-                const buffer = new crypto.util.ByteBuffer(this.marshal());
-                const asn1 = crypto.asn1.fromDer(buffer);
-                const privateKey = crypto.pki.privateKeyFromAsn1(asn1);
-                if (format === "pkcs-8") {
-                    const options = {
-                        algorithm: "aes256",
-                        count: 10000,
-                        saltSize: 128 / 8,
-                        prfAlgorithm: "sha512"
-                    };
-                    pem = crypto.pki.encryptRsaPrivateKey(privateKey, password, options);
-                } else {
-                    err = new Error(`Unknown export format '${format}'`);
-                }
-            } catch (_err) {
-                err = _err;
-            }
-
-            callback(err, pem);
-        });
+        return pem;
     }
 }
 
-function unmarshalRsaPrivateKey(bytes, callback) {
-    const jwk = rsa.utils.pkcs1ToJwk(bytes);
-
-    rsa.unmarshalPrivateKey(jwk, (err, keys) => {
-        if (err) {
-            return callback(err);
-        }
-
-        callback(null, new RsaPrivateKey(keys.privateKey, keys.publicKey));
-    });
+async function unmarshalRsaPrivateKey(bytes) {
+    const jwk = cryptoInternal.utils.pkcs1ToJwk(bytes);
+    const keys = await cryptoInternal.unmarshalPrivateKey(jwk);
+    return new RsaPrivateKey(keys.privateKey, keys.publicKey);
 }
 
 function unmarshalRsaPublicKey(bytes) {
-    const jwk = rsa.utils.pkixToJwk(bytes);
-
+    const jwk = cryptoInternal.utils.pkixToJwk(bytes);
     return new RsaPublicKey(jwk);
 }
 
-function fromJwk(jwk, callback) {
-    rsa.unmarshalPrivateKey(jwk, (err, keys) => {
-        if (err) {
-            return callback(err);
-        }
-
-        callback(null, new RsaPrivateKey(keys.privateKey, keys.publicKey));
-    });
+async function fromJwk(jwk) {
+    const keys = await cryptoInternal.unmarshalPrivateKey(jwk);
+    return new RsaPrivateKey(keys.privateKey, keys.publicKey);
 }
 
-function generateKeyPair(bits, callback) {
-    rsa.generateKey(bits, (err, keys) => {
-        if (err) {
-            return callback(err);
-        }
-
-        callback(null, new RsaPrivateKey(keys.privateKey, keys.publicKey));
-    });
-}
-
-function ensure(callback) {
-    if (!is.function(callback)) {
-        throw new Error("callback is required");
-    }
+async function generateKeyPair(bits) {
+    const keys = await cryptoInternal.generateKey(bits);
+    return new RsaPrivateKey(keys.privateKey, keys.publicKey);
 }
 
 module.exports = {

@@ -1,15 +1,11 @@
+
+
 const asm = require("asmcrypto.js");
+const validateCipherMode = require("./cipher-mode");
 
-const {
-    async: { nextTick }
-} = adone;
-
-exports.create = function (key, iv, callback) {
-    const done = (err, res) => nextTick(() => callback(err, res));
-
-    if (key.length !== 16 && key.length !== 32) {
-        return done(new Error("Invalid key length"));
-    }
+exports.create = async function (key, iv) { // eslint-disable-line require-await
+    // Throws an error if mode is invalid
+    validateCipherMode(key);
 
     const enc = new asm.AES_CTR.Encrypt({
         key,
@@ -21,36 +17,18 @@ exports.create = function (key, iv, callback) {
     });
 
     const res = {
-        encrypt(data, cb) {
-            const done = (err, res) => nextTick(() => cb(err, res));
-
-            let res;
-            try {
-                res = Buffer.from(
-                    enc.process(data).result
-                );
-            } catch (err) {
-                return done(err);
-            }
-
-            done(null, res);
+        async encrypt(data) { // eslint-disable-line require-await
+            return Buffer.from(
+                enc.process(data).result
+            );
         },
 
-        decrypt(data, cb) {
-            const done = (err, res) => nextTick(() => cb(err, res));
-
-            let res;
-            try {
-                res = Buffer.from(
-                    dec.process(data).result
-                );
-            } catch (err) {
-                return done(err);
-            }
-
-            done(null, res);
+        async decrypt(data) { // eslint-disable-line require-await
+            return Buffer.from(
+                dec.process(data).result
+            );
         }
     };
 
-    done(null, res);
+    return res;
 };

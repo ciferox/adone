@@ -1,18 +1,16 @@
-import { ensureMultiaddr } from "./utils";
-import MultiaddrSet from "./multiaddr_set";
-
 const {
-    error,
     is,
+    assert,
     p2p: { PeerId }
 } = adone;
 
+const { ensureMultiaddr } = require("./utils");
+const MultiaddrSet = require("./multiaddr_set");
+
 // Peer represents a peer on the IPFS network
-export default class PeerInfo {
+class PeerInfo {
     constructor(peerId) {
-        if (!peerId) {
-            throw new error.InvalidArgumentException("Missing peerId. Use Peer.create(cb) to create one");
-        }
+        assert(peerId, "Missing peerId. Use Peer.create() to create one");
 
         this.id = peerId;
         this.multiaddrs = new MultiaddrSet();
@@ -43,31 +41,22 @@ export default class PeerInfo {
     isConnected() {
         return this._connectedMultiaddr;
     }
-
-    static create(peerId, callback) {
-        if (is.function(peerId)) {
-            callback = peerId;
-            peerId = null;
-
-            PeerId.create((err, id) => {
-                if (err) {
-                    return callback(err);
-                }
-
-                callback(null, new PeerInfo(id));
-            });
-            return;
-        }
-
-        // Already a PeerId instance
-        if (is.function(peerId.toJSON)) {
-            callback(null, new PeerInfo(peerId));
-        } else {
-            PeerId.createFromJSON(peerId, (err, id) => callback(err, new PeerInfo(id)));
-        }
-    }
-
-    static isPeerInfo(peerInfo) {
-        return Boolean(typeof peerInfo === "object" && peerInfo.id && peerInfo.multiaddrs);
-    }
 }
+
+PeerInfo.create = async (peerId) => {
+    if (is.nil(peerId)) {
+        peerId = await PeerId.create();
+    } else if (!PeerId.isPeerId(peerId)) {
+        peerId = await PeerId.createFromJSON(peerId);
+    }
+
+    return new PeerInfo(peerId);
+};
+
+PeerInfo.isPeerInfo = (peerInfo) => {
+    return Boolean(typeof peerInfo === "object" &&
+        peerInfo.id &&
+        peerInfo.multiaddrs);
+};
+
+module.exports = PeerInfo;

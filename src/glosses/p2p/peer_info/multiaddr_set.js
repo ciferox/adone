@@ -1,12 +1,12 @@
-const { ensureMultiaddr } = require("./utils");
-const uniqBy = require("unique-by");
-
 const {
     is
 } = adone;
 
+const { ensureMultiaddr } = require("./utils");
+const uniqBy = require("unique-by");
+
 // Because JavaScript doesn't let you overload the compare in Set()..
-export default class MultiaddrSet {
+class MultiaddrSet {
     constructor(multiaddrs) {
         this._multiaddrs = multiaddrs || [];
         this._observedMultiaddrs = [];
@@ -36,7 +36,6 @@ export default class MultiaddrSet {
                 this._observedMultiaddrs.splice(i, 1);
                 return true;
             }
-            return false;
         });
         if (!check) {
             this._observedMultiaddrs.push(ma);
@@ -59,9 +58,7 @@ export default class MultiaddrSet {
         if (typeof maFmt !== "object" ||
             !is.function(maFmt.matches) ||
             !is.function(maFmt.partialMatch) ||
-            !is.function(maFmt.toString)) {
-            return [];
-        }
+            !is.function(maFmt.toString)) {return []};
 
         return this._multiaddrs.filter((ma) => maFmt.matches(ma));
     }
@@ -79,7 +76,6 @@ export default class MultiaddrSet {
                 this._multiaddrs.splice(i, 1);
                 return true;
             }
-            return false;
         });
     }
 
@@ -109,3 +105,5 @@ export default class MultiaddrSet {
         });
     }
 }
+
+module.exports = MultiaddrSet;

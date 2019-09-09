@@ -1,8 +1,8 @@
-const async = require("async");
 const utils = require("./utils");
 const createPeerInfo = utils.createPeerInfo;
 
 const {
+    async,
     multiformat: { multiaddr },
     p2p: { PeerBook, PeerInfo }
 } = adone;

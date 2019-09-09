@@ -1,49 +1,32 @@
-const secp256k1 = require("secp256k1");
-
 const {
-    async: { setImmediate },
     multiformat: { multihashingAsync }
 } = adone;
+
+const secp256k1 = require("secp256k1");
 
 const HASH_ALGORITHM = "sha2-256";
 
 module.exports = (randomBytes) => {
     const privateKeyLength = 32;
 
-    function generateKey(callback) {
-        const done = (err, res) => setImmediate(() => callback(err, res));
-
+    function generateKey() {
         let privateKey;
         do {
             privateKey = randomBytes(32);
         } while (!secp256k1.privateKeyVerify(privateKey));
-
-        done(null, privateKey);
+        return privateKey;
     }
 
-    async function hashAndSign(key, msg, callback) {
-        const done = (err, res) => setImmediate(() => callback(err, res));
-
-        try {
-            const digest = await multihashingAsync.digest(msg, HASH_ALGORITHM);
-            const sig = secp256k1.sign(digest, key);
-            const sigDER = secp256k1.signatureExport(sig.signature);
-            return done(null, sigDER);
-        } catch (err) {
-            done(err);
-        }
+    async function hashAndSign(key, msg) {
+        const digest = await multihashingAsync.digest(msg, HASH_ALGORITHM);
+        const sig = secp256k1.sign(digest, key);
+        return secp256k1.signatureExport(sig.signature);
     }
 
-    async function hashAndVerify(key, sig, msg, callback) {
-        const done = (err, res) => setImmediate(() => callback(err, res));
-        try {
-            const digest = await multihashingAsync.digest(msg, HASH_ALGORITHM);
-            sig = secp256k1.signatureImport(sig);
-            const valid = secp256k1.verify(digest, sig, key);
-            return done(null, valid);
-        } catch (err) {
-            done(err);
-        }
+    async function hashAndVerify(key, sig, msg) {
+        const digest = await multihashingAsync.digest(msg, HASH_ALGORITHM);
+        sig = secp256k1.signatureImport(sig);
+        return secp256k1.verify(digest, sig, key);
     }
 
     function compressPublicKey(key) {

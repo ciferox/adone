@@ -1,11 +1,12 @@
-const nodeify = require("../nodeify");
+
+
 const webcrypto = require("../webcrypto");
 const randomBytes = require("../random-bytes");
 
 exports.utils = require("./rsa-utils");
 
-exports.generateKey = function (bits, callback) {
-    nodeify(webcrypto.subtle.generateKey(
+exports.generateKey = async function (bits) {
+    const pair = await webcrypto.get().subtle.generateKey(
         {
             name: "RSASSA-PKCS1-v1_5",
             modulusLength: bits,
@@ -14,17 +15,19 @@ exports.generateKey = function (bits, callback) {
         },
         true,
         ["sign", "verify"]
-    )
-        .then(exportKey)
-        .then((keys) => ({
-            privateKey: keys[0],
-            publicKey: keys[1]
-        })), callback);
+    );
+
+    const keys = await exportKey(pair);
+
+    return {
+        privateKey: keys[0],
+        publicKey: keys[1]
+    };
 };
 
 // Takes a jwk key
-exports.unmarshalPrivateKey = function (key, callback) {
-    const privateKey = webcrypto.subtle.importKey(
+exports.unmarshalPrivateKey = async function (key) {
+    const privateKey = await webcrypto.get().subtle.importKey(
         "jwk",
         key,
         {
@@ -35,22 +38,26 @@ exports.unmarshalPrivateKey = function (key, callback) {
         ["sign"]
     );
 
-    nodeify(Promise.all([
+    const pair = [
         privateKey,
-        derivePublicFromPrivate(key)
-    ]).then((keys) => exportKey({
+        await derivePublicFromPrivate(key)
+    ];
+
+    const keys = await exportKey({
+        privateKey: pair[0],
+        publicKey: pair[1]
+    });
+
+    return {
         privateKey: keys[0],
         publicKey: keys[1]
-    })).then((keys) => ({
-        privateKey: keys[0],
-        publicKey: keys[1]
-    })), callback);
+    };
 };
 
 exports.getRandomValues = randomBytes;
 
-exports.hashAndSign = function (key, msg, callback) {
-    nodeify(webcrypto.subtle.importKey(
+exports.hashAndSign = async function (key, msg) {
+    const privateKey = await webcrypto.get().subtle.importKey(
         "jwk",
         key,
         {
@@ -59,17 +66,19 @@ exports.hashAndSign = function (key, msg, callback) {
         },
         false,
         ["sign"]
-    ).then((privateKey) => {
-        return webcrypto.subtle.sign(
-            { name: "RSASSA-PKCS1-v1_5" },
-            privateKey,
-            Uint8Array.from(msg)
-        );
-    }).then((sig) => Buffer.from(sig)), callback);
+    );
+
+    const sig = await webcrypto.get().subtle.sign(
+        { name: "RSASSA-PKCS1-v1_5" },
+        privateKey,
+        Uint8Array.from(msg)
+    );
+
+    return Buffer.from(sig);
 };
 
-exports.hashAndVerify = function (key, sig, msg, callback) {
-    nodeify(webcrypto.subtle.importKey(
+exports.hashAndVerify = async function (key, sig, msg) {
+    const publicKey = await webcrypto.get().subtle.importKey(
         "jwk",
         key,
         {
@@ -78,25 +87,25 @@ exports.hashAndVerify = function (key, sig, msg, callback) {
         },
         false,
         ["verify"]
-    ).then((publicKey) => {
-        return webcrypto.subtle.verify(
-            { name: "RSASSA-PKCS1-v1_5" },
-            publicKey,
-            sig,
-            msg
-        );
-    }), callback);
+    );
+
+    return webcrypto.get().subtle.verify(
+        { name: "RSASSA-PKCS1-v1_5" },
+        publicKey,
+        sig,
+        msg
+    );
 };
 
 function exportKey(pair) {
     return Promise.all([
-        webcrypto.subtle.exportKey("jwk", pair.privateKey),
-        webcrypto.subtle.exportKey("jwk", pair.publicKey)
+        webcrypto.get().subtle.exportKey("jwk", pair.privateKey),
+        webcrypto.get().subtle.exportKey("jwk", pair.publicKey)
     ]);
 }
 
 function derivePublicFromPrivate(jwKey) {
-    return webcrypto.subtle.importKey(
+    return webcrypto.get().subtle.importKey(
         "jwk",
         {
             kty: jwKey.kty,

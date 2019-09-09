@@ -1,6 +1,5 @@
-const waterfall = require("async/waterfall");
-
 const {
+    async: { waterfall },
     is,
     p2p: { PeerId, PeerInfo }
 } = adone;
@@ -16,8 +15,8 @@ const createPeerInfo = function (multiaddrs, options, callback) {
     }
 
     waterfall([
-        (cb) => PeerId.create({ bits: 1024 }, cb),
-        (peerId, cb) => PeerInfo.create(peerId, cb),
+        (cb) => PeerId.create({ bits: 1024 }).then((peerId) => cb(null, peerId), cb),
+        (peerId, cb) => PeerInfo.create(peerId).then((peerInfo) => cb(null, peerInfo), cb),
         (peerInfo, cb) => {
             multiaddrs.map((ma) => peerInfo.multiaddrs.add(ma));
             cb(null, peerInfo);

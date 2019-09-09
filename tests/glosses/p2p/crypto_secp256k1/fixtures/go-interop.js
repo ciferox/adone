@@ -1,7 +1,3 @@
-
-
-const Buffer = require("safe-buffer").Buffer;
-
 // The keypair and signature below were generated in a gore repl session (https://github.com/motemen/gore)
 // using the secp256k1 fork of go-libp2p-crypto by github user @vyzo
 //

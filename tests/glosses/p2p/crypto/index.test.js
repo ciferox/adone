@@ -1,20 +1,15 @@
-const fixtures = require("./fixtures/go-key-rsa");
-
 const {
     p2p: { crypto }
 } = adone;
 
-describe("libp2p-crypto", function () {
+const fixtures = require("./fixtures/go-key-rsa");
+const { expectErrCode } = require("./util");
+
+describe("common", function () {
     this.timeout(20 * 1000);
     let key;
-    before((done) => {
-        crypto.keys.generateKeyPair("RSA", 512, (err, _key) => {
-            if (err) {
-                return done(err);
-            }
-            key = _key;
-            done();
-        });
+    before(async () => {
+        key = await crypto.keys.generateKeyPair("RSA", 512);
     });
 
     it("marshalPublicKey and unmarshalPublicKey", () => {
@@ -28,71 +23,50 @@ describe("libp2p-crypto", function () {
         }).to.throw();
     });
 
-    it("marshalPrivateKey and unmarshalPrivateKey", (done) => {
+    it("marshalPrivateKey and unmarshalPrivateKey", async () => {
         expect(() => {
             crypto.keys.marshalPrivateKey(key, "invalid-key-type");
         }).to.throw();
 
-        crypto.keys.unmarshalPrivateKey(crypto.keys.marshalPrivateKey(key), (err, key2) => {
-            if (err) {
-                return done(err);
-            }
+        const key2 = await crypto.keys.unmarshalPrivateKey(crypto.keys.marshalPrivateKey(key));
 
-            expect(key2.equals(key)).to.be.eql(true);
-            expect(key2.public.equals(key.public)).to.be.eql(true);
-            done();
-        });
+        expect(key2.equals(key)).to.be.eql(true);
+        expect(key2.public.equals(key.public)).to.be.eql(true);
+    });
+
+    it("generateKeyPair", () => {
+        return expectErrCode(crypto.keys.generateKeyPair("invalid-key-type", 512), "ERR_UNSUPPORTED_KEY_TYPE");
+    });
+
+    it("generateKeyPairFromSeed", () => {
+        const seed = crypto.randomBytes(32);
+        return expectErrCode(crypto.keys.generateKeyPairFromSeed("invalid-key-type", seed, 512), "ERR_UNSUPPORTED_KEY_TYPE");
     });
 
     // marshalled keys seem to be slightly different
     // unsure as to if this is just a difference in encoding
     // or a bug
     describe("go interop", () => {
-        it("unmarshals private key", (done) => {
-            crypto.keys.unmarshalPrivateKey(fixtures.private.key, (err, key) => {
-                if (err) {
-                    return done(err);
-                }
-                const hash = fixtures.private.hash;
-                expect(fixtures.private.key).to.eql(key.bytes);
-
-                key.hash((err, digest) => {
-                    if (err) {
-                        return done(err);
-                    }
-
-                    expect(digest).to.eql(hash);
-                    done();
-                });
-            });
+        it("unmarshals private key", async () => {
+            const key = await crypto.keys.unmarshalPrivateKey(fixtures.private.key);
+            const hash = fixtures.private.hash;
+            expect(fixtures.private.key).to.eql(key.bytes);
+            const digest = await key.hash();
+            expect(digest).to.eql(hash);
         });
 
-        it("unmarshals public key", (done) => {
+        it("unmarshals public key", async () => {
             const key = crypto.keys.unmarshalPublicKey(fixtures.public.key);
             const hash = fixtures.public.hash;
-
             expect(crypto.keys.marshalPublicKey(key)).to.eql(fixtures.public.key);
-
-            key.hash((err, digest) => {
-                if (err) {
-                    return done(err);
-                }
-
-                expect(digest).to.eql(hash);
-                done();
-            });
+            const digest = await key.hash();
+            expect(digest).to.eql(hash);
         });
 
-        it("unmarshal -> marshal, private key", (done) => {
-            crypto.keys.unmarshalPrivateKey(fixtures.private.key, (err, key) => {
-                if (err) {
-                    return done(err);
-                }
-
-                const marshalled = crypto.keys.marshalPrivateKey(key);
-                expect(marshalled).to.eql(fixtures.private.key);
-                done();
-            });
+        it("unmarshal -> marshal, private key", async () => {
+            const key = await crypto.keys.unmarshalPrivateKey(fixtures.private.key);
+            const marshalled = crypto.keys.marshalPrivateKey(key);
+            expect(marshalled).to.eql(fixtures.private.key);
         });
 
         it("unmarshal -> marshal, public key", () => {
@@ -124,7 +98,8 @@ describe("libp2p-crypto", function () {
         });
 
         it("throws on invalid hash name", () => {
-            expect(() => crypto.pbkdf2("password", "at least 16 character salt", 500, 512 / 8, "shaX-xxx")).to.throw();
+            const fn = () => crypto.pbkdf2("password", "at least 16 character salt", 500, 512 / 8, "shaX-xxx");
+            expect(fn).to.throw().with.property("code", "ERR_UNSUPPORTED_HASH_TYPE");
         });
     });
 

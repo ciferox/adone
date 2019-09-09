@@ -1,8 +1,7 @@
-const {
-    async: { nextTick },
-    is,
-    std: { crypto }
-} = adone;
+
+
+const crypto = require("crypto");
+const validateCurveType = require("./validate-curve-type");
 
 const curves = {
     "P-256": "prime256v1",
@@ -10,33 +9,20 @@ const curves = {
     "P-521": "secp521r1"
 };
 
-exports.generateEphmeralKeyPair = function (curve, callback) {
-    if (!curves[curve]) {
-        return callback(new Error(`Unkown curve: ${curve}`));
-    }
+exports.generateEphmeralKeyPair = async function (curve) { // eslint-disable-line require-await
+    validateCurveType(Object.keys(curves), curve);
+
     const ecdh = crypto.createECDH(curves[curve]);
     ecdh.generateKeys();
 
-    nextTick(() => callback(null, {
+    return {
         key: ecdh.getPublicKey(),
-        genSharedKey(theirPub, forcePrivate, cb) {
-            if (is.function(forcePrivate)) {
-                cb = forcePrivate;
-                forcePrivate = null;
-            }
-
+        async genSharedKey(theirPub, forcePrivate) { // eslint-disable-line require-await
             if (forcePrivate) {
                 ecdh.setPrivateKey(forcePrivate.private);
             }
 
-            let secret;
-            try {
-                secret = ecdh.computeSecret(theirPub);
-            } catch (err) {
-                return cb(err);
-            }
-
-            nextTick(() => cb(null, secret));
+            return ecdh.computeSecret(theirPub);
         }
-    }));
+    };
 };

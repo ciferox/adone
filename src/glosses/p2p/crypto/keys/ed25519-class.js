@@ -1,22 +1,22 @@
-const crypto = require("./ed25519");
-
 const {
-    data: { base58, protobuf },
     is,
+    data: { protobuf },
     multiformat: { multihashingAsync }
 } = adone;
 
-const pbm = protobuf.create(require("./keys.proto"));
+const bs58 = require("bs58");
+const errcode = require("err-code");
 
+const crypto = require("./ed25519");
+const pbm = protobuf.create(require("./keys.proto"));
 
 class Ed25519PublicKey {
     constructor(key) {
         this._key = ensureKey(key, crypto.publicKeyLength);
     }
 
-    verify(data, sig, callback) {
-        ensure(callback);
-        crypto.hashAndVerify(this._key, sig, data, callback);
+    async verify(data, sig) { // eslint-disable-line require-await
+        return crypto.hashAndVerify(this._key, sig, data);
     }
 
     marshal() {
@@ -34,13 +34,8 @@ class Ed25519PublicKey {
         return this.bytes.equals(key.bytes);
     }
 
-    async hash(callback) {
-        try {
-            ensure(callback);
-            callback(null, await multihashingAsync(this.bytes, "sha2-256"));
-        } catch (err) {
-            callback(err);
-        }
+    async hash() { // eslint-disable-line require-await
+        return multihashingAsync(this.bytes, "sha2-256");
     }
 }
 
@@ -52,16 +47,11 @@ class Ed25519PrivateKey {
         this._publicKey = ensureKey(publicKey, crypto.publicKeyLength);
     }
 
-    sign(message, callback) {
-        ensure(callback);
-        crypto.hashAndSign(this._key, message, callback);
+    async sign(message) { // eslint-disable-line require-await
+        return crypto.hashAndSign(this._key, message);
     }
 
     get public() {
-        if (!this._publicKey) {
-            throw new Error("public key not provided");
-        }
-
         return new Ed25519PublicKey(this._publicKey);
     }
 
@@ -80,13 +70,8 @@ class Ed25519PrivateKey {
         return this.bytes.equals(key.bytes);
     }
 
-    async hash(callback) {
-        try {
-            ensure(callback);
-            callback(null, await multihashingAsync(this.bytes, "sha2-256"));
-        } catch (err) {
-            callback(err);
-        }
+    async hash() { // eslint-disable-line require-await
+        return multihashingAsync(this.bytes, "sha2-256");
     }
 
     /**
@@ -96,28 +81,19 @@ class Ed25519PrivateKey {
      * The public key is a protobuf encoding containing a type and the DER encoding
      * of the PKCS SubjectPublicKeyInfo.
      *
-     * @param {function(Error, id)} callback
-     * @returns {undefined}
+     * @returns {Promise<String>}
      */
-    id(callback) {
-        this.public.hash((err, hash) => {
-            if (err) {
-                return callback(err);
-            }
-            callback(null, base58.encode(hash));
-        });
+    async id() {
+        const hash = await this.public.hash();
+        return bs58.encode(hash);
     }
 }
 
-function unmarshalEd25519PrivateKey(bytes, callback) {
-    try {
-        bytes = ensureKey(bytes, crypto.privateKeyLength + crypto.publicKeyLength);
-    } catch (err) {
-        return callback(err);
-    }
+function unmarshalEd25519PrivateKey(bytes) {
+    bytes = ensureKey(bytes, crypto.privateKeyLength + crypto.publicKeyLength);
     const privateKeyBytes = bytes.slice(0, crypto.privateKeyLength);
     const publicKeyBytes = bytes.slice(crypto.privateKeyLength, bytes.length);
-    callback(null, new Ed25519PrivateKey(privateKeyBytes, publicKeyBytes));
+    return new Ed25519PrivateKey(privateKeyBytes, publicKeyBytes);
 }
 
 function unmarshalEd25519PublicKey(bytes) {
@@ -125,52 +101,14 @@ function unmarshalEd25519PublicKey(bytes) {
     return new Ed25519PublicKey(bytes);
 }
 
-function generateKeyPair(_bits, cb) {
-    if (is.undefined(cb) && is.function(_bits)) {
-        cb = _bits;
-    }
-
-    crypto.generateKey((err, keys) => {
-        if (err) {
-            return cb(err);
-        }
-        let privkey;
-        try {
-            privkey = new Ed25519PrivateKey(keys.secretKey, keys.publicKey);
-        } catch (err) {
-            cb(err);
-            return;
-        }
-
-        cb(null, privkey);
-    });
+async function generateKeyPair() {
+    const { secretKey, publicKey } = await crypto.generateKey();
+    return new Ed25519PrivateKey(secretKey, publicKey);
 }
 
-function generateKeyPairFromSeed(seed, _bits, cb) {
-    if (is.undefined(cb) && is.function(_bits)) {
-        cb = _bits;
-    }
-
-    crypto.generateKeyFromSeed(seed, (err, keys) => {
-        if (err) {
-            return cb(err);
-        }
-        let privkey;
-        try {
-            privkey = new Ed25519PrivateKey(keys.secretKey, keys.publicKey);
-        } catch (err) {
-            cb(err);
-            return;
-        }
-
-        cb(null, privkey);
-    });
-}
-
-function ensure(cb) {
-    if (!is.function(cb)) {
-        throw new Error("callback is required");
-    }
+async function generateKeyPairFromSeed(seed) {
+    const { secretKey, publicKey } = await crypto.generateKeyFromSeed(seed);
+    return new Ed25519PrivateKey(secretKey, publicKey);
 }
 
 function ensureKey(key, length) {
@@ -178,7 +116,7 @@ function ensureKey(key, length) {
         key = new Uint8Array(key);
     }
     if (!(key instanceof Uint8Array) || key.length !== length) {
-        throw new Error(`Key must be a Uint8Array or Buffer of length ${length}`);
+        throw errcode(new Error(`Key must be a Uint8Array or Buffer of length ${length}`), "ERR_INVALID_KEY_TYPE");
     }
     return key;
 }

@@ -1,19 +1,17 @@
+
+
 const crypto = require("crypto");
 const lengths = require("./lengths");
 
-exports.create = function (hash, secret, callback) {
+exports.create = async function (hash, secret) { // eslint-disable-line require-await
     const res = {
-        digest(data, cb) {
+        async digest(data) { // eslint-disable-line require-await
             const hmac = crypto.createHmac(hash.toLowerCase(), secret);
-
             hmac.update(data);
-
-            adone.async.nextTick(() => {
-                cb(null, hmac.digest());
-            });
+            return hmac.digest();
         },
         length: lengths[hash]
     };
 
-    callback(null, res);
+    return res;
 };

@@ -1,88 +1,56 @@
-const fixtures = require("../fixtures/secp256k1");
-
 const {
     p2p: { crypto }
 } = adone;
+const sinon = require("sinon");
 
-const mockPublicKey = {
-    bytes: fixtures.pbmPublicKey
-};
-
-const mockPrivateKey = {
-    bytes: fixtures.pbmPrivateKey,
-    public: mockPublicKey
-};
-
-const mockSecp256k1Module = {
-    generateKeyPair(bits, callback) {
-        callback(null, mockPrivateKey);
-    },
-
-    unmarshalSecp256k1PrivateKey(buf, callback) {
-        callback(null, mockPrivateKey);
-    },
-
-    unmarshalSecp256k1PublicKey(buf) {
-        return mockPublicKey;
-    }
-};
-
-describe("without libp2p-crypto-secp256k1 module present", () => {
-    crypto.keys.supportedKeys.secp256k1 = undefined;
-
-    it("fails to generate a secp256k1 key", (done) => {
-        crypto.keys.generateKeyPair("secp256k1", 256, (err, key) => {
-            expect(err).to.exist();
-            expect(key).to.not.exist();
-            done();
+const fixtures = require("../fixtures/secp256k1");
+describe("keys", () => {
+    describe("without libp2p-crypto-secp256k1 module present", () => {
+        before(() => {
+            sinon.replace(crypto.keys.supportedKeys, "secp256k1", null);
         });
-    });
 
-    it("fails to unmarshal a secp256k1 private key", (done) => {
-        crypto.keys.unmarshalPrivateKey(fixtures.pbmPrivateKey, (err, key) => {
-            expect(err).to.exist();
-            expect(key).to.not.exist();
-            done();
+        after(() => {
+            sinon.restore();
         });
-    });
 
-    it("fails to unmarshal a secp256k1 public key", () => {
-        expect(() => {
-            crypto.keys.unmarshalPublicKey(fixtures.pbmPublicKey);
-        }).to.throw(Error);
-    });
-});
-
-describe("with libp2p-crypto-secp256k1 module present", () => {
-    let key;
-
-    before((done) => {
-        crypto.keys.supportedKeys.secp256k1 = mockSecp256k1Module;
-        crypto.keys.generateKeyPair("secp256k1", 256, (err, _key) => {
-            if (err) {
-                return done(err); 
+        it("fails to generate a secp256k1 key", async () => {
+            try {
+                await crypto.keys.generateKeyPair("secp256k1", 256);
+            } catch (err) {
+                return; // expected
             }
-            key = _key;
-            done();
+            throw new Error("Expected error to be thrown");
+        });
+
+        it("fails to unmarshal a secp256k1 private key", async () => {
+            try {
+                await crypto.keys.unmarshalPrivateKey(fixtures.pbmPrivateKey);
+            } catch (err) {
+                return; // expected
+            }
+            throw new Error("Expected error to be thrown");
+        });
+
+        it("fails to unmarshal a secp256k1 public key", () => {
+            expect(() => {
+                crypto.keys.unmarshalPublicKey(fixtures.pbmPublicKey);
+            }).to.throw(Error);
         });
     });
 
-    after((done) => {
-        delete crypto.keys.secp256k1;
-        done();
-    });
+    describe("with libp2p-crypto-secp256k1 module present", () => {
+        it("generates a valid key", async () => {
+            const key = await crypto.keys.generateKeyPair("secp256k1", 256);
+            expect(key).to.exist();
+        });
 
-    it("generates a valid key", (done) => {
-        expect(key).to.exist();
-        done();
-    });
+        it("protobuf encoding", async () => {
+            const key = await crypto.keys.generateKeyPair("secp256k1", 256);
+            expect(key).to.exist();
 
-    it("protobuf encoding", (done) => {
-        const keyMarshal = crypto.keys.marshalPrivateKey(key);
-        crypto.keys.unmarshalPrivateKey(keyMarshal, (err, key2) => {
-            if (err) {
-                return done(err); 
-            }
+            const keyMarshal = crypto.keys.marshalPrivateKey(key);
+            const key2 = await crypto.keys.unmarshalPrivateKey(keyMarshal);
             const keyMarshal2 = crypto.keys.marshalPrivateKey(key2);
 
             expect(keyMarshal).to.eql(keyMarshal2);
@@ -93,7 +61,16 @@ describe("with libp2p-crypto-secp256k1 module present", () => {
             const pkMarshal2 = crypto.keys.marshalPublicKey(pk2);
 
             expect(pkMarshal).to.eql(pkMarshal2);
-            done();
+        });
+
+        it("unmarshals a secp256k1 private key", async () => {
+            const key = await crypto.keys.unmarshalPrivateKey(fixtures.pbmPrivateKey);
+            expect(key).to.exist();
+        });
+
+        it("unmarshals a secp256k1 public key", () => {
+            const key = crypto.keys.unmarshalPublicKey(fixtures.pbmPublicKey);
+            expect(key).to.exist();
         });
     });
 });

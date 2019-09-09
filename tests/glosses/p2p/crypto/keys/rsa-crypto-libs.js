@@ -1,8 +1,8 @@
-chai.use(require("chai-string"));
+// chai.use(require("chai-string"));
 
 const LIBS = ["ursa", "keypair"];
 
-describe("RSA crypto libs", function () {
+describe("keys", "RSA crypto libs", function () {
     this.timeout(20 * 1000);
 
     LIBS.forEach((lib) => {
@@ -19,27 +19,15 @@ describe("RSA crypto libs", function () {
                     }
                 }
 
-                crypto = require("../../src");
+                crypto = adone.p2p.crypto;
                 rsa = crypto.keys.supportedKeys.rsa;
             });
 
-            it("generates a valid key", (done) => {
-                crypto.keys.generateKeyPair("RSA", 512, (err, key) => {
-                    if (err) {
-                        return done(err);
-                    }
-
-                    expect(key).to.be.an.instanceof(rsa.RsaPrivateKey);
-
-                    key.hash((err, digest) => {
-                        if (err) {
-                            return done(err);
-                        }
-
-                        expect(digest).to.have.length(34);
-                        done();
-                    });
-                });
+            it("generates a valid key", async () => {
+                const key = await crypto.keys.generateKeyPair("RSA", 512);
+                expect(key).to.be.an.instanceof(rsa.RsaPrivateKey);
+                const digest = await key.hash();
+                expect(digest).to.have.length(34);
             });
 
             after(() => {
