@@ -7,8 +7,10 @@ module.exports = {
     hapi: {
         port: process.env.PORT || 13579,
         host: "0.0.0.0",
-        routes: {
-            cors: true
+        options: {
+            routes: {
+                cors: true
+            }
         }
     },
     refreshPeerListIntervalMS: 10000,

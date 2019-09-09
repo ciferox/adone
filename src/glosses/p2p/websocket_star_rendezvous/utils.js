@@ -1,10 +1,10 @@
 const {
-    is,
-    p2p: { crypto, PeerId },
-    multiformat: { multiaddr, mafmt }
+    multiformat: { mafmt, multiaddr },
+    p2p: { PeerId, crypto }
 } = adone;
 
-const isIP = function (ma) {
+
+function isIP(ma) {
     const protos = ma.protos();
 
     if (protos[0].code !== 4 && protos[0].code !== 41) {
@@ -15,32 +15,32 @@ const isIP = function (ma) {
     }
 
     return true;
-};
+}
 
-const cleanUrlSIO = function (ma) {
-    const maStrSplit = ma.toString().split("/");
+function cleanUrlSIO(ma) {
+    const maStrSplit = ma.toString().split('/')
 
     if (isIP(ma)) {
-        if (maStrSplit[1] === "ip4") {
-            return `http://${maStrSplit[2]}:${maStrSplit[4]}`;
-        } else if (maStrSplit[1] === "ip6") {
-            return `http://[${maStrSplit[2]}]:${maStrSplit[4]}`;
+        if (maStrSplit[1] === 'ip4') {
+            return 'http://' + maStrSplit[2] + ':' + maStrSplit[4]
+        } else if (maStrSplit[1] === 'ip6') {
+            return 'http://[' + maStrSplit[2] + ']:' + maStrSplit[4]
         }
-        throw new Error(`invalid multiaddr: ${ma.toString()}`);
+        throw new Error('invalid multiaddr: ' + ma.toString())
 
     } else if (multiaddr.isName(ma)) {
-        const wsProto = ma.protos()[1].name;
-        if (wsProto === "ws") {
-            return `http://${maStrSplit[2]}`;
-        } else if (wsProto === "wss") {
-            return `https://${maStrSplit[2]}`;
+        const wsProto = ma.protos()[1].name
+        if (wsProto === 'ws') {
+            return 'http://' + maStrSplit[2]
+        } else if (wsProto === 'wss') {
+            return 'https://' + maStrSplit[2]
+        } else {
+            throw new Error('invalid multiaddr: ' + ma.toString())
         }
-        throw new Error(`invalid multiaddr: ${ma.toString()}`);
-
     } else {
-        throw new Error(`invalid multiaddr: ${ma.toString()}`);
+        throw new Error('invalid multiaddr: ' + ma.toString())
     }
-};
+}
 
 const types = {
     string: (v) => (is.string(v)),
@@ -60,20 +60,18 @@ const types = {
     function: (v) => (is.function(v))
 };
 
-const validate = function (def, data) {
-    if (!is.array(data)) {
-        throw new Error("Data is not an array");
-    }
+function validate(def, data) {
+    if (!is.array(data)) { throw new Error('Data is not an array') };
     def.forEach((type, index) => {
         if (!types[type]) {
-            throw new Error(`Type ${type} does not exist`);
+            throw new Error("Type " + type + " does not exist");
         }
 
         if (!types[type](data[index])) {
-            throw new Error(`Data at index ${index} is invalid for type ${type}`);
+            throw new Error("Data at index " + index + " is invalid for type " + type);
         }
     });
-};
+}
 
 function Protocol(log) {
     log = log || function noop() { };
@@ -103,18 +101,13 @@ function Protocol(log) {
     };
 }
 
-function getIdAndValidate(pub, id, cb) {
-    PeerId.createFromPubKey(Buffer.from(pub, "hex"), (err, _id) => {
-        if (err) {
-            return cb(new Error("Crypto error"));
-        }
+async function getIdAndValidate(pub, id) {
+    const _id = await Id.createFromPubKey(Buffer.from(pub, "hex"));
+    if (_id.toB58String() !== id) {
+        throw Error("Id is not matching");
+    }
 
-        if (_id.toB58String() !== id) {
-            return cb(new Error("Id is not matching"));
-        }
-
-        return cb(null, crypto.keys.unmarshalPublicKey(Buffer.from(pub, "hex")));
-    });
+    return crypto.keys.unmarshalPublicKey(Buffer.from(pub, "hex"));
 }
 
 exports = module.exports;

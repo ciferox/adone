@@ -1,59 +1,59 @@
-const Hapi = require("hapi");
-const path = require("path");
-// const epimetheus = require("epimetheus");
-const defaultConfig = require("./config");
-
 const {
-    is,
     lodash: { merge }
 } = adone;
 
+const Hapi = require("@hapi/hapi");
+const path = require("path");
+// const menoetius = require("menoetius");
+const Inert = require("@hapi/inert");
+const { readFileSync } = require("fs");
+
 exports = module.exports;
 
-exports.start = (options, callback) => {
-    if (is.function(options)) {
-        callback = options;
-        options = {};
-    }
-
-    const config = merge(Object.assign({}, defaultConfig), adone.util.omit(options, ["host", "port"]));
+exports.start = async (options = {}) => {
+    const config = merge(Object.assign({}, require("./config")), Object.assign({}, options));
     const log = config.log;
 
-    if (options.host) {
-        config.hapi.host = options.host;
+    const port = options.port || config.hapi.port;
+    const host = options.host || config.hapi.host;
+
+    let tls;
+    if (options.key && options.cert) {
+        tls = {
+            key: readFileSync(options.key),
+            cert: readFileSync(options.cert),
+            passphrase: options.passphrase
+        };
+    } else if (options.pfx && options.passphrase) {
+        tls = {
+            pfx: readFileSync(options.pfx),
+            passphrase: options.passphrase
+        };
     }
 
-    if (is.number(options.port)) {
-        config.hapi.port = options.port;
-    }
+    const http = new Hapi.Server(Object.assign({
+        port,
+        host,
+        tls
+    }, config.hapi.options));
 
-    const http = new Hapi.Server(config.hapi);
-    http.register(require("inert")).then((err) => {
-        if (err) {
-            return callback(err);
-        }
+    await http.register(Inert);
+    await http.start();
 
-        http.start().then((err) => {
-            if (err) {
-                return callback(err);
-            }
+    log(`rendezvous server has started on: ${http.info.uri}`);
 
-            log(`rendezvous server has started on: ${http.info.uri}`);
+    http.peers = require("./routes")(config, http).peers;
 
-            http.peers = require("./routes")(config, http).peers;
-
-            http.route({
-                method: "GET",
-                path: "/",
-                handler: (request, h) => ({ file: path.join(__dirname, "index.html") })
-            });
-
-            callback(null, http);
-        });
+    http.route({
+        method: "GET",
+        path: "/",
+        handler: (request, reply) => reply.file(path.join(__dirname, "index.html"), {
+            confine: false
+        })
     });
 
     // if (config.metrics) {
-    //     epimetheus.instrument(http);
+    //     menoetius.instrument(http);
     // }
 
     return http;
