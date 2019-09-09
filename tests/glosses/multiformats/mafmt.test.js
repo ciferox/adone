@@ -4,13 +4,11 @@ const {
 
 describe("multiformat", "multiaddr validation", () => {
     const goodDNS = [
+        "/dns/ipfs.io",
         "/dnsaddr/ipfs.io",
         "/dns4/ipfs.io",
         "/dns4/libp2p.io",
-        "/dns6/protocol.ai",
-        "/dns4/protocol.ai/tcp/80",
-        "/dns6/protocol.ai/tcp/80",
-        "/dnsaddr/protocol.ai/tcp/80"
+        "/dns6/protocol.ai"
     ];
 
     const badDNS = [
@@ -31,6 +29,7 @@ describe("multiformat", "multiaddr validation", () => {
         "/ip4/0.0.7.6/tcp/1234",
         "/ip6/::/tcp/0",
         "/dns4/protocol.ai/tcp/80",
+        "/dns6/protocol.ai/tcp/80",
         "/dnsaddr/protocol.ai/tcp/80"
     ];
 
@@ -61,7 +60,6 @@ describe("multiformat", "multiaddr validation", () => {
     ];
 
     const goodHTTP = [
-        "/dnsaddr/ipfs.io",
         "/dnsaddr/ipfs.io/http",
         "/dnsaddr/ipfs.io/tcp/3456/http",
         "/ip4/0.0.0.0/http",
@@ -96,7 +94,9 @@ describe("multiformat", "multiaddr validation", () => {
         "/dnsaddr/ipfs.io/ws/p2p-webrtc-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4",
         "/dnsaddr/ipfs.io/wss/p2p-webrtc-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4",
         "/ip6/::/tcp/0/ws/p2p-webrtc-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo5",
-        "/dns4/wrtc-star.discovery.libp2p.io/tcp/443/wss/p2p-webrtc-star/ipfs/QmTysQQiTGMdfRsDQp516oZ9bR3FiSCDnicUnqny2q1d79"
+        "/dns4/wrtc-star.discovery.libp2p.io/tcp/443/wss/p2p-webrtc-star/ipfs/QmTysQQiTGMdfRsDQp516oZ9bR3FiSCDnicUnqny2q1d79",
+        "/dns/wrtc-star.discovery.libp2p.io/wss/p2p-webrtc-star/ipfs/QmTysQQiTGMdfRsDQp516oZ9bR3FiSCDnicUnqny2q1d79",
+        "/dns/wrtc-star.discovery.libp2p.io/tcp/443/wss/p2p-webrtc-star/ipfs/QmTysQQiTGMdfRsDQp516oZ9bR3FiSCDnicUnqny2q1d79"
     ];
 
     const goodWebRTCDirect = [
@@ -156,53 +156,57 @@ describe("multiformat", "multiaddr validation", () => {
         "/ip4/1.2.3.4/tcp/3456/ws/p2p-webrtc-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4",
         "/ip4/1.2.3.4/tcp/3456/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4",
         "/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4/p2p-circuit",
-        "/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4/p2p-circuit/ipfs/QmUjNmr8TgJCn1Ao7DvMy4cjoZU15b9bwSCBLE3vwXiwgj"
+        "/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4/p2p-circuit/ipfs/QmUjNmr8TgJCn1Ao7DvMy4cjoZU15b9bwSCBLE3vwXiwgj",
+        "/ip4/127.0.0.1/tcp/20008/ws/p2p/QmUjNmr8TgJCn1Ao7DvMy4cjoZU15b9bwSCBLE3vwXiwgj",
+        "/ip4/1.2.3.4/tcp/3456/ws/p2p-webrtc-star/p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4",
+        "/ip4/1.2.3.4/tcp/3456/p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4",
+        "/p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4/p2p-circuit",
+        "/p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4/p2p-circuit/p2p/QmUjNmr8TgJCn1Ao7DvMy4cjoZU15b9bwSCBLE3vwXiwgj"
     ].concat(goodCircuit);
 
-    const assertMatches = function (p) {
+    function assertMatches(p) {
         const tests = Array.from(arguments).slice(1);
         tests.forEach((test) => {
             test.forEach((testcase) => {
                 try {
-                    console.log(testcase);
-                    expect(p.matches(testcase), `assertMatches: ${testcase} (string)`).to.be.equal(true);
-                    const ma = multiaddr(testcase);
-                    expect(p.matches(ma), `assertMatches: ${testcase} (multiaddr object)`).to.be.equal(true);
-                    expect(p.matches(ma.buffer), `assertMatches: ${testcase} (multiaddr.buffer)`).to.be.equal(true);
+                    expect(p.matches(testcase), `assertMatches: ${testcase} (string)`).to.be.eql(true)
+                    const ma = multiaddr(testcase)
+                    expect(p.matches(ma), `assertMatches: ${testcase} (multiaddr object)`).to.be.eql(true)
+                    expect(p.matches(ma.buffer), `assertMatches: ${testcase} (multiaddr.buffer)`).to.be.eql(true)
                 } catch (err) {
-                    err.stack = `[testcase=${JSON.stringify(testcase)}, shouldMatch=true] ${err.stack}`;
-                    throw err;
+                    err.stack = '[testcase=' + JSON.stringify(testcase) + ', shouldMatch=true] ' + err.stack
+                    throw err
                 }
             });
         });
-    };
+    }
 
-    const assertMismatches = function (p) {
+    function assertMismatches(p) {
         const tests = Array.from(arguments).slice(1);
         tests.forEach((test) => {
             test.forEach((testcase) => {
                 try {
-                    expect(p.matches(testcase), `assertMismatches: ${testcase} (string)`).to.be.eql(false);
-                    let validMultiaddrObj;
+                    expect(p.matches(testcase), `assertMismatches: ${testcase} (string)`).to.be.eql(false)
+                    let validMultiaddrObj
                     try {
                         // if testcase string happens to be a valid multiaddr,
                         // we expect 'p' test to also return false for Multiaddr object and Buffer versions
-                        validMultiaddrObj = multiaddr(testcase);
+                        validMultiaddrObj = multiaddr(testcase)
                     } catch (e) {
                         // Ignoring testcase as the string is not a multiaddr
                         // (There is a separate 'Buffer is invalid' test later below)
                     }
                     if (validMultiaddrObj) {
-                        expect(p.matches(validMultiaddrObj), `assertMismatches: ${testcase} (multiaddr object)`).to.be.eql(false);
-                        expect(p.matches(validMultiaddrObj.buffer), `assertMismatches: ${testcase} (multiaddr.buffer)`).to.be.eql(false);
+                        expect(p.matches(validMultiaddrObj), `assertMismatches: ${testcase} (multiaddr object)`).to.be.eql(false)
+                        expect(p.matches(validMultiaddrObj.buffer), `assertMismatches: ${testcase} (multiaddr.buffer)`).to.be.eql(false)
                     }
                 } catch (err) {
-                    err.stack = `[testcase=${JSON.stringify(testcase)}, shouldMatch=false] ${err.stack}`;
-                    throw err;
+                    err.stack = '[testcase=' + JSON.stringify(testcase) + ', shouldMatch=false] ' + err.stack
+                    throw err
                 }
             });
         });
-    };
+    }
 
     it("do not throw if multiaddr str is invalid", () => {
         expect(mafmt.HTTP.matches("/http-google-com")).to.be.eql(false);
@@ -267,7 +271,7 @@ describe("multiformat", "multiaddr validation", () => {
         assertMismatches(mafmt.WebSocketStar, goodIP, goodUDP, badWS);
     });
 
-    it("Stardust validation", () => {
+    it.todo("Stardust validation", () => {
         assertMatches(mafmt.Stardust, goodStardust);
         assertMismatches(mafmt.Stardust, goodIP, goodUDP, badWS);
     });

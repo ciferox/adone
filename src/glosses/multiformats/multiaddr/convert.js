@@ -1,7 +1,5 @@
-/* eslint-disable func-style */
-/* eslint-disable func-name-matching */
 const protocols = require("./protocols_table");
-const base32 = require('hi-base32');
+const base32 = require("hi-base32");
 
 const {
     data: { varint, base58 },

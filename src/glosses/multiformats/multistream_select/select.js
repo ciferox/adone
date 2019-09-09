@@ -1,6 +1,9 @@
 const util = require("./util");
 const writeEncoded = util.writeEncoded;
 
+const errCode = require("err-code");
+const { errors } = require("./constants");
+
 const {
     stream: { pull: { handshake, lengthPrefixed } }
 } = adone;
@@ -22,7 +25,9 @@ const select = function (multicodec, callback/*, log*/) {
         const protocol = data.toString().slice(0, -1);
 
         if (protocol !== multicodec) {
-            return callback(new Error(`"${multicodec}" not supported`), shake.rest());
+            const err = errCode(new Error(`"${multicodec}" not supported`), errors.MULTICODEC_NOT_SUPPORTED);
+
+            return callback(err, shake.rest());
         }
 
         // log(`received ack: ${protocol}`);

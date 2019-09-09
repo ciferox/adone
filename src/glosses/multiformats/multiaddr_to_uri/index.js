@@ -3,6 +3,22 @@ const {
 } = adone;
 
 const reduceValue = (_, v) => v;
+const tcpUri = (str, port, parts, opts) => {
+    // return tcp when explicitly requested
+    if (opts && opts.assumeHttp === false) {
+        return `tcp://${str}:${port}`;
+    }
+    // check if tcp is the last protocol in multiaddr
+    let protocol = "tcp";
+    let explicitPort = `:${port}`;
+    const last = parts[parts.length - 1];
+    if (last.protocol === "tcp") {
+        // assume http and produce clean urls
+        protocol = port === 443 ? "https" : "http";
+        explicitPort = port === 443 || port === 80 ? "" : explicitPort;
+    }
+    return `${protocol}://${str}${explicitPort}`;
+};
 
 const Reducers = {
     ip4: reduceValue,
@@ -11,10 +27,10 @@ const Reducers = {
             ? content
             : `[${content}]`
     ),
-    tcp: (str, content, i, parts) => (
+    tcp: (str, content, i, parts, opts) => (
         parts.some((p) => ["http", "https", "ws", "wss"].includes(p.protocol))
             ? `${str}:${content}`
-            : `tcp://${str}:${content}`
+            : tcpUri(str, content, parts, opts)
     ),
     udp: (str, content) => `udp://${str}:${content}`,
     dnsaddr: reduceValue,
@@ -31,7 +47,7 @@ const Reducers = {
     "p2p-webrtc-direct": (str) => `${str}/p2p-webrtc-direct`
 };
 
-module.exports = (multiaddr) => (
+module.exports = (multiaddr, opts) => (
     Multiaddr(multiaddr)
         .stringTuples()
         .map((tuple) => ({
@@ -43,6 +59,6 @@ module.exports = (multiaddr) => (
             if (!reduce) {
                 throw new Error(`Unsupported protocol ${part.protocol}`);
             }
-            return reduce(str, part.content, i, parts);
+            return reduce(str, part.content, i, parts, opts);
         }, "")
 );

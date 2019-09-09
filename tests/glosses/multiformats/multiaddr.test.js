@@ -219,21 +219,21 @@ describe("multiformat", "multiaddr", () => {
             const str = "/ip4/127.0.0.1/p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC/tcp/1234";
             const addr = multiaddr(str);
             expect(addr).to.have.property("buffer");
-            expect(addr.toString()).to.equal(str.replace("/p2p/", "/ipfs/"));
+            expect(addr.toString()).to.equal(str);
         });
 
         it("ip4 + ipfs", () => {
             const str = "/ip4/127.0.0.1/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC/tcp/1234";
             const addr = multiaddr(str);
             expect(addr).to.have.property("buffer");
-            expect(addr.toString()).to.equal(str);
+            expect(addr.toString()).to.equal(str.replace("/ipfs/", "/p2p/"));
         });
 
         it("ip6 + p2p", () => {
             const str = "/ip6/2001:8a0:7ac5:4201:3ac9:86ff:fe31:7095/p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC/tcp/1234";
             const addr = multiaddr(str);
             expect(addr).to.have.property("buffer");
-            expect(addr.toString()).to.equal(str.replace("/p2p/", "/ipfs/"));
+            expect(addr.toString()).to.equal(str);
         });
 
         it.skip("ip4 + dccp", () => { });
@@ -317,28 +317,28 @@ describe("multiformat", "multiaddr", () => {
             const str = "/ip6/2001:8a0:7ac5:4201:3ac9:86ff:fe31:7095/tcp/8000/ws/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC";
             const addr = multiaddr(str);
             expect(addr).to.have.property("buffer");
-            expect(addr.toString()).to.equal(str);
+            expect(addr.toString()).to.equal(str.replace("/ipfs/", "/p2p/"));
         });
 
         it("ip6 + tcp + websockets + p2p", () => {
             const str = "/ip6/2001:8a0:7ac5:4201:3ac9:86ff:fe31:7095/tcp/8000/ws/p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC";
             const addr = multiaddr(str);
             expect(addr).to.have.property("buffer");
-            expect(addr.toString()).to.equal(str.replace("/p2p/", "/ipfs/"));
+            expect(addr.toString()).to.equal(str);
         });
 
         it("ip6 + udp + quic + ipfs", () => {
             const str = "/ip6/2001:8a0:7ac5:4201:3ac9:86ff:fe31:7095/udp/4001/quic/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC";
             const addr = multiaddr(str);
             expect(addr).to.have.property("buffer");
-            expect(addr.toString()).to.equal(str);
+            expect(addr.toString()).to.equal(str.replace("/ipfs/", "/p2p/"));
         });
 
         it("ip6 + udp + quic + p2p", () => {
             const str = "/ip6/2001:8a0:7ac5:4201:3ac9:86ff:fe31:7095/udp/4001/quic/p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC";
             const addr = multiaddr(str);
             expect(addr).to.have.property("buffer");
-            expect(addr.toString()).to.equal(str.replace("/p2p/", "/ipfs/"));
+            expect(addr.toString()).to.equal(str);
         });
 
         it("unix", () => {
@@ -352,14 +352,14 @@ describe("multiformat", "multiaddr", () => {
             const str = "/p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC";
             const addr = multiaddr(str);
             expect(addr).to.have.property("buffer");
-            expect(addr.toString()).to.equal(str.replace("/p2p/", "/ipfs/"));
+            expect(addr.toString()).to.equal(str);
         });
 
         it("ipfs", () => {
             const str = "/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC";
             const addr = multiaddr(str);
             expect(addr).to.have.property("buffer");
-            expect(addr.toString()).to.equal(str);
+            expect(addr.toString()).to.equal(str.replace("/ipfs/", "/p2p/")); 
         });
 
         it("onion", () => {
@@ -368,39 +368,39 @@ describe("multiformat", "multiaddr", () => {
             expect(addr).to.have.property("buffer");
             expect(addr.toString()).to.equal(str);
         });
-        
+
         it("onion bad length", () => {
             const str = "/onion/timaq4ygg2iegci:80";
             expect(() => multiaddr(str)).to.throw();
         });
-        
+
         it("onion bad port", () => {
             const str = "/onion/timaq4ygg2iegci7:-1";
             expect(() => multiaddr(str)).to.throw();
         });
-        
+
         it("onion no port", () => {
             const str = "/onion/timaq4ygg2iegci7";
             expect(() => multiaddr(str)).to.throw();
         });
-        
+
         it("onion3", () => {
             const str = "/onion3/vww6ybal4bd7szmgncyruucpgfkqahzddi37ktceo3ah7ngmcopnpyyd:1234";
             const addr = multiaddr(str);
             expect(addr).to.have.property("buffer");
             expect(addr.toString()).to.equal(str);
         });
-        
+
         it("onion3 bad length", () => {
             const str = "/onion3/vww6ybal4bd7szmgncyruucpgfkqahzddi37ktceo3ah7ngmcopyyd:1234";
             expect(() => multiaddr(str)).to.throw();
         });
-        
+
         it("onion3 bad port", () => {
             const str = "/onion3/vww6ybal4bd7szmgncyruucpgfkqahzddi37ktceo3ah7ngmcopnpyyd:-1";
             expect(() => multiaddr(str)).to.throw();
         });
-        
+
         it("onion3 no port", () => {
             const str = "/onion3/vww6ybal4bd7szmgncyruucpgfkqahzddi37ktceo3ah7ngmcopnpyyd";
             expect(() => multiaddr(str)).to.throw();
@@ -410,35 +410,35 @@ describe("multiformat", "multiaddr", () => {
             const str = "/p2p-circuit/p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC";
             const addr = multiaddr(str);
             expect(addr).to.have.property("buffer");
-            expect(addr.toString()).to.equal(str.replace("/p2p/", "/ipfs/"));
+            expect(addr.toString()).to.equal(str);
         });
 
         it("p2p-circuit p2p", () => {
             const str = "/p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC/p2p-circuit";
             const addr = multiaddr(str);
             expect(addr).to.have.property("buffer");
-            expect(addr.toString()).to.equal(str.replace("/p2p/", "/ipfs/"));
+            expect(addr.toString()).to.equal(str);
         });
 
         it("p2p-circuit ipfs", () => {
             const str = "/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC/p2p-circuit";
             const addr = multiaddr(str);
             expect(addr).to.have.property("buffer");
-            expect(addr.toString()).to.equal(str);
+            expect(addr.toString()).to.equal(str.replace("/ipfs/", "/p2p/"));
         });
 
         it("p2p-webrtc-star", () => {
             const str = "/ip4/127.0.0.1/tcp/9090/ws/p2p-webrtc-star/p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC";
             const addr = multiaddr(str);
             expect(addr).to.have.property("buffer");
-            expect(addr.toString()).to.equal(str.replace("/p2p/", "/ipfs/"));
+            expect(addr.toString()).to.equal(str);
         });
 
         it("p2p-webrtc-star ipfs", () => {
             const str = "/ip4/127.0.0.1/tcp/9090/ws/p2p-webrtc-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC";
             const addr = multiaddr(str);
             expect(addr).to.have.property("buffer");
-            expect(addr.toString()).to.equal(str);
+            expect(addr.toString()).to.equal(str.replace("/ipfs/", "/p2p/"));
         });
 
         it("p2p-webrtc-direct", () => {
@@ -464,7 +464,7 @@ describe("multiformat", "multiaddr", () => {
                         family: "ipv4",
                         host: "0.0.0.0",
                         transport: "tcp",
-                        port: "1234"
+                        port: 1234
                     });
             });
         });
@@ -511,7 +511,7 @@ describe("multiformat", "multiaddr", () => {
                     resolvable: false
                 }, {
                     code: 421,
-                    name: "ipfs",
+                    name: "p2p",
                     path: false,
                     size: -1,
                     resolvable: false
@@ -535,7 +535,7 @@ describe("multiformat", "multiaddr", () => {
                     resolvable: false
                 }, {
                     code: 421,
-                    name: "ipfs",
+                    name: "p2p",
                     path: false,
                     size: -1,
                     resolvable: false
@@ -628,7 +628,7 @@ describe("multiformat", "multiaddr", () => {
                 ).to.be.eql({
                     address: "192.168.0.1",
                     family: 4,
-                    port: "1234"
+                    port: 1234
                 });
             });
 
@@ -638,7 +638,7 @@ describe("multiformat", "multiaddr", () => {
                 ).to.be.eql({
                     address: "wss0.bootstrap.libp2p.io",
                     family: 4,
-                    port: "443"
+                    port: 443
                 });
             });
 
@@ -689,7 +689,7 @@ describe("multiformat", "multiaddr", () => {
                     multiaddr.fromNodeAddress({
                         address: "192.168.0.1",
                         family: "IPv4",
-                        port: "1234"
+                        port: 1234
                     }, "tcp").toString()
                 ).to.be.eql(
                     "/ip4/192.168.0.1/tcp/1234"
@@ -747,6 +747,11 @@ describe("multiformat", "multiaddr", () => {
             it("parses extracts the peer Id from a multiaddr, p2p", () => {
                 expect(
                     multiaddr("/p2p-circuit/p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC").getPeerId()
+                ).to.equal("QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC");
+            });
+            it("extracts the correct peer Id from a circuit multiaddr", () => {
+                expect(
+                    multiaddr("/ip4/0.0.0.0/tcp/8080/p2p/QmZR5a9AAXGqQF2ADqoDdGS8zvqv8n3Pag6TDDnTNMcFW6/p2p-circuit/p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC").getPeerId()
                 ).to.equal("QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC");
             });
             it("parses extracts the peer Id from a multiaddr, ipfs", () => {
@@ -829,14 +834,15 @@ describe("multiformat", "multiaddr", () => {
 
             describe(".resolve", () => {
                 it.skip("valid and active DNS name", (done) => { });
-                it.skip("valid but inactive DNS name", (done) => { });
-                it("invalid DNS name", (done) => {
+                it.skip("valid but inactive DNS name", () => { });
+                it("invalid DNS name", () => {
                     const str = "/ip4/127.0.0.1";
                     const addr = multiaddr(str);
-                    multiaddr.resolve(addr, (err, multiaddrs) => {
-                        expect(err).to.exist();
-                        done();
-                    });
+                    return multiaddr.resolve(addr)
+                        .then(expect.fail, (err) => {
+                            expect(err).to.exist();
+                            expect(err.message).to.eql("not a valid name");
+                        });
                 });
             });
         });

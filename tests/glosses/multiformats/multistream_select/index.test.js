@@ -212,10 +212,13 @@ describe("multiformat", "multistream", () => {
             p2p: { muxer: { spdy, mplex } }
         } = adone;
 
+        const srcPath = (...args) => adone.getPath("src", "glosses", "multiformats", "multistream_select", ...args);
+        const { errors } = require(srcPath("constants"));
+
         const options = [
             { name: "over pull-pair" },
             { name: "over spdy", muxer: spdy },
-            { name: "over multiplex", muxer: mplex }
+            { name: "over mplex", muxer: mplex }
         ];
 
         options.forEach((option) => {
@@ -310,6 +313,7 @@ describe("multiformat", "multistream", () => {
                         (next) => {
                             msd.select("/panda/1.0.0", (err) => {
                                 expect(err).to.exist();
+                                expect(err.code).to.eql(errors.MULTICODEC_NOT_SUPPORTED);
                                 next();
                             });
                         }
@@ -346,6 +350,7 @@ describe("multiformat", "multistream", () => {
                         (next) => {
                             msd.select("/sadpanda/1.0.0", (err) => {
                                 expect(err).to.exist();
+                                expect(err.code).to.eql(errors.MULTICODEC_NOT_SUPPORTED);
                                 next();
                             });
                         },

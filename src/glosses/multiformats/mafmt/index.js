@@ -8,7 +8,8 @@ const {
  */
 const DNS4 = base("dns4");
 const DNS6 = base("dns6");
-const _DNS = or(
+const DNS = or(
+    base("dns"),
     base("dnsaddr"),
     DNS4,
     DNS6
@@ -17,15 +18,10 @@ const _DNS = or(
 const IP = or(base("ip4"), base("ip6"));
 const TCP = or(
     and(IP, base("tcp")),
-    and(_DNS, base("tcp"))
+    and(DNS, base("tcp"))
 );
 const UDP = and(IP, base("udp"));
 const UTP = and(UDP, base("utp"));
-
-const DNS = or(
-    and(_DNS, base("tcp")),
-    _DNS
-);
 
 const WebSockets = or(
     and(TCP, base("ws")),
@@ -40,8 +36,7 @@ const WebSocketsSecure = or(
 const HTTP = or(
     and(TCP, base("http")),
     and(IP, base("http")),
-    and(DNS, base("http")),
-    and(DNS)
+    and(DNS, base("http"))
 );
 
 const HTTPS = or(
@@ -52,12 +47,16 @@ const HTTPS = or(
 
 const WebRTCStar = or(
     and(WebSockets, base("p2p-webrtc-star"), base("ipfs")),
-    and(WebSocketsSecure, base("p2p-webrtc-star"), base("ipfs"))
+    and(WebSocketsSecure, base("p2p-webrtc-star"), base("ipfs")),
+    and(WebSockets, base("p2p-webrtc-star"), base("p2p")),
+    and(WebSocketsSecure, base("p2p-webrtc-star"), base("p2p"))
 );
 
 const WebSocketStar = or(
     and(WebSockets, base("p2p-websocket-star"), base("ipfs")),
     and(WebSocketsSecure, base("p2p-websocket-star"), base("ipfs")),
+    and(WebSockets, base("p2p-websocket-star"), base("p2p")),
+    and(WebSocketsSecure, base("p2p-websocket-star"), base("p2p")),
     and(WebSockets, base("p2p-websocket-star")),
     and(WebSocketsSecure, base("p2p-websocket-star"))
 );
@@ -84,16 +83,18 @@ const Stardust = or(
     and(Reliable, base("p2p-stardust"))
 );
 
-const _IPFS = or(
+const _P2P = or(
     and(Reliable, base("ipfs")),
+    and(Reliable, base("p2p")),
     WebRTCStar,
-    base("ipfs")
+    base("ipfs"),
+    base("p2p")
 );
 
 const _Circuit = or(
-    and(_IPFS, base("p2p-circuit"), _IPFS),
-    and(_IPFS, base("p2p-circuit")),
-    and(base("p2p-circuit"), _IPFS),
+    and(_P2P, base("p2p-circuit"), _P2P),
+    and(_P2P, base("p2p-circuit")),
+    and(base("p2p-circuit"), _P2P),
     and(Reliable, base("p2p-circuit")),
     and(base("p2p-circuit"), Reliable),
     base("p2p-circuit")
@@ -106,12 +107,12 @@ const CircuitRecursive = () => or(
 
 const Circuit = CircuitRecursive();
 
-const IPFS = or(
-    and(Circuit, _IPFS, Circuit),
-    and(_IPFS, Circuit),
-    and(Circuit, _IPFS),
+const P2P = or(
+    and(Circuit, _P2P, Circuit),
+    and(_P2P, Circuit),
+    and(Circuit, _P2P),
     Circuit,
-    _IPFS
+    _P2P
 );
 
 exports.DNS = DNS;
@@ -131,7 +132,8 @@ exports.WebRTCDirect = WebRTCDirect;
 exports.Reliable = Reliable;
 exports.Stardust = Stardust;
 exports.Circuit = Circuit;
-exports.IPFS = IPFS;
+exports.P2P = P2P;
+exports.IPFS = P2P;
 
 /**
  * Validation funcs
@@ -174,9 +176,7 @@ function and() {
     }
 
     return {
-        toString() {
-            return `{ ${args.join(" ")} }`;
-        },
+        toString () { return '{ ' + args.join(' ') + ' }' },
         input: args,
         matches: makeMatchesFunction(partialMatch),
         partialMatch
@@ -202,9 +202,7 @@ function or() {
     }
 
     const result = {
-        toString() {
-            return `{ ${args.join(" ")} }`;
-        },
+        toString () { return '{ ' + args.join(' ') + ' }' },
         input: args,
         matches: makeMatchesFunction(partialMatch),
         partialMatch
@@ -244,9 +242,7 @@ function base(n) {
     }
 
     return {
-        toString() {
-            return name;
-        },
+        toString () { return name },
         matches,
         partialMatch
     };

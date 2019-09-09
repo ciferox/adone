@@ -1,3 +1,5 @@
+const withIs = require("class-is");
+
 const codec = require("./codec");
 const protocols = require("./protocols_table");
 
@@ -17,7 +19,7 @@ const {
  * Multiaddr('/ip4/127.0.0.1/tcp/4001')
  * // <Multiaddr 047f000001060fa1 - /ip4/127.0.0.1/tcp/4001>
  */
-const Multiaddr = adone.util.withIs.proto(function (addr) {
+const Multiaddr = withIs.proto(function (addr) {
     if (!(this instanceof Multiaddr)) {
         return new Multiaddr(addr);
     }
@@ -69,10 +71,10 @@ Multiaddr.prototype.toJSON = Multiaddr.prototype.toString;
 /**
  * Returns Multiaddr as a convinient options object to be used with net.createConnection
  *
- * @returns {{family: String, host: String, transport: String, port: String}}
+ * @returns {{family: String, host: String, transport: String, port: Number}}
  * @example
  * Multiaddr('/ip4/127.0.0.1/tcp/4001').toOptions()
- * // { family: 'ipv4', host: '127.0.0.1', transport: 'tcp', port: '4001' }
+ * // { family: 'ipv4', host: '127.0.0.1', transport: 'tcp', port: 4001 }
  */
 Multiaddr.prototype.toOptions = function toOptions() {
     const opts = {};
@@ -80,7 +82,7 @@ Multiaddr.prototype.toOptions = function toOptions() {
     opts.family = parsed[1] === "ip4" ? "ipv4" : "ipv6";
     opts.host = parsed[2];
     opts.transport = parsed[3];
-    opts.port = parsed[4];
+    opts.port = parseInt(parsed[4]);
     return opts;
 };
 
@@ -93,9 +95,9 @@ Multiaddr.prototype.toOptions = function toOptions() {
  * // '<Multiaddr 047f000001060fa1 - /ip4/127.0.0.1/tcp/4001>'
  */
 Multiaddr.prototype.inspect = function inspect() {
-    return `<Multiaddr ${
-        this.buffer.toString("hex")} - ${
-        codec.bufferToString(this.buffer)}>`;
+    return "<Multiaddr " +
+        this.buffer.toString("hex") + " - " +
+        codec.bufferToString(this.buffer) + ">";
 };
 
 /**
@@ -232,7 +234,7 @@ Multiaddr.prototype.decapsulate = function decapsulate(addr) {
     const s = this.toString();
     const i = s.lastIndexOf(addr);
     if (i < 0) {
-        throw new Error(`Address ${this} does not contain subaddress: ${addr}`);
+        throw new Error("Address " + this + " does not contain subaddress: " + addr);
     }
     return Multiaddr(s.slice(0, i));
 };
@@ -251,11 +253,14 @@ Multiaddr.prototype.decapsulate = function decapsulate(addr) {
 Multiaddr.prototype.getPeerId = function getPeerId() {
     let b58str = null;
     try {
-        b58str = this.stringTuples().filter((tuple) => {
+        const tuples = this.stringTuples().filter((tuple) => {
             if (tuple[0] === protocols.names.ipfs.code) {
                 return true;
             }
-        })[0][1];
+        });
+
+        // Get the last id
+        b58str = tuples.pop()[1];
 
         base58.decode(b58str);
     } catch (e) {
@@ -321,7 +326,7 @@ Multiaddr.prototype.equals = function equals(addr) {
  *
  * Has to be a ThinWaist Address, otherwise throws error
  *
- * @returns {{family: String, address: String, port: String}}
+ * @returns {{family: String, address: String, port: Number}}
  * @throws {Error} Throws error if Multiaddr is not a Thin Waist address
  * @example
  * Multiaddr('/ip4/127.0.0.1/tcp/4001').nodeAddress()
@@ -343,7 +348,7 @@ Multiaddr.prototype.nodeAddress = function nodeAddress() {
     return {
         family: (codes[0] === 41 || codes[0] === 55) ? 6 : 4,
         address: parts[1], // ip addr
-        port: parts[3] // tcp or udp port
+        port: parseInt(parts[3]) // tcp or udp port
     };
 };
 
@@ -360,14 +365,10 @@ Multiaddr.prototype.nodeAddress = function nodeAddress() {
  * // <Multiaddr 047f000001060fa1 - /ip4/127.0.0.1/tcp/4001>
  */
 Multiaddr.fromNodeAddress = function fromNodeAddress(addr, transport) {
-    if (!addr) {
-        throw new Error("requires node address object");
-    }
-    if (!transport) {
-        throw new Error("requires transport protocol");
-    }
+    if (!addr) {throw new Error('requires node address object')};
+    if (!transport) {throw new Error('requires transport protocol')};
     const ip = (addr.family === "IPv6") ? "ip6" : "ip4";
-    return Multiaddr(`/${[ip, addr.address, transport, addr.port].join("/")}`);
+    return Multiaddr("/" + [ip, addr.address, transport, addr.port].join("/"));
 };
 
 // TODO find a better example, not sure about it's good enough
@@ -441,22 +442,21 @@ Multiaddr.isName = function isName(addr) {
 /**
  * Returns an array of multiaddrs, by resolving the multiaddr that is a name
  *
+ * @async
  * @param {Multiaddr} addr
- *
- * @param {Function} callback
- * @return {Bool} isName
+ * @return {Multiaddr[]}
  */
-Multiaddr.resolve = function resolve(addr, callback) {
+Multiaddr.resolve = function resolve(addr) {
     if (!Multiaddr.isMultiaddr(addr) || !Multiaddr.isName(addr)) {
-        return callback(new Error("not a valid name"));
+        return Promise.reject(Error("not a valid name"));
     }
 
     /*
-   * Needs more consideration from spec design:
-   *   - what to return
-   *   - how to achieve it in the browser?
-   */
-    return callback(new Error("not implemented yet"));
+     * Needs more consideration from spec design:
+     *   - what to return
+     *   - how to achieve it in the browser?
+     */
+    return Promise.reject(new Error("not implemented yet"));
 };
 
 exports = module.exports = Multiaddr;
