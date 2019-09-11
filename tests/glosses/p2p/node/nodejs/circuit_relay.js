@@ -1,15 +1,21 @@
+/**
+ * eslint-env mocha
+ */
+
+
+const chai = require("chai");
+chai.use(require("dirty-chai"));
+const expect = chai.expect;
 const sinon = require("sinon");
+const waterfall = require("async/waterfall");
+const series = require("async/series");
+const parallel = require("async/parallel");
+const Circuit = require("../src/circuit");
+const multiaddr = require("multiaddr");
 
-const {
-    async: { waterfall, series, parallel },
-    is,
-    multiformat: { multiaddr },
-    p2p: { Circuit }
-} = adone;
-
-const createNode = require("../utils/create_node");
-const tryEcho = require("../utils/try_echo");
-const echo = require("../utils/echo");
+const createNode = require("./utils/create-node");
+const tryEcho = require("./utils/try-echo");
+const echo = require("./utils/echo");
 
 describe("circuit relay", () => {
     const handlerSpies = [];
@@ -20,7 +26,7 @@ describe("circuit relay", () => {
     let nodeTCP1;
     let nodeTCP2;
 
-    const setupNode = function (addrs, options, callback) {
+    function setupNode(addrs, options, callback) {
         if (is.function(options)) {
             callback = options;
             options = {};
@@ -42,7 +48,7 @@ describe("circuit relay", () => {
                 callback(node);
             });
         });
-    };
+    }
 
     before(function (done) {
         this.timeout(20 * 1000);
@@ -53,89 +59,89 @@ describe("circuit relay", () => {
                 "/ip4/0.0.0.0/tcp/0/ws",
                 "/ip4/0.0.0.0/tcp/0"
             ], {
-                    config: {
-                        relay: {
+                config: {
+                    relay: {
+                        enabled: true,
+                        hop: {
                             enabled: true,
-                            hop: {
-                                enabled: true,
-                                active: false // passive relay
-                            }
+                            active: false // passive relay
                         }
                     }
-                }, (node) => {
-                    relayNode1 = node;
-                    cb();
-                }),
+                }
+            }, (node) => {
+                relayNode1 = node;
+                cb();
+            }),
             // setup active relay
             (cb) => setupNode([
                 "/ip4/0.0.0.0/tcp/0/ws",
                 "/ip4/0.0.0.0/tcp/0"
             ], {
-                    config: {
-                        relay: {
+                config: {
+                    relay: {
+                        enabled: true,
+                        hop: {
                             enabled: true,
-                            hop: {
-                                enabled: true,
-                                active: false // passive relay
-                            }
+                            active: false // passive relay
                         }
                     }
-                }, (node) => {
-                    relayNode2 = node;
-                    cb();
-                }),
+                }
+            }, (node) => {
+                relayNode2 = node;
+                cb();
+            }),
             // setup node with WS
             (cb) => setupNode([
                 "/ip4/0.0.0.0/tcp/0/ws"
             ], {
-                    config: {
-                        relay: {
-                            enabled: true
-                        }
+                config: {
+                    relay: {
+                        enabled: true
                     }
-                }, (node) => {
-                    nodeWS1 = node;
-                    cb();
-                }),
+                }
+            }, (node) => {
+                nodeWS1 = node;
+                cb();
+            }),
             // setup node with WS
             (cb) => setupNode([
                 "/ip4/0.0.0.0/tcp/0/ws"
             ], {
-                    config: {
-                        relay: {
-                            enabled: true
-                        }
+                config: {
+                    relay: {
+                        enabled: true
                     }
-                }, (node) => {
-                    nodeWS2 = node;
-                    cb();
-                }),
+                }
+            }, (node) => {
+                nodeWS2 = node;
+                cb();
+            }),
             // set up node with TCP
             (cb) => setupNode([
                 "/ip4/0.0.0.0/tcp/0"
             ], {
-                    config: {
-                        relay: {
-                            enabled: true
-                        }
+                config: {
+                    relay: {
+                        enabled: true
                     }
-                }, (node) => {
-                    nodeTCP1 = node;
-                    cb();
-                }),
+                }
+            }, (node) => {
+                nodeTCP1 = node;
+                cb();
+            }),
             // set up node with TCP
             (cb) => setupNode([
                 "/ip4/0.0.0.0/tcp/0"
             ], {
-                    config: {
-                        relay: {
-                            enabled: true
-                        }
+                config: {
+                    relay: {
+                        enabled: true
                     }
-                }, (node) => {
-                    nodeTCP2 = node;
-                    cb();
-                })
+                }
+            }, (node) => {
+                nodeTCP2 = node;
+                cb();
+            })
         ], (err) => {
             expect(err).to.not.exist();
 

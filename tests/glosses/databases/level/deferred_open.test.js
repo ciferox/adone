@@ -1,4 +1,5 @@
-const async = require("async");
+const each = require("async-each");
+const parallel = require("run-parallel");
 const concat = require("concat-stream");
 const common = require("./common");
 
@@ -23,7 +24,7 @@ describe("Deferred open()", () => {
         common.closeableDatabases.push(db);
         assert.isObject(db);
 
-        async.parallel([
+        parallel([
             // 2) insert 3 values with put(), these should be deferred until the database is actually open
             db.put.bind(db, "k1", "v1"),
             db.put.bind(db, "k2", "v2"),
@@ -31,7 +32,7 @@ describe("Deferred open()", () => {
         ], () => {
             // 3) when the callbacks have returned, the database should be open and those values should be in
             //    verify that the values are there
-            async.forEach([1, 2, 3], (k, cb) => {
+            each([1, 2, 3], (k, cb) => {
                 db.get(`k${k}`, (err, v) => {
                     assert.notExists(err);
                     assert.equal(v, `v${k}`);
@@ -67,7 +68,7 @@ describe("Deferred open()", () => {
         ], () => {
             // 3) when the callbacks have returned, the database should be open and those values should be in
             //    verify that the values are there
-            async.forEach([1, 2, 3], (k, cb) => {
+            each([1, 2, 3], (k, cb) => {
                 db.get(`k${k}`, (err, v) => {
                     assert.notExists(err);
                     assert.equal(v, `v${k}`);
@@ -103,7 +104,7 @@ describe("Deferred open()", () => {
             .write(() => {
                 // 3) when the callbacks have returned, the database should be open and those values should be in
                 //    verify that the values are there
-                async.forEach([1, 2, 3], (k, cb) => {
+                each([1, 2, 3], (k, cb) => {
                     db.get(`k${k}`, (err, v) => {
                         assert.notExists(err);
                         assert.equal(v, `v${k}`);

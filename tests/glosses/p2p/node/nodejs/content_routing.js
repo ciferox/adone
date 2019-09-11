@@ -1,15 +1,26 @@
+/**
+ * eslint-env mocha
+ */
+/**
+ * eslint max-nested-callbacks: ["error", 8]
+ */
+
+
+
+const chai = require("chai");
+chai.use(require("dirty-chai"));
+const expect = chai.expect;
+const parallel = require("async/parallel");
+const waterfall = require("async/waterfall");
+const _times = require("lodash.times");
+const CID = require("cids");
+const DelegatedContentRouter = require("libp2p-delegated-content-routing");
 const sinon = require("sinon");
 const nock = require("nock");
-const Node = require("../utils/bundle_nodejs");
+const ma = require("multiaddr");
+const Node = require("./utils/bundle-nodejs");
 
-const {
-    async: { parallel, waterfall },
-    multiformat: { CID, multiaddr: ma },
-    lodash: { times: _times },
-    p2p: { DelegatedContentRouter }
-} = adone;
-
-const createNode = require("../utils/create_node");
+const createNode = require("./utils/create-node");
 const createPeerInfo = createNode.createPeerInfo;
 
 describe(".contentRouting", () => {
@@ -114,8 +125,9 @@ describe(".contentRouting", () => {
                 const cid = new CID("QmTp9VkYvnHyrqKQuFPiuZkiX9gPcqj6x5LJ1rmWuSnnnn");
 
                 nodeE.contentRouting.findProviders(cid, { maxTimeout: 5000 }, (err, providers) => {
-                    expect(err).to.not.exist();
-                    expect(providers).to.have.length(0);
+                    expect(err).to.exist();
+                    expect(err.code).to.eql("ERR_NOT_FOUND");
+                    expect(providers).to.not.exist();
                     done();
                 });
             });
@@ -178,19 +190,10 @@ describe(".contentRouting", () => {
             it("should be able to register as a provider", (done) => {
                 const cid = new CID("QmU621oD8AhHw6t25vVyfYKmL9VV3PTgc52FngEhTGACFB");
                 const mockApi = nock("http://0.0.0.0:60197")
-                    // mock the swarm connect
-                    .post("/api/v0/swarm/connect")
-                    .query({
-                        arg: `/ip4/0.0.0.0/tcp/60194/p2p-circuit/ipfs/${nodeA.peerInfo.id.toB58String()}`,
-                        "stream-channels": true
-                    })
-                    .reply(200, {
-                        Strings: [`connect ${nodeA.peerInfo.id.toB58String()} success`]
-                    }, ["Content-Type", "application/json"])
-                    // mock the refs call
+                // mock the refs call
                     .post("/api/v0/refs")
                     .query({
-                        recursive: true,
+                        recursive: false,
                         arg: cid.toBaseEncodedString(),
                         "stream-channels": true
                     })
@@ -209,10 +212,11 @@ describe(".contentRouting", () => {
             it("should handle errors when registering as a provider", (done) => {
                 const cid = new CID("QmU621oD8AhHw6t25vVyfYKmL9VV3PTgc52FngEhTGACFB");
                 const mockApi = nock("http://0.0.0.0:60197")
-                    // mock the swarm connect
-                    .post("/api/v0/swarm/connect")
+                // mock the refs call
+                    .post("/api/v0/refs")
                     .query({
-                        arg: `/ip4/0.0.0.0/tcp/60194/p2p-circuit/ipfs/${nodeA.peerInfo.id.toB58String()}`,
+                        recursive: false,
+                        arg: cid.toBaseEncodedString(),
                         "stream-channels": true
                     })
                     .reply(502, "Bad Gateway", ["Content-Type", "application/json"]);
@@ -244,7 +248,7 @@ describe(".contentRouting", () => {
                         timeout: "1000ms",
                         "stream-channels": true
                     })
-                    .reply(200, `{"Extra":"","ID":"QmWKqWXCtRXEeCQTo3FoZ7g4AfnGiauYYiczvNxFCHicbB","Responses":[{"Addrs":["/ip4/0.0.0.0/tcp/0"],"ID":"${provider}"}],"Type":1}\n`, [
+                    .reply(200, `{"Extra":"","ID":"QmWKqWXCtRXEeCQTo3FoZ7g4AfnGiauYYiczvNxFCHicbB","Responses":[{"Addrs":["/ip4/0.0.0.0/tcp/0"],"ID":"${provider}"}],"Type":4}\n`, [
                         "Content-Type", "application/json",
                         "X-Chunked-Output", "1"
                     ]);
@@ -322,7 +326,7 @@ describe(".contentRouting", () => {
 
         describe("provide", () => {
             it("should use both the dht and delegate router to provide", (done) => {
-                const dhtStub = sinon.stub(nodeA._dht, "provide").callsFake(() => { });
+                const dhtStub = sinon.stub(nodeA._dht, "provide").callsFake(() => {});
                 const delegateStub = sinon.stub(delegate, "provide").callsFake(() => {
                     expect(dhtStub.calledOnce).to.equal(true);
                     expect(delegateStub.calledOnce).to.equal(true);

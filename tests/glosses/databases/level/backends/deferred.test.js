@@ -1,7 +1,9 @@
 const {
+    assertion,
     noop,
-    database: { level: { backend: { Deferred } } }
+    database: { level: { backend: { Deferred: DeferredBackend } } }
 } = adone;
+assertion.use(assertion.extension.checkmark);
 
 describe("Deferred backend", () => {
     it("deferred open gets correct options", (done) => {
@@ -13,7 +15,7 @@ describe("Deferred backend", () => {
             }
         };
 
-        const ld = new Deferred(db);
+        const ld = new DeferredBackend(db);
         ld.open(OPTIONS, (err) => {
             assert.notExists(err, "no error");
             done();
@@ -34,7 +36,7 @@ describe("Deferred backend", () => {
             }
         };
 
-        const ld = new Deferred(db);
+        const ld = new DeferredBackend(db);
         ld.put("foo", "bar", (err, v) => {
             assert.notExists(err, "no error");
             called = v;
@@ -50,11 +52,12 @@ describe("Deferred backend", () => {
     });
 
     it("many operations", (done) => {
-        const calls = [];
         let puts = 0;
         let gets = 0;
         let batches = 0;
+        let clears = 0;
 
+        const calls = [];
         const db = {
             put(key, value, options, callback) {
                 if (puts++ === 0) {
@@ -97,12 +100,21 @@ describe("Deferred backend", () => {
                 }
                 callback();
             },
+            clear(options, callback) {
+                if (clears++ === 0) {
+                    assert.deepEqual(options, { reverse: false, limit: -1 }, "default options");
+                } else {
+                    assert.deepEqual(options, { gt: "k5", reverse: false, limit: -1 }, "range option");
+                }
+
+                callback();
+            },
             open(options, callback) {
                 process.nextTick(callback);
             }
         };
 
-        const ld = new Deferred(db);
+        const ld = new DeferredBackend(db);
 
         ld.put("foo1", "bar1", (err, v) => {
             assert.notExists(err, "no error");
@@ -111,6 +123,9 @@ describe("Deferred backend", () => {
         ld.get("woo1", (err, v) => {
             assert.notExists(err, "no error");
             calls.push({ type: "get", key: "woo1", v });
+        });
+        ld.clear(() => {
+            calls.push({ type: "clear" });
         });
         ld.put("foo2", "bar2", (err, v) => {
             assert.notExists(err, "no error");
@@ -137,21 +152,26 @@ describe("Deferred backend", () => {
             .write(() => {
                 calls.push({ type: "batch", keys: "k3,k4" });
             });
+        ld.clear({ gt: "k5" }, () => {
+            calls.push({ type: "clear", gt: "k5" });
+        });
 
         assert.ok(calls.length === 0, "not called");
 
         ld.open((err) => {
             assert.notExists(err, "no error");
 
-            assert.equal(calls.length, 7, "all functions called");
+            assert.equal(calls.length, 9, "all functions called");
             assert.deepEqual(calls, [
                 { type: "put", key: "foo1", v: "put1" },
                 { type: "get", key: "woo1", v: "gets1" },
+                { type: "clear" },
                 { type: "put", key: "foo2", v: "put2" },
                 { type: "get", key: "woo2", v: "gets2" },
                 { type: "del", key: "blergh", v: "del" },
                 { type: "batch", keys: "k1,k2" },
-                { type: "batch", keys: "k3,k4" }
+                { type: "batch", keys: "k3,k4" },
+                { type: "clear", gt: "k5" }
             ], "calls correctly behaved");
 
             done();
@@ -172,7 +192,7 @@ describe("Deferred backend", () => {
             });
         });
 
-        const Db = function (m, fn) {
+        function Db(m, fn) {
             const db = {
                 open(options, cb) {
                     process.nextTick(cb);
@@ -182,8 +202,8 @@ describe("Deferred backend", () => {
                 fn.apply(null, arguments);
             };
             db[m] = wrapper;
-            return new Deferred(db);
-        };
+            return new DeferredBackend(db);
+        }
 
         it("put", (done) => {
             const calls = [];
@@ -195,7 +215,7 @@ describe("Deferred backend", () => {
             });
             ld.open((err) => {
                 assert.notExists(err, "no error");
-                assert.sameDeepMembers(calls, DATA, "value ok");
+                assert.deepEqual(calls, DATA, "value ok");
                 done();
             });
         });
@@ -210,7 +230,7 @@ describe("Deferred backend", () => {
             });
             ld.open((err) => {
                 assert.notExists(err, "no error");
-                assert.sameDeepMembers(calls, ITEMS, "value ok");
+                assert.deepEqual(calls, ITEMS, "value ok");
                 done();
             });
         });
@@ -225,7 +245,24 @@ describe("Deferred backend", () => {
             });
             ld.open((err) => {
                 assert.notExists(err, "no error");
-                assert.sameDeepMembers(calls, ITEMS, "value ok");
+                assert.deepEqual(calls, ITEMS, "value ok");
+                done();
+            });
+        });
+
+        it("clear", (done) => {
+            const calls = [];
+            const ld = Db("clear", (opts, cb) => {
+                calls.push(opts);
+            });
+            ITEMS.forEach((key) => {
+                ld.clear({ gt: key }, noop);
+            });
+            ld.open((err) => {
+                assert.notExists(err, "no error");
+                assert.deepEqual(calls, ITEMS.map((key) => {
+                    return { gt: key, reverse: false, limit: -1 }
+                }), "value ok");
                 done();
             });
         });
@@ -240,95 +277,102 @@ describe("Deferred backend", () => {
             });
             ld.open((err) => {
                 assert.notExists(err, "no error");
-                assert.sameDeepMembers(calls, ITEMS.map((i) => {
-                    return { start: i, end: i };
+                assert.deepEqual(calls, ITEMS.map((i) => {
+                    return { start: i, end: i }
                 }), "value ok");
                 done();
             });
         });
 
-        it("store not supporting approximateSize", () => {
+        it("store not supporting approximateSize", (done) => {
             const ld = Db("FOO", () => { });
             assert.throws(() => {
                 ld.approximateSize("key", "key", noop);
             }, /approximateSize is not a function/);
+            done();
+        });
+
+        it("compactRange", (done) => {
+            const calls = [];
+            const ld = Db("compactRange", (start, end, cb) => {
+                calls.push({ start, end });
+            });
+            ITEMS.forEach((key) => {
+                ld.compactRange(key, key, noop);
+            });
+            ld.open((err) => {
+                assert.notExists(err, "no error");
+                assert.deepEqual(calls, ITEMS.map((i) => {
+                    return { start: i, end: i }
+                }), "value ok");
+                done();
+            });
+        });
+
+        it("store not supporting compactRange", (done) => {
+            const ld = Db("FOO", () => { });
+            assert.throws(() => {
+                ld.compactRange("key", "key", noop);
+            }, /compactRange is not a function/);
+            done();
         });
     });
 
-    it("_close calls close for underlying store", (dn) => {
-        let counter = 0;
-        const done = () => {
-            if (++counter === 2) {
-                dn();
-            }
-        };
+    it("_close calls close for underlying store", (done) => {
+        expect(2).checks(done);
 
         const db = {
             close(callback) {
-                done();
+                expect(true).to.be.true.mark();
+                // t.pass("close for underlying store is called");
                 process.nextTick(callback);
             }
         };
-        const ld = new Deferred(db);
+        const ld = new DeferredBackend(db);
 
         ld.close((err) => {
             assert.notExists(err, "no error");
-            done();
+            expect(true).to.be.true.mark();
         });
     });
 
-    it("open error on underlying store calls back with error", (dn) => {
-        let counter = 0;
-        const done = () => {
-            if (++counter === 2) {
-                dn();
-            }
-        };
-
+    it("open error on underlying store calls back with error", (done) => {
+        expect(2).checks(done);
         const db = {
             open(options, callback) {
-                done();
+                expect(true).to.be.true.mark();
+                // t.pass("db.open called");
                 process.nextTick(callback, new Error("foo"));
             }
         };
-        const ld = new Deferred(db);
+        const ld = new DeferredBackend(db);
 
         ld.open((err) => {
             assert.equal(err.message, "foo");
-            done();
+            expect(true).to.be.true.mark();
         });
     });
 
-    it("close error on underlying store calls back with error", (dn) => {
-        let counter = 0;
-        const done = () => {
-            if (++counter === 2) {
-                dn();
-            }
-        };
+    it("close error on underlying store calls back with error", (done) => {
+        expect(2).checks(done);
 
         const db = {
             close(callback) {
-                done();
+                expect(true).to.be.true.mark();
+                // t.pass("db.close called");
                 process.nextTick(callback, new Error("foo"));
             }
         };
-        const ld = new Deferred(db);
+        const ld = new DeferredBackend(db);
 
         ld.close((err) => {
             assert.equal(err.message, "foo");
-            done();
+            expect(true).to.be.true.mark();
         });
     });
 
-    it("non-deferred approximateSize", (dn) => {
-        let counter = 0;
-        const done = () => {
-            if (++counter === 2) {
-                dn();
-            }
-        };
-
+    it("non-deferred approximateSize", (done) => {
+        expect(2).checks(done);
         const db = {
             open(options, cb) {
                 process.nextTick(cb);
@@ -336,25 +380,57 @@ describe("Deferred backend", () => {
             approximateSize(start, end, callback) {
                 assert.equal(start, "bar");
                 assert.equal(end, "foo");
-                done();
                 process.nextTick(callback);
+                expect(true).to.be.true.mark();
             }
         };
-        const ld = new Deferred(db);
+        const ld = new DeferredBackend(db);
 
         ld.open((err) => {
             assert.notExists(err);
             ld.approximateSize("bar", "foo", (err) => {
                 assert.notExists(err);
-                done();
+                expect(true).to.be.true.mark();
             });
         });
     });
 
-    it("iterator - deferred operations", (dn) => {
+    it("non-deferred compactRange", (done) => {
+        expect(2).checks(done);
+
+        const db = {
+            open(options, cb) {
+                process.nextTick(cb);
+            },
+            compactRange(start, end, callback) {
+                assert.equal(start, "bar");
+                assert.equal(end, "foo");
+                process.nextTick(callback);
+                expect(true).to.be.true.mark();
+            }
+        };
+        const ld = new DeferredBackend(db);
+
+        ld.open((err) => {
+            assert.notExists(err);
+            ld.compactRange("bar", "foo", (err) => {
+                assert.notExists(err);
+                expect(true).to.be.true.mark();
+            });
+        });
+    });
+
+    it("iterator - deferred operations", (done) => {
+        expect(3).checks(done);
+
+        let seekTarget = false;
+
         const db = {
             iterator(options) {
                 return {
+                    seek(target) {
+                        seekTarget = target;
+                    },
                     next(cb) {
                         cb(null, "key", "value");
                     },
@@ -367,48 +443,50 @@ describe("Deferred backend", () => {
                 process.nextTick(callback);
             }
         };
-        const ld = new Deferred(db);
-        const itr = ld.iterator();
+        const ld = new DeferredBackend(db);
+        const it = ld.iterator();
         let nextFirst = false;
-        let counter = 0;
-        const done = () => {
-            if (++counter === 3) {
-                dn();
-            }
-        };
 
-        itr.next((err, key, value) => {
+        it.seek("foo");
+
+        it.next((err, key, value) => {
+            assert.equal(seekTarget, "foo", "seek was called with correct target");
             nextFirst = true;
             assert.notExists(err, "no error");
             assert.equal(key, "key");
             assert.equal(value, "value");
-            done();
+            expect(true).to.be.true.mark();
         });
 
-        itr.end((err) => {
+        it.end((err) => {
             assert.notExists(err, "no error");
             assert.ok(nextFirst);
-            done();
+            expect(true).to.be.true.mark();
         });
 
         ld.open((err) => {
             assert.notExists(err, "no error");
-            const itr2 = ld.iterator();
-            itr2.end((err) => {
+            const it2 = ld.iterator();
+            it2.end((err) => {
                 assert.notExists(err);
-                done();
+                expect(true).to.be.true.mark();
             });
         });
 
-        assert.ok(Deferred.Iterator);
+        assert.ok(require(adone.getPath("src", "glosses", "databases", "level", "backends", "deferred")).default.Iterator);
     });
 
-    it("iterator - non deferred operation", (dn) => {
+    it("iterator - non deferred operation", (done) => {
+        let seekTarget = false;
+
         const db = {
             iterator(options) {
                 return {
                     next(cb) {
                         cb(null, "key", "value");
+                    },
+                    seek(target) {
+                        seekTarget = target;
                     },
                     end(cb) {
                         process.nextTick(cb);
@@ -419,17 +497,21 @@ describe("Deferred backend", () => {
                 process.nextTick(callback);
             }
         };
-        const ld = new Deferred(db);
-        const itr = ld.iterator();
+        const ld = new DeferredBackend(db);
+        const it = ld.iterator();
 
         ld.open((err) => {
             assert.notExists(err, "no error");
 
-            itr.next((err, key, value) => {
+            it.seek("foo");
+
+            assert.equal(seekTarget, "foo", "seek was called with correct target");
+
+            it.next((err, key, value) => {
                 assert.notExists(err, "no error");
                 assert.equal(key, "key");
                 assert.equal(value, "value");
-                dn();
+                done();
             });
         });
     });

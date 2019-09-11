@@ -1,17 +1,15 @@
-;
 
+
+const promisify = require("promisify-es6");
+const crypto = require("libp2p-crypto");
+const multihashing = promisify(require("multihashing-async"));
+const PeerId = require("peer-id");
+const assert = require("assert");
 const AbortController = require("abort-controller");
 const errcode = require("err-code");
 const times = require("p-times");
 const c = require("./constants");
 const { logger } = require("./utils");
-
-const {
-    assert,
-    p2p: { crypto, PeerId },
-    multiformat: { multihashingAsync },
-    promise: { promisify }
-} = adone;
 
 class RandomWalk {
     /**
@@ -41,10 +39,10 @@ class RandomWalk {
      * @returns {void}
      */
     start() {
-        // Don't run twice
+    // Don't run twice
         if (this._timeoutId || !this._options.enabled) {
- return; 
-}
+            return; 
+        }
 
         // Start doing random walks after `this._options.delay`
         this._timeoutId = setTimeout(() => {
@@ -73,7 +71,7 @@ class RandomWalk {
      * @private
      */
     async _runPeriodically() {
-        // run until the walk has been stopped
+    // run until the walk has been stopped
         while (this._timeoutId) {
             try {
                 await this._walk(this._options.queriesPerPeriod, this._options.timeout);
@@ -107,7 +105,9 @@ class RandomWalk {
                     const id = await this._randomPeerId();
 
                     // Check if we've happened to already abort
-                    if (!this._controller) {return};
+                    if (!this._controller) {
+                        return; 
+                    }
 
                     await this._query(id, {
                         timeout: walkTimeout,
@@ -175,7 +175,7 @@ class RandomWalk {
      * @private
      */
     async _randomPeerId() {
-        const digest = await multihashingAsync(crypto.randomBytes(16), "sha2-256");
+        const digest = await multihashing(crypto.randomBytes(16), "sha2-256");
         return new PeerId(digest);
     }
 }

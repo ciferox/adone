@@ -1,14 +1,16 @@
-const debug = require("debug");
-const distance = require("xor-distance");
-const errcode = require("err-code");
 
-const {
-    async: { map, setImmediate },
-    data: { base32 },
-    multiformat: { multihashingAsync, multihash: mh },
-    datastore: { interface: { Key } },
-    p2p: { PeerId, record: { Record } }
-} = adone;
+
+const debug = require("debug");
+const multihashing = require("multihashing-async");
+const mh = require("multihashes");
+const Key = require("interface-datastore").Key;
+const base32 = require("base32.js");
+const distance = require("xor-distance");
+const map = require("async/map");
+const Record = require("libp2p-record").Record;
+const setImmediate = require("async/setImmediate");
+const PeerId = require("peer-id");
+const errcode = require("err-code");
 
 /**
  * Creates a DHT ID by hashing a given buffer.
@@ -17,13 +19,8 @@ const {
  * @param {function(Error, Buffer)} callback
  * @returns {void}
  */
-exports.convertBuffer = async (buf, callback) => {
-    try {
-        const digest = await multihashingAsync.digest(buf, "sha2-256");
-        callback(null, digest);
-    } catch (err) {
-        callback(err);
-    }
+exports.convertBuffer = (buf, callback) => {
+    multihashing.digest(buf, "sha2-256", callback);
 };
 
 /**
@@ -33,13 +30,8 @@ exports.convertBuffer = async (buf, callback) => {
  * @param {function(Error, Buffer)} callback
  * @returns {void}
  */
-exports.convertPeerId = async (peer, callback) => {
-    try {
-        const digest = await multihashingAsync.digest(peer.id, "sha2-256");
-        callback(null, digest);
-    } catch (err) {
-        callback(err);
-    }
+exports.convertPeerId = (peer, callback) => {
+    multihashing.digest(peer.id, "sha2-256", callback);
 };
 
 /**
@@ -217,7 +209,7 @@ exports.TimeoutError = class TimeoutError extends Error {
  * @private
  */
 exports.withTimeout = (asyncFn, time) => {
-    return async (...args) => {
+    return async (...args) => { // eslint-disable-line require-await
         return Promise.race([
             asyncFn(...args),
             new Promise((resolve, reject) => {

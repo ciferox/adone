@@ -1,10 +1,11 @@
-const {
-    async: { timeout },
-    is,
-    p2p: { PeerId, PeerInfo, record },
-    promise: { promisify, nodeify }
-} = adone;
 
+
+const PeerId = require("peer-id");
+const libp2pRecord = require("libp2p-record");
+const timeout = require("async/timeout");
+const PeerInfo = require("peer-info");
+const promisify = require("promisify-es6");
+const promiseToCallback = require("promise-to-callback");
 const errcode = require("err-code");
 
 const utils = require("./utils");
@@ -13,20 +14,20 @@ const c = require("./constants");
 const Query = require("./query");
 const LimitedPeerList = require("./limited-peer-list");
 
-const { Record, validator } = record;
+const Record = libp2pRecord.Record;
 
 module.exports = (dht) => ({
     /**
-     * Returns the routing tables closest peers, for the key of
-     * the message.
-     *
-     * @param {Message} msg
-     * @param {function(Error, Array<PeerInfo>)} callback
-     * @returns {undefined}
-     * @private
-     */
+   * Returns the routing tables closest peers, for the key of
+   * the message.
+   *
+   * @param {Message} msg
+   * @param {function(Error, Array<PeerInfo>)} callback
+   * @returns {undefined}
+   * @private
+   */
     _nearestPeersToQuery(msg, callback) {
-        nodeify(this._nearestPeersToQueryAsync(msg), callback);
+        promiseToCallback(this._nearestPeersToQueryAsync(msg))(callback);
     },
 
     async _nearestPeersToQueryAsync(msg) {
@@ -41,18 +42,18 @@ module.exports = (dht) => ({
         });
     },
     /**
-     * Get the nearest peers to the given query, but iff closer
-     * than self.
-     *
-     * @param {Message} msg
-     * @param {PeerInfo} peer
-     * @param {function(Error, Array<PeerInfo>)} callback
-     * @returns {undefined}
-     * @private
-     */
+   * Get the nearest peers to the given query, but iff closer
+   * than self.
+   *
+   * @param {Message} msg
+   * @param {PeerInfo} peer
+   * @param {function(Error, Array<PeerInfo>)} callback
+   * @returns {undefined}
+   * @private
+   */
 
     _betterPeersToQuery(msg, peer, callback) {
-        nodeify(this._betterPeersToQueryAsync(msg, peer), callback);
+        promiseToCallback(this._betterPeersToQueryAsync(msg, peer))(callback);
     },
 
     async _betterPeersToQueryAsync(msg, peer) {
@@ -71,20 +72,20 @@ module.exports = (dht) => ({
     },
 
     /**
-     * Try to fetch a given record by from the local datastore.
-     * Returns the record iff it is still valid, meaning
-     * - it was either authored by this node, or
-     * - it was received less than `MAX_RECORD_AGE` ago.
-     *
-     * @param {Buffer} key
-     * @param {function(Error, Record)} callback
-     * @returns {undefined}
-     *
-     *@private
-     */
+   * Try to fetch a given record by from the local datastore.
+   * Returns the record iff it is still valid, meaning
+   * - it was either authored by this node, or
+   * - it was received less than `MAX_RECORD_AGE` ago.
+   *
+   * @param {Buffer} key
+   * @param {function(Error, Record)} callback
+   * @returns {undefined}
+   *
+   *@private
+   */
 
     _checkLocalDatastore(key, callback) {
-        nodeify(this._checkLocalDatastoreAsync(key), callback);
+        promiseToCallback(this._checkLocalDatastoreAsync(key))(callback);
     },
 
     async _checkLocalDatastoreAsync(key) {
@@ -94,7 +95,7 @@ module.exports = (dht) => ({
         // Fetch value from ds
         let rawRecord;
         try {
-            rawRecord = await promisify((cb) => dht.datastore.get(dsKey, cb))();
+            rawRecord = await dht.datastore.get(dsKey);
         } catch (err) {
             if (err.code === "ERR_NOT_FOUND") {
                 return undefined;
@@ -111,9 +112,9 @@ module.exports = (dht) => ({
 
         // Check validity: compare time received with max record age
         if (is.nil(record.timeReceived) ||
-            utils.now() - record.timeReceived > c.MAX_RECORD_AGE) {
+        utils.now() - record.timeReceived > c.MAX_RECORD_AGE) {
             // If record is bad delete it and return
-            await promisify((cb) => dht.datastore.delete(dsKey, cb))();
+            await dht.datastore.delete(dsKey);
             return undefined;
         }
 
@@ -121,17 +122,17 @@ module.exports = (dht) => ({
         return record;
     },
     /**
-     * Add the peer to the routing table and update it in the peerbook.
-     *
-     * @param {PeerInfo} peer
-     * @param {function(Error)} callback
-     * @returns {undefined}
-     *
-     * @private
-     */
+   * Add the peer to the routing table and update it in the peerbook.
+   *
+   * @param {PeerInfo} peer
+   * @param {function(Error)} callback
+   * @returns {undefined}
+   *
+   * @private
+   */
 
     _add(peer, callback) {
-        nodeify(this._addAsync(peer), (err) => callback(err));
+        promiseToCallback(this._addAsync(peer))((err) => callback(err));
     },
 
     async _addAsync(peer) {
@@ -140,22 +141,22 @@ module.exports = (dht) => ({
         return undefined;
     },
     /**
-     * Verify a record without searching the DHT.
-     *
-     * @param {Record} record
-     * @param {function(Error)} callback
-     * @returns {undefined}
-     *
-     * @private
-     */
+   * Verify a record without searching the DHT.
+   *
+   * @param {Record} record
+   * @param {function(Error)} callback
+   * @returns {undefined}
+   *
+   * @private
+   */
 
     _verifyRecordLocally(record, callback) {
-        nodeify(this._verifyRecordLocallyAsync(record), (err) => callback(err));
+        promiseToCallback(this._verifyRecordLocallyAsync(record))((err) => callback(err));
     },
 
     async _verifyRecordLocallyAsync(record) {
         dht._log("verifyRecordLocally");
-        await promisify((cb) => validator.verifyRecord(
+        await promisify((cb) => libp2pRecord.validator.verifyRecord(
             dht.validators,
             record,
             cb
@@ -163,18 +164,18 @@ module.exports = (dht) => ({
     },
 
     /**
-     * Find close peers for a given peer
-     *
-     * @param {Buffer} key
-     * @param {PeerId} peer
-     * @param {function(Error, Array<PeerInfo>)} callback
-     * @returns {void}
-     *
-     * @private
-     */
+   * Find close peers for a given peer
+   *
+   * @param {Buffer} key
+   * @param {PeerId} peer
+   * @param {function(Error, Array<PeerInfo>)} callback
+   * @returns {void}
+   *
+   * @private
+   */
 
     _closerPeersSingle(key, peer, callback) {
-        nodeify(this._closerPeersSingleAsync(key, peer), callback);
+        promiseToCallback(this._closerPeersSingleAsync(key, peer))(callback);
     },
 
     async _closerPeersSingleAsync(key, peer) {
@@ -186,53 +187,53 @@ module.exports = (dht) => ({
     },
 
     /**
-     * Is the given peer id our PeerId?
-     *
-     * @param {PeerId} other
-     * @returns {bool}
-     *
-     * @private
-     */
+   * Is the given peer id our PeerId?
+   *
+   * @param {PeerId} other
+   * @returns {bool}
+   *
+   * @private
+   */
 
     _isSelf(other) {
         return other && dht.peerInfo.id.id.equals(other.id);
     },
 
     /**
-     * Ask peer `peer` if they know where the peer with id `target` is.
-     *
-     * @param {PeerId} peer
-     * @param {PeerId} target
-     * @param {function(Error, Message)} callback
-     * @returns {void}
-     *
-     * @private
-     */
+   * Ask peer `peer` if they know where the peer with id `target` is.
+   *
+   * @param {PeerId} peer
+   * @param {PeerId} target
+   * @param {function(Error, Message)} callback
+   * @returns {void}
+   *
+   * @private
+   */
 
     _findPeerSingle(peer, target, callback) {
-        nodeify(this._findPeerSingleAsync(peer, target), callback);
+        promiseToCallback(this._findPeerSingleAsync(peer, target))(callback);
     },
 
-    async _findPeerSingleAsync(peer, target) {
+    async _findPeerSingleAsync(peer, target) { // eslint-disable-line require-await
         dht._log("_findPeerSingle %s", peer.toB58String());
         const msg = new Message(Message.TYPES.FIND_NODE, target.id, 0);
         return promisify((callback) => dht.network.sendRequest(peer, msg, callback))();
     },
 
     /**
-     * Store the given key/value pair at the peer `target`.
-     *
-     * @param {Buffer} key
-     * @param {Buffer} rec - encoded record
-     * @param {PeerId} target
-     * @param {function(Error)} callback
-     * @returns {void}
-     *
-     * @private
-     */
+   * Store the given key/value pair at the peer `target`.
+   *
+   * @param {Buffer} key
+   * @param {Buffer} rec - encoded record
+   * @param {PeerId} target
+   * @param {function(Error)} callback
+   * @returns {void}
+   *
+   * @private
+   */
 
     _putValueToPeer(key, rec, target, callback) {
-        nodeify(this._putValueToPeerAsync(key, rec, target), callback);
+        promiseToCallback(this._putValueToPeerAsync(key, rec, target))(callback);
     },
 
     async _putValueToPeerAsync(key, rec, target) {
@@ -247,38 +248,38 @@ module.exports = (dht) => ({
     },
 
     /**
-     * Store the given key/value pair locally, in the datastore.
-     * @param {Buffer} key
-     * @param {Buffer} rec - encoded record
-     * @param {function(Error)} callback
-     * @returns {void}
-     *
-     * @private
-     */
+   * Store the given key/value pair locally, in the datastore.
+   * @param {Buffer} key
+   * @param {Buffer} rec - encoded record
+   * @param {function(Error)} callback
+   * @returns {void}
+   *
+   * @private
+   */
 
     _putLocal(key, rec, callback) {
-        nodeify(this._putLocalAsync(key, rec), (err) => callback(err));
+        promiseToCallback(this._putLocalAsync(key, rec))((err) => callback(err));
     },
 
     async _putLocalAsync(key, rec) {
-        await promisify((cb) => dht.datastore.put(utils.bufferToKey(key), rec, cb))();
+        await dht.datastore.put(utils.bufferToKey(key), rec);
         return undefined;
     },
 
     /**
-     * Get the value for given key.
-     *
-     * @param {Buffer} key
-     * @param {Object} options - get options
-     * @param {number} options.timeout - optional timeout (default: 60000)
-     * @param {function(Error, Record)} callback
-     * @returns {void}
-     *
-     * @private
-     */
+   * Get the value for given key.
+   *
+   * @param {Buffer} key
+   * @param {Object} options - get options
+   * @param {number} options.timeout - optional timeout (default: 60000)
+   * @param {function(Error, Record)} callback
+   * @returns {void}
+   *
+   * @private
+   */
 
     _get(key, options, callback) {
-        nodeify(this._getAsync(key, options), callback);
+        promiseToCallback(this._getAsync(key, options))(callback);
     },
 
     async _getAsync(key, options) {
@@ -290,7 +291,7 @@ module.exports = (dht) => ({
         let i = 0;
 
         try {
-            i = record.selection.bestRecord(dht.selectors, key, recs);
+            i = libp2pRecord.selection.bestRecord(dht.selectors, key, recs);
         } catch (err) {
             // Assume the first record if no selector available
             if (err.code !== "ERR_NO_SELECTOR_FUNCTION_FOR_RECORD_KEY") {
@@ -311,15 +312,15 @@ module.exports = (dht) => ({
     },
 
     /**
-     * Send the best record found to any peers that have an out of date record.
-     *
-     * @param {Buffer} key
-     * @param {Array<Object>} vals - values retrieved from the DHT
-     * @param {Object} best - the best record that was found
-     * @returns {Promise}
-     *
-     * @private
-     */
+   * Send the best record found to any peers that have an out of date record.
+   *
+   * @param {Buffer} key
+   * @param {Array<Object>} vals - values retrieved from the DHT
+   * @param {Object} best - the best record that was found
+   * @returns {Promise}
+   *
+   * @private
+   */
     async _sendCorrectionRecord(key, vals, best) {
         const fixupRec = await promisify((cb) => utils.createPutRecord(key, best, cb))();
 
@@ -349,23 +350,23 @@ module.exports = (dht) => ({
     },
 
     /**
-     * Attempt to retrieve the value for the given key from
-     * the local datastore.
-     *
-     * @param {Buffer} key
-     * @param {function(Error, Record)} callback
-     * @returns {void}
-     *
-     * @private
-     */
+   * Attempt to retrieve the value for the given key from
+   * the local datastore.
+   *
+   * @param {Buffer} key
+   * @param {function(Error, Record)} callback
+   * @returns {void}
+   *
+   * @private
+   */
     _getLocal(key, callback) {
-        nodeify(this._getLocalAsync(key), callback);
+        promiseToCallback(this._getLocalAsync(key))(callback);
     },
 
     async _getLocalAsync(key) {
         dht._log("getLocal %b", key);
 
-        const raw = await promisify((cb) => dht.datastore.get(utils.bufferToKey(key), cb))();
+        const raw = await dht.datastore.get(utils.bufferToKey(key));
         dht._log("found %b in local datastore", key);
         const rec = Record.deserialize(raw);
 
@@ -374,22 +375,24 @@ module.exports = (dht) => ({
     },
 
     /**
-     * Query a particular peer for the value for the given key.
-     * It will either return the value or a list of closer peers.
-     *
-     * Note: The peerbook is updated with new addresses found for the given peer.
-     *
-     * @param {PeerId} peer
-     * @param {Buffer} key
-     * @param {function(Error, Redcord, Array<PeerInfo>)} callback
-     * @returns {void}
-     *
-     * @private
-     */
+   * Query a particular peer for the value for the given key.
+   * It will either return the value or a list of closer peers.
+   *
+   * Note: The peerbook is updated with new addresses found for the given peer.
+   *
+   * @param {PeerId} peer
+   * @param {Buffer} key
+   * @param {function(Error, Redcord, Array<PeerInfo>)} callback
+   * @returns {void}
+   *
+   * @private
+   */
 
     _getValueOrPeers(peer, key, callback) {
-        nodeify(this._getValueOrPeersAsync(peer, key), (err, result) => {
-            if (err) { return callback(err) };
+        promiseToCallback(this._getValueOrPeersAsync(peer, key))((err, result) => {
+            if (err) {
+                return callback(err); 
+            }
             callback(null, result.record, result.peers);
         });
     },
@@ -421,56 +424,56 @@ module.exports = (dht) => ({
     },
 
     /**
-     * Get a value via rpc call for the given parameters.
-     *
-     * @param {PeerId} peer
-     * @param {Buffer} key
-     * @param {function(Error, Message)} callback
-     * @returns {void}
-     *
-     * @private
-     */
+   * Get a value via rpc call for the given parameters.
+   *
+   * @param {PeerId} peer
+   * @param {Buffer} key
+   * @param {function(Error, Message)} callback
+   * @returns {void}
+   *
+   * @private
+   */
 
     _getValueSingle(peer, key, callback) {
-        nodeify(this._getValueSingleAsync(peer, key), callback);
+        promiseToCallback(this._getValueSingleAsync(peer, key))(callback);
     },
 
-    async _getValueSingleAsync(peer, key) {
+    async _getValueSingleAsync(peer, key) { // eslint-disable-line require-await
         const msg = new Message(Message.TYPES.GET_VALUE, key, 0);
         return promisify((cb) => dht.network.sendRequest(peer, msg, cb))();
     },
 
     /**
-     * Verify a record, fetching missing public keys from the network.
-     * Calls back with an error if the record is invalid.
-     *
-     * @param {Record} record
-     * @param {function(Error)} callback
-     * @returns {void}
-     *
-     * @private
-     */
+   * Verify a record, fetching missing public keys from the network.
+   * Calls back with an error if the record is invalid.
+   *
+   * @param {Record} record
+   * @param {function(Error)} callback
+   * @returns {void}
+   *
+   * @private
+   */
 
     _verifyRecordOnline(record, callback) {
-        nodeify(this._verifyRecordOnlineAsync(record), (err) => callback(err));
+        promiseToCallback(this._verifyRecordOnlineAsync(record))((err) => callback(err));
     },
 
     async _verifyRecordOnlineAsync(record) {
-        await promisify((cb) => validator.verifyRecord(dht.validators, record, cb))();
+        await promisify((cb) => libp2pRecord.validator.verifyRecord(dht.validators, record, cb))();
     },
 
     /**
-     * Get the public key directly from a node.
-     *
-     * @param {PeerId} peer
-     * @param {function(Error, PublicKey)} callback
-     * @returns {void}
-     *
-     * @private
-     */
+   * Get the public key directly from a node.
+   *
+   * @param {PeerId} peer
+   * @param {function(Error, PublicKey)} callback
+   * @returns {void}
+   *
+   * @private
+   */
 
     _getPublicKeyFromNode(peer, callback) {
-        nodeify(this._getPublicKeyFromNodeAsync(peer), callback);
+        promiseToCallback(this._getPublicKeyFromNodeAsync(peer))(callback);
     },
 
     async _getPublicKeyFromNodeAsync(peer) {
@@ -493,18 +496,18 @@ module.exports = (dht) => ({
     },
 
     /**
-     * Search the dht for up to `n` providers of the given CID.
-     *
-     * @param {CID} key
-     * @param {number} providerTimeout - How long the query should maximally run in milliseconds.
-     * @param {number} n
-     * @param {function(Error, Array<PeerInfo>)} callback
-     * @returns {void}
-     *
-     * @private
-     */
+   * Search the dht for up to `n` providers of the given CID.
+   *
+   * @param {CID} key
+   * @param {number} providerTimeout - How long the query should maximally run in milliseconds.
+   * @param {number} n
+   * @param {function(Error, Array<PeerInfo>)} callback
+   * @returns {void}
+   *
+   * @private
+   */
     _findNProviders(key, providerTimeout, n, callback) {
-        nodeify(this._findNProvidersAsync(key, providerTimeout, n), callback);
+        promiseToCallback(this._findNProvidersAsync(key, providerTimeout, n))(callback);
     },
 
     async _findNProvidersAsync(key, providerTimeout, n) {
@@ -559,10 +562,10 @@ module.exports = (dht) => ({
 
         try {
             await promisify((callback) => timeout((cb) => {
-                nodeify(query.run(peers), cb);
+                promiseToCallback(query.run(peers))(cb);
             }, providerTimeout)(callback))();
         } catch (err) {
-            if (err.code !== "ETIMEDOUT" || out.length === 0) {
+            if (err.code !== "ETIMEDOUT") {
                 throw err;
             }
         } finally {
@@ -576,24 +579,28 @@ module.exports = (dht) => ({
             });
         });
 
+        if (out.length === 0) {
+            throw errcode(new Error("no providers found"), "ERR_NOT_FOUND");
+        }
+
         return out.toArray();
     },
 
     /**
-     * Check for providers from a single node.
-     *
-     * @param {PeerId} peer
-     * @param {CID} key
-     * @param {function(Error, Message)} callback
-     * @returns {void}
-     *
-     * @private
-     */
+   * Check for providers from a single node.
+   *
+   * @param {PeerId} peer
+   * @param {CID} key
+   * @param {function(Error, Message)} callback
+   * @returns {void}
+   *
+   * @private
+   */
     _findProvidersSingle(peer, key, callback) {
-        nodeify(this._findProvidersSingleAsync(peer, key), callback);
+        promiseToCallback(this._findProvidersSingleAsync(peer, key))(callback);
     },
 
-    async _findProvidersSingleAsync(peer, key) {
+    async _findProvidersSingleAsync(peer, key) { // eslint-disable-line require-await
         const msg = new Message(Message.TYPES.GET_PROVIDERS, key.buffer, 0);
         return promisify((cb) => dht.network.sendRequest(peer, msg, cb))();
     }

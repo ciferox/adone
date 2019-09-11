@@ -37,6 +37,11 @@ const suite = function (options) {
     } else {
         require("./iterator_no_snapshot").all(testCommon);
     }
+
+    if (testCommon.clear) {
+        require("./clear").all(testCommon);
+        require("./clear_range").all(testCommon);
+    }
 };
 
 suite.common = common;

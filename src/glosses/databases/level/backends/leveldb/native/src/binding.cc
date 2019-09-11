@@ -250,12 +250,12 @@ struct BaseWorker {
               napi_value callback,
               const char* resourceName)
     : env_(env), database_(database), errMsg_(NULL) {
-    NAPI_STATUS_THROWS(napi_create_reference(env_, callback, 1, &callbackRef_));
+    NAPI_STATUS_THROWS_VOID(napi_create_reference(env_, callback, 1, &callbackRef_));
     napi_value asyncResourceName;
-    NAPI_STATUS_THROWS(napi_create_string_utf8(env_, resourceName,
+    NAPI_STATUS_THROWS_VOID(napi_create_string_utf8(env_, resourceName,
                                                NAPI_AUTO_LENGTH,
                                                &asyncResourceName));
-    NAPI_STATUS_THROWS(napi_create_async_work(env_, callback,
+    NAPI_STATUS_THROWS_VOID(napi_create_async_work(env_, callback,
                                               asyncResourceName,
                                               BaseWorker::Execute,
                                               BaseWorker::Complete,
@@ -689,6 +689,8 @@ struct Iterator {
 
   bool IteratorNext (std::vector<std::pair<std::string, std::string> >& result) {
     size_t size = 0;
+    uint32_t cacheSize = 0;
+
     while (true) {
       std::string key, value;
       bool ok = Read(key, value);
@@ -704,6 +706,9 @@ struct Iterator {
         size = size + key.size() + value.size();
         if (size > highWaterMark_) return true;
 
+        // Limit the size of the cache to prevent starving the event loop
+        // in JS-land while we're recursively calling process.nextTick().
+        if (++cacheSize >= 1000) return true;
       } else {
         return false;
       }
@@ -1784,7 +1789,7 @@ struct BatchWriteWorker final : public PriorityWorker {
       batch_(batch),
       sync_(sync) {
         // Prevent GC of batch object before we execute
-        NAPI_STATUS_THROWS(napi_create_reference(env_, context, 1, &contextRef_));
+        NAPI_STATUS_THROWS_VOID(napi_create_reference(env_, context, 1, &contextRef_));
       }
 
   ~BatchWriteWorker () {

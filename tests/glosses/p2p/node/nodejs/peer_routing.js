@@ -1,13 +1,22 @@
+/**
+ * eslint-env mocha
+ */
+/**
+ * eslint max-nested-callbacks: ["error", 8]
+ */
+
+
+
+const chai = require("chai");
+chai.use(require("dirty-chai"));
+const expect = chai.expect;
+const parallel = require("async/parallel");
+const _times = require("lodash.times");
+const DelegatedPeerRouter = require("libp2p-delegated-peer-routing");
 const sinon = require("sinon");
 const nock = require("nock");
 
-const createNode = require("../utils/create_node");
-
-const {
-    async: { parallel },
-    lodash: { times: _times },
-    p2p: { DelegatedPeerRouter }
-} = adone;
+const createNode = require("./utils/create-node");
 
 describe(".peerRouting", () => {
     describe("via the dht", () => {
@@ -74,7 +83,7 @@ describe(".peerRouting", () => {
                     (cb) => nodeC.dial(nodeE.peerInfo.id, cb)
                 ], (err) => {
                     if (err) {
-                        throw err;
+                        throw err; 
                     }
                     expect(err).to.not.exist();
                     nodeB.peerRouting.findPeer(nodeE.peerInfo.id, (err, peerInfo) => {

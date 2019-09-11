@@ -1,7 +1,7 @@
 adone.lazify({
     interface: "./interface",
     backend: "./backends",
-    KeyTransformDatastore: "./core/key_transform",
+    KeyTransformDatastore: "./core/keytransform",
     ShardingDatastore: "./core/sharding",
     MountDatastore: "./core/mount",
     TieredDatastore: "./core/tiered",

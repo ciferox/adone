@@ -1,47 +1,41 @@
 const {
-    async: { setImmediate },
     is,
     multiformat: { multihashingAsync }
 } = adone;
+
+const errcode = require("err-code");
 
 /**
  * Validator for publick key records.
  * Verifies that the passed in record value is the PublicKey
  * that matches the passed in key.
+ * If validation fails the returned Promise will reject with the error.
  *
  * @param {Buffer} key - A valid key is of the form `'/pk/<keymultihash>'`
  * @param {Buffer} publicKey - The public key to validate against (protobuf encoded).
- * @param {function(Error)} callback
- * @returns {undefined}
+ * @returns {Promise}
  */
-const validatePublicKeyRecord = async (key, publicKey, callback) => {
-    const done = (err) => setImmediate(() => callback(err));
-
+const validatePublicKeyRecord = async (key, publicKey) => {
     if (!is.buffer(key)) {
-        return done(new Error('"key" must be a Buffer'));
+        throw errcode('"key" must be a Buffer', "ERR_INVALID_RECORD_KEY_NOT_BUFFER");
     }
 
-    if (key.length < 3) {
-        return done(new Error("invalid public key record"));
+    if (key.length < 5) {
+        throw errcode("invalid public key record", "ERR_INVALID_RECORD_KEY_TOO_SHORT");
     }
 
     const prefix = key.slice(0, 4).toString();
 
     if (prefix !== "/pk/") {
-        return done(new Error("key was not prefixed with /pk/"));
+        throw errcode("key was not prefixed with /pk/", "ERR_INVALID_RECORD_KEY_BAD_PREFIX");
     }
 
     const keyhash = key.slice(4);
 
-    try {
-        const publicKeyHash = await multihashingAsync(publicKey, "sha2-256");
-        if (!keyhash.equals(publicKeyHash)) {
-            return done(new Error("public key does not match passed in key"));
-        }
+    const publicKeyHash = await multihashingAsync(publicKey, "sha2-256");
 
-        done();
-    } catch (err) {
-        done(err);
+    if (!keyhash.equals(publicKeyHash)) {
+        throw errcode("public key does not match passed in key", "ERR_INVALID_RECORD_HASH_MISMATCH");
     }
 };
 

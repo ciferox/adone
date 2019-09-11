@@ -17,9 +17,6 @@ const factory = () => {
     };
 };
 
-const fastFuture = global.setImmediate ? factory : () => process.nextTick;
-
-
 const native = adone.requireAddon(adone.path.join(__dirname, "native", "leveldb.node"));
 
 class Iterator extends AbstractIterator {
@@ -29,7 +26,6 @@ class Iterator extends AbstractIterator {
         this.context = native.iterator_init(db.context, options);
         this.cache = null;
         this.finished = false;
-        this.fastFuture = fastFuture();
     }
 
     _seek(target) {
@@ -43,20 +39,10 @@ class Iterator extends AbstractIterator {
     }
 
     _next(callback) {
-        let key;
-        let value;
-
         if (this.cache && this.cache.length) {
-            key = this.cache.pop();
-            value = this.cache.pop();
-
-            this.fastFuture(() => {
-                callback(null, key, value);
-            });
+            process.nextTick(callback, null, this.cache.pop(), this.cache.pop());
         } else if (this.finished) {
-            this.fastFuture(() => {
-                callback();
-            });
+            process.nextTick(callback);
         } else {
             native.iterator_next(this.context, (err, array, finished) => {
                 if (err) {

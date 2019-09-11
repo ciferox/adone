@@ -1,14 +1,16 @@
-describe("nodejs", () => {
-    require("./pnet");
-    require("./transports");
-    require("./stream_muxing");
-    require("./peer_discovery");
-    require("./peer_routing");
-    require("./ping");
-    require("./pubsub");
-    require("./content_routing");
-    require("./circuit_relay");
-    require("./multiaddr_trim");
-    require("./stats");
-    require("./dht");
-});
+require("./pnet");
+// require("./transports.node");
+// require("./stream-muxing.node");
+// require("./peer-discovery.node");
+// require("./peer-routing.node");
+// require("./ping.node");
+// require("./promisify.node");
+// require("./pubsub.node");
+// require("./content-routing.node");
+// require("./circuit-relay.node");
+// require("./multiaddr-trim.node");
+// require("./stats");
+// require("./dht.node");
+
+// require("./ping/node");
+// require("./switch/node");

@@ -14,7 +14,7 @@ const maybeError = function (db, callback) {
     }
 };
 
-// Possible AbstractBackend#status values:
+// Possible AbstractLevelDOWN#status values:
 //  - 'new'     - newly created, not opened or closed
 //  - 'opening' - waiting for the database to be opened, post open()
 //  - 'open'    - successfully opened the database, available for use
@@ -27,6 +27,8 @@ export default class DB extends event.Emitter {
         super();
 
         let error;
+
+        this.setMaxListeners(Infinity);
 
         if (is.function(options)) {
             callback = options;
@@ -47,24 +49,27 @@ export default class DB extends event.Emitter {
             throw new TypeError(".status required, old abstract backend");
         }
 
-        this.setMaxListeners(Infinity);
-
         this.options = getOptions(options);
         this._db = db;
         this.db = new Deferred(db);
-
-        // Call open() only if callback is specified.
-        if (is.function(callback)) {
-            this.open(callback);
-        }
+        this.open(callback);
     }
 
-    open(callback) {
+    open(opts, callback) {
         let promise;
+
+        if (is.function(opts)) {
+            callback = opts;
+            opts = null;
+        }
 
         if (!callback) {
             callback = promisify();
             promise = callback.promise;
+        }
+
+        if (!opts) {
+            opts = this.options;
         }
 
         if (this.isOpen()) {
@@ -81,7 +86,7 @@ export default class DB extends event.Emitter {
 
         this.emit("opening");
 
-        this.db.open(this.options, (err) => {
+        this.db.open(opts, (err) => {
             if (err) {
                 return callback(new DatabaseOpenException(err));
             }
@@ -270,6 +275,32 @@ export default class DB extends event.Emitter {
         return this.db.iterator(options);
     }
 
+    clear(options, callback) {
+        let promise;
+
+        callback = getCallback(options, callback);
+        options = getOptions(options);
+
+        if (!callback) {
+            callback = promisify();
+            promise = callback.promise;
+        }
+
+        if (maybeError(this, callback)) {
+            return promise;
+        }
+
+        this.db.clear(options, (err) => {
+            if (err) {
+                return callback(new DatabaseWriteException(err));
+            }
+            this.emit("clear", options);
+            callback();
+        });
+
+        return promise;
+    }
+
     createReadStream(options) {
         options = Object.assign({ keys: true, values: true }, options);
         if (!is.number(options.limit)) {
@@ -284,5 +315,9 @@ export default class DB extends event.Emitter {
 
     createValueStream(options) {
         return this.createReadStream(Object.assign({}, options, { keys: false, values: true }));
+    }
+
+    toString() {
+        return "Level";
     }
 }

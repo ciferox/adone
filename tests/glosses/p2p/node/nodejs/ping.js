@@ -1,9 +1,15 @@
-const createNode = require("../utils/create_node.js");
-const echo = require("../utils/echo");
+/**
+ * eslint-env mocha
+ */
 
-const {
-    async: { parallel }
-} = adone;
+
+const chai = require("chai");
+chai.use(require("dirty-chai"));
+const expect = chai.expect;
+const parallel = require("async/parallel");
+
+const createNode = require("./utils/create-node.js");
+const echo = require("./utils/echo");
 
 describe("ping", () => {
     let nodeA;

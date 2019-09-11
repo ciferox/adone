@@ -1,6 +1,6 @@
-const {
-    multiformat: { multihash }
-} = adone;
+
+
+const mh = require("multihashes");
 
 const utils = require("../utils");
 const Run = require("./run");
@@ -38,7 +38,7 @@ class Query {
         this.dht = dht;
         this.key = key;
         this.makePath = makePath;
-        this._log = utils.logger(this.dht.peerInfo.id, `query:${multihash.toB58String(key)}`);
+        this._log = utils.logger(this.dht.peerInfo.id, `query:${mh.toB58String(key)}`);
 
         this.running = false;
 
@@ -52,7 +52,7 @@ class Query {
      * @param {Array<PeerId>} peers
      * @returns {Promise}
      */
-    async run(peers) {
+    async run(peers) { // eslint-disable-line require-await
         if (!this.dht._queryManager.running) {
             this._log.error("Attempt to run query after shutdown");
             return { finalSet: new Set(), paths: [] };
@@ -87,7 +87,7 @@ class Query {
      * Called when the run completes (even if there's an error).
      */
     _onComplete() {
-        // Ensure worker queues for all paths are stopped at the end of the query
+    // Ensure worker queues for all paths are stopped at the end of the query
         this.stop();
     }
 

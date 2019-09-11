@@ -1,13 +1,8 @@
 const {
-    async: { each, whilst },
-    is,
     datastore: { interface: { error } }
 } = adone;
 
-/**
- * ::
- * import type {Key, Datastore, Callback, Batch, Query, QueryResult} from 'interface-datastore'
- */
+// const log = require("debug")("datastore:core:tiered");
 
 /**
  * A datastore that can combine multiple stores. Puts and deletes
@@ -16,112 +11,86 @@ const {
  * last one first.
  *
  */
-class TieredDatastore /* :: <Value> */ {
-    /**
-     * :: stores: Array<Datastore<Value>>
-     */
-
-    constructor(stores /* : Array<Datastore<Value>> */) {
+export default class TieredDatastore {
+    constructor(stores) {
         this.stores = stores.slice();
     }
 
-    open(callback /* : Callback<void> */) /* : void */ {
-        each(this.stores, (store, cb) => {
-            store.open(cb);
-        }, (err) => {
-            if (err) {
-                return callback(error.dbOpenFailedError());
-            }
-            callback();
-        });
+    async open() {
+        try {
+            await (this.stores.map((store) => store.open()));
+        } catch (err) {
+            throw error.dbOpenFailedError();
+        }
     }
 
-    put(key /* : Key */, value /* : Value */, callback /* : Callback<void> */) /* : void */ {
-        each(this.stores, (store, cb) => {
-            store.put(key, value, cb);
-        }, (err) => {
-            if (err) {
-                return callback(error.dbWriteFailedError());
-            }
-            callback();
-        });
+    async put(key, value) {
+        try {
+            await Promise.all(this.stores.map((store) => store.put(key, value)));
+        } catch (err) {
+            throw error.dbWriteFailedError();
+        }
     }
 
-    get(key /* : Key */, callback /* : Callback<Value> */) /* : void */ {
-        const storeLength = this.stores.length;
-        let done = false;
-        let i = 0;
-        whilst((cb) => cb(null, !done && i < storeLength), (cb) => {
-            const store = this.stores[i++];
-            store.get(key, (err, res) => {
-                if (is.nil(err)) {
-                    done = true;
-                    return cb(null, res);
+    async get(key) {
+        for (const store of this.stores) {
+            try {
+                const res = await store.get(key);
+                if (res) {
+                    return res;
                 }
-                cb();
-            });
-        }, (err, res) => {
-            if (err || !res) {
-                return callback(error.notFoundError());
+            } catch (err) {
+                // log(err);
             }
-            callback(null, res);
-        });
+        }
+        throw error.notFoundError();
     }
 
-    has(key /* : Key */, callback /* : Callback<bool> */) /* : void */ {
-        const storeLength = this.stores.length;
-        let done = false;
-        let i = 0;
-        whilst((cb) => cb(null, !done && i < storeLength), (cb) => {
-            const store = this.stores[i++];
-            store.has(key, (err, exists) => {
-                if (is.nil(err)) {
-                    done = true;
-                    return cb(null, exists);
+    has(key) {
+        return new Promise(async (resolve) => {
+            await Promise.all(this.stores.map(async (store) => {
+                const has = await store.has(key);
+
+                if (has) {
+                    resolve(true);
                 }
-                cb();
-            });
-        }, callback);
-    }
+            }));
 
-    delete(key /* : Key */, callback /* : Callback<void> */) /* : void */ {
-        each(this.stores, (store, cb) => {
-            store.delete(key, cb);
-        }, (err) => {
-            if (err) {
-                return callback(error.dbDeleteFailedError());
-            }
-            callback();
+            resolve(false);
         });
     }
 
-    close(callback /* : Callback<void> */) /* : void */ {
-        each(this.stores, (store, cb) => {
-            store.close(cb);
-        }, callback);
+    async delete(key) {
+        try {
+            await Promise.all(this.stores.map((store) => store.delete(key)));
+        } catch (err) {
+            throw error.dbDeleteFailedError();
+        }
     }
 
-    batch() /* : Batch<Value> */ {
+    async close() {
+        await Promise.all(this.stores.map((store) => store.close()));
+    }
+
+    batch() {
         const batches = this.stores.map((store) => store.batch());
 
         return {
-            put: (key /* : Key */, value /* : Value */) /* : void */ => {
+            put: (key, value) => {
                 batches.forEach((b) => b.put(key, value));
             },
-            delete: (key /* : Key */) /* : void */ => {
+            delete: (key) => {
                 batches.forEach((b) => b.delete(key));
             },
-            commit: (callback /* : Callback<void> */) /* : void */ => {
-                each(batches, (b, cb) => {
-                    b.commit(cb);
-                }, callback);
+            commit: async () => {
+                for (const batch of batches) {
+                    await batch.commit();
+                }
             }
         };
     }
 
-    query(q /* : Query<Value> */) /* : QueryResult<Value> */ {
+    query(q) {
         return this.stores[this.stores.length - 1].query(q);
     }
 }
-
-module.exports = TieredDatastore;

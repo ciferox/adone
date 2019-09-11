@@ -1,8 +1,14 @@
-const createNode = require("../utils/create_node");
+/**
+ * eslint-env mocha
+ */
 
-const {
-    async: { series }
-} = adone;
+
+const chai = require("chai");
+chai.use(require("dirty-chai"));
+const expect = chai.expect;
+const series = require("async/series");
+
+const createNode = require("./utils/create-node");
 
 describe("multiaddr trim", () => {
     it("non used multiaddrs get trimmed", (done) => {

@@ -1,5 +1,6 @@
-const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", ...args);
-const { sortClosestPeers } = require(srcPath("utils"));
+
+
+const { sortClosestPeers } = require("../../src/utils");
 
 /**
  * Like `sortClosestPeers`, expect it takes and returns `PeerInfo`s
@@ -11,8 +12,8 @@ const { sortClosestPeers } = require(srcPath("utils"));
  */
 exports.sortClosestPeerInfos = (peers, target, callback) => {
     sortClosestPeers(peers.map((peerInfo) => peerInfo.id), target, (err, sortedPeerIds) => {
-        if (err) { 
-            return callback(err);
+        if (err) {
+            return callback(err); 
         }
 
         const sortedPeerInfos = sortedPeerIds.map((peerId) => {

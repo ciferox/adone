@@ -1,4 +1,4 @@
-const async = require("async");
+const each = require("async-each");
 const common = require("./common");
 
 const {
@@ -151,7 +151,7 @@ describe("Binary API", () => {
                 { type: "put", key: "baz", value: "abazvalue" }
             ], { keyEncoding: "utf8", valueEncoding: "binary" }, (err) => {
                 assert.notExists(err);
-                async.forEach(["foo", "bar", "baz"], (key, callback) => {
+                each(["foo", "bar", "baz"], (key, callback) => {
                     db.get(key, { valueEncoding: "binary" }, (err, value) => {
                         assert.notExists(err);
                         if (key === "baz") {

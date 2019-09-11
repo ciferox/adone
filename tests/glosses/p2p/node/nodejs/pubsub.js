@@ -1,28 +1,45 @@
-const createNode = require("../utils/create_node");
-
-const {
-    async: { parallel, series },
-    lodash: { times: _times }
-} = adone;
-
-const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "node", ...args);
-const { codes } = require(srcPath("errors"));
+/**
+ * eslint-env mocha
+ */
+/**
+ * eslint max-nested-callbacks: ["error", 8]
+ */
 
 
-const startTwo = function (callback) {
+
+const chai = require("chai");
+chai.use(require("dirty-chai"));
+chai.use(require("chai-checkmark"));
+const expect = chai.expect;
+const parallel = require("async/parallel");
+const series = require("async/series");
+const _times = require("lodash.times");
+
+const Floodsub = require("libp2p-floodsub");
+const mergeOptions = require("merge-options");
+
+const { codes } = require("../src/errors");
+const createNode = require("./utils/create-node");
+
+function startTwo(options, callback) {
+    if (is.function(options)) {
+        callback = options;
+        options = {};
+    }
+
     const tasks = _times(2, () => (cb) => {
-        createNode("/ip4/0.0.0.0/tcp/0", {
+        createNode("/ip4/0.0.0.0/tcp/0", mergeOptions({
             config: {
                 peerDiscovery: {
                     mdns: {
                         enabled: false
                     }
                 },
-                EXPERIMENTAL: {
-                    pubsub: true
+                pubsub: {
+                    enabled: true
                 }
             }
-        }, (err, node) => {
+        }, options), (err, node) => {
             expect(err).to.not.exist();
             node.start((err) => cb(err, node));
         });
@@ -33,31 +50,26 @@ const startTwo = function (callback) {
 
         nodes[0].dial(nodes[1].peerInfo, (err) => callback(err, nodes));
     });
-};
+}
 
-const stopTwo = function (nodes, callback) {
+function stopTwo(nodes, callback) {
     parallel([
         (cb) => nodes[0].stop(cb),
         (cb) => nodes[1].stop(cb)
     ], callback);
-};
+}
 
-// There is a vast test suite on PubSub through js-ipfs
-// https://github.com/ipfs/interface-ipfs-core/blob/master/js/src/pubsub.js
-// and libp2p-floodsub itself
-// https://github.com/libp2p/js-libp2p-floodsub/tree/master/test
-// TODO: consider if all or some of those should come here
 describe(".pubsub", () => {
-    describe(".pubsub on (default)", (done) => {
+    describe(".pubsub on (default)", () => {
         it("start two nodes and send one message, then unsubscribe", (done) => {
             // Check the final series error, and the publish handler
             expect(2).checks(done);
 
             let nodes;
-            const data = Buffer.from("test");
+            const data = "test";
             const handler = (msg) => {
                 // verify the data is correct and mark the expect
-                expect(msg.data).to.eql(data).mark();
+                expect(msg.data.toString()).to.eql(data).mark();
             };
 
             series([
@@ -67,15 +79,11 @@ describe(".pubsub", () => {
                     cb(err);
                 }),
                 // subscribe on the first
-                (cb) => nodes[0].pubsub.subscribe("pubsub", handler, cb),
+                (cb) => nodes[0].pubsub.subscribe("pubsub", handler, null, cb),
                 // Wait a moment before publishing
                 (cb) => setTimeout(cb, 500),
                 // publish on the second
                 (cb) => nodes[1].pubsub.publish("pubsub", data, cb),
-                // ls subscripts
-                (cb) => nodes[1].pubsub.ls(cb),
-                // get subscribed peers
-                (cb) => nodes[1].pubsub.peers("pubsub", cb),
                 // Wait a moment before unsubscribing
                 (cb) => setTimeout(cb, 500),
                 // unsubscribe on the first
@@ -105,6 +113,85 @@ describe(".pubsub", () => {
                     cb(err);
                 }),
                 // subscribe on the first
+                (cb) => nodes[0].pubsub.subscribe("pubsub", handler, {}, cb),
+                // Wait a moment before publishing
+                (cb) => setTimeout(cb, 500),
+                // publish on the second
+                (cb) => nodes[1].pubsub.publish("pubsub", data, cb),
+                // ls subscripts
+                (cb) => nodes[1].pubsub.ls(cb),
+                // get subscribed peers
+                (cb) => nodes[1].pubsub.peers("pubsub", cb),
+                // Wait a moment before unsubscribing
+                (cb) => setTimeout(cb, 500),
+                // unsubscribe from all
+                (cb) => nodes[0].pubsub.unsubscribe("pubsub", null, cb),
+                // Verify unsubscribed
+                (cb) => {
+                    nodes[0].pubsub.ls((err, topics) => {
+                        expect(topics.length).to.eql(0).mark();
+                        cb(err);
+                    });
+                },
+                // Stop both nodes
+                (cb) => stopTwo(nodes, cb)
+            ], (err) => {
+                // Verify there was no error, and mark the expect
+                expect(err).to.not.exist().mark();
+            });
+        });
+        it("publish should fail if data is not a buffer nor a string", (done) => {
+            createNode("/ip4/0.0.0.0/tcp/0", {
+                config: {
+                    peerDiscovery: {
+                        mdns: {
+                            enabled: false
+                        }
+                    },
+                    pubsub: {
+                        enabled: true
+                    }
+                }
+            }, (err, node) => {
+                expect(err).to.not.exist();
+
+                node.start((err) => {
+                    expect(err).to.not.exist();
+
+                    node.pubsub.publish("pubsub", 10, (err) => {
+                        expect(err).to.exist();
+                        expect(err.code).to.equal("ERR_DATA_IS_NOT_VALID");
+
+                        done();
+                    });
+                });
+            });
+        });
+    });
+
+    describe(".pubsub on using floodsub", () => {
+        it("start two nodes and send one message, then unsubscribe", (done) => {
+            // Check the final series error, and the publish handler
+            expect(2).checks(done);
+
+            let nodes;
+            const data = Buffer.from("test");
+            const handler = (msg) => {
+                // verify the data is correct and mark the expect
+                expect(msg.data).to.eql(data).mark();
+            };
+
+            series([
+                // Start the nodes
+                (cb) => startTwo({
+                    modules: {
+                        pubsub: Floodsub
+                    }
+                }, (err, _nodes) => {
+                    nodes = _nodes;
+                    cb(err);
+                }),
+                // subscribe on the first
                 (cb) => nodes[0].pubsub.subscribe("pubsub", handler, cb),
                 // Wait a moment before publishing
                 (cb) => setTimeout(cb, 500),
@@ -113,11 +200,45 @@ describe(".pubsub", () => {
                 // Wait a moment before unsubscribing
                 (cb) => setTimeout(cb, 500),
                 // unsubscribe on the first
-                (cb) => {
-                    nodes[0].pubsub.unsubscribe("pubsub");
-                    // Wait a moment to make sure the ubsubscribe-from-all worked
-                    setTimeout(cb, 500);
-                },
+                (cb) => nodes[0].pubsub.unsubscribe("pubsub", handler, cb),
+                // Stop both nodes
+                (cb) => stopTwo(nodes, cb)
+            ], (err) => {
+                // Verify there was no error, and mark the expect
+                expect(err).to.not.exist().mark();
+            });
+        });
+        it("start two nodes and send one message, then unsubscribe without handler", (done) => {
+            // Check the final series error, and the publish handler
+            expect(3).checks(done);
+
+            let nodes;
+            const data = Buffer.from("test");
+            const handler = (msg) => {
+                // verify the data is correct and mark the expect
+                expect(msg.data).to.eql(data).mark();
+            };
+
+            series([
+                // Start the nodes
+                (cb) => startTwo({
+                    modules: {
+                        pubsub: Floodsub
+                    }
+                }, (err, _nodes) => {
+                    nodes = _nodes;
+                    cb(err);
+                }),
+                // subscribe on the first
+                (cb) => nodes[0].pubsub.subscribe("pubsub", handler, cb),
+                // Wait a moment before publishing
+                (cb) => setTimeout(cb, 500),
+                // publish on the second
+                (cb) => nodes[1].pubsub.publish("pubsub", data, cb),
+                // Wait a moment before unsubscribing
+                (cb) => setTimeout(cb, 500),
+                // unsubscribe from all
+                (cb) => nodes[0].pubsub.unsubscribe("pubsub", null, cb),
                 // Verify unsubscribed
                 (cb) => {
                     nodes[0].pubsub.ls((err, topics) => {
@@ -140,9 +261,12 @@ describe(".pubsub", () => {
                             enabled: false
                         }
                     },
-                    EXPERIMENTAL: {
-                        pubsub: true
+                    pubsub: {
+                        enabled: true
                     }
+                },
+                modules: {
+                    pubsub: Floodsub
                 }
             }, (err, node) => {
                 expect(err).to.not.exist();
@@ -150,9 +274,9 @@ describe(".pubsub", () => {
                 node.start((err) => {
                     expect(err).to.not.exist();
 
-                    node.pubsub.publish("pubsub", "datastr", (err) => {
+                    node.pubsub.publish("pubsub", 10, (err) => {
                         expect(err).to.exist();
-                        expect(err.code).to.equal("ERR_DATA_IS_NOT_A_BUFFER");
+                        expect(err.code).to.equal("ERR_DATA_IS_NOT_VALID");
 
                         done();
                     });
@@ -169,9 +293,6 @@ describe(".pubsub", () => {
                         mdns: {
                             enabled: false
                         }
-                    },
-                    EXPERIMENTAL: {
-                        pubsub: false
                     }
                 }
             }, (err, node) => {
@@ -193,8 +314,8 @@ describe(".pubsub", () => {
                             enabled: false
                         }
                     },
-                    EXPERIMENTAL: {
-                        pubsub: true
+                    pubsub: {
+                        enabled: true
                     }
                 }
             }, (err, node) => {
@@ -247,6 +368,72 @@ describe(".pubsub", () => {
                 expect(err.code).to.equal(codes.PUBSUB_NOT_STARTED);
 
                 done();
+            });
+        });
+    });
+
+    describe(".pubsub config", () => {
+        it("toggle all pubsub options off (except enabled)", (done) => {
+            expect(3).checks(done);
+
+            class PubSubSpy {
+                constructor(node, config) {
+                    expect(config).to.be.eql({
+                        enabled: true,
+                        emitSelf: false,
+                        signMessages: false,
+                        strictSigning: false
+                    }).mark();
+                }
+            }
+
+            createNode("/ip4/0.0.0.0/tcp/0", {
+                modules: {
+                    pubsub: PubSubSpy
+                },
+                config: {
+                    pubsub: {
+                        enabled: true,
+                        emitSelf: false,
+                        signMessages: false,
+                        strictSigning: false
+                    }
+                }
+            }, (err, node) => {
+                expect(err).to.not.exist().mark();
+                expect(node).to.exist().mark();
+            });
+        });
+
+        it("toggle all pubsub options on", (done) => {
+            expect(3).checks(done);
+
+            class PubSubSpy {
+                constructor(node, config) {
+                    expect(config).to.be.eql({
+                        enabled: true,
+                        emitSelf: true,
+                        signMessages: true,
+                        strictSigning: true
+                    }).mark();
+                }
+            }
+
+            createNode("/ip4/0.0.0.0/tcp/0", {
+                modules: {
+                    pubsub: PubSubSpy
+                },
+                config: {
+                    pubsub: {
+                        enabled: true,
+                        emitSelf: true,
+                        signMessages: true,
+                        strictSigning: true
+                    }
+                }
+            }, (err, node) => {
+                expect(err).to.not.exist().mark();
+                expect(node).to.exist().mark();
             });
         });
     });

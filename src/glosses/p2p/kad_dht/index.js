@@ -1,12 +1,17 @@
 const {
-    assert,
-    async: { waterfall, each, filter, timeout },
-    is,
-    datastore: { backend: { MemoryDatastore } },
-    event: { Emitter },
-    p2p: { crypto, PeerId, PeerInfo, record },
-    promise: { nodeify }
+    p2p: { record: libp2pRecord }
 } = adone;
+
+const { EventEmitter } = require("events");
+const MemoryStore = require("interface-datastore").MemoryDatastore;
+const waterfall = require("async/waterfall");
+const each = require("async/each");
+const filter = require("async/filter");
+const timeout = require("async/timeout");
+const PeerId = require("peer-id");
+const PeerInfo = require("peer-info");
+const crypto = require("libp2p-crypto");
+const promiseToCallback = require("promise-to-callback");
 
 const errcode = require("err-code");
 
@@ -20,21 +25,22 @@ const Providers = require("./providers");
 const Message = require("./message");
 const RandomWalk = require("./random-walk");
 const QueryManager = require("./query-manager");
+const assert = require("assert");
 
 /**
  * A DHT implementation modeled after Kademlia with S/Kademlia modifications.
  *
  * Original implementation in go: https://github.com/libp2p/go-libp2p-kad-dht.
  */
-class KadDHT extends Emitter {
+class KadDHT extends EventEmitter {
     /**
      * Random walk options
      *
      * @typedef {Object} randomWalkOptions
      * @property {boolean} enabled discovery enabled (default: true)
-     * @property {number} queriesPerPeriod how many queries to run per period (default: 1)
-     * @property {number} interval how often to run the the random-walk process, in milliseconds (default: 300000)
-     * @property {number} timeout how long to wait for the the random-walk query to run, in milliseconds (default: 30000)
+     * @property {number} queriesPerPeriod how many queries to run per period (default: 1)recordrecordrecordrecordrecord
+     * @property {number} interval how often to run the the random-walk process, in milliseconds (default: 300000)record
+     * @property {number} timeout how long to wait for the the random-walk query to run, in milliseconds (default: 30000)record
      * @property {number} delay how long to wait before starting the first random walk, in milliseconds (default: 10000)
      */
 
@@ -96,7 +102,7 @@ class KadDHT extends Emitter {
          *
          * @type {Datastore}
          */
-        this.datastore = options.datastore || new MemoryDatastore();
+        this.datastore = options.datastore || new MemoryStore();
 
         /**
          * Provider management
@@ -106,12 +112,12 @@ class KadDHT extends Emitter {
         this.providers = new Providers(this.datastore, this.peerInfo.id);
 
         this.validators = {
-            pk: record.validator.validators.pk,
+            pk: libp2pRecord.validator.validators.pk,
             ...options.validators
         };
 
         this.selectors = {
-            pk: record.selection.selectors.pk,
+            pk: libp2pRecord.selection.selectors.pk,
             ...options.selectors
         };
 
@@ -380,7 +386,7 @@ class KadDHT extends Emitter {
 
                     // run our query
                     timeout((_cb) => {
-                        nodeify(query.run(rtp), _cb);
+                        promiseToCallback(query.run(rtp))(_cb);
                     }, options.timeout)((err, res) => {
                         query.stop();
                         cb(err, res);
@@ -438,7 +444,7 @@ class KadDHT extends Emitter {
                 };
             });
 
-            nodeify(q.run(tablePeers), (err, res) => {
+            promiseToCallback(q.run(tablePeers))((err, res) => {
                 if (err) {
                     return callback(err);
                 }
@@ -537,7 +543,7 @@ class KadDHT extends Emitter {
         const errors = [];
         waterfall([
             // TODO: refactor this in method in async and remove this wrapper
-            (cb) => nodeify(this.providers.addProvider(key, this.peerInfo.id), (err) => cb(err)),
+            (cb) => promiseToCallback(this.providers.addProvider(key, this.peerInfo.id))((err) => cb(err)),
             (cb) => this.getClosestPeers(key.buffer, cb),
             (peers, cb) => {
                 const msg = new Message(Message.TYPES.ADD_PROVIDER, key.buffer, 0);
@@ -672,7 +678,7 @@ class KadDHT extends Emitter {
                     });
 
                     timeout((_cb) => {
-                        nodeify(query.run(peers), _cb);
+                        promiseToCallback(query.run(peers))(_cb);
                     }, options.timeout)((err, res) => {
                         query.stop();
                         cb(err, res);

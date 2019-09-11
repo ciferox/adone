@@ -38,6 +38,11 @@ class Iterator extends AbstractIterator {
         });
     }
 
+    _seek(key) {
+        key = this.codec.encodeKey(key, this.opts);
+        this.it.seek(key);
+    }
+
     _end(cb) {
         this.it.end(cb);
     }
@@ -149,6 +154,11 @@ export default class EncodingBackend extends AbstractBackend {
         opts.keyAsBuffer = this.codec.keyAsBuffer(opts);
         opts.valueAsBuffer = this.codec.valueAsBuffer(opts);
         return new Iterator(this, opts);
+    }
+
+    _clear(opts, callback) {
+        opts = this.codec.encodeLtgt(opts);
+        this.db.clear(opts, callback);
     }
 
     approximateSize(start, end, opts, cb) {

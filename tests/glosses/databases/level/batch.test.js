@@ -1,4 +1,5 @@
-const async = require("async");
+const each = require("async-each");
+const series = require("run-series");
 const common = require("./common");
 
 describe("batch()", () => {
@@ -18,7 +19,7 @@ describe("batch()", () => {
                 { type: "put", key: "baz", value: "abazvalue" }
             ], (err) => {
                 assert.notExists(err);
-                async.forEach(["foo", "bar", "baz"], (key, callback) => {
+                each(["foo", "bar", "baz"], (key, callback) => {
                     db.get(key, (err, value) => {
                         assert.notExists(err);
                         assert.equal(value, `a${key}value`);
@@ -37,7 +38,7 @@ describe("batch()", () => {
                 { type: "put", key: "baz", value: "abazvalue" }
             ])
                 .then(() => {
-                    async.forEach(["foo", "bar", "baz"], (key, callback) => {
+                    each(["foo", "bar", "baz"], (key, callback) => {
                         db.get(key, (err, value) => {
                             assert.notExists(err);
                             assert.equal(value, `a${key}value`);
@@ -51,7 +52,7 @@ describe("batch()", () => {
 
     it("batch() with multiple puts and deletes", (done) => {
         common.openTestDatabase((db) => {
-            async.series([
+            series([
                 function (callback) {
                     db.batch([
                         { type: "put", key: "1", value: "one" },
@@ -70,7 +71,7 @@ describe("batch()", () => {
                 },
                 function (callback) {
                     // these should exist
-                    async.forEach(["2", "3", "bar", "baz"], (key, callback) => {
+                    each(["2", "3", "bar", "baz"], (key, callback) => {
                         db.get(key, (err, value) => {
                             assert.notExists(err);
                             assert.isNotNull(value);
@@ -80,7 +81,7 @@ describe("batch()", () => {
                 },
                 function (callback) {
                     // these shouldn't exist
-                    async.forEach(["1", "foo"], (key, callback) => {
+                    each(["1", "foo"], (key, callback) => {
                         db.get(key, (err, value) => {
                             assert(err);
                             assert.instanceOf(err, adone.error.NotFoundException);
@@ -110,7 +111,7 @@ describe("batch()", () => {
                     .write((err) => {
                         assert.notExists(err);
 
-                        async.forEach(["one", "three", "1", "2", "3"], (key, callback) => {
+                        each(["one", "three", "1", "2", "3"], (key, callback) => {
                             db.get(key, (err) => {
                                 if (["one", "three", "1", "3"].indexOf(key) > -1) {
                                     assert(err);
@@ -176,7 +177,7 @@ describe("batch()", () => {
                     .del("3")
                     .write()
                     .then(() => {
-                        async.forEach(["one", "three", "1", "2", "3"], (key, callback) => {
+                        each(["one", "three", "1", "2", "3"], (key, callback) => {
                             db.get(key, (err) => {
                                 if (["one", "three", "1", "3"].indexOf(key) > -1) {
                                     assert(err);
@@ -214,7 +215,7 @@ describe("batch()", () => {
     it("batch() with can manipulate data from put()", (done) => {
         // checks encoding and whatnot
         common.openTestDatabase((db) => {
-            async.series(
+            series(
                 [
                     db.put.bind(db, "1", "one"),
                     db.put.bind(db, "2", "two"),
@@ -230,7 +231,7 @@ describe("batch()", () => {
                     },
                     function (callback) {
                         // these should exist
-                        async.forEach(["2", "3", "bar", "baz"], (key, callback) => {
+                        each(["2", "3", "bar", "baz"], (key, callback) => {
                             db.get(key, (err, value) => {
                                 assert.notExists(err);
                                 assert.isNotNull(value);
@@ -240,7 +241,7 @@ describe("batch()", () => {
                     },
                     function (callback) {
                         // these shouldn't exist
-                        async.forEach(["1", "foo"], (key, callback) => {
+                        each(["1", "foo"], (key, callback) => {
                             db.get(key, (err, value) => {
                                 assert(err);
                                 assert.instanceOf(err, adone.error.NotFoundException);
@@ -255,7 +256,7 @@ describe("batch()", () => {
 
     it("batch() data can be read with get() and del()", (done) => {
         common.openTestDatabase((db) => {
-            async.series([
+            series([
                 function (callback) {
                     db.batch([
                         { type: "put", key: "1", value: "one" },
@@ -266,7 +267,7 @@ describe("batch()", () => {
                 db.del.bind(db, "1", "one"),
                 function (callback) {
                     // these should exist
-                    async.forEach(["2", "3"], (key, callback) => {
+                    each(["2", "3"], (key, callback) => {
                         db.get(key, (err, value) => {
                             assert.notExists(err);
                             assert.isNotNull(value);

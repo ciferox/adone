@@ -1,36 +1,44 @@
-const createNode = require("../utils/create_node");
-const tryEcho = require("../utils/try_echo");
-const echo = require("../utils/echo");
+/**
+ * eslint-env mocha
+ */
 
-const {
-    async: { parallel, series },
-    p2p: { muxer: { spdy, mplex, pullMplex } }
-} = adone;
 
-const test = function (nodeA, nodeB, callback) {
+const chai = require("chai");
+chai.use(require("dirty-chai"));
+const expect = chai.expect;
+const parallel = require("async/parallel");
+const series = require("async/series");
+const pMplex = require("pull-mplex");
+const Mplex = require("libp2p-mplex");
+const SPDY = require("libp2p-spdy");
+const createNode = require("./utils/create-node");
+const tryEcho = require("./utils/try-echo");
+const echo = require("./utils/echo");
+
+function test(nodeA, nodeB, callback) {
     nodeA.dialProtocol(nodeB.peerInfo, "/echo/1.0.0", (err, conn) => {
         expect(err).to.not.exist();
         tryEcho(conn, callback);
     });
-};
+}
 
-const teardown = function (nodeA, nodeB, callback) {
+function teardown(nodeA, nodeB, callback) {
     parallel([
         (cb) => nodeA.stop(cb),
         (cb) => nodeB.stop(cb)
     ], callback);
-};
+}
 
 describe("stream muxing", () => {
     it("spdy only", (done) => {
         let nodeA;
         let nodeB;
 
-        const setup = function (callback) {
+        function setup(callback) {
             parallel([
                 (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
                     modules: {
-                        streamMuxer: [spdy]
+                        streamMuxer: [SPDY]
                     }
                 }, (err, node) => {
                     expect(err).to.not.exist();
@@ -40,7 +48,7 @@ describe("stream muxing", () => {
                 }),
                 (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
                     modules: {
-                        streamMuxer: [spdy]
+                        streamMuxer: [SPDY]
                     }
                 }, (err, node) => {
                     expect(err).to.not.exist();
@@ -49,7 +57,7 @@ describe("stream muxing", () => {
                     node.start(cb);
                 })
             ], callback);
-        };
+        }
 
         series([
             (cb) => setup(cb),
@@ -62,11 +70,11 @@ describe("stream muxing", () => {
         let nodeA;
         let nodeB;
 
-        const setup = function (callback) {
+        function setup(callback) {
             parallel([
                 (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
                     modules: {
-                        streamMuxer: [mplex]
+                        streamMuxer: [Mplex]
                     }
                 }, (err, node) => {
                     expect(err).to.not.exist();
@@ -76,7 +84,7 @@ describe("stream muxing", () => {
                 }),
                 (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
                     modules: {
-                        streamMuxer: [mplex]
+                        streamMuxer: [Mplex]
                     }
                 }, (err, node) => {
                     expect(err).to.not.exist();
@@ -85,7 +93,7 @@ describe("stream muxing", () => {
                     node.start(cb);
                 })
             ], callback);
-        };
+        }
 
         series([
             (cb) => setup(cb),
@@ -94,15 +102,15 @@ describe("stream muxing", () => {
         ], done);
     });
 
-    it("pullMplex only", (done) => {
+    it("pMplex only", (done) => {
         let nodeA;
         let nodeB;
 
-        const setup = function (callback) {
+        function setup(callback) {
             parallel([
                 (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
                     modules: {
-                        streamMuxer: [pullMplex]
+                        streamMuxer: [pMplex]
                     }
                 }, (err, node) => {
                     expect(err).to.not.exist();
@@ -112,7 +120,7 @@ describe("stream muxing", () => {
                 }),
                 (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
                     modules: {
-                        streamMuxer: [pullMplex]
+                        streamMuxer: [pMplex]
                     }
                 }, (err, node) => {
                     expect(err).to.not.exist();
@@ -121,7 +129,7 @@ describe("stream muxing", () => {
                     node.start(cb);
                 })
             ], callback);
-        };
+        }
 
         series([
             (cb) => setup(cb),
@@ -136,11 +144,11 @@ describe("stream muxing", () => {
         let nodeA;
         let nodeB;
 
-        const setup = function (callback) {
+        function setup(callback) {
             parallel([
                 (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
                     modules: {
-                        streamMuxer: [mplex]
+                        streamMuxer: [Mplex]
                     }
                 }, (err, node) => {
                     expect(err).to.not.exist();
@@ -150,7 +158,7 @@ describe("stream muxing", () => {
                 }),
                 (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
                     modules: {
-                        streamMuxer: [spdy, mplex]
+                        streamMuxer: [SPDY, Mplex]
                     }
                 }, (err, node) => {
                     expect(err).to.not.exist();
@@ -159,7 +167,7 @@ describe("stream muxing", () => {
                     node.start(cb);
                 })
             ], callback);
-        };
+        }
 
         series([
             (cb) => setup(cb),
@@ -174,11 +182,11 @@ describe("stream muxing", () => {
         let nodeA;
         let nodeB;
 
-        const setup = function (callback) {
+        function setup(callback) {
             parallel([
                 (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
                     modules: {
-                        streamMuxer: [mplex]
+                        streamMuxer: [Mplex]
                     }
                 }, (err, node) => {
                     expect(err).to.not.exist();
@@ -188,7 +196,7 @@ describe("stream muxing", () => {
                 }),
                 (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
                     modules: {
-                        streamMuxer: [pullMplex]
+                        streamMuxer: [pMplex]
                     }
                 }, (err, node) => {
                     expect(err).to.not.exist();
@@ -197,7 +205,7 @@ describe("stream muxing", () => {
                     node.start(cb);
                 })
             ], callback);
-        };
+        }
 
         series([
             (cb) => setup(cb),
@@ -212,11 +220,11 @@ describe("stream muxing", () => {
         let nodeA;
         let nodeB;
 
-        const setup = function (callback) {
+        function setup(callback) {
             parallel([
                 (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
                     modules: {
-                        streamMuxer: [spdy, mplex]
+                        streamMuxer: [SPDY, Mplex]
                     }
                 }, (err, node) => {
                     expect(err).to.not.exist();
@@ -226,7 +234,7 @@ describe("stream muxing", () => {
                 }),
                 (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
                     modules: {
-                        streamMuxer: [mplex, spdy]
+                        streamMuxer: [Mplex, SPDY]
                     }
                 }, (err, node) => {
                     expect(err).to.not.exist();
@@ -235,7 +243,7 @@ describe("stream muxing", () => {
                     node.start(cb);
                 })
             ], callback);
-        };
+        }
 
         series([
             (cb) => setup(cb),
@@ -250,11 +258,11 @@ describe("stream muxing", () => {
         let nodeA;
         let nodeB;
 
-        const setup = function (callback) {
+        function setup(callback) {
             parallel([
                 (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
                     modules: {
-                        streamMuxer: [spdy, pullMplex]
+                        streamMuxer: [SPDY, pMplex]
                     }
                 }, (err, node) => {
                     expect(err).to.not.exist();
@@ -264,7 +272,7 @@ describe("stream muxing", () => {
                 }),
                 (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
                     modules: {
-                        streamMuxer: [pullMplex, spdy]
+                        streamMuxer: [pMplex, SPDY]
                     }
                 }, (err, node) => {
                     expect(err).to.not.exist();
@@ -273,7 +281,7 @@ describe("stream muxing", () => {
                     node.start(cb);
                 })
             ], callback);
-        };
+        }
 
         series([
             (cb) => setup(cb),
@@ -292,7 +300,7 @@ describe("stream muxing", () => {
             parallel([
                 (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
                     modules: {
-                        streamMuxer: [spdy]
+                        streamMuxer: [SPDY]
                     }
                 }, (err, node) => {
                     expect(err).to.not.exist();
@@ -302,7 +310,7 @@ describe("stream muxing", () => {
                 }),
                 (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
                     modules: {
-                        streamMuxer: [mplex]
+                        streamMuxer: [Mplex]
                     }
                 }, (err, node) => {
                     expect(err).to.not.exist();

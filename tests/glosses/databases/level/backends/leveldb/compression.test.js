@@ -1,4 +1,4 @@
-const async = require("async");
+const each = require("async-each");
 const du = require("du");
 const delayed = require("delayed");
 const testCommon = require("./common");
@@ -49,7 +49,7 @@ describe("compression", () => {
         const db = testCommon.factory();
         db.open((err) => {
             assert.notExists(err);
-            async.forEach(
+            each(
                 Array.apply(null, Array(multiples)).map((e, i) => {
                     return [i, compressableData];
                 }), (args, callback) => {
@@ -63,7 +63,7 @@ describe("compression", () => {
         const db = testCommon.factory();
         db.open({ compression: false }, (err) => {
             assert.notExists(err);
-            async.forEach(
+            each(
                 Array.apply(null, Array(multiples)).map((e, i) => {
                     return [i, compressableData];
                 }), (args, callback) => {
@@ -80,7 +80,7 @@ describe("compression", () => {
             db.batch(
                 Array.apply(null, Array(multiples)).map((e, i) => {
                     return { type: "put", key: i, value: compressableData };
-                }), cycle.bind(null, db, false, delayed.delayed(verify.bind(null, db.location, false, done), 0.01))
+                }), cycle.bind(null, db, true, delayed.delayed(verify.bind(null, db.location, true, done), 0.01))
             );
         });
     });

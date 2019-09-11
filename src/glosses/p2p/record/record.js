@@ -1,5 +1,3 @@
-const utils = require("./utils");
-
 const {
     assert,
     data: { protobuf },
@@ -7,6 +5,7 @@ const {
 } = adone;
 
 const pb = protobuf.create(require("./record.proto")).Record;
+const utils = require("./utils");
 
 class Record {
     /**

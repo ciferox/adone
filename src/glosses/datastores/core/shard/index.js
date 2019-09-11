@@ -1,11 +1,9 @@
-const leftPad = require("left-pad");
-
 const {
     is,
     datastore: { interface: { Key } }
 } = adone;
 
-export const readme = require("./readme");
+const readme = require("./readme");
 
 // eslint-disable-next-line
 /*:: import type {Datastore, Callback} from 'interface-datastore'
@@ -18,9 +16,9 @@ export interface ShardV1 {
 }
 */
 
-export const PREFIX = "/repo/flatfs/shard/";
-export const SHARDING_FN = "SHARDING";
-export const README_FN = "_README";
+const PREFIX = exports.PREFIX = "/repo/flatfs/shard/";
+const SHARDING_FN = exports.SHARDING_FN = "SHARDING";
+exports.README_FN = "_README";
 
 class Shard {
     /**
@@ -46,10 +44,10 @@ class Shard {
     }
 }
 
-export class Prefix extends Shard {
+class Prefix extends Shard {
     constructor(prefixLen /* : number */) {
         super(prefixLen);
-        this._padding = leftPad("", prefixLen, "_");
+        this._padding = "".padStart(prefixLen, "_");
         this.name = "prefix";
     }
 
@@ -58,10 +56,10 @@ export class Prefix extends Shard {
     }
 }
 
-export class Suffix extends Shard {
+class Suffix extends Shard {
     constructor(suffixLen /* : number */) {
         super(suffixLen);
-        this._padding = leftPad("", suffixLen, "_");
+        this._padding = "".padStart(suffixLen, "_");
         this.name = "suffix";
     }
 
@@ -71,10 +69,10 @@ export class Suffix extends Shard {
     }
 }
 
-export class NextToLast extends Shard {
+class NextToLast extends Shard {
     constructor(suffixLen /* : number */) {
         super(suffixLen);
-        this._padding = leftPad("", suffixLen + 1, "_");
+        this._padding = "".padStart(suffixLen + 1, "_");
         this.name = "next-to-last";
     }
 
@@ -91,7 +89,7 @@ export class NextToLast extends Shard {
  * @param {string} str
  * @returns {ShardV1}
  */
-export function parseShardFun(str /* : string */) /* : ShardV1 */ {
+function parseShardFun(str /* : string */) {
     str = str.trim();
 
     if (str.length === 0) {
@@ -129,22 +127,15 @@ export function parseShardFun(str /* : string */) /* : ShardV1 */ {
     }
 }
 
-export const readShardFun = (path /* : string */, store /* : Datastore<Buffer> */, callback /* : Callback<ShardV1> */) /* : void */ => {
+exports.readShardFun = async (path /* : string */, store) /* : Promise<ShardV1> */ => {
     const key = new Key(path).child(new Key(SHARDING_FN));
     const get = is.function(store.getRaw) ? store.getRaw.bind(store) : store.get.bind(store);
-
-    get(key, (err, res) => {
-        if (err) {
-            return callback(err);
-        }
-
-        let shard;
-        try {
-            shard = parseShardFun((res || "").toString().trim());
-        } catch (err) {
-            return callback(err);
-        }
-
-        callback(null, shard);
-    });
+    const res = await get(key);
+    return parseShardFun((res || "").toString().trim());
 };
+
+exports.readme = readme;
+exports.parseShardFun = parseShardFun;
+exports.Prefix = Prefix;
+exports.Suffix = Suffix;
+exports.NextToLast = NextToLast;

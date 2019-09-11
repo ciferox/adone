@@ -1,4 +1,5 @@
-const async = require("async");
+const each = require("async-each");
+const parallel = require("run-parallel");
 const common = require("./common");
 
 const {
@@ -31,9 +32,9 @@ describe("custom encoding", () => {
                     const PUT = testData.map((d) => {
                         return db.put.bind(db, d.key, d.value);
                     });
-                    async.parallel(PUT, (err) => {
+                    parallel(PUT, (err) => {
                         assert.notExists(err);
-                        async.forEach(testData, (d, callback) => {
+                        each(testData, (d, callback) => {
                             db.get(d.key, (err, value) => {
                                 if (err) {
                                     console.error(err.stack);

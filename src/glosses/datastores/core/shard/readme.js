@@ -1,8 +1,3 @@
-/**
- * @flow
- */
-
-
 module.exports = `This is a repository of IPLD objects. Each IPLD object is in a single file,
 named <base32 encoding of cid>.data. Where <base32 encoding of cid> is the
 "base32" encoding of the CID (as specified in

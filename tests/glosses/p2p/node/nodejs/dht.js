@@ -1,13 +1,21 @@
-const {
-    datastore: { backend: { MemoryDatastore } }
-} = adone;
+/**
+ * eslint-env mocha
+ */
 
-const createNode = require("../utils/create_node");
+
+
+const chai = require("chai");
+chai.use(require("dirty-chai"));
+const expect = chai.expect;
+
+const MemoryStore = require("interface-datastore").MemoryDatastore;
+
+const createNode = require("./utils/create-node");
 
 describe(".dht", () => {
     describe("enabled", () => {
         let nodeA;
-        const datastore = new MemoryDatastore();
+        const datastore = new MemoryStore();
 
         before((done) => {
             createNode("/ip4/0.0.0.0/tcp/0", {

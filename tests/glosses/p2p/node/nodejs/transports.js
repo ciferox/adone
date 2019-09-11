@@ -1,17 +1,27 @@
+/**
+ * eslint-env mocha
+ */
+
+
+const chai = require("chai");
+chai.use(require("dirty-chai"));
+const expect = chai.expect;
+const parallel = require("async/parallel");
+const series = require("async/series");
+const rendezvous = require("libp2p-websocket-star-rendezvous");
+const TCP = require("libp2p-tcp");
+const WS = require("libp2p-websockets");
+const WSStar = require("libp2p-websocket-star");
+const WRTCStar = require("libp2p-webrtc-star");
 const wrtc = require("wrtc");
 
-const createNode = require("../utils/create_node.js");
-const tryEcho = require("../utils/try_echo");
-const echo = require("../utils/echo");
-const { WRTC_RENDEZVOUS_MULTIADDR } = require("../utils/constants");
+const createNode = require("./utils/create-node.js");
+const tryEcho = require("./utils/try-echo");
+const echo = require("./utils/echo");
 
 const {
-    async: { parallel, series },
-    p2p: { transport: { WS, TCP, WSStar, WebRTCStar }, rendezvous }
-} = adone;
-
-const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", ...args);
-const signalling = require(srcPath("transports", "webrtc_star/sig-server"));
+    WRTC_RENDEZVOUS_MULTIADDR
+} = require("./utils/constants");
 
 describe("transports", () => {
     describe("TCP only", () => {
@@ -409,91 +419,88 @@ describe("transports", () => {
 
             parallel([
                 (cb) => {
-                    const wstar = new WebRTCStar({ wrtc });
+                    const wstar = new WRTCStar({ wrtc });
 
                     createNode([
                         "/ip4/0.0.0.0/tcp/0",
                         "/ip4/127.0.0.1/tcp/25011/ws",
                         `${WRTC_RENDEZVOUS_MULTIADDR.toString()}/p2p-webrtc-star`
-                    ],
-                        {
-                            modules: {
-                                transport: [
-                                    TCP,
-                                    WS,
-                                    wstar
-                                ],
-                                peerDiscovery: [wstar.discovery]
-                            },
-                            config: {
-                                peerDiscovery: {
-                                    autoDial: false,
-                                    [wstar.discovery.tag]: {
-                                        enabled: true
-                                    }
+                    ], {
+                        modules: {
+                            transport: [
+                                TCP,
+                                WS,
+                                wstar
+                            ],
+                            peerDiscovery: [wstar.discovery]
+                        },
+                        config: {
+                            peerDiscovery: {
+                                autoDial: false,
+                                [wstar.discovery.tag]: {
+                                    enabled: true
                                 }
                             }
-                        }, (err, node) => {
-                            expect(err).to.not.exist();
-                            nodeAll = node;
-                            node.handle("/echo/1.0.0", echo);
-                            node.start(cb);
                         }
-                    );
+                    }, (err, node) => {
+                        expect(err).to.not.exist();
+                        nodeAll = node;
+                        node.handle("/echo/1.0.0", echo);
+                        node.start(cb);
+                    });
                 },
                 (cb) => createNode([
                     "/ip4/0.0.0.0/tcp/0"
                 ], {
-                        config: {
-                            peerDiscovery: {
-                                autoDial: false
-                            }
+                    config: {
+                        peerDiscovery: {
+                            autoDial: false
                         }
-                    }, (err, node) => {
-                        expect(err).to.not.exist();
-                        nodeTCP = node;
-                        node.handle("/echo/1.0.0", echo);
-                        node.start(cb);
-                    }),
+                    }
+                }, (err, node) => {
+                    expect(err).to.not.exist();
+                    nodeTCP = node;
+                    node.handle("/echo/1.0.0", echo);
+                    node.start(cb);
+                }),
                 (cb) => createNode([
                     "/ip4/127.0.0.1/tcp/25022/ws"
                 ], {
-                        config: {
-                            peerDiscovery: {
-                                autoDial: false
-                            }
+                    config: {
+                        peerDiscovery: {
+                            autoDial: false
                         }
-                    }, (err, node) => {
-                        expect(err).to.not.exist();
-                        nodeWS = node;
-                        node.handle("/echo/1.0.0", echo);
-                        node.start(cb);
-                    }),
-
+                    }
+                }, (err, node) => {
+                    expect(err).to.not.exist();
+                    nodeWS = node;
+                    node.handle("/echo/1.0.0", echo);
+                    node.start(cb);
+                }),
                 (cb) => {
-                    const wstar = new WebRTCStar({ wrtc });
+                    const wstar = new WRTCStar({ wrtc });
 
                     createNode([
                         `${WRTC_RENDEZVOUS_MULTIADDR.toString()}/p2p-webrtc-star`
                     ], {
-                            modules: {
-                                transport: [wstar],
-                                peerDiscovery: [wstar.discovery]
-                            },
-                            config: {
-                                peerDiscovery: {
-                                    autoDial: false,
-                                    [wstar.discovery.tag]: {
-                                        enabled: true
-                                    }
+                        modules: {
+                            transport: [wstar],
+                            peerDiscovery: [wstar.discovery]
+                        },
+                        config: {
+                            peerDiscovery: {
+                                autoDial: false,
+                                [wstar.discovery.tag]: {
+                                    enabled: true
                                 }
                             }
-                        }, (err, node) => {
-                            expect(err).to.not.exist();
-                            nodeWebRTCStar = node;
-                            node.handle("/echo/1.0.0", echo);
-                            node.start(cb);
-                        });
+                        }
+                    }, (err, node) => {
+                        expect(err).to.not.exist();
+                        nodeWebRTCStar = node;
+                        node.handle("/echo/1.0.0", echo);
+                        node.start(cb);
+                    });
                 }
             ], done);
         });
@@ -573,48 +580,40 @@ describe("transports", () => {
         let nodeTCP;
         let nodeWS;
         let nodeWebSocketStar;
-
         let ss;
+        const PORT = 24642;
+
+        before(async () => {
+            ss = await rendezvous.start({
+                port: PORT
+            });
+        });
 
         before((done) => {
             parallel([
-                (cb) => {
-                    rendezvous.start({ port: 24642 }, (err, server) => {
-                        expect(err).to.not.exist();
-                        ss = server;
-                        cb();
-                    });
-                },
                 (cb) => {
                     const wstar = new WSStar();
 
                     createNode([
                         "/ip4/0.0.0.0/tcp/0",
                         "/ip4/127.0.0.1/tcp/25011/ws",
-                        "/ip4/127.0.0.1/tcp/24642/ws/p2p-websocket-star"
+                        `/ip4/127.0.0.1/tcp/${PORT}/ws/p2p-websocket-star`
                     ], {
-                            modules: {
-                                transport: [
-                                    TCP,
-                                    WS,
-                                    wstar
-                                ],
-                                peerDiscovery: [wstar.discovery]
-                            },
-                            config: {
-                                peerDiscovery: {
-                                    [wstar.discovery.tag]: {
-                                        enabled: true
-                                    }
-                                }
-                            }
-                        }, (err, node) => {
-                            expect(err).to.not.exist();
-                            nodeAll = node;
-                            wstar.lazySetId(node.peerInfo.id);
-                            node.handle("/echo/1.0.0", echo);
-                            node.start(cb);
-                        });
+                        modules: {
+                            transport: [
+                                TCP,
+                                WS,
+                                wstar
+                            ],
+                            peerDiscovery: [wstar.discovery]
+                        }
+                    }, (err, node) => {
+                        expect(err).to.not.exist();
+                        nodeAll = node;
+                        wstar.lazySetId(node.peerInfo.id);
+                        node.handle("/echo/1.0.0", echo);
+                        node.start(cb);
+                    });
                 },
                 (cb) => createNode([
                     "/ip4/0.0.0.0/tcp/0"
@@ -637,27 +636,19 @@ describe("transports", () => {
                     const wstar = new WSStar({});
 
                     createNode([
-                        "/ip4/127.0.0.1/tcp/24642/ws/p2p-websocket-star"
+                        `/ip4/127.0.0.1/tcp/${PORT}/ws/p2p-websocket-star`
                     ], {
-                            modules: {
-                                transport: [wstar],
-                                peerDiscovery: [wstar.discovery]
-                            },
-                            config: {
-                                peerDiscovery: {
-                                    autoDial: false,
-                                    [wstar.discovery.tag]: {
-                                        enabled: true
-                                    }
-                                }
-                            }
-                        }, (err, node) => {
-                            expect(err).to.not.exist();
-                            nodeWebSocketStar = node;
-                            wstar.lazySetId(node.peerInfo.id);
-                            node.handle("/echo/1.0.0", echo);
-                            node.start(cb);
-                        });
+                        modules: {
+                            transport: [wstar],
+                            peerDiscovery: [wstar.discovery]
+                        }
+                    }, (err, node) => {
+                        expect(err).to.not.exist();
+                        nodeWebSocketStar = node;
+                        wstar.lazySetId(node.peerInfo.id);
+                        node.handle("/echo/1.0.0", echo);
+                        node.start(cb);
+                    });
                 }
             ], done);
         });
@@ -668,7 +659,9 @@ describe("transports", () => {
                 (cb) => nodeTCP.stop(cb),
                 (cb) => nodeWS.stop(cb),
                 (cb) => nodeWebSocketStar.stop(cb),
-                (cb) => ss.stop().then(cb)
+                async () => {
+                    await ss.stop();
+                }
             ], done);
         });
 

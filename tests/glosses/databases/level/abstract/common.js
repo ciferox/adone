@@ -2,13 +2,13 @@ const {
     is
 } = adone;
 
-const noopTest = function () {
+const noopTest = () => {
     return function (done) {
         done();
     };
 };
 
-const testCommon = function (options) {
+const testCommon = (options) => {
     const factory = options.factory;
 
     if (!is.function(factory)) {
@@ -23,7 +23,8 @@ const testCommon = function (options) {
         createIfMissing: options.createIfMissing !== false,
         errorIfExists: options.errorIfExists !== false,
         snapshots: options.snapshots !== false,
-        seek: options.seek !== false
+        seek: options.seek !== false,
+        clear: Boolean(options.clear)
     };
 };
 

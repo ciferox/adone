@@ -1,127 +1,94 @@
 const {
-    async: { setImmediate },
     is,
-    datastore: { interface: { Key, error, util: { asyncFilter, asyncSort } } },
-    stream: { pull }
+    datastore: { interface: { Key, error, util: { filter, sortAll, take, map } } }
 } = adone;
 
 class MemoryDatastore {
-    /**
-     * :: data: {[key: string]: Buffer}
-     */
-
     constructor() {
         this.data = {};
     }
 
-    open(callback /* : Callback<void> */) /* : void */ {
-        setImmediate(callback);
-    }
+    async open() { }
 
-    put(key /* : Key */, val /* : Buffer */, callback /* : Callback<void> */) /* : void */ {
+    async put(key, val) { // eslint-disable-line require-await
         this.data[key.toString()] = val;
-
-        setImmediate(callback);
     }
 
-    get(key /* : Key */, callback /* : Callback<Buffer> */) /* : void */ {
-        this.has(key, (err, exists) => {
-            if (err) {
-                return callback(err);
-            }
-
-            if (!exists) {
-                return callback(error.notFoundError());
-            }
-
-            callback(null, this.data[key.toString()]);
-        });
+    async get(key) {
+        const exists = await this.has(key);
+        if (!exists) {
+            throw error.notFoundError();
+        }
+        return this.data[key.toString()];
     }
 
-    has(key /* : Key */, callback /* : Callback<bool> */) /* : void */ {
-        setImmediate(() => {
-            callback(null, !is.undefined(this.data[key.toString()]));
-        });
+    async has(key) { // eslint-disable-line require-await
+        return !is.undefined(this.data[key.toString()]);
     }
 
-    delete(key /* : Key */, callback /* : Callback<void> */) /* : void */ {
+    async delete(key) { // eslint-disable-line require-await
         delete this.data[key.toString()];
-
-        setImmediate(() => {
-            callback();
-        });
     }
 
-    batch() /* : Batch<Buffer> */ {
+    batch() {
         let puts = [];
         let dels = [];
 
         return {
-            put(key /* : Key */, value /* : Buffer */) /* : void */ {
+            put(key, value) {
                 puts.push([key, value]);
             },
-            delete(key /* : Key */) /* : void */ {
+            delete(key) {
                 dels.push(key);
             },
-            commit: (callback /* : Callback<void> */) /* : void */ => {
+            commit: async () => { // eslint-disable-line require-await
                 puts.forEach((v) => {
                     this.data[v[0].toString()] = v[1];
                 });
-
                 puts = [];
+
                 dels.forEach((key) => {
                     delete this.data[key.toString()];
                 });
                 dels = [];
-
-                setImmediate(callback);
             }
         };
     }
 
-    query(q /* : Query<Buffer> */) /* : QueryResult<Buffer> */ {
-        let tasks = [pull.keys(this.data), pull.map((k) => ({
-            key: new Key(k),
-            value: this.data[k]
-        }))];
+    query(q) {
+        let it = Object.entries(this.data);
 
-        let filters = [];
+        it = map(it, (entry) => ({ key: new Key(entry[0]), value: entry[1] }));
 
         if (!is.nil(q.prefix)) {
-            const prefix = q.prefix;
-            filters.push((e, cb) => cb(null, e.key.toString().startsWith(prefix)));
+            it = filter(it, (e) => e.key.toString().startsWith(q.prefix));
         }
 
-        if (!is.nil(q.filters)) {
-            filters = filters.concat(q.filters);
+        if (is.array(q.filters)) {
+            it = q.filters.reduce((it, f) => filter(it, f), it);
         }
 
-        tasks = tasks.concat(filters.map((f) => asyncFilter(f)));
-
-        if (!is.nil(q.orders)) {
-            tasks = tasks.concat(q.orders.map((o) => asyncSort(o)));
+        if (is.array(q.orders)) {
+            it = q.orders.reduce((it, f) => sortAll(it, f), it);
         }
 
         if (!is.nil(q.offset)) {
             let i = 0;
-            // $FlowFixMe
-            tasks.push(pull.filter(() => i++ >= q.offset));
+            it = filter(it, () => i++ >= q.offset);
         }
 
         if (!is.nil(q.limit)) {
-            tasks.push(pull.take(q.limit));
+            it = take(it, q.limit);
         }
 
         if (q.keysOnly === true) {
-            tasks.push(pull.map((e) => ({ key: e.key })));
+            it = map(it, (e) => ({ key: e.key }));
         }
 
-        return pull.apply(null, tasks);
+        return it;
     }
 
-    close(callback /* : Callback<void> */) /* : void */ {
-        setImmediate(callback);
-    }
+    async close() { }
 }
 
 module.exports = MemoryDatastore;

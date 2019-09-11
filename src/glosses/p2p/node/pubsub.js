@@ -1,84 +1,129 @@
+
+
+const nextTick = require("async/nextTick");
 const { messages, codes } = require("./errors");
+const promisify = require("promisify-es6");
+
 const errCode = require("err-code");
 
-const {
-    async: { nextTick },
-    is,
-    p2p: { FloodSub }
-} = adone;
-
-module.exports = (node) => {
-    const floodSub = new FloodSub(node);
-
-    node._floodSub = floodSub;
+module.exports = (node, Pubsub, config) => {
+    const pubsub = new Pubsub(node, config);
 
     return {
-        subscribe: (topic, options, handler, callback) => {
+    /**
+     * Subscribe the given handler to a pubsub topic
+     *
+     * @param {string} topic
+     * @param {function} handler The handler to subscribe
+     * @param {object|null} [options]
+     * @param {function} [callback] An optional callback
+     *
+     * @returns {Promise|void} A promise is returned if no callback is provided
+     *
+     * @example <caption>Subscribe a handler to a topic</caption>
+     *
+     * // `null` must be passed for options until subscribe is no longer using promisify
+     * const handler = (message) => { }
+     * await libp2p.subscribe(topic, handler, null)
+     *
+     * @example <caption>Use a callback instead of the Promise api</caption>
+     *
+     * // `options` may be passed or omitted when supplying a callback
+     * const handler = (message) => { }
+     * libp2p.subscribe(topic, handler, callback)
+     */
+        subscribe: promisify((topic, handler, options, callback) => {
             if (is.function(options)) {
-                callback = handler;
-                handler = options;
+                callback = options;
                 options = {};
             }
 
-            if (!node.isStarted() && !floodSub.started) {
+            if (!node.isStarted() && !pubsub.started) {
                 return nextTick(callback, errCode(new Error(messages.NOT_STARTED_YET), codes.PUBSUB_NOT_STARTED));
             }
 
-            const subscribe = function (cb) {
-                if (floodSub.listenerCount(topic) === 0) {
-                    floodSub.subscribe(topic);
+            function subscribe(cb) {
+                if (pubsub.listenerCount(topic) === 0) {
+                    pubsub.subscribe(topic);
                 }
 
-                floodSub.on(topic, handler);
+                pubsub.on(topic, handler);
                 nextTick(cb);
-            };
+            }
 
             subscribe(callback);
-        },
+        }),
 
-        unsubscribe: (topic, handler, callback) => {
-            if (!node.isStarted() && !floodSub.started) {
+        /**
+     * Unsubscribes from a pubsub topic
+     *
+     * @param {string} topic
+     * @param {function|null} handler The handler to unsubscribe from
+     * @param {function} [callback] An optional callback
+     *
+     * @returns {Promise|void} A promise is returned if no callback is provided
+     *
+     * @example <caption>Unsubscribe a topic for all handlers</caption>
+     *
+     * // `null` must be passed until unsubscribe is no longer using promisify
+     * await libp2p.unsubscribe(topic, null)
+     *
+     * @example <caption>Unsubscribe a topic for 1 handler</caption>
+     *
+     * await libp2p.unsubscribe(topic, handler)
+     *
+     * @example <caption>Use a callback instead of the Promise api</caption>
+     *
+     * libp2p.unsubscribe(topic, handler, callback)
+     */
+        unsubscribe: promisify((topic, handler, callback) => {
+            if (!node.isStarted() && !pubsub.started) {
                 return nextTick(callback, errCode(new Error(messages.NOT_STARTED_YET), codes.PUBSUB_NOT_STARTED));
             }
-            if (!handler && !callback) {
-                floodSub.removeAllListeners(topic);
+
+            if (!handler) {
+                pubsub.removeAllListeners(topic);
             } else {
-                floodSub.removeListener(topic, handler);
+                pubsub.removeListener(topic, handler);
             }
 
-            if (floodSub.listenerCount(topic) === 0) {
-                floodSub.unsubscribe(topic);
+            if (pubsub.listenerCount(topic) === 0) {
+                pubsub.unsubscribe(topic);
             }
 
             if (is.function(callback)) {
-                nextTick(() => callback());
+                return nextTick(() => callback());
             }
-        },
 
-        publish: (topic, data, callback) => {
-            if (!node.isStarted() && !floodSub.started) {
+            return Promise.resolve();
+        }),
+
+        publish: promisify((topic, data, callback) => {
+            if (!node.isStarted() && !pubsub.started) {
                 return nextTick(callback, errCode(new Error(messages.NOT_STARTED_YET), codes.PUBSUB_NOT_STARTED));
             }
 
-            if (!is.buffer(data)) {
-                return nextTick(callback, errCode(new Error("data must be a Buffer"), "ERR_DATA_IS_NOT_A_BUFFER"));
+            try {
+                data = Buffer.from(data);
+            } catch (err) {
+                return nextTick(callback, errCode(new Error("data must be convertible to a Buffer"), "ERR_DATA_IS_NOT_VALID"));
             }
 
-            floodSub.publish(topic, data, callback);
-        },
+            pubsub.publish(topic, data, callback);
+        }),
 
-        ls: (callback) => {
-            if (!node.isStarted() && !floodSub.started) {
+        ls: promisify((callback) => {
+            if (!node.isStarted() && !pubsub.started) {
                 return nextTick(callback, errCode(new Error(messages.NOT_STARTED_YET), codes.PUBSUB_NOT_STARTED));
             }
 
-            const subscriptions = Array.from(floodSub.subscriptions);
+            const subscriptions = Array.from(pubsub.subscriptions);
 
             nextTick(() => callback(null, subscriptions));
-        },
+        }),
 
-        peers: (topic, callback) => {
-            if (!node.isStarted() && !floodSub.started) {
+        peers: promisify((topic, callback) => {
+            if (!node.isStarted() && !pubsub.started) {
                 return nextTick(callback, errCode(new Error(messages.NOT_STARTED_YET), codes.PUBSUB_NOT_STARTED));
             }
 
@@ -87,15 +132,19 @@ module.exports = (node) => {
                 topic = null;
             }
 
-            const peers = Array.from(floodSub.peers.values())
+            const peers = Array.from(pubsub.peers.values())
                 .filter((peer) => topic ? peer.topics.has(topic) : true)
                 .map((peer) => peer.info.id.toB58String());
 
             nextTick(() => callback(null, peers));
-        },
+        }),
 
         setMaxListeners(n) {
-            return floodSub.setMaxListeners(n);
-        }
+            return pubsub.setMaxListeners(n);
+        },
+
+        start: promisify((cb) => pubsub.start(cb)),
+
+        stop: promisify((cb) => pubsub.stop(cb))
     };
 };

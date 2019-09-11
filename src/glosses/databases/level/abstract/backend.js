@@ -203,6 +203,10 @@ export default class AbstractBackend {
             return process.nextTick(callback, new Error("batch(array) requires an array argument"));
         }
 
+        if (array.length === 0) {
+            return process.nextTick(callback);
+        }
+
         if (typeof options !== "object" || is.null(options)) {
             options = {};
         }
@@ -244,6 +248,52 @@ export default class AbstractBackend {
 
     _batch(array, options, callback) {
         process.nextTick(callback);
+    }
+
+    clear(options, callback) {
+        if (is.function(options)) {
+            callback = options;
+        } else if (!is.function(callback)) {
+            throw new Error("clear() requires a callback argument");
+        }
+
+        options = cleanRangeOptions(this, options);
+        options.reverse = Boolean(options.reverse);
+        options.limit = "limit" in options ? options.limit : -1;
+
+        this._clear(options, callback);
+    }
+
+    _clear(options, callback) {
+        // Avoid setupIteratorOptions, would serialize range options a second time.
+        options.keys = true;
+        options.values = false;
+        options.keyAsBuffer = true;
+        options.valueAsBuffer = true;
+
+        const iterator = this._iterator(options);
+        const emptyOptions = {};
+        const self = this;
+
+        const next = function (err) {
+            if (err) {
+                return iterator.end(() => {
+                    callback(err);
+                });
+            }
+
+            iterator.next((err, key) => {
+                if (err) {return next(err)};
+                if (is.undefined(key)) {return iterator.end(callback)};
+
+                // This could be optimized by using a batch, but the default _clear
+                // is not meant to be fast. Implementations have more room to optimize
+                // if they override _clear. Note: using _del bypasses key serialization.
+                self._del(key, emptyOptions, next);
+            });
+        };
+
+        next();
     }
 
     _setupIteratorOptions(options) {

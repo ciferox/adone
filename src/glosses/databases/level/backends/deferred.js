@@ -25,6 +25,11 @@ class DeferredIterator extends AbstractIterator {
         }
         this._operations.push({ method, args });
     }
+
+    // Must defer seek() rather than _seek() because it requires db._serializeKey to be available
+    seek() {
+        this._operation("seek", arguments);
+    }
 }
 
 "next end".split(" ").forEach((m) => {
@@ -35,7 +40,9 @@ class DeferredIterator extends AbstractIterator {
 
 
 
-const deferrables = "put get del batch".split(" ");
+const deferrables = "put get del batch clear".split(" ");
+const optionalDeferrables = "approximateSize compactRange".split(" ");
+
 
 const open = function (self) {
     deferrables.concat("iterator").forEach((m) => {
@@ -43,11 +50,13 @@ const open = function (self) {
             return this._db[m].apply(this._db, arguments);
         };
     });
-    if (self._db.approximateSize) {
-        self.approximateSize = function () {
-            return this._db.approximateSize.apply(this._db, arguments);
-        };
-    }
+    optionalDeferrables.forEach((m) => {
+        if (is.function(self._db[m])) {
+            self[m] = function () {
+                return this._db[m].apply(this._db, arguments);
+            };
+        }
+    });
 };
 
 const closed = function (self) {
@@ -56,14 +65,13 @@ const closed = function (self) {
             this._operations.push({ method: m, args: arguments });
         };
     });
-    if (is.function(self._db.approximateSize)) {
-        self.approximateSize = function () {
-            this._operations.push({
-                method: "approximateSize",
-                args: arguments
-            });
-        };
-    }
+    optionalDeferrables.forEach((m) => {
+        if (is.function(self._db[m])) {
+            self[m] = function () {
+                this._operations.push({ method: m, args: arguments });
+            };
+        }
+    });
     self._iterator = function (options) {
         const it = new DeferredIterator(options);
         this._iterators.push(it);
@@ -117,6 +125,4 @@ export default class DeferredBackend extends AbstractBackend {
         return value;
     }
 }
-
-
 DeferredBackend.Iterator = DeferredIterator;

@@ -1,64 +1,45 @@
-const eachSeries = require("async/eachSeries");
-
 const {
     database: { level },
-    datastore: { backend: { LevelDatastore } }
+    datastore: { backend: { LevelDatastore } },
+    std: { os }
 } = adone;
 
 describe("datastore", "backend", "LevelDatastore", () => {
     describe("initialization", () => {
-        it("should default to a leveldown database", (done) => {
+        it("should default to a leveldown database", async () => {
             const levelStore = new LevelDatastore("init-default");
+            await levelStore.open();
 
-            levelStore.open((err) => {
-                expect(err).to.not.exist();
-                expect(levelStore.db.db.db instanceof level.backend.LevelDB).to.equal(true);
-                expect(levelStore.db.options).to.include({
-                    createIfMissing: true,
-                    errorIfExists: false
-                });
-                expect(levelStore.db.db.codec.opts).to.include({
-                    valueEncoding: "binary"
-                });
-                done();
+            expect(levelStore.db.options).to.include({
+                createIfMissing: true,
+                errorIfExists: false
+            });
+            expect(levelStore.db.db.codec.opts).to.include({
+                valueEncoding: "binary"
             });
         });
 
-        it("should be able to override the database", (done) => {
+        it("should be able to override the database", async () => {
             const levelStore = new LevelDatastore("init-default", {
-                db: level.backend.Memory,
+                db: level.packager(level.backend.Memory),
                 createIfMissing: true,
                 errorIfExists: true
             });
 
-            levelStore.open((err) => {
-                expect(err).to.not.exist();
-                expect(levelStore.db.db.db instanceof level.backend.Memory).to.equal(true);
-                expect(levelStore.db.options).to.include({
-                    createIfMissing: true,
-                    errorIfExists: true
-                });
-                done();
+            await levelStore.open();
+
+            expect(levelStore.db.options).to.include({
+                createIfMissing: true,
+                errorIfExists: true
             });
         });
     });
-
-    eachSeries([
-        level.backend.Memory,
-        level.backend.LevelDB
-    ], (Database) => {
-        describe(`interface-datastore ${Database.name}`, () => {
+    [level.packager(level.backend.Memory), level.packager(level.backend.LevelDB)].forEach((database) => {
+        describe(`interface ${database.name}`, () => {
             require("../interface")({
-                setup(callback) {
-                    callback(null, new LevelDatastore("datastore-test", { db: Database }));
-                },
-                teardown(callback) {
-                    // memdown.clearGlobalStore();
-                    callback();
-                }
+                setup: () => new LevelDatastore(`${os.tmpdir()}/datastore-level-test-${Math.random()}`, { db: database }),
+                teardown() { }
             });
         });
-    }, (err) => {
-        expect(err).to.not.exist();
     });
 });

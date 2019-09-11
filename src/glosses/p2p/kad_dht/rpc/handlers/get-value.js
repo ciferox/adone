@@ -1,27 +1,24 @@
-const {
-    async: { parallel }
-} = adone;
+
+
+const parallel = require("async/parallel");
+const Record = require("libp2p-record").Record;
 
 const errcode = require("err-code");
 
 const Message = require("../../message");
 const utils = require("../../utils");
 
-const {
-    p2p: { record: { Record } }
-} = adone;
-
 module.exports = (dht) => {
     const log = utils.logger(dht.peerInfo.id, "rpc:get-value");
 
     /**
-     * Process `GetValue` DHT messages.
-     *
-     * @param {PeerInfo} peer
-     * @param {Message} msg
-     * @param {function(Error, Message)} callback
-     * @returns {undefined}
-     */
+   * Process `GetValue` DHT messages.
+   *
+   * @param {PeerInfo} peer
+   * @param {Message} msg
+   * @param {function(Error, Message)} callback
+   * @returns {undefined}
+   */
     return function getValue(peer, msg, callback) {
         const key = msg.key;
 

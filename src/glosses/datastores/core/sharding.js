@@ -1,18 +1,12 @@
 const {
-    async: { waterfall, parallel },
     is,
-    datastore: { shard: sh, KeyTransformDatastore, interface: { Key } }
+    datastore: { KeyTransformDatastore, interface: { Key } }
 } = adone;
+
+const sh = require("./shard");
 
 const shardKey = new Key(sh.SHARDING_FN);
 const shardReadmeKey = new Key(sh.README_FN);
-
-/**
- * ::
- * import type {Datastore, Batch, Query, QueryResult, Callback} from 'interface-datastore'
- *
- * import type {ShardV1} from './shard'
- */
 
 /**
  * Backend independent abstraction of go-ds-flatfs.
@@ -21,14 +15,7 @@ const shardReadmeKey = new Key(sh.README_FN);
  * sharded according to the given sharding function.
  */
 export default class ShardingDatastore {
-    /**
-     * :: shard: ShardV1
-     */
-    /**
-     * :: child: Datastore<Buffer>
-     */
-
-    constructor(store /* : Datastore<Buffer> */, shard /* : ShardV1 */) {
+    constructor(store, shard) {
         this.child = new KeyTransformDatastore(store, {
             convert: this._convertKey.bind(this),
             invert: this._invertKey.bind(this)
@@ -36,11 +23,11 @@ export default class ShardingDatastore {
         this.shard = shard;
     }
 
-    open(callback /* : Callback<void> */) /* : void */ {
-        this.child.open(callback);
+    open() {
+        return this.child.open();
     }
 
-    _convertKey(key/* : Key */)/* : Key */ {
+    _convertKey(key) {
         const s = key.toString();
         if (s === shardKey.toString() || s === shardReadmeKey.toString()) {
             return key;
@@ -50,7 +37,7 @@ export default class ShardingDatastore {
         return parent.child(key);
     }
 
-    _invertKey(key/* : Key */)/* : Key */ {
+    _invertKey(key) {
         const s = key.toString();
         if (s === shardKey.toString() || s === shardReadmeKey.toString()) {
             return key;
@@ -58,122 +45,101 @@ export default class ShardingDatastore {
         return Key.withNamespaces(key.list().slice(1));
     }
 
-    static createOrOpen(store /* : Datastore<Buffer> */, shard /* : ShardV1 */, callback /* : Callback<ShardingDatastore> */) /* : void */ {
-        ShardingDatastore.create(store, shard, (err) => {
+    static async createOrOpen(store, shard) {
+        try {
+            await ShardingDatastore.create(store, shard);
+        } catch (err) {
             if (err && err.message !== "datastore exists") {
-                return callback(err);
+                throw err;
             }
-
-            ShardingDatastore.open(store, callback);
-        });
+        }
+        return ShardingDatastore.open(store);
     }
 
-    static open(store /* : Datastore<Buffer> */, callback /* : Callback<ShardingDatastore> */) /* : void */ {
-        waterfall([
-            (cb) => sh.readShardFun("/", store, cb),
-            (shard, cb) => {
-                cb(null, new ShardingDatastore(store, shard));
-            }
-        ], callback);
+    static async open(store) {
+        const shard = await sh.readShardFun("/", store);
+        return new ShardingDatastore(store, shard);
     }
 
-    static create(store /* : Datastore<Buffer> */, shard /* : ShardV1 */, callback /* : Callback<void> */) /* : void */ {
-        store.has(shardKey, (err, exists) => {
-            if (err) {
-                return callback(err);
-            }
+    static async create(store, shard) {
+        const exists = await store.has(shardKey);
+        if (!exists) {
+            const put = is.function(store.putRaw) ? store.putRaw.bind(store) : store.put.bind(store);
+            return Promise.all([put(shardKey, Buffer.from(`${shard.toString()}\n`)), put(shardReadmeKey, Buffer.from(sh.readme))]);
+        }
 
-            if (!exists) {
-                const put = is.function(store.putRaw) ? store.putRaw.bind(store) : store.put.bind(store);
-                return parallel([
-                    (cb) => put(shardKey, Buffer.from(`${shard.toString()}\n`), cb),
-                    (cb) => put(shardReadmeKey, Buffer.from(sh.readme), cb)
-                ], (err) => callback(err));
-            }
-
-            sh.readShardFun("/", store, (err, diskShard) => {
-                if (err) {
-                    return callback(err);
-                }
-
-                const a = (diskShard || "").toString();
-                const b = shard.toString();
-                if (a !== b) {
-                    return callback(new Error(`specified fun ${b} does not match repo shard fun ${a}`));
-                }
-
-                callback(new Error("datastore exists"));
-            });
-        });
+        const diskShard = await sh.readShardFun("/", store);
+        const a = (diskShard || "").toString();
+        const b = shard.toString();
+        if (a !== b) {
+            throw new Error(`specified fun ${b} does not match repo shard fun ${a}`);
+        }
+        throw new Error("datastore exists");
     }
 
-    put(key /* : Key */, val /* : Buffer */, callback /* : Callback<void> */) /* : void */ {
-        this.child.put(key, val, callback);
+    put(key, val) {
+        return this.child.put(key, val);
     }
 
-    get(key /* : Key */, callback /* : Callback<Buffer> */) /* : void */ {
-        this.child.get(key, callback);
+    get(key) {
+        return this.child.get(key);
     }
 
-    has(key /* : Key */, callback /* : Callback<bool> */) /* : void */ {
-        this.child.has(key, callback);
+    has(key) {
+        return this.child.has(key);
     }
 
-    delete(key /* : Key */, callback /* : Callback<void> */) /* : void */ {
-        this.child.delete(key, callback);
+    delete(key) {
+        return this.child.delete(key);
     }
 
-    batch() /* : Batch<Buffer> */ {
+    batch() {
         return this.child.batch();
     }
 
-    query(q /* : Query<Buffer> */) /* : QueryResult<Buffer> */ {
-        const tq/* : Query<Buffer> */ = {
+    query(q) {
+        const tq = {
             keysOnly: q.keysOnly,
             offset: q.offset,
             limit: q.limit,
             filters: [
-                (e, cb) => cb(null, e.key.toString() !== shardKey.toString()),
-                (e, cb) => cb(null, e.key.toString() !== shardReadmeKey.toString())
+                (e) => e.key.toString() !== shardKey.toString(),
+                (e) => e.key.toString() !== shardReadmeKey.toString()
             ]
         };
 
         if (!is.nil(q.prefix)) {
-            tq.filters.push((e, cb) => {
-                cb(null, this._invertKey(e.key).toString().startsWith(q.prefix));
+            tq.filters.push((e) => {
+                return this._invertKey(e.key).toString().startsWith(q.prefix);
             });
         }
 
         if (!is.nil(q.filters)) {
-            const filters = q.filters.map((f) => (e, cb) => {
-                f(Object.assign({}, e, {
+            const filters = q.filters.map((f) => (e) => {
+                return f(Object.assign({}, e, {
                     key: this._invertKey(e.key)
-                }), cb);
+                }));
             });
             tq.filters = tq.filters.concat(filters);
         }
 
         if (!is.nil(q.orders)) {
-            tq.orders = q.orders.map((o) => (res, cb) => {
+            tq.orders = q.orders.map((o) => async (res) => {
                 res.forEach((e) => {
                     e.key = this._invertKey(e.key);
                 });
-                o(res, (err, ordered) => {
-                    if (err) {
-                        return cb(err);
-                    }
-                    ordered.forEach((e) => {
-                        e.key = this._convertKey(e.key);
-                    });
-                    cb(null, ordered);
+                const ordered = await o(res);
+                ordered.forEach((e) => {
+                    e.key = this._convertKey(e.key);
                 });
+                return ordered;
             });
         }
 
         return this.child.query(tq);
     }
 
-    close(callback /* : Callback<void> */) /* : void */ {
-        this.child.close(callback);
+    close() {
+        return this.child.close();
     }
 }

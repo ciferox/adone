@@ -1,9 +1,12 @@
-const defaultsDeep = require("@nodeutils/defaults-deep");
-
 const {
-    async: { waterfall },
-    p2p: { Node, PeerId, PeerInfo, transport: { WS }, KadDHT }
+    p2p: { PeerInfo, PeerId, transport: { WS } }
 } = adone;
+
+const waterfall = require("async/waterfall");
+const defaultsDeep = require("@nodeutils/defaults-deep");
+const DHT = require("libp2p-kad-dht");
+
+const Libp2p = require("../src");
 
 describe("private network", () => {
     let config;
@@ -17,7 +20,7 @@ describe("private network", () => {
                     peerInfo,
                     modules: {
                         transport: [WS],
-                        dht: KadDHT
+                        dht: DHT
                     }
                 };
                 cb();
@@ -36,7 +39,7 @@ describe("private network", () => {
 
         it("should throw an error without a provided protector", () => {
             expect(() => {
-                return new Node(config);
+                return new Libp2p(config);
             }).to.throw("Private network is enforced, but no protector was provided");
         });
 
@@ -55,7 +58,7 @@ describe("private network", () => {
                     }
                 });
 
-                node = new Node(options);
+                node = new Libp2p(options);
                 return node;
             }).to.not.throw();
             expect(node._switch.protector).to.deep.equal(protector);
@@ -69,7 +72,7 @@ describe("private network", () => {
                     }
                 });
 
-                return new Node(options);
+                return new Libp2p(options);
             }).to.throw();
         });
     });
@@ -77,7 +80,7 @@ describe("private network", () => {
     describe("network protection not enforced", () => {
         it("should not throw an error with no provided protector", () => {
             expect(() => {
-                return new Node(config);
+                return new Libp2p(config);
             }).to.not.throw();
         });
     });

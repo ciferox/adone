@@ -137,87 +137,121 @@ describe("datastore", "interface", () => {
             checkLess("/a/b/c/d/e/f/g/h", "/b");
             checkLess(pathSep, "/a");
         });
+
+        it("concat", () => {
+            const originalKey = new Key("/a/b/c");
+        
+            const concattedKey = originalKey.concat(new Key("/d/e/f"));
+            expect(concattedKey.toString()).to.equal("/a/b/c/d/e/f");
+        
+            // Original key is not changed
+            expect(originalKey.toString()).to.equal("/a/b/c");
+        
+            const concattedMultipleKeys = originalKey.concat(new Key("/d/e"), new Key("/f/g"));
+            expect(concattedMultipleKeys.toString()).to.equal("/a/b/c/d/e/f/g");
+        
+            // New instance of Key is always created
+            expect(originalKey.concat()).to.not.equal(originalKey);
+            // but has the same value
+            expect(originalKey.concat().toString()).to.equal("/a/b/c");
+        });
     });
 
     describe("utils", () => {
-        it("asyncFilter - sync", (done) => {
-            pull(
-                pull.values([1, 2, 3, 4]),
-                util.asyncFilter((val, cb) => {
-                    cb(null, val % 2 === 0);
-                }),
-                pull.collect((err, res) => {
-                    expect(err).to.not.exist();
-                    expect(res).to.be.eql([2, 4]);
-                    done();
-                })
-            );
+        it("filter - sync", async () => {
+            const data = [1, 2, 3, 4];
+            const filterer = (val) => val % 2 === 0;
+            const res = [];
+            for await (const val of util.filter(data, filterer)) {
+                res.push(val);
+            }
+            expect(res).to.be.eql([2, 4]);
         });
-
-        it("asyncFilter - async", (done) => {
-            pull(
-                pull.values([1, 2, 3, 4]),
-                util.asyncFilter((val, cb) => {
-                    setTimeout(() => {
-                        cb(null, val % 2 === 0);
-                    }, 10);
-                }),
-                pull.collect((err, res) => {
-                    expect(err).to.not.exist();
-                    expect(res).to.be.eql([2, 4]);
-                    done();
-                })
-            );
+        
+        it("filter - async", async () => {
+            const data = [1, 2, 3, 4];
+            const filterer = (val) => val % 2 === 0;
+            const res = [];
+            for await (const val of util.filter(data, filterer)) {
+                res.push(val);
+            }
+            expect(res).to.be.eql([2, 4]);
         });
-
-        it("asyncSort", (done) => {
-            pull(
-                pull.values([1, 2, 3, 4]),
-                util.asyncSort((res, cb) => {
-                    setTimeout(() => {
-                        cb(null, res.reverse());
-                    }, 10);
-                }),
-                pull.collect((err, res) => {
-                    expect(err).to.not.exist();
-                    expect(res).to.be.eql([4, 3, 2, 1]);
-                    done();
-                })
-            );
+        
+        it("sortAll", async () => {
+            const data = [1, 2, 3, 4];
+            const sorter = (vals) => vals.reverse();
+            const res = [];
+            for await (const val of util.sortAll(data, sorter)) {
+                res.push(val);
+            }
+            expect(res).to.be.eql([4, 3, 2, 1]);
         });
-
-        it("asyncSort - fail", (done) => {
-            pull(
-                pull.values([1, 2, 3, 4]),
-                util.asyncSort((res, cb) => {
-                    setTimeout(() => {
-                        cb(new Error("fail"));
-                    }, 10);
-                }),
-                pull.collect((err, res) => {
-                    expect(err.message).to.be.eql("fail");
-                    done();
-                })
-            );
+        
+        it("sortAll - fail", async () => {
+            const data = [1, 2, 3, 4];
+            const sorter = (vals) => {
+ throw new Error("fail"); 
+};
+            const res = [];
+        
+            try {
+                for await (const val of util.sortAll(data, sorter)) {
+                    res.push(val);
+                }
+            } catch (err) {
+                expect(err.message).to.be.eql("fail");
+                return;
+            }
+        
+            throw new Error("expected error to be thrown");
         });
-
+        
+        it("should take n values from iterator", async () => {
+            const data = [1, 2, 3, 4];
+            const n = 3;
+            const res = [];
+            for await (const val of util.take(data, n)) {
+                res.push(val);
+            }
+            expect(res).to.be.eql([1, 2, 3]);
+        });
+        
+        it("should take nothing from iterator", async () => {
+            const data = [1, 2, 3, 4];
+            const n = 0;
+            for await (const _ of util.take(data, n)) { // eslint-disable-line
+                throw new Error("took a value");
+            }
+        });
+        
+        it("should map iterator values", async () => {
+            const data = [1, 2, 3, 4];
+            const mapper = (n) => n * 2;
+            const res = [];
+            for await (const val of util.map(data, mapper)) {
+                res.push(val);
+            }
+            expect(res).to.be.eql([2, 4, 6, 8]);
+        });
+        
         it("replaceStartWith", () => {
             expect(
                 util.replaceStartWith("helloworld", "hello")
             ).to.eql(
                 "world"
             );
-
+        
             expect(
                 util.replaceStartWith("helloworld", "world")
             ).to.eql(
                 "helloworld"
             );
         });
-
+        
         it("provides a temp folder", () => {
             expect(util.tmpdir()).to.not.equal("");
-        });
+        }); 
     });
 });
 

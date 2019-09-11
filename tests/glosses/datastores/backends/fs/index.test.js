@@ -1,15 +1,25 @@
-const mkdirp = require("mkdirp");
-const rimraf = require("rimraf");
-const waterfall = require("async/waterfall");
-const parallel = require("async/parallel");
-
 const {
-    datastore: { ShardingDatastore, shard: sh, interface: { Key, util }, backend: { FsDatastore } },
-    std: { fs, path },
-    stream: { pull }
+    datastore: { backend: { FsDatastore }, interface: { Key, util }, ShardingDatastore, shard: sh }
 } = adone;
 
+const path = require("path");
+const promisify = require("util").promisify;
+const noop = () => { };
+const mkdirp = require("mkdirp");
+const rimraf = promisify(require("rimraf"));
+const fs = require("fs");
+const fsReadFile = promisify(require("fs").readFile || noop);
+const isNode = require("detect-node");
+
 describe("datastore", "backend", "FsDatastore", () => {
+    if (!isNode) {
+        it("only supports node.js", () => {
+
+        });
+
+        return;
+    }
+
     describe("construction", () => {
         it("defaults - folder missing", () => {
             const dir = util.tmpdir();
@@ -60,71 +70,83 @@ describe("datastore", "backend", "FsDatastore", () => {
         );
     });
 
-    it("sharding files", (done) => {
+    it("deleting files", async () => {
+        const dir = util.tmpdir();
+        const fs = new FsDatastore(dir);
+        const key = new Key("1234");
+
+        await fs.put(key, Buffer.from([0, 1, 2, 3]));
+        await fs.delete(key);
+
+        try {
+            await fs.get(key);
+            throw new Error("Should have errored");
+        } catch (err) {
+            expect(err.code).to.equal("ERR_NOT_FOUND");
+        }
+    });
+
+    it("deleting non-existent files", async () => {
+        const dir = util.tmpdir();
+        const fs = new FsDatastore(dir);
+        const key = new Key("5678");
+
+        await fs.delete(key);
+
+        try {
+            await fs.get(key);
+            throw new Error("Should have errored");
+        } catch (err) {
+            expect(err.code).to.equal("ERR_NOT_FOUND");
+        }
+    });
+
+    it("sharding files", async () => {
         const dir = util.tmpdir();
         const fstore = new FsDatastore(dir);
         const shard = new sh.NextToLast(2);
-        waterfall([
-            (cb) => ShardingDatastore.create(fstore, shard, cb),
-            (cb) => fs.readFile(path.join(dir, sh.SHARDING_FN), cb),
-            (file, cb) => {
-                expect(file.toString()).to.be.eql("/repo/flatfs/shard/v1/next-to-last/2\n");
-                fs.readFile(path.join(dir, sh.README_FN), cb);
-            },
-            (readme, cb) => {
-                expect(readme.toString()).to.be.eql(sh.readme);
-                cb();
-            },
-            (cb) => rimraf(dir, cb)
-        ], done);
+        await ShardingDatastore.create(fstore, shard);
+
+        const file = await fsReadFile(path.join(dir, sh.SHARDING_FN));
+        expect(file.toString()).to.be.eql("/repo/flatfs/shard/v1/next-to-last/2\n");
+
+        const readme = await fsReadFile(path.join(dir, sh.README_FN));
+        expect(readme.toString()).to.be.eql(sh.readme);
+        await rimraf(dir);
     });
 
-    it("query", (done) => {
+    it("query", async () => {
         const fs = new FsDatastore(path.join(__dirname, "test-repo", "blocks"));
-
-        pull(
-            fs.query({}),
-            pull.collect((err, res) => {
-                expect(err).to.not.exist();
-                expect(res).to.have.length(23);
-                done();
-            })
-        );
+        const res = [];
+        for await (const q of fs.query({})) {
+            res.push(q);
+        }
+        expect(res).to.have.length(23);
     });
 
-    it("interop with go", (done) => {
+    it("interop with go", async () => {
         const repodir = path.join(__dirname, "/test-repo/blocks");
         const fstore = new FsDatastore(repodir);
         const key = new Key("CIQGFTQ7FSI2COUXWWLOQ45VUM2GUZCGAXLWCTOKKPGTUWPXHBNIVOY");
         const expected = fs.readFileSync(path.join(repodir, "VO", `${key.toString()}.data`));
-
-        waterfall([
-            (cb) => ShardingDatastore.open(fstore, cb),
-            (flatfs, cb) => parallel([
-                (cb) => pull(
-                    flatfs.query({}),
-                    pull.collect(cb)
-                ),
-                (cb) => flatfs.get(key, cb)
-            ], (err, res) => {
-                expect(err).to.not.exist();
-                expect(res[0]).to.have.length(23);
-                expect(res[1]).to.be.eql(expected);
-
-                cb();
-            })
-        ], done);
+        const flatfs = await ShardingDatastore.open(fstore);
+        const res = await flatfs.get(key);
+        const queryResult = flatfs.query({});
+        const results = [];
+        for await (const result of queryResult) { results.push(result) };
+        expect(results).to.have.length(23);
+        expect(res).to.be.eql(expected);
     });
 
     describe("interface-datastore", () => {
         const dir = util.tmpdir();
 
         require("../interface")({
-            setup(callback) {
-                callback(null, new FsDatastore(dir));
+            setup: () => {
+                return new FsDatastore(dir);
             },
-            teardown(callback) {
-                rimraf(dir, callback);
+            teardown: () => {
+                return rimraf(dir);
             }
         });
     });
@@ -133,13 +155,28 @@ describe("datastore", "backend", "FsDatastore", () => {
         const dir = util.tmpdir();
 
         require("../interface")({
-            setup(callback) {
+            setup: () => {
                 const shard = new sh.NextToLast(2);
-                ShardingDatastore.createOrOpen(new FsDatastore(dir), shard, callback);
+                return ShardingDatastore.createOrOpen(new FsDatastore(dir), shard);
             },
-            teardown(callback) {
-                rimraf(dir, callback);
+            teardown: () => {
+                return rimraf(dir);
             }
         });
+    });
+
+    it("can survive concurrent writes", async () => {
+        const dir = util.tmpdir();
+        const fstore = new FsDatastore(dir);
+        const key = new Key("CIQGFTQ7FSI2COUXWWLOQ45VUM2GUZCGAXLWCTOKKPGTUWPXHBNIVOY");
+        const value = Buffer.from("Hello world");
+
+        await Promise.all(
+            new Array(100).fill(0).map(() => fstore.put(key, value))
+        );
+
+        const res = await fstore.get(key);
+
+        expect(res).to.deep.equal(value);
     });
 });

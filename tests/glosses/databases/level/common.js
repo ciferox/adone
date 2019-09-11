@@ -1,4 +1,4 @@
-const async = require("async");
+const each = require("async-each");
 const delayed = require("delayed").delayed;
 
 const {
@@ -20,7 +20,7 @@ export const openTestDatabase = function () {
 };
 
 export const commonTearDown = function (done) {
-    async.forEach(this.closeableDatabases, (db, callback) => {
+    each(this.closeableDatabases, (db, callback) => {
         db.close(callback);
     }, done);
 };

@@ -1,13 +1,45 @@
-const uuid = require("uuid/v4");
-const withIs = require("class-is");
-
 const {
     is
 } = adone;
 
+const uuid = require("uuid/v4");
+const withIs = require("class-is");
+
 const pathSepS = "/";
 const pathSepB = Buffer.from(pathSepS);
 const pathSep = pathSepB[0];
+
+/**
+ * The first component of a namespace. `foo` in `foo:bar`
+ *
+ * @param {string} ns
+ * @returns {string}
+ */
+const namespaceType = (ns) => {
+    const parts = ns.split(":");
+    if (parts.length < 2) {
+        return "";
+    }
+    return parts.slice(0, -1).join(":");
+};
+
+/**
+ * The last component of a namespace, `baz` in `foo:bar:baz`.
+ *
+ * @param {string} ns
+ * @returns {string}
+ */
+const namespaceValue = (ns) => {
+    const parts = ns.split(":");
+    return parts[parts.length - 1];
+};
+
+/**
+ * Flatten array of arrays (only one level)
+ * @param {Array<Array>} arr
+ * @return {*}
+ */
+const flatten = (arr) => [].concat(...arr);
 
 /**
  * A Key represents the unique identifier of an object.
@@ -26,11 +58,7 @@ const pathSep = pathSepB[0];
  *
  */
 class Key {
-    /**
-     * :: _buf: Buffer
-     */
-
-    constructor(s /* : string|Buffer */, clean /* : ?bool */) {
+    constructor(s, clean) {
         if (is.string(s)) {
             this._buf = Buffer.from(s);
         } else if (is.buffer(s)) {
@@ -56,7 +84,7 @@ class Key {
      * @param {string} [encoding='utf8']
      * @returns {string}
      */
-    toString(encoding/* : ?buffer$Encoding */)/* : string */ {
+    toString(encoding) {
         return this._buf.toString(encoding || "utf8");
     }
 
@@ -65,13 +93,14 @@ class Key {
      *
      * @returns {Buffer}
      */
-    toBuffer() /* : Buffer */ {
+    toBuffer() {
         return this._buf;
     }
 
-    // waiting on https://github.com/facebook/flow/issues/2286
-    // $FlowFixMe
-    get [Symbol.toStringTag]() /* : string */ {
+    /**
+     * @returns {String}
+     */
+    get [Symbol.toStringTag]() {
         return `[Key ${this.toString()}]`;
     }
 
@@ -86,7 +115,7 @@ class Key {
      * // => Key('/one/two')
      *
      */
-    static withNamespaces(list /* : Array<string> */) /* : Key */ {
+    static withNamespaces(list) {
         return new _Key(list.join(pathSepS));
     }
 
@@ -100,7 +129,7 @@ class Key {
      * // => Key('/f98719ea086343f7b71f32ea9d9d521d')
      *
      */
-    static random() /* : Key */ {
+    static random() {
         return new _Key(uuid().replace(/-/g, ""));
     }
 
@@ -130,7 +159,7 @@ class Key {
      * @param {Key} key
      * @returns {bool}
      */
-    less(key /* : Key */) /* : bool */ {
+    less(key) {
         const list1 = this.list();
         const list2 = key.list();
 
@@ -161,7 +190,7 @@ class Key {
      * new Key('/Comedy/MontyPython/Actor:JohnCleese').reverse()
      * // => Key('/Actor:JohnCleese/MontyPython/Comedy')
      */
-    reverse() /* : Key */ {
+    reverse() {
         return Key.withNamespaces(this.list().slice().reverse());
     }
 
@@ -170,7 +199,7 @@ class Key {
      *
      * @returns {Array<string>}
      */
-    namespaces() /* : Array<string> */ {
+    namespaces() {
         return this.list();
     }
 
@@ -184,7 +213,7 @@ class Key {
      * // => 'Actor:JohnCleese'
      *
      */
-    baseNamespace() /* : string */ {
+    baseNamespace() {
         const ns = this.namespaces();
         return ns[ns.length - 1];
     }
@@ -199,7 +228,7 @@ class Key {
      * // => ['Comedy', 'MontyPythong', 'Actor:JohnCleese']
      *
      */
-    list() /* : Array<string> */ {
+    list() {
         return this.toString().split(pathSepS).slice(1);
     }
 
@@ -213,7 +242,7 @@ class Key {
      * // => 'Actor'
      *
      */
-    type() /* : string */ {
+    type() {
         return namespaceType(this.baseNamespace());
     }
 
@@ -226,7 +255,7 @@ class Key {
      * new Key('/Comedy/MontyPython/Actor:JohnCleese').name()
      * // => 'JohnCleese'
      */
-    name() /* : string */ {
+    name() {
         return namespaceValue(this.baseNamespace());
     }
 
@@ -240,7 +269,7 @@ class Key {
      * new Key('/Comedy/MontyPython/Actor').instance('JohnClesse')
      * // => Key('/Comedy/MontyPython/Actor:JohnCleese')
      */
-    instance(s /* : string */) /* : Key */ {
+    instance(s) {
         return new _Key(`${this.toString()}:${s}`);
     }
 
@@ -254,7 +283,7 @@ class Key {
      * // => Key('/Comedy/MontyPython/Actor')
      *
      */
-    path() /* : Key */ {
+    path() {
         let p = this.parent().toString();
         if (!p.endsWith(pathSepS)) {
             p += pathSepS;
@@ -273,7 +302,7 @@ class Key {
      * // => Key("/Comedy/MontyPython")
      *
      */
-    parent() /* : Key */ {
+    parent() {
         const list = this.list();
         if (list.length === 1) {
             return new _Key(pathSepS);
@@ -293,7 +322,7 @@ class Key {
      * // => Key('/Comedy/MontyPython/Actor:JohnCleese')
      *
      */
-    child(key /* : Key */) /* : Key */ {
+    child(key) {
         if (this.toString() === pathSepS) {
             return key;
         } else if (key.toString() === pathSepS) {
@@ -314,7 +343,7 @@ class Key {
      * // => true
      *
      */
-    isAncestorOf(other /* : Key */) /* : bool */ {
+    isAncestorOf(other) {
         if (other.toString() === this.toString()) {
             return false;
         }
@@ -333,7 +362,7 @@ class Key {
      * // => true
      *
      */
-    isDecendantOf(other /* : Key */) /* : bool */ {
+    isDecendantOf(other) {
         if (other.toString() === this.toString()) {
             return false;
         }
@@ -347,34 +376,19 @@ class Key {
      * @returns {bool}
      *
      */
-    isTopLevel() /* : bool */ {
+    isTopLevel() {
         return this.list().length === 1;
     }
-}
 
-/**
- * The first component of a namespace. `foo` in `foo:bar`
- *
- * @param {string} ns
- * @returns {string}
- */
-function namespaceType(ns /* : string */) /* : string */ {
-    const parts = ns.split(":");
-    if (parts.length < 2) {
-        return "";
+    /**
+     * Concats one or more Keys into one new Key.
+     *
+     * @param {Array<Key>} keys
+     * @returns {Key}
+     */
+    concat(...keys) {
+        return Key.withNamespaces([...this.namespaces(), ...flatten(keys.map((key) => key.namespaces()))]);
     }
-    return parts.slice(0, -1).join(":");
-}
-
-/**
- * The last component of a namespace, `baz` in `foo:bar:baz`.
- *
- * @param {string} ns
- * @returns {string}
- */
-function namespaceValue(ns /* : string */) /* : string */ {
-    const parts = ns.split(":");
-    return parts[parts.length - 1];
 }
 
 const _Key = withIs(Key, { className: "Key", symbolName: "@ipfs/interface-datastore/key" });

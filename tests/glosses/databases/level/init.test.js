@@ -67,4 +67,23 @@ describe("Init & open()", () => {
         }
         throw new Error("did not throw");
     });
+
+    it("support open options", (done) => {
+        const down = new Memory();
+
+        new DB(down, (err, up) => {
+            assert.notExists(err, "no error");
+
+            up.close(() => {
+                down.open = function (opts) {
+                    assert.equal(opts.foo, "bar");
+                    done();
+                };
+
+                up.open({
+                    foo: "bar"
+                });
+            });
+        });
+    });
 });

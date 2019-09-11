@@ -1,24 +1,34 @@
+const {
+    // async: { each, series, parallel, nextTick },
+    is,
+    p2p: { PeerBook, PeerInfo, transport: { WS } }
+} = adone;
+
 const FSM = require("fsm-event");
-const debug = require("debug");
-const log = debug("libp2p");
-log.error = debug("libp2p:error");
+const EventEmitter = require("events").EventEmitter;
+// const debug = require("debug");
+// const log = debug("libp2p");
+// log.error = debug("libp2p:error");
 const errCode = require("err-code");
+const promisify = require("promisify-es6");
+
+const each = require("async/each");
+const series = require("async/series");
+const parallel = require("async/parallel");
+const nextTick = require("async/nextTick");
+
+const Switch = require("./switch");
+const Ping = require("./ping");
+const ConnectionManager = require("./connection-manager");
 
 const { emitFirst } = require("./util");
 const peerRouting = require("./peer-routing");
 const contentRouting = require("./content-routing");
 const dht = require("./dht");
 const pubsub = require("./pubsub");
-const getPeerInfo = require("./get_peer_info");
+const { getPeerInfoRemote } = require("./get-peer-info");
 const validateConfig = require("./config").validate;
 const { codes } = require("./errors");
-
-const {
-    async: { each, series, parallel, nextTick },
-    event,
-    is,
-    p2p: { PeerBook, PeerInfo, ConnectionManager, Switch, Ping, transport: { WS } }
-} = adone;
 
 const notStarted = (action, state) => {
     return errCode(
@@ -28,14 +38,14 @@ const notStarted = (action, state) => {
 };
 
 /**
- * @fires Node#error Emitted when an error occurs
- * @fires Node#peer:connect Emitted when a peer is connected to this node
- * @fires Node#peer:disconnect Emitted when a peer disconnects from this node
- * @fires Node#peer:discovery Emitted when a peer is discovered
- * @fires Node#start Emitted when the node and its services has started
- * @fires Node#stop Emitted when the node and its services has stopped
+ * @fires Libp2p#error Emitted when an error occurs
+ * @fires Libp2p#peer:connect Emitted when a peer is connected to this node
+ * @fires Libp2p#peer:disconnect Emitted when a peer disconnects from this node
+ * @fires Libp2p#peer:discovery Emitted when a peer is discovered
+ * @fires Libp2p#start Emitted when the node and its services has started
+ * @fires Libp2p#stop Emitted when the node and its services has stopped
  */
-export default class Node extends event.Emitter {
+class Libp2p extends EventEmitter {
     constructor(_options) {
         super();
         // validateConfig will ensure the config is correct,
@@ -113,9 +123,9 @@ export default class Node extends event.Emitter {
             });
         }
 
-        // enable/disable pubsub
-        if (this._config.EXPERIMENTAL.pubsub) {
-            this.pubsub = pubsub(this);
+        // start pubsub
+        if (this._modules.pubsub && this._config.pubsub.enabled !== false) {
+            this.pubsub = pubsub(this, this._modules.pubsub, this._config.pubsub);
         }
 
         // Attach remaining APIs
@@ -123,8 +133,6 @@ export default class Node extends event.Emitter {
         this.peerRouting = peerRouting(this);
         this.contentRouting = contentRouting(this);
         this.dht = dht(this);
-
-        this._getPeerInfo = getPeerInfo(this);
 
         // Mount default protocols
         Ping.mount(this._switch);
@@ -149,23 +157,23 @@ export default class Node extends event.Emitter {
             }
         });
         this.state.on("STARTING", () => {
-            log("libp2p is starting");
+            // log("libp2p is starting");
             this._onStarting();
         });
         this.state.on("STOPPING", () => {
-            log("libp2p is stopping");
+            // log("libp2p is stopping");
             this._onStopping();
         });
         this.state.on("STARTED", () => {
-            log("libp2p has started");
+            // log("libp2p has started");
             this.emit("start");
         });
         this.state.on("STOPPED", () => {
-            log("libp2p has stopped");
+            // log("libp2p has stopped");
             this.emit("stop");
         });
         this.state.on("error", (err) => {
-            log.error(err);
+            // log.error(err);
             this.emit("error", err);
         });
 
@@ -177,11 +185,16 @@ export default class Node extends event.Emitter {
             });
         });
 
-        this._peerDiscovered = this._peerDiscovered.bind(this);
+        this._peerDiscovered = this._peerDiscovered.bind(this)
+
+        // promisify all instance methods
+        ;["start", "stop", "dial", "dialProtocol", "dialFSM", "hangUp", "ping"].forEach((method) => {
+            this[method] = promisify(this[method], { context: this });
+        });
     }
 
     /**
-     * Overrides Emitter.emit to conditionally emit errors
+     * Overrides EventEmitter.emit to conditionally emit errors
      * if there is a handler. If not, errors will be logged.
      * @param {string} eventName
      * @param  {...any} args
@@ -189,7 +202,7 @@ export default class Node extends event.Emitter {
      */
     emit(eventName, ...args) {
         if (eventName === "error" && !this._events.error) {
-            log.error(...args);
+            // log.error(...args);
         } else {
             super.emit(eventName, ...args);
         }
@@ -253,13 +266,10 @@ export default class Node extends event.Emitter {
             protocol = undefined;
         }
 
-        this._getPeerInfo(peer, (err, peerInfo) => {
-            if (err) {
-                return callback(err);
-            }
-
-            this._switch.dial(peerInfo, protocol, callback);
-        });
+        getPeerInfoRemote(peer, this)
+            .then((peerInfo) => {
+                this._switch.dial(peerInfo, protocol, callback);
+            }, callback);
     }
 
     /**
@@ -281,37 +291,42 @@ export default class Node extends event.Emitter {
             protocol = undefined;
         }
 
-        this._getPeerInfo(peer, (err, peerInfo) => {
-            if (err) {
-                return callback(err);
-            }
-
-            this._switch.dialFSM(peerInfo, protocol, callback);
-        });
+        getPeerInfoRemote(peer, this)
+            .then((peerInfo) => {
+                this._switch.dialFSM(peerInfo, protocol, callback);
+            }, callback);
     }
 
+    /**
+     * Disconnects from the given peer
+     *
+     * @param {PeerInfo|PeerId|Multiaddr|string} peer The peer to ping
+     * @param {function(Error)} callback
+     * @returns {void}
+     */
     hangUp(peer, callback) {
-        this._getPeerInfo(peer, (err, peerInfo) => {
-            if (err) {
-                return callback(err);
-            }
-
-            this._switch.hangUp(peerInfo, callback);
-        });
+        getPeerInfoRemote(peer, this)
+            .then((peerInfo) => {
+                this._switch.hangUp(peerInfo, callback);
+            }, callback);
     }
 
+    /**
+     * Pings the provided peer
+     *
+     * @param {PeerInfo|PeerId|Multiaddr|string} peer The peer to ping
+     * @param {function(Error, Ping)} callback
+     * @returns {void}
+     */
     ping(peer, callback) {
         if (!this.isStarted()) {
             return callback(notStarted("ping", this.state._state));
         }
 
-        this._getPeerInfo(peer, (err, peerInfo) => {
-            if (err) {
-                return callback(err);
-            }
-
-            callback(null, new Ping(this._switch, peerInfo));
-        });
+        getPeerInfoRemote(peer, this)
+            .then((peerInfo) => {
+                callback(null, new Ping(this._switch, peerInfo));
+            }, callback);
     }
 
     handle(protocol, handlerFunc, matchFunc) {
@@ -395,8 +410,8 @@ export default class Node extends event.Emitter {
                 }
             },
             (cb) => {
-                if (this._floodSub) {
-                    return this._floodSub.start(cb);
+                if (this.pubsub) {
+                    return this.pubsub.start(cb);
                 }
                 cb();
             },
@@ -410,7 +425,7 @@ export default class Node extends event.Emitter {
             }
         ], (err) => {
             if (err) {
-                log.error(err);
+                // log.error(err);
                 this.emit("error", err);
                 return this.state("stop");
             }
@@ -426,7 +441,7 @@ export default class Node extends event.Emitter {
                     this._discovery.map((d) => {
                         d.removeListener("peer", this._peerDiscovered);
                         return (_cb) => d.stop((err) => {
-                            log.error("an error occurred stopping the discovery service", err);
+                            // log.error("an error occurred stopping the discovery service", err);
                             _cb();
                         });
                     }),
@@ -434,8 +449,8 @@ export default class Node extends event.Emitter {
                 );
             },
             (cb) => {
-                if (this._floodSub) {
-                    return this._floodSub.stop(cb);
+                if (this.pubsub) {
+                    return this.pubsub.stop(cb);
                 }
                 cb();
             },
@@ -457,7 +472,7 @@ export default class Node extends event.Emitter {
             }
         ], (err) => {
             if (err) {
-                log.error(err);
+                // log.error(err);
                 this.emit("error", err);
             }
             this.state("done");
@@ -480,7 +495,7 @@ export default class Node extends event.Emitter {
      */
     _peerDiscovered(peerInfo) {
         if (peerInfo.id.toB58String() === this.peerInfo.id.toB58String()) {
-            log.error(new Error(codes.ERR_DISCOVERED_SELF));
+            // log.error(new Error(codes.ERR_DISCOVERED_SELF));
             return;
         }
         peerInfo = this.peerBook.put(peerInfo);
@@ -505,9 +520,9 @@ export default class Node extends event.Emitter {
         if (this._config.peerDiscovery.autoDial === true && !peerInfo.isConnected()) {
             const minPeers = this._options.connectionManager.minPeers || 0;
             if (minPeers > Object.keys(this._switch.connection.connections).length) {
-                log("connecting to discovered peer");
+                // log("connecting to discovered peer");
                 this._switch.dialer.connect(peerInfo, (err) => {
-                    err && log.error("could not connect to discovered peer", err);
+                    // err && log.error("could not connect to discovered peer", err);
                 });
             }
         }
@@ -550,3 +565,24 @@ export default class Node extends event.Emitter {
         }, callback);
     }
 }
+
+module.exports = Libp2p;
+/**
+ * Like `new Libp2p(options)` except it will create a `PeerInfo`
+ * instance if one is not provided in options.
+ * @param {object} options Libp2p configuration options
+ * @param {function(Error, Libp2p)} callback
+ * @returns {void}
+ */
+module.exports.createLibp2p = promisify((options, callback) => {
+    if (options.peerInfo) {
+        return nextTick(callback, null, new Libp2p(options));
+    }
+    PeerInfo.create((err, peerInfo) => {
+        if (err) {
+            return callback(err);
+        }
+        options.peerInfo = peerInfo;
+        callback(null, new Libp2p(options));
+    });
+});

@@ -1,21 +1,25 @@
+/**
+ * eslint-env mocha
+ */
+
+
+const chai = require("chai");
+chai.use(require("dirty-chai"));
+const expect = chai.expect;
 const sinon = require("sinon");
-const createNode = require("../utils/create_node");
-const echo = require("../utils/echo");
-const { WRTC_RENDEZVOUS_MULTIADDR } = require("../utils/constants");
+const parallel = require("async/parallel");
+const crypto = require("crypto");
 
-const {
-    async: { parallel },
-    std: { path, crypto }
-} = adone;
-
-// const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", ...args);
+const createNode = require("./utils/create-node");
+const echo = require("./utils/echo");
+const { WRTC_RENDEZVOUS_MULTIADDR } = require("./utils/constants");
 
 describe("peer discovery", () => {
     let nodeA;
     let nodeB;
     let nodeC;
 
-    const setup = function (options) {
+    function setup(options) {
         before((done) => {
             parallel([
                 (cb) => createNode([
@@ -59,7 +63,7 @@ describe("peer discovery", () => {
         afterEach(() => {
             sinon.restore();
         });
-    };
+    }
 
     describe("module registration", () => {
         it("should enable by default a module passed as an object", (done) => {
@@ -308,7 +312,6 @@ describe("peer discovery", () => {
                 if (expectedPeers.size === 0) {
                     finish();
                 }
-                done();
             });
         });
     });
@@ -403,17 +406,17 @@ describe("peer discovery", () => {
                     },
                     webRTCStar: {
                         enabled: false
-                    },
-                    dht: {
+                    }
+                },
+                dht: {
+                    enabled: true,
+                    kBucketSize: 20,
+                    randomWalk: {
                         enabled: true,
-                        kBucketSize: 20,
-                        randomWalk: {
-                            enabled: true,
-                            queriesPerPeriod: 1,
-                            delay: 100,
-                            interval: 200, // start the query sooner
-                            timeout: 3000
-                        }
+                        queriesPerPeriod: 1,
+                        delay: 100,
+                        interval: 200, // start the query sooner
+                        timeout: 3000
                     }
                 }
             }

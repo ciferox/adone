@@ -1,8 +1,13 @@
+/**
+ * eslint-env mocha
+ */
+
+
 const pull = require("pull-stream");
 
-const echo = function (protocol, conn) {
+function echo(protocol, conn) {
     pull(conn, conn);
-};
+}
 
 module.exports = echo;
 module.exports.multicodec = "/echo/1.0.0";

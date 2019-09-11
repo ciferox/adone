@@ -1,9 +1,7 @@
+
+
 const PeerQueue = require("../peer-queue");
 const utils = require("../utils");
-
-const {
-    is
-} = adone;
 
 // TODO: Temporary until parallel dial in Switch have a proper
 // timeout. Requires async/await refactor of transports and
@@ -25,10 +23,10 @@ class Path {
         this.run = run;
         this.queryFunc = utils.withTimeout(queryFunc, QUERY_FUNC_TIMEOUT);
         if (!this.queryFunc) {
-            throw new Error("Path requires a `queryFn` to be specified");
+            throw new Error("Path requires a `queryFn` to be specified"); 
         }
         if (!is.function(this.queryFunc)) {
-            throw new Error(`Path expected \`queryFn\` to be a function. Got ${typeof this.queryFunc}`);
+            throw new Error(`Path expected \`queryFn\` to be a function. Got ${typeof this.queryFunc}`); 
         }
 
         /**
@@ -58,7 +56,7 @@ class Path {
      *
      */
     async execute() {
-        // Create a queue of peers ordered by distance from the key
+    // Create a queue of peers ordered by distance from the key
         const queue = await PeerQueue.fromKey(this.run.query.key);
         // Add initial peers to the queue
         this.peersToQuery = queue;
@@ -73,7 +71,7 @@ class Path {
      * @returns {Promise<void>}
      */
     async addPeerToQuery(peer) {
-        // Don't add self
+    // Don't add self
         if (this.run.query.dht._isSelf(peer)) {
             return;
         }

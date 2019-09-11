@@ -1,20 +1,27 @@
-const sinon = require("sinon");
-const errcode = require("err-code");
-
 const {
-    async: { series, times, parallel, timeout, retry, each, waterfall },
-    p2p: { KadDHT, PeerId, PeerBook, PeerInfo, Switch, transport: { TCP }, muxer: { mplex }, record: { Record } }
+    p2p: { KadDHT, Switch, record: { Record }, PeerId, PeerInfo, PeerBook, muxer: { mplex }, transport: { TCP } }
 } = adone;
 
-const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "kad_dht", ...args);
+const sinon = require("sinon");
+const series = require("async/series");
+const times = require("async/times");
+const parallel = require("async/parallel");
+const timeout = require("async/timeout");
+const retry = require("async/retry");
+const each = require("async/each");
+const waterfall = require("async/waterfall");
+const promiseToCallback = require("promise-to-callback");
+const errcode = require("err-code");
+
+const srcPath = (...args) => adone.getPath("src", "glosses", "p2p", "kad_dht", ...args);
 
 const kadUtils = require(srcPath("utils"));
 const c = require(srcPath("constants"));
 const Message = require(srcPath("message"));
 
-const createPeerInfo = require("./utils/create_peer_info");
-const createValues = require("./utils/create_values");
-const TestDHT = require("./utils/test_dht");
+const createPeerInfo = require("./utils/create-peer-info");
+const createValues = require("./utils/create-values");
+const TestDHT = require("./utils/test-dht");
 
 // connect two dhts
 function connectNoSync(a, b, callback) {
@@ -94,7 +101,7 @@ function countDiffPeers(a, b) {
     return b.filter((p) => !s.has(p.toB58String())).length;
 }
 
-describe("KadDHT", () => {
+describe("p2p", "KadDHT", () => {
     let peerInfos;
     let values;
 
@@ -946,7 +953,9 @@ describe("KadDHT", () => {
 
             waterfall([
                 (cb) => dht._putLocal(record.key, record.serialize(), cb),
-                (cb) => dht.datastore.get(kadUtils.bufferToKey(record.key), cb),
+                (cb) => {
+                    promiseToCallback(dht.datastore.get(kadUtils.bufferToKey(record.key)))(cb);
+                },
                 (lookup, cb) => {
                     expect(lookup).to.exist("Record should be in the local datastore");
                     cb();
@@ -956,7 +965,7 @@ describe("KadDHT", () => {
                 expect(err).to.not.exist();
                 expect(rec).to.not.exist("Record should have expired");
 
-                dht.datastore.get(kadUtils.bufferToKey(record.key), (err, lookup) => {
+                promiseToCallback(dht.datastore.get(kadUtils.bufferToKey(record.key)))((err, lookup) => {
                     expect(err).to.exist("Should throw error for not existing");
                     expect(lookup).to.not.exist("Record should be removed from datastore");
                     done();
@@ -1005,7 +1014,7 @@ describe("KadDHT", () => {
                     // Simulate returning a peer id to query
                     sinon.stub(dht.routingTable, "closestPeers").returns([peerInfos[1].id]),
                     // Simulate going out to the network and returning the record
-                    sinon.stub(dht, "_getValueOrPeersAsync").callsFake(async () => ({ record: rec }))
+                    sinon.stub(dht, "_getValueOrPeersAsync").callsFake(async () => ({ record: rec })) // eslint-disable-line require-await
                 ];
 
                 dht.getMany(key, 1, (err, res) => {

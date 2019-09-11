@@ -1,11 +1,6 @@
 const {
-    datastore: { KeyTransformDatastore, interface: { Key } }
+    datastore: { KeyTransformDatastore, interface: { Key }}
 } = adone;
-
-/**
- * ::
- * import type {Callback, Datastore, Query, QueryResult} from 'interface-datastore'
- */
 
 /**
  * Wraps a given datastore into a keytransform which
@@ -16,17 +11,13 @@ const {
  * `/hello/world`.
  *
  */
-export default class NamespaceDatastore/* :: <Value> */ extends KeyTransformDatastore /* :: <Value> */ {
-    /**
-     * :: prefix: Key
-     */
-
-    constructor(child/* : Datastore<Value> */, prefix/* : Key */) {
+export default class NamespaceDatastore extends KeyTransformDatastore {
+    constructor(child, prefix) {
         super(child, {
-            convert(key/* : Key */)/* : Key */ {
+            convert(key) {
                 return prefix.child(key);
             },
-            invert(key/* : Key */)/* : Key */ {
+            invert(key) {
                 if (prefix.toString() === "/") {
                     return key;
                 }
@@ -42,7 +33,7 @@ export default class NamespaceDatastore/* :: <Value> */ extends KeyTransformData
         this.prefix = prefix;
     }
 
-    query(q /* : Query<Value> */)/* : QueryResult<Value> */ {
+    query(q) {
         if (q.prefix && this.prefix.toString() !== "/") {
             return super.query(Object.assign({}, q, {
                 prefix: this.prefix.child(new Key(q.prefix)).toString()

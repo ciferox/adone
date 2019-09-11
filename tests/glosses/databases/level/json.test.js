@@ -1,4 +1,5 @@
-const async = require("async");
+const each = require("async-each");
+const parallel = require("run-parallel");
 const concat = require("concat-stream");
 const common = require("./common");
 
@@ -28,7 +29,7 @@ describe("JSON encoding", () => {
                     });
 
                     const testGet = function (next) {
-                        async.forEach(testData, (d, callback) => {
+                        each(testData, (d, callback) => {
                             db.get(d.key, (err, value) => {
                                 if (err) {
                                     console.error(err.stack);
@@ -47,9 +48,9 @@ describe("JSON encoding", () => {
                         }));
                     };
 
-                    async.parallel(PUT, (err) => {
+                    parallel(PUT, (err) => {
                         assert.notExists(err);
-                        async.parallel([testGet, testStream], done);
+                        parallel([testGet, testStream], done);
                     });
                 });
             };

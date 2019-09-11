@@ -1,4 +1,5 @@
-const async = require("async");
+const each = require("async-each");
+const series = require("run-series");
 const common = require("./common");
 
 const {
@@ -90,9 +91,9 @@ describe("get() / put() / del()", () => {
 
         it("del() works on real entries", (done) => {
             common.openTestDatabase((db) => {
-                async.series([
+                series([
                     function (callback) {
-                        async.forEach(["foo", "bar", "baz"], (key, callback) => {
+                        each(["foo", "bar", "baz"], (key, callback) => {
                             db.put(key, 1 + Math.random(), callback);
                         }, callback);
                     },
@@ -100,7 +101,7 @@ describe("get() / put() / del()", () => {
                         db.del("bar", callback);
                     },
                     function (callback) {
-                        async.forEach(["foo", "bar", "baz"], (key, callback) => {
+                        each(["foo", "bar", "baz"], (key, callback) => {
                             db.get(key, (err, value) => {
                                 // we should get foo & baz but not bar
                                 if (key === "bar") {

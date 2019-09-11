@@ -1,9 +1,8 @@
-const errCode = require("err-code");
 
-const {
-    async: { tryEach },
-    is
-} = adone;
+
+const tryEach = require("async/tryEach");
+const errCode = require("err-code");
+const promisify = require("promisify-es6");
 
 module.exports = (node) => {
     const routers = node._modules.peerRouting || [];
@@ -14,16 +13,16 @@ module.exports = (node) => {
     }
 
     return {
-        /**
-         * Iterates over all peer routers in series to find the given peer.
-         *
-         * @param {String} id The id of the peer to find
-         * @param {object} options
-         * @param {number} options.maxTimeout How long the query should run
-         * @param {function(Error, Result<Array>)} callback
-         * @returns {void}
-         */
-        findPeer: (id, options, callback) => {
+    /**
+     * Iterates over all peer routers in series to find the given peer.
+     *
+     * @param {String} id The id of the peer to find
+     * @param {object} options
+     * @param {number} options.maxTimeout How long the query should run
+     * @param {function(Error, Result<Array>)} callback
+     * @returns {void}
+     */
+        findPeer: promisify((id, options, callback) => {
             if (is.function(options)) {
                 callback = options;
                 options = {};
@@ -49,12 +48,12 @@ module.exports = (node) => {
             });
 
             tryEach(tasks, (err, results) => {
-                if (err && err.code !== "NOT_FOUND") {
+                if (err) {
                     return callback(err);
                 }
                 results = results || [];
                 callback(null, results);
             });
-        }
+        })
     };
 };

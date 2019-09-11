@@ -1,21 +1,21 @@
-const {
-    multiformat: { CID },
-    promise: { nodeify }
-} = adone;
+
+
+const CID = require("cids");
+const errcode = require("err-code");
+const promiseToCallback = require("promise-to-callback");
 
 const utils = require("../../utils");
-const errcode = require("err-code");
 
 module.exports = (dht) => {
     const log = utils.logger(dht.peerInfo.id, "rpc:add-provider");
     /**
-     * Process `AddProvider` DHT messages.
-     *
-     * @param {PeerInfo} peer
-     * @param {Message} msg
-     * @param {function(Error)} callback
-     * @returns {undefined}
-     */
+   * Process `AddProvider` DHT messages.
+   *
+   * @param {PeerInfo} peer
+   * @param {Message} msg
+   * @param {function(Error)} callback
+   * @returns {undefined}
+   */
     return function addProvider(peer, msg, callback) {
         log("start");
 
@@ -50,7 +50,7 @@ module.exports = (dht) => {
             if (!dht._isSelf(pi.id)) {
                 foundProvider = true;
                 dht.peerBook.put(pi);
-                nodeify(dht.providers.addProvider(cid, pi.id), (err) => callback(err));
+                promiseToCallback(dht.providers.addProvider(cid, pi.id))((err) => callback(err));
             }
         });
 
@@ -61,7 +61,7 @@ module.exports = (dht) => {
         // https://github.com/libp2p/js-libp2p-kad-dht/pull/127
         // https://github.com/libp2p/js-libp2p-kad-dht/issues/128
         if (!foundProvider) {
-            nodeify(dht.providers.addProvider(cid, peer.id), (err) => callback(err));
+            promiseToCallback(dht.providers.addProvider(cid, peer.id))((err) => callback(err));
         }
     };
 };

@@ -1,17 +1,14 @@
+
+
 const cache = require("hashlru");
+const varint = require("varint");
+const PeerId = require("peer-id");
+const Key = require("interface-datastore").Key;
 const Queue = require("p-queue");
 
 const c = require("./constants");
 const utils = require("./utils");
 
-const {
-    is,
-    data: { varint },
-    datastore: { interface: { Key } },
-    p2p: { PeerId },
-    promise: { promisify },
-    stream: { pull: { pullStreamToAsyncIterator } }
-} = adone;
 /**
  * This class manages known providers.
  * A provider is a peer that we know to have the content for a given CID.
@@ -92,7 +89,7 @@ class Providers {
 
             // Get all provider entries from the datastore
             const query = this.datastore.query({ prefix: c.PROVIDERS_KEY_PREFIX });
-            for await (const entry of pullStreamToAsyncIterator(query)) {
+            for await (const entry of query) {
                 try {
                     // Add a delete to the batch for each expired entry
                     const { cid, peerId } = parseProviderKey(entry.key);
@@ -115,9 +112,10 @@ class Providers {
                 }
             }
             this._log("deleting %d / %d entries", deleteCount, count);
+
             // Commit the deletes to the datastore
             if (deleted.size) {
-                await promisify((cb) => batch.commit(cb))();
+                await batch.commit();
             }
 
             // Clear expired entries from the cache
@@ -128,13 +126,11 @@ class Providers {
                     for (const peerId of peers) {
                         provs.delete(peerId);
                     }
-
                     if (provs.size === 0) {
                         this.providers.remove(key);
                     } else {
                         this.providers.set(key, provs);
                     }
-
                 }
             }
 
@@ -153,7 +149,6 @@ class Providers {
     async _getProvidersMap(cid) {
         const cacheKey = makeProviderKey(cid);
         let provs = this.providers.get(cacheKey);
-
         if (!provs) {
             provs = await loadProviders(this.datastore, cid);
             this.providers.set(cacheKey, provs);
@@ -185,7 +180,7 @@ class Providers {
      * @param {PeerId} provider
      * @returns {Promise}
      */
-    async addProvider(cid, provider) {
+    async addProvider(cid, provider) { // eslint-disable-line require-await
         return this.syncQueue.add(async () => {
             this._log("addProvider %s", cid.toBaseEncodedString());
             const provs = await this._getProvidersMap(cid);
@@ -195,7 +190,6 @@ class Providers {
             provs.set(utils.encodeBase32(provider.id), now);
 
             const dsKey = makeProviderKey(cid);
-
             this.providers.set(dsKey, provs);
             return writeProviderEntry(this.datastore, cid, provider, now);
         });
@@ -207,7 +201,7 @@ class Providers {
      * @param {CID} cid
      * @returns {Promise<Array<PeerId>>}
      */
-    async getProviders(cid) {
+    async getProviders(cid) { // eslint-disable-line require-await
         return this.syncQueue.add(async () => {
             this._log("getProviders %s", cid.toBaseEncodedString());
             const provs = await this._getProvidersMap(cid);
@@ -242,7 +236,7 @@ function makeProviderKey(cid) {
  *
  * @private
  */
-async function writeProviderEntry(store, cid, peer, time) {
+async function writeProviderEntry(store, cid, peer, time) { // eslint-disable-line require-await
     const dsKey = [
         makeProviderKey(cid),
         "/",
@@ -251,7 +245,7 @@ async function writeProviderEntry(store, cid, peer, time) {
 
     const key = new Key(dsKey);
     const buffer = Buffer.from(varint.encode(time));
-    return promisify((cb) => store.put(key, buffer, cb))();
+    return store.put(key, buffer);
 }
 
 /**
@@ -265,7 +259,7 @@ async function writeProviderEntry(store, cid, peer, time) {
 function parseProviderKey(key) {
     const parts = key.toString().split("/");
     if (parts.length !== 4) {
-        throw new Error("incorrectly formatted provider entry key in datastore: " + key);
+        throw new Error(`incorrectly formatted provider entry key in datastore: ${key}`);
     }
 
     return {
@@ -286,7 +280,7 @@ function parseProviderKey(key) {
 async function loadProviders(store, cid) {
     const providers = new Map();
     const query = store.query({ prefix: makeProviderKey(cid) });
-    for await (const entry of pullStreamToAsyncIterator(query)) {
+    for await (const entry of query) {
         const { peerId } = parseProviderKey(entry.key);
         providers.set(peerId, readTime(entry.value));
     }

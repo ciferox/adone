@@ -1,6 +1,6 @@
-const {
-    async: { waterfall }
-} = adone;
+
+
+const waterfall = require("async/waterfall");
 
 const Message = require("../../message");
 const utils = require("../../utils");

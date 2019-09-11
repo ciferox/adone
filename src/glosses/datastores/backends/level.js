@@ -1,198 +1,181 @@
 const {
     is,
     database: { level },
-    datastore: { interface: { Key, error, util: { asyncFilter, asyncSort } } },
-    stream: { pull }
+    datastore: { interface: { Key, error, util } }
 } = adone;
+const { filter, map, take, sortAll } = util;
+
+const levelIteratorToIterator = (li) => {
+    return {
+        next: () => new Promise((resolve, reject) => {
+            li.next((err, key, value) => {
+                if (err) {
+                    return reject(err); 
+                }
+                if (is.nil(key)) {
+                    return resolve({ done: true }); 
+                }
+                resolve({ done: false, value: { key, value } });
+            });
+        }),
+        return: () => new Promise((resolve, reject) => {
+            li.end((err) => {
+                if (err) {
+                    return reject(err); 
+                }
+                resolve({ done: true });
+            });
+        }),
+        [Symbol.asyncIterator]() {
+            return this;
+        }
+    };
+};
+
 
 /**
  * A datastore backed by leveldb.
  */
-/**
- * :: export type LevelOptions = {
- * createIfMissing?: bool,
- * errorIfExists?: bool,
- * compression?: bool,
- * cacheSize?: number,
- * db?: Object
- */
-class LevelDatastore {
-    /**
-     * :: db: levelup
-     */
-
-    constructor(path /* : string */, opts /* : ?LevelOptions */) {
-        let Database;
+export default class LevelDatastore {
+    constructor(path, opts) {
+        let database;
 
         if (opts && opts.db) {
-            Database = opts.db;
+            database = opts.db;
             delete opts.db;
         } else {
-            Database = level.backend.LevelDB;
+            database = level.packager(level.backend.LevelDB);
         }
 
-        this.db = new level.DB(
-            new level.backend.Encoding(new Database(path), { valueEncoding: "binary" }),
-            Object.assign({}, opts, {
-                compression: false // same default as go
-            }),
-            (err) => {
-                // Prevent an uncaught exception error on duplicate locks
-                if (err) {
-                    throw err;
-                }
-            }
-        );
+        this.db = this._initDb(database, path, opts);
     }
 
-    open(callback /* : Callback<void> */) /* : void */ {
-        this.db.open((err) => {
-            if (err) {
-                return callback(error.dbOpenFailedError(err));
-            }
-            callback();
+    _initDb(database, path, opts) {
+        return database(path, {
+            ...opts,
+            valueEncoding: "binary",
+            compression: false // same default as go
         });
     }
 
-    put(key /* : Key */, value /* : Buffer */, callback /* : Callback<void> */) /* : void */ {
-        this.db.put(key.toString(), value, (err) => {
-            if (err) {
-                return callback(error.dbWriteFailedError(err));
+    async open() {
+        try {
+            await this.db.open();
+        } catch (err) {
+            throw error.dbOpenFailedError(err);
+        }
+    }
+
+    async put(key, value) {
+        try {
+            await this.db.put(key.toString(), value);
+        } catch (err) {
+            throw error.dbWriteFailedError(err);
+        }
+    }
+
+    async get(key) {
+        let data;
+        try {
+            data = await this.db.get(key.toString());
+        } catch (err) {
+            if (err instanceof adone.error.NotFoundException) {
+                throw error.notFoundError(err); 
             }
-            callback();
-        });
+            throw error.dbWriteFailedError(err);
+        }
+        return data;
     }
 
-    get(key /* : Key */, callback /* : Callback<Buffer> */) /* : void */ {
-        this.db.get(key.toString(), (err, data) => {
-            if (err) {
-                return callback(error.notFoundError(err));
+    async has(key) {
+        try {
+            await this.db.get(key.toString());
+        } catch (err) {
+            if (err instanceof adone.error.NotFoundException) {
+                return false; 
             }
-            callback(null, data);
-        });
+            throw err;
+        }
+        return true;
     }
 
-    has(key /* : Key */, callback /* : Callback<bool> */) /* : void */ {
-        this.db.get(key.toString(), (err, res) => {
-            if (err) {
-                if (err instanceof adone.error.NotFoundException) {
-                    callback(null, false);
-                    return;
-                }
-                callback(err);
-                return;
-            }
-
-            callback(null, true);
-        });
+    async delete(key) {
+        try {
+            await this.db.del(key.toString());
+        } catch (err) {
+            throw error.dbDeleteFailedError(err);
+        }
     }
 
-    delete(key /* : Key */, callback /* : Callback<void> */) /* : void */ {
-        this.db.del(key.toString(), (err) => {
-            if (err) {
-                return callback(error.dbDeleteFailedError(err));
-            }
-            callback();
-        });
+    close() {
+        return this.db.close();
     }
 
-    close(callback /* : Callback<void> */) /* : void */ {
-        this.db.close(callback);
-    }
-
-    batch() /* : Batch<Buffer> */ {
+    batch() {
         const ops = [];
         return {
-            put: (key /* : Key */, value /* : Buffer */) /* : void */ => {
+            put: (key, value) => {
                 ops.push({
                     type: "put",
                     key: key.toString(),
                     value
                 });
             },
-            delete: (key /* : Key */) /* : void */ => {
+            delete: (key) => {
                 ops.push({
                     type: "del",
                     key: key.toString()
                 });
             },
-            commit: (callback /* : Callback<void> */) /* : void */ => {
-                this.db.batch(ops, callback);
+            commit: () => {
+                return this.db.batch(ops);
             }
         };
     }
 
-    query(q /* : Query<Buffer> */) /* : QueryResult<Buffer> */ {
+    query(q) {
         let values = true;
         if (!is.nil(q.keysOnly)) {
             values = !q.keysOnly;
         }
 
-        const iter = this.db.db.iterator({
-            keys: true,
-            values,
-            keyAsBuffer: true
+        let it = levelIteratorToIterator(
+            this.db.db.iterator({
+                keys: true,
+                values,
+                keyAsBuffer: true
+            })
+        );
+
+        it = map(it, ({ key, value }) => {
+            const res = { key: new Key(key, false) };
+            if (values) {
+                res.value = Buffer.from(value);
+            }
+            return res;
         });
 
-        const rawStream = (end, cb) => {
-            if (end) {
-                return iter.end((err) => {
-                    cb(err || end);
-                });
-            }
-
-            iter.next((err, key, value) => {
-                if (err) {
-                    return cb(err);
-                }
-
-                if (is.nil(err) && is.nil(key) && is.nil(value)) {
-                    return iter.end((err) => {
-                        cb(err || true);
-                    });
-                }
-
-                const res /* : QueryEntry<Buffer> */ = {
-                    key: new Key(key, false)
-                };
-
-                if (values) {
-                    res.value = Buffer.from(value);
-                }
-
-                cb(null, res);
-            });
-        };
-
-        let tasks = [rawStream];
-        let filters = [];
-
         if (!is.nil(q.prefix)) {
-            const prefix = q.prefix;
-            filters.push((e, cb) => cb(null, e.key.toString().startsWith(prefix)));
+            it = filter(it, (e) => e.key.toString().startsWith(q.prefix));
         }
 
-        if (!is.nil(q.filters)) {
-            filters = filters.concat(q.filters);
+        if (is.array(q.filters)) {
+            it = q.filters.reduce((it, f) => filter(it, f), it);
         }
 
-        tasks = tasks.concat(filters.map((f) => asyncFilter(f)));
-
-        if (!is.nil(q.orders)) {
-            tasks = tasks.concat(q.orders.map((o) => asyncSort(o)));
+        if (is.array(q.orders)) {
+            it = q.orders.reduce((it, f) => sortAll(it, f), it);
         }
 
         if (!is.nil(q.offset)) {
             let i = 0;
-            tasks.push(pull.filter(() => i++ >= q.offset));
+            it = filter(it, () => i++ >= q.offset);
         }
 
         if (!is.nil(q.limit)) {
-            tasks.push(pull.take(q.limit));
+            it = take(it, q.limit);
         }
 
-        return pull.apply(null, tasks);
+        return it;
     }
 }
-
-module.exports = LevelDatastore;

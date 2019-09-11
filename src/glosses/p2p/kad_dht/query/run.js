@@ -1,9 +1,8 @@
-const {
-    event: { Emitter },
-    promise: { promisify }
-} = adone;
+
 
 const PeerDistanceList = require("../peer-distance-list");
+const EventEmitter = require("events");
+const promisify = require("promisify-es6");
 
 const Path = require("./path");
 const WorkerQueue = require("./workerQueue");
@@ -12,7 +11,7 @@ const utils = require("../utils");
 /**
  * Manages a single run of the query.
  */
-class Run extends Emitter {
+class Run extends EventEmitter {
     /**
      * Creates a Run.
      *
@@ -177,7 +176,7 @@ class Run extends Emitter {
      * @returns {Promise<Boolean>}
      */
     async continueQuerying(worker) {
-        // If we haven't queried K peers yet, keep going
+    // If we haven't queried K peers yet, keep going
         if (this.peersQueried.length < this.peersQueried.capacity) {
             return true;
         }

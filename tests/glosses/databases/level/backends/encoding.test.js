@@ -1,7 +1,11 @@
 const {
+    assertion,
     noop,
     database: { level: { backend: { Memory, Encoding } } }
 } = adone;
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+
+assertion.use(assertion.extension.checkmark);
 
 describe("Encoding backend", () => {
     it("opens and closes the underlying db", (done) => {
@@ -385,6 +389,30 @@ describe("Encoding backend", () => {
         });
     });
 
+    it("iterator encodes range options", (done) => {
+        const keyEncoding = {
+            encode(key) {
+                return `encoded_${key}`;
+            },
+            buffer: false
+        };
+
+        const db = new Encoding({
+            iterator(options) {
+                assert.equal(options.start, "encoded_1");
+                assert.equal(options.end, "encoded_2");
+                assert.equal(options.gt, "encoded_3");
+                assert.equal(options.gte, "encoded_4");
+                assert.equal(options.lt, "encoded_5");
+                assert.equal(options.lte, "encoded_6");
+                assert.equal(options.foo, 7);
+                done();
+            }
+        }, { keyEncoding });
+
+        db.iterator({ start: 1, end: 2, gt: 3, gte: 4, lt: 5, lte: 6, foo: 7 });
+    });
+
     it("iterator does not strip nullish range options", (dn) => {
         let counter = 0;
         const done = () => {
@@ -409,10 +437,10 @@ describe("Encoding backend", () => {
 
         new Encoding({
             iterator(options) {
-                assert.ok(options.hasOwnProperty("gt"));
-                assert.ok(options.hasOwnProperty("gte"));
-                assert.ok(options.hasOwnProperty("lt"));
-                assert.ok(options.hasOwnProperty("lte"));
+                assert.ok(hasOwnProperty.call(options, "gt"));
+                assert.ok(hasOwnProperty.call(options, "gte"));
+                assert.ok(hasOwnProperty.call(options, "lt"));
+                assert.ok(hasOwnProperty.call(options, "lte"));
 
                 assert.equal(options.gt, undefined);
                 assert.equal(options.gte, undefined);
@@ -431,10 +459,10 @@ describe("Encoding backend", () => {
     it("iterator does not add nullish range options", (done) => {
         new Encoding({
             iterator(options) {
-                assert.notOk(options.hasOwnProperty("gt"));
-                assert.notOk(options.hasOwnProperty("gte"));
-                assert.notOk(options.hasOwnProperty("lt"));
-                assert.notOk(options.hasOwnProperty("lte"));
+                assert.notOk(hasOwnProperty.call(options, "gt"));
+                assert.notOk(hasOwnProperty.call(options, "gte"));
+                assert.notOk(hasOwnProperty.call(options, "lt"));
+                assert.notOk(hasOwnProperty.call(options, "lte"));
                 done();
             }
         }).iterator({});
@@ -554,5 +582,159 @@ describe("Encoding backend", () => {
         };
 
         new Encoding(down).approximateSize(1, 2, noop);
-    });    
+    });
+
+    it("encodes seek target", (done) => {
+        const db = new Encoding({
+            iterator() {
+                return {
+                    seek(target) {
+                        assert.equal(target, "123", "encoded number");
+                        done();
+                    }
+                };
+            }
+        }, { keyEncoding: "json" });
+
+        db.iterator().seek(123);
+    });
+
+    it("encodes seek target with custom encoding", (done) => {
+        const targets = [];
+        const db = new Encoding({
+            iterator() {
+                return {
+                    seek(target) {
+                        targets.push(target);
+                    }
+                };
+            }
+        });
+
+        db.iterator().seek("a");
+        db.iterator({ keyEncoding: "json" }).seek("a");
+
+        assert.sameMembers(targets, ["a", '"a"'], "encoded targets");
+        done();
+    });
+
+    it("encodes nullish seek target", (done) => {
+        const targets = [];
+        const db = new Encoding({
+            iterator() {
+                return {
+                    seek(target) {
+                        targets.push(target);
+                    }
+                };
+            }
+        }, { keyEncoding: { encode: String } });
+
+        // Unlike keys, nullish targets should not be rejected;
+        // assume that the encoding gives these types meaning.
+        db.iterator().seek(null);
+        db.iterator().seek(undefined);
+
+        assert.sameMembers(targets, ["null", "undefined"], "encoded");
+        done();
+    });
+
+    it("clear() forwards default options", (done) => {
+        const down = {
+            clear(options, callback) {
+                assert.equal(options.reverse, false);
+                assert.equal(options.limit, -1);
+                assert.equal(callback, noop);
+                done();
+            }
+        };
+
+        new Encoding(down).clear(noop);
+    });
+
+    it("clear() forwards error from underlying store", (done) => {
+        const down = {
+            clear(options, cb) {
+                process.nextTick(cb, new Error("error from store"));
+            }
+        };
+
+        new Encoding(down).clear((err) => {
+            assert.equal(err.message, "error from store");
+            done();
+        });
+    });
+
+    it("clear() encodes range options", (done) => {
+        const keyEncoding = {
+            encode(key) {
+                return `encoded_${key}`;
+            },
+            buffer: false
+        };
+
+        const db = new Encoding({
+            clear(options) {
+                assert.equal(options.gt, "encoded_1");
+                assert.equal(options.gte, "encoded_2");
+                assert.equal(options.lt, "encoded_3");
+                assert.equal(options.lte, "encoded_4");
+                assert.equal(options.foo, 5);
+                done();
+            }
+        }, { keyEncoding });
+
+        db.clear({ gt: 1, gte: 2, lt: 3, lte: 4, foo: 5 }, noop);
+    });
+
+    it("clear() does not strip nullish range options", (done) => {
+        expect(2).checks(done);
+
+        new Encoding({
+            clear(options) {
+                assert.equal(options.gt, null);
+                assert.equal(options.gte, null);
+                assert.equal(options.lt, null);
+                assert.equal(options.lte, null);
+                expect(true).to.be.ok.mark();
+            }
+        }).clear({
+            gt: null,
+            gte: null,
+            lt: null,
+            lte: null
+        }, noop);
+
+        new Encoding({
+            clear(options) {
+                assert.ok(hasOwnProperty.call(options, "gt"));
+                assert.ok(hasOwnProperty.call(options, "gte"));
+                assert.ok(hasOwnProperty.call(options, "lt"));
+                assert.ok(hasOwnProperty.call(options, "lte"));
+
+                assert.equal(options.gt, undefined);
+                assert.equal(options.gte, undefined);
+                assert.equal(options.lt, undefined);
+                assert.equal(options.lte, undefined);
+                expect(true).to.be.ok.mark();
+            }
+        }).clear({
+            gt: undefined,
+            gte: undefined,
+            lt: undefined,
+            lte: undefined
+        }, noop);
+    });
+
+    it("clear() does not add nullish range options", (done) => {
+        new Encoding({
+            clear(options) {
+                assert.notOk(hasOwnProperty.call(options, "gt"));
+                assert.notOk(hasOwnProperty.call(options, "gte"));
+                assert.notOk(hasOwnProperty.call(options, "lt"));
+                assert.notOk(hasOwnProperty.call(options, "lte"));
+                done();
+            }
+        }).clear({}, noop);
+    });
 });

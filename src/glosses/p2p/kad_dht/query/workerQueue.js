@@ -1,7 +1,8 @@
-const {
-    async: { queue },
-    promise: { promisify, nodeify }
-} = adone;
+
+
+const queue = require("async/queue");
+const promisify = require("promisify-es6");
+const promiseToCallback = require("promise-to-callback");
 
 class WorkerQueue {
     /**
@@ -32,27 +33,27 @@ class WorkerQueue {
      */
     setupQueue() {
         const q = queue((peer, cb) => {
-            nodeify(this.processNext(peer), cb);
+            promiseToCallback(this.processNext(peer))(cb);
         }, this.concurrency);
 
         // If there's an error, stop the worker
-        q.error((err) => {
+        q.error = (err) => {
             this.log.error("queue", err);
             this.stop(err);
-        });
+        };
 
         // When all peers in the queue have been processed, stop the worker
-        q.drain(() => {
+        q.drain = () => {
             this.log("queue:drain");
             this.stop();
-        });
+        };
 
         // When a space opens up in the queue, add some more peers
-        q.unsaturated(() => {
+        q.unsaturated = () => {
             if (this.running) {
                 this.fill();
             }
-        });
+        };
 
         q.buffer = 0;
 
@@ -106,11 +107,11 @@ class WorkerQueue {
      * being added to the peers-to-query queue.
      */
     fill() {
-        // Note:
-        // - queue.running(): number of items that are currently running
-        // - queue.length(): the number of items that are waiting to be run
+    // Note:
+    // - queue.running(): number of items that are currently running
+    // - queue.length(): the number of items that are waiting to be run
         while (this.queue.running() + this.queue.length() < this.concurrency &&
-            this.path.peersToQuery.length > 0) {
+           this.path.peersToQuery.length > 0) {
             this.queue.push(this.path.peersToQuery.dequeue());
         }
     }
