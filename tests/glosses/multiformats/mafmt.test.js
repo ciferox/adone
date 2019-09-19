@@ -1,3 +1,4 @@
+/* eslint-disable func-style */
 const {
     multiformat: { mafmt, multiaddr }
 } = adone;
@@ -160,6 +161,8 @@ describe("multiformat", "multiaddr validation", () => {
         "/ip4/127.0.0.1/tcp/20008/ws/p2p/QmUjNmr8TgJCn1Ao7DvMy4cjoZU15b9bwSCBLE3vwXiwgj",
         "/ip4/1.2.3.4/tcp/3456/ws/p2p-webrtc-star/p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4",
         "/ip4/1.2.3.4/tcp/3456/p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4",
+        "/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4",
+        "/p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4",
         "/p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4/p2p-circuit",
         "/p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4/p2p-circuit/p2p/QmUjNmr8TgJCn1Ao7DvMy4cjoZU15b9bwSCBLE3vwXiwgj"
     ].concat(goodCircuit);
@@ -169,13 +172,13 @@ describe("multiformat", "multiaddr validation", () => {
         tests.forEach((test) => {
             test.forEach((testcase) => {
                 try {
-                    expect(p.matches(testcase), `assertMatches: ${testcase} (string)`).to.be.eql(true)
-                    const ma = multiaddr(testcase)
-                    expect(p.matches(ma), `assertMatches: ${testcase} (multiaddr object)`).to.be.eql(true)
-                    expect(p.matches(ma.buffer), `assertMatches: ${testcase} (multiaddr.buffer)`).to.be.eql(true)
+                    expect(p.matches(testcase), `assertMatches: ${testcase} (string)`).to.be.eql(true);
+                    const ma = multiaddr(testcase);
+                    expect(p.matches(ma), `assertMatches: ${testcase} (multiaddr object)`).to.be.eql(true);
+                    expect(p.matches(ma.buffer), `assertMatches: ${testcase} (multiaddr.buffer)`).to.be.eql(true);
                 } catch (err) {
-                    err.stack = '[testcase=' + JSON.stringify(testcase) + ', shouldMatch=true] ' + err.stack
-                    throw err
+                    err.stack = `[testcase=${JSON.stringify(testcase)}, shouldMatch=true] ${err.stack}`;
+                    throw err;
                 }
             });
         });
@@ -186,23 +189,23 @@ describe("multiformat", "multiaddr validation", () => {
         tests.forEach((test) => {
             test.forEach((testcase) => {
                 try {
-                    expect(p.matches(testcase), `assertMismatches: ${testcase} (string)`).to.be.eql(false)
-                    let validMultiaddrObj
+                    expect(p.matches(testcase), `assertMismatches: ${testcase} (string)`).to.be.eql(false);
+                    let validMultiaddrObj;
                     try {
                         // if testcase string happens to be a valid multiaddr,
                         // we expect 'p' test to also return false for Multiaddr object and Buffer versions
-                        validMultiaddrObj = multiaddr(testcase)
+                        validMultiaddrObj = multiaddr(testcase);
                     } catch (e) {
                         // Ignoring testcase as the string is not a multiaddr
                         // (There is a separate 'Buffer is invalid' test later below)
                     }
                     if (validMultiaddrObj) {
-                        expect(p.matches(validMultiaddrObj), `assertMismatches: ${testcase} (multiaddr object)`).to.be.eql(false)
-                        expect(p.matches(validMultiaddrObj.buffer), `assertMismatches: ${testcase} (multiaddr.buffer)`).to.be.eql(false)
+                        expect(p.matches(validMultiaddrObj), `assertMismatches: ${testcase} (multiaddr object)`).to.be.eql(false);
+                        expect(p.matches(validMultiaddrObj.buffer), `assertMismatches: ${testcase} (multiaddr.buffer)`).to.be.eql(false);
                     }
                 } catch (err) {
-                    err.stack = '[testcase=' + JSON.stringify(testcase) + ', shouldMatch=false] ' + err.stack
-                    throw err
+                    err.stack = `[testcase=${JSON.stringify(testcase)}, shouldMatch=false] ${err.stack}`;
+                    throw err;
                 }
             });
         });
@@ -271,7 +274,7 @@ describe("multiformat", "multiaddr validation", () => {
         assertMismatches(mafmt.WebSocketStar, goodIP, goodUDP, badWS);
     });
 
-    it.todo("Stardust validation", () => {
+    it("Stardust validation", () => {
         assertMatches(mafmt.Stardust, goodStardust);
         assertMismatches(mafmt.Stardust, goodIP, goodUDP, badWS);
     });
