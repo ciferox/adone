@@ -359,7 +359,7 @@ describe("multiformat", "multiaddr", () => {
             const str = "/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC";
             const addr = multiaddr(str);
             expect(addr).to.have.property("buffer");
-            expect(addr.toString()).to.equal(str.replace("/ipfs/", "/p2p/")); 
+            expect(addr.toString()).to.equal(str.replace("/ipfs/", "/p2p/"));
         });
 
         it("onion", () => {
@@ -594,6 +594,22 @@ describe("multiformat", "multiaddr", () => {
                 ).to.throw(
                     /does not contain subaddress/
                 );
+            });
+        });
+
+        describe(".decapsulateCode", () => {
+            it("removes the last occurrence of the code from the multiaddr", () => {
+                const relayTCP = multiaddr("/ip4/0.0.0.0/tcp/8080");
+                const relay = relayTCP.encapsulate("/p2p/QmZR5a9AAXGqQF2ADqoDdGS8zvqv8n3Pag6TDDnTNMcFW6/p2p-circuit");
+                const target = multiaddr("/p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC");
+                const original = relay.encapsulate(target);
+                expect(original.decapsulateCode(421)).to.eql(relay);
+                expect(relay.decapsulateCode(421)).to.eql(relayTCP);
+            });
+
+            it("ignores missing codes", () => {
+                const tcp = multiaddr("/ip4/0.0.0.0/tcp/8080");
+                expect(tcp.decapsulateCode(421)).to.eql(tcp);
             });
         });
 

@@ -95,9 +95,9 @@ Multiaddr.prototype.toOptions = function toOptions() {
  * // '<Multiaddr 047f000001060fa1 - /ip4/127.0.0.1/tcp/4001>'
  */
 Multiaddr.prototype.inspect = function inspect() {
-    return "<Multiaddr " +
-        this.buffer.toString("hex") + " - " +
-        codec.bufferToString(this.buffer) + ">";
+    return `<Multiaddr ${ 
+        this.buffer.toString("hex")  } - ${ 
+        codec.bufferToString(this.buffer)  }>`;
 };
 
 /**
@@ -234,9 +234,37 @@ Multiaddr.prototype.decapsulate = function decapsulate(addr) {
     const s = this.toString();
     const i = s.lastIndexOf(addr);
     if (i < 0) {
-        throw new Error("Address " + this + " does not contain subaddress: " + addr);
+        throw new Error(`Address ${  this  } does not contain subaddress: ${  addr}`);
     }
     return Multiaddr(s.slice(0, i));
+};
+
+/**
+ * A more reliable version of `decapsulate` if you are targeting a
+ * specific code, such as 421 (the `p2p` protocol code). The last index of the code
+ * will be removed from the `Multiaddr`, and a new instance will be returned.
+ * If the code is not present, the original `Multiaddr` is returned.
+ *
+ * @param {Number} code The code of the protocol to decapsulate from this Multiaddr
+ * @return {Multiaddr}
+ * @example
+ * const addr = Multiaddr('/ip4/0.0.0.0/tcp/8080/p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC')
+ * // <Multiaddr 0400... - /ip4/0.0.0.0/tcp/8080/p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC>
+ *
+ * addr.decapsulateCode(421).toString()
+ * // '/ip4/0.0.0.0/tcp/8080'
+ *
+ * Multiaddr('/ip4/127.0.0.1/tcp/8080').decapsulateCode(421).toString()
+ * // '/ip4/127.0.0.1/tcp/8080'
+ */
+Multiaddr.prototype.decapsulateCode = function decapsulateCode(code) {
+    const tuples = this.tuples();
+    for (let i = tuples.length - 1; i >= 0; i--) {
+        if (tuples[i][0] === code) {
+            return Multiaddr(codec.tuplesToBuffer(tuples.slice(0, i)));
+        }
+    }
+    return this;
 };
 
 /**
@@ -365,10 +393,14 @@ Multiaddr.prototype.nodeAddress = function nodeAddress() {
  * // <Multiaddr 047f000001060fa1 - /ip4/127.0.0.1/tcp/4001>
  */
 Multiaddr.fromNodeAddress = function fromNodeAddress(addr, transport) {
-    if (!addr) {throw new Error('requires node address object')};
-    if (!transport) {throw new Error('requires transport protocol')};
+    if (!addr) {
+ throw new Error("requires node address object"); 
+}
+    if (!transport) {
+ throw new Error("requires transport protocol"); 
+}
     const ip = (addr.family === "IPv6") ? "ip6" : "ip4";
-    return Multiaddr("/" + [ip, addr.address, transport, addr.port].join("/"));
+    return Multiaddr(`/${  [ip, addr.address, transport, addr.port].join("/")}`);
 };
 
 // TODO find a better example, not sure about it's good enough

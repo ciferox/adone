@@ -1,6 +1,6 @@
 const {
     multiformat: { multihashingAsync }
-} = adone; 
+} = adone;
 
 const { Buffer } = require("buffer");
 const sinon = require("sinon");
@@ -15,6 +15,14 @@ describe("multiformat", "multihashingAsync", () => {
 
         it(`encodes in ${func}`, async () => {
             const digest = await multihashingAsync(Buffer.from(raw), func);
+            expect(digest.toString("hex")).to.eql(encoded);
+        });
+
+        // eslint-disable-next-line no-loop-func
+        it(`encodes Uint8Array in ${func}`, async () => {
+            const buffer = Buffer.from(raw);
+            const bytes = new Uint8Array(buffer, buffer.byteOffset, buffer.byteLength);
+            const digest = await multihashingAsync(bytes, func);
             expect(digest.toString("hex")).to.eql(encoded);
         });
     }
