@@ -110,6 +110,7 @@ adone.lazify({
     traverse: "./traverse",
     write: "./write",
     ws: "./ws",
+    ws2: "./ws2",
     socketioPullStream: "./socketio_pull_stream",
     is: "./is",
     peek: "./peek",
