@@ -1,5 +1,3 @@
-
-
 module.exports = {
     DENY_TTL: 5 * 60 * 1e3, // How long before an errored peer can be dialed again
     DENY_ATTEMPTS: 5, // Num of unsuccessful dials before a peer is permanently denied

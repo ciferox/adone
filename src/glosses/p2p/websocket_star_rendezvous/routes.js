@@ -1,3 +1,5 @@
+/* eslint-disable func-style */
+
 // Needed because JSON.stringify(Error) returns "{}"
 
 const SocketIO = require("socket.io");
@@ -6,6 +8,7 @@ const uuid = require("uuid");
 const client = require("prom-client");
 
 const {
+    is,
     stream: { pull: { socketioPullStream: sp } }
 } = adone;
 
@@ -67,7 +70,7 @@ module.exports = (config, http) => {
 
     // join this signaling server network
     async function join(socket, multiaddr, pub, cb) {
-        const log = socket.log = config.log.bind(config.log, "[" + socket.id + "]");
+        const log = socket.log = config.log.bind(config.log, `[${socket.id}]`);
 
         if (getConfig().strictMultiaddr && !util.validateMa(multiaddr)) {
             joinsTotal.inc();
@@ -141,9 +144,11 @@ module.exports = (config, http) => {
     }
 
     function joinFinalize(socket, multiaddr, cb) {
-        const log = getConfig().log.bind(getConfig().log, "[" + socket.id + "]");
+        const log = getConfig().log.bind(getConfig().log, `[${socket.id}]`);
         _peers[multiaddr] = socket;
-        if (!socket.stopSendingPeersIntv) { socket.stopSendingPeersIntv = {} };
+        if (!socket.stopSendingPeersIntv) {
+            socket.stopSendingPeersIntv = {};
+        }
         joinsSuccessTotal.inc();
         refreshMetrics();
         socket.addrs.push(multiaddr);

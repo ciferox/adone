@@ -1,3 +1,1 @@
-describe("p2p", "transport", "WSStar", () => {
-    require("./reconnect");
-});
+require("./reconnect.js");

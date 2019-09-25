@@ -93,7 +93,7 @@ class ConnectionManager {
      * @returns {void}
      */
     remove(connection) {
-        // No record of the peer, disconnect it
+    // No record of the peer, disconnect it
         if (!this.connections[connection.theirB58Id]) {
             if (connection.theirPeerInfo) {
                 connection.theirPeerInfo.disconnect();
@@ -151,7 +151,7 @@ class ConnectionManager {
      * @returns {void}
      */
     addStreamMuxer(muxer) {
-        // for dialing
+    // for dialing
         this.switch.muxers[muxer.multicodec] = muxer;
 
         // for listening

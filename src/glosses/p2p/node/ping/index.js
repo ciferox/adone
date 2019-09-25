@@ -1,5 +1,3 @@
-
-
 const handler = require("./handler");
 
 exports = module.exports = require("./ping");

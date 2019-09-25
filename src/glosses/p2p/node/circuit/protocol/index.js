@@ -1,3 +1,4 @@
+
 module.exports = adone.data.protobuf.create(`
 message CircuitRelay {
 

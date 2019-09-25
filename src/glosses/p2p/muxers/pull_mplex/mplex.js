@@ -1,13 +1,13 @@
-import looper from "../../../streams/pull/looper4";
-const debug = require("debug");
-
 const {
+    is,
     async: { nextTick },
     event: { Emitter },
-    is,
     stream: { pull }
 } = adone;
-const { through2, pushable } = pull;
+const { pushable, through } = pull;
+
+import looper from "../../../streams/pull/looper4";
+const debug = require("debug");
 
 const { emitError, emitStream } = require("./util");
 const { Types, MAX_MSG_SIZE } = require("./consts");
@@ -83,7 +83,7 @@ class Mplex extends Emitter {
 
         const self = this;
         this.sink = pull(
-            through2(function (data) {
+            through(function (data) {
                 // ensure data is within our max size requirement
                 if (data && data.length >= self._maxMsgSize) {
                     nextTick(emitError, self, new Error("message too large!"));

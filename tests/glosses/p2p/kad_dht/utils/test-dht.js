@@ -1,11 +1,12 @@
-
+const {
+    is,
+    p2p: { PeerBook, transport: { TCP } }
+} = adone;
 
 const each = require("async/each");
 const series = require("async/series");
 const setImmediate = require("async/setImmediate");
-const PeerBook = require("peer-book");
 const Switch = require("libp2p-switch");
-const TCP = require("libp2p-tcp");
 const Mplex = require("libp2p-mplex");
 const times = require("async/times");
 

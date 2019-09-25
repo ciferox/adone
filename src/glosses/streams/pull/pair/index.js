@@ -1,36 +1,38 @@
-const {
-    is
-} = adone;
+const getIterator = require("get-iterator");
 
 //a pair of pull streams where one drains from the other
 module.exports = function () {
-    let _read; let waiting;
-    const sink = function (read) {
-        if (!is.function(read)) {
-            throw new Error("read must be function");
-        }
+    let _source;
+    let onSource;
 
-        if (_read) {
-            throw new Error("already piped");
+    const sink = async (source) => {
+        if (_source) {
+            throw new Error("already piped"); 
         }
-        _read = read;
-        if (waiting) {
-            const _waiting = waiting;
-            waiting = null;
-            _read.apply(null, _waiting);
-        }
-    };
-    const source = function (abort, cb) {
-        if (_read) {
-            _read(abort, cb);
-        } else {
-            waiting = [abort, cb];
+        _source = getIterator(source);
+        if (onSource) {
+            onSource(_source); 
         }
     };
 
-    return {
-        source, sink
+    const source = {
+        [Symbol.asyncIterator]() {
+            return this;
+        },
+        next() {
+            if (_source) {
+                return _source.next(); 
+            }
+            return new Promise((resolve) => {
+                onSource = (source) => {
+                    onSource = null;
+                    resolve(source.next());
+                };
+            });
+        }
     };
+
+    return { sink, source };
 };
 
 adone.lazify({

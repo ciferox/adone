@@ -1,9 +1,9 @@
-const debug = require("debug");
-
 const {
     stream: { pull }
 } = adone;
 const { abortable } = pull;
+
+const debug = require("debug");
 
 const MULTIPLEX_CODEC = require("./codec");
 const Mplex = require("./mplex");
@@ -18,7 +18,7 @@ log.err = debug("pull-plex:err");
  * @param {boolean} isListener Whether or not the muxer is the listener
  * @returns {StreamMuxer}
  */
-const create = function (conn, isListener) {
+function create(conn, isListener) {
     const mpx = new Mplex(!isListener);
     const aborter = abortable();
 
@@ -41,7 +41,7 @@ const create = function (conn, isListener) {
     });
 
     return muxer;
-};
+}
 
 exports = module.exports = create;
 exports.pullMplex = Mplex;

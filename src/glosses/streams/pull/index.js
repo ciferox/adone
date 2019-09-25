@@ -95,6 +95,7 @@ adone.lazify({
     split: "./split",
     stringify: "./stringify",
     pushable: "./pushable",
+    itrPushable: "./itr_pushable",
     reader: "./reader",
     pair: "./pair",
     lengthPrefixed: "./length_prefixed",

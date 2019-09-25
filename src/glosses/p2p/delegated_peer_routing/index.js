@@ -1,24 +1,34 @@
 const {
-    is,
-    p2p: { PeerId, PeerInfo },
+    p2p: { PeerId },
     ipfs: { httpClient: { dht, defaultConfig } }
 } = adone;
+
+// const defaultConfig = require("ipfs-http-client/src/utils/default-config");
+const { default: PQueue } = require("p-queue");
+const debug = require("debug");
+
+const log = debug("libp2p-delegated-peer-routing");
+log.error = debug("libp2p-delegated-peer-routing:error");
 
 const DEFAULT_MAX_TIMEOUT = 30e3; // 30 second default
 const DEFAULT_IPFS_API = {
     protocol: "https",
     port: 443,
-    host: "ipfs.io"
+    host: "node0.delegate.ipfs.io"
 };
+const CONCURRENT_HTTP_REQUESTS = 4;
 
-const peerNotFoundError = (id) => {
-    return new Error(`Peer "${id}" not found`);
-};
-
-export default class DelegatedPeerRouting {
+class DelegatedPeerRouting {
     constructor(api) {
         this.api = Object.assign({}, defaultConfig(), DEFAULT_IPFS_API, api);
         this.dht = dht(this.api);
+
+        // limit concurrency to avoid request flood in web browser
+        // https://github.com/libp2p/js-libp2p-delegated-content-routing/issues/12
+        this._httpQueue = new PQueue({
+            concurrency: CONCURRENT_HTTP_REQUESTS
+        });
+        log(`enabled DelegatedPeerRouting via ${this.api.protocol}://${this.api.host}:${this.api.port}`);
     }
 
     /**
@@ -27,53 +37,30 @@ export default class DelegatedPeerRouting {
      * @param {PeerID} id
      * @param {object} options
      * @param {number} options.maxTimeout How long the query can take. Defaults to 30 seconds
-     * @param {function(Error, PeerInfo)} callback
-     * @returns {void}
+     * @returns {Promise<PeerInfo>}
      */
-    findPeer(id, options, callback) {
-        if (is.function(options)) {
-            callback = options;
-            options = {};
-        } else if (is.number(options)) { // This will be deprecated in a next release
-            options = {
-                maxTimeout: options
-            };
-        } else {
-            options = options || {};
-        }
-
+    async findPeer(id, options = {}) {
         if (PeerId.isPeerId(id)) {
             id = id.toB58String();
         }
+        log(`findPeer starts: ${id}`);
 
         options.maxTimeout = options.maxTimeout || DEFAULT_MAX_TIMEOUT;
 
-        this.dht.findPeer(id, {
-            timeout: `${options.maxTimeout}ms`// The api requires specification of the time unit (s/ms)
-        }, (err, results) => {
-            if (err) {
-                return callback(err);
+        try {
+            return await this._httpQueue.add(() => this.dht.findPeer(id, {
+                timeout: `${options.maxTimeout}ms`// The api requires specification of the time unit (s/ms)
+            }));
+        } catch (err) {
+            if (err.message.includes("not found")) {
+                return undefined;
             }
 
-            // cleanup result from ipfs-api
-            const actual = results.filter((res) => Boolean(res.Responses));
-
-            if (actual.length === 0) {
-                return callback(peerNotFoundError(id));
-            }
-
-            const wantedResponse = actual.find((el) => el.Type === 2);
-            if (is.undefined(wantedResponse)) {
-                return callback(peerNotFoundError(id));
-            }
-            const details = wantedResponse.Responses[0];
-            const info = new PeerInfo(
-                PeerId.createFromB58String(details.ID)
-            );
-            details.Addrs.forEach((addr) => info.multiaddrs.add(addr));
-
-            // there should be only one of these
-            callback(null, info);
-        });
+            throw err;
+        } finally {
+            log(`findPeer finished: ${id}`);
+        }
     }
 }
+
+module.exports = DelegatedPeerRouting;

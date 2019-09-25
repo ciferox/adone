@@ -1,21 +1,14 @@
-/**
- * eslint-env mocha
- */
+const {
+    p2p: { KadDHT, Bootstrap, PeerInfo, PeerId, transport: { WS } }
+} = adone;
 
-
-const chai = require("chai");
-chai.use(require("dirty-chai"));
-const expect = chai.expect;
-const PeerInfo = require("peer-info");
-const PeerId = require("peer-id");
 const waterfall = require("async/waterfall");
-const WS = require("libp2p-websockets");
-const Bootstrap = require("libp2p-bootstrap");
-const DelegatedPeerRouter = require("libp2p-delegated-peer-routing");
-const DelegatedContentRouter = require("libp2p-delegated-content-routing");
-const DHT = require("libp2p-kad-dht");
+// const DelegatedPeerRouter = require("libp2p-delegated-peer-routing");
+// const DelegatedContentRouter = require("libp2p-delegated-content-routing");
 
-const validateConfig = require("../src/config").validate;
+const srcPath = (...args) => adone.getPath("src/glosses/p2p/node", ...args);
+
+const validateConfig = require(srcPath("config")).validate;
 
 describe("configuration", () => {
     let peerInfo;
@@ -66,7 +59,7 @@ describe("configuration", () => {
             modules: {
                 transport: [WS],
                 peerDiscovery: [Bootstrap],
-                dht: DHT
+                dht: KadDHT
             }
         };
 
@@ -78,7 +71,7 @@ describe("configuration", () => {
             modules: {
                 transport: [WS],
                 peerDiscovery: [Bootstrap],
-                dht: DHT
+                dht: KadDHT
             },
             config: {
                 peerDiscovery: {
@@ -119,7 +112,7 @@ describe("configuration", () => {
             modules: {
                 transport: [WS],
                 peerDiscovery: [Bootstrap],
-                dht: DHT
+                dht: KadDHT
             },
             config: {
                 peerDiscovery: {
@@ -148,7 +141,7 @@ describe("configuration", () => {
             modules: {
                 transport: [WS],
                 peerDiscovery: [Bootstrap],
-                dht: DHT
+                dht: KadDHT
             },
             config: {
                 peerDiscovery: {
@@ -214,34 +207,34 @@ describe("configuration", () => {
         });
     });
 
-    it("should allow for delegated content and peer routing", () => {
-        const peerRouter = new DelegatedPeerRouter();
-        const contentRouter = new DelegatedContentRouter(peerInfo);
+    // it("should allow for delegated content and peer routing", () => {
+    //     const peerRouter = new DelegatedPeerRouter();
+    //     const contentRouter = new DelegatedContentRouter(peerInfo);
 
-        const options = {
-            peerInfo,
-            modules: {
-                transport: [WS],
-                peerDiscovery: [Bootstrap],
-                peerRouting: [peerRouter],
-                contentRouting: [contentRouter],
-                dht: DHT
-            },
-            config: {
-                peerDiscovery: {
-                    bootstrap: {
-                        interval: 1000,
-                        enabled: true
-                    }
-                }
-            }
-        };
+    //     const options = {
+    //         peerInfo,
+    //         modules: {
+    //             transport: [WS],
+    //             peerDiscovery: [Bootstrap],
+    //             peerRouting: [peerRouter],
+    //             contentRouting: [contentRouter],
+    //             dht: KadDHT
+    //         },
+    //         config: {
+    //             peerDiscovery: {
+    //                 bootstrap: {
+    //                     interval: 1000,
+    //                     enabled: true
+    //                 }
+    //             }
+    //         }
+    //     };
 
-        expect(validateConfig(options).modules).to.deep.include({
-            peerRouting: [peerRouter],
-            contentRouting: [contentRouter]
-        });
-    });
+    //     expect(validateConfig(options).modules).to.deep.include({
+    //         peerRouting: [peerRouter],
+    //         contentRouting: [contentRouter]
+    //     });
+    // });
 
     it("should not allow for dht to be enabled without it being provided", () => {
         const options = {
@@ -267,7 +260,7 @@ describe("configuration", () => {
             peerInfo,
             modules: {
                 transport: [WS],
-                dht: DHT
+                dht: KadDHT
             },
             config: {
                 dht: {
@@ -283,7 +276,7 @@ describe("configuration", () => {
             },
             modules: {
                 transport: [WS],
-                dht: DHT
+                dht: KadDHT
             },
             config: {
                 pubsub: {
@@ -324,7 +317,7 @@ describe("configuration", () => {
             peerInfo,
             modules: {
                 transport: [WS],
-                dht: DHT
+                dht: KadDHT
             },
             config: {
                 dht: {

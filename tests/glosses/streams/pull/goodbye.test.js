@@ -48,41 +48,40 @@ describe("stream", "pull", "goodbye", () => {
         pull(dup, dup);
     });
 
-    describe("enable", () => {
-        const { pipeline, filter, collect } = require("streaming-iterables");
-        const { endable } = goodbye;
+    const { pipeline, filter, collect } = require("streaming-iterables");
+    const { endable } = goodbye;
 
-        it("simple", async () => {
-            const e1 = endable(-1);
-            const e2 = endable(-1);
+    it("simple", async () => {
+        const e1 = endable(-1);
+        const e2 = endable(-1);
 
-            const [ary0, ary1] = await Promise.all([
-                pipeline(
-                    () => [1, 2, 3],
-                    e1,
-                    filter((n) => {
-                        if (n !== -1) {
-                            return true;
-                        }
-                        e2.end();
-                    }),
-                    collect
-                ),
-                pipeline(
-                    () => [1, 2, 3],
-                    e2,
-                    filter((n) => {
-                        if (n !== -1) {
-                            return true;
-                        }
-                        e1.end();
-                    }),
-                    collect
-                )
-            ]);
+        const [ary0, ary1] = await Promise.all([
+            pipeline(
+                () => [1, 2, 3],
+                e1,
+                filter((n) => {
+                    if (n !== -1) {
+                        return true;
+                    }
+                    e2.end();
+                }),
+                collect
+            ),
+            pipeline(
+                () => [1, 2, 3],
+                e2,
+                filter((n) => {
+                    if (n !== -1) {
+                        return true;
+                    }
+                    e1.end();
+                }),
+                collect
+            )
+        ]);
 
-            assert.deepEqual(ary0, [1, 2, 3]);
-            assert.deepEqual(ary1, [1, 2, 3]);
-        });
+        assert.deepEqual(ary0, [1, 2, 3]);
+        assert.deepEqual(ary1, [1, 2, 3]);
     });
+
 });

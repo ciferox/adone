@@ -1,4 +1,5 @@
 const {
+    is,
     multiformat: { multiaddr },
     p2p: { Connection, PeerId }
 } = adone;

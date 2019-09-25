@@ -29,7 +29,8 @@ const __ = adone.lazify({
     rendezvous: "./websocket_star_rendezvous",
 
     transport: "./transports",
-    muxer: "./muxers"
+    muxer: "./muxers",
+    util: "./utils"
 }, adone.asNamespace(exports), require);
 
 const {

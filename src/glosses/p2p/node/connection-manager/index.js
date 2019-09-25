@@ -1,5 +1,3 @@
-
-
 const EventEmitter = require("events");
 const LatencyMonitor = require("latency-monitor").default;
 const debug = require("debug")("libp2p:connection-manager");

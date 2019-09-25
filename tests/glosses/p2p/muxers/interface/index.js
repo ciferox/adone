@@ -1,13 +1,12 @@
-const baseTest = require("./base_test");
-const stressTest = require("./stress_test");
-const megaStressTest = require("./mega_stress_test");
-const isNode = require("detect-node");
+const baseTest = require("./base");
+const stressTest = require("./stress");
+const megaStressTest = require("./mega_stress");
 
 module.exports = (common) => {
     describe("interface", () => {
         baseTest(common);
-        if (isNode) {
-            const closeTest = require("./close_test");
+        if (adone.is.nodejs) {
+            const closeTest = require("./close");
             closeTest(common);
         }
         stressTest(common);

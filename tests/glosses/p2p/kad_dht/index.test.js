@@ -1,5 +1,6 @@
 const {
-    p2p: { KadDHT, Switch, record: { Record }, PeerId, PeerInfo, PeerBook, muxer: { mplex }, transport: { TCP } }
+    p2p: { KadDHT, Switch, record: { Record }, PeerId, PeerInfo, PeerBook, muxer: { mplex }, transport: { TCP } },
+    promise: { nodeify }
 } = adone;
 
 const sinon = require("sinon");
@@ -10,7 +11,6 @@ const timeout = require("async/timeout");
 const retry = require("async/retry");
 const each = require("async/each");
 const waterfall = require("async/waterfall");
-const promiseToCallback = require("promise-to-callback");
 const errcode = require("err-code");
 
 const srcPath = (...args) => adone.getPath("src", "glosses", "p2p", "kad_dht", ...args);
@@ -954,7 +954,7 @@ describe("p2p", "KadDHT", () => {
             waterfall([
                 (cb) => dht._putLocal(record.key, record.serialize(), cb),
                 (cb) => {
-                    promiseToCallback(dht.datastore.get(kadUtils.bufferToKey(record.key)))(cb);
+                    nodeify(dht.datastore.get(kadUtils.bufferToKey(record.key)), cb);
                 },
                 (lookup, cb) => {
                     expect(lookup).to.exist("Record should be in the local datastore");
@@ -965,7 +965,7 @@ describe("p2p", "KadDHT", () => {
                 expect(err).to.not.exist();
                 expect(rec).to.not.exist("Record should have expired");
 
-                promiseToCallback(dht.datastore.get(kadUtils.bufferToKey(record.key)))((err, lookup) => {
+                nodeify(dht.datastore.get(kadUtils.bufferToKey(record.key)), (err, lookup) => {
                     expect(err).to.exist("Should throw error for not existing");
                     expect(lookup).to.not.exist("Record should be removed from datastore");
                     done();

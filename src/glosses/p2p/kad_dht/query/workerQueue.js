@@ -1,8 +1,9 @@
-
+const {
+    promise: { nodeify }
+} = adone;
 
 const queue = require("async/queue");
 const promisify = require("promisify-es6");
-const promiseToCallback = require("promise-to-callback");
 
 class WorkerQueue {
     /**
@@ -33,7 +34,7 @@ class WorkerQueue {
      */
     setupQueue() {
         const q = queue((peer, cb) => {
-            promiseToCallback(this.processNext(peer))(cb);
+            nodeify(this.processNext(peer), cb);
         }, this.concurrency);
 
         // If there's an error, stop the worker

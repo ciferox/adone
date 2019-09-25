@@ -1,8 +1,8 @@
-
-
-const pull = require("pull-stream");
-const Connection = require("interface-connection").Connection;
-const assert = require("assert");
+const {
+    assert,
+    p2p: { Connection },
+    stream: { pull }
+} = adone;
 
 const Errors = require("./errors");
 const State = require("./state");

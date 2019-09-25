@@ -1,11 +1,11 @@
-const debug = require("debug");
-
 const {
     async: { nextTick },
     event: { Emitter },
     noop,
     p2p: { Connection }
 } = adone;
+
+const debug = require("debug");
 
 const MULTIPLEX_CODEC = require("./codec");
 

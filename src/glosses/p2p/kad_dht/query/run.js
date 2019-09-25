@@ -1,5 +1,3 @@
-
-
 const PeerDistanceList = require("../peer-distance-list");
 const EventEmitter = require("events");
 const promisify = require("promisify-es6");

@@ -1,12 +1,12 @@
-import looper from "../../../streams/pull/looper4";
-const debug = require("debug");
-
 const {
+    is,
     async: { nextTick },
     event: { Emitter },
-    is,
     stream: { pull: { pushable } }
 } = adone;
+
+import looper from "../../../streams/pull/looper4";
+const debug = require("debug");
 
 const { Types } = require("./consts");
 const { emitError } = require("./util");
@@ -20,7 +20,7 @@ log.err = debug("pull-plex:chan:err");
  * @param {Channel} channel
  * @returns {function} The sink function
  */
-const channelSink = function (channel) {
+function channelSink(channel) {
     return function (read) {
         const next = looper(() => {
             read(null, (end, data) => {
@@ -52,7 +52,7 @@ const channelSink = function (channel) {
 
         next();
     };
-};
+}
 
 /**
  * @fires Channel#close

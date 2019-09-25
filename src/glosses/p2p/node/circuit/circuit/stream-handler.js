@@ -1,8 +1,8 @@
 const {
+    is,
     stream: { pull }
 } = adone;
-
-const { values, collect, empty, handshake, lengthPrefixed: lp } = pull;
+const { collect, values, empty, lengthPrefixed: lp, handshake } = pull;
 
 const debug = require("debug");
 const log = debug("libp2p:circuit:stream-handler");

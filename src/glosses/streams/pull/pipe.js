@@ -4,8 +4,11 @@ const {
 
 const rawPipe = (...fns) => {
     let res;
+    // console.log(adone.inspect(fns));
     while (fns.length) {
-        res = fns.shift()(res);
+        const v = fns.shift();
+        // console.log(adone.inspect(v));
+        res = v(res);
     }
     return res;
 };
@@ -58,4 +61,3 @@ module.exports.pipe = pipe;
 module.exports.rawPipe = rawPipe;
 module.exports.isIterable = isIterable;
 module.exports.isDuplex = isDuplex;
-

@@ -1,7 +1,6 @@
-
-
-const mafmt = require("mafmt");
-const multiaddr = require("multiaddr");
+const {
+    multiformat: { multiaddr, mafmt }
+} = adone;
 
 const CircuitDialer = require("./circuit/dialer");
 const utilsFactory = require("./circuit/utils");
@@ -58,7 +57,7 @@ class Circuit {
      * @return {void}
      */
     _dialSwarmRelays() {
-    // if we have relay addresses in swarm config, then dial those relays
+        // if we have relay addresses in swarm config, then dial those relays
         this.relays.forEach((relay) => {
             const relaySegments = relay
                 .toString()

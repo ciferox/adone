@@ -1,6 +1,8 @@
+const {
+    noop,
+    util: { once }
+} = adone;
 
-
-const once = require("once");
 const Queue = require("./queue");
 const { DIAL_ABORTED } = require("../errors");
 const nextTick = require("async/nextTick");
@@ -8,7 +10,6 @@ const retimer = require("retimer");
 const { QUARTER_HOUR, PRIORITY_HIGH } = require("../constants");
 const debug = require("debug");
 const log = debug("libp2p:switch:dial:manager");
-const noop = () => {};
 
 class DialQueueManager {
     /**
@@ -43,7 +44,7 @@ class DialQueueManager {
 
             // Keep track of denylisted queues
             if (dialQueue.denylisted) {
-                return; 
+                return;
             }
 
             // Clear if peer is no longer active
@@ -157,7 +158,7 @@ class DialQueueManager {
      */
     run() {
         if (!this.isRunning) {
-            return; 
+            return;
         }
 
         if (this._dialingQueues.size < this.switch.dialer.MAX_PARALLEL_DIALS) {

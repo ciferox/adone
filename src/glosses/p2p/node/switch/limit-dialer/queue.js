@@ -1,14 +1,13 @@
 const {
     p2p: { Connection },
-    stream: { pull }
+    stream: { pull },
+    util: { once }
 } = adone;
-
 const { empty } = pull;
 
 const timeout = require("async/timeout");
 const queue = require("async/queue");
 const debug = require("debug");
-const once = require("once");
 
 const log = debug("libp2p:switch:dialer:queue");
 log.error = debug("libp2p:switch:dialer:queue:error");

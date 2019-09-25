@@ -1,8 +1,6 @@
-
-
-/**
- * eslint no-warning-comments: off
- */
+const {
+    is
+} = adone;
 
 const parallel = require("async/parallel");
 const once = require("once");

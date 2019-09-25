@@ -1,5 +1,3 @@
-
-
 const Identify = require("../identify");
 
 /**

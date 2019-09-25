@@ -1,6 +1,7 @@
+const {
+    stream: { pull: { map } }
+} = adone;
 
-
-const map = require("pull-stream/throughs/map");
 const EventEmitter = require("events");
 
 /**

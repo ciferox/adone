@@ -1,11 +1,11 @@
-
+const {
+    multiformat: { multiaddr, mafmt }
+} = adone;
 
 const setImmediate = require("async/setImmediate");
 
 const multicodec = require("./multicodec");
 const EE = require("events").EventEmitter;
-const multiaddr = require("multiaddr");
-const mafmt = require("mafmt");
 const Stop = require("./circuit/stop");
 const Hop = require("./circuit/hop");
 const proto = require("./protocol");
@@ -34,7 +34,7 @@ module.exports = (swarm, options, connHandler) => {
      * @return {void}
      */
     listener.listen = (ma, callback) => {
-        callback = callback || (() => {});
+        callback = callback || (() => { });
 
         swarm.handle(multicodec.relay, (_, conn) => {
             const sh = new StreamHandler(conn);
@@ -113,7 +113,7 @@ module.exports = (swarm, options, connHandler) => {
         // get all the explicit relay addrs excluding self
         const p2pAddrs = addrs.filter((addr) => {
             return mafmt.Circuit.matches(addr) &&
-        !addr.toString().includes(swarm._peerInfo.id.toB58String());
+                !addr.toString().includes(swarm._peerInfo.id.toB58String());
         });
 
         // use the explicit relays instead of any relay

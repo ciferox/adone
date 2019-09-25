@@ -1,4 +1,6 @@
-
+const {
+    is
+} = adone;
 
 const setImmediate = require("async/setImmediate");
 

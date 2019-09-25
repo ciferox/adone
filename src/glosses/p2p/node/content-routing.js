@@ -1,4 +1,6 @@
-
+const {
+    is
+} = adone;
 
 const tryEach = require("async/tryEach");
 const parallel = require("async/parallel");

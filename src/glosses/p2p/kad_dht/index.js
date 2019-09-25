@@ -1,17 +1,15 @@
 const {
-    p2p: { record: libp2pRecord }
+    assert,
+    datastore: { backend: { MemoryDatastore } },
+    p2p: { crypto, record: libp2pRecord, PeerInfo, PeerId },
+    promise: { nodeify }
 } = adone;
 
 const { EventEmitter } = require("events");
-const MemoryStore = require("interface-datastore").MemoryDatastore;
 const waterfall = require("async/waterfall");
 const each = require("async/each");
 const filter = require("async/filter");
 const timeout = require("async/timeout");
-const PeerId = require("peer-id");
-const PeerInfo = require("peer-info");
-const crypto = require("libp2p-crypto");
-const promiseToCallback = require("promise-to-callback");
 
 const errcode = require("err-code");
 
@@ -25,7 +23,6 @@ const Providers = require("./providers");
 const Message = require("./message");
 const RandomWalk = require("./random-walk");
 const QueryManager = require("./query-manager");
-const assert = require("assert");
 
 /**
  * A DHT implementation modeled after Kademlia with S/Kademlia modifications.
@@ -102,7 +99,7 @@ class KadDHT extends EventEmitter {
          *
          * @type {Datastore}
          */
-        this.datastore = options.datastore || new MemoryStore();
+        this.datastore = options.datastore || new MemoryDatastore();
 
         /**
          * Provider management
@@ -386,7 +383,7 @@ class KadDHT extends EventEmitter {
 
                     // run our query
                     timeout((_cb) => {
-                        promiseToCallback(query.run(rtp))(_cb);
+                        nodeify(query.run(rtp), _cb);
                     }, options.timeout)((err, res) => {
                         query.stop();
                         cb(err, res);
@@ -444,7 +441,7 @@ class KadDHT extends EventEmitter {
                 };
             });
 
-            promiseToCallback(q.run(tablePeers))((err, res) => {
+            nodeify(q.run(tablePeers), (err, res) => {
                 if (err) {
                     return callback(err);
                 }
@@ -543,7 +540,7 @@ class KadDHT extends EventEmitter {
         const errors = [];
         waterfall([
             // TODO: refactor this in method in async and remove this wrapper
-            (cb) => promiseToCallback(this.providers.addProvider(key, this.peerInfo.id))((err) => cb(err)),
+            (cb) => nodeify(this.providers.addProvider(key, this.peerInfo.id), (err) => cb(err)),
             (cb) => this.getClosestPeers(key.buffer, cb),
             (peers, cb) => {
                 const msg = new Message(Message.TYPES.ADD_PROVIDER, key.buffer, 0);
@@ -678,7 +675,7 @@ class KadDHT extends EventEmitter {
                     });
 
                     timeout((_cb) => {
-                        promiseToCallback(query.run(peers))(_cb);
+                        nodeify(query.run(peers), _cb);
                     }, options.timeout)((err, res) => {
                         query.stop();
                         cb(err, res);

@@ -1,8 +1,9 @@
+const {
+    stream: { pull }
+} = adone;
+const { lengthPrefixed: lp } = pull;
 
-
-const pull = require("pull-stream");
 const timeout = require("async/timeout");
-const lp = require("pull-length-prefixed");
 const setImmediate = require("async/setImmediate");
 
 const errcode = require("err-code");
@@ -93,7 +94,7 @@ class Network {
      * @type {bool}
      */
     get isConnected() {
-    // TODO add a way to check if switch has started or not
+        // TODO add a way to check if switch has started or not
         return this.dht.isStarted && this.isStarted;
     }
 
@@ -136,7 +137,7 @@ class Network {
      * @returns {void}
      */
     sendRequest(to, msg, callback) {
-    // TODO: record latency
+        // TODO: record latency
         if (!this.isConnected) {
             return callback(errcode(new Error("Network is offline"), "ERR_NETWORK_OFFLINE"));
         }

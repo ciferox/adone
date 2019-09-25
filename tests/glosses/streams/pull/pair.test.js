@@ -1,50 +1,65 @@
 const {
     stream: { pull }
 } = adone;
-const { pair } = pull;
+const { pipe, pair } = pull;
 
 describe("stream", "pull", "pair", () => {
-    it("simple", (done) => {
+    it("simple", async () => {
         const p = pair();
         const input = [1, 2, 3];
-        pull(pull.values(input), p.sink);
-        pull(p.source, pull.collect((err, values) => {
-            if (err) {
-                throw err;
-            }
-            // console.log(values); //[1, 2, 3]
-            assert.deepEqual(values, input);
-            done();
-        }));
-
+        pipe(input, p.sink);
+        const values = await pipe(p.source, collect);
+        console.log(values); // [1, 2, 3]
+        assert.deepEqual(values, input);
     });
 
-    it("simple - error", (done) => {
+    it("simple - error", async (done) => {
         const p = pair();
         const err = new Error("test errors");
-        const input = [1, 2, 3];
-        pull((abort, cb) => {
-            cb(err);
+        pipe({
+            async *[Symbol.iterator]() {
+                throw err;
+            }
         }, p.sink);
-        pull(p.source, pull.collect((_err, values) => {
-            // console.log(_err);
+        try {
+            await pipe(p.source, collect);
+        } catch (_err) {
+            console.log(_err);
             assert.equal(_err, err);
             done();
-        }));
-
+        }
     });
+
     it("echo duplex", (done) => {
         const d = pair.duplex();
-        pull(
-            pull.values([1, 2, 3]),
+        pipe(
+            [1, 2, 3],
             d[0],
-            pull.collect((err, ary) => {
-                assert.deepEqual(ary, [1, 2, 3]);
-                done();
-            })
-        );
+            collect
+        ).then((ary) => {
+            assert.deepEqual(ary, [1, 2, 3]);
+            done();
+        });
 
-        //pipe the second duplex stream back to itself.
-        pull(d[1], pull.through(console.log), d[1]);
+        // pipe the second duplex stream back to itself.
+        pipe(d[1], through(console.log), d[1]);
     });
+
+    function through(fn) {
+        return async function* (source) {
+            for await (const value of source) {
+                fn(value);
+                yield value;
+            }
+        };
+    }
+
+    async function collect(source) {
+        const values = [];
+        for await (const value of source) {
+            values.push(value);
+        }
+        return values;
+    }
+
 });

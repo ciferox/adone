@@ -416,7 +416,7 @@ class ConnectionFSM extends BaseConnection {
         }
         this.muxer.newStream(async (err, conn) => {
             if (err) {
-                return callback(err); 
+                return callback(err);
             }
             const ms = new multistream.Dialer();
             let results;

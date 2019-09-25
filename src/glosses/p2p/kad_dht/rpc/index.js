@@ -1,7 +1,7 @@
-
-
-const pull = require("pull-stream");
-const lp = require("pull-length-prefixed");
+const {
+    stream: { pull }
+} = adone;
+const { lengthPrefixed: lp } = pull;
 
 const Message = require("../message");
 const handlers = require("./handlers");
@@ -23,7 +23,7 @@ module.exports = (dht) => {
      * @private
      */
     function handleMessage(peer, msg, callback) {
-    // update the peer
+        // update the peer
         dht._add(peer, (err) => {
             if (err) {
                 log.error("Failed to update the kbucket store");

@@ -1,10 +1,10 @@
-
+const {
+    multiformat: { CID, multihashingAsync: multihashing },
+    p2p: { crypto }
+} = adone;
 
 const times = require("async/times");
-const multihashing = require("multihashing-async");
 const waterfall = require("async/waterfall");
-const CID = require("cids");
-const crypto = require("libp2p-crypto");
 
 function createValues(n, callback) {
     times(n, (i, cb) => {

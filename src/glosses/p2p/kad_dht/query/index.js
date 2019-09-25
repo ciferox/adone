@@ -1,6 +1,6 @@
-
-
-const mh = require("multihashes");
+const {
+    multiformat: { multihash: mh }
+} = adone;
 
 const utils = require("../utils");
 const Run = require("./run");
@@ -87,7 +87,7 @@ class Query {
      * Called when the run completes (even if there's an error).
      */
     _onComplete() {
-    // Ensure worker queues for all paths are stopped at the end of the query
+        // Ensure worker queues for all paths are stopped at the end of the query
         this.stop();
     }
 

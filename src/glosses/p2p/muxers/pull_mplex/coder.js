@@ -1,10 +1,10 @@
-const debug = require("debug");
-
 const {
-    data: { varint },
     is,
-    stream: { pull: { through2 } }
+    data: { varint },
+    stream: { pull: { through } }
 } = adone;
+
+const debug = require("debug");
 
 const log = debug("pull-plex:coder");
 log.err = debug("pull-plex:coder:err");
@@ -22,7 +22,7 @@ exports.encode = () => {
     let pool = Buffer.allocUnsafe(PULL_LENGTH);
     let used = 0;
 
-    return through2(function (msg) {
+    return through(function (msg) {
         const oldUsed = used;
         varint.encode(msg[0] << 3 | msg[1], pool, used);
         used += varint.encode.bytes;
@@ -122,7 +122,7 @@ exports.decode = () => {
     let message = null;
     let accumulating = false;
     let array = [];
-    return through2(function (msg) {
+    return through(function (msg) {
         const ps = this;
         function more() {
             if (msg && msg.length) {

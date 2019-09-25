@@ -1,5 +1,3 @@
-
-
 const crypto = require("crypto");
 const KEY_LENGTH = 32;
 

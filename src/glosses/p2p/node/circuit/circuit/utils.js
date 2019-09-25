@@ -1,6 +1,7 @@
 const {
+    is,
     multiformat: { multiaddr },
-    p2p: { PeerId, PeerInfo }
+    p2p: { PeerInfo, PeerId }
 } = adone;
 
 const proto = require("../protocol");

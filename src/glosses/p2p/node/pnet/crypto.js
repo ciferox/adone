@@ -1,6 +1,8 @@
+const {
+    is,
+    stream: { pull }
+} = adone;
 
-
-const pull = require("pull-stream");
 const debug = require("debug");
 const Errors = require("./errors");
 const xsalsa20 = require("xsalsa20");
@@ -58,11 +60,11 @@ module.exports.createUnboxStream = (remote, psk) => {
  */
 module.exports.decodeV1PSK = (pskBuffer) => {
     try {
-    // This should pull from multibase/multicodec to allow for
-    // more encoding flexibility. Ideally we'd consume the codecs
-    // from the buffer line by line to evaluate the next line
-    // programatically instead of making assumptions about the
-    // encodings of each line.
+        // This should pull from multibase/multicodec to allow for
+        // more encoding flexibility. Ideally we'd consume the codecs
+        // from the buffer line by line to evaluate the next line
+        // programatically instead of making assumptions about the
+        // encodings of each line.
         const metadata = pskBuffer.toString().split(/(?:\r\n|\r|\n)/g);
         const pskTag = metadata.shift();
         const codec = metadata.shift();

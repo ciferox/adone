@@ -1,117 +1,139 @@
 const {
-    stream: { pull }
+    stream: {
+        pull: { pipe }
+    }
 } = adone;
 
+const sinon = require("sinon");
+
+const { isValidTick } = require("./utils");
+
 module.exports = (common) => {
+    const upgrader = {
+        _upgrade(multiaddrConnection) {
+            ["sink", "source", "remoteAddr", "conn", "timeline", "close"].forEach((prop) => {
+                expect(multiaddrConnection).to.have.property(prop);
+            });
+            expect(isValidTick(multiaddrConnection.timeline.open)).to.equal(true);
+
+            return multiaddrConnection;
+        },
+        upgradeOutbound(multiaddrConnection) {
+            return upgrader._upgrade(multiaddrConnection);
+        },
+        upgradeInbound(multiaddrConnection) {
+            return upgrader._upgrade(multiaddrConnection);
+        }
+    };
+
     describe("listen", () => {
         let addrs;
         let transport;
 
-        before((done) => {
-            common.setup((err, _transport, _addrs) => {
-                if (err) {return done(err)};
-                transport = _transport;
-                addrs = _addrs;
-                done();
-            });
+        before(async () => {
+            ({ transport, addrs } = await common.setup({ upgrader }));
         });
 
-        after((done) => {
-            common.teardown(done);
+        after(() => common.teardown && common.teardown());
+
+        afterEach(() => {
+            sinon.restore();
         });
 
-        it("simple", (done) => {
+        it("simple", async () => {
             const listener = transport.createListener((conn) => { });
-            listener.listen(addrs[0], () => {
-                listener.close(done);
-            });
+            await listener.listen(addrs[0]);
+            await listener.close();
         });
 
-        it("close listener with connections, through timeout", (done) => {
-            const finish = plan(3, done);
+        it("close listener with connections, through timeout", async () => {
+            const upgradeSpy = sinon.spy(upgrader, "upgradeInbound");
+            const listenerConns = [];
+
             const listener = transport.createListener((conn) => {
-                pull(conn, conn);
+                listenerConns.push(conn);
+                expect(upgradeSpy.returned(conn)).to.equal(true);
+                pipe(conn, conn);
             });
 
-            listener.listen(addrs[0], () => {
-                const socket1 = transport.dial(addrs[0], () => {
-                    listener.close(finish);
-                });
+            // Listen
+            await listener.listen(addrs[0]);
 
-                pull(
-                    transport.dial(addrs[0]),
-                    pull.onEnd(() => {
-                        finish();
-                    })
-                );
+            // Create two connections to the listener
+            const [socket1] = await Promise.all([
+                transport.dial(addrs[0]),
+                transport.dial(addrs[0])
+            ]);
 
-                pull(
-                    pull.values([Buffer.from("Some data that is never handled")]),
-                    socket1,
-                    pull.onEnd(() => {
-                        finish();
-                    })
-                );
+            // Give the listener a chance to finish its upgrade
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            // Wait for the data send and close to finish
+            await Promise.all([
+                pipe(
+                    [Buffer.from("Some data that is never handled")],
+                    socket1
+                ),
+                // Closer the listener (will take a couple of seconds to time out)
+                listener.close()
+            ]);
+
+            await socket1.close();
+
+            expect(isValidTick(socket1.timeline.close)).to.equal(true);
+            listenerConns.forEach((conn) => {
+                expect(isValidTick(conn.timeline.close)).to.equal(true);
             });
+
+            // 2 dials = 2 connections upgraded
+            expect(upgradeSpy.callCount).to.equal(2);
         });
 
         describe("events", () => {
-            // eslint-disable-next-line
-            // TODO: figure out why it fails in the full test suite
-            it.skip("connection", (done) => {
-                const finish = plan(2, done);
-
+            it("connection", (done) => {
+                const upgradeSpy = sinon.spy(upgrader, "upgradeInbound");
                 const listener = transport.createListener();
 
-                listener.on("connection", (conn) => {
+                listener.on("connection", async (conn) => {
+                    expect(upgradeSpy.returned(conn)).to.equal(true);
+                    expect(upgradeSpy.callCount).to.equal(1);
                     expect(conn).to.exist();
-                    finish();
+                    await listener.close();
+                    done();
                 });
-
-                listener.listen(addrs[0], () => {
-                    transport.dial(addrs[0], () => {
-                        listener.close(finish);
-                    });
-                });
+                (async () => {
+                    await listener.listen(addrs[0]);
+                    await transport.dial(addrs[0]);
+                })();
             });
 
             it("listening", (done) => {
                 const listener = transport.createListener();
-                listener.on("listening", () => {
-                    listener.close(done);
+                listener.on("listening", async () => {
+                    await listener.close();
+                    done();
                 });
                 listener.listen(addrs[0]);
             });
 
-            // eslint-disable-next-line
-            // TODO: how to get the listener to emit an error?
-            it.skip("error", (done) => {
+            it("error", (done) => {
                 const listener = transport.createListener();
-                listener.on("error", (err) => {
+                listener.on("error", async (err) => {
                     expect(err).to.exist();
-                    listener.close(done);
+                    await listener.close();
+                    done();
                 });
+                listener.emit("error", new Error("my err"));
             });
 
             it("close", (done) => {
-                const finish = plan(2, done);
                 const listener = transport.createListener();
-                listener.on("close", finish);
-
-                listener.listen(addrs[0], () => {
-                    listener.close(finish);
-                });
+                listener.on("close", done);
+                (async () => {
+                    await listener.listen(addrs[0]);
+                    await listener.close();
+                })();
             });
         });
     });
 };
-
-function plan(n, done) {
-    let i = 0;
-    return (err) => {
-        if (err) {return done(err)};
-        i++;
-
-        if (i === n) {done()};
-    };
-}

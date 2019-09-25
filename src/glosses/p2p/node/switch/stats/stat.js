@@ -1,5 +1,3 @@
-
-
 const EventEmitter = require("events");
 const Big = require("bignumber.js");
 const MovingAverage = require("moving-average");

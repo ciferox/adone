@@ -1,5 +1,3 @@
-
-
 const PeerQueue = require("../peer-queue");
 const utils = require("../utils");
 

@@ -769,7 +769,15 @@ export default {
                     task: "transpile",
                     src: "src/glosses/p2p/**/*.js",
                     dst: "lib/glosses/p2p",
-                    predecessor: "https://github.com/libp2p"
+                    predecessor: "https://github.com/libp2p",
+                    units: {
+                        utils_ts: {
+                            description: "Some utils implemented using TypeScript",
+                            src: "src/glosses/p2p/utils/**/*.ts",
+                            dst: "lib/glosses/p2p/utils",
+                            task: "tsc"
+                        }
+                    }
                 },
                 path: {
                     description: "Replacement of native path",

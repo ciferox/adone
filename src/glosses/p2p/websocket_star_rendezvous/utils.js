@@ -1,8 +1,9 @@
+/* eslint-disable func-style */
 const {
+    is,
     multiformat: { mafmt, multiaddr },
     p2p: { PeerId, crypto }
 } = adone;
-
 
 function isIP(ma) {
     const protos = ma.protos();
@@ -18,27 +19,27 @@ function isIP(ma) {
 }
 
 function cleanUrlSIO(ma) {
-    const maStrSplit = ma.toString().split('/')
+    const maStrSplit = ma.toString().split("/");
 
     if (isIP(ma)) {
-        if (maStrSplit[1] === 'ip4') {
-            return 'http://' + maStrSplit[2] + ':' + maStrSplit[4]
-        } else if (maStrSplit[1] === 'ip6') {
-            return 'http://[' + maStrSplit[2] + ']:' + maStrSplit[4]
+        if (maStrSplit[1] === "ip4") {
+            return `http://${maStrSplit[2]}:${maStrSplit[4]}`;
+        } else if (maStrSplit[1] === "ip6") {
+            return `http://[${maStrSplit[2]}]:${maStrSplit[4]}`;
         }
-        throw new Error('invalid multiaddr: ' + ma.toString())
+        throw new Error(`invalid multiaddr: ${ma.toString()}`);
 
     } else if (multiaddr.isName(ma)) {
-        const wsProto = ma.protos()[1].name
-        if (wsProto === 'ws') {
-            return 'http://' + maStrSplit[2]
-        } else if (wsProto === 'wss') {
-            return 'https://' + maStrSplit[2]
-        } else {
-            throw new Error('invalid multiaddr: ' + ma.toString())
+        const wsProto = ma.protos()[1].name;
+        if (wsProto === "ws") {
+            return `http://${maStrSplit[2]}`;
+        } else if (wsProto === "wss") {
+            return `https://${maStrSplit[2]}`;
         }
+        throw new Error(`invalid multiaddr: ${ma.toString()}`);
+
     } else {
-        throw new Error('invalid multiaddr: ' + ma.toString())
+        throw new Error(`invalid multiaddr: ${ma.toString()}`);
     }
 }
 
@@ -61,14 +62,16 @@ const types = {
 };
 
 function validate(def, data) {
-    if (!is.array(data)) { throw new Error('Data is not an array') };
+    if (!is.array(data)) {
+        throw new Error("Data is not an array");
+    }
     def.forEach((type, index) => {
         if (!types[type]) {
-            throw new Error("Type " + type + " does not exist");
+            throw new Error(`Type ${type} does not exist`);
         }
 
         if (!types[type](data[index])) {
-            throw new Error("Data at index " + index + " is invalid for type " + type);
+            throw new Error(`Data at index ${index} is invalid for type ${type}`);
         }
     });
 }
@@ -102,7 +105,7 @@ function Protocol(log) {
 }
 
 async function getIdAndValidate(pub, id) {
-    const _id = await Id.createFromPubKey(Buffer.from(pub, "hex"));
+    const _id = await PeerId.createFromPubKey(Buffer.from(pub, "hex"));
     if (_id.toB58String() !== id) {
         throw Error("Id is not matching");
     }

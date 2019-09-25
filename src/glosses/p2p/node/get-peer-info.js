@@ -1,4 +1,6 @@
+/* eslint-disable func-style */
 const {
+    is,
     multiformat: { multiaddr },
     p2p: { PeerId, PeerInfo }
 } = adone;

@@ -1,15 +1,15 @@
 const {
-    p2p: { PeerInfo, PeerId }
+    multiformat: { multiaddr },
+    p2p: { PeerId, PeerInfo },
+    stream: { pull }
 } = adone;
 
-const pull = require("pull-stream/pull");
 const debug = require("debug");
 const EE = require("events").EventEmitter;
 const once = require("once");
 const utilsFactory = require("./utils");
 const StreamHandler = require("./stream-handler");
 const proto = require("../protocol").CircuitRelay;
-const multiaddr = require("multiaddr");
 const series = require("async/series");
 const waterfall = require("async/waterfall");
 const setImmediate = require("async/setImmediate");

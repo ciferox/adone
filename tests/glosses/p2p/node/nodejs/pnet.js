@@ -1,8 +1,15 @@
-const {
-    p2p: { PeerInfo, PeerId, transport: { WS } }
-} = adone;
+/**
+ * eslint-env mocha
+ */
 
+
+const chai = require("chai");
+chai.use(require("dirty-chai"));
+const expect = chai.expect;
+const PeerInfo = require("peer-info");
+const PeerId = require("peer-id");
 const waterfall = require("async/waterfall");
+const WS = require("libp2p-websockets");
 const defaultsDeep = require("@nodeutils/defaults-deep");
 const DHT = require("libp2p-kad-dht");
 
@@ -68,7 +75,7 @@ describe("private network", () => {
             expect(() => {
                 const options = defaultsDeep(config, {
                     modules: {
-                        connProtector: {}
+                        connProtector: { }
                     }
                 });
 

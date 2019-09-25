@@ -1,5 +1,3 @@
-
-
 module.exports.INVALID_PEER = "Not a valid peer connection";
 module.exports.INVALID_PSK = "Your private shared key is invalid";
 module.exports.NO_LOCAL_ID = "No local private key provided";

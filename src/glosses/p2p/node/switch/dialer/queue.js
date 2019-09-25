@@ -1,9 +1,10 @@
-
+const {
+    util: { once }
+} = adone;
 
 const ConnectionFSM = require("../connection");
 const { DIAL_ABORTED, ERR_DENIED } = require("../errors");
 const nextTick = require("async/nextTick");
-const once = require("once");
 const debug = require("debug");
 const log = debug("libp2p:switch:dial");
 log.error = debug("libp2p:switch:dial:error");

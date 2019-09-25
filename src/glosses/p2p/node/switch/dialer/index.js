@@ -1,5 +1,3 @@
-
-
 const DialQueueManager = require("./queueManager");
 const { getPeerInfo } = require("../../get-peer-info");
 const {

@@ -1,10 +1,10 @@
 const {
     is,
-    p2p: { crypto, PeerId },
-    multiformat: { multiaddr, mafmt }
+    multiformat: { mafmt, multiaddr },
+    p2p: { crypto, PeerId }
 } = adone;
 
-const cleanUrlSIO = function (ma) {
+function cleanUrlSIO(ma) {
     const protos = ma.protos();
     const ipProto = protos[0].name;
     const tcpProto = protos[1].name;
@@ -27,7 +27,7 @@ const cleanUrlSIO = function (ma) {
             ? "" : tcpPort;
 
     return `${proto}://${host}${port ? `:${port}` : ""}`;
-};
+}
 
 const types = {
     string: (v) => is.string(v),
@@ -46,7 +46,7 @@ const types = {
     function: (v) => is.function(v)
 };
 
-const validate = function (def, data) {
+function validate(def, data) {
     if (!is.array(data)) {
         throw new Error("Data is not an array");
     }
@@ -59,7 +59,7 @@ const validate = function (def, data) {
             throw new Error(`Data at index ${index} is invalid for type ${type}`);
         }
     });
-};
+}
 
 function Protocol(log) {
     if (!log) {

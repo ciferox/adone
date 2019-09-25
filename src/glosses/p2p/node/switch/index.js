@@ -128,13 +128,13 @@ class Switch extends EventEmitter {
 
         // Only listen on transports we actually have addresses for
         return myTransports.filter((ts) => this.transports[ts].filter(myAddrs).length > 0)
-            // push Circuit to be the last proto to be dialed, and alphabetize the others
+        // push Circuit to be the last proto to be dialed, and alphabetize the others
             .sort((a, b) => {
                 if (a === Circuit.tag) {
-                    return 1;
+                    return 1; 
                 }
                 if (b === Circuit.tag) {
-                    return -1;
+                    return -1; 
                 }
                 return a < b ? -1 : 1;
             });
@@ -205,8 +205,8 @@ class Switch extends EventEmitter {
      * @param {function} callback deprecated: Listening for the `error` and `start` events are recommended
      * @returns {void}
      */
-    start(callback = () => { }) {
-        // Add once listener for deprecated callback support
+    start(callback = () => {}) {
+    // Add once listener for deprecated callback support
         this.once("start", callback);
 
         this.state("start");
@@ -218,8 +218,8 @@ class Switch extends EventEmitter {
      * @param {function} callback deprecated: Listening for the `error` and `stop` events are recommended
      * @returns {void}
      */
-    stop(callback = () => { }) {
-        // Add once listener for deprecated callback support
+    stop(callback = () => {}) {
+    // Add once listener for deprecated callback support
         this.once("stop", callback);
 
         this.state("stop");
@@ -260,7 +260,7 @@ class Switch extends EventEmitter {
                     each(transport.listeners, (listener, cb) => {
                         listener.close((err) => {
                             if (err) {
-                                log.error(err);
+                                log.error(err); 
                             }
                             cb();
                         });

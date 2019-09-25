@@ -1,14 +1,13 @@
 const {
-    // async: { each, series, parallel, nextTick },
     is,
-    p2p: { PeerBook, PeerInfo, transport: { WS } }
+    p2p: { PeerBook, PeerInfo }
 } = adone;
 
 const FSM = require("fsm-event");
 const EventEmitter = require("events").EventEmitter;
-// const debug = require("debug");
-// const log = debug("libp2p");
-// log.error = debug("libp2p:error");
+const debug = require("debug");
+const log = debug("libp2p");
+log.error = debug("libp2p:error");
 const errCode = require("err-code");
 const promisify = require("promisify-es6");
 
@@ -157,23 +156,23 @@ class Libp2p extends EventEmitter {
             }
         });
         this.state.on("STARTING", () => {
-            // log("libp2p is starting");
+            log("libp2p is starting");
             this._onStarting();
         });
         this.state.on("STOPPING", () => {
-            // log("libp2p is stopping");
+            log("libp2p is stopping");
             this._onStopping();
         });
         this.state.on("STARTED", () => {
-            // log("libp2p has started");
+            log("libp2p has started");
             this.emit("start");
         });
         this.state.on("STOPPED", () => {
-            // log("libp2p has stopped");
+            log("libp2p has stopped");
             this.emit("stop");
         });
         this.state.on("error", (err) => {
-            // log.error(err);
+            log.error(err);
             this.emit("error", err);
         });
 
@@ -187,10 +186,10 @@ class Libp2p extends EventEmitter {
 
         this._peerDiscovered = this._peerDiscovered.bind(this)
 
-        // promisify all instance methods
-        ;["start", "stop", "dial", "dialProtocol", "dialFSM", "hangUp", "ping"].forEach((method) => {
-            this[method] = promisify(this[method], { context: this });
-        });
+            // promisify all instance methods
+            ;["start", "stop", "dial", "dialProtocol", "dialFSM", "hangUp", "ping"].forEach((method) => {
+                this[method] = promisify(this[method], { context: this });
+            });
     }
 
     /**
@@ -202,7 +201,7 @@ class Libp2p extends EventEmitter {
      */
     emit(eventName, ...args) {
         if (eventName === "error" && !this._events.error) {
-            // log.error(...args);
+            log.error(...args);
         } else {
             super.emit(eventName, ...args);
         }
@@ -369,7 +368,7 @@ class Libp2p extends EventEmitter {
 
             if (t.filter(multiaddrs).length > 0) {
                 this._switch.transport.add(t.tag || t[Symbol.toStringTag], t);
-            } else if (WS.isWebSockets(t)) {
+            } else if (adone.p2p.transport.WS.isWebSockets(t)) {
                 // TODO find a cleaner way to signal that a transport is always used
                 // for dialing, even if no listener
                 ws = t;
@@ -425,7 +424,7 @@ class Libp2p extends EventEmitter {
             }
         ], (err) => {
             if (err) {
-                // log.error(err);
+                log.error(err);
                 this.emit("error", err);
                 return this.state("stop");
             }
@@ -441,7 +440,7 @@ class Libp2p extends EventEmitter {
                     this._discovery.map((d) => {
                         d.removeListener("peer", this._peerDiscovered);
                         return (_cb) => d.stop((err) => {
-                            // log.error("an error occurred stopping the discovery service", err);
+                            log.error("an error occurred stopping the discovery service", err);
                             _cb();
                         });
                     }),
@@ -472,7 +471,7 @@ class Libp2p extends EventEmitter {
             }
         ], (err) => {
             if (err) {
-                // log.error(err);
+                log.error(err);
                 this.emit("error", err);
             }
             this.state("done");
@@ -495,7 +494,7 @@ class Libp2p extends EventEmitter {
      */
     _peerDiscovered(peerInfo) {
         if (peerInfo.id.toB58String() === this.peerInfo.id.toB58String()) {
-            // log.error(new Error(codes.ERR_DISCOVERED_SELF));
+            log.error(new Error(codes.ERR_DISCOVERED_SELF));
             return;
         }
         peerInfo = this.peerBook.put(peerInfo);
@@ -520,9 +519,9 @@ class Libp2p extends EventEmitter {
         if (this._config.peerDiscovery.autoDial === true && !peerInfo.isConnected()) {
             const minPeers = this._options.connectionManager.minPeers || 0;
             if (minPeers > Object.keys(this._switch.connection.connections).length) {
-                // log("connecting to discovered peer");
+                log("connecting to discovered peer");
                 this._switch.dialer.connect(peerInfo, (err) => {
-                    // err && log.error("could not connect to discovered peer", err);
+                    err && log.error("could not connect to discovered peer", err);
                 });
             }
         }

@@ -1,15 +1,14 @@
-
+const {
+    datastore: { interface: { Key } },
+    multiformat: { multihash: mh, multihashingAsync },
+    p2p: { PeerId, record: { Record } }
+} = adone;
 
 const debug = require("debug");
-const multihashing = require("multihashing-async");
-const mh = require("multihashes");
-const Key = require("interface-datastore").Key;
 const base32 = require("base32.js");
 const distance = require("xor-distance");
 const map = require("async/map");
-const Record = require("libp2p-record").Record;
 const setImmediate = require("async/setImmediate");
-const PeerId = require("peer-id");
 const errcode = require("err-code");
 
 /**
@@ -20,7 +19,7 @@ const errcode = require("err-code");
  * @returns {void}
  */
 exports.convertBuffer = (buf, callback) => {
-    multihashing.digest(buf, "sha2-256", callback);
+    multihashingAsync.digest(buf, "sha2-256", callback);
 };
 
 /**
@@ -31,7 +30,7 @@ exports.convertBuffer = (buf, callback) => {
  * @returns {void}
  */
 exports.convertPeerId = (peer, callback) => {
-    multihashing.digest(peer.id, "sha2-256", callback);
+    multihashingAsync.digest(peer.id, "sha2-256", callback);
 };
 
 /**

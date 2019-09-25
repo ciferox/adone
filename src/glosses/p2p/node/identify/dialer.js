@@ -1,10 +1,8 @@
 const {
-    is,
     multiformat: { multiaddr },
-    p2p: { PeerInfo, PeerId },
+    p2p: { PeerId, PeerInfo },
     stream: { pull }
 } = adone;
-
 const { take, collect, lengthPrefixed: lp } = pull;
 
 const msg = require("./message");

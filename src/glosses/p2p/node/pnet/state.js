@@ -1,12 +1,10 @@
-
+const {
+    stream: { pull }
+} = adone;
+const { pair, cat, deferred, reader } = pull;
 
 const crypto = require("crypto");
 const debug = require("debug");
-const pair = require("pull-pair");
-const Reader = require("pull-reader");
-const cat = require("pull-cat");
-const pull = require("pull-stream");
-const deferred = require("pull-defer");
 
 const cryptoStreams = require("./crypto");
 const NONCE_LENGTH = require("./key-generator").NONCE_LENGTH;
@@ -33,8 +31,8 @@ class State {
         };
         this.remote = { nonce: null };
 
-        this.rawReader = Reader(60e3);
-        this.encryptedReader = Reader(60e3);
+        this.rawReader = reader(60e3);
+        this.encryptedReader = reader(60e3);
 
         this.rawPairStream = pair();
         this.encryptedPairStream = pair();
@@ -66,8 +64,8 @@ class State {
      * @returns {void}
      */
     encrypt(callback) {
-    // The outer stream needs to be returned before we setup the
-    // rest of the streams, so we're delaying the execution
+        // The outer stream needs to be returned before we setup the
+        // rest of the streams, so we're delaying the execution
         setTimeout(() => {
             // Read the nonce first, once we have it resolve the
             // deferred source, so we keep reading

@@ -1,17 +1,17 @@
+const {
+    async: { setImmediate },
+    event: { Emitter },
+    is,
+    multiformat: { mafmt, multiaddr },
+    p2p: { Connection, PeerId, PeerInfo }
+} = adone;
+
 const debug = require("debug");
 const log = debug("libp2p:websocket-star");
 const utils = require("./utils");
 const Listener = require("./listener");
 const cleanUrlSIO = utils.cleanUrlSIO;
 const withIs = require("class-is");
-
-const {
-    async: { setImmediate },
-    event: { Emitter },
-    is,
-    p2p: { Connection, PeerId, PeerInfo },
-    multiformat: { multiaddr, mafmt }
-} = adone;
 
 class WebsocketStar {
     /**
@@ -125,7 +125,7 @@ class WebsocketStar {
      */
     _peerDiscovered(maStr) {
         log("Peer Discovered:", maStr);
-        const peerIdStr = maStr.split("/ipfs/").pop();
+        const peerIdStr = maStr.split("/p2p/").pop();
         const peerId = PeerId.createFromB58String(peerIdStr);
         const peerInfo = new PeerInfo(peerId);
 
