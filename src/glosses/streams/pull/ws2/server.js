@@ -45,6 +45,12 @@ module.exports = !WebSocket.Server ? null : function (opts, onConnection) {
     wsServer.on("connection", (socket, req) => {
         const stream = ws(socket);
         stream.remoteAddress = req.socket.remoteAddress;
+        
+        // workaround
+        stream.remotePort = req.socket.remotePort;
+        stream.destroy = () => socket.destroy();
+        stream.close = () => socket.close();
+        
         emitter.emit("connection", stream, req);
     });
 

@@ -1,7 +1,7 @@
 const {
     is,
     multiformat: { mafmt, multiaddrToUri },
-    p2p: { util: { AbortError } },
+    p2p: { util: { abortableIterator: { AbortError } } },
     stream: { pull: { ws2: { connect } } }
 } = adone;
 
@@ -79,7 +79,9 @@ class WebSockets {
             };
 
             // Already aborted?
-            if (options.signal.aborted) { return onAbort() };
+            if (options.signal.aborted) {
+                return onAbort();
+            }
             options.signal.addEventListener("abort", onAbort);
         });
 

@@ -7,7 +7,7 @@ module.exports = function (addr, opts) {
     const location = typeof(window) === "undefined" ? {} : window.location;
 
     const url = wsurl(addr, location);
-    const socket = new WebSocket(url);
+    const socket = new WebSocket(url, opts.websocket);
 
     const stream = duplex(socket, opts);
     stream.remoteAddress = url;

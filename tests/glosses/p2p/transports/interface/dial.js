@@ -5,7 +5,7 @@ const {
 
 const { isValidTick } = require("./utils");
 const { collect } = require("streaming-iterables");
-const AbortError = require("./errors").AbortError;
+const { AbortError } = require("./errors");
 const sinon = require("sinon");
 
 module.exports = (common) => {
@@ -93,8 +93,8 @@ module.exports = (common) => {
                 await socket;
             } catch (err) {
                 expect(upgradeSpy.callCount).to.equal(0);
-                expect(err.code).to.eql(AbortError.code);
-                expect(err.type).to.eql(AbortError.type);
+                expect(err.code).to.be.equal(AbortError.code);
+                expect(err.type).to.be.equal(AbortError.type);
                 return;
             }
             expect.fail(`Did not throw error with code ${AbortError.code}`);

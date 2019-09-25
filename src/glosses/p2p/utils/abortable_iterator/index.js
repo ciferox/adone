@@ -4,7 +4,14 @@ const {
 } = adone;
 
 const getIterator = require("get-iterator");
-const AbortError = require("./AbortError");
+
+class AbortError extends Error {
+    constructor(message, code) {
+        super(message || "The operation was aborted");
+        this.type = "aborted";
+        this.code = code || "ABORT_ERR";
+    }
+}
 
 // Wrap an iterator to make it abortable, allow cleanup when aborted via onAbort
 module.exports = (iterator, signal, options) => {

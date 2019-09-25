@@ -10,7 +10,7 @@ const mockUpgrader = {
     upgradeOutbound: (maConn) => maConn
 };
 
-describe("libp2p-websockets", () => {
+describe.skip("libp2p-websockets", () => {
     const ma = multiaddr("/ip4/127.0.0.1/tcp/9095/ws");
     let ws;
     let conn;

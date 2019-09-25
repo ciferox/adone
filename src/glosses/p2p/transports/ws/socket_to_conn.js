@@ -46,7 +46,8 @@ module.exports = (socket, options = {}) => {
                     log("timeout closing socket to %s:%s after %dms, destroying it manually",
                         host, port, Date.now() - start);
 
-                    socket.destroy();
+                    // workaround 
+                    // socket.destroy();
                     maConn.timeline.close = Date.now();
                     return resolve();
                 }, CLOSE_TIMEOUT);
