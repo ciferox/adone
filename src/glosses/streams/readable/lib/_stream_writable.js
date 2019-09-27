@@ -57,7 +57,7 @@ Writable.WritableState = WritableState;
 /*<replacement>*/
 
 var internalUtil = {
-  deprecate: require('util-deprecate')
+  deprecate: require('util').deprecate//require('util-deprecate')
 };
 /*</replacement>*/
 

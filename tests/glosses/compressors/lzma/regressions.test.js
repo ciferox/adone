@@ -1,7 +1,7 @@
 const { std: { fs, path }, compressor: { xz }, collection: { BufferList } } = adone;
 
 describe("compressor", "lzma", "regressions", () => {
-    const commonFixturePath = (relPath) => path.join(__dirname, "../..", "fixtures", relPath);
+    const commonFixturePath = (relPath) => path.join(__dirname, "..", "fixtures", relPath);
 
     describe("regression-#7", () => {
         it("should perform correctly", (done) => {

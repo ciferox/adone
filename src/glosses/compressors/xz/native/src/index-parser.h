@@ -8,8 +8,7 @@
 #include <stdlib.h>
 #include <lzma.h>
 
-namespace lzma
-{
+namespace lzma {
 
 /**
  * \brief       Internal data structure
@@ -40,8 +39,7 @@ typedef struct lzma_index_parser_internal_s lzma_index_parser_internal;
  * Reading the data from the underlying file may happen synchronously or
  * asynchronously, see the description of the read_callback().
  */
-typedef struct
-{
+typedef struct {
 	/**
 	 * \brief       Combined Index of all Streams in the file
 	 *
@@ -94,10 +92,10 @@ typedef struct
 	 * This function is modelled after pread(2), which is a available on
 	 * some platforms and can be easily wrapped to be used here.
 	 */
-	int64_t(LZMA_API_CALL *read_callback)(void *opaque,
-										  uint8_t *buf,
-										  size_t count,
-										  int64_t offset);
+	int64_t (LZMA_API_CALL *read_callback)(void *opaque,
+	                                       uint8_t *buf,
+	                                       size_t count,
+	                                       int64_t offset);
 
 	/// Opaque pointer that is passed to read_callback.
 	void *opaque;
@@ -147,7 +145,7 @@ typedef struct
 	 * structure currently holds external resources, not counting the
 	 * possible index member that is set on success.
 	 */
-	lzma_index_parser_internal *internal;
+	lzma_index_parser_internal* internal;
 
 	/*
 	 * Reserved space to allow possible future extensions without
@@ -177,12 +175,10 @@ typedef struct
  *
  * Anything which applies for LZMA_STREAM_INIT applies here, too.
  */
-#define LZMA_INDEX_PARSER_DATA_INIT                     \
-	{                                                   \
-		NULL, 0, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, \
-			NULL, NULL, NULL, NULL, 0, 0, 0, 0,         \
-			LZMA_RESERVED_ENUM, LZMA_RESERVED_ENUM      \
-	}
+#define LZMA_INDEX_PARSER_DATA_INIT \
+	{ NULL, 0, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, \
+	NULL, NULL, NULL, NULL, 0, 0, 0, 0, \
+	LZMA_RESERVED_ENUM, LZMA_RESERVED_ENUM }
 
 /** \brief      Parse the Index(es) from the given .xz file
  *
@@ -206,6 +202,7 @@ typedef struct
  */
 extern lzma_ret
 my_lzma_parse_indexes_from_file(lzma_index_parser_data *info) lzma_nothrow;
+
 }
 
 #endif

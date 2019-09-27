@@ -210,7 +210,11 @@ export default {
                     units: {
                         brotli: {
                             description: "Brotli compression format",
-                            src: "src/glosses/compressors/brotli/**/*.js",
+                            src: [
+                                "src/glosses/compressors/brotli/**/*.js",
+                                "!src/glosses/compressors/brotli/native/**/*.js"
+
+                            ],
                             dst: "lib/glosses/compressors/brotli",
                             task: "transpile",
                             units: {
@@ -879,7 +883,7 @@ export default {
                         }
                     }
                 },
-                stream: {
+                streams: {
                     description: "Different streams and stream utilites",
                     task: "transpile",
                     src: "src/glosses/streams/**/*.js",
