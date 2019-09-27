@@ -9,7 +9,6 @@ adone.lazify({
     matchPath: "./match_path",
     toposort: "./toposort",
     jsesc: "./jsesc",
-    memcpy: "./memcpy",
     uuid: "./uuid",
     StreamSearch: "./streamsearch",
     delegate: "./delegate",

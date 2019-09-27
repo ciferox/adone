@@ -1,7 +1,6 @@
 const {
     is,
     math: { Long },
-    util,
     error
 } = adone;
 
@@ -2228,7 +2227,8 @@ export default class SmartBuffer {
             }
         }
         const ab = new ArrayBuffer(limit - offset);
-        util.memcpy.utoa(ab, 0, this.buffer, offset, limit);
+        const dst = new Uint8Array(ab);
+        this.buffer.copy(dst);
         return ab;
     }
 
@@ -2511,12 +2511,10 @@ export default class SmartBuffer {
         let b;
 
         if (buffer instanceof Uint8Array) { // Extract bytes from Uint8Array
-            b = Buffer.allocUnsafe(buffer.length);
-            util.memcpy.atou(b, 0, buffer.buffer, buffer.byteOffset, buffer.byteOffset + buffer.length);
+            b = Buffer.from(buffer);
             buffer = b;
         } else if (buffer instanceof ArrayBuffer) { // Convert ArrayBuffer to Buffer
-            b = Buffer.allocUnsafe(buffer.byteLength);
-            util.memcpy.atou(b, 0, buffer, 0, buffer.byteLength);
+            b = Buffer.from(buffer);
             buffer = b;
         } else if (!(buffer instanceof Buffer)) { // Create from octets if it is an error, otherwise fail
             if (!is.array(buffer)) {

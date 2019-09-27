@@ -975,19 +975,6 @@ export default {
                     src: "src/glosses/utils/**/*.js",
                     dst: "lib/glosses/utils",
                     units: {
-                        memcpy: {
-                            description: "Memory copy utilites with native performance",
-                            task: "transpile",
-                            src: "src/glosses/utils/memcpy/index.js",
-                            dst: "lib/glosses/utils/memcpy",
-                            units: {
-                                native: {
-                                    task: "cmake",
-                                    src: "src/glosses/utils/memcpy/native",
-                                    dst: "lib/glosses/utils/memcpy/native"
-                                }
-                            }
-                        },
                         throttle: {
                             description: "Throttling asyncronous cuncurrency",
                             task: "transpile",
