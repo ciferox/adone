@@ -69,17 +69,30 @@ exports.ensureArray = (maybeArray) => {
     return maybeArray;
 };
 
+/**
+ * Ensures `message.from` is base58 encoded
+ * @param {Object} message
+ * @param {Buffer|String} message.from
+ * @return {Object}
+ */
+exports.normalizeInRpcMessage = (message) => {
+    const m = Object.assign({}, message);
+    if (is.buffer(message.from)) {
+        m.from = base58.encode(message.from);
+    }
+    return m;
+};
+
+/**
+ * The same as `normalizeInRpcMessage`, but performed on an array of messages
+ * @param {Object[]} messages
+ * @return {Object[]}
+ */
 exports.normalizeInRpcMessages = (messages) => {
     if (!messages) {
         return messages;
     }
-    return messages.map((msg) => {
-        const m = Object.assign({}, msg);
-        if (is.buffer(msg.from)) {
-            m.from = base58.encode(msg.from);
-        }
-        return m;
-    });
+    return messages.map(exports.normalizeInRpcMessage);
 };
 
 exports.normalizeOutRpcMessage = (message) => {

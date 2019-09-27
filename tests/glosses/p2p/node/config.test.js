@@ -1,10 +1,6 @@
 const {
-    p2p: { KadDHT, Bootstrap, PeerInfo, PeerId, transport: { WS } }
+    p2p: { DelegatedPeerRouter, DelegatedContentRouter, KadDHT, Bootstrap, PeerInfo, PeerId, transport: { WS } }
 } = adone;
-
-const waterfall = require("async/waterfall");
-// const DelegatedPeerRouter = require("libp2p-delegated-peer-routing");
-// const DelegatedContentRouter = require("libp2p-delegated-content-routing");
 
 const srcPath = (...args) => adone.getPath("src/glosses/p2p/node", ...args);
 
@@ -13,15 +9,9 @@ const validateConfig = require(srcPath("config")).validate;
 describe("configuration", () => {
     let peerInfo;
 
-    before((done) => {
-        waterfall([
-            (cb) => PeerId.create({ bits: 512 }, cb),
-            (peerId, cb) => PeerInfo.create(peerId, cb),
-            (info, cb) => {
-                peerInfo = info;
-                cb();
-            }
-        ], () => done());
+    before(async () => {
+        const peerId = await PeerId.create({ bits: 512 });
+        peerInfo = await PeerInfo.create(peerId);
     });
 
     it("should throw an error if peerInfo is missing", () => {
@@ -207,34 +197,34 @@ describe("configuration", () => {
         });
     });
 
-    // it("should allow for delegated content and peer routing", () => {
-    //     const peerRouter = new DelegatedPeerRouter();
-    //     const contentRouter = new DelegatedContentRouter(peerInfo);
+    it("should allow for delegated content and peer routing", () => {
+        const peerRouter = new DelegatedPeerRouter();
+        const contentRouter = new DelegatedContentRouter(peerInfo);
 
-    //     const options = {
-    //         peerInfo,
-    //         modules: {
-    //             transport: [WS],
-    //             peerDiscovery: [Bootstrap],
-    //             peerRouting: [peerRouter],
-    //             contentRouting: [contentRouter],
-    //             dht: KadDHT
-    //         },
-    //         config: {
-    //             peerDiscovery: {
-    //                 bootstrap: {
-    //                     interval: 1000,
-    //                     enabled: true
-    //                 }
-    //             }
-    //         }
-    //     };
+        const options = {
+            peerInfo,
+            modules: {
+                transport: [WS],
+                peerDiscovery: [Bootstrap],
+                peerRouting: [peerRouter],
+                contentRouting: [contentRouter],
+                dht: KadDHT
+            },
+            config: {
+                peerDiscovery: {
+                    bootstrap: {
+                        interval: 1000,
+                        enabled: true
+                    }
+                }
+            }
+        };
 
-    //     expect(validateConfig(options).modules).to.deep.include({
-    //         peerRouting: [peerRouter],
-    //         contentRouting: [contentRouter]
-    //     });
-    // });
+        expect(validateConfig(options).modules).to.deep.include({
+            peerRouting: [peerRouter],
+            contentRouting: [contentRouter]
+        });
+    });
 
     it("should not allow for dht to be enabled without it being provided", () => {
         const options = {

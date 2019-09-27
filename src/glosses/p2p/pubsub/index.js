@@ -1,29 +1,35 @@
+const {
+    stream: { pull }
+} = adone;
+const { empty } = pull;
+
+const EventEmitter = require("events");
+const asyncEach = require("async/each");
 const TimeCache = require("time-cache");
 const debug = require("debug");
 const errcode = require("err-code");
 
 const Peer = require("./peer");
 const message = require("./message");
-const { signMessage } = require("./message/sign");
+const {
+    signMessage,
+    verifySignature
+} = require("./message/sign");
 const utils = require("./utils");
 
-const {
-    async: { each: asyncEach, nextTick },
-    event: { Emitter },
-    stream: { pull }
-} = adone;
-const { empty } = pull;
+const nextTick = require("async/nextTick");
 
 /**
  * PubsubBaseProtocol handles the peers and connections logic for pubsub routers
  */
-class PubsubBaseProtocol extends Emitter {
+class PubsubBaseProtocol extends EventEmitter {
     /**
      * @param {String} debugName
      * @param {String} multicodec
      * @param {Object} libp2p libp2p implementation
      * @param {Object} options
      * @param {boolean} options.signMessages if messages should be signed, defaults to true
+     * @param {boolean} options.strictSigning if message signing should be required, defaults to true
      * @constructor
      */
     constructor(debugName, multicodec, libp2p, options) {
@@ -31,6 +37,7 @@ class PubsubBaseProtocol extends Emitter {
 
         options = {
             signMessages: true,
+            strictSigning: true,
             ...options
         };
 
@@ -43,6 +50,12 @@ class PubsubBaseProtocol extends Emitter {
         if (options.signMessages) {
             this.peerId = this.libp2p.peerInfo.id;
         }
+
+        /**
+         * If message signing should be required for incoming messages
+         * @type {boolean}
+         */
+        this.strictSigning = options.strictSigning;
 
         /**
          * Map of topics to which peers are subscribed to
@@ -227,7 +240,7 @@ class PubsubBaseProtocol extends Emitter {
      * @param {Error} err error for connection end
      */
     _onConnectionEnd(idB58Str, peer, err) {
-        // socket hang up, means the one side canceled
+    // socket hang up, means the one side canceled
         if (err && err.message !== "socket hang up") {
             this.log.err(err);
         }
@@ -347,6 +360,33 @@ class PubsubBaseProtocol extends Emitter {
             this.started = false;
             callback();
         });
+    }
+
+    /**
+     * Validates the given message. The signature will be checked for authenticity.
+     * @param {rpc.RPC.Message} message
+     * @param {function(Error, Boolean)} callback
+     * @returns {void}
+     */
+    validate(message, callback) {
+    // If strict signing is on and we have no signature, abort
+        if (this.strictSigning && !message.signature) {
+            this.log("Signing required and no signature was present, dropping message:", message);
+            return nextTick(callback, null, false);
+        }
+
+        // Check the message signature if present
+        if (message.signature) {
+            verifySignature(message, (err, valid) => {
+                if (err) {
+                    return callback(err); 
+                }
+                callback(null, valid);
+            });
+        } else {
+            // The message is valid
+            nextTick(callback, null, true);
+        }
     }
 }
 

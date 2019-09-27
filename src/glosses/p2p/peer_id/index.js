@@ -51,6 +51,13 @@ class PeerId {
         if (this._privKey) {
             return this._privKey.public;
         }
+
+        const decoded = multihash.decode(this.id);
+
+        if (decoded.name === "identity") {
+            this._pubKey = cryptoKeys.unmarshalPublicKey(decoded.digest);
+            return this._pubKey;
+        }
     }
 
     set pubKey(pubKey) {

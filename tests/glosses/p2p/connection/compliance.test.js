@@ -1,0 +1,58 @@
+const {
+    multiformat: { multiaddr },
+    p2p: { Connection, PeerId },
+    stream: { pull: { pair } }
+} = adone;
+
+const tests = require("./tests");
+const peers = require("./utils/peers");
+
+describe("compliance tests", () => {
+    tests({
+        async setup() {
+            const localAddr = multiaddr("/ip4/127.0.0.1/tcp/8080");
+            const remoteAddr = multiaddr("/ip4/127.0.0.1/tcp/8081");
+            const [localPeer, remotePeer] = await Promise.all([
+                PeerId.createFromJSON(peers[0]),
+                PeerId.createFromJSON(peers[1])
+            ]);
+            const openStreams = [];
+            let streamId = 0;
+
+            return new Connection({
+                localPeer,
+                remotePeer,
+                localAddr,
+                remoteAddr,
+                stat: {
+                    timeline: {
+                        open: Date.now() - 10,
+                        upgraded: Date.now()
+                    },
+                    direction: "outbound",
+                    encryption: "/secio/1.0.0",
+                    multiplexer: "/mplex/6.7.0"
+                },
+                newStream: (protocols) => {
+                    const id = streamId++;
+                    const stream = pair();
+
+                    stream.close = () => stream.sink([]);
+                    stream.id = id;
+
+                    openStreams.push(stream);
+
+                    return {
+                        stream,
+                        protocol: protocols[0]
+                    };
+                },
+                close: () => { },
+                getStreams: () => openStreams
+            });
+        },
+        async teardown() {
+            // cleanup resources created by setup()
+        }
+    });
+});

@@ -1,8 +1,12 @@
 const {
-    p2p: { transport: { TCP }, muxer: { spdy }, secio, Node }
+    p2p: { transport: { TCP } }
 } = adone;
 
-class TestNode extends Node {
+const spdy = require("libp2p-spdy");
+const secio = require("libp2p-secio");
+const libp2p = require("libp2p");
+
+class Node extends libp2p {
     constructor({ peerInfo, peerBook }) {
         const modules = {
             transport: [TCP],
@@ -20,4 +24,4 @@ class TestNode extends Node {
     }
 }
 
-module.exports = TestNode;
+module.exports = Node;

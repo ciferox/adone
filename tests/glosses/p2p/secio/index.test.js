@@ -17,25 +17,17 @@ describe("p2p", "secio", () => {
     let peerB;
     let peerC;
 
-    before((done) => {
-        parallel([
-            (cb) => PeerId.createFromJSON(require("./fixtures/peer-a"), cb),
-            (cb) => PeerId.createFromJSON(require("./fixtures/peer-b"), cb),
-            (cb) => PeerId.createFromJSON(require("./fixtures/peer-c"), cb)
-        ], (err, peers) => {
-            expect(err).to.not.exist();
-            peerA = peers[0];
-            peerB = peers[1];
-            peerC = peers[2];
-            done();
-        });
+    before(async () => {
+        peerA = await PeerId.createFromJSON(require("./fixtures/peer-a"));
+        peerB = await PeerId.createFromJSON(require("./fixtures/peer-b"));
+        peerC = await PeerId.createFromJSON(require("./fixtures/peer-c"));
     });
 
     it("exports a secio multicodec", () => {
         expect(secio.tag).to.equal("/secio/1.0.0");
     });
 
-    it("upgrades a connection", (done) => {
+    it.only("upgrades a connection", (done) => {
         const p = pair.duplex();
 
         const aToB = secio.encrypt(peerA, new Connection(p[0]), peerB, (err) => expect(err).to.not.exist());

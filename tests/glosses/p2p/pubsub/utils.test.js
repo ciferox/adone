@@ -1,5 +1,4 @@
-const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "pubsub", ...args);
-const utils = require(srcPath("utils"));
+const utils = require("../src/utils");
 
 describe("utils", () => {
     it("randomSeqno", () => {

@@ -1,7 +1,7 @@
 const {
     async: { nextTick },
     multiformat: { multiaddr },
-    p2p: { PeerId, PeerInfo }
+    p2p: { PeerInfo, PeerId }
 } = adone;
 
 const peerJSON = require("../fixtures/test-peer");

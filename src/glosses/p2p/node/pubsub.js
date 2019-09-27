@@ -1,4 +1,6 @@
-
+const {
+    is
+} = adone;
 
 const nextTick = require("async/nextTick");
 const { messages, codes } = require("./errors");
