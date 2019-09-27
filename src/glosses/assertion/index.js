@@ -4,7 +4,8 @@ const assertion = lazify({
     AssertionError: "./assertion_error",
     config: "./config",
     util: "./__/utils",
-    extension: "./extensions"
+    extension: "./extensions",
+    getFunctionName: "./get_func_name"
 }, adone.asNamespace(exports), require);
 
 const __ = lazify({

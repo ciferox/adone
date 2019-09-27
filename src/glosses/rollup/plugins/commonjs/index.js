@@ -1,6 +1,5 @@
 import { realpathSync, existsSync } from "fs";
 import { extname, resolve, normalize } from "path";
-import { sync as nodeResolveSync, isCore } from "resolve";
 import { createFilter } from "../../pluginutils";
 // import { peerDependencies } from "../package.json";
 import {
@@ -16,6 +15,10 @@ import { getResolveId } from "./resolve-id";
 import { checkEsModule, hasCjsKeywords, transformCommonjs } from "./transform.js";
 import { getName } from "./utils.js";
 
+const {
+    module: { resolve: nodeResolveSync }
+} = adone;
+
 export default function commonjs(options = {}) {
     const extensions = options.extensions || [".js"];
     const filter = createFilter(options.include, options.exclude);
@@ -27,7 +30,7 @@ export default function commonjs(options = {}) {
             let resolveId = id;
             let resolvedId;
 
-            if (isCore(id)) {
+            if (nodeResolveSync.isCore(id)) {
                 // resolve will not find npm modules with the same name as
                 // core modules without a trailing slash. Since core modules
                 // must be external, we can assume any core modules defined

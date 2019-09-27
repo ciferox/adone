@@ -1,7 +1,10 @@
 const terser = require('terser');
 const assert = require('assert');
 const getLocation = require('../../../getLocation');
-const SourceMapConsumer = require('source-map').SourceMapConsumer;
+
+const {
+	sourcemap: { SourceMapConsumer }
+} = adone;
 
 module.exports = {
 	description: 'preserves sourcemap chains when transforming the bundle',

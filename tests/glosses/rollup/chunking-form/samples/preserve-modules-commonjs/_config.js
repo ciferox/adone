@@ -1,5 +1,3 @@
-// const commonjs = require('rollup-plugin-commonjs');
-
 module.exports = {
 	description: 'Handles output from rollup-plugin-commonjs',
 	options: {

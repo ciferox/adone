@@ -1,8 +1,11 @@
 const assert = require('assert');
 const terser = require('terser');
-const MagicString = require('magic-string');
 const getLocation = require('../../../getLocation');
-const SourceMapConsumer = require('source-map').SourceMapConsumer;
+
+const {
+	sourcemap: { SourceMapConsumer },
+	text: { MagicString }
+} = adone;
 
 module.exports = {
 	description: 'names are recovered if transformBundle is used',

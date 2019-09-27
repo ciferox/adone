@@ -118,13 +118,16 @@ export default class Graph {
 							(options.treeshake as TreeshakingOptions).propertyReadSideEffects !== false,
 						pureExternalModules: (options.treeshake as TreeshakingOptions).pureExternalModules,
 						tryCatchDeoptimization:
-							(options.treeshake as TreeshakingOptions).tryCatchDeoptimization !== false
+							(options.treeshake as TreeshakingOptions).tryCatchDeoptimization !== false,
+						unknownGlobalSideEffects:
+							(options.treeshake as TreeshakingOptions).unknownGlobalSideEffects !== false
 				  }
 				: {
 						annotations: true,
 						moduleSideEffects: true,
 						propertyReadSideEffects: true,
-						tryCatchDeoptimization: true
+						tryCatchDeoptimization: true,
+						unknownGlobalSideEffects: true
 				  };
 			if (typeof this.treeshakingOptions.pureExternalModules !== 'undefined') {
 				this.warnDeprecation(
@@ -224,7 +227,6 @@ export default class Graph {
 			for (const module of this.moduleById.values()) {
 				if (module instanceof Module) {
 					this.modules.push(module);
-					this.watchFiles[module.id] = true;
 				} else {
 					this.externalModules.push(module);
 				}
@@ -333,7 +335,7 @@ export default class Graph {
 		return {
 			modules: this.modules.map(module => module.toJSON()),
 			plugins: this.pluginCache
-		} as any;
+		};
 	}
 
 	includeMarked(modules: Module[]) {

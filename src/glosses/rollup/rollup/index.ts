@@ -168,7 +168,8 @@ function assignChunksToBundle(
 			modules: chunk.renderedModules,
 			get name() {
 				return chunk.getChunkName();
-			}
+			},
+			type: 'chunk'
 		} as OutputChunk;
 	}
 	return outputBundle as OutputBundle;
@@ -271,6 +272,16 @@ export default async function rollup(rawInputOptions: GenericConfigObject): Prom
 			throw error;
 		}
 		await graph.pluginDriver.hookSeq('generateBundle', [outputOptions, outputBundle, isWrite]);
+		for (const key of Object.keys(outputBundle)) {
+			const file = outputBundle[key] as any;
+			if (!file.type) {
+				graph.warnDeprecation(
+					'A plugin is directly adding properties to the bundle object in the "generateBundle" hook. This is deprecated and will be removed in a future Rollup version, please use "this.emitFile" instead.',
+					false
+				);
+				file.type = 'asset';
+			}
+		}
 		graph.pluginDriver.finaliseAssets();
 
 		timeEnd('GENERATE', 1);
@@ -301,7 +312,7 @@ export default async function rollup(rawInputOptions: GenericConfigObject): Prom
 				let chunkCnt = 0;
 				for (const fileName of Object.keys(bundle)) {
 					const file = bundle[fileName];
-					if ((file as OutputAsset).isAsset) continue;
+					if (file.type === 'asset') continue;
 					chunkCnt++;
 					if (chunkCnt > 1) break;
 				}
@@ -343,10 +354,10 @@ enum SortingFileType {
 }
 
 function getSortingFileType(file: OutputAsset | OutputChunk): SortingFileType {
-	if ((file as OutputAsset).isAsset) {
+	if (file.type === 'asset') {
 		return SortingFileType.ASSET;
 	}
-	if ((file as OutputChunk).isEntry) {
+	if (file.isEntry) {
 		return SortingFileType.ENTRY_CHUNK;
 	}
 	return SortingFileType.SECONDARY_CHUNK;
@@ -367,10 +378,6 @@ function createOutput(outputBundle: Record<string, OutputChunk | OutputAsset | {
 	};
 }
 
-function isOutputAsset(file: OutputAsset | OutputChunk): file is OutputAsset {
-	return (file as OutputAsset).isAsset === true;
-}
-
 function writeOutputFile(
 	graph: Graph,
 	build: RollupBuild,
@@ -383,7 +390,7 @@ function writeOutputFile(
 	);
 	let writeSourceMapPromise: Promise<void>;
 	let source: string | Buffer;
-	if (isOutputAsset(outputFile)) {
+	if (outputFile.type === 'asset') {
 		source = outputFile.source;
 	} else {
 		source = outputFile.code;
@@ -403,7 +410,7 @@ function writeOutputFile(
 		.then(() => writeSourceMapPromise)
 		.then(
 			(): any =>
-				!isOutputAsset(outputFile) &&
+				outputFile.type === 'chunk' &&
 				graph.pluginDriver.hookSeq('onwrite', [
 					{
 						bundle: build,

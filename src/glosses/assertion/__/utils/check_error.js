@@ -1,8 +1,8 @@
-/**
- * eslint-disable adone/no-typeof
- */
+/* eslint-disable adone/no-typeof */
+const {
+    assertion: { getFunctionName }
+} = adone;
 
-const getFunctionName = require("get-func-name");
 /**
  * ### .checkError
  *

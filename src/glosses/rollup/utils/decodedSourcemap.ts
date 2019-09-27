@@ -1,5 +1,8 @@
-import { decode } from 'sourcemap-codec';
 import { ExistingDecodedSourceMap, ExistingRawSourceMap, SourceMapInput } from '../rollup/types';
+
+const {
+	sourcemap: { codec: { decode } }
+} = adone;
 
 type Input = SourceMapInput | ExistingDecodedSourceMap | undefined;
 

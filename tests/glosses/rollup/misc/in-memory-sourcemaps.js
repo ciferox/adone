@@ -1,11 +1,11 @@
 const path = require('path');
 const { loader } = require('../utils.js');
-const { SourceMapConsumer } = require('source-map');
 const { getLocator } = require('locate-character');
 
 const {
 	assert,
-	rollup
+	rollup,
+	sourcemap: { SourceMapConsumer }
 } = adone;
 
 

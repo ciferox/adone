@@ -50,7 +50,7 @@ export const createLibp2p = (options, callback) => {
     }
     __.PeerInfo.create((err, peerInfo) => {
         if (err) {
-            return callback(err)
+            return callback(err);
         }
         options.peerInfo = peerInfo;
         callback(null, new __.Node(options));

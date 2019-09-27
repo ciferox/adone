@@ -9,7 +9,6 @@ const {
 
 const child_process = require("child_process");
 const fs = require("fs");
-const bufferFrom = require("buffer-from");
 
 const fixturePath = (...args) => adone.path.join(__dirname, ...args);
 
@@ -106,7 +105,7 @@ function compareStackTrace(sourceMap, source, expected) {
     // Check again with an inline source map (in a data URL)
     fs.writeFileSync(fixturePath(".generated.js"), `exports.test = function() {${
         source.join("\n")}};//@ sourceMappingURL=data:application/json;base64,${
-        bufferFrom(sourceMap.toString()).toString("base64")}`);
+        Buffer.from(sourceMap.toString()).toString("base64")}`);
     try {
         delete require.cache[require.resolve(fixturePath("./.generated"))];
         require(fixturePath("./.generated")).test();
@@ -558,7 +557,7 @@ describe("support", () => {
                 "process.nextTick(foo);",
                 "process.nextTick(foo);",
                 "process.nextTick(function() { console.log(count); });",
-                `//@ sourceMappingURL=data:application/json;charset=utf8;base64,${bufferFrom(sourceMap.toString()).toString("base64")}`
+                `//@ sourceMappingURL=data:application/json;charset=utf8;base64,${Buffer.from(sourceMap.toString()).toString("base64")}`
             ].join("\n")),
             ", filename);",
             "};",
@@ -587,7 +586,7 @@ describe("support", () => {
     
         fs.writeFileSync(fixturePath(".generated.js"), `exports.test = function() {${
             source.join("\n")}};//@ sourceMappingURL=data:application/json;charset=utf8;base64,${
-            bufferFrom(sourceMap.toString()).toString("base64")}`);
+            Buffer.from(sourceMap.toString()).toString("base64")}`);
         try {
             delete require.cache[require.resolve(fixturePath(".generated"))];
             require(fixturePath(".generated")).test();
@@ -612,7 +611,7 @@ describe("support", () => {
     
         fs.writeFileSync(fixturePath(".generated.js"), `exports.test = function() {${
             source.join("\n")}};//# sourceMappingURL=data:application/json;base64,${
-            bufferFrom(sourceMap.toString()).toString("base64")
+            Buffer.from(sourceMap.toString()).toString("base64")
         }\n// Some comment below the sourceMappingURL\nvar foo = 0;`);
         try {
             delete require.cache[require.resolve(fixturePath(".generated"))];
@@ -652,7 +651,6 @@ describe("support", () => {
             'console.trace("test");'
         ], [
             "Trace: test",
-            /at Console.trace/,
             /^ {4}at Object\.<anonymous> \((?:.*[/\\])?line3\.js:1003:103\)$/
         ]);
     });    

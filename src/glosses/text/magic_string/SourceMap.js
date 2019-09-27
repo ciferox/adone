@@ -1,4 +1,6 @@
-import { encode } from "sourcemap-codec";
+const {
+    sourcemap: { codec: { encode } }
+} = adone;
 
 let btoa = () => {
     throw new Error("Unsupported environment: `window.btoa` or `Buffer` should be supported.");

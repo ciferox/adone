@@ -1,8 +1,14 @@
-import { Bundle as MagicStringBundle } from 'magic-string';
 import { FinaliserOptions } from './index';
 
-export * from 'magic-string';
+// export * from 'magic-string';
 import { OutputOptions } from '../rollup/types';
+
+const {
+	text: { MagicString }
+} = adone;
+const {
+	Bundle: MagicStringBundle
+} = MagicString;
 
 export default function esm(
 	magicString: MagicStringBundle,

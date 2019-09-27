@@ -1,11 +1,4 @@
-import {
-	InputOptions,
-	OutputAsset,
-	OutputChunk,
-	OutputOptions,
-	RollupBuild,
-	SourceMap
-} from '../rollup/types';
+import { InputOptions, OutputOptions, RollupBuild, SourceMap } from '../../src/rollup/types';
 import relativeId from '../utils/relativeId';
 import { handleError, stderr } from './logging';
 import SOURCEMAPPING_URL from './sourceMappingUrl';
@@ -44,7 +37,7 @@ export default function build(
 	}
 
 	return rollup
-		.rollup(inputOptions)
+		.rollup(inputOptions as any)
 		.then((bundle: RollupBuild) => {
 			if (useStdout) {
 				const output = outputOptions[0];
@@ -58,12 +51,12 @@ export default function build(
 				return bundle.generate(output).then(({ output: outputs }) => {
 					for (const file of outputs) {
 						let source: string | Buffer;
-						if ((file as OutputAsset).isAsset) {
-							source = (file as OutputAsset).source;
+						if (file.type === 'asset') {
+							source = file.source;
 						} else {
-							source = (file as OutputChunk).code;
+							source = file.code;
 							if (output.sourcemap === 'inline') {
-								source += `\n//# ${SOURCEMAPPING_URL}=${((file as OutputChunk)
+								source += `\n//# ${SOURCEMAPPING_URL}=${(file
 									.map as SourceMap).toUrl()}\n`;
 							}
 						}
@@ -71,6 +64,7 @@ export default function build(
 							process.stdout.write('\n' + chalk.cyan(chalk.bold('//→ ' + file.fileName + ':')) + '\n');
 						process.stdout.write(source);
 					}
+					return null
 				});
 			}
 
@@ -78,14 +72,15 @@ export default function build(
 				() => bundle
 			);
 		})
-		.then((bundle?: RollupBuild) => {
-			warnings.flush();
-			if (!silent)
+		.then((bundle: RollupBuild | null) => {
+			if (!silent) {
+				warnings.flush();
 				stderr(
 					chalk.green(`created ${chalk.bold(files.join(', '))} in ${chalk.bold(adone.pretty.ms(Date.now() - start))}`)
 				);
-			if (bundle && bundle.getTimings) {
-				printTimings(bundle.getTimings());
+				if (bundle && bundle.getTimings) {
+					printTimings(bundle.getTimings());
+				}
 			}
 		})
 		.catch((err: any) => {

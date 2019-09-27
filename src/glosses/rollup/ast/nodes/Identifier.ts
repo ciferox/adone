@@ -1,5 +1,3 @@
-import isReference from 'is-reference';
-import MagicString from 'magic-string';
 import { BLANK } from '../../utils/blank';
 import { NodeRenderOptions, RenderOptions } from '../../utils/renderHelpers';
 import CallOptions from '../CallOptions';
@@ -7,7 +5,8 @@ import { DeoptimizableEntity } from '../DeoptimizableEntity';
 import { ExecutionPathOptions } from '../ExecutionPathOptions';
 import FunctionScope from '../scopes/FunctionScope';
 import { ImmutableEntityPathTracker } from '../utils/ImmutableEntityPathTracker';
-import { LiteralValueOrUnknown, ObjectPath, UNKNOWN_EXPRESSION, UNKNOWN_VALUE } from '../values';
+import { EMPTY_PATH, LiteralValueOrUnknown, ObjectPath } from '../values';
+import GlobalVariable from '../variables/GlobalVariable';
 import LocalVariable from '../variables/LocalVariable';
 import Variable from '../variables/Variable';
 import * as NodeType from './NodeType';
@@ -17,7 +16,8 @@ import { PatternNode } from './shared/Pattern';
 import SpreadElement from './SpreadElement';
 
 const {
-	acorn: { isReference }
+	acorn: { isReference },
+	text: { MagicString }
 } = adone;
 
 export type IdentifierWithVariable = Identifier & { variable: Variable };
@@ -66,24 +66,20 @@ export default class Identifier extends NodeBase implements PatternNode {
 			case 'parameter':
 				variable = (this.scope as FunctionScope).addParameterDeclaration(this);
 				break;
+			/* istanbul ignore next */
 			default:
-				throw new Error(`Unexpected identifier kind ${kind}.`);
+				/* istanbul ignore next */
+				throw new Error(`Internal Error: Unexpected identifier kind ${kind}.`);
 		}
 		return [(this.variable = variable)];
 	}
 
 	deoptimizePath(path: ObjectPath) {
 		if (!this.bound) this.bind();
-		if (this.variable !== null) {
-			if (
-				path.length === 0 &&
-				this.name in this.context.importDescriptions &&
-				!this.scope.contains(this.name)
-			) {
-				this.disallowImportReassignment();
-			}
-			this.variable.deoptimizePath(path);
+		if (path.length === 0 && !this.scope.contains(this.name)) {
+			this.disallowImportReassignment();
 		}
+		(this.variable as Variable).deoptimizePath(path);
 	}
 
 	getLiteralValueAtPath(
@@ -92,10 +88,7 @@ export default class Identifier extends NodeBase implements PatternNode {
 		origin: DeoptimizableEntity
 	): LiteralValueOrUnknown {
 		if (!this.bound) this.bind();
-		if (this.variable !== null) {
-			return this.variable.getLiteralValueAtPath(path, recursionTracker, origin);
-		}
-		return UNKNOWN_VALUE;
+		return (this.variable as Variable).getLiteralValueAtPath(path, recursionTracker, origin);
 	}
 
 	getReturnExpressionWhenCalledAtPath(
@@ -104,10 +97,19 @@ export default class Identifier extends NodeBase implements PatternNode {
 		origin: DeoptimizableEntity
 	) {
 		if (!this.bound) this.bind();
-		if (this.variable !== null) {
-			return this.variable.getReturnExpressionWhenCalledAtPath(path, recursionTracker, origin);
-		}
-		return UNKNOWN_EXPRESSION;
+		return (this.variable as Variable).getReturnExpressionWhenCalledAtPath(
+			path,
+			recursionTracker,
+			origin
+		);
+	}
+
+	hasEffects(): boolean {
+		return (
+			this.context.unknownGlobalSideEffects &&
+			this.variable instanceof GlobalVariable &&
+			this.variable.hasEffectsWhenAccessedAtPath(EMPTY_PATH)
+		);
 	}
 
 	hasEffectsWhenAccessedAtPath(path: ObjectPath, options: ExecutionPathOptions): boolean {
@@ -136,9 +138,7 @@ export default class Identifier extends NodeBase implements PatternNode {
 	}
 
 	includeCallArguments(args: (ExpressionNode | SpreadElement)[]): void {
-		if (this.variable) {
-			this.variable.includeCallArguments(args);
-		}
+		(this.variable as Variable).includeCallArguments(args);
 	}
 
 	render(

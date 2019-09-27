@@ -1,9 +1,12 @@
 const fs = require('fs');
 const buble = require('buble');
-const MagicString = require('magic-string');
 const assert = require('assert');
 const getLocation = require('../../getLocation');
-const SourceMapConsumer = require('source-map').SourceMapConsumer;
+
+const {
+	sourcemap: { SourceMapConsumer },
+	text: { MagicString }
+} = adone;
 
 module.exports = {
 	description: 'get combined sourcemap in transforming with loader',
