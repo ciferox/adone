@@ -1,7 +1,20 @@
-const {
-    std: { fs, childProcess: { exec } }
-} = adone;
 
+// @ts-check;
+// ==================================================================================
+// battery.js
+// ----------------------------------------------------------------------------------
+// Description:   System Information - library
+//                for Node.js
+// Copyright:     (c) 2014 - 2019
+// Author:        Sebastian Hildebrandt
+// ----------------------------------------------------------------------------------
+// License:       MIT
+// ==================================================================================
+// 6. Battery
+// ----------------------------------------------------------------------------------
+
+const exec = require("child_process").exec;
+const fs = require("fs");
 const util = require("./util");
 
 const _platform = process.platform;
@@ -11,6 +24,7 @@ const _darwin = (_platform === "darwin");
 const _windows = (_platform === "win32");
 const _freebsd = (_platform === "freebsd");
 const _openbsd = (_platform === "openbsd");
+const _netbsd = (_platform === "netbsd");
 const _sunos = (_platform === "sunos");
 
 module.exports = function (callback) {
@@ -80,19 +94,19 @@ module.exports = function (callback) {
                             result.manufacturer = util.getValue(lines, "POWER_SUPPLY_MANUFACTURER", "=");
                             result.serial = util.getValue(lines, "POWER_SUPPLY_SERIAL_NUMBER", "=");
                             if (callback) {
-                                callback(result);
+                                callback(result); 
                             }
                             resolve(result);
                         }
                     });
                 } else {
                     if (callback) {
-                        callback(result);
+                        callback(result); 
                     }
                     resolve(result);
                 }
             }
-            if (_freebsd || _openbsd) {
+            if (_freebsd || _openbsd || _netbsd) {
                 exec("sysctl hw.acpi.battery hw.acpi.acline", (error, stdout) => {
                     const lines = stdout.toString().split("\n");
                     const batteries = parseInt(`0${util.getValue(lines, "hw.acpi.battery.units")}`, 10);
@@ -105,7 +119,7 @@ module.exports = function (callback) {
                     result.currentcapacity = -1;
                     result.percent = batteries ? percent : -1;
                     if (callback) {
-                        callback(result);
+                        callback(result); 
                     }
                     resolve(result);
                 });
@@ -146,20 +160,20 @@ module.exports = function (callback) {
                         }
                     }
                     if (callback) {
-                        callback(result);
+                        callback(result); 
                     }
                     resolve(result);
                 });
             }
             if (_sunos) {
                 if (callback) {
-                    callback(result);
+                    callback(result); 
                 }
                 resolve(result);
             }
             if (_windows) {
                 try {
-                    exec(`${util.getWmic()} Path Win32_Battery Get BatteryStatus, DesignCapacity, EstimatedChargeRemaining /value`, util.execOptsWin, (error, stdout) => {
+                    util.wmic("Path Win32_Battery Get BatteryStatus, DesignCapacity, EstimatedChargeRemaining /value").then((stdout) => {
                         if (stdout) {
                             const lines = stdout.split("\r\n");
                             const status = util.getValue(lines, "BatteryStatus", "=").trim();
@@ -181,17 +195,17 @@ module.exports = function (callback) {
                                 result.percent = parseInt(util.getValue(lines, "EstimatedChargeRemaining", "=") || 0);
                                 result.currentcapacity = parseInt(result.maxcapacity * result.percent / 100);
                                 result.ischarging = (statusValue >= 6 && statusValue <= 9) || statusValue === 11 || (!(statusValue === 3) && !(statusValue === 1) && result.percent < 100);
-                                result.acconnected = result.ischarging;
+                                result.acconnected = result.ischarging || statusValue === 2;
                             }
                         }
                         if (callback) {
-                            callback(result);
+                            callback(result); 
                         }
                         resolve(result);
                     });
                 } catch (e) {
                     if (callback) {
-                        callback(result);
+                        callback(result); 
                     }
                     resolve(result);
                 }

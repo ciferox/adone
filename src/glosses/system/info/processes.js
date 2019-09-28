@@ -1,6 +1,21 @@
-const {
-    std: { os, childProcess: { exec, execSync } }
-} = adone;
+
+// @ts-check
+// ==================================================================================
+// processes.js
+// ----------------------------------------------------------------------------------
+// Description:   System Information - library
+//                for Node.js
+// Copyright:     (c) 2014 - 2019
+// Author:        Sebastian Hildebrandt
+// ----------------------------------------------------------------------------------
+// License:       MIT
+// ==================================================================================
+// 10. Processes
+// ----------------------------------------------------------------------------------
+
+const os = require("os");
+const exec = require("child_process").exec;
+const execSync = require("child_process").execSync;
 
 const util = require("./util");
 
@@ -11,6 +26,7 @@ const _darwin = (_platform === "darwin");
 const _windows = (_platform === "win32");
 const _freebsd = (_platform === "freebsd");
 const _openbsd = (_platform === "openbsd");
+const _netbsd = (_platform === "netbsd");
 const _sunos = (_platform === "sunos");
 
 const _processes_cpu = {
@@ -46,28 +62,31 @@ const _winStatusValues = {
 };
 
 
-const parseTimeWin = (time) => {
+function parseTimeWin(time) {
     time = time || "";
     if (time) {
         return (`${time.substr(0, 4)}-${time.substr(4, 2)}-${time.substr(6, 2)} ${time.substr(8, 2)}:${time.substr(10, 2)}:${time.substr(12, 2)}`);
-    }
+    } 
     return "";
-};
+  
+}
 
-const parseTimeUnix = (time) => {
+function parseTimeUnix(time) {
     let result = time;
     const parts = time.replace(/ +/g, " ").split(" ");
     if (parts.length === 5) {
         result = `${parts[4]}-${(`0${"JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC".indexOf(parts[1].toUpperCase()) / 3 + 1}`).slice(-2)}-${(`0${parts[2]}`).slice(-2)} ${parts[3]}`;
     }
     return result;
-};
+}
 
 // --------------------------
 // PS - services
 // pass a comma separated string with services to check (mysql, apache, postgresql, ...)
 // this function gives an array back, if the services are running.
-export const services = (srv, callback) => {
+
+function services(srv, callback) {
+
     // fallback - if only callback is given
     if (util.isFunction(srv) && !callback) {
         callback = srv;
@@ -83,8 +102,8 @@ export const services = (srv, callback) => {
                 const dataSrv = [];
                 const allSrv = [];
 
-                if (_linux || _freebsd || _openbsd || _darwin) {
-                    if ((_linux || _freebsd || _openbsd) && srv === "*") {
+                if (_linux || _freebsd || _openbsd || _netbsd || _darwin) {
+                    if ((_linux || _freebsd || _openbsd || _netbsd) && srv === "*") {
                         srv = "";
                         const tmpsrv = execSync("service --status-all 2> /dev/null").toString().split("\n");
                         for (const s of tmpsrv) {
@@ -98,7 +117,7 @@ export const services = (srv, callback) => {
                     }
                     const comm = (_darwin) ? "ps -caxo pcpu,pmem,pid,command" : "ps -axo pcpu,pmem,pid,command";
                     if (srv !== "" && srvs.length > 0) {
-                        exec(`${comm} | grep -v grep | grep -iE "${srv}"`, { maxBuffer: 1024 * 2000 }, (error, stdout) => {
+                        exec(`${comm} | grep -v grep | grep -iE "${srv}"`, { maxBuffer: 1024 * 20000 }, (error, stdout) => {
                             if (!error) {
                                 const lines = stdout.toString().replace(/ +/g, " ").replace(/,+/g, ".").split("\n");
                                 srvs.forEach((srv) => {
@@ -114,7 +133,7 @@ export const services = (srv, callback) => {
                                         });
                                     }
                                     const singleSrv = allSrv.filter((item) => {
-                                        return item.name === srv;
+                                        return item.name === srv; 
                                     });
                                     const pids = [];
                                     for (const p of ps) {
@@ -141,7 +160,7 @@ export const services = (srv, callback) => {
                                             cmd += (`;cat /proc/${result[i].pids[j]}/stat`);
                                         }
                                     }
-                                    exec(cmd, { maxBuffer: 1024 * 2000 }, (error, stdout) => {
+                                    exec(cmd, { maxBuffer: 1024 * 20000 }, (error, stdout) => {
                                         const curr_processes = stdout.toString().split("\n");
 
                                         // first line (all - /proc/stat)
@@ -184,18 +203,18 @@ export const services = (srv, callback) => {
                                         _services_cpu.ms = Date.now() - _services_cpu.ms;
                                         _services_cpu.result = result;
                                         if (callback) {
-                                            callback(result);
+                                            callback(result); 
                                         }
                                         resolve(result);
                                     });
                                 } else {
                                     if (callback) {
-                                        callback(result);
+                                        callback(result); 
                                     }
                                     resolve(result);
                                 }
                             } else {
-                                exec(`ps -o comm | grep -v grep | egrep "${srv}"`, { maxBuffer: 1024 * 2000 }, (error, stdout) => {
+                                exec(`ps -o comm | grep -v grep | egrep "${srv}"`, { maxBuffer: 1024 * 20000 }, (error, stdout) => {
                                     if (!error) {
                                         const lines = stdout.toString().replace(/ +/g, " ").replace(/,+/g, ".").split("\n");
                                         srvs.forEach((srv) => {
@@ -211,7 +230,7 @@ export const services = (srv, callback) => {
                                             });
                                         });
                                         if (callback) {
-                                            callback(result);
+                                            callback(result); 
                                         }
                                         resolve(result);
                                     } else {
@@ -225,7 +244,7 @@ export const services = (srv, callback) => {
                                             });
                                         });
                                         if (callback) {
-                                            callback(result);
+                                            callback(result); 
                                         }
                                         resolve(result);
                                     }
@@ -234,14 +253,14 @@ export const services = (srv, callback) => {
                         });
                     } else {
                         if (callback) {
-                            callback(result);
+                            callback(result); 
                         }
                         resolve(result);
                     }
                 }
                 if (_windows) {
                     try {
-                        exec(`${util.getWmic()} service get /value`, util.execOptsWin, (error, stdout) => {
+                        util.wmic("service get /value").then((stdout, error) => {
                             if (!error) {
                                 const serviceSections = stdout.split(/\n\s*\n/);
                                 for (let i = 0; i < serviceSections.length; i++) {
@@ -277,7 +296,7 @@ export const services = (srv, callback) => {
                                     });
                                 }
                                 if (callback) {
-                                    callback(result);
+                                    callback(result); 
                                 }
                                 resolve(result);
                             } else {
@@ -291,29 +310,31 @@ export const services = (srv, callback) => {
                                     });
                                 });
                                 if (callback) {
-                                    callback(result);
+                                    callback(result); 
                                 }
                                 resolve(result);
                             }
                         });
                     } catch (e) {
                         if (callback) {
-                            callback(result);
+                            callback(result); 
                         }
                         resolve(result);
                     }
                 }
             } else {
                 if (callback) {
-                    callback({});
+                    callback({}); 
                 }
                 resolve({});
             }
         });
     });
-};
+}
 
-const parseProcStat = (line) => {
+exports.services = services;
+
+function parseProcStat(line) {
     const parts = line.replace(/ +/g, " ").split(" ");
     const user = (parts.length >= 2 ? parseInt(parts[1]) : 0);
     const nice = (parts.length >= 3 ? parseInt(parts[2]) : 0);
@@ -326,9 +347,9 @@ const parseProcStat = (line) => {
     const guest = (parts.length >= 10 ? parseInt(parts[9]) : 0);
     const guest_nice = (parts.length >= 11 ? parseInt(parts[10]) : 0);
     return user + nice + system + idle + iowait + irq + softirq + steal + guest + guest_nice;
-};
+}
 
-const calcProcStatLinux = (line, all, _cpu_old) => {
+function calcProcStatLinux(line, all, _cpu_old) {
     const statparts = line.replace(/ +/g, " ").split(")");
     if (statparts.length >= 2) {
         const parts = statparts[1].split(" ");
@@ -358,7 +379,7 @@ const calcProcStatLinux = (line, all, _cpu_old) => {
                 pcpuu,
                 pcpus
             };
-        }
+        } 
         return {
             pid: 0,
             utime: 0,
@@ -368,8 +389,8 @@ const calcProcStatLinux = (line, all, _cpu_old) => {
             pcpuu: 0,
             pcpus: 0
         };
-
-    }
+    
+    } 
     return {
         pid: 0,
         utime: 0,
@@ -379,9 +400,10 @@ const calcProcStatLinux = (line, all, _cpu_old) => {
         pcpuu: 0,
         pcpus: 0
     };
-};
+  
+}
 
-const calcProcStatWin = (procStat, all, _cpu_old) => {
+function calcProcStatWin(procStat, all, _cpu_old) {
     // calc
     let pcpuu = 0;
     let pcpus = 0;
@@ -399,15 +421,18 @@ const calcProcStatWin = (procStat, all, _cpu_old) => {
         pcpuu,
         pcpus
     };
-};
+}
+
 
 
 // --------------------------
 // running processes
-export const processes = (callback) => {
+
+function processes(callback) {
+
     let parsedhead = [];
 
-    const getName = (command) => {
+    function getName(command) {
         command = command || "";
         let result = command.split(" ")[0];
         if (result.substr(-1) === ":") {
@@ -422,16 +447,16 @@ export const processes = (callback) => {
             }
         }
         return result;
-    };
+    }
 
-    const parseLine = function (line) {
+    function parseLine(line) {
         let offset = 0;
         let offset2 = 0;
 
-        const checkColumn = (i) => {
+        function checkColumn(i) {
             offset = offset2;
             offset2 = line.substring(parsedhead[i].to + offset, 1000).indexOf(" ");
-        };
+        }
 
         checkColumn(0);
         const pid = parseInt(line.substring(parsedhead[0].from + offset, parsedhead[0].to + offset2));
@@ -457,12 +482,37 @@ export const processes = (callback) => {
         checkColumn(10);
         let tty = line.substring(parsedhead[10].from + offset, parsedhead[10].to + offset2).trim();
         if (tty === "?" || tty === "??") {
-            tty = "";
+            tty = ""; 
         }
         checkColumn(11);
         const user = line.substring(parsedhead[11].from + offset, parsedhead[11].to + offset2).trim();
         checkColumn(12);
-        const command = line.substring(parsedhead[12].from + offset, parsedhead[12].to + offset2).trim().replace(/\[/g, "").replace(/]/g, "");
+        const fullcommand = line.substring(parsedhead[12].from + offset, parsedhead[12].to + offset2).trim().replace(/\[/g, "").replace(/]/g, "");
+        let path = "";
+        let command = "";
+        let params = "";
+        // try to figure out where parameter starts
+        let firstParamPos = fullcommand.indexOf(" -");
+        let firstParamPathPos = fullcommand.indexOf(" /");
+        firstParamPos = (firstParamPos >= 0 ? firstParamPos : 10000);
+        firstParamPathPos = (firstParamPathPos >= 0 ? firstParamPathPos : 10000);
+        const firstPos = Math.min(firstParamPos, firstParamPathPos);
+        let tmpCommand = fullcommand.substr(0, firstPos);
+        const tmpParams = fullcommand.substr(firstPos);
+        const lastSlashPos = tmpCommand.lastIndexOf("/");
+        if (lastSlashPos >= 0) {
+            path = tmpCommand.substr(0, lastSlashPos);
+            tmpCommand = tmpCommand.substr(lastSlashPos + 1);
+        }
+
+        if (firstPos === 10000) {
+            const parts = tmpCommand.split(" ");
+            command = parts.shift();
+            params = (`${parts.join(" ")} ${tmpParams}`).trim();
+        } else {
+            command = tmpCommand.trim();
+            params = tmpParams.trim();
+        }
 
         return ({
             pid,
@@ -480,11 +530,13 @@ export const processes = (callback) => {
             state,
             tty,
             user,
-            command
+            command,
+            params,
+            path
         });
-    };
+    }
 
-    const parseProcesses = (lines) => {
+    function parseProcesses(lines) {
         const result = [];
         if (lines.length > 1) {
             const head = lines[0];
@@ -497,10 +549,10 @@ export const processes = (callback) => {
             });
         }
         return result;
-    };
+    }
+    function parseProcesses2(lines) {
 
-    const parseProcesses2 = (lines) => {
-        const formatDateTime = (time) => {
+        function formatDateTime(time) {
             const month = (`0${(time.getMonth() + 1).toString()}`).substr(-2);
             const year = time.getFullYear().toString();
             const day = (`0${time.getDay().toString()}`).substr(-2);
@@ -509,7 +561,7 @@ export const processes = (callback) => {
             const secs = (`0${time.getSeconds().toString()}`).substr(-2);
 
             return (`${year}-${month}-${day} ${hours}:${mins}:${secs}`);
-        };
+        }
 
         const result = [];
         lines.forEach((line) => {
@@ -542,7 +594,7 @@ export const processes = (callback) => {
             }
         });
         return result;
-    };
+    }
 
     return new Promise((resolve) => {
         process.nextTick(() => {
@@ -558,20 +610,20 @@ export const processes = (callback) => {
             let cmd = "";
 
             if ((_processes_cpu.ms && Date.now() - _processes_cpu.ms >= 500) || _processes_cpu.ms === 0) {
-                if (_linux || _freebsd || _openbsd || _darwin || _sunos) {
+                if (_linux || _freebsd || _openbsd || _netbsd || _darwin || _sunos) {
                     if (_linux) {
-                        cmd = "export LC_ALL=C; ps -axo pid:11,ppid:11,pcpu:6,pmem:6,pri:5,vsz:11,rss:11,ni:5,lstart:30,state:5,tty:15,user:20,command; unset LC_ALL";
+                        cmd = "export LC_ALL=C; ps -axo pid:11,ppid:11,pcpu:6,pmem:6,pri:5,vsz:11,rss:11,ni:5,lstart:30,state:5,tty:15,user:20,command; unset LC_ALL"; 
                     }
-                    if (_freebsd || _openbsd) {
-                        cmd = "export LC_ALL=C; ps -axo pid,ppid,pcpu,pmem,pri,vsz,rss,ni,lstart,state,tty,user,command; unset LC_ALL";
+                    if (_freebsd || _openbsd || _netbsd) {
+                        cmd = "export LC_ALL=C; ps -axo pid,ppid,pcpu,pmem,pri,vsz,rss,ni,lstart,state,tty,user,command; unset LC_ALL"; 
                     }
                     if (_darwin) {
-                        cmd = "export LC_ALL=C; ps -acxo pid,ppid,pcpu,pmem,pri,vsz,rss,nice,lstart,state,tty,user,command -r; unset LC_ALL";
+                        cmd = "export LC_ALL=C; ps -axo pid,ppid,pcpu,pmem,pri,vsz,rss,nice,lstart,state,tty,user,command -r; unset LC_ALL"; 
                     }
                     if (_sunos) {
-                        cmd = "ps -Ao pid,ppid,pcpu,pmem,pri,vsz,rss,nice,stime,s,tty,user,comm";
+                        cmd = "ps -Ao pid,ppid,pcpu,pmem,pri,vsz,rss,nice,stime,s,tty,user,comm"; 
                     }
-                    exec(cmd, { maxBuffer: 1024 * 2000 }, (error, stdout) => {
+                    exec(cmd, { maxBuffer: 1024 * 20000 }, (error, stdout) => {
                         if (!error) {
                             result.list = parseProcesses(stdout.toString().split("\n"));
                             result.all = result.list.length;
@@ -591,7 +643,7 @@ export const processes = (callback) => {
                                 for (let i = 0; i < result.list.length; i++) {
                                     cmd += (`;cat /proc/${result.list[i].pid}/stat`);
                                 }
-                                exec(cmd, { maxBuffer: 1024 * 2000 }, (error, stdout) => {
+                                exec(cmd, { maxBuffer: 1024 * 20000 }, (error, stdout) => {
                                     const curr_processes = stdout.toString().split("\n");
 
                                     // first line (all - /proc/stat)
@@ -607,7 +659,7 @@ export const processes = (callback) => {
 
                                             // store pcpu in outer array
                                             const listPos = result.list.map((e) => {
-                                                return e.pid;
+                                                return e.pid; 
                                             }).indexOf(resultProcess.pid);
                                             if (listPos >= 0) {
                                                 result.list[listPos].pcpu = resultProcess.pcpuu + resultProcess.pcpus;
@@ -633,13 +685,13 @@ export const processes = (callback) => {
                                     _processes_cpu.ms = Date.now() - _processes_cpu.ms;
                                     _processes_cpu.result = result;
                                     if (callback) {
-                                        callback(result);
+                                        callback(result); 
                                     }
                                     resolve(result);
                                 });
                             } else {
                                 if (callback) {
-                                    callback(result);
+                                    callback(result); 
                                 }
                                 resolve(result);
                             }
@@ -648,7 +700,7 @@ export const processes = (callback) => {
                             if (_sunos) {
                                 cmd = "ps -o pid,ppid,vsz,rss,nice,etime,s,tty,user,comm";
                             }
-                            exec(cmd, { maxBuffer: 1024 * 2000 }, (error, stdout) => {
+                            exec(cmd, { maxBuffer: 1024 * 20000 }, (error, stdout) => {
                                 if (!error) {
                                     const lines = stdout.toString().split("\n");
                                     lines.shift();
@@ -665,12 +717,12 @@ export const processes = (callback) => {
                                         return e.state === "sleeping";
                                     }).length;
                                     if (callback) {
-                                        callback(result);
+                                        callback(result); 
                                     }
                                     resolve(result);
                                 } else {
                                     if (callback) {
-                                        callback(result);
+                                        callback(result); 
                                     }
                                     resolve(result);
                                 }
@@ -680,7 +732,7 @@ export const processes = (callback) => {
                 }
                 if (_windows) {
                     try {
-                        exec(`${util.getWmic()} process get /value`, util.execOptsWin, (error, stdout) => {
+                        util.wmic("process get /value").then((stdout, error) => {
                             if (!error) {
                                 const processSections = stdout.split(/\n\s*\n/);
                                 const procs = [];
@@ -696,6 +748,7 @@ export const processes = (callback) => {
                                         const statusValue = util.getValue(lines, "ExecutionState", "=");
                                         const name = util.getValue(lines, "Caption", "=", true);
                                         const commandLine = util.getValue(lines, "CommandLine", "=", true);
+                                        const commandPath = util.getValue(lines, "ExecutablePath", "=", true);
                                         const utime = parseInt(util.getValue(lines, "UserModeTime", "=", true), 10);
                                         const stime = parseInt(util.getValue(lines, "KernelModeTime", "=", true), 10);
                                         const mem = parseInt(util.getValue(lines, "WorkingSetSize", "=", true), 10);
@@ -703,13 +756,13 @@ export const processes = (callback) => {
                                         allcpus = allcpus + stime;
                                         result.all++;
                                         if (!statusValue) {
-                                            result.unknown++;
+                                            result.unknown++; 
                                         }
                                         if (statusValue === "3") {
-                                            result.running++;
+                                            result.running++; 
                                         }
                                         if (statusValue === "4" || statusValue === "5") {
-                                            result.blocked++;
+                                            result.blocked++; 
                                         }
 
                                         procStats.push({
@@ -736,7 +789,9 @@ export const processes = (callback) => {
                                             state: (!statusValue ? _winStatusValues[0] : _winStatusValues[statusValue]),
                                             tty: "",
                                             user: "",
-                                            command: commandLine || name
+                                            command: commandLine || name,
+                                            path: commandPath,
+                                            params: ""
                                         });
                                     }
                                 }
@@ -747,7 +802,7 @@ export const processes = (callback) => {
 
                                     // store pcpu in outer array
                                     const listPos = result.list.map((e) => {
-                                        return e.pid;
+                                        return e.pid; 
                                     }).indexOf(resultProcess.pid);
                                     if (listPos >= 0) {
                                         result.list[listPos].pcpu = resultProcess.pcpuu + resultProcess.pcpus;
@@ -776,26 +831,30 @@ export const processes = (callback) => {
                         });
                     } catch (e) {
                         if (callback) {
-                            callback(result);
+                            callback(result); 
                         }
                         resolve(result);
                     }
                 }
             } else {
                 if (callback) {
-                    callback(_processes_cpu.result);
+                    callback(_processes_cpu.result); 
                 }
                 resolve(_processes_cpu.result);
             }
         });
     });
-};
+}
+
+exports.processes = processes;
 
 // --------------------------
 // PS - process load
 // get detailed information about a certain process
 // (PID, CPU-Usage %, Mem-Usage %)
-export const processLoad = (proc, callback) => {
+
+function processLoad(proc, callback) {
+
     // fallback - if only callback is given
     if (util.isFunction(proc) && !callback) {
         callback = proc;
@@ -809,12 +868,12 @@ export const processLoad = (proc, callback) => {
                 pid: -1,
                 cpu: 0,
                 mem: 0
-            }; ro;
+            };
 
             if (proc) {
                 if (_windows) {
                     try {
-                        exec(`${util.getWmic()} process get /value`, util.execOptsWin, (error, stdout) => {
+                        util.wmic("process get /value").then((stdout, error) => {
                             if (!error) {
                                 const processSections = stdout.split(/\n\s*\n/);
                                 const procStats = [];
@@ -886,14 +945,14 @@ export const processLoad = (proc, callback) => {
                         });
                     } catch (e) {
                         if (callback) {
-                            callback(result);
+                            callback(result); 
                         }
                         resolve(result);
                     }
                 }
 
                 if (_darwin || _linux) {
-                    exec(`ps -axo pid,pcpu,pmem,comm | grep -i ${proc} | grep -v grep`, { maxBuffer: 1024 * 2000 }, (error, stdout) => {
+                    exec(`ps -axo pid,pcpu,pmem,comm | grep -i ${proc} | grep -v grep`, { maxBuffer: 1024 * 20000 }, (error, stdout) => {
                         if (!error) {
                             const lines = stdout.toString().split("\n");
 
@@ -926,7 +985,7 @@ export const processLoad = (proc, callback) => {
                                     cmd += (`;cat /proc/${result.pids[i]}/stat`);
                                 }
 
-                                exec(cmd, { maxBuffer: 1024 * 2000 }, (error, stdout) => {
+                                exec(cmd, { maxBuffer: 1024 * 20000 }, (error, stdout) => {
                                     const curr_processes = stdout.toString().split("\n");
 
                                     // first line (all - /proc/stat)
@@ -963,19 +1022,19 @@ export const processLoad = (proc, callback) => {
                                     _process_cpu.ms = Date.now() - _process_cpu.ms;
                                     _process_cpu.result = result;
                                     if (callback) {
-                                        callback(result);
+                                        callback(result); 
                                     }
                                     resolve(result);
                                 });
                             } else {
                                 if (callback) {
-                                    callback(result);
+                                    callback(result); 
                                 }
                                 resolve(result);
                             }
                         } else {
                             if (callback) {
-                                callback(result);
+                                callback(result); 
                             }
                             resolve(result);
                         }
@@ -984,4 +1043,6 @@ export const processLoad = (proc, callback) => {
             }
         });
     });
-};
+}
+
+exports.processLoad = processLoad;

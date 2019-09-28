@@ -1,6 +1,27 @@
+
+// @ts-check
+// ==================================================================================
+// utils.js
+// ----------------------------------------------------------------------------------
+// Description:   System Information - library
+//                for Node.js
+// Copyright:     (c) 2014 - 2019
+// Author:        Sebastian Hildebrandt
+// ----------------------------------------------------------------------------------
+// License:       MIT
+// ==================================================================================
+// 0. helper functions
+// ----------------------------------------------------------------------------------
+
+const os = require("os");
+const fs = require("fs");
+const spawn = require("child_process").spawn;
+const exec = require("child_process").exec;
+const execSync = require("child_process").execSync;
+const util = require("util");
+
 const {
-    is,
-    std: { os, fs, childProcess: { spawn, exec, execSync } }
+    is
 } = adone;
 
 const _platform = process.platform;
@@ -9,30 +30,41 @@ const _darwin = (_platform === "darwin");
 const _windows = (_platform === "win32");
 const _freebsd = (_platform === "freebsd");
 const _openbsd = (_platform === "openbsd");
+const _netbsd = (_platform === "netbsd");
 // const _sunos = (_platform === 'sunos');
 
 let _cores = 0;
-let wmic = "";
+let wmicPath = "";
 let codepage = "";
 
-export const execOptsWin = {
+const execOptsWin = {
     windowsHide: true,
-    maxBuffer: 1024 * 2000,
-    encoding: "UTF-8"
+    maxBuffer: 1024 * 20000,
+    encoding: "UTF-8",
+    env: util._extend({}, process.env, { LANG: "en_US.UTF-8" })
 };
 
-export const isFunction = (functionToCheck) => {
+
+function toInt(value) {
+    let result = parseInt(value, 10);
+    if (isNaN(result)) {
+        result = 0;
+    }
+    return result;
+}
+
+function isFunction(functionToCheck) {
     const getType = {};
     return functionToCheck && getType.toString.call(functionToCheck) === "[object Function]";
-};
+}
 
-export const unique = (obj) => {
+function unique(obj) {
     const uniques = [];
     const stringify = {};
     for (let i = 0; i < obj.length; i++) {
         const keys = Object.keys(obj[i]);
         keys.sort((a, b) => {
-            return a - b;
+            return a - b; 
         });
         let str = "";
         for (let j = 0; j < keys.length; j++) {
@@ -45,9 +77,9 @@ export const unique = (obj) => {
         }
     }
     return uniques;
-};
+}
 
-export const sortByKey = (array, keys) => {
+function sortByKey(array, keys) {
     return array.sort((a, b) => {
         let x = "";
         let y = "";
@@ -56,16 +88,16 @@ export const sortByKey = (array, keys) => {
         });
         return ((x < y) ? -1 : ((x > y) ? 1 : 0));
     });
-};
+}
 
-export const cores = () => {
+function cores() {
     if (_cores === 0) {
         _cores = os.cpus().length;
     }
     return _cores;
-};
+}
 
-export const getValue = (lines, property, separator, trimmed) => {
+function getValue(lines, property, separator, trimmed) {
     separator = separator || ":";
     property = property.toLowerCase();
     trimmed = trimmed || false;
@@ -79,32 +111,56 @@ export const getValue = (lines, property, separator, trimmed) => {
             if (parts.length >= 2) {
                 parts.shift();
                 return parts.join(separator).trim();
-            }
+            } 
             return "";
-
+      
         }
     }
     return "";
-};
+}
 
-export const decodeEscapeSequence = (str, base) => {
+function decodeEscapeSequence(str, base) {
     base = base || 16;
     return str.replace(/\\x([0-9A-Fa-f]{2})/g, function () {
         return String.fromCharCode(parseInt(arguments[1], base));
     });
-};
+}
 
-const parseTime = (t) => {
+function parseTime(t) {
     t = t.toUpperCase();
-    const parts = t.split(":");
-    const isPM = (parts[1] && parts[1].indexOf("PM") > -1);
-    let hour = parseInt(parts[0], 10);
-    const min = parseInt(parts[1], 10);
-    hour = isPM && hour < 12 ? hour + 12 : hour;
-    return `${(`0${hour}`).substr(-2)}:${(`0${min}`).substr(-2)}`;
-};
+    let hour = 0;
+    let min = 0;
+    let parts = t.split(":");
+    if (parts.length >= 2) {
+        const isPM = (parts[1] && (parts[1].toLowerCase().indexOf("pm") > -1) || (parts[1].toLowerCase().indexOf("p.m.") > -1) || (parts[1].toLowerCase().indexOf("p. m.") > -1));
+        hour = parseInt(parts[0], 10);
+        min = parseInt(parts[1], 10);
+        hour = isPM && hour < 12 ? hour + 12 : hour;
+        return `${(`0${hour}`).substr(-2)}:${(`0${min}`).substr(-2)}`;
+    }
+    parts = t.split(".");
+    if (parts.length >= 2) {
+        const isPM = (parts[1] && (parts[1].toLowerCase().indexOf("pm") > -1) || (parts[1].toLowerCase().indexOf("p.m.") > -1) || (parts[1].toLowerCase().indexOf("p. m.") > -1) || (parts[1].toLowerCase().indexOf("n") > -1) || (parts[1].toLowerCase().indexOf("ch") > -1) || (parts[1].toLowerCase().indexOf("ös") > -1));
+        hour = parseInt(parts[0], 10);
+        min = parseInt(parts[1], 10);
+        hour = isPM && hour < 12 ? hour + 12 : hour;
+        return `${(`0${hour}`).substr(-2)}:${(`0${min}`).substr(-2)}`;
+    }
+    parts = t.split(" ");
+    if (parts.length >= 2) {
+        const isPM = ((t.toLowerCase().indexOf("pm") > -1) || (t.toLowerCase().indexOf("p.m.") > -1) || (t.toLowerCase().indexOf("p. m.") > -1) || (t.toLowerCase().indexOf("n") > -1) || (t.toLowerCase().indexOf("ch") > -1) || (t.toLowerCase().indexOf("ös") > -1));
+        hour = parseInt(parts[0], 10);
+        if (parts[1] === "h" && parts[2]) {
+            min = parseInt(parts[2], 10);
+        } else {
+            min = parseInt(parts[1], 10);
+        }
+        hour = isPM && hour < 12 ? hour + 12 : hour;
+        return `${(`0${hour}`).substr(-2)}:${(`0${min}`).substr(-2)}`;
+    }
+}
 
-export const parseDateTime = (dt) => {
+function parseDateTime(dt) {
     const result = {
         date: "",
         time: ""
@@ -112,10 +168,26 @@ export const parseDateTime = (dt) => {
     const parts = dt.split(" ");
     if (parts[0]) {
         if (parts[0].indexOf("/") >= 0) {
-            // Dateformat: mm/dd/yyyy
+            // Dateformat: mm/dd/yyyy or dd/mm/yyyy or dd/mm/yy or yyyy/mm/dd
             const dtparts = parts[0].split("/");
             if (dtparts.length === 3) {
-                result.date = `${dtparts[2]}-${(`0${dtparts[0]}`).substr(-2)}-${(`0${dtparts[1]}`).substr(-2)}`;
+                if (dtparts[0].length === 4) {
+                    // Dateformat: yyyy/mm/dd
+                    result.date = `${dtparts[0]}-${(`0${dtparts[1]}`).substr(-2)}-${(`0${dtparts[2]}`).substr(-2)}`;
+                } else if (dtparts[2].length === 2) {
+                    // Dateformat: dd/mm/yy
+                    result.date = `20${dtparts[2]}-${(`0${dtparts[1]}`).substr(-2)}-${(`0${dtparts[0]}`).substr(-2)}`;
+                } else {
+                    // Dateformat: mm/dd/yyyy or dd/mm/yyyy
+                    const isEN = ((dt.toLowerCase().indexOf("pm") > -1) || (dt.toLowerCase().indexOf("p.m.") > -1) || (dt.toLowerCase().indexOf("p. m.") > -1) || (dt.toLowerCase().indexOf("am") > -1) || (dt.toLowerCase().indexOf("a.m.") > -1) || (dt.toLowerCase().indexOf("a. m.") > -1));
+                    if (isEN) {
+                        // Dateformat: mm/dd/yyyy
+                        result.date = `${dtparts[2]}-${(`0${dtparts[0]}`).substr(-2)}-${(`0${dtparts[1]}`).substr(-2)}`;
+                    } else {
+                        // Dateformat: dd/mm/yyyy
+                        result.date = `${dtparts[2]}-${(`0${dtparts[1]}`).substr(-2)}-${(`0${dtparts[0]}`).substr(-2)}`;
+                    }
+                }
             }
         }
         if (parts[0].indexOf(".") >= 0) {
@@ -134,13 +206,14 @@ export const parseDateTime = (dt) => {
         }
     }
     if (parts[1]) {
-        const time = parts[1] + (parts[2] ? parts[2] : "");
+        parts.shift();
+        const time = parts.join(" ");
         result.time = parseTime(time);
     }
     return result;
-};
+}
 
-export const parseHead = (head, rights) => {
+function parseHead(head, rights) {
     let space = (rights > 0);
     let count = 1;
     let from = 0;
@@ -194,33 +267,57 @@ export const parseHead = (head, rights) => {
         }
     }
     return result;
-};
+}
 
-export const findObjectByKey = (array, key, value) => {
+function findObjectByKey(array, key, value) {
     for (let i = 0; i < array.length; i++) {
         if (array[i][key] === value) {
             return i;
         }
     }
     return -1;
-};
+}
 
-export const getWmic = () => {
-    if (os.type() === "Windows_NT" && !wmic) {
-        try {
-            wmic = execSync("WHERE WMIC").toString().trim();
-        } catch (e) {
-            if (fs.existsSync(`${process.env.WINDIR}\\system32\\wbem\\wmic.exe`)) {
-                wmic = `${process.env.WINDIR}\\system32\\wbem\\wmic.exe`;
-            } else {
-                wmic = "wmic";
+function getWmic() {
+    if (os.type() === "Windows_NT" && !wmicPath) {
+        wmicPath = `${process.env.WINDIR}\\system32\\wbem\\wmic.exe`;
+        if (!fs.existsSync(wmicPath)) {
+            try {
+                const wmicPathArray = execSync("WHERE WMIC").toString().split("\r\n");
+                if (wmicPathArray && wmicPathArray.length) {
+                    wmicPath = wmicPathArray[0];
+                } else {
+                    wmicPath = "wmic";
+                }
+            } catch (e) {
+                wmicPath = "wmic";
             }
         }
     }
-    return wmic;
-};
+    return wmicPath;
+}
 
-export const powerShell = (cmd) => {
+function wmic(command, options) {
+    options = options || execOptsWin;
+    return new Promise((resolve) => {
+        process.nextTick(() => {
+            try {
+                exec(`${getWmic()} ${command}`, options, (error, stdout) => {
+                    resolve(stdout, error);
+                }).stdin.end();
+            } catch (e) {
+                resolve("", e);
+            }
+        });
+    });
+}
+
+function getVboxmanage() {
+    return _windows ? process.env.VBOX_INSTALL_PATH || `${process.env.VBOX_MSI_INSTALL_PATH}\\VBoxManage.exe` + "\" " : "vboxmanage";
+}
+
+function powerShell(cmd) {
+
     let result = "";
 
     return new Promise((resolve) => {
@@ -262,9 +359,9 @@ export const powerShell = (cmd) => {
             }
         });
     });
-};
+}
 
-export const getCodepage = () => {
+function getCodepage() {
     if (_windows) {
         if (!codepage) {
             try {
@@ -278,7 +375,7 @@ export const getCodepage = () => {
         }
         return codepage;
     }
-    if (_linux || _darwin || _freebsd || _openbsd) {
+    if (_linux || _darwin || _freebsd || _openbsd || _netbsd) {
         if (!codepage) {
             try {
                 const stdout = execSync("echo $LANG");
@@ -294,9 +391,9 @@ export const getCodepage = () => {
         }
         return codepage;
     }
-};
+}
 
-export const isRaspberry = () => {
+function isRaspberry() {
     const PI_MODEL_NO = [
         "BCM2708",
         "BCM2709",
@@ -312,9 +409,9 @@ export const isRaspberry = () => {
     }
     const hardware = getValue(cpuinfo, "hardware");
     return (hardware && PI_MODEL_NO.indexOf(hardware) > -1);
-};
+}
 
-export const isRaspbian = () => {
+function isRaspbian() {
     let osrelease = [];
     try {
         osrelease = fs.readFileSync("/etc/os-release", { encoding: "utf8" }).split("\n");
@@ -323,9 +420,9 @@ export const isRaspbian = () => {
     }
     const id = getValue(osrelease, "id");
     return (id && id.indexOf("raspbian") > -1);
-};
+}
 
-export const execWin = (cmd, opts, callback) => {
+function execWin(cmd, opts, callback) {
     if (!callback) {
         callback = opts;
         opts = execOptsWin;
@@ -334,17 +431,24 @@ export const execWin = (cmd, opts, callback) => {
     exec(newCmd, opts, (error, stdout) => {
         callback(error, stdout);
     });
-};
+}
 
-export const nanoSeconds = () => {
+function darwinXcodeExists() {
+    const cmdLineToolsExists = fs.existsSync("/Library/Developer/CommandLineTools/usr/bin/");
+    const xcodeAppExists = fs.existsSync("/Applications/Xcode.app/Contents/Developer/Tools");
+    const xcodeExists = fs.existsSync("/Library/Developer/Xcode/");
+    return (cmdLineToolsExists || xcodeExists || xcodeAppExists);
+}
+
+function nanoSeconds() {
     const time = process.hrtime();
     if (!is.array(time) || time.length !== 2) {
         return 0;
     }
     return Number(time[0]) * 1e9 + Number(time[1]);
-};
+}
 
-export const countUniqueLines = (lines, startingWith) => {
+function countUniqueLines(lines, startingWith) {
     startingWith = startingWith || "";
     const uniqueLines = [];
     lines.forEach((line) => {
@@ -355,4 +459,29 @@ export const countUniqueLines = (lines, startingWith) => {
         }
     });
     return uniqueLines.length;
-};
+}
+function noop() { }
+
+exports.toInt = toInt;
+exports.execOptsWin = execOptsWin;
+exports.getCodepage = getCodepage;
+exports.execWin = execWin;
+exports.isFunction = isFunction;
+exports.unique = unique;
+exports.sortByKey = sortByKey;
+exports.cores = cores;
+exports.getValue = getValue;
+exports.decodeEscapeSequence = decodeEscapeSequence;
+exports.parseDateTime = parseDateTime;
+exports.parseHead = parseHead;
+exports.findObjectByKey = findObjectByKey;
+exports.getWmic = getWmic;
+exports.wmic = wmic;
+exports.darwinXcodeExists = darwinXcodeExists;
+exports.getVboxmanage = getVboxmanage;
+exports.powerShell = powerShell;
+exports.nanoSeconds = nanoSeconds;
+exports.countUniqueLines = countUniqueLines;
+exports.noop = noop;
+exports.isRaspberry = isRaspberry;
+exports.isRaspbian = isRaspbian;

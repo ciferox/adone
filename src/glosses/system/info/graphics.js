@@ -1,10 +1,26 @@
-const {
-    is,
-    noop,
-    std: { childProcess: { exec, execSync } }
-} = adone;
 
+// @ts-check
+// ==================================================================================
+// graphics.js
+// ----------------------------------------------------------------------------------
+// Description:   System Information - library
+//                for Node.js
+// Copyright:     (c) 2014 - 2019
+// Author:        Sebastian Hildebrandt
+// ----------------------------------------------------------------------------------
+// License:       MIT
+// ==================================================================================
+// 7. Graphics (controller, display)
+// ----------------------------------------------------------------------------------
+
+const os = require("os");
+const exec = require("child_process").exec;
+const execSync = require("child_process").execSync;
 const util = require("./util");
+
+const {
+    is
+} = adone;
 
 const _platform = process.platform;
 
@@ -13,67 +29,38 @@ const _darwin = (_platform === "darwin");
 const _windows = (_platform === "win32");
 const _freebsd = (_platform === "freebsd");
 const _openbsd = (_platform === "openbsd");
+const _netbsd = (_platform === "netbsd");
 const _sunos = (_platform === "sunos");
 
 let _resolutionx = 0;
 let _resolutiony = 0;
 let _pixeldepth = 0;
+let _refreshrate = 0;
 
-const toInt = (value) => {
-    let result = parseInt(value, 10);
-    if (isNaN(result)) {
-        result = 0;
-    }
-    return result;
+const videoTypes = {
+    "-2": "UNINITIALIZED",
+    "-1": "OTHER",
+    0: "HD15",
+    1: "SVIDEO",
+    2: "Composite video",
+    3: "Component video",
+    4: "DVI",
+    5: "HDMI",
+    6: "LVDS",
+    8: "D_JPN",
+    9: "SDI",
+    10: "DP",
+    11: "DP embedded",
+    12: "UDI",
+    13: "UDI embedded",
+    14: "SDTVDONGLE",
+    15: "MIRACAST",
+    2147483648: "INTERNAL"
 };
 
-const parseLinesWindowsControllers = (sections) => {
-    const controllers = [];
-    for (const i in sections) {
-        if (sections.hasOwnProperty(i)) {
-            if (sections[i].trim() !== "") {
+function graphics(callback) {
 
-                const lines = sections[i].trim().split("\r\n");
-                controllers.push({
-                    model: util.getValue(lines, "name", "="),
-                    vendor: util.getValue(lines, "AdapterCompatibility", "="),
-                    bus: util.getValue(lines, "PNPDeviceID", "=").startsWith("PCI") ? "PCI" : "",
-                    vram: parseInt(util.getValue(lines, "AdapterRAM", "="), 10) / 1024 / 1024,
-                    vramDynamic: (util.getValue(lines, "VideoMemoryType", "=") === "2")
-                });
-                _resolutionx = toInt(util.getValue(lines, "CurrentHorizontalResolution", "="));
-                _resolutiony = toInt(util.getValue(lines, "CurrentVerticalResolution", "="));
-                _pixeldepth = toInt(util.getValue(lines, "CurrentBitsPerPixel", "="));
-            }
-        }
-    }
-    return controllers;
-};
-
-const parseLinesWindowsDisplays = (sections) => {
-    const displays = [];
-    for (const i in sections) {
-        if (sections.hasOwnProperty(i)) {
-            if (sections[i].trim() !== "") {
-                const lines = sections[i].trim().split("\r\n");
-                displays.push({
-                    model: util.getValue(lines, "MonitorManufacturer", "="),
-                    main: false,
-                    builtin: false,
-                    connection: "",
-                    resolutionx: toInt(util.getValue(lines, "ScreenWidth", "=")),
-                    resolutiony: toInt(util.getValue(lines, "ScreenHeight", "=")),
-                    sizex: -1,
-                    sizey: -1
-                });
-            }
-        }
-    }
-    return displays;
-};
-
-export const graphics = (callback) => {
-    const parseLinesDarwin = (lines) => {
+    function parseLinesDarwin(lines) {
         const starts = [];
         let level = -1;
         let lastlevel = -1;
@@ -87,6 +74,7 @@ export const graphics = (callback) => {
             vramDynamic: false
         };
         let currentDisplay = {
+            vendor: "",
             model: "",
             main: false,
             builtin: false,
@@ -95,7 +83,12 @@ export const graphics = (callback) => {
             sizey: -1,
             pixeldepth: -1,
             resolutionx: -1,
-            resolutiony: -1
+            resolutiony: -1,
+            currentResX: -1,
+            currentResY: -1,
+            positionX: 0,
+            positionY: 0,
+            currentRefreshRate: -1
         };
         for (let i = 0; i < lines.length; i++) {
             if (lines[i].trim() !== "") {
@@ -118,6 +111,7 @@ export const graphics = (callback) => {
                     if (Object.keys(currentDisplay).length > 0) { // just changed to Displays
                         displays.push(currentDisplay);
                         currentDisplay = {
+                            vendor: "",
                             model: "",
                             main: false,
                             builtin: false,
@@ -126,7 +120,12 @@ export const graphics = (callback) => {
                             sizey: -1,
                             pixeldepth: -1,
                             resolutionx: -1,
-                            resolutiony: -1
+                            resolutiony: -1,
+                            currentResX: -1,
+                            currentResY: -1,
+                            positionX: 0,
+                            positionY: 0,
+                            currentRefreshRate: -1
                         };
                     }
                 }
@@ -134,13 +133,13 @@ export const graphics = (callback) => {
                 const parts = lines[i].split(":");
                 if (level === 2) { // grafics controller level
                     if (parts.length > 1 && parts[0].replace(/ +/g, "").toLowerCase().indexOf("chipsetmodel") !== -1) {
-                        currentController.model = parts[1].trim();
+                        currentController.model = parts[1].trim(); 
                     }
                     if (parts.length > 1 && parts[0].replace(/ +/g, "").toLowerCase().indexOf("bus") !== -1) {
-                        currentController.bus = parts[1].trim();
+                        currentController.bus = parts[1].trim(); 
                     }
                     if (parts.length > 1 && parts[0].replace(/ +/g, "").toLowerCase().indexOf("vendor") !== -1) {
-                        currentController.vendor = parts[1].split("(")[0].trim();
+                        currentController.vendor = parts[1].split("(")[0].trim(); 
                     }
                     if (parts.length > 1 && parts[0].replace(/ +/g, "").toLowerCase().indexOf("vram(total)") !== -1) {
                         currentController.vram = parseInt(parts[1]); // in MB
@@ -153,12 +152,15 @@ export const graphics = (callback) => {
                 }
                 if (level === 3) { // display controller level
                     if (parts.length > 1 && parts[1] === "") {
+                        currentDisplay.vendor = "";
                         currentDisplay.model = parts[0].trim();
                         currentDisplay.main = false;
                         currentDisplay.builtin = false;
                         currentDisplay.connection = "";
                         currentDisplay.sizex = -1;
                         currentDisplay.sizey = -1;
+                        currentDisplay.positionX = 0;
+                        currentDisplay.positionY = 0;
                         currentDisplay.pixeldepth = -1;
                     }
                 }
@@ -167,15 +169,17 @@ export const graphics = (callback) => {
                         const resolution = parts[1].split("x");
                         currentDisplay.resolutionx = (resolution.length > 1 ? parseInt(resolution[0]) : 0);
                         currentDisplay.resolutiony = (resolution.length > 1 ? parseInt(resolution[1]) : 0);
+                        currentDisplay.currentResX = currentDisplay.resolutionx;
+                        currentDisplay.currentResY = currentDisplay.resolutiony;
                     }
                     if (parts.length > 1 && parts[0].replace(/ +/g, "").toLowerCase().indexOf("pixeldepth") !== -1) {
-                        currentDisplay.pixeldepth = parseInt(parts[1]);
+                        currentDisplay.pixeldepth = parseInt(parts[1]); 
                     } // in BIT
                     if (parts.length > 1 && parts[0].replace(/ +/g, "").toLowerCase().indexOf("framebufferdepth") !== -1) {
-                        currentDisplay.pixeldepth = parseInt(parts[1]);
+                        currentDisplay.pixeldepth = parseInt(parts[1]); 
                     } // in BIT
                     if (parts.length > 1 && parts[0].replace(/ +/g, "").toLowerCase().indexOf("maindisplay") !== -1 && parts[1].replace(/ +/g, "").toLowerCase() === "yes") {
-                        currentDisplay.main = true;
+                        currentDisplay.main = true; 
                     }
                     if (parts.length > 1 && parts[0].replace(/ +/g, "").toLowerCase().indexOf("built-in") !== -1 && parts[1].replace(/ +/g, "").toLowerCase() === "yes") {
                         currentDisplay.builtin = true;
@@ -198,9 +202,9 @@ export const graphics = (callback) => {
             controllers,
             displays
         });
-    };
+    }
 
-    const parseLinesLinuxControllers = (lines) => {
+    function parseLinesLinuxControllers(lines) {
         const controllers = [];
         let currentController = {
             vendor: "",
@@ -221,7 +225,7 @@ export const graphics = (callback) => {
                 return !is.nil(el) && el;
             });
         } catch (e) {
-            noop();
+            util.noop();
         }
         for (let i = 0; i < lines.length; i++) {
             if (lines[i].trim() !== "") {
@@ -283,7 +287,7 @@ export const graphics = (callback) => {
                 if (isGraphicsController) { // within VGA details
                     const parts = lines[i].split(":");
                     if (parts.length > 1 && parts[0].replace(/ +/g, "").toLowerCase().indexOf("devicename") !== -1 && parts[1].toLowerCase().indexOf("onboard") !== -1) {
-                        currentController.bus = "Onboard";
+                        currentController.bus = "Onboard"; 
                     }
                     if (parts.length > 1 && parts[0].replace(/ +/g, "").toLowerCase().indexOf("region") !== -1 && parts[1].toLowerCase().indexOf("memory") !== -1) {
                         const memparts = parts[1].split("=");
@@ -298,18 +302,19 @@ export const graphics = (callback) => {
             controllers.push(currentController);
         }
         return (controllers);
-    };
+    }
 
-    const parseLinesLinuxEdid = (edid) => {
-        // parsen EDID
-        // --> model
-        // --> resolutionx
-        // --> resolutiony
-        // --> builtin = false
-        // --> pixeldepth (?)
-        // --> sizex
-        // --> sizey
+    function parseLinesLinuxEdid(edid) {
+    // parsen EDID
+    // --> model
+    // --> resolutionx
+    // --> resolutiony
+    // --> builtin = false
+    // --> pixeldepth (?)
+    // --> sizex
+    // --> sizey
         const result = {
+            vendor: "",
             model: "",
             main: false,
             builtin: false,
@@ -318,7 +323,12 @@ export const graphics = (callback) => {
             sizey: -1,
             pixeldepth: -1,
             resolutionx: -1,
-            resolutiony: -1
+            resolutiony: -1,
+            currentResX: -1,
+            currentResY: -1,
+            positionX: 0,
+            positionY: 0,
+            currentRefreshRate: -1
         };
         // find first "Detailed Timing Description"
         let start = 108;
@@ -345,18 +355,25 @@ export const graphics = (callback) => {
             if (model_raw.indexOf("0a") !== -1) {
                 model_raw = model_raw.substr(0, model_raw.indexOf("0a"));
             }
-            result.model = model_raw.match(/.{1,2}/g).map((v) => {
-                return String.fromCharCode(parseInt(v, 16));
-            }).join("");
+            try {
+                if (model_raw.length > 2) {
+                    result.model = model_raw.match(/.{1,2}/g).map((v) => {
+                        return String.fromCharCode(parseInt(v, 16));
+                    }).join("");
+                }
+            } catch (e) {
+                util.noop();
+            }
         } else {
             result.model = "";
         }
         return result;
-    };
+    }
 
-    const parseLinesLinuxDisplays = (lines, depth) => {
+    function parseLinesLinuxDisplays(lines, depth) {
         const displays = [];
         let currentDisplay = {
+            vendor: "",
             model: "",
             main: false,
             builtin: false,
@@ -365,9 +382,15 @@ export const graphics = (callback) => {
             sizey: -1,
             pixeldepth: -1,
             resolutionx: -1,
-            resolutiony: -1
+            resolutiony: -1,
+            currentResX: -1,
+            currentResY: -1,
+            positionX: 0,
+            positionY: 0,
+            currentRefreshRate: -1
         };
         let is_edid = false;
+        let is_current = false;
         let edid_raw = "";
         let start = 0;
         for (let i = 1; i < lines.length; i++) { // start with second line
@@ -376,6 +399,7 @@ export const graphics = (callback) => {
                     if (currentDisplay.model || currentDisplay.main || currentDisplay.builtin || currentDisplay.connection || currentDisplay.sizex !== -1 || currentDisplay.pixeldepth !== -1 || currentDisplay.resolutionx !== -1) { // push last display to array
                         displays.push(currentDisplay);
                         currentDisplay = {
+                            vendor: "",
                             model: "",
                             main: false,
                             builtin: false,
@@ -384,12 +408,17 @@ export const graphics = (callback) => {
                             sizey: -1,
                             pixeldepth: -1,
                             resolutionx: -1,
-                            resolutiony: -1
+                            resolutiony: -1,
+                            currentResX: -1,
+                            currentResY: -1,
+                            positionX: 0,
+                            positionY: 0,
+                            currentRefreshRate: -1
                         };
                     }
                     const parts = lines[i].split(" ");
                     currentDisplay.connection = parts[0];
-                    currentDisplay.main = (parts[2] === "primary");
+                    currentDisplay.main = lines[i].toLowerCase().indexOf(" primary ") >= 0;
                     currentDisplay.builtin = (parts[0].toLowerCase().indexOf("edp") >= 0);
                 }
 
@@ -400,6 +429,7 @@ export const graphics = (callback) => {
                     } else {
                         // parsen EDID
                         const edid_decoded = parseLinesLinuxEdid(edid_raw);
+                        currentDisplay.vendor = edid_decoded.vendor;
                         currentDisplay.model = edid_decoded.model;
                         currentDisplay.resolutionx = edid_decoded.resolutionx;
                         currentDisplay.resolutiony = edid_decoded.resolutiony;
@@ -409,9 +439,25 @@ export const graphics = (callback) => {
                         is_edid = false;
                     }
                 }
-                if (lines[i].toLowerCase().indexOf("edid:") !== -1) {
+                if (lines[i].toLowerCase().indexOf("edid:") >= 0) {
                     is_edid = true;
                     start = lines[i].search(/\S|$/);
+                }
+                if (lines[i].toLowerCase().indexOf("*current") >= 0) {
+                    const parts1 = lines[i].split("(");
+                    if (parts1 && parts1.length > 1 && parts1[0].indexOf("x") >= 0) {
+                        const resParts = parts1[0].trim().split("x");
+                        currentDisplay.currentResX = util.toInt(resParts[0]);
+                        currentDisplay.currentResY = util.toInt(resParts[1]);
+                    }
+                    is_current = true;
+                }
+                if (is_current && lines[i].toLowerCase().indexOf("clock") >= 0 && lines[i].toLowerCase().indexOf("hz") >= 0 && lines[i].toLowerCase().indexOf("v: height") >= 0) {
+                    const parts1 = lines[i].split("clock");
+                    if (parts1 && parts1.length > 1 && parts1[1].toLowerCase().indexOf("hz") >= 0) {
+                        currentDisplay.currentRefreshRate = util.toInt(parts1[1]);
+                    }
+                    is_current = false;
                 }
             }
         }
@@ -421,7 +467,7 @@ export const graphics = (callback) => {
             displays.push(currentDisplay);
         }
         return displays;
-    };
+    }
 
     // function starts here
     return new Promise((resolve) => {
@@ -453,6 +499,7 @@ export const graphics = (callback) => {
                             const parts = lines[0].replace("mode", "").replace(/"/g, "").trim().split("x");
                             if (parts.length === 2) {
                                 result.displays.push({
+                                    vendor: "",
                                     model: util.getValue(lines, "device_name", "="),
                                     main: true,
                                     builtin: false,
@@ -461,7 +508,12 @@ export const graphics = (callback) => {
                                     sizey: -1,
                                     pixeldepth: -1,
                                     resolutionx: parseInt(parts[0], 10),
-                                    resolutiony: parseInt(parts[1], 10)
+                                    resolutiony: parseInt(parts[1], 10),
+                                    currentResX: -1,
+                                    currentResY: -1,
+                                    positionX: 0,
+                                    positionY: 0,
+                                    currentRefreshRate: -1
                                 });
                             }
                         }
@@ -508,55 +560,195 @@ export const graphics = (callback) => {
                     });
                 }
             }
-            if (_freebsd || _openbsd) {
+            if (_freebsd || _openbsd || _netbsd) {
                 if (callback) {
-                    callback(result);
+                    callback(result); 
                 }
                 resolve(result);
             }
             if (_sunos) {
                 if (callback) {
-                    callback(result);
+                    callback(result); 
                 }
                 resolve(result);
             }
             if (_windows) {
+
                 // https://blogs.technet.microsoft.com/heyscriptingguy/2013/10/03/use-powershell-to-discover-multi-monitor-information/
+                // https://devblogs.microsoft.com/scripting/use-powershell-to-discover-multi-monitor-information/
                 try {
-                    util.execWin(`${util.getWmic()} path win32_VideoController get AdapterCompatibility, AdapterDACType, name, PNPDeviceID, CurrentVerticalResolution, CurrentHorizontalResolution, CurrentNumberOfColors, AdapterRAM, CurrentBitsPerPixel, CurrentRefreshRate, MinRefreshRate, MaxRefreshRate, VideoMemoryType /value`, util.execOptsWin, (error, stdout) => {
-                        if (!error) {
-                            const csections = stdout.split(/\n\s*\n/);
-                            result.controllers = parseLinesWindowsControllers(csections);
-                            util.execWin(`${util.getWmic()} path win32_desktopmonitor get Caption, MonitorManufacturer, MonitorType, ScreenWidth, ScreenHeight /value`, util.execOptsWin, (error, stdout) => {
-                                const dsections = stdout.split(/\n\s*\n/);
-                                if (!error) {
-                                    result.displays = parseLinesWindowsDisplays(dsections);
-                                    if (result.controllers.length === 1 && result.displays.length === 1) {
-                                        if (_resolutionx && !result.displays[0].resolutionx) {
-                                            result.displays[0].resolutionx = _resolutionx;
-                                        }
-                                        if (_resolutiony && !result.displays[0].resolutiony) {
-                                            result.displays[0].resolutiony = _resolutiony;
-                                        }
-                                        if (_pixeldepth) {
-                                            result.displays[0].pixeldepth = _pixeldepth;
-                                        }
-                                    }
+                    const workload = [];
+                    workload.push(util.wmic("path win32_VideoController get /value"));
+                    workload.push(util.wmic("path win32_desktopmonitor get /value"));
+                    workload.push(util.powerShell("Get-CimInstance -Namespace root\\wmi -ClassName WmiMonitorBasicDisplayParams | fl"));
+                    workload.push(util.powerShell("Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Screen]::AllScreens"));
+                    workload.push(util.powerShell("Get-CimInstance -Namespace root\\wmi -ClassName WmiMonitorConnectionParams | fl"));
+
+                    Promise.all(
+                        workload
+                    ).then((data) => {
+                        // controller
+                        const csections = data[0].split(/\n\s*\n/);
+                        result.controllers = parseLinesWindowsControllers(csections);
+
+                        // displays
+                        const dsections = data[1].split(/\n\s*\n/);
+                        // result.displays = parseLinesWindowsDisplays(dsections);
+                        dsections.shift();
+                        dsections.pop();
+
+                        // monitor (powershell)
+                        const msections = data[2].split("Active ");
+                        msections.shift();
+
+                        // forms.screens (powershell)
+                        const ssections = data[3].split("BitsPerPixel ");
+                        ssections.shift();
+
+                        // connection params (powershell) - video type
+                        const tsections = data[4].split(/\n\s*\n/);
+                        tsections.shift();
+
+                        result.displays = parseLinesWindowsDisplaysPowershell(ssections, msections, dsections, tsections);
+
+                        if (result.controllers.length === 1 && result.displays.length === 1) {
+                            if (_resolutionx) {
+                                result.displays[0].currentResX = _resolutionx;
+                                if (!result.displays[0].resolutionx) {
+                                    result.displays[0].resolutionx = _resolutionx;
                                 }
-                                if (callback) {
-                                    callback(result);
+                            }
+                            if (_resolutiony) {
+                                result.displays[0].currentResY = _resolutiony;
+                                if (result.displays[0].resolutiony === 0) {
+                                    result.displays[0].resolutiony = _resolutiony;
                                 }
-                                resolve(result);
-                            });
+                            }
+                            if (_pixeldepth) {
+                                result.displays[0].pixeldepth = _pixeldepth;
+                            }
+                            if (_refreshrate && !result.displays[0].refreshrate) {
+                                result.displays[0].currentRefreshRate = _refreshrate;
+                            }
                         }
-                    });
+
+                        if (callback) {
+                            callback(result);
+                        }
+                        resolve(result);
+                    })
+                        .catch(() => {
+                            if (callback) {
+                                callback(result);
+                            }
+                            resolve(result);
+                        });
                 } catch (e) {
                     if (callback) {
-                        callback(result);
+                        callback(result); 
                     }
                     resolve(result);
                 }
             }
         });
     });
-};
+
+    function parseLinesWindowsControllers(sections) {
+        const controllers = [];
+        for (const i in sections) {
+            if (sections.hasOwnProperty(i)) {
+                if (sections[i].trim() !== "") {
+
+                    const lines = sections[i].trim().split("\r\n");
+                    controllers.push({
+                        vendor: util.getValue(lines, "AdapterCompatibility", "="),
+                        model: util.getValue(lines, "name", "="),
+                        bus: util.getValue(lines, "PNPDeviceID", "=").startsWith("PCI") ? "PCI" : "",
+                        vram: parseInt(util.getValue(lines, "AdapterRAM", "="), 10) / 1024 / 1024,
+                        vramDynamic: (util.getValue(lines, "VideoMemoryType", "=") === "2")
+                    });
+                    _resolutionx = util.toInt(util.getValue(lines, "CurrentHorizontalResolution", "="));
+                    _resolutiony = util.toInt(util.getValue(lines, "CurrentVerticalResolution", "="));
+                    _refreshrate = util.toInt(util.getValue(lines, "CurrentRefreshRate", "="));
+                    _pixeldepth = util.toInt(util.getValue(lines, "CurrentBitsPerPixel", "="));
+                }
+            }
+        }
+        return controllers;
+    }
+
+    // function parseLinesWindowsDisplays(sections) {
+    //   let displays = [];
+    //   for (let i in sections) {
+    //     if (sections.hasOwnProperty(i)) {
+    //       if (sections[i].trim() !== '') {
+    //         let lines = sections[i].trim().split('\r\n');
+    //         displays.push({
+    //           vendor: util.getValue(lines, 'MonitorManufacturer', '='),
+    //           model: util.getValue(lines, 'Name', '='),
+    //           main: false,
+    //           builtin: false,
+    //           connection: '',
+    //           sizex: -1,
+    //           sizey: -1,
+    //           pixeldepth: -1,
+    //           resolutionx: util.toInt(util.getValue(lines, 'ScreenWidth', '=')),
+    //           resolutiony: util.toInt(util.getValue(lines, 'ScreenHeight', '=')),
+    //         });
+    //       }
+    //     }
+    //   }
+    //   return displays;
+    // }
+
+    function parseLinesWindowsDisplaysPowershell(ssections, msections, dsections, tsections) {
+        const displays = [];
+        let vendor = "";
+        let model = "";
+        let deviceID = "";
+        if (dsections && dsections.length) {
+            const linesDisplay = dsections[0].split(os.EOL);
+            vendor = util.getValue(linesDisplay, "MonitorManufacturer", "=");
+            model = util.getValue(linesDisplay, "Name", "=");
+            deviceID = util.getValue(linesDisplay, "PNPDeviceID", "=").replace(/&amp;/g, "&").toLowerCase();
+        }
+
+        for (let i = 0; i < ssections.length; i++) {
+            if (ssections[i].trim() !== "") {
+                ssections[i] = `BitsPerPixel ${ssections[i]}`;
+                msections[i] = `Active ${msections[i]}`;
+
+                const linesScreen = ssections[i].split(os.EOL);
+                const linesMonitor = msections[i].split(os.EOL);
+                const linesConnection = tsections[i].split(os.EOL);
+                const bitsPerPixel = util.getValue(linesScreen, "BitsPerPixel");
+                const bounds = util.getValue(linesScreen, "Bounds").replace("{", "").replace("}", "").split(",");
+                const primary = util.getValue(linesScreen, "Primary");
+                const sizex = util.getValue(linesMonitor, "MaxHorizontalImageSize");
+                const sizey = util.getValue(linesMonitor, "MaxVerticalImageSize");
+                const instanceName = util.getValue(linesMonitor, "InstanceName").toLowerCase();
+                const videoOutputTechnology = util.getValue(linesConnection, "VideoOutputTechnology");
+                displays.push({
+                    vendor: instanceName.startsWith(deviceID) ? vendor : "",
+                    model: instanceName.startsWith(deviceID) ? model : "",
+                    main: primary.toLowerCase() === "true",
+                    builtin: videoOutputTechnology === "2147483648",
+                    connection: videoOutputTechnology && videoTypes[videoOutputTechnology] ? videoTypes[videoOutputTechnology] : "",
+                    resolutionx: util.toInt(util.getValue(bounds, "Width", "=")),
+                    resolutiony: util.toInt(util.getValue(bounds, "Height", "=")),
+                    sizex: sizex ? parseInt(sizex, 10) : -1,
+                    sizey: sizey ? parseInt(sizey, 10) : -1,
+                    pixeldepth: bitsPerPixel,
+                    currentResX: util.toInt(util.getValue(bounds, "Width", "=")),
+                    currentResY: util.toInt(util.getValue(bounds, "Height", "=")),
+                    positionX: util.toInt(util.getValue(bounds, "X", "=")),
+                    positionY: util.toInt(util.getValue(bounds, "Y", "="))
+                });
+            }
+        }
+        return displays;
+    }
+
+}
+
+exports.graphics = graphics;

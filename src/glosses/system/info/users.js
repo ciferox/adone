@@ -1,7 +1,19 @@
-const {
-    std: { childProcess: { exec } }
-} = adone;
 
+// @ts-check
+// ==================================================================================
+// users.js
+// ----------------------------------------------------------------------------------
+// Description:   System Information - library
+//                for Node.js
+// Copyright:     (c) 2014 - 2019
+// Author:        Sebastian Hildebrandt
+// ----------------------------------------------------------------------------------
+// License:       MIT
+// ==================================================================================
+// 11. Users/Sessions
+// ----------------------------------------------------------------------------------
+
+const exec = require("child_process").exec;
 const util = require("./util");
 
 const _platform = process.platform;
@@ -11,12 +23,13 @@ const _darwin = (_platform === "darwin");
 const _windows = (_platform === "win32");
 const _freebsd = (_platform === "freebsd");
 const _openbsd = (_platform === "openbsd");
+const _netbsd = (_platform === "netbsd");
 const _sunos = (_platform === "sunos");
 
 // --------------------------
 // array of users online = sessions
 
-const parseUsersLinux = (lines, phase) => {
+function parseUsersLinux(lines, phase) {
     const result = [];
     const result_who = [];
     const result_w = {};
@@ -75,11 +88,12 @@ const parseUsersLinux = (lines, phase) => {
     });
     if (result.length === 0 && phase === 2) {
         return result_who;
-    }
+    } 
     return result;
-};
+  
+}
 
-const parseUsersDarwin = (lines) => {
+function parseUsersDarwin(lines) {
     const result = [];
     const result_who = [];
     const result_w = {};
@@ -125,9 +139,10 @@ const parseUsersDarwin = (lines) => {
         }
     });
     return result;
-};
+}
 
-const parseUsersWin = (lines) => {
+function parseUsersWin(lines) {
+
     const result = [];
     const header = lines[0];
     const headerDelimiter = [];
@@ -136,7 +151,7 @@ const parseUsersWin = (lines) => {
         headerDelimiter.push(start - 1);
         let nextSpace = 0;
         for (let i = start + 1; i < header.length; i++) {
-            if (header[i] === " " && header[i - 1] === " ") {
+            if (header[i] === " " && ((header[i - 1] === " ") || (header[i - 1] === "."))) {
                 nextSpace = i;
             } else {
                 if (nextSpace) {
@@ -145,26 +160,27 @@ const parseUsersWin = (lines) => {
                 }
             }
         }
-    }
-    for (let i = 1; i < lines.length; i++) {
-        if (lines[i].trim()) {
-            const user = lines[i].substring(headerDelimiter[0] + 1, headerDelimiter[1]).trim() || "";
-            const tty = lines[i].substring(headerDelimiter[1] + 1, headerDelimiter[2] - 2).trim() || "";
-            const dateTime = util.parseDateTime(lines[i].substring(headerDelimiter[5] + 1, 2000).trim()) || "";
-            result.push({
-                user,
-                tty,
-                date: dateTime.date,
-                time: dateTime.time,
-                ip: "",
-                command: ""
-            });
+        for (let i = 1; i < lines.length; i++) {
+            if (lines[i].trim()) {
+                const user = lines[i].substring(headerDelimiter[0] + 1, headerDelimiter[1]).trim() || "";
+                const tty = lines[i].substring(headerDelimiter[1] + 1, headerDelimiter[2] - 2).trim() || "";
+                const dateTime = util.parseDateTime(lines[i].substring(headerDelimiter[5] + 1, 2000).trim()) || "";
+                result.push({
+                    user,
+                    tty,
+                    date: dateTime.date,
+                    time: dateTime.time,
+                    ip: "",
+                    command: ""
+                });
+            }
         }
     }
     return result;
-};
+}
 
-export const users = (callback) => {
+function users(callback) {
+
     return new Promise((resolve) => {
         process.nextTick(() => {
             let result = [];
@@ -184,25 +200,25 @@ export const users = (callback) => {
                                     result = parseUsersLinux(lines, 2);
                                 }
                                 if (callback) {
-                                    callback(result);
+                                    callback(result); 
                                 }
                                 resolve(result);
                             });
                         } else {
                             if (callback) {
-                                callback(result);
+                                callback(result); 
                             }
                             resolve(result);
                         }
                     } else {
                         if (callback) {
-                            callback(result);
+                            callback(result); 
                         }
                         resolve(result);
                     }
                 });
             }
-            if (_freebsd || _openbsd) {
+            if (_freebsd || _openbsd || _netbsd) {
                 exec('who; echo "---"; w -ih', (error, stdout) => {
                     if (!error) {
                         // lines / split
@@ -210,7 +226,7 @@ export const users = (callback) => {
                         result = parseUsersDarwin(lines);
                     }
                     if (callback) {
-                        callback(result);
+                        callback(result); 
                     }
                     resolve(result);
                 });
@@ -223,7 +239,7 @@ export const users = (callback) => {
                         result = parseUsersDarwin(lines);
                     }
                     if (callback) {
-                        callback(result);
+                        callback(result); 
                     }
                     resolve(result);
                 });
@@ -237,7 +253,7 @@ export const users = (callback) => {
                         result = parseUsersDarwin(lines);
                     }
                     if (callback) {
-                        callback(result);
+                        callback(result); 
                     }
                     resolve(result);
                 });
@@ -251,13 +267,13 @@ export const users = (callback) => {
                             result = parseUsersWin(lines);
                         }
                         if (callback) {
-                            callback(result);
+                            callback(result); 
                         }
                         resolve(result);
                     });
                 } catch (e) {
                     if (callback) {
-                        callback(result);
+                        callback(result); 
                     }
                     resolve(result);
                 }
@@ -265,4 +281,6 @@ export const users = (callback) => {
 
         });
     });
-};
+}
+
+exports.users = users;

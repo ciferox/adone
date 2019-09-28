@@ -813,6 +813,12 @@ export default {
                     src: "src/glosses/punycode/**/*.js",
                     dst: "lib/glosses/punycode"
                 },
+                puppeteer: {
+                    description: "High-level API to control Chrome or Chromium over the DevTools Protocol",
+                    task: "transpile",
+                    src: "src/glosses/puppeteer/**/*.js",
+                    dst: "lib/glosses/puppeteer"
+                },
                 realm: {
                     description: "Realm management",
                     task: "transpile",

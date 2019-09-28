@@ -1,7 +1,19 @@
-const {
-    std: { childProcess: { exec } }
-} = adone;
 
+// @ts-check
+// ==================================================================================
+// internet.js
+// ----------------------------------------------------------------------------------
+// Description:   System Information - library
+//                for Node.js
+// Copyright:     (c) 2014 - 2019
+// Author:        Sebastian Hildebrandt
+// ----------------------------------------------------------------------------------
+// License:       MIT
+// ==================================================================================
+// 12. Internet
+// ----------------------------------------------------------------------------------
+
+const exec = require("child_process").exec;
 const util = require("./util");
 
 const _platform = process.platform;
@@ -11,88 +23,96 @@ const _darwin = (_platform === "darwin");
 const _windows = (_platform === "win32");
 const _freebsd = (_platform === "freebsd");
 const _openbsd = (_platform === "openbsd");
+const _netbsd = (_platform === "netbsd");
 const _sunos = (_platform === "sunos");
 
 // --------------------------
 // check if external site is available
 
-export const inetChecksite = (url, callback) => new Promise((resolve) => {
-    process.nextTick(() => {
+function inetChecksite(url, callback) {
 
-        const result = {
-            url,
-            ok: false,
-            status: 404,
-            ms: -1
-        };
-        if (url) {
-            url = url.toLowerCase();
-            const t = Date.now();
-            if (_linux || _freebsd || _openbsd || _darwin || _sunos) {
-                const args = ` -I --connect-timeout 5 -m 5 ${url} 2>/dev/null | head -n 1 | cut -d " " -f2`;
-                const cmd = "curl";
-                exec(cmd + args, (error, stdout) => {
-                    const statusCode = parseInt(stdout.toString());
-                    result.status = statusCode || 404;
-                    result.ok = !error && (statusCode === 200 || statusCode === 301 || statusCode === 302 || statusCode === 304);
-                    result.ms = (result.ok ? Date.now() - t : -1);
-                    if (callback) {
-                        callback(result);
-                    }
-                    resolve(result);
-                });
-            }
-            if (_windows) { // if this is stable, this can be used for all OS types
-                const http = (url.startsWith("https:") ? require("https") : require("http"));
-                try {
-                    http.get(url, (res) => {
-                        const statusCode = res.statusCode;
+    return new Promise((resolve) => {
+        process.nextTick(() => {
 
+            const result = {
+                url,
+                ok: false,
+                status: 404,
+                ms: -1
+            };
+            if (url) {
+                url = url.toLowerCase();
+                const t = Date.now();
+                if (_linux || _freebsd || _openbsd || _netbsd || _darwin || _sunos) {
+                    const args = ` -I --connect-timeout 5 -m 5 ${url} 2>/dev/null | head -n 1 | cut -d " " -f2`;
+                    const cmd = "curl";
+                    exec(cmd + args, (error, stdout) => {
+                        const statusCode = parseInt(stdout.toString());
                         result.status = statusCode || 404;
-                        result.ok = (statusCode === 200 || statusCode === 301 || statusCode === 302 || statusCode === 304);
-
-                        if (statusCode !== 200) {
-                            res.resume();
-                            result.ms = (result.ok ? Date.now() - t : -1);
-                            if (callback) {
-                                callback(result);
-                            }
-                            resolve(result);
-                        } else {
-                            res.on("data", () => { });
-                            res.on("end", () => {
-                                result.ms = (result.ok ? Date.now() - t : -1);
-                                if (callback) {
-                                    callback(result);
-                                }
-                                resolve(result);
-                            });
-                        }
-                    }).on("error", () => {
+                        result.ok = !error && (statusCode === 200 || statusCode === 301 || statusCode === 302 || statusCode === 304);
+                        result.ms = (result.ok ? Date.now() - t : -1);
                         if (callback) {
-                            callback(result);
+                            callback(result); 
                         }
                         resolve(result);
                     });
-                } catch (err) {
-                    if (callback) {
-                        callback(result);
-                    }
-                    resolve(result);
                 }
+                if (_windows) { // if this is stable, this can be used for all OS types
+                    const http = (url.startsWith("https:") ? require("https") : require("http"));
+                    try {
+                        http.get(url, (res) => {
+                            const statusCode = res.statusCode;
+
+                            result.status = statusCode || 404;
+                            result.ok = (statusCode === 200 || statusCode === 301 || statusCode === 302 || statusCode === 304);
+
+                            if (statusCode !== 200) {
+                                res.resume();
+                                result.ms = (result.ok ? Date.now() - t : -1);
+                                if (callback) {
+                                    callback(result); 
+                                }
+                                resolve(result);
+                            } else {
+                                res.on("data", () => { });
+                                res.on("end", () => {
+                                    result.ms = (result.ok ? Date.now() - t : -1);
+                                    if (callback) {
+                                        callback(result); 
+                                    }
+                                    resolve(result);
+                                });
+                            }
+                        }).on("error", () => {
+                            if (callback) {
+                                callback(result); 
+                            }
+                            resolve(result);
+                        });
+                    } catch (err) {
+                        if (callback) {
+                            callback(result); 
+                        }
+                        resolve(result);
+                    }
+                }
+            } else {
+                if (callback) {
+                    callback(result); 
+                }
+                resolve(result);
             }
-        } else {
-            if (callback) {
-                callback(result);
-            }
-            resolve(result);
-        }
+        });
     });
-});
+}
+
+exports.inetChecksite = inetChecksite;
 
 // --------------------------
 // check inet latency
-export const inetLatency = (host, callback) => {
+
+function inetLatency(host, callback) {
+
     // fallback - if only callback is given
     if (util.isFunction(host) && !callback) {
         callback = host;
@@ -104,11 +124,11 @@ export const inetLatency = (host, callback) => {
     return new Promise((resolve) => {
         process.nextTick(() => {
             let cmd;
-            if (_linux || _freebsd || _openbsd || _darwin) {
+            if (_linux || _freebsd || _openbsd || _netbsd || _darwin) {
                 if (_linux) {
                     cmd = `ping -c 2 -w 3 ${host} | grep rtt`;
                 }
-                if (_freebsd || _openbsd) {
+                if (_freebsd || _openbsd || _netbsd) {
                     cmd = `ping -c 2 -t 3 ${host} | grep round-trip`;
                 }
                 if (_darwin) {
@@ -127,7 +147,7 @@ export const inetLatency = (host, callback) => {
                         }
                     }
                     if (callback) {
-                        callback(result);
+                        callback(result); 
                     }
                     resolve(result);
                 });
@@ -145,7 +165,7 @@ export const inetLatency = (host, callback) => {
                         }
                     }
                     if (callback) {
-                        callback(result);
+                        callback(result); 
                     }
                     resolve(result);
                 });
@@ -167,17 +187,19 @@ export const inetLatency = (host, callback) => {
                             });
                         }
                         if (callback) {
-                            callback(result);
+                            callback(result); 
                         }
                         resolve(result);
                     });
                 } catch (e) {
                     if (callback) {
-                        callback(result);
+                        callback(result); 
                     }
                     resolve(result);
                 }
             }
         });
     });
-};
+}
+
+exports.inetLatency = inetLatency;

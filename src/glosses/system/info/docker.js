@@ -1,3 +1,18 @@
+
+// @ts-check
+// ==================================================================================
+// docker.js
+// ----------------------------------------------------------------------------------
+// Description:   System Information - library
+//                for Node.js
+// Copyright:     (c) 2014 - 2019
+// Author:        Sebastian Hildebrandt
+// ----------------------------------------------------------------------------------
+// License:       MIT
+// ==================================================================================
+// 13. Docker
+// ----------------------------------------------------------------------------------
+
 const util = require("./util");
 const DockerSocket = require("./dockerSocket");
 
@@ -12,8 +27,75 @@ let _docker_last_read = 0;
 // --------------------------
 // get containers (parameter all: get also inactive/exited containers)
 
-export const dockerContainers = (all, callback) => {
-    const inContainers = (containers, id) => {
+function dockerInfo(callback) {
+    return new Promise((resolve) => {
+        process.nextTick(() => {
+            if (!_docker_socket) {
+                _docker_socket = new DockerSocket();
+            }
+            const result = {};
+
+            _docker_socket.getInfo((data) => {
+                result.id = data.ID;
+                result.containers = data.Containers;
+                result.containersRunning = data.ContainersRunning;
+                result.containersPaused = data.ContainersPaused;
+                result.containersStopped = data.ContainersStopped;
+                result.images = data.Images;
+                result.driver = data.Driver;
+                result.memoryLimit = data.MemoryLimit;
+                result.swapLimit = data.SwapLimit;
+                result.kernelMemory = data.KernelMemory;
+                result.cpuCfsPeriod = data.CpuCfsPeriod;
+                result.cpuCfsQuota = data.CpuCfsQuota;
+                result.cpuShares = data.CPUShares;
+                result.cpuSet = data.CPUSet;
+                result.ipv4Forwarding = data.IPv4Forwarding;
+                result.bridgeNfIptables = data.BridgeNfIptables;
+                result.bridgeNfIp6tables = data.BridgeNfIp6tables;
+                result.debug = data.Debug;
+                result.nfd = data.NFd;
+                result.oomKillDisable = data.OomKillDisable;
+                result.ngoroutines = data.NGoroutines;
+                result.systemTime = data.SystemTime;
+                result.loggingDriver = data.LoggingDriver;
+                result.cgroupDriver = data.CgroupDriver;
+                result.nEventsListener = data.NEventsListener;
+                result.kernelVersion = data.KernelVersion;
+                result.pperatingSystem = data.OperatingSystem;
+                result.osType = data.OSType;
+                result.architecture = data.Architecture;
+                result.ncpu = data.NCPU;
+                result.memTotal = data.MemTotal;
+                result.dockerRootDir = data.DockerRootDir;
+                result.httpProxy = data.HttpProxy;
+                result.httpsProxy = data.HttpsProxy;
+                result.noProxy = data.NoProxy;
+                result.name = data.Name;
+                result.labels = data.Labels;
+                result.experimentalBuild = data.ExperimentalBuild;
+                result.serverVersion = data.ServerVersion;
+                result.clusterStore = data.ClusterStore;
+                result.clusterAdvertise = data.ClusterAdvertise;
+                result.defaultRuntime = data.DefaultRuntime;
+                result.liveRestoreEnabled = data.LiveRestoreEnabled;
+                result.isolation = data.Isolation;
+                result.initBinary = data.InitBinary;
+                result.productLicense = data.ProductLicense;
+                if (callback) {
+                    callback(result); 
+                }
+                resolve(result);
+            });
+        });
+    });
+}
+
+exports.dockerInfo = dockerInfo;
+
+function dockerContainers(all, callback) {
+
+    function inContainers(containers, id) {
         const filtered = containers.filter((obj) => {
             /**
        * @namespace
@@ -22,7 +104,7 @@ export const dockerContainers = (all, callback) => {
             return (obj.Id && (obj.Id === id));
         });
         return (filtered.length > 0);
-    };
+    }
 
     // fallback - if only callback is given
     if (util.isFunction(all) && !callback) {
@@ -37,70 +119,130 @@ export const dockerContainers = (all, callback) => {
             if (!_docker_socket) {
                 _docker_socket = new DockerSocket();
             }
+            const workload = [];
 
             _docker_socket.listContainers(all, (data) => {
                 let docker_containers = {};
                 try {
                     docker_containers = data;
                     if (docker_containers && Object.prototype.toString.call(docker_containers) === "[object Array]" && docker_containers.length > 0) {
+                        // GC in _docker_container_stats
+                        for (const key in _docker_container_stats) {
+                            if (_docker_container_stats.hasOwnProperty(key)) {
+                                if (!inContainers(docker_containers, key)) {
+                                    delete _docker_container_stats[key]; 
+                                }
+                            }
+                        }
+
                         docker_containers.forEach((element) => {
-                            /**
-               * @namespace
-               * @property {string}  Id
-               * @property {string}  Name
-               * @property {string}  Image
-               * @property {string}  ImageID
-               * @property {string}  Command
-               * @property {number}  Created
-               * @property {string}  State
-               * @property {Array}  Names
-               * @property {Array}  Ports
-               * @property {Array}  Mounts
-               */
 
                             if (element.Names && Object.prototype.toString.call(element.Names) === "[object Array]" && element.Names.length > 0) {
                                 element.Name = element.Names[0].replace(/^\/|\/$/g, "");
                             }
-                            result.push({
-                                id: element.Id,
-                                name: element.Name,
-                                image: element.Image,
-                                imageID: element.ImageID,
-                                command: element.Command,
-                                created: element.Created,
-                                state: element.State,
-                                ports: element.Ports,
-                                mounts: element.Mounts
-                                // hostconfig: element.HostConfig,
-                                // network: element.NetworkSettings
-                            });
+                            workload.push(dockerContainerInspect(element.Id.trim(), element));
+                            // result.push({
+                            //   id: element.Id,
+                            //   name: element.Name,
+                            //   image: element.Image,
+                            //   imageID: element.ImageID,
+                            //   command: element.Command,
+                            //   created: element.Created,
+                            //   state: element.State,
+                            //   ports: element.Ports,
+                            //   mounts: element.Mounts,
+                            //   // hostconfig: element.HostConfig,
+                            //   // network: element.NetworkSettings
+                            // });
                         });
-                    }
-                } catch (err) {
-                    util.noop();
-                }
-                // }
-
-                // GC in _docker_container_stats
-                for (const key in _docker_container_stats) {
-                    if (_docker_container_stats.hasOwnProperty(key)) {
-                        if (!inContainers(docker_containers, key)) {
-                            delete _docker_container_stats[key];
+                        if (workload.length) {
+                            Promise.all(
+                                workload
+                            ).then((data) => {
+                                if (callback) {
+                                    callback(data); 
+                                }
+                                resolve(data);
+                            });
+                        } else {
+                            if (callback) {
+                                callback(result); 
+                            }
+                            resolve(result);
                         }
                     }
+                } catch (err) {
+                    // GC in _docker_container_stats
+                    for (const key in _docker_container_stats) {
+                        if (_docker_container_stats.hasOwnProperty(key)) {
+                            if (!inContainers(docker_containers, key)) {
+                                delete _docker_container_stats[key]; 
+                            }
+                        }
+                    }
+                    if (callback) {
+                        callback(result); 
+                    }
+                    resolve(result);
                 }
-                if (callback) {
-                    callback(result);
-                }
-                resolve(result);
             });
         });
     });
-};
+}
+
+// --------------------------
+// container inspect (for one container)
+
+function dockerContainerInspect(containerID, payload) {
+    containerID = containerID || "";
+    return new Promise((resolve) => {
+        process.nextTick(() => {
+            if (containerID) {
+
+                if (!_docker_socket) {
+                    _docker_socket = new DockerSocket();
+                }
+
+                _docker_socket.getInspect(containerID.trim(), (data) => {
+                    try {
+                        resolve({
+                            id: payload.Id,
+                            name: payload.Name,
+                            image: payload.Image,
+                            imageID: payload.ImageID,
+                            command: payload.Command,
+                            created: payload.Created,
+                            started: data.State && data.State.StartedAt ? Math.round(new Date(data.State.StartedAt).getTime() / 1000) : 0,
+                            finished: data.State && data.State.FinishedAt && !data.State.FinishedAt.startsWith("0001-01-01") ? Math.round(new Date(data.State.FinishedAt).getTime() / 1000) : 0,
+                            createdAt: data.Created ? data.Created : "",
+                            startedAt: data.State && data.State.StartedAt ? data.State.StartedAt : "",
+                            finishedAt: data.State && data.State.FinishedAt && !data.State.FinishedAt.startsWith("0001-01-01") ? data.State.FinishedAt : "",
+                            state: payload.State,
+                            restartCount: data.RestartCount || 0,
+                            platform: data.Platform || "",
+                            driver: data.Driver || "",
+                            ports: payload.Ports,
+                            mounts: payload.Mounts
+                            // hostconfig: payload.HostConfig,
+                            // network: payload.NetworkSettings
+                        });
+                    } catch (err) {
+                        resolve();
+                    }
+                });
+            } else {
+                resolve();
+            }
+        });
+    });
+}
+
+exports.dockerContainers = dockerContainers;
 
 // --------------------------
 // helper functions for calculation of docker stats
-const docker_calcCPUPercent = (cpu_stats, precpu_stats) => {
+
+function docker_calcCPUPercent(cpu_stats, precpu_stats) {
     /**
    * @namespace
    * @property {object}  cpu_usage
@@ -123,7 +265,7 @@ const docker_calcCPUPercent = (cpu_stats, precpu_stats) => {
         }
 
         return cpuPercent;
-    }
+    } 
     const nanoSecNow = util.nanoSeconds();
     let cpuPercent = 0.0;
     if (_docker_last_read > 0) {
@@ -135,15 +277,16 @@ const docker_calcCPUPercent = (cpu_stats, precpu_stats) => {
     }
     _docker_last_read = nanoSecNow;
     return cpuPercent;
-};
+  
+}
 
-const docker_calcNetworkIO = (networks) => {
+function docker_calcNetworkIO(networks) {
     let rx;
     let tx;
     for (const key in networks) {
-        // skip loop if the property is from prototype
+    // skip loop if the property is from prototype
         if (!networks.hasOwnProperty(key)) {
-            continue;
+            continue; 
         }
 
         /**
@@ -159,9 +302,9 @@ const docker_calcNetworkIO = (networks) => {
         rx,
         tx
     };
-};
+}
 
-const docker_calcBlockIO = (blkio_stats) => {
+function docker_calcBlockIO(blkio_stats) {
     const result = {
         r: 0,
         w: 0
@@ -188,9 +331,10 @@ const docker_calcBlockIO = (blkio_stats) => {
         });
     }
     return result;
-};
+}
 
-export const dockerContainerStats = (containerIDs, callback) => {
+function dockerContainerStats(containerIDs, callback) {
+
     let containerArray = [];
     // fallback - if only callback is given
     if (util.isFunction(containerIDs) && !callback) {
@@ -216,7 +360,7 @@ export const dockerContainerStats = (containerIDs, callback) => {
                     }
                     dockerContainerStats(containerArray.join(",")).then((result) => {
                         if (callback) {
-                            callback(result);
+                            callback(result); 
                         }
                         resolve(result);
                     });
@@ -230,24 +374,25 @@ export const dockerContainerStats = (containerIDs, callback) => {
                         workload
                     ).then((data) => {
                         if (callback) {
-                            callback(data);
+                            callback(data); 
                         }
                         resolve(data);
                     });
                 } else {
                     if (callback) {
-                        callback(result);
+                        callback(result); 
                     }
                     resolve(result);
                 }
             }
         });
     });
-};
+}
 
 // --------------------------
 // container stats (for one container)
-const dockerContainerStatsSingle = (containerID) => {
+
+function dockerContainerStatsSingle(containerID) {
     containerID = containerID || "";
     const result = {
         id: containerID,
@@ -273,55 +418,64 @@ const dockerContainerStatsSingle = (containerID) => {
                     _docker_socket = new DockerSocket();
                 }
 
-                _docker_socket.getStats(containerID, (data) => {
+                _docker_socket.getInspect(containerID, (dataInspect) => {
                     try {
-                        const stats = data;
-                        /**
-             * @namespace
-             * @property {Object}  memory_stats
-             * @property {number}  memory_stats.usage
-             * @property {number}  memory_stats.limit
-             * @property {Object}  cpu_stats
-             * @property {Object}  pids_stats
-             * @property {number}  pids_stats.current
-             * @property {Object}  networks
-             * @property {Object}  blkio_stats
-             */
+                        _docker_socket.getStats(containerID, (data) => {
+                            try {
+                                const stats = data;
+                                /**
+                 * @namespace
+                 * @property {Object}  memory_stats
+                 * @property {number}  memory_stats.usage
+                 * @property {number}  memory_stats.limit
+                 * @property {Object}  cpu_stats
+                 * @property {Object}  pids_stats
+                 * @property {number}  pids_stats.current
+                 * @property {Object}  networks
+                 * @property {Object}  blkio_stats
+                 */
 
-                        if (!stats.message) {
-                            result.mem_usage = (stats.memory_stats && stats.memory_stats.usage ? stats.memory_stats.usage : 0);
-                            result.mem_limit = (stats.memory_stats && stats.memory_stats.limit ? stats.memory_stats.limit : 0);
-                            result.mem_percent = (stats.memory_stats && stats.memory_stats.usage && stats.memory_stats.limit ? stats.memory_stats.usage / stats.memory_stats.limit * 100.0 : 0);
-                            result.cpu_percent = (stats.cpu_stats && stats.precpu_stats ? docker_calcCPUPercent(stats.cpu_stats, stats.precpu_stats) : 0);
-                            result.pids = (stats.pids_stats && stats.pids_stats.current ? stats.pids_stats.current : 0);
-                            if (stats.networks) {
-                                result.netIO = docker_calcNetworkIO(stats.networks);
+                                if (!stats.message) {
+                                    result.mem_usage = (stats.memory_stats && stats.memory_stats.usage ? stats.memory_stats.usage : 0);
+                                    result.mem_limit = (stats.memory_stats && stats.memory_stats.limit ? stats.memory_stats.limit : 0);
+                                    result.mem_percent = (stats.memory_stats && stats.memory_stats.usage && stats.memory_stats.limit ? stats.memory_stats.usage / stats.memory_stats.limit * 100.0 : 0);
+                                    result.cpu_percent = (stats.cpu_stats && stats.precpu_stats ? docker_calcCPUPercent(stats.cpu_stats, stats.precpu_stats) : 0);
+                                    result.pids = (stats.pids_stats && stats.pids_stats.current ? stats.pids_stats.current : 0);
+                                    result.restartCount = (dataInspect.RestartCount ? dataInspect.RestartCount : 0);
+                                    if (stats.networks) {
+                                        result.netIO = docker_calcNetworkIO(stats.networks); 
+                                    }
+                                    if (stats.blkio_stats) {
+                                        result.blockIO = docker_calcBlockIO(stats.blkio_stats); 
+                                    }
+                                    result.cpu_stats = (stats.cpu_stats ? stats.cpu_stats : {});
+                                    result.precpu_stats = (stats.precpu_stats ? stats.precpu_stats : {});
+                                    result.memory_stats = (stats.memory_stats ? stats.memory_stats : {});
+                                    result.networks = (stats.networks ? stats.networks : {});
+                                }
+                            } catch (err) {
+                                util.noop();
                             }
-                            if (stats.blkio_stats) {
-                                result.blockIO = docker_calcBlockIO(stats.blkio_stats);
-                            }
-                            result.cpu_stats = (stats.cpu_stats ? stats.cpu_stats : {});
-                            result.precpu_stats = (stats.precpu_stats ? stats.precpu_stats : {});
-                            result.memory_stats = (stats.memory_stats ? stats.memory_stats : {});
-                            result.networks = (stats.networks ? stats.networks : {});
-                        }
+                            // }
+                            resolve(result);
+                        });
                     } catch (err) {
                         util.noop();
                     }
-                    // }
-                    resolve(result);
                 });
             } else {
                 resolve(result);
             }
         });
     });
-};
+}
 
+exports.dockerContainerStats = dockerContainerStats;
 
 // --------------------------
 // container processes (for one container)
-export const dockerContainerProcesses = (containerID, callback) => {
+
+function dockerContainerProcesses(containerID, callback) {
     containerID = containerID || "";
     const result = [];
     return new Promise((resolve) => {
@@ -381,60 +535,66 @@ export const dockerContainerProcesses = (containerID, callback) => {
                         util.noop();
                     }
                     if (callback) {
-                        callback(result);
+                        callback(result); 
                     }
                     resolve(result);
                 });
             } else {
                 if (callback) {
-                    callback(result);
+                    callback(result); 
                 }
                 resolve(result);
             }
         });
     });
-};
+}
 
-export const dockerAll = (callback) => new Promise((resolve) => {
-    process.nextTick(() => {
-        dockerContainers(true).then((result) => {
-            if (result && Object.prototype.toString.call(result) === "[object Array]" && result.length > 0) {
-                let l = result.length;
-                result.forEach((element) => {
-                    dockerContainerStats(element.id).then((res) => {
-                        // include stats in array
-                        element.mem_usage = res.mem_usage;
-                        element.mem_limit = res.mem_limit;
-                        element.mem_percent = res.mem_percent;
-                        element.cpu_percent = res.cpu_percent;
-                        element.pids = res.pids;
-                        element.netIO = res.netIO;
-                        element.blockIO = res.blockIO;
-                        element.cpu_stats = res.cpu_stats;
-                        element.precpu_stats = res.precpu_stats;
-                        element.memory_stats = res.memory_stats;
-                        element.networks = res.networks;
+exports.dockerContainerProcesses = dockerContainerProcesses;
 
-                        dockerContainerProcesses(element.id).then((processes) => {
-                            element.processes = processes;
+function dockerAll(callback) {
+    return new Promise((resolve) => {
+        process.nextTick(() => {
+            dockerContainers(true).then((result) => {
+                if (result && Object.prototype.toString.call(result) === "[object Array]" && result.length > 0) {
+                    let l = result.length;
+                    result.forEach((element) => {
+                        dockerContainerStats(element.id).then((res) => {
+                            // include stats in array
+                            element.mem_usage = res[0].mem_usage;
+                            element.mem_limit = res[0].mem_limit;
+                            element.mem_percent = res[0].mem_percent;
+                            element.cpu_percent = res[0].cpu_percent;
+                            element.pids = res[0].pids;
+                            element.netIO = res[0].netIO;
+                            element.blockIO = res[0].blockIO;
+                            element.cpu_stats = res[0].cpu_stats;
+                            element.precpu_stats = res[0].precpu_stats;
+                            element.memory_stats = res[0].memory_stats;
+                            element.networks = res[0].networks;
 
-                            l -= 1;
-                            if (l === 0) {
-                                if (callback) {
-                                    callback(result);
+                            dockerContainerProcesses(element.id).then((processes) => {
+                                element.processes = processes;
+
+                                l -= 1;
+                                if (l === 0) {
+                                    if (callback) {
+                                        callback(result); 
+                                    }
+                                    resolve(result);
                                 }
-                                resolve(result);
-                            }
+                            });
+                            // all done??
                         });
-                        // all done??
                     });
-                });
-            } else {
-                if (callback) {
-                    callback(result);
+                } else {
+                    if (callback) {
+                        callback(result); 
+                    }
+                    resolve(result);
                 }
-                resolve(result);
-            }
+            });
         });
     });
-});
+}
+
+exports.dockerAll = dockerAll;

@@ -148,6 +148,7 @@ lazify({
     process: "./glosses/process",
     promise: "./glosses/promise",
     punycode: "./glosses/punycode",
+    puppeteer: "./glosses/puppeteer",
     realm: "./glosses/realm",
     regex: "./glosses/regex",
     rollup: "./glosses/rollup",
@@ -187,7 +188,13 @@ lazify({
     asNamespace: true
 });
 
-common.setLazifyErrorHandler((err) => adone.__app__.fireException(err));
+common.setLazifyErrorHandler((err) => {
+    if (adone.__app__ !== null) {
+        adone.__app__.fireException(err);
+        return;
+    }
+    console.error(adone.pretty.error(err));
+});
 
 Object.defineProperty(exports, "__esModule", {
     value: true
