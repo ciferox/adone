@@ -19,7 +19,7 @@ export default (LevelDB) => {
     ["destroy", "repair"].forEach((m) => {
         if (is.function(LevelDB[m])) {
             Level[m] = function (...args) {
-                LevelDB[m].apply(LevelDB, ...args);
+                LevelDB[m].apply(LevelDB, args);
             };
         }
     });

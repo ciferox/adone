@@ -16,9 +16,12 @@
   "main": "lib",
   "devDependencies": {
     "ajv-pack": "^0.3.1",
+    "async-each": "^1.0.3",
     "babel-eslint": "^10.0.3",
     "buble": "^0.19.8",
     "console-group": "^0.3.3",
+    "delayed": "^2.0.0",
+    "du": "^1.0.0",
     "eslint": "^6.4.0",
     "eslint-plugin-adone": "^0.6.71-2",
     "eslint-plugin-babel": "^5.3.0",
@@ -27,9 +30,17 @@
     "fixturify": "^1.2.0",
     "immutable": "^4.0.0-rc.12",
     "locate-character": "^2.0.5",
+    "mkfiletree": "^2.0.0",
+    "readfiletree": "^1.0.0",
     "requirejs": "^2.3.6",
+    "run-parallel": "^1.1.9",
+    "run-series": "^1.1.8",
     "sander": "^0.6.0",
-    "terser": "^4.3.3"
+    "sinon": "^7.5.0",
+    "tempy": "^0.3.0",
+    "terser": "^4.3.3",
+    "through2": "^3.0.1",
+    "trickle": "^0.0.2"
   },
   "dependencies": {
     "@babel/core": "^7.6.2",
