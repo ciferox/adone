@@ -986,6 +986,13 @@ export default {
                             task: "transpile",
                             src: "src/glosses/utils/throttle/**/*.js",
                             dst: "lib/glosses/utils/throttle"
+                        },
+                        uuid: {
+                            description: "Generate RFC-compliant UUIDs",
+                            task: "transpile",
+                            src: "src/glosses/utils/uuid/**/*.js",
+                            dst: "lib/glosses/utils/uuid",
+                            original: "https://github.com/kelektiv/node-uuid"
                         }
                     }
                 },

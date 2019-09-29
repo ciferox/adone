@@ -1,31 +1,27 @@
-const rimraf = require("rimraf");
-
 const {
-    async: { series },
     datastore: { backend: { FsDatastore } },
-    std: { os, path }
+    std: { path, os }
 } = adone;
 
+const promisify = require("promisify-es6");
+const rimraf = promisify(require("rimraf"));
+
 describe("node", () => {
-    const store1 = path.join(os.tmpdir(), "test-keystore-1");
-    const store2 = path.join(os.tmpdir(), "test-keystore-2");
+    const store1 = path.join(os.tmpdir(), `test-keystore-1-${Date.now()}`);
+    const store2 = path.join(os.tmpdir(), `test-keystore-2-${Date.now()}`);
     const datastore1 = new FsDatastore(store1);
     const datastore2 = new FsDatastore(store2);
 
-    before((done) => {
-        series([
-            (cb) => datastore1.open(cb),
-            (cb) => datastore2.open(cb)
-        ], done);
+    before(async () => {
+        await datastore1.open();
+        await datastore2.open();
     });
 
-    after((done) => {
-        series([
-            (cb) => datastore1.close(cb),
-            (cb) => datastore2.close(cb),
-            (cb) => rimraf(store1, cb),
-            (cb) => rimraf(store2, cb)
-        ], done);
+    after(async () => {
+        await datastore1.close();
+        await datastore2.close();
+        await rimraf(store1);
+        await rimraf(store2);
     });
 
     require("./keychain")(datastore1, datastore2);

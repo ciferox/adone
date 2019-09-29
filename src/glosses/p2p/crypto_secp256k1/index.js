@@ -1,8 +1,7 @@
 const {
+    data: { base58 },
     multiformat: { multihashingAsync }
 } = adone;
-
-const bs58 = require("bs58");
 
 module.exports = (keysProtobuf, randomBytes, crypto) => {
     crypto = crypto || require("./crypto")(randomBytes);
@@ -85,7 +84,7 @@ module.exports = (keysProtobuf, randomBytes, crypto) => {
         async id() {
             const hash = await this.public.hash();
 
-            return bs58.encode(hash);
+            return base58.encode(hash);
         }
     }
 

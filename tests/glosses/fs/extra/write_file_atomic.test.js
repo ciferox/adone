@@ -327,7 +327,7 @@ describe("fs", "writeFileAtomic", () => {
         }
     });
 
-    it("write multibyte unicode sybols", (done) => {
+    it("write multibyte unicode symbols", (done) => {
         const dest = getDest();
         const content = '{"name":"tajné jménoed25519","id":"QmSvTNE2Eo7SxRXjmEaZnE91cNpduKjYFBtd2LYC4Rsoeq"}';
         writeFileAtomic(dest, content, (err) => {

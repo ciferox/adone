@@ -1,17 +1,19 @@
+/* eslint-disable func-style */
 const {
     assert,
-    async: { nextTick },
-    event: { Emitter },
     is,
-    multiformat: { multiaddr },
-    p2p: { PeerInfo, PeerId }
+    multiformat: { multiaddr: Multiaddr },
+    p2p: { PeerId, PeerInfo }
 } = adone;
 
+const EE = require("events");
 const MDNS = require("multicast-dns");
-const log = require("debug")("libp2p:mdns:compat:querier");
+const debug = require("debug");
+const log = debug("libp2p:mdns:compat:querier");
+log.error = debug("libp2p:mdns:compat:querier:error");
 const { SERVICE_TAG_LOCAL, MULTICAST_IP, MULTICAST_PORT } = require("./constants");
 
-class Querier extends Emitter {
+class Querier extends EE {
     constructor(peerId, options) {
         super();
         assert(peerId, "missing peerId parameter");
@@ -29,7 +31,7 @@ class Querier extends Emitter {
         this._onResponse = this._onResponse.bind(this);
     }
 
-    start(callback) {
+    start() {
         this._handle = periodically(() => {
             // Create a querier that queries multicast but gets responses unicast
             const mdns = MDNS({ multicast: false, interface: "0.0.0.0", port: 0 });
@@ -40,25 +42,23 @@ class Querier extends Emitter {
                 id: nextId(), // id > 0 for unicast response
                 questions: [{ name: SERVICE_TAG_LOCAL, type: "PTR", class: "IN" }]
             }, null, {
-                    address: MULTICAST_IP,
-                    port: MULTICAST_PORT
-                });
+                address: MULTICAST_IP,
+                port: MULTICAST_PORT
+            });
 
             return {
-                stop: (callback) => {
+                stop: () => {
                     mdns.removeListener("response", this._onResponse);
-                    mdns.destroy(callback);
+                    return new Promise((resolve) => mdns.destroy(resolve));
                 }
             };
         }, {
-                period: this._options.queryPeriod,
-                interval: this._options.queryInterval
-            });
-
-        nextTick(() => callback());
+            period: this._options.queryPeriod,
+            interval: this._options.queryInterval
+        });
     }
 
-    _onResponse(event, info) {
+    async _onResponse(event, info) {
         const answers = event.answers || [];
         const ptrRecord = answers.find((a) => a.type === "PTR" && a.name === SERVICE_TAG_LOCAL);
 
@@ -92,41 +92,42 @@ class Querier extends Emitter {
             return log("failed to create peer ID from TXT record data", peerIdStr, err);
         }
 
-        PeerInfo.create(peerId, (err, info) => {
-            if (err) {
-                return log("failed to create peer info from peer ID", peerId, err);
-            }
+        let peerInfo;
+        try {
+            peerInfo = await PeerInfo.create(peerId);
+        } catch (err) {
+            return log.error("failed to create peer info from peer ID", peerId, err);
+        }
 
-            const srvRecord = answers.find((a) => a.type === "SRV");
-            if (!srvRecord) {
-                return log("missing SRV record in response");
-            }
+        const srvRecord = answers.find((a) => a.type === "SRV");
+        if (!srvRecord) {
+            return log("missing SRV record in response");
+        }
 
-            log("peer found", peerIdStr);
+        log("peer found", peerIdStr);
 
-            const { port } = srvRecord.data || {};
-            const protos = { A: "ip4", AAAA: "ip6" };
+        const { port } = srvRecord.data || {};
+        const protos = { A: "ip4", AAAA: "ip6" };
 
-            const multiaddrs = answers
-                .filter((a) => ["A", "AAAA"].includes(a.type))
-                .reduce((addrs, a) => {
-                    const maStr = `/${protos[a.type]}/${a.data}/tcp/${port}`;
-                    try {
-                        addrs.push(new multiaddr(maStr));
-                        log(maStr);
-                    } catch (err) {
-                        log(`failed to create multiaddr from ${a.type} record data`, maStr, port, err);
-                    }
-                    return addrs;
-                }, []);
+        const multiaddrs = answers
+            .filter((a) => ["A", "AAAA"].includes(a.type))
+            .reduce((addrs, a) => {
+                const maStr = `/${protos[a.type]}/${a.data}/tcp/${port}`;
+                try {
+                    addrs.push(new Multiaddr(maStr));
+                    log(maStr);
+                } catch (err) {
+                    log(`failed to create multiaddr from ${a.type} record data`, maStr, port, err);
+                }
+                return addrs;
+            }, []);
 
-            multiaddrs.forEach((addr) => info.multiaddrs.add(addr));
-            this.emit("peer", info);
-        });
+        multiaddrs.forEach((addr) => peerInfo.multiaddrs.add(addr));
+        this.emit("peer", peerInfo);
     }
 
-    stop(callback) {
-        this._handle.stop(callback);
+    stop() {
+        return this._handle.stop();
     }
 }
 
@@ -144,20 +145,17 @@ module.exports = Querier;
  * @returns {Object} handle that can be used to stop execution
  */
 function periodically(fn, options) {
-    let handle; let timeoutId;
+    let handle;
+    let timeoutId;
     let stopped = false;
 
     const reRun = () => {
         handle = fn();
-        timeoutId = setTimeout(() => {
-            handle.stop((err) => {
-                if (err) {
-                    log(err);
-                }
-                if (!stopped) {
-                    timeoutId = setTimeout(reRun, options.interval);
-                }
-            });
+        timeoutId = setTimeout(async () => {
+            await handle.stop().catch(log);
+            if (!stopped) {
+                timeoutId = setTimeout(reRun, options.interval);
+            }
             handle = null;
         }, options.period);
     };
@@ -165,13 +163,11 @@ function periodically(fn, options) {
     reRun();
 
     return {
-        stop(callback) {
+        stop() {
             stopped = true;
             clearTimeout(timeoutId);
             if (handle) {
-                handle.stop(callback);
-            } else {
-                callback();
+                return handle.stop();
             }
         }
     };

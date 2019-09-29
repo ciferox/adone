@@ -1,20 +1,20 @@
 const {
-    is,
-    util: { uuid }
+    is
 } = adone;
 
-const {
-    util
-} = adone.getPrivate(uuid);
+const rng = require("./lib/rng");
+const bytesToUuid = require("./lib/bytesToUuid");
 
-const v4 = (options, buf, offset) => {
+function v4(options, buf, offset) {
     const i = buf && offset || 0;
 
-    if (is.string(buf)) {
-        buf = options === "binary" ? Buffer.alloc(16) : null;
+    if (is.string(options)) {
+        buf = options === "binary" ? new Array(16) : null;
+        options = null;
     }
+    options = options || {};
 
-    const rnds = util.rnd16();
+    const rnds = options.random || (options.rng || rng)();
 
     // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
     rnds[6] = (rnds[6] & 0x0f) | 0x40;
@@ -27,7 +27,7 @@ const v4 = (options, buf, offset) => {
         }
     }
 
-    return buf || util.bytesToUuid(rnds);
-};
+    return buf || bytesToUuid(rnds);
+}
 
-export default v4;
+module.exports = v4;

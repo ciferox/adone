@@ -11,10 +11,8 @@
             "type": "node",
             "request": "launch",
             "name": "adone",
-            "program": "${workspaceRoot}/bin/adone.js",
+            "program": "${workspaceRoot}/bin/adone",
             "args": [
-                "run",
-                "${workspaceRoot}/test.js"
             ],
             "internalConsoleOptions": "openOnSessionStart",
             "console": "externalTerminal"

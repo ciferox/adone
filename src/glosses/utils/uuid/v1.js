@@ -1,12 +1,9 @@
 const {
-    is,
-    error,
-    util: { uuid }
+    is
 } = adone;
 
-const {
-    util
-} = adone.getPrivate(uuid);
+const rng = require("./lib/rng");
+const bytesToUuid = require("./lib/bytesToUuid");
 
 // **`v1()` - Generate time-based UUID**
 //
@@ -21,7 +18,7 @@ let _lastMSecs = 0;
 let _lastNSecs = 0;
 
 // See https://github.com/broofa/node-uuid for API details
-const v1 = (options, buf, offset) => {
+function v1(options, buf, offset) {
     let i = buf && offset || 0;
     const b = buf || [];
 
@@ -33,7 +30,7 @@ const v1 = (options, buf, offset) => {
     // specified.  We do this lazily to minimize issues related to insufficient
     // system entropy.  See #189
     if (is.nil(node) || is.nil(clockseq)) {
-        const seedBytes = util.rnd16();
+        const seedBytes = rng();
         if (is.nil(node)) {
             // Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
             node = _nodeId = [
@@ -73,7 +70,7 @@ const v1 = (options, buf, offset) => {
 
     // Per 4.2.1.2 Throw error if too many uuids are requested
     if (nsecs >= 10000) {
-        throw new error.IllegalStateException("Can't create more than 10M uuids/sec");
+        throw new Error("uuid.v1(): Can't create more than 10M uuids/sec");
     }
 
     _lastMSecs = msecs;
@@ -110,7 +107,7 @@ const v1 = (options, buf, offset) => {
         b[i + n] = node[n];
     }
 
-    return buf ? buf : util.bytesToUuid(b);
-};
+    return buf ? buf : bytesToUuid(b);
+}
 
-export default v1;
+module.exports = v1;

@@ -1,6 +1,7 @@
-const path = require("path");
-const os = require("os");
-const uuid = require("uuid/v4");
+const {
+    util: { uuid },
+    std: { path, os }
+} = adone;
 
 exports.filter = (iterable, filterer) => {
     return (async function* () {
@@ -59,5 +60,5 @@ exports.replaceStartWith = function (s, r) {
 };
 
 exports.tmpdir = () => {
-    return path.join(os.tmpdir(), uuid());
+    return path.join(os.tmpdir(), uuid.v4());
 };

@@ -1,8 +1,8 @@
 const {
-    is
+    is,
+    util: { uuid }
 } = adone;
 
-const uuid = require("uuid/v4");
 const withIs = require("class-is");
 
 const pathSepS = "/";
@@ -130,7 +130,7 @@ class Key {
      *
      */
     static random() {
-        return new _Key(uuid().replace(/-/g, ""));
+        return new _Key(uuid.v4().replace(/-/g, ""));
     }
 
     /**

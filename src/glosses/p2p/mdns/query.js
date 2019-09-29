@@ -1,14 +1,12 @@
+const {
+    multiformat: { multiaddr: Multiaddr },
+    p2p: { PeerInfo, PeerId }
+} = adone;
+
 const os = require("os");
 const debug = require("debug");
 const log = debug("libp2p:mdns");
-
-const {
-    p2p: { PeerId, PeerInfo, transport: { TCP } },
-    multiformat: { multiaddr: Multiaddr }
-} = adone;
-
-const tcp = new TCP();
-
+log.error = debug("libp2p:mdns:error");
 
 module.exports = {
 
@@ -28,7 +26,7 @@ module.exports = {
         return setInterval(query, interval);
     },
 
-    gotResponse(rsp, peerInfo, serviceTag, callback) {
+    async gotResponse(rsp, peerInfo, serviceTag) {
         if (!rsp.answers) {
             return;
         }
@@ -75,15 +73,13 @@ module.exports = {
 
         const peerId = PeerId.createFromB58String(b58Id);
 
-        PeerInfo.create(peerId, (err, peerFound) => {
-            if (err) {
-                return log("Error creating PeerInfo from new found peer", err);
-            }
-
+        try {
+            const peerFound = await PeerInfo.create(peerId);
             multiaddrs.forEach((addr) => peerFound.multiaddrs.add(addr));
-
-            callback(null, peerFound);
-        });
+            return peerFound;
+        } catch (err) {
+            log.error("Error creating PeerInfo from new found peer", err);
+        }
     },
 
     gotQuery(qry, mdns, peerInfo, serviceTag, broadcast) {
@@ -91,9 +87,9 @@ module.exports = {
             return;
         }
 
-        const multiaddrs = tcp.filter(peerInfo.multiaddrs.toArray());
+        const addresses = peerInfo.multiaddrs.toArray().map((ma) => ma.toOptions());
         // Only announce TCP for now
-        if (multiaddrs.length === 0) {
+        if (addresses.length === 0) {
             return;
         }
 
@@ -109,7 +105,7 @@ module.exports = {
             });
 
             // Only announce TCP multiaddrs for now
-            const port = multiaddrs[0].toString().split("/")[4];
+            const port = addresses[0].port;
 
             answers.push({
                 name: `${peerInfo.id.toB58String()}.${serviceTag}`,
@@ -132,24 +128,14 @@ module.exports = {
                 data: peerInfo.id.toB58String()
             });
 
-            multiaddrs.forEach((ma) => {
-                if (ma.protoNames()[0] === "ip4") {
+            addresses.forEach((addr) => {
+                if (["ipv4", "ipv6"].includes(addr.family)) {
                     answers.push({
                         name: os.hostname(),
-                        type: "A",
+                        type: addr.family === "ipv4" ? "A" : "AAAA",
                         class: "IN",
                         ttl: 120,
-                        data: ma.toString().split("/")[2]
-                    });
-                    return;
-                }
-                if (ma.protoNames()[0] === "ip6") {
-                    answers.push({
-                        name: os.hostname(),
-                        type: "AAAA",
-                        class: "IN",
-                        ttl: 120,
-                        data: ma.toString().split("/")[2]
+                        data: addr.host
                     });
                 }
             });

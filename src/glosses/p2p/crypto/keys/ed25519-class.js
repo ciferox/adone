@@ -1,10 +1,9 @@
 const {
     is,
-    data: { protobuf },
+    data: { base58, protobuf },
     multiformat: { multihashingAsync }
 } = adone;
 
-const bs58 = require("bs58");
 const errcode = require("err-code");
 
 const crypto = require("./ed25519");
@@ -85,7 +84,7 @@ class Ed25519PrivateKey {
      */
     async id() {
         const hash = await this.public.hash();
-        return bs58.encode(hash);
+        return base58.encode(hash);
     }
 }
 

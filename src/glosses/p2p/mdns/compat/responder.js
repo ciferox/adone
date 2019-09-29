@@ -1,15 +1,11 @@
 const {
-    assert,
-    async: { nextTick },
-    p2p: { transport: { TCP } }
+    assert
 } = adone;
 
 const OS = require("os");
 const MDNS = require("multicast-dns");
 const log = require("debug")("libp2p:mdns:compat:responder");
 const { SERVICE_TAG_LOCAL } = require("./constants");
-
-const tcp = new TCP();
 
 class Responder {
     constructor(peerInfo) {
@@ -19,24 +15,23 @@ class Responder {
         this._onQuery = this._onQuery.bind(this);
     }
 
-    start(callback) {
+    start() {
         this._mdns = MDNS();
         this._mdns.on("query", this._onQuery);
-        nextTick(() => callback());
     }
 
     _onQuery(event, info) {
-        const multiaddrs = tcp.filter(this._peerInfo.multiaddrs.toArray());
+        const addresses = this._peerInfo.multiaddrs.toArray().map((ma) => ma.toOptions());
         // Only announce TCP for now
-        if (!multiaddrs.length) {
-            return;
+        if (!addresses.length) {
+            return; 
         }
 
         const questions = event.questions || [];
 
         // Only respond to queries for our service tag
         if (!questions.some((q) => q.name === SERVICE_TAG_LOCAL)) {
-            return;
+            return; 
         }
 
         log("got query", event, info);
@@ -53,7 +48,7 @@ class Responder {
         });
 
         // Only announce TCP multiaddrs for now
-        const port = multiaddrs[0].toString().split("/")[4];
+        const port = addresses[0].port;
 
         answers.push({
             name: peerServiceTagLocal,
@@ -76,15 +71,14 @@ class Responder {
             data: [Buffer.from(this._peerIdStr)]
         });
 
-        multiaddrs.forEach((ma) => {
-            const proto = ma.protoNames()[0];
-            if (proto === "ip4" || proto === "ip6") {
+        addresses.forEach((ma) => {
+            if (["ipv4", "ipv6"].includes(ma.family)) {
                 answers.push({
                     name: OS.hostname(),
-                    type: proto === "ip4" ? "A" : "AAAA",
+                    type: ma.family === "ipv4" ? "A" : "AAAA",
                     class: "IN",
                     ttl: 120,
-                    data: ma.toString().split("/")[2]
+                    data: ma.host
                 });
             }
         });
@@ -93,9 +87,9 @@ class Responder {
         this._mdns.respond(answers, info);
     }
 
-    stop(callback) {
+    stop() {
         this._mdns.removeListener("query", this._onQuery);
-        this._mdns.destroy(callback);
+        return new Promise((resolve) => this._mdns.destroy(resolve));
     }
 }
 

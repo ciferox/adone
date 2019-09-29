@@ -1,10 +1,10 @@
 const {
+    data: { base58 },
     crypto,
     data: { protobuf },
     multiformat: { multihashingAsync }
 } = adone;
 
-const bs58 = require("bs58");
 const errcode = require("err-code");
 
 const cryptoInternal = require("./rsa");
@@ -97,7 +97,7 @@ class RsaPrivateKey {
      */
     async id() {
         const hash = await this.public.hash();
-        return bs58.encode(hash);
+        return base58.encode(hash);
     }
 
     /**

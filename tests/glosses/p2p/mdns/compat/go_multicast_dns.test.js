@@ -1,9 +1,10 @@
 const {
-    async: { map, series },
     p2p: { PeerInfo }
 } = adone;
 
-const srcPath = (...args) => adone.getPath("lib", "glosses", "p2p", "mdns", ...args);
+const pDefer = require("p-defer");
+
+const { srcPath } = require("./helpers");
 const GoMulticastDNS = require(srcPath("compat"));
 
 describe("GoMulticastDNS", () => {
@@ -13,67 +14,57 @@ describe("GoMulticastDNS", () => {
     ];
     let peerInfos;
 
-    before((done) => {
-        map(peerAddrs, (addr, cb) => {
-            PeerInfo.create((err, info) => {
-                expect(err).to.not.exist();
-                info.multiaddrs.add(addr);
-                cb(null, info);
-            });
-        }, (err, infos) => {
-            expect(err).to.not.exist();
-            peerInfos = infos;
-            done();
+    before(async () => {
+        peerInfos = await Promise.all([
+            PeerInfo.create(),
+            PeerInfo.create()
+        ]);
+
+        peerInfos.forEach((peer, index) => {
+            peer.multiaddrs.add(peerAddrs[index]);
         });
     });
 
-    it("should start and stop", (done) => {
+    it("should start and stop", async () => {
         const mdns = new GoMulticastDNS(peerInfos[0]);
 
-        mdns.start((err) => {
-            expect(err).to.not.exist();
-            mdns.stop((err) => {
-                expect(err).to.not.exist();
-                done();
-            });
-        });
+        await mdns.start();
+        return mdns.stop();
     });
 
-    it("should not start when started", (done) => {
+    it("should ignore multiple start calls", async () => {
         const mdns = new GoMulticastDNS(peerInfos[0]);
 
-        mdns.start((err) => {
-            expect(err).to.not.exist();
+        await mdns.start();
+        await mdns.start();
 
-            mdns.start((err) => {
-                expect(err.message).to.equal("MulticastDNS service is already started");
-                mdns.stop(done);
-            });
-        });
+        return mdns.stop();
     });
 
-    it("should not stop when not started", (done) => {
+    it("should ignore unnecessary stop calls", async () => {
         const mdns = new GoMulticastDNS(peerInfos[0]);
-
-        mdns.stop((err) => {
-            expect(err.message).to.equal("MulticastDNS service is not started");
-            done();
-        });
+        await mdns.stop();
     });
 
-    it("should emit peer info when peer is discovered", (done) => {
+    it("should emit peer info when peer is discovered", async () => {
         const mdnsA = new GoMulticastDNS(peerInfos[0]);
         const mdnsB = new GoMulticastDNS(peerInfos[1]);
+        const defer = pDefer();
 
         mdnsA.on("peer", (info) => {
-            if (!info.id.isEqual(peerInfos[1].id)) { return };
+            if (!info.id.isEqual(peerInfos[1].id)) {
+                return;
+            }
             expect(info.multiaddrs.has(peerAddrs[1])).to.be.true();
-            done();
+            defer.resolve();
         });
 
-        series([
-            (cb) => mdnsA.start(cb),
-            (cb) => mdnsB.start(cb)
-        ], (err) => expect(err).to.not.exist());
+        // Start in series
+        Promise.all([
+            mdnsA.start(),
+            mdnsB.start()
+        ]);
+
+        await defer.promise;
     });
 });

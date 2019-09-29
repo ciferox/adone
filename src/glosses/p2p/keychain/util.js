@@ -1,8 +1,8 @@
-exports = module.exports;
-
 const {
     crypto: { pki }
 } = adone;
+
+exports = module.exports;
 
 /**
  * Gets a self-signed X.509 certificate for the key.
@@ -13,10 +13,9 @@ const {
  *
  * @param {KeyInfo} key - The id and name of the key
  * @param {RsaPrivateKey} privateKey - The naked key
- * @param {function(Error, Certificate)} callback
  * @returns {undefined}
  */
-exports.certificateForKey = (key, privateKey, callback) => {
+exports.certificateForKey = (key, privateKey) => {
     const publicKey = pki.setRsaPublicKey(privateKey.n, privateKey.e);
     const cert = pki.createCertificate();
     cert.publicKey = publicKey;
@@ -66,5 +65,24 @@ exports.certificateForKey = (key, privateKey, callback) => {
     // self-sign certificate
     cert.sign(privateKey);
 
-    return callback(null, cert);
+    return cert;
 };
+
+/**
+ * Finds the first item in a collection that is matched in the
+ * `asyncCompare` function.
+ *
+ * `asyncCompare` is an async function that must
+ * resolve to either `true` or `false`.
+ *
+ * @param {Array} array
+ * @param {function(*)} asyncCompare An async function that returns a boolean
+ */
+async function findAsync(array, asyncCompare) {
+    const promises = array.map(asyncCompare);
+    const results = await Promise.all(promises);
+    const index = results.findIndex((result) => result);
+    return array[index];
+}
+
+module.exports.findAsync = findAsync;

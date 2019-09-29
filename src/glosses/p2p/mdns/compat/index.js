@@ -1,14 +1,10 @@
 // Compatibility with Go libp2p MDNS
 
+const EE = require("events");
 const Responder = require("./responder");
 const Querier = require("./querier");
 
-const {
-    async: { parallel },
-    event: { Emitter }
-} = adone;
-
-class GoMulticastDNS extends Emitter {
+class GoMulticastDNS extends EE {
     constructor(peerInfo) {
         super();
         this._started = false;
@@ -16,9 +12,9 @@ class GoMulticastDNS extends Emitter {
         this._onPeer = this._onPeer.bind(this);
     }
 
-    start(callback) {
+    async start() {
         if (this._started) {
-            return callback(new Error("MulticastDNS service is already started"));
+            return;
         }
 
         this._started = true;
@@ -27,19 +23,19 @@ class GoMulticastDNS extends Emitter {
 
         this._querier.on("peer", this._onPeer);
 
-        parallel([
-            (cb) => this._responder.start(cb),
-            (cb) => this._querier.start(cb)
-        ], callback);
+        await Promise.all([
+            this._responder.start(),
+            this._querier.start()
+        ]);
     }
 
     _onPeer(peerInfo) {
         this.emit("peer", peerInfo);
     }
 
-    stop(callback) {
+    stop() {
         if (!this._started) {
-            return callback(new Error("MulticastDNS service is not started"));
+            return; 
         }
 
         const responder = this._responder;
@@ -51,10 +47,10 @@ class GoMulticastDNS extends Emitter {
 
         querier.removeListener("peer", this._onPeer);
 
-        parallel([
-            (cb) => responder.stop(cb),
-            (cb) => querier.stop(cb)
-        ], callback);
+        return Promise.all([
+            responder.stop(),
+            querier.stop()
+        ]);
     }
 }
 

@@ -1,9 +1,4 @@
-const {
-    util: { uuid }
-} = adone;
+const v35 = require("./lib/v35.js");
+const md5 = require("./lib/md5");
 
-const __ = adone.getPrivate(uuid);
-
-const v3 = __.v35("v3", 0x30, __.md5);
-
-export default v3;
+module.exports = v35("v3", 0x30, md5);
