@@ -1,5 +1,5 @@
 const {
-    data: { bson }
+    data: { bson: BSON }
 } = adone;
 
 // 0x0C foo\0 \0\0\07 String.fromCharCode(0x41, 0x42, 0xfffd, 0x43, 0x44) 12
@@ -52,6 +52,6 @@ const bsonSnippet = Buffer.from([
 
 describe("dbpointer tests", () => {
     it("can serialize and deserialize 0xFFFD in dbpointer name", () => {
-        expect(() => bson.decode(bsonSnippet)).to.not.throw();
+        expect(() => BSON.deserialize(bsonSnippet)).to.not.throw();
     });
 });

@@ -2,6 +2,7 @@ const {
     is
 } = adone;
 
+// const Map = require('./map');
 const Long = require("./long");
 const Double = require("./double");
 const Timestamp = require("./timestamp");
@@ -36,20 +37,7 @@ const keysToCodecs = {
     $timestamp: Timestamp
 };
 
-// MAX INT32 boundaries
-const BSON_INT32_MAX = 0x7fffffff;
-
-
-const BSON_INT32_MIN = -0x80000000;
-
-
-const BSON_INT64_MAX = 0x7fffffffffffffff;
-
-
-const BSON_INT64_MIN = -0x8000000000000000;
-
-
-const deserializeValue = function (self, key, value, options) {
+function deserializeValue(self, key, value, options) {
     if (is.number(value)) {
         if (options.relaxed) {
             return value;
@@ -59,10 +47,10 @@ const deserializeValue = function (self, key, value, options) {
         // that can represent it exactly. (if out of range, interpret as double.)
         if (Math.floor(value) === value) {
             if (value >= BSON_INT32_MIN && value <= BSON_INT32_MAX) {
-                return new Int32(value);
+                return new Int32(value); 
             }
             if (value >= BSON_INT64_MIN && value <= BSON_INT64_MAX) {
-                return Long.fromNumber(value);
+                return Long.fromNumber(value); 
             }
         }
 
@@ -72,19 +60,19 @@ const deserializeValue = function (self, key, value, options) {
 
     // from here on out we're looking for bson types, so bail if its not an object
     if (is.nil(value) || typeof value !== "object") {
-        return value;
+        return value; 
     }
 
     // upgrade deprecated undefined to null
     if (value.$undefined) {
-        return null;
+        return null; 
     }
 
     const keys = Object.keys(value).filter((k) => k.startsWith("$") && !is.nil(value[k]));
     for (let i = 0; i < keys.length; i++) {
         const c = keysToCodecs[keys[i]];
         if (c) {
-            return c.fromExtendedJSON(value, options);
+            return c.fromExtendedJSON(value, options); 
         }
     }
 
@@ -93,11 +81,11 @@ const deserializeValue = function (self, key, value, options) {
         const date = new Date();
 
         if (is.string(d)) {
-            date.setTime(Date.parse(d));
-        } else if (d instanceof Long) {
-            date.setTime(d.toNumber());
+            date.setTime(Date.parse(d)); 
+        } else if (is.long(d)) {
+            date.setTime(d.toNumber()); 
         } else if (is.number(d) && options.relaxed) {
-            date.setTime(d);
+            date.setTime(d); 
         }
         return date;
     }
@@ -117,25 +105,25 @@ const deserializeValue = function (self, key, value, options) {
         // we run into this in a "degenerate EJSON" case (with $id and $ref order flipped)
         // because of the order JSON.parse goes through the document
         if (v instanceof DBRef) {
-            return v;
+            return v; 
         }
 
         const dollarKeys = Object.keys(v).filter((k) => k.startsWith("$"));
         let valid = true;
         dollarKeys.forEach((k) => {
             if (["$ref", "$id", "$db"].indexOf(k) === -1) {
-                valid = false;
+                valid = false; 
             }
         });
 
         // only make DBRef if $ keys are all valid
         if (valid) {
-            return DBRef.fromExtendedJSON(v);
+            return DBRef.fromExtendedJSON(v); 
         }
     }
 
     return value;
-};
+}
 
 /**
  * Parse an Extended JSON string, constructing the JavaScript value or object described by that
@@ -157,23 +145,29 @@ const deserializeValue = function (self, key, value, options) {
  * // prints { int32: 10 }
  * console.log(EJSON.parse(text));
  */
-const parse = function (text, options) {
+function parse(text, options) {
     options = Object.assign({}, { relaxed: true }, options);
 
     // relaxed implies not strict
     if (is.boolean(options.relaxed)) {
-        options.strict = !options.relaxed;
+        options.strict = !options.relaxed; 
     }
     if (is.boolean(options.strict)) {
-        options.relaxed = !options.strict;
+        options.relaxed = !options.strict; 
     }
 
     return JSON.parse(text, (key, value) => deserializeValue(this, key, value, options));
-};
+}
 
 //
 // Serializer
 //
+
+// MAX INT32 boundaries
+const BSON_INT32_MAX = 0x7fffffff;
+const BSON_INT32_MIN = -0x80000000;
+const BSON_INT64_MAX = 0x7fffffffffffffff;
+const BSON_INT64_MIN = -0x8000000000000000;
 
 /**
  * Converts a BSON document to an Extended JSON string, optionally replacing values if a replacer
@@ -199,7 +193,7 @@ const parse = function (text, options) {
  * // prints '{"int32":10}'
  * console.log(EJSON.stringify(doc));
  */
-const stringify = function (value, replacer, space, options) {
+function stringify(value, replacer, space, options) {
     if (!is.nil(space) && typeof space === "object") {
         options = space;
         space = 0;
@@ -216,7 +210,7 @@ const stringify = function (value, replacer, space, options) {
         : serializeDocument(value, options);
 
     return JSON.stringify(doc, replacer, space);
-};
+}
 
 /**
  * Serializes an object to an Extended JSON string, and reparse it as a JavaScript object.
@@ -226,10 +220,10 @@ const stringify = function (value, replacer, space, options) {
  * @param {object} [options] Optional settings passed to the `stringify` function
  * @return {object}
  */
-const serialize = function (bson, options) {
+function serialize(bson, options) {
     options = options || {};
     return JSON.parse(stringify(bson, options));
-};
+}
 
 /**
  * Deserializes an Extended JSON object into a plain JavaScript object with native/BSON types
@@ -239,31 +233,33 @@ const serialize = function (bson, options) {
  * @param {object} [options] Optional settings passed to the parse method
  * @return {object}
  */
-const deserialize = function (ejson, options) {
+function deserialize(ejson, options) {
     options = options || {};
     return parse(JSON.stringify(ejson), options);
-};
+}
 
-const getISOString = function (date) {
+function serializeArray(array, options) {
+    return array.map((v) => serializeValue(v, options));
+}
+
+function getISOString(date) {
     const isoStr = date.toISOString();
     // we should only show milliseconds in timestamp if they're non-zero
     return date.getUTCMilliseconds() !== 0 ? isoStr : `${isoStr.slice(0, -5)}Z`;
-};
+}
 
-const serializeValue = function (value, options) {
+function serializeValue(value, options) {
     if (is.array(value)) {
-        return serializeArray(value, options);
+        return serializeArray(value, options); 
     }
 
     if (is.undefined(value)) {
-        return null;
+        return null; 
     }
 
     if (value instanceof Date) {
         const dateNum = value.getTime();
-
         // is it in year range 1970-9999?
-
         const inRange = dateNum > -1 && dateNum < 253402318800000;
 
         return options.relaxed && inRange
@@ -272,19 +268,17 @@ const serializeValue = function (value, options) {
     }
 
     if (is.number(value) && !options.relaxed) {
-        // it's an integer
+    // it's an integer
         if (Math.floor(value) === value) {
             const int32Range = value >= BSON_INT32_MIN && value <= BSON_INT32_MAX;
-
-
             const int64Range = value >= BSON_INT64_MIN && value <= BSON_INT64_MAX;
 
             // interpret as being of the smallest BSON integer type that can represent the number exactly
             if (int32Range) {
-                return { $numberInt: value.toString() };
+                return { $numberInt: value.toString() }; 
             }
             if (int64Range) {
-                return { $numberLong: value.toString() };
+                return { $numberLong: value.toString() }; 
             }
         }
         return { $numberDouble: value.toString() };
@@ -301,45 +295,74 @@ const serializeValue = function (value, options) {
     }
 
     if (!is.nil(value) && typeof value === "object") {
-        return serializeDocument(value, options);
+        return serializeDocument(value, options); 
     }
     return value;
+}
+
+const BSON_TYPE_MAPPINGS = {
+    Binary: (o) => new Binary(o.value(), o.subtype),
+    Code: (o) => new Code(o.code, o.scope),
+    DBRef: (o) => new DBRef(o.collection || o.namespace, o.oid, o.db, o.fields), // "namespace" for 1.x library backwards compat
+    Decimal128: (o) => new Decimal128(o.bytes),
+    Double: (o) => new Double(o.value),
+    Int32: (o) => new Int32(o.value),
+    Long: (o) =>
+        Long.fromBits(
+            // underscore variants for 1.x backwards compatibility
+            !is.nil(o.low) ? o.low : o.low_,
+            !is.nil(o.low) ? o.high : o.high_,
+            !is.nil(o.low) ? o.unsigned : o.unsigned_
+        ),
+    MaxKey: () => new MaxKey(),
+    MinKey: () => new MinKey(),
+    ObjectID: (o) => new ObjectId(o),
+    ObjectId: (o) => new ObjectId(o), // support 4.0.0/4.0.1 before _bsontype was reverted back to ObjectID
+    BSONRegExp: (o) => new BSONRegExp(o.pattern, o.options),
+    Symbol: (o) => new Symbol(o.value),
+    Timestamp: (o) => Timestamp.fromBits(o.low, o.high)
 };
 
-const serializeArray = function (array, options) {
-    return array.map((v) => serializeValue(v, options));
-};
-
-const serializeDocument = function (doc, options) {
+function serializeDocument(doc, options) {
     if (is.nil(doc) || typeof doc !== "object") {
-        throw new Error("not an object instance");
+        throw new Error("not an object instance"); 
     }
 
-    // the "document" is really just a BSON type
-    if (doc._bsontype) {
-        if (is.function(doc.toExtendedJSON)) {
-            // TODO: the two cases below mutate the original document! Bad.  I don't know
-            // enough about these two BSON types to know how to safely clone these objects, but
-            // someone who knows MongoDB better should fix this to clone instead of mutating input objects.
-            if (doc._bsontype === "Code" && doc.scope) {
-                doc.scope = serializeDocument(doc.scope, options);
-            } else if (doc._bsontype === "DBRef" && doc.oid) {
-                doc.oid = serializeDocument(doc.oid, options);
-            }
-
-            return doc.toExtendedJSON(options);
+    const bsontype = doc._bsontype;
+    if (is.undefined(bsontype)) {
+    // It's a regular object. Recursively serialize its property values.
+        const _doc = {};
+        for (const name in doc) {
+            _doc[name] = serializeValue(doc[name], options);
         }
-        // TODO: should we throw an exception if there's a BSON type that has no toExtendedJSON method?
-    }
+        return _doc;
+    } else if (is.string(bsontype)) {
+    // the "document" is really just a BSON type object
+        let _doc = doc;
+        if (!is.function(_doc.toExtendedJSON)) {
+            // There's no EJSON serialization function on the object. It's probably an
+            // object created by a previous version of this library (or another library)
+            // that's duck-typing objects to look like they were generated by this library).
+            // Copy the object into this library's version of that type.
+            const mapper = BSON_TYPE_MAPPINGS[bsontype];
+            if (!mapper) {
+                throw new TypeError(`Unrecognized or invalid _bsontype: ${bsontype}`);
+            }
+            _doc = mapper(_doc);
+        }
 
-    // Recursively serialize this document's property values. 
-    const _doc = {};
-    for (const name in doc) {
-        _doc[name] = serializeValue(doc[name], options);
-    }
+        // Two BSON types may have nested objects that may need to be serialized too
+        if (bsontype === "Code" && _doc.scope) {
+            _doc = new Code(_doc.code, serializeValue(_doc.scope, options));
+        } else if (bsontype === "DBRef" && _doc.oid) {
+            _doc = new DBRef(_doc.collection, serializeValue(_doc.oid, options), _doc.db, _doc.fields);
+        }
 
-    return _doc;
-};
+        return _doc.toExtendedJSON(options);
+    } 
+    throw new Error(`_bsontype must be a string, but was: ${typeof bsontype}`);
+  
+}
 
 module.exports = {
     parse,

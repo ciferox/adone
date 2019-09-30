@@ -8,7 +8,7 @@ class MinKey {
      *
      * @return {MinKey} A MinKey instance
      */
-    constructor() {}
+    constructor() { }
 
     /**
      * @ignore

@@ -1,7 +1,8 @@
-
+const {
+    data: { baseX }
+} = adone;
 
 const Base = require("./base.js");
-const baseX = require("base-x");
 const base16 = require("./base16");
 const base32 = require("./base32");
 const base64 = require("./base64");

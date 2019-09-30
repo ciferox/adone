@@ -1,7 +1,3 @@
-
-
-const Buffer = require("buffer").Buffer;
-
 /**
  * Makes sure that, if a Uint8Array is passed in, it is wrapped in a Buffer.
  *

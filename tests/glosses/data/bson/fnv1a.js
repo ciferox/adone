@@ -2,7 +2,8 @@ const {
     is
 } = adone;
 
-const fnv1a = require(adone.getPath("lib", "glosses", "data", "bson", "fnv1a"));
+const srcPath = (...args) => adone.getPath("src/glosses/data/bson", ...args);
+const fnv1a = require(srcPath("fnv1a"));
 const fnv1a24 = fnv1a.fnv1a24;
 
 describe("fnv1a", () => {

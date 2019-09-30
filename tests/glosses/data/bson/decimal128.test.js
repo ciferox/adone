@@ -1,8 +1,8 @@
 const {
-    data: { bson }
+    data: { bson: BSON }
 } = adone;
 
-const { Decimal128 } = bson;
+const Decimal128 = BSON.Decimal128;
 
 const NAN = Buffer.from(
     [
@@ -152,7 +152,7 @@ describe("Decimal128", () => {
     });
 
     it("fromString simple", (done) => {
-        // Create decimal from string value 1
+    // Create decimal from string value 1
         let result = Decimal128.fromString("1");
         let bytes = Buffer.from(
             [
@@ -395,7 +395,7 @@ describe("Decimal128", () => {
     });
 
     it("fromString scientific format", (done) => {
-        // Create decimal from string value 10e0
+    // Create decimal from string value 10e0
         let result = Decimal128.fromString("10e0");
         let bytes = Buffer.from(
             [
@@ -566,7 +566,7 @@ describe("Decimal128", () => {
     });
 
     it("fromString large format", (done) => {
-        // Create decimal from string value 12345689012345789012345
+    // Create decimal from string value 12345689012345789012345
         let result = Decimal128.fromString("12345689012345789012345");
         let bytes = Buffer.from(
             [
@@ -689,10 +689,10 @@ describe("Decimal128", () => {
     });
 
     it("fromString exponent normalization", (done) => {
-        // Create decimal from string value 1000000000000000000000000000000000000000
+    // Create decimal from string value 1000000000000000000000000000000000000000
 
-        let result = Decimal128.fromString("1000000000000000000000000000000000000000");
-        let bytes = Buffer.from(
+        result = Decimal128.fromString("1000000000000000000000000000000000000000");
+        bytes = Buffer.from(
             [
                 0x30,
                 0x4c,
@@ -763,26 +763,26 @@ describe("Decimal128", () => {
         expect(bytes).to.deep.equal(result.bytes);
 
         const str =
-            "100000000000000000000000000000000000000000000000000000000000000000000" +
-            "000000000000000000000000000000000000000000000000000000000000000000000" +
-            "000000000000000000000000000000000000000000000000000000000000000000000" +
-            "000000000000000000000000000000000000000000000000000000000000000000000" +
-            "000000000000000000000000000000000000000000000000000000000000000000000" +
-            "000000000000000000000000000000000000000000000000000000000000000000000" +
-            "000000000000000000000000000000000000000000000000000000000000000000000" +
-            "000000000000000000000000000000000000000000000000000000000000000000000" +
-            "000000000000000000000000000000000000000000000000000000000000000000000" +
-            "000000000000000000000000000000000000000000000000000000000000000000000" +
-            "000000000000000000000000000000000000000000000000000000000000000000000" +
-            "000000000000000000000000000000000000000000000000000000000000000000000" +
-            "000000000000000000000000000000000000000000000000000000000000000000000" +
-            "000000000000000000000000000000000000000000000000000000000000000000000" +
-            "0000000000000000000000000000000000";
+      "100000000000000000000000000000000000000000000000000000000000000000000" +
+      "000000000000000000000000000000000000000000000000000000000000000000000" +
+      "000000000000000000000000000000000000000000000000000000000000000000000" +
+      "000000000000000000000000000000000000000000000000000000000000000000000" +
+      "000000000000000000000000000000000000000000000000000000000000000000000" +
+      "000000000000000000000000000000000000000000000000000000000000000000000" +
+      "000000000000000000000000000000000000000000000000000000000000000000000" +
+      "000000000000000000000000000000000000000000000000000000000000000000000" +
+      "000000000000000000000000000000000000000000000000000000000000000000000" +
+      "000000000000000000000000000000000000000000000000000000000000000000000" +
+      "000000000000000000000000000000000000000000000000000000000000000000000" +
+      "000000000000000000000000000000000000000000000000000000000000000000000" +
+      "000000000000000000000000000000000000000000000000000000000000000000000" +
+      "000000000000000000000000000000000000000000000000000000000000000000000" +
+      "0000000000000000000000000000000000";
 
         // Create decimal from string value str
 
-        result = Decimal128.fromString(str);
-        bytes = Buffer.from(
+        var result = Decimal128.fromString(str);
+        var bytes = Buffer.from(
             [
                 0x37,
                 0xcc,
@@ -833,7 +833,7 @@ describe("Decimal128", () => {
     });
 
     it("fromString from string zeros", (done) => {
-        // Create decimal from string value 0
+    // Create decimal from string value 0
         let result = Decimal128.fromString("0");
         let bytes = Buffer.from(
             [
@@ -932,7 +932,7 @@ describe("Decimal128", () => {
     });
 
     it("fromString from string round", (done) => {
-        // Create decimal from string value 10E-6177
+    // Create decimal from string value 10E-6177
         const result = Decimal128.fromString("10E-6177");
         const bytes = Buffer.from(
             [
@@ -2069,11 +2069,11 @@ describe("Decimal128", () => {
     });
 
     it("Serialize and Deserialize tests", (done) => {
-        // Test all methods around a simple serialization at object top level
+    // Test all methods around a simple serialization at object top level
         let doc = { value: Decimal128.fromString("1") };
-        let buffer = bson.encode(doc);
-        let size = bson.calculateObjectSize(doc);
-        let back = bson.decode(buffer);
+        let buffer = BSON.serialize(doc);
+        let size = BSON.calculateObjectSize(doc);
+        let back = BSON.deserialize(buffer);
 
         expect(buffer.length).to.equal(size);
         expect(doc).to.deep.equal(back);
@@ -2082,9 +2082,9 @@ describe("Decimal128", () => {
 
         // Test all methods around a simple serialization at array top level
         doc = { value: [Decimal128.fromString("1")] };
-        buffer = bson.encode(doc);
-        size = bson.calculateObjectSize(doc);
-        back = bson.decode(buffer);
+        buffer = BSON.serialize(doc);
+        size = BSON.calculateObjectSize(doc);
+        back = BSON.deserialize(buffer);
 
         expect(buffer.length).to.equal(size);
         expect(doc).to.deep.equal(back);
@@ -2092,9 +2092,9 @@ describe("Decimal128", () => {
 
         // Test all methods around a simple serialization at nested object
         doc = { value: { a: Decimal128.fromString("1") } };
-        buffer = bson.encode(doc);
-        size = bson.calculateObjectSize(doc);
-        back = bson.decode(buffer);
+        buffer = BSON.serialize(doc);
+        size = BSON.calculateObjectSize(doc);
+        back = BSON.deserialize(buffer);
 
         expect(buffer.length).to.equal(size);
         expect(doc).to.deep.equal(back);
@@ -2103,7 +2103,7 @@ describe("Decimal128", () => {
     });
 
     it("Support toBSON and toObject methods for custom mapping", (done) => {
-        // Create a custom object
+    // Create a custom object
         const MyCustomDecimal = function (value) {
             this.value = value instanceof Decimal128 ? value.toString() : value;
         };
@@ -2113,16 +2113,23 @@ describe("Decimal128", () => {
         };
 
         // Add a custom mapper for the type
-        Decimal128.prototype.toObject = function () {
-            return new MyCustomDecimal(this);
-        };
+        const saveToObject = Decimal128.prototype.toObject;
+        try {
+            Decimal128.prototype.toObject = function () {
+                return new MyCustomDecimal(this);
+            };
 
-        // Test all methods around a simple serialization at object top level
-        const doc = { value: new MyCustomDecimal("1") };
-        const buffer = bson.encode(doc);
-        const back = bson.decode(buffer);
-        expect(back.value instanceof MyCustomDecimal).to.be.ok;
-        expect("1").to.equal(back.value.value);
+            // Test all methods around a simple serialization at object top level
+            const doc = { value: new MyCustomDecimal("1") };
+            const buffer = BSON.serialize(doc);
+            const back = BSON.deserialize(buffer);
+            expect(back.value instanceof MyCustomDecimal).to.be.ok;
+            expect("1").to.equal(back.value.value);
+        } finally {
+            // prevent this test from breaking later tests which may re-use the same class
+            Decimal128.prototype.toObject = saveToObject;
+        }
+
         done();
     });
 });

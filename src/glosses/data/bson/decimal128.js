@@ -73,10 +73,12 @@ const INF_POSITIVE_BUFFER = [
 const EXPONENT_REGEX = /^([-+])?(\d+)?$/;
 
 // Detect if the value is a digit
-const isDigit = (value) => !isNaN(parseInt(value, 10));
+function isDigit(value) {
+    return !isNaN(parseInt(value, 10));
+}
 
 // Divide two uint128 values
-const divideu128 = function (value) {
+function divideu128(value) {
     const DIVISOR = Long.fromNumber(1000 * 1000 * 1000);
     let _rem = Long.fromNumber(0);
 
@@ -85,7 +87,7 @@ const divideu128 = function (value) {
     }
 
     for (let i = 0; i <= 3; i++) {
-        // Adjust remainder to match value of next dividend
+    // Adjust remainder to match value of next dividend
         _rem = _rem.shl(32);
         // Add the divided to _rem
         _rem = _rem.add(new Long(value.parts[i], 0));
@@ -94,10 +96,10 @@ const divideu128 = function (value) {
     }
 
     return { quotient: value, rem: _rem };
-};
+}
 
 // Multiply two Long values and return the 128 bit value
-const multiply64x2 = function (left, right) {
+function multiply64x2(left, right) {
     if (!left && !right) {
         return { high: Long.fromNumber(0), low: Long.fromNumber(0) };
     }
@@ -122,9 +124,9 @@ const multiply64x2 = function (left, right) {
 
     // Return the 128 bit result
     return { high: productHigh, low: productLow };
-};
+}
 
-const lessThan = function (left, right) {
+function lessThan(left, right) {
     // Make values unsigned
     const uhleft = left.high >>> 0;
     const uhright = right.high >>> 0;
@@ -136,16 +138,16 @@ const lessThan = function (left, right) {
         const ulleft = left.low >>> 0;
         const ulright = right.low >>> 0;
         if (ulleft < ulright) {
-            return true;
+            return true; 
         }
     }
 
     return false;
-};
+}
 
-const invalidErr = function (string, message) {
+function invalidErr(string, message) {
     throw new TypeError(`"${string}" is not a valid Decimal128 string - ${message}`);
-};
+}
 
 /**
  * A class representation of the BSON Decimal128 type.
@@ -225,8 +227,8 @@ Decimal128.fromString = function (string) {
     }
 
     if (stringMatch) {
-        // full_match = stringMatch[0]
-        // sign = stringMatch[1]
+    // full_match = stringMatch[0]
+    // sign = stringMatch[1]
 
         const unsignedNumber = stringMatch[2];
         // stringMatch[3] is undefined if a whole number (ex "1", 12")
@@ -238,12 +240,12 @@ Decimal128.fromString = function (string) {
 
         // they provided e, but didn't give an exponent number. for ex "1e"
         if (e && is.undefined(expNumber)) {
-            invalidErr(string, "missing exponent power");
+            invalidErr(string, "missing exponent power"); 
         }
 
         // they provided e, but didn't give a number before it. for ex "e1"
         if (e && is.undefined(unsignedNumber)) {
-            invalidErr(string, "missing exponent base");
+            invalidErr(string, "missing exponent base"); 
         }
 
         if (is.undefined(e) && (expSign || expNumber)) {
@@ -269,7 +271,7 @@ Decimal128.fromString = function (string) {
     while (isDigit(string[index]) || string[index] === ".") {
         if (string[index] === ".") {
             if (sawRadix) {
-                invalidErr(string, "contains multiple periods");
+                invalidErr(string, "contains multiple periods"); 
             }
 
             sawRadix = true;
@@ -292,10 +294,10 @@ Decimal128.fromString = function (string) {
         }
 
         if (foundNonZero) {
-            nDigits = nDigits + 1;
+            nDigits = nDigits + 1; 
         }
         if (sawRadix) {
-            radixPosition = radixPosition + 1;
+            radixPosition = radixPosition + 1; 
         }
 
         nDigitsRead = nDigitsRead + 1;
@@ -303,17 +305,17 @@ Decimal128.fromString = function (string) {
     }
 
     if (sawRadix && !nDigitsRead) {
-        throw new TypeError(`${String(string)} not a valid Decimal128 string`);
+        throw new TypeError(`${String(string)} not a valid Decimal128 string`); 
     }
 
     // Read exponent if exists
     if (string[index] === "e" || string[index] === "E") {
-        // Read exponent digits
+    // Read exponent digits
         const match = string.substr(++index).match(EXPONENT_REGEX);
 
         // No digits read
         if (!match || !match[2]) {
-            return new Decimal128(Buffer.from(NAN_BUFFER));
+            return new Decimal128(Buffer.from(NAN_BUFFER)); 
         }
 
         // Get exponent
@@ -325,7 +327,7 @@ Decimal128.fromString = function (string) {
 
     // Return not a number
     if (string[index]) {
-        return new Decimal128(Buffer.from(NAN_BUFFER));
+        return new Decimal128(Buffer.from(NAN_BUFFER)); 
     }
 
     // Done reading input
@@ -362,7 +364,7 @@ Decimal128.fromString = function (string) {
 
     // Attempt to normalize the exponent
     while (exponent > EXPONENT_MAX) {
-        // Shift exponent to significand and decrease
+    // Shift exponent to significand and decrease
         lastDigit = lastDigit + 1;
 
         if (lastDigit - firstDigit > MAX_DIGITS) {
@@ -379,7 +381,7 @@ Decimal128.fromString = function (string) {
     }
 
     while (exponent < EXPONENT_MIN || nDigitsStored < nDigits) {
-        // Shift last digit. can only do this if < significant digits than # stored.
+    // Shift last digit. can only do this if < significant digits than # stored.
         if (lastDigit === 0 && significantDigits < nDigitsStored) {
             exponent = EXPONENT_MIN;
             significantDigits = 0;
@@ -518,7 +520,7 @@ Decimal128.fromString = function (string) {
             .and(Long.fromNumber(1))
             .equals(Long.fromNumber(1))
     ) {
-        // Encode '11' into bits 1 to 3
+    // Encode '11' into bits 1 to 3
         dec.high = dec.high.or(Long.fromNumber(0x3).shl(61));
         dec.high = dec.high.or(
             Long.fromNumber(biasedExponent).and(Long.fromNumber(0x3fff).shl(47))
@@ -598,13 +600,13 @@ Decimal128.prototype.toString = function () {
     // bits 1 - 5
     let combination;
     // decoded biased exponent (14 bits)
-    let biasedExponent;
+    let biased_exponent;
     // the number of significand digits
-    let significandDigits = 0;
+    let significand_digits = 0;
     // the base-10 digits in the significand
     const significand = new Array(36);
     for (let i = 0; i < significand.length; i++) {
-        significand[i] = 0;
+        significand[i] = 0; 
     }
     // read pointer into significand
     let index = 0;
@@ -612,13 +614,13 @@ Decimal128.prototype.toString = function () {
     // unbiased exponent
     let exponent;
     // the exponent if scientific notation is used
-    let scientificExponent;
+    let scientific_exponent;
 
     // true if the number is zero
-    let isZero = false;
+    let is_zero = false;
 
     // the most signifcant significand bits (50-46)
-    let significandMsb;
+    let significand_msb;
     // temporary storage for significand decoding
     let significand128 = { parts: new Array(4) };
     // indexing variables
@@ -635,15 +637,15 @@ Decimal128.prototype.toString = function () {
 
     // Unpack the low 64bits into a long
     low =
-        buffer[index++] | (buffer[index++] << 8) | (buffer[index++] << 16) | (buffer[index++] << 24);
+    buffer[index++] | (buffer[index++] << 8) | (buffer[index++] << 16) | (buffer[index++] << 24);
     midl =
-        buffer[index++] | (buffer[index++] << 8) | (buffer[index++] << 16) | (buffer[index++] << 24);
+    buffer[index++] | (buffer[index++] << 8) | (buffer[index++] << 16) | (buffer[index++] << 24);
 
     // Unpack the high 64bits into a long
     midh =
-        buffer[index++] | (buffer[index++] << 8) | (buffer[index++] << 16) | (buffer[index++] << 24);
+    buffer[index++] | (buffer[index++] << 8) | (buffer[index++] << 16) | (buffer[index++] << 24);
     high =
-        buffer[index++] | (buffer[index++] << 8) | (buffer[index++] << 16) | (buffer[index++] << 24);
+    buffer[index++] | (buffer[index++] << 8) | (buffer[index++] << 16) | (buffer[index++] << 24);
 
     // Unpack index
     index = 0;
@@ -662,58 +664,58 @@ Decimal128.prototype.toString = function () {
     combination = (high >> 26) & COMBINATION_MASK;
 
     if (combination >> 3 === 3) {
-        // Check for 'special' values
+    // Check for 'special' values
         if (combination === COMBINATION_INFINITY) {
             return `${string.join("")}Infinity`;
         } else if (combination === COMBINATION_NAN) {
             return "NaN";
-        }
-        biasedExponent = (high >> 15) & EXPONENT_MASK;
-        significandMsb = 0x08 + ((high >> 14) & 0x01);
-
+        } 
+        biased_exponent = (high >> 15) & EXPONENT_MASK;
+        significand_msb = 0x08 + ((high >> 14) & 0x01);
+    
     } else {
-        significandMsb = (high >> 14) & 0x07;
-        biasedExponent = (high >> 17) & EXPONENT_MASK;
+        significand_msb = (high >> 14) & 0x07;
+        biased_exponent = (high >> 17) & EXPONENT_MASK;
     }
 
-    exponent = biasedExponent - EXPONENT_BIAS;
+    exponent = biased_exponent - EXPONENT_BIAS;
 
     // Create string of significand digits
 
     // Convert the 114-bit binary number represented by
     // (significand_high, significand_low) to at most 34 decimal
     // digits through modulo and division.
-    significand128.parts[0] = (high & 0x3fff) + ((significandMsb & 0xf) << 14);
+    significand128.parts[0] = (high & 0x3fff) + ((significand_msb & 0xf) << 14);
     significand128.parts[1] = midh;
     significand128.parts[2] = midl;
     significand128.parts[3] = low;
 
     if (
         significand128.parts[0] === 0 &&
-        significand128.parts[1] === 0 &&
-        significand128.parts[2] === 0 &&
-        significand128.parts[3] === 0
+    significand128.parts[1] === 0 &&
+    significand128.parts[2] === 0 &&
+    significand128.parts[3] === 0
     ) {
-        isZero = true;
+        is_zero = true;
     } else {
         for (k = 3; k >= 0; k--) {
-            let leastDigits = 0;
+            let least_digits = 0;
             // Peform the divide
             const result = divideu128(significand128);
             significand128 = result.quotient;
-            leastDigits = result.rem.low;
+            least_digits = result.rem.low;
 
             // We now have the 9 least significant digits (in base 2).
             // Convert and output to string.
-            if (!leastDigits) {
-                continue;
+            if (!least_digits) {
+                continue; 
             }
 
             for (j = 8; j >= 0; j--) {
                 // significand[k * 9 + j] = Math.round(least_digits % 10);
-                significand[k * 9 + j] = leastDigits % 10;
+                significand[k * 9 + j] = least_digits % 10;
                 // least_digits = Math.round(least_digits / 10);
-                leastDigits = Math.floor(leastDigits / 10);
+                least_digits = Math.floor(least_digits / 10);
             }
         }
     }
@@ -722,18 +724,18 @@ Decimal128.prototype.toString = function () {
     // Scientific - [-]d.dddE(+/-)dd or [-]dE(+/-)dd
     // Regular    - ddd.ddd
 
-    if (isZero) {
-        significandDigits = 1;
+    if (is_zero) {
+        significand_digits = 1;
         significand[index] = 0;
     } else {
-        significandDigits = 36;
+        significand_digits = 36;
         while (!significand[index]) {
-            significandDigits = significandDigits - 1;
+            significand_digits = significand_digits - 1;
             index = index + 1;
         }
     }
 
-    scientificExponent = significandDigits - 1 + exponent;
+    scientific_exponent = significand_digits - 1 + exponent;
 
     // The scientific exponent checks are dictated by the string conversion
     // specification and are somewhat arbitrary cutoffs.
@@ -742,52 +744,52 @@ Decimal128.prototype.toString = function () {
     // has trailing zeros.  However, we *cannot* output these trailing zeros,
     // because doing so would change the precision of the value, and would
     // change stored data if the string converted number is round tripped.
-    if (scientificExponent >= 34 || scientificExponent <= -7 || exponent > 0) {
-        // Scientific format
+    if (scientific_exponent >= 34 || scientific_exponent <= -7 || exponent > 0) {
+    // Scientific format
 
         // if there are too many significant digits, we should just be treating numbers
         // as + or - 0 and using the non-scientific exponent (this is for the "invalid
         // representation should be treated as 0/-0" spec cases in decimal128-1.json)
-        if (significandDigits > 34) {
+        if (significand_digits > 34) {
             string.push(0);
             if (exponent > 0) {
-                string.push(`E+${exponent}`);
+                string.push(`E+${exponent}`); 
             } else if (exponent < 0) {
-                string.push(`E${exponent}`);
+                string.push(`E${exponent}`); 
             }
             return string.join("");
         }
 
         string.push(significand[index++]);
-        significandDigits = significandDigits - 1;
+        significand_digits = significand_digits - 1;
 
-        if (significandDigits) {
+        if (significand_digits) {
             string.push(".");
         }
 
-        for (let i = 0; i < significandDigits; i++) {
+        for (let i = 0; i < significand_digits; i++) {
             string.push(significand[index++]);
         }
 
         // Exponent
         string.push("E");
-        if (scientificExponent > 0) {
-            string.push(`+${scientificExponent}`);
+        if (scientific_exponent > 0) {
+            string.push(`+${scientific_exponent}`);
         } else {
-            string.push(scientificExponent);
+            string.push(scientific_exponent);
         }
     } else {
-        // Regular format with no decimal place
+    // Regular format with no decimal place
         if (exponent >= 0) {
-            for (let i = 0; i < significandDigits; i++) {
+            for (let i = 0; i < significand_digits; i++) {
                 string.push(significand[index++]);
             }
         } else {
-            let radixPosition = significandDigits + exponent;
+            let radix_position = significand_digits + exponent;
 
             // non-zero digits before radix
-            if (radixPosition > 0) {
-                for (let i = 0; i < radixPosition; i++) {
+            if (radix_position > 0) {
+                for (let i = 0; i < radix_position; i++) {
                     string.push(significand[index++]);
                 }
             } else {
@@ -796,11 +798,11 @@ Decimal128.prototype.toString = function () {
 
             string.push(".");
             // add leading zeros after radix
-            while (radixPosition++ < 0) {
+            while (radix_position++ < 0) {
                 string.push("0");
             }
 
-            for (let i = 0; i < significandDigits - Math.max(radixPosition - 1, 0); i++) {
+            for (let i = 0; i < significand_digits - Math.max(radix_position - 1, 0); i++) {
                 string.push(significand[index++]);
             }
         }

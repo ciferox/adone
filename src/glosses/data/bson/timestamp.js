@@ -1,4 +1,6 @@
-
+const {
+    is
+} = adone;
 
 const Long = require("./long");
 
@@ -10,7 +12,7 @@ const Long = require("./long");
  */
 class Timestamp extends Long {
     constructor(low, high) {
-        if (low instanceof Long) {
+        if (is.long(low)) {
             super(low.low, low.high, true);
         } else {
             super(low, high, true);
@@ -72,7 +74,7 @@ class Timestamp extends Long {
      * @return {Timestamp} the timestamp.
      */
     static fromString(str, opt_radix) {
-        return new Timestamp(Long.fromString(str, true, opt_radix));
+        return new Timestamp(Long.fromString(str, opt_radix, true));
     }
 
     /**
@@ -90,7 +92,8 @@ class Timestamp extends Long {
     }
 }
 
+Object.defineProperty(Timestamp.prototype, "_bsontype", { value: "Timestamp" });
+
 Timestamp.MAX_VALUE = Timestamp.MAX_UNSIGNED_VALUE;
 
-Object.defineProperty(Timestamp.prototype, "_bsontype", { value: "Timestamp" });
 module.exports = Timestamp;

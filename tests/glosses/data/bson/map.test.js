@@ -1,15 +1,17 @@
 const {
-    data: { bson },
-    is
+    is,
+    data: { bson: BSON }
 } = adone;
 
+const srcPath = (...args) => adone.getPath("src/glosses/data/bson", ...args);
+const M = require(srcPath("map"));
 
 describe("Map", () => {
     /**
      * @ignore
      */
     it("should correctly exercise the map", (done) => {
-        const m = new Map([["a", 1], ["b", 2]]);
+        const m = new M([["a", 1], ["b", 2]]);
         expect(m.has("a")).to.be.ok;
         expect(m.has("b")).to.be.ok;
         expect(1).to.equal(m.get("a"));
@@ -82,28 +84,28 @@ describe("Map", () => {
      * @ignore
      */
     it("should serialize a map", (done) => {
-        // Serialize top level map only
-        let m = new Map([["a", 1], ["b", 2]]);
+    // Serialize top level map only
+        let m = new M([["a", 1], ["b", 2]]);
         // Serialize the map
-        let data = bson.encode(m, false, true);
+        let data = BSON.serialize(m, false, true);
         // Deserialize the data
-        let object = bson.decode(data);
+        let object = BSON.deserialize(data);
         expect({ a: 1, b: 2 }).to.deep.equal(object);
 
         // Serialize nested maps
-        const m1 = new Map([["a", 1], ["b", 2]]);
-        m = new Map([["c", m1]]);
+        const m1 = new M([["a", 1], ["b", 2]]);
+        m = new M([["c", m1]]);
         // Serialize the map
-        data = bson.encode(m, false, true);
+        data = BSON.serialize(m, false, true);
         // Deserialize the data
-        object = bson.decode(data);
+        object = BSON.deserialize(data);
         expect({ c: { a: 1, b: 2 } }).to.deep.equal(object);
         done();
 
         // Serialize top level map only
-        m = new Map([["1", 1], ["0", 2]]);
+        m = new M([["1", 1], ["0", 2]]);
         // Serialize the map, validating that the order in the resulting BSON is preserved
-        data = bson.encode(m, false, true);
+        data = BSON.serialize(m, false, true);
         expect("13000000103100010000001030000200000000").to.equal(data.toString("hex"));
     });
 
@@ -111,12 +113,12 @@ describe("Map", () => {
      * @ignore
      */
     it("should not crash due to object that looks like map", (done) => {
-        // Serialize top level map only
+    // Serialize top level map only
         const m = { entries: "test" };
         // Serialize the map
-        const data = bson.encode(m, false, true);
+        const data = BSON.serialize(m, false, true);
         // Deserialize the data
-        const object = bson.decode(data);
+        const object = BSON.deserialize(data);
         expect(m).to.deep.equal(object);
         done();
     });

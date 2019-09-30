@@ -379,6 +379,13 @@ export default {
                     dst: "lib/glosses/data",
                     task: "transpile",
                     units: {
+                        basex: {
+                            description: "Encode/decode any base",
+                            task: "tsc",
+                            src: "src/glosses/data/basex.ts",
+                            dst: "lib/glosses/data",
+                            original: "https://github.com/cryptocoinjs/base-x"
+                        },
                         base64: {
                             description: "Implementation of BASE64 serializer",
                             task: "transpile",
@@ -425,12 +432,6 @@ export default {
                             description: "Implementation of Base58 serializer",
                             task: "transpile",
                             src: "src/glosses/data/base58.js",
-                            dst: "lib/glosses/data"
-                        },
-                        basex: {
-                            description: "",
-                            task: "transpile",
-                            src: "src/glosses/data/basex.js",
                             dst: "lib/glosses/data"
                         },
                         varint: {

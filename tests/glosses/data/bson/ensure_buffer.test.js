@@ -1,4 +1,6 @@
-const ensureBuffer = require(adone.getPath("lib", "glosses", "data", "bson", "ensure_buffer"));
+const srcPath = (...args) => adone.getPath("src/glosses/data/bson", ...args);
+
+const ensureBuffer = require(srcPath("ensure_buffer"));
 
 describe("ensureBuffer tests", () => {
     it("should be a function", () => {

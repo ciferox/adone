@@ -1,5 +1,3 @@
-
-
 const FIRST_BIT = 0x80;
 const FIRST_TWO_BITS = 0xc0;
 const FIRST_THREE_BITS = 0xe0;

@@ -1,8 +1,10 @@
-const randomBytes = require("./parser/utils").randomBytes;
-
 const {
     is
 } = adone;
+
+const randomBytes = require("./parser/utils").randomBytes;
+const util = require("util");
+const { deprecate } = util;
 
 // constants
 const PROCESS_UNIQUE = randomBytes(5);
@@ -37,16 +39,18 @@ while (i < 16) {
 }
 
 const _Buffer = Buffer;
-const convertToHex = (bytes) => bytes.toString("hex");
+function convertToHex(bytes) {
+    return bytes.toString("hex");
+}
 
-const makeObjectIdError = function (invalidString, index) {
+function makeObjectIdError(invalidString, index) {
     const invalidCharacter = invalidString[index];
     return new TypeError(
         `ObjectId string "${invalidString}" contains invalid character "${invalidCharacter}" with character code (${invalidString.charCodeAt(
             index
         )}). All character codes for a non-hex string must be less than 256.`
     );
-};
+}
 
 /**
  * A class representation of the BSON ObjectId type.
@@ -55,7 +59,7 @@ class ObjectId {
     /**
      * Create an ObjectId type
      *
-     * @param {(string|number)} id Can be a 24 byte hex string, 12 byte binary string or a Number.
+     * @param {(string|Buffer|number)} id Can be a 24 byte hex string, 12 byte binary Buffer, or a Number.
      * @property {number} generationTime The generation time of this ObjectId instance
      * @return {ObjectId} instance of ObjectId.
      */
@@ -94,7 +98,7 @@ class ObjectId {
             this.id = id;
         } else if (!is.nil(id) && id.toHexString) {
             // Duck-typing to support ObjectId from different npm packages
-            return id;
+            return ObjectId.createFromHexString(id.toHexString());
         } else {
             throw new TypeError(
                 "Argument passed in must be a single String of 12 bytes or a string of 24 hex characters"
@@ -120,7 +124,9 @@ class ObjectId {
         let hexString = "";
         if (!this.id || !this.id.length) {
             throw new TypeError(
-                `invalid ObjectId, ObjectId.id must be either a string or a Buffer, but is [${JSON.stringify(this.id)}]`
+                `invalid ObjectId, ObjectId.id must be either a string or a Buffer, but is [${
+                JSON.stringify(this.id)
+                }]`
             );
         }
 
@@ -223,7 +229,7 @@ class ObjectId {
      * Compares the equality of this ObjectId with `otherID`.
      *
      * @method
-     * @param {object} otherID ObjectId instance to compare against.
+     * @param {object} otherId ObjectId instance to compare against.
      * @return {boolean} the result of comparing two ObjectId's
      */
     equals(otherId) {
@@ -259,7 +265,7 @@ class ObjectId {
      * Returns the generation date (accurate up to the second) that this ID was generated.
      *
      * @method
-     * @return {date} the generation date
+     * @return {Date} the generation date
      */
     getTimestamp() {
         const timestamp = new Date();
@@ -380,25 +386,25 @@ class ObjectId {
 }
 
 // Deprecated methods
-// ObjectId.get_inc = deprecate(
-//     () => ObjectId.getInc(),
-//     "Please use the static `ObjectId.getInc()` instead"
-// );
+ObjectId.get_inc = deprecate(
+    () => ObjectId.getInc(),
+    "Please use the static `ObjectId.getInc()` instead"
+);
 
-// ObjectId.prototype.get_inc = deprecate(
-//     () => ObjectId.getInc(),
-//     "Please use the static `ObjectId.getInc()` instead"
-// );
+ObjectId.prototype.get_inc = deprecate(
+    () => ObjectId.getInc(),
+    "Please use the static `ObjectId.getInc()` instead"
+);
 
-// ObjectId.prototype.getInc = deprecate(
-//     () => ObjectId.getInc(),
-//     "Please use the static `ObjectId.getInc()` instead"
-// );
+ObjectId.prototype.getInc = deprecate(
+    () => ObjectId.getInc(),
+    "Please use the static `ObjectId.getInc()` instead"
+);
 
-// ObjectId.prototype.generate = deprecate(
-//     (time) => ObjectId.generate(time),
-//     "Please use the static `ObjectId.generate(time)` instead"
-// );
+ObjectId.prototype.generate = deprecate(
+    (time) => ObjectId.generate(time),
+    "Please use the static `ObjectId.generate(time)` instead"
+);
 
 /**
  * @ignore
@@ -423,12 +429,15 @@ Object.defineProperty(ObjectId.prototype, "generationTime", {
  * @return {String} return the 24 byte hex string representation.
  * @ignore
  */
-ObjectId.prototype[adone.std.util.inspect.custom || "inspect"] = ObjectId.prototype.toString;
+ObjectId.prototype[util.inspect.custom || "inspect"] = ObjectId.prototype.toString;
 
 /**
  * @ignore
  */
 ObjectId.index = ~~(Math.random() * 0xffffff);
 
-Object.defineProperty(ObjectId.prototype, "_bsontype", { value: "ObjectId" });
+// In 4.0.0 and 4.0.1, this property name was changed to ObjectId to match the class name.
+// This caused interoperability problems with previous versions of the library, so in
+// later builds we changed it back to ObjectID (capital D) to match legacy implementations.
+Object.defineProperty(ObjectId.prototype, "_bsontype", { value: "ObjectID" });
 module.exports = ObjectId;

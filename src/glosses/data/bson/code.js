@@ -1,5 +1,3 @@
-
-
 /**
  * A class representation of the BSON Code type.
  */

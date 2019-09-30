@@ -13,7 +13,7 @@ for (let i = 0; i < 64; i++) {
 
 function BinaryParser(bigEndian, allowExceptions) {
     if (!(this instanceof BinaryParser)) {
-        return new BinaryParser(bigEndian, allowExceptions);
+        return new BinaryParser(bigEndian, allowExceptions); 
     }
 
     this.bigEndian = bigEndian;
@@ -34,20 +34,10 @@ BinaryParser.decodeFloat = function decodeFloat(data, precisionBits, exponentBit
     b.checkBuffer(precisionBits + exponentBits + 1);
 
     const bias = maxBits[exponentBits - 1] - 1;
-
-        
     const signal = b.readBits(precisionBits + exponentBits, 1);
-
-        
     const exponent = b.readBits(precisionBits, exponentBits);
-
-        
     let significand = 0;
-
-        
     let divisor = 2;
-
-        
     let curByte = b.buffer.length + (-precisionBits >> 3) - 1;
 
     do {
@@ -74,11 +64,7 @@ BinaryParser.decodeFloat = function decodeFloat(data, precisionBits, exponentBit
 
 BinaryParser.decodeInt = function decodeInt(data, bits, signed, forceBigEndian) {
     const b = new this.Buffer(this.bigEndian || forceBigEndian, data);
-
-        
     const x = b.readBits(0, bits);
-
-        
     const max = maxBits[bits]; //max = Math.pow( 2, bits );
 
     return signed && x >= max / 2 ? x - max : x;
@@ -86,64 +72,30 @@ BinaryParser.decodeInt = function decodeInt(data, bits, signed, forceBigEndian) 
 
 BinaryParser.encodeFloat = function encodeFloat(data, precisionBits, exponentBits) {
     const bias = maxBits[exponentBits - 1] - 1;
-
-        
     const minExp = -bias + 1;
-
-        
     const maxExp = bias;
-
-        
     const minUnnormExp = minExp - precisionBits;
-
-        
     let n = parseFloat(data);
-
-        
     const status = isNaN(n) || n === -Infinity || n === Number(Infinity) ? n : 0;
-
-        
     let exp = 0;
-
-        
     const len = 2 * bias + 1 + precisionBits + 3;
-
-        
     const bin = new Array(len);
-
-        
     let signal = (n = status !== 0 ? 0 : n) < 0;
-
-        
     let intPart = Math.floor((n = Math.abs(n)));
-
-        
     let floatPart = n - intPart;
-
-        
     let lastBit;
-
-        
     let rounded;
-
-        
     let result;
-
-        
     let i;
-
-        
     let j;
 
     for (i = len; i; bin[--i] = 0) { }
 
     for (i = bias + 2; intPart && i; bin[--i] = intPart % 2, intPart = Math.floor(intPart / 2)) { }
 
-    for (i = bias + 1; floatPart > 0 && i; (bin[++i] = ((floatPart *= 2) >= 1) - 0) && --floatPart) { 
-    }
+    for (i = bias + 1; floatPart > 0 && i; (bin[++i] = ((floatPart *= 2) >= 1) - 0) && --floatPart) { }
 
-    for (i = -1; ++i < len && !bin[i]; ) {
-    }
+    for (i = -1; ++i < len && !bin[i]; ) { }
 
     if (
         bin[
@@ -157,17 +109,13 @@ BinaryParser.encodeFloat = function encodeFloat(data, precisionBits, exponentBit
         ]
     ) {
         if (!(rounded = bin[lastBit])) {
-            for (j = lastBit + 2; !rounded && j < len; rounded = bin[j++]) {
-            }
+            for (j = lastBit + 2; !rounded && j < len; rounded = bin[j++]) { }
         }
 
-        for (j = lastBit + 1; rounded && --j >= 0; (bin[j] = !bin[j] - 0) && (rounded = 0)) {
-
-        }
+        for (j = lastBit + 1; rounded && --j >= 0; (bin[j] = !bin[j] - 0) && (rounded = 0)) { }
     }
 
-    for (i = i - 2 < 0 ? -1 : i - 3; ++i < len && !bin[i]; ) { 
-    }
+    for (i = i - 2 < 0 ? -1 : i - 3; ++i < len && !bin[i]; ) { }
 
     if ((exp = bias + 1 - i) >= minExp && exp <= maxExp) {
         ++i;
@@ -192,8 +140,7 @@ BinaryParser.encodeFloat = function encodeFloat(data, precisionBits, exponentBit
         n = Math.abs(exp + bias), j = exponentBits + 1, result = "";
         --j;
         result = (n % 2) + result, n = n >>= 1
-    ) { 
-    }
+    ) { }
 
     let r;
     for (
@@ -233,8 +180,7 @@ BinaryParser.encodeInt = function encodeInt(data, bits, signed, forceBigEndian) 
         var r = [];
         data;
         r[r.length] = String.fromCharCode(data % 256), data = Math.floor(data / 256)
-    ) { 
-    }
+    ) { }
 
     for (bits = -(-bits >> 3) - r.length; bits--; r[r.length] = "\0") { }
 
@@ -344,20 +290,10 @@ BinaryParser.encode_int64 = function encode_int64(number) {
 // Take a raw binary string and return a utf8 string
 BinaryParser.decode_utf8 = function decode_utf8(binaryStr) {
     const len = binaryStr.length;
-
-        
     let decoded = "";
-
-        
     let i = 0;
-
-        
     let c = 0;
-
-        
     let c2 = 0;
-
-        
     let c3;
 
     while (i < len) {
@@ -388,8 +324,6 @@ BinaryParser.encode_cstring = function encode_cstring(s) {
 // Take a utf8 string and return a binary string
 BinaryParser.encode_utf8 = function encode_utf8(s) {
     let a = "";
-
-        
     let c;
 
     for (let n = 0, len = s.length; n < len; n++) {
@@ -476,8 +410,7 @@ BinaryParserBuffer.prototype.setBuffer = function setBuffer(data) {
     if (data) {
         i = l = data.length;
         b = this.buffer = new Array(l);
-        for (; i; b[l - i] = data.charCodeAt(--i)) { 
-        }
+        for (; i; b[l - i] = data.charCodeAt(--i)) { }
         this.bigEndian && b.reverse();
     }
 };
@@ -503,9 +436,7 @@ BinaryParserBuffer.prototype.readBits = function readBits(start, length) {
         ((a %= 0x7fffffff + 1) & 0x40000000) === 0x40000000
             ? a * 2
             : (a - 0x40000000) * 2 + 0x7fffffff + 1
-        ) {
-
-        }
+        ) { }
         return a;
     }
 
@@ -516,20 +447,10 @@ BinaryParserBuffer.prototype.readBits = function readBits(start, length) {
     this.checkBuffer(start + length);
 
     let offsetLeft;
-
-        
     const offsetRight = start % 8;
-
-        
     const curByte = this.buffer.length - (start >> 3) - 1;
-
-        
     let lastByte = this.buffer.length + (-(start + length) >> 3);
-
-        
     let diff = curByte - lastByte;
-
-        
     let sum =
       ((this.buffer[curByte] >> offsetRight) & ((1 << (diff ? 8 - offsetRight : length)) - 1)) +
       (diff && (offsetLeft = (start + length) % 8)

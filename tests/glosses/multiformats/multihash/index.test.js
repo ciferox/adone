@@ -1,7 +1,7 @@
 const bufeq = require("buffer-equal");
-const bs58 = require("bs58");
 
 const {
+    data: { base58 },
     multiformat: { multihash: mh }
 } = adone;
 
@@ -63,7 +63,7 @@ describe("multiformat", "multihash", () => {
                 expect(
                     mh.toB58String(buf)
                 ).to.be.eql(
-                    bs58.encode(buf)
+                    base58.encode(buf)
                 );
             });
         });

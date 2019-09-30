@@ -1,18 +1,16 @@
 const {
     is,
-    data: { bson }
+    data: { bson: BSON }
 } = adone;
 
-const {
-    Code,
-    Binary,
-    Timestamp,
-    Long,
-    ObjectId,
-    DBRef,
-    MinKey,
-    MaxKey
-} = bson;
+const Code = BSON.Code;
+const Binary = BSON.Binary;
+const Timestamp = BSON.Timestamp;
+const Long = BSON.Long;
+const ObjectId = BSON.ObjectId;
+const DBRef = BSON.DBRef;
+const MinKey = BSON.MinKey;
+const MaxKey = BSON.MaxKey;
 
 describe("BSON Compliance", () => {
     /**
@@ -32,7 +30,7 @@ describe("BSON Compliance", () => {
                 // Create a buffer containing the payload
                 const buffer = Buffer.from(doc.encoded, "hex");
                 // Attempt to deserialize
-                bson.decode(buffer);
+                BSON.deserialize(buffer);
                 expect(false).to.be.ok;
             } catch (err) {
                 expect(true).to.be.ok;
@@ -50,7 +48,7 @@ describe("BSON Compliance", () => {
         const scenarios = require("./compliance/valid");
 
         // Translate extended json to correctly typed doc
-        const translate = function (doc, object) {
+        function translate(doc, object) {
             for (const name in doc) {
                 if (
                     is.number(doc[name]) ||
@@ -105,11 +103,11 @@ describe("BSON Compliance", () => {
             // Get the expectedDocument
             const expectedDocument = translate(doc.document, {});
             // Serialize to buffer
-            const buffer = bson.encode(expectedDocument);
+            const buffer = BSON.serialize(expectedDocument);
             // Validate the output
             expect(expectedData.toString("hex")).to.equal(buffer.toString("hex"));
             // Attempt to deserialize
-            const object = bson.decode(buffer, { promoteLongs: false });
+            const object = BSON.deserialize(buffer, { promoteLongs: false });
             // // Validate the object
             expect(JSON.stringify(expectedDocument)).to.deep.equal(JSON.stringify(object));
         });

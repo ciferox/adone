@@ -1,15 +1,12 @@
 const {
-    data: { bson },
-    is
+    is,
+    data: { bson: BSON }
 } = adone;
 
-const BinaryParser = require("./binary_parser").BinaryParser;
-
-const {
-    ObjectId,
-    Binary,
-    BSONRegExp    
-} = bson;
+const {BinaryParser} = require("./binary_parser");
+const ObjectId = BSON.ObjectId;
+const Binary = BSON.Binary;
+const BSONRegExp = BSON.BSONRegExp;
 
 describe("Full BSON", () => {
     /**
@@ -113,13 +110,13 @@ describe("Full BSON", () => {
             0,
             0
         ];
-        let serializedData = "";
+        let serialized_data = "";
         // Convert to chars
         for (let i = 0; i < bytes.length; i++) {
-            serializedData = serializedData + BinaryParser.fromByte(bytes[i]);
+            serialized_data = serialized_data + BinaryParser.fromByte(bytes[i]);
         }
 
-        const object = bson.decode(Buffer.from(serializedData, "binary"));
+        const object = BSON.deserialize(Buffer.from(serialized_data, "binary"));
         expect("a_1").to.equal(object.name);
         expect(false).to.equal(object.unique);
         expect(1).to.equal(object.key.a);
@@ -414,13 +411,13 @@ describe("Full BSON", () => {
             0,
             0
         ];
-        let serializedData = "";
+        let serialized_data = "";
         // Convert to chars
         for (let i = 0; i < bytes.length; i++) {
-            serializedData = serializedData + BinaryParser.fromByte(bytes[i]);
+            serialized_data = serialized_data + BinaryParser.fromByte(bytes[i]);
         }
 
-        const object = bson.decode(Buffer.from(serializedData, "binary"));
+        const object = BSON.deserialize(Buffer.from(serialized_data, "binary"));
         expect("hello").to.equal(object.string);
         expect([1, 2, 3]).to.deep.equal(object.array);
         expect(1).to.equal(object.hash.a);
@@ -442,9 +439,9 @@ describe("Full BSON", () => {
      * @ignore
      */
     it("Should Serialize and Deserialize String", (done) => {
-        const testString = { hello: "world" };
-        const serializedData = bson.encode(testString);
-        expect(testString).to.deep.equal(bson.decode(serializedData));
+        const test_string = { hello: "world" };
+        const serialized_data = BSON.serialize(test_string);
+        expect(test_string).to.deep.equal(BSON.deserialize(serialized_data));
         done();
     });
 
@@ -452,9 +449,9 @@ describe("Full BSON", () => {
      * @ignore
      */
     it("Should Correctly Serialize and Deserialize Integer", (done) => {
-        const testNumber = { doc: 5 };
-        const serializedData = bson.encode(testNumber);
-        expect(testNumber).to.deep.equal(bson.decode(serializedData));
+        const test_number = { doc: 5 };
+        const serialized_data = BSON.serialize(test_number);
+        expect(test_number).to.deep.equal(BSON.deserialize(serialized_data));
         done();
     });
 
@@ -462,10 +459,10 @@ describe("Full BSON", () => {
      * @ignore
      */
     it("Should Correctly Serialize and Deserialize null value", (done) => {
-        const testNull = { doc: null };
-        const serializedData = bson.encode(testNull);
-        const object = bson.decode(serializedData);
-        expect(testNull).to.deep.equal(object);
+        const test_null = { doc: null };
+        const serialized_data = BSON.serialize(test_null);
+        const object = BSON.deserialize(serialized_data);
+        expect(test_null).to.deep.equal(object);
         done();
     });
 
@@ -473,9 +470,9 @@ describe("Full BSON", () => {
      * @ignore
      */
     it("Should Correctly Serialize and Deserialize undefined value", (done) => {
-        const testUndefined = { doc: undefined };
-        const serializedData = bson.encode(testUndefined);
-        const object = bson.decode(Buffer.from(serializedData, "binary"));
+        const test_undefined = { doc: undefined };
+        const serialized_data = BSON.serialize(test_undefined);
+        const object = BSON.deserialize(Buffer.from(serialized_data, "binary"));
         expect(undefined).to.equal(object.doc);
         done();
     });
@@ -484,9 +481,9 @@ describe("Full BSON", () => {
      * @ignore
      */
     it("Should Correctly Serialize and Deserialize Number 3", (done) => {
-        const testNumber = { doc: 5.5 };
-        const serializedData = bson.encode(testNumber);
-        expect(testNumber).to.deep.equal(bson.decode(serializedData));
+        const test_number = { doc: 5.5 };
+        const serialized_data = BSON.serialize(test_number);
+        expect(test_number).to.deep.equal(BSON.deserialize(serialized_data));
         done();
     });
 
@@ -494,21 +491,21 @@ describe("Full BSON", () => {
      * @ignore
      */
     it("Should Correctly Serialize and Deserialize Integer", (done) => {
-        let testInt = { doc: 42 };
-        let serializedData = bson.encode(testInt);
-        expect(testInt).to.deep.equal(bson.decode(serializedData));
+        let test_int = { doc: 42 };
+        let serialized_data = BSON.serialize(test_int);
+        expect(test_int).to.deep.equal(BSON.deserialize(serialized_data));
 
-        testInt = { doc: -5600 };
-        serializedData = bson.encode(testInt);
-        expect(testInt).to.deep.equal(bson.decode(serializedData));
+        test_int = { doc: -5600 };
+        serialized_data = BSON.serialize(test_int);
+        expect(test_int).to.deep.equal(BSON.deserialize(serialized_data));
 
-        testInt = { doc: 2147483647 };
-        serializedData = bson.encode(testInt);
-        expect(testInt).to.deep.equal(bson.decode(serializedData));
+        test_int = { doc: 2147483647 };
+        serialized_data = BSON.serialize(test_int);
+        expect(test_int).to.deep.equal(BSON.deserialize(serialized_data));
 
-        testInt = { doc: -2147483648 };
-        serializedData = bson.encode(testInt);
-        expect(testInt).to.deep.equal(bson.decode(serializedData));
+        test_int = { doc: -2147483648 };
+        serialized_data = BSON.serialize(test_int);
+        expect(test_int).to.deep.equal(BSON.deserialize(serialized_data));
         done();
     });
 
@@ -517,8 +514,8 @@ describe("Full BSON", () => {
      */
     it("Should Correctly Serialize and Deserialize Object", (done) => {
         const doc = { doc: { age: 42, name: "Spongebob", shoe_size: 9.5 } };
-        const serializedData = bson.encode(doc);
-        expect(doc).to.deep.equal(bson.decode(serializedData));
+        const serialized_data = BSON.serialize(doc);
+        expect(doc).to.deep.equal(BSON.deserialize(serialized_data));
         done();
     });
 
@@ -527,8 +524,8 @@ describe("Full BSON", () => {
      */
     it("Should Correctly Serialize and Deserialize Array", (done) => {
         const doc = { doc: [1, 2, "a", "b"] };
-        const serializedData = bson.encode(doc);
-        expect(doc).to.deep.equal(bson.decode(serializedData));
+        const serialized_data = BSON.serialize(doc);
+        expect(doc).to.deep.equal(BSON.deserialize(serialized_data));
         done();
     });
 
@@ -537,8 +534,8 @@ describe("Full BSON", () => {
      */
     it("Should Correctly Serialize and Deserialize Array with added on functions", (done) => {
         const doc = { doc: [1, 2, "a", "b"] };
-        const serializedData = bson.encode(doc);
-        expect(doc).to.deep.equal(bson.decode(serializedData));
+        const serialized_data = BSON.serialize(doc);
+        expect(doc).to.deep.equal(BSON.deserialize(serialized_data));
         done();
     });
 
@@ -547,8 +544,8 @@ describe("Full BSON", () => {
      */
     it("Should Correctly Serialize and Deserialize A Boolean", (done) => {
         const doc = { doc: true };
-        const serializedData = bson.encode(doc);
-        expect(doc).to.deep.equal(bson.decode(serializedData));
+        const serialized_data = BSON.serialize(doc);
+        expect(doc).to.deep.equal(BSON.deserialize(serialized_data));
         done();
     });
 
@@ -565,8 +562,8 @@ describe("Full BSON", () => {
         date.setUTCMinutes(0);
         date.setUTCSeconds(30);
         const doc = { doc: date };
-        const serializedData = bson.encode(doc);
-        expect(doc).to.deep.equal(bson.decode(serializedData));
+        const serialized_data = BSON.serialize(doc);
+        expect(doc).to.deep.equal(BSON.deserialize(serialized_data));
         done();
     });
 
@@ -575,9 +572,9 @@ describe("Full BSON", () => {
      */
     it("Should Correctly Serialize and Deserialize Oid", (done) => {
         const doc = { doc: new ObjectId() };
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
         expect(doc.doc.toHexString()).to.deep.equal(
-            bson.decode(serializedData).doc.toHexString()
+            BSON.deserialize(serialized_data).doc.toHexString()
         );
 
         done();
@@ -588,10 +585,10 @@ describe("Full BSON", () => {
      */
     it("Should Correctly Serialize and Deserialize Buffer", (done) => {
         const doc = { doc: Buffer.from("123451234512345") };
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
         expect("123451234512345").to.equal(
-            bson.decode(serializedData).doc.buffer.toString("ascii")
+            BSON.deserialize(serialized_data).doc.buffer.toString("ascii")
         );
 
         done();
@@ -602,11 +599,11 @@ describe("Full BSON", () => {
      */
     it("Should Correctly Serialize and Deserialize Buffer with promoteBuffers option", (done) => {
         const doc = { doc: Buffer.from("123451234512345") };
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
         const options = { promoteBuffers: true };
         expect("123451234512345").to.equal(
-            bson.decode(serializedData, options).doc.toString("ascii")
+            BSON.deserialize(serialized_data, options).doc.toString("ascii")
         );
 
         done();
@@ -616,9 +613,9 @@ describe("Full BSON", () => {
      * @ignore
      */
     it("Should Correctly encode Empty Hash", (done) => {
-        const testCode = {};
-        const serializedData = bson.encode(testCode);
-        expect(testCode).to.deep.equal(bson.decode(serializedData));
+        const test_code = {};
+        const serialized_data = BSON.serialize(test_code);
+        expect(test_code).to.deep.equal(BSON.deserialize(serialized_data));
         done();
     });
 
@@ -627,10 +624,10 @@ describe("Full BSON", () => {
      */
     it("Should Correctly Serialize and Deserialize Ordered Hash", (done) => {
         const doc = { doc: { b: 1, a: 2, c: 3, d: 4 } };
-        const serializedData = bson.encode(doc);
-        const decodedHash = bson.decode(serializedData).doc;
+        const serialized_data = BSON.serialize(doc);
+        const decoded_hash = BSON.deserialize(serialized_data).doc;
         const keys = [];
-        for (const name in decodedHash) {
+        for (const name in decoded_hash) {
             keys.push(name); 
         }
         expect(["b", "a", "c", "d"]).to.deep.equal(keys);
@@ -642,8 +639,8 @@ describe("Full BSON", () => {
      */
     it("Should Correctly Serialize and Deserialize Regular Expression", (done) => {
         const doc = { doc: /foobar/im };
-        const serializedData = bson.encode(doc);
-        const doc2 = bson.decode(serializedData);
+        const serialized_data = BSON.serialize(doc);
+        const doc2 = BSON.deserialize(serialized_data);
         expect(doc.doc.toString()).to.equal(doc2.doc.toString());
         done();
     });
@@ -658,16 +655,16 @@ describe("Full BSON", () => {
             bin.put(string.charAt(index));
         }
         const doc = { doc: bin };
-        const serializedData = bson.encode(doc);
-        const deserializedData = bson.decode(serializedData);
-        expect(doc.doc.value()).to.equal(deserializedData.doc.value());
+        const serialized_data = BSON.serialize(doc);
+        const deserialized_data = BSON.deserialize(serialized_data);
+        expect(doc.doc.value()).to.equal(deserialized_data.doc.value());
         done();
     });
 
     it("Should Correctly fail due to attempting serialization of illegal key values", (done) => {
         const k = Buffer.alloc(15);
-        for (let i = 0; i < 15; i++) {
-            k[i] = 0;
+        for (var i = 0; i < 15; i++) {
+            k[i] = 0; 
         }
 
         k.write("hello");
@@ -675,8 +672,8 @@ describe("Full BSON", () => {
         k.write("world", 10);
 
         const v = Buffer.alloc(65801);
-        for (let i = 0; i < 65801; i++) {
-            v[i] = 1;
+        for (i = 0; i < 65801; i++) {
+            v[i] = 1; 
         }
         v[0] = 0x0a;
         const doc = {};
@@ -684,7 +681,7 @@ describe("Full BSON", () => {
 
         // Should throw due to null character
         try {
-            bson.encode(doc, {
+            BSON.serialize(doc, {
                 checkKeys: true
             });
             expect(false).to.be.ok;
@@ -700,7 +697,7 @@ describe("Full BSON", () => {
         doc.test = new RegExp("a\0b"); // eslint-disable-line no-control-regex
 
         try {
-            bson.encode(doc, {
+            BSON.serialize(doc, {
                 checkKeys: true
             });
             expect(false).to.be.ok;
@@ -716,7 +713,7 @@ describe("Full BSON", () => {
         doc.test = new BSONRegExp("a\0b");
 
         try {
-            bson.encode(doc, {
+            BSON.serialize(doc, {
                 checkKeys: true
             });
             expect(false).to.be.ok;

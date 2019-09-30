@@ -1,42 +1,39 @@
 const {
     is,
-    data: { bson },
-    std: { vm }
+    data: { bson: BSON }
 } = adone;
 
-const {
-    Code,
-    BSONRegExp,
-    Binary,
-    Timestamp,
-    Long,
-    ObjectId,
-    BSONSymbol,
-    DBRef,
-    Decimal128,
-    Int32,
-    Double,
-    MinKey,
-    MaxKey
-} = bson;
-
-const BinaryParser = require("./binary_parser").BinaryParser;
-const assertBuffersEqual = require("./tools/utils").assertBuffersEqual;
+const Code = BSON.Code;
+const BSONRegExp = BSON.BSONRegExp;
+const Binary = BSON.Binary;
+const Timestamp = BSON.Timestamp;
+const Long = BSON.Long;
+const ObjectId = BSON.ObjectId;
+const BSONSymbol = BSON.BSONSymbol;
+const DBRef = BSON.DBRef;
+const Decimal128 = BSON.Decimal128;
+const Int32 = BSON.Int32;
+const Double = BSON.Double;
+const MinKey = BSON.MinKey;
+const MaxKey = BSON.MaxKey;
+const { BinaryParser } = require("./binary_parser");
+const vm = require("vm");
+const { assertBuffersEqual } = require("./tools/utils");
 
 // for tests
-bson.BSON_BINARY_SUBTYPE_DEFAULT = 0;
-bson.BSON_BINARY_SUBTYPE_FUNCTION = 1;
-bson.BSON_BINARY_SUBTYPE_BYTE_ARRAY = 2;
-bson.BSON_BINARY_SUBTYPE_UUID = 3;
-bson.BSON_BINARY_SUBTYPE_MD5 = 4;
-bson.BSON_BINARY_SUBTYPE_USER_DEFINED = 128;
+BSON.BSON_BINARY_SUBTYPE_DEFAULT = 0;
+BSON.BSON_BINARY_SUBTYPE_FUNCTION = 1;
+BSON.BSON_BINARY_SUBTYPE_BYTE_ARRAY = 2;
+BSON.BSON_BINARY_SUBTYPE_UUID = 3;
+BSON.BSON_BINARY_SUBTYPE_MD5 = 4;
+BSON.BSON_BINARY_SUBTYPE_USER_DEFINED = 128;
 
-bson.BSON_BINARY_SUBTYPE_DEFAULT = 0;
-bson.BSON_BINARY_SUBTYPE_FUNCTION = 1;
-bson.BSON_BINARY_SUBTYPE_BYTE_ARRAY = 2;
-bson.BSON_BINARY_SUBTYPE_UUID = 3;
-bson.BSON_BINARY_SUBTYPE_MD5 = 4;
-bson.BSON_BINARY_SUBTYPE_USER_DEFINED = 128;
+BSON.BSON_BINARY_SUBTYPE_DEFAULT = 0;
+BSON.BSON_BINARY_SUBTYPE_FUNCTION = 1;
+BSON.BSON_BINARY_SUBTYPE_BYTE_ARRAY = 2;
+BSON.BSON_BINARY_SUBTYPE_UUID = 3;
+BSON.BSON_BINARY_SUBTYPE_MD5 = 4;
+BSON.BSON_BINARY_SUBTYPE_USER_DEFINED = 128;
 
 /**
  * Module for parsing an ISO 8601 formatted string into a Date object.
@@ -63,8 +60,6 @@ const ISODate = function (string) {
 
     if (match[13] && match[13] !== "Z") {
         let h = Number(match[16]) || 0;
-
-
         let m = Number(match[17]) || 0;
 
         h *= 3600000;
@@ -97,26 +92,26 @@ describe("BSON", () => {
         done();
     });
 
-    // /**
-    //  * @ignore
-    //  */
-    // it("Should Correctly get BSON types from require", (done) => {
-    //     const _mongodb = require("../../lib/bson");
-    //     expect(_mongodb.ObjectId === ObjectId).to.be.ok;
-    //     expect(_mongodb.Binary === Binary).to.be.ok;
-    //     expect(_mongodb.Long === Long).to.be.ok;
-    //     expect(_mongodb.Timestamp === Timestamp).to.be.ok;
-    //     expect(_mongodb.Code === Code).to.be.ok;
-    //     expect(_mongodb.DBRef === DBRef).to.be.ok;
-    //     expect(_mongodb.BSONSymbol === BSONSymbol).to.be.ok;
-    //     expect(_mongodb.MinKey === MinKey).to.be.ok;
-    //     expect(_mongodb.MaxKey === MaxKey).to.be.ok;
-    //     expect(_mongodb.Double === Double).to.be.ok;
-    //     expect(_mongodb.Decimal128 === Decimal128).to.be.ok;
-    //     expect(_mongodb.Int32 === Int32).to.be.ok;
-    //     expect(_mongodb.BSONRegExp === BSONRegExp).to.be.ok;
-    //     done();
-    // });
+    /**
+     * @ignore
+     */
+    it.skip("Should Correctly get BSON types from require", (done) => {
+        const _mongodb = require("../../lib/bson");
+        expect(_mongodb.ObjectId === ObjectId).to.be.ok;
+        expect(_mongodb.Binary === Binary).to.be.ok;
+        expect(_mongodb.Long === Long).to.be.ok;
+        expect(_mongodb.Timestamp === Timestamp).to.be.ok;
+        expect(_mongodb.Code === Code).to.be.ok;
+        expect(_mongodb.DBRef === DBRef).to.be.ok;
+        expect(_mongodb.BSONSymbol === BSONSymbol).to.be.ok;
+        expect(_mongodb.MinKey === MinKey).to.be.ok;
+        expect(_mongodb.MaxKey === MaxKey).to.be.ok;
+        expect(_mongodb.Double === Double).to.be.ok;
+        expect(_mongodb.Decimal128 === Decimal128).to.be.ok;
+        expect(_mongodb.Int32 === Int32).to.be.ok;
+        expect(_mongodb.BSONRegExp === BSONRegExp).to.be.ok;
+        done();
+    });
 
     /**
      * @ignore
@@ -219,13 +214,13 @@ describe("BSON", () => {
             0,
             0
         ];
-        let serializedData = "";
+        let serialized_data = "";
         // Convert to chars
         for (let i = 0; i < bytes.length; i++) {
-            serializedData = serializedData + BinaryParser.fromByte(bytes[i]);
+            serialized_data = serialized_data + BinaryParser.fromByte(bytes[i]);
         }
 
-        const object = bson.decode(Buffer.from(serializedData, "binary"));
+        const object = BSON.deserialize(Buffer.from(serialized_data, "binary"));
         expect("a_1").to.equal(object.name);
         expect(false).to.equal(object.unique);
         expect(1).to.equal(object.key.a);
@@ -520,14 +515,14 @@ describe("BSON", () => {
             0,
             0
         ];
-        let serializedData = "";
+        let serialized_data = "";
 
         // Convert to chars
         for (let i = 0; i < bytes.length; i++) {
-            serializedData = serializedData + BinaryParser.fromByte(bytes[i]);
+            serialized_data = serialized_data + BinaryParser.fromByte(bytes[i]);
         }
 
-        const object = bson.decode(Buffer.from(serializedData, "binary"));
+        const object = BSON.deserialize(Buffer.from(serialized_data, "binary"));
         // Perform tests
         expect("hello").to.equal(object.string);
         expect([1, 2, 3]).to.deep.equal(object.array);
@@ -550,17 +545,17 @@ describe("BSON", () => {
      * @ignore
      */
     it("Should Serialize and Deserialize String", (done) => {
-        const testString = { hello: "world" };
-        const serializedData = bson.encode(testString, {
+        const test_string = { hello: "world" };
+        const serialized_data = BSON.serialize(test_string, {
             checkKeys: false
         });
 
-        bson.encodeWithBufferAndIndex(testString, serializedData, {
+        BSON.serializeWithBufferAndIndex(test_string, serialized_data, {
             checkKeys: false,
             index: 0
         });
 
-        expect(testString).to.deep.equal(bson.decode(serializedData));
+        expect(test_string).to.deep.equal(BSON.deserialize(serialized_data));
         done();
     });
 
@@ -568,13 +563,13 @@ describe("BSON", () => {
      * @ignore
      */
     it("Should Serialize and Deserialize Empty String", (done) => {
-        const testString = { hello: "" };
-        const serializedData = bson.encode(testString);
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(testString));
-        bson.encodeWithBufferAndIndex(testString, serializedData2);
+        const test_string = { hello: "" };
+        const serialized_data = BSON.serialize(test_string);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(test_string));
+        BSON.serializeWithBufferAndIndex(test_string, serialized_data2);
 
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
-        expect(testString).to.deep.equal(bson.decode(serializedData));
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
+        expect(test_string).to.deep.equal(BSON.deserialize(serialized_data));
         done();
     });
 
@@ -582,14 +577,14 @@ describe("BSON", () => {
      * @ignore
      */
     it("Should Correctly Serialize and Deserialize Integer", (done) => {
-        const testNumber = { doc: 5 };
+        const test_number = { doc: 5 };
 
-        const serializedData = bson.encode(testNumber);
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(testNumber));
-        bson.encodeWithBufferAndIndex(testNumber, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
-        expect(testNumber).to.deep.equal(bson.decode(serializedData));
-        expect(testNumber).to.deep.equal(bson.decode(serializedData2));
+        const serialized_data = BSON.serialize(test_number);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(test_number));
+        BSON.serializeWithBufferAndIndex(test_number, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
+        expect(test_number).to.deep.equal(BSON.deserialize(serialized_data));
+        expect(test_number).to.deep.equal(BSON.deserialize(serialized_data2));
         done();
     });
 
@@ -597,14 +592,14 @@ describe("BSON", () => {
      * @ignore
      */
     it("Should Correctly Serialize and Deserialize null value", (done) => {
-        const testNull = { doc: null };
-        const serializedData = bson.encode(testNull);
+        const test_null = { doc: null };
+        const serialized_data = BSON.serialize(test_null);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(testNull));
-        bson.encodeWithBufferAndIndex(testNull, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(test_null));
+        BSON.serializeWithBufferAndIndex(test_null, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const object = bson.decode(serializedData);
+        const object = BSON.deserialize(serialized_data);
         expect(null).to.equal(object.doc);
         done();
     });
@@ -613,14 +608,14 @@ describe("BSON", () => {
      * @ignore
      */
     it("Should Correctly Serialize and Deserialize Number 1", (done) => {
-        const testNumber = { doc: 5.5 };
-        const serializedData = bson.encode(testNumber);
+        const test_number = { doc: 5.5 };
+        const serialized_data = BSON.serialize(test_number);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(testNumber));
-        bson.encodeWithBufferAndIndex(testNumber, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(test_number));
+        BSON.serializeWithBufferAndIndex(test_number, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        expect(testNumber).to.deep.equal(bson.decode(serializedData));
+        expect(test_number).to.deep.equal(BSON.deserialize(serialized_data));
         done();
     });
 
@@ -628,37 +623,37 @@ describe("BSON", () => {
      * @ignore
      */
     it("Should Correctly Serialize and Deserialize Integer", (done) => {
-        let testInt = { doc: 42 };
-        let serializedData = bson.encode(testInt);
+        let test_int = { doc: 42 };
+        let serialized_data = BSON.serialize(test_int);
 
-        let serializedData2 = Buffer.alloc(bson.calculateObjectSize(testInt));
-        bson.encodeWithBufferAndIndex(testInt, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
-        expect(testInt.doc).to.deep.equal(bson.decode(serializedData).doc);
+        let serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(test_int));
+        BSON.serializeWithBufferAndIndex(test_int, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
+        expect(test_int.doc).to.deep.equal(BSON.deserialize(serialized_data).doc);
 
-        testInt = { doc: -5600 };
-        serializedData = bson.encode(testInt);
+        test_int = { doc: -5600 };
+        serialized_data = BSON.serialize(test_int);
 
-        serializedData2 = Buffer.alloc(bson.calculateObjectSize(testInt));
-        bson.encodeWithBufferAndIndex(testInt, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
-        expect(testInt.doc).to.deep.equal(bson.decode(serializedData).doc);
+        serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(test_int));
+        BSON.serializeWithBufferAndIndex(test_int, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
+        expect(test_int.doc).to.deep.equal(BSON.deserialize(serialized_data).doc);
 
-        testInt = { doc: 2147483647 };
-        serializedData = bson.encode(testInt);
+        test_int = { doc: 2147483647 };
+        serialized_data = BSON.serialize(test_int);
 
-        serializedData2 = Buffer.alloc(bson.calculateObjectSize(testInt));
-        bson.encodeWithBufferAndIndex(testInt, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
-        expect(testInt.doc).to.deep.equal(bson.decode(serializedData).doc);
+        serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(test_int));
+        BSON.serializeWithBufferAndIndex(test_int, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
+        expect(test_int.doc).to.deep.equal(BSON.deserialize(serialized_data).doc);
 
-        testInt = { doc: -2147483648 };
-        serializedData = bson.encode(testInt);
+        test_int = { doc: -2147483648 };
+        serialized_data = BSON.serialize(test_int);
 
-        serializedData2 = Buffer.alloc(bson.calculateObjectSize(testInt));
-        bson.encodeWithBufferAndIndex(testInt, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
-        expect(testInt.doc).to.deep.equal(bson.decode(serializedData).doc);
+        serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(test_int));
+        BSON.serializeWithBufferAndIndex(test_int, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
+        expect(test_int.doc).to.deep.equal(BSON.deserialize(serialized_data).doc);
         done();
     });
 
@@ -667,15 +662,15 @@ describe("BSON", () => {
      */
     it("Should Correctly Serialize and Deserialize Object", (done) => {
         const doc = { doc: { age: 42, name: "Spongebob", shoe_size: 9.5 } };
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        expect(doc.doc.age).to.deep.equal(bson.decode(serializedData).doc.age);
-        expect(doc.doc.name).to.deep.equal(bson.decode(serializedData).doc.name);
-        expect(doc.doc.shoe_size).to.deep.equal(bson.decode(serializedData).doc.shoe_size);
+        expect(doc.doc.age).to.deep.equal(BSON.deserialize(serialized_data).doc.age);
+        expect(doc.doc.name).to.deep.equal(BSON.deserialize(serialized_data).doc.name);
+        expect(doc.doc.shoe_size).to.deep.equal(BSON.deserialize(serialized_data).doc.shoe_size);
 
         done();
     });
@@ -685,20 +680,20 @@ describe("BSON", () => {
      */
     it("Should correctly ignore undefined values in arrays", (done) => {
         const doc = { doc: { notdefined: undefined } };
-        const serializedData = bson.encode(doc, {
+        const serialized_data = BSON.serialize(doc, {
             ignoreUndefined: true
         });
-        const serializedData2 = Buffer.alloc(
-            bson.calculateObjectSize(doc, {
+        const serialized_data2 = Buffer.alloc(
+            BSON.calculateObjectSize(doc, {
                 ignoreUndefined: true
             })
         );
-        bson.encodeWithBufferAndIndex(doc, serializedData2, {
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2, {
             ignoreUndefined: true
         });
 
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
-        const doc1 = bson.decode(serializedData);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
+        const doc1 = BSON.deserialize(serialized_data);
 
         expect(undefined).to.deep.equal(doc1.doc.notdefined);
         done();
@@ -706,19 +701,19 @@ describe("BSON", () => {
 
     it("Should correctly serialize undefined array entries as null values", (done) => {
         const doc = { doc: { notdefined: undefined }, a: [1, 2, undefined, 3] };
-        const serializedData = bson.encode(doc, {
+        const serialized_data = BSON.serialize(doc, {
             ignoreUndefined: true
         });
-        const serializedData2 = Buffer.alloc(
-            bson.calculateObjectSize(doc, {
+        const serialized_data2 = Buffer.alloc(
+            BSON.calculateObjectSize(doc, {
                 ignoreUndefined: true
             })
         );
-        bson.encodeWithBufferAndIndex(doc, serializedData2, {
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2, {
             ignoreUndefined: true
         });
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
-        const doc1 = bson.decode(serializedData);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
+        const doc1 = BSON.deserialize(serialized_data);
         expect(undefined).to.deep.equal(doc1.doc.notdefined);
         expect(null).to.equal(doc1.a[2]);
         done();
@@ -726,25 +721,25 @@ describe("BSON", () => {
 
     it("Should correctly serialize undefined array entries as undefined values", (done) => {
         const doc = { doc: { notdefined: undefined }, a: [1, 2, undefined, 3] };
-        const serializedData = bson.encode(doc, {
+        const serialized_data = BSON.serialize(doc, {
             ignoreUndefined: false
         });
-        const serializedData2 = Buffer.alloc(
-            bson.calculateObjectSize(doc, {
+        const serialized_data2 = Buffer.alloc(
+            BSON.calculateObjectSize(doc, {
                 ignoreUndefined: false
             })
         );
-        bson.encodeWithBufferAndIndex(doc, serializedData2, {
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2, {
             ignoreUndefined: false
         });
 
         // console.log("======================================== 0")
-        // console.log(serializedData.toString('hex'))
-        // console.log(serializedData2.toString('hex'))
+        // console.log(serialized_data.toString('hex'))
+        // console.log(serialized_data2.toString('hex'))
 
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
-        const doc1 = bson.decode(serializedData);
-        const doc2 = bson.decode(serializedData2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
+        const doc1 = BSON.deserialize(serialized_data);
+        const doc2 = BSON.deserialize(serialized_data2);
         // console.log("======================================== 0")
         // console.dir(doc1)
         // console.dir(doc2)
@@ -759,13 +754,13 @@ describe("BSON", () => {
      */
     it("Should Correctly Serialize and Deserialize Array", (done) => {
         const doc = { doc: [1, 2, "a", "b"] };
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const deserialized = bson.decode(serializedData);
+        const deserialized = BSON.deserialize(serialized_data);
         expect(doc.doc[0]).to.equal(deserialized.doc[0]);
         expect(doc.doc[1]).to.equal(deserialized.doc[1]);
         expect(doc.doc[2]).to.equal(deserialized.doc[2]);
@@ -778,13 +773,13 @@ describe("BSON", () => {
      */
     it("Should Correctly Serialize and Deserialize Buffer", (done) => {
         const doc = { doc: Buffer.from("hello world") };
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const deserialized = bson.decode(serializedData);
+        const deserialized = BSON.deserialize(serialized_data);
         expect(deserialized.doc instanceof Binary).to.be.ok;
         expect("hello world").to.equal(deserialized.doc.toString());
         done();
@@ -795,13 +790,13 @@ describe("BSON", () => {
      */
     it("Should Correctly Serialize and Deserialize Buffer with promoteBuffers option", (done) => {
         const doc = { doc: Buffer.from("hello world") };
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const deserialized = bson.decode(serializedData, {
+        const deserialized = BSON.deserialize(serialized_data, {
             promoteBuffers: true
         });
         expect(deserialized.doc instanceof Buffer).to.be.ok;
@@ -813,16 +808,16 @@ describe("BSON", () => {
      * @ignore
      */
     it("Should Correctly Serialize and Deserialize Number 4", (done) => {
-        const doc = { doc: bson.BSON_INT32_MAX + 10 };
-        const serializedData = bson.encode(doc);
+        const doc = { doc: BSON.BSON_INT32_MAX + 10 };
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const deserialized = bson.decode(serializedData);
+        const deserialized = BSON.deserialize(serialized_data);
         // expect(deserialized.doc instanceof Binary).to.be.ok;
-        expect(bson.BSON_INT32_MAX + 10).to.equal(deserialized.doc);
+        expect(BSON.BSON_INT32_MAX + 10).to.equal(deserialized.doc);
         done();
     });
 
@@ -832,13 +827,13 @@ describe("BSON", () => {
     it("Should Correctly Serialize and Deserialize Array with added on functions", (done) => {
         Array.prototype.toXml = function () { };
         const doc = { doc: [1, 2, "a", "b"] };
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const deserialized = bson.decode(serializedData);
+        const deserialized = BSON.deserialize(serialized_data);
         expect(doc.doc[0]).to.equal(deserialized.doc[0]);
         expect(doc.doc[1]).to.equal(deserialized.doc[1]);
         expect(doc.doc[2]).to.equal(deserialized.doc[2]);
@@ -851,13 +846,13 @@ describe("BSON", () => {
      */
     it("Should correctly deserialize a nested object", (done) => {
         const doc = { doc: { doc: 1 } };
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        expect(doc.doc.doc).to.deep.equal(bson.decode(serializedData).doc.doc);
+        expect(doc.doc.doc).to.deep.equal(BSON.deserialize(serialized_data).doc.doc);
         done();
     });
 
@@ -866,13 +861,13 @@ describe("BSON", () => {
      */
     it("Should Correctly Serialize and Deserialize A Boolean", (done) => {
         const doc = { doc: true };
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        expect(doc.doc).to.equal(bson.decode(serializedData).doc);
+        expect(doc.doc).to.equal(BSON.deserialize(serialized_data).doc);
         done();
     });
 
@@ -889,13 +884,13 @@ describe("BSON", () => {
         date.setUTCMinutes(0);
         date.setUTCSeconds(30);
         const doc = { doc: date };
-        const serializedData = bson.encode(doc);
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
+        const serialized_data = BSON.serialize(doc);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
 
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const doc1 = bson.decode(serializedData);
+        const doc1 = BSON.deserialize(serialized_data);
         expect(doc).to.deep.equal(doc1);
         done();
     });
@@ -905,8 +900,6 @@ describe("BSON", () => {
      */
     it("Should Correctly Serialize and Deserialize a Date from another VM", (done) => {
         const script = "date1 = new Date();";
-
-
         const ctx = vm.createContext({
             date1: null
         });
@@ -921,12 +914,12 @@ describe("BSON", () => {
         date.setUTCMinutes(0);
         date.setUTCSeconds(30);
         const doc = { doc: date };
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
-        expect(doc.date).to.equal(bson.decode(serializedData).doc.date);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
+        expect(doc.date).to.equal(BSON.deserialize(serialized_data).doc.date);
         done();
     });
 
@@ -949,11 +942,11 @@ describe("BSON", () => {
             anotherString: "another string"
         };
 
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
         done();
     });
@@ -963,13 +956,13 @@ describe("BSON", () => {
      */
     it("Should Correctly Serialize and Deserialize Oid", (done) => {
         const doc = { doc: new ObjectId() };
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        expect(doc).to.deep.equal(bson.decode(serializedData));
+        expect(doc).to.deep.equal(BSON.deserialize(serialized_data));
         done();
     });
 
@@ -978,13 +971,13 @@ describe("BSON", () => {
      */
     it("Should Correctly encode Empty Hash", (done) => {
         const doc = {};
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        expect(doc).to.deep.equal(bson.decode(serializedData));
+        expect(doc).to.deep.equal(BSON.deserialize(serialized_data));
         done();
     });
 
@@ -993,16 +986,16 @@ describe("BSON", () => {
      */
     it("Should Correctly Serialize and Deserialize Ordered Hash", (done) => {
         const doc = { doc: { b: 1, a: 2, c: 3, d: 4 } };
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const decodedHash = bson.decode(serializedData).doc;
+        const decoded_hash = BSON.deserialize(serialized_data).doc;
         const keys = [];
 
-        for (const name in decodedHash) {
+        for (const name in decoded_hash) {
             keys.push(name);
         }
         expect(["b", "a", "c", "d"]).to.deep.equal(keys);
@@ -1015,13 +1008,13 @@ describe("BSON", () => {
     it("Should Correctly Serialize and Deserialize Regular Expression", (done) => {
         // Serialize the regular expression
         const doc = { doc: /foobar/im };
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const doc2 = bson.decode(serializedData);
+        const doc2 = BSON.deserialize(serialized_data);
 
         expect(doc.doc.toString()).to.deep.equal(doc2.doc.toString());
         done();
@@ -1038,15 +1031,15 @@ describe("BSON", () => {
         }
 
         const doc = { doc: bin };
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const deserializedData = bson.decode(serializedData);
+        const deserialized_data = BSON.deserialize(serialized_data);
 
-        expect(doc.doc.value()).to.deep.equal(deserializedData.doc.value());
+        expect(doc.doc.value()).to.deep.equal(deserialized_data.doc.value());
         done();
     });
 
@@ -1061,15 +1054,15 @@ describe("BSON", () => {
         }
 
         const doc = { doc: bin };
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const deserializedData = bson.decode(serializedData);
+        const deserialized_data = BSON.deserialize(serialized_data);
 
-        expect(doc.doc.value()).to.deep.equal(deserializedData.doc.value());
+        expect(doc.doc.value()).to.deep.equal(deserialized_data.doc.value());
         done();
     });
 
@@ -1079,13 +1072,14 @@ describe("BSON", () => {
     it("Should Correctly Serialize and Deserialize DBRef", (done) => {
         const oid = new ObjectId();
         const doc = { dbref: new DBRef("namespace", oid, null, {}) };
+        const b = BSON;
 
-        const serializedData = bson.encode(doc);
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        expect(serializedData).to.deep.equal(serializedData2);
+        const serialized_data = b.serialize(doc);
+        const serialized_data2 = Buffer.alloc(b.calculateObjectSize(doc));
+        b.serializeWithBufferAndIndex(doc, serialized_data2);
+        expect(serialized_data).to.deep.equal(serialized_data2);
 
-        const doc2 = bson.decode(serializedData);
+        const doc2 = b.deserialize(serialized_data);
         expect(doc).to.deep.equal(doc2);
         expect(doc2.dbref.oid.toHexString()).to.deep.equal(oid.toHexString());
         done();
@@ -1097,13 +1091,14 @@ describe("BSON", () => {
     it("Should Correctly Serialize and Deserialize partial DBRef", (done) => {
         const id = new ObjectId();
         const doc = { name: "something", user: { $ref: "username", $id: id } };
-        const serializedData = bson.encode(doc);
+        const b = BSON;
+        const serialized_data = b.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(b.calculateObjectSize(doc));
+        b.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const doc2 = bson.decode(serializedData);
+        const doc2 = b.deserialize(serialized_data);
         expect("something").to.equal(doc2.name);
         expect("username").to.equal(doc2.user.collection);
         expect(id.toString()).to.equal(doc2.user.oid.toString());
@@ -1115,13 +1110,13 @@ describe("BSON", () => {
      */
     it("Should Correctly Serialize and Deserialize simple Int", (done) => {
         const doc = { doc: 2147483648 };
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const doc2 = bson.decode(serializedData);
+        const doc2 = BSON.deserialize(serialized_data);
         expect(doc.doc).to.deep.equal(doc2.doc);
         done();
     });
@@ -1131,24 +1126,24 @@ describe("BSON", () => {
      */
     it("Should Correctly Serialize and Deserialize Long Integer", (done) => {
         let doc = { doc: Long.fromNumber(9223372036854775807) };
-        let serializedData = bson.encode(doc);
+        let serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        let deserializedData = bson.decode(serializedData);
-        expect(doc.doc).to.deep.equal(deserializedData.doc);
+        let deserialized_data = BSON.deserialize(serialized_data);
+        expect(doc.doc).to.deep.equal(deserialized_data.doc);
 
         doc = { doc: Long.fromNumber(-9223372036854775) };
-        serializedData = bson.encode(doc);
-        deserializedData = bson.decode(serializedData);
-        expect(doc.doc).to.deep.equal(deserializedData.doc);
+        serialized_data = BSON.serialize(doc);
+        deserialized_data = BSON.deserialize(serialized_data);
+        expect(doc.doc).to.deep.equal(deserialized_data.doc);
 
         doc = { doc: Long.fromNumber(-9223372036854775809) };
-        serializedData = bson.encode(doc);
-        deserializedData = bson.decode(serializedData);
-        expect(doc.doc).to.deep.equal(deserializedData.doc);
+        serialized_data = BSON.serialize(doc);
+        deserialized_data = BSON.deserialize(serialized_data);
+        expect(doc.doc).to.deep.equal(deserialized_data.doc);
         done();
     });
 
@@ -1156,17 +1151,17 @@ describe("BSON", () => {
      * @ignore
      */
     it("Should Deserialize Large Integers as Number not Long", (done) => {
-        const roundTrip = function (val) {
+        function roundTrip(val) {
             const doc = { doc: val };
-            const serializedData = bson.encode(doc);
+            const serialized_data = BSON.serialize(doc);
 
-            const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-            bson.encodeWithBufferAndIndex(doc, serializedData2);
-            assertBuffersEqual(done, serializedData, serializedData2, 0);
+            const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+            BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+            assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-            const deserializedData = bson.decode(serializedData);
-            expect(doc.doc).to.deep.equal(deserializedData.doc);
-        };
+            const deserialized_data = BSON.deserialize(serialized_data);
+            expect(doc.doc).to.deep.equal(deserialized_data.doc);
+        }
 
         roundTrip(Math.pow(2, 52));
         roundTrip(Math.pow(2, 53) - 1);
@@ -1193,15 +1188,15 @@ describe("BSON", () => {
         expect(timestamp instanceof Timestamp).to.be.ok;
         expect(timestamp instanceof Long).to.be.ok;
 
-        const testInt = { doc: long, doc2: timestamp };
-        const serializedData = bson.encode(testInt);
+        const test_int = { doc: long, doc2: timestamp };
+        const serialized_data = BSON.serialize(test_int);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(testInt));
-        bson.encodeWithBufferAndIndex(testInt, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(test_int));
+        BSON.serializeWithBufferAndIndex(test_int, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const deserializedData = bson.decode(serializedData);
-        expect(testInt.doc).to.deep.equal(deserializedData.doc);
+        const deserialized_data = BSON.deserialize(serialized_data);
+        expect(test_int.doc).to.deep.equal(deserialized_data.doc);
         done();
     });
 
@@ -1210,16 +1205,16 @@ describe("BSON", () => {
      */
     it("Should Always put the id as the first item in a hash", (done) => {
         const hash = { doc: { not_id: 1, _id: 2 } };
-        const serializedData = bson.encode(hash);
+        const serialized_data = BSON.serialize(hash);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(hash));
-        bson.encodeWithBufferAndIndex(hash, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(hash));
+        BSON.serializeWithBufferAndIndex(hash, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const deserializedData = bson.decode(serializedData);
+        const deserialized_data = BSON.deserialize(serialized_data);
         const keys = [];
 
-        for (const name in deserializedData.doc) {
+        for (const name in deserialized_data.doc) {
             keys.push(name);
         }
 
@@ -1232,22 +1227,22 @@ describe("BSON", () => {
      */
     it("Should Correctly Serialize and Deserialize a User defined Binary object", (done) => {
         const bin = new Binary();
-        bin.subType = bson.BSON_BINARY_SUBTYPE_USER_DEFINED;
+        bin.sub_type = BSON.BSON_BINARY_SUBTYPE_USER_DEFINED;
         const string = "binstring";
         for (let index = 0; index < string.length; index++) {
             bin.put(string.charAt(index));
         }
 
         const doc = { doc: bin };
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
-        const deserializedData = bson.decode(serializedData);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
+        const deserialized_data = BSON.deserialize(serialized_data);
 
-        expect(deserializedData.doc.subType).to.deep.equal(bson.BSON_BINARY_SUBTYPE_USER_DEFINED);
-        expect(doc.doc.value()).to.deep.equal(deserializedData.doc.value());
+        expect(deserialized_data.doc.sub_type).to.deep.equal(BSON.BSON_BINARY_SUBTYPE_USER_DEFINED);
+        expect(doc.doc.value()).to.deep.equal(deserialized_data.doc.value());
         done();
     });
 
@@ -1256,14 +1251,14 @@ describe("BSON", () => {
      */
     it("Should Correclty Serialize and Deserialize a Code object", (done) => {
         const doc = { doc: { doc2: new Code("this.a > i", { i: 1 }) } };
-        const serializedData = bson.encode(doc);
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data = BSON.serialize(doc);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const deserializedData = bson.decode(serializedData);
-        expect(doc.doc.doc2.code).to.deep.equal(deserializedData.doc.doc2.code);
-        expect(doc.doc.doc2.scope.i).to.deep.equal(deserializedData.doc.doc2.scope.i);
+        const deserialized_data = BSON.deserialize(serialized_data);
+        expect(doc.doc.doc2.code).to.deep.equal(deserialized_data.doc.doc2.code);
+        expect(doc.doc.doc2.scope.i).to.deep.equal(deserialized_data.doc.doc2.scope.i);
         done();
     });
 
@@ -1293,15 +1288,15 @@ describe("BSON", () => {
             ]
         };
 
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const deserializedData = bson.decode(serializedData);
-        expect(doc.a).to.deep.equal(deserializedData.a);
-        expect(doc.b).to.deep.equal(deserializedData.b);
+        const deserialized_data = BSON.deserialize(serialized_data);
+        expect(doc.a).to.deep.equal(deserialized_data.a);
+        expect(doc.b).to.deep.equal(deserialized_data.b);
         done();
     });
 
@@ -1323,14 +1318,14 @@ describe("BSON", () => {
                 洪水警報本荘地域に洪水警報本荘由利: "本荘由利地域に洪水警報"
             }
         };
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const deserializedData = bson.decode(serializedData);
-        expect(doc).to.deep.equal(deserializedData);
+        const deserialized_data = BSON.deserialize(serialized_data);
+        expect(doc).to.deep.equal(deserialized_data);
         done();
     });
 
@@ -1339,14 +1334,14 @@ describe("BSON", () => {
      */
     it("Should Correctly Serialize and Deserialize query object", (done) => {
         const doc = { count: "remove_with_no_callback_bug_test", query: {}, fields: null };
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const deserializedData = bson.decode(serializedData);
-        expect(doc).to.deep.equal(deserializedData);
+        const deserialized_data = BSON.deserialize(serialized_data);
+        expect(doc).to.deep.equal(deserialized_data);
         done();
     });
 
@@ -1355,14 +1350,14 @@ describe("BSON", () => {
      */
     it("Should Correctly Serialize and Deserialize empty query object", (done) => {
         const doc = {};
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const deserializedData = bson.decode(serializedData);
-        expect(doc).to.deep.equal(deserializedData);
+        const deserialized_data = BSON.deserialize(serialized_data);
+        expect(doc).to.deep.equal(deserialized_data);
         done();
     });
 
@@ -1371,15 +1366,15 @@ describe("BSON", () => {
      */
     it("Should Correctly Serialize and Deserialize array based doc", (done) => {
         const doc = { b: [1, 2, 3], _id: new ObjectId() };
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const deserializedData = bson.decode(serializedData);
-        expect(doc.b).to.deep.equal(deserializedData.b);
-        expect(doc).to.deep.equal(deserializedData);
+        const deserialized_data = BSON.deserialize(serialized_data);
+        expect(doc.b).to.deep.equal(deserialized_data.b);
+        expect(doc).to.deep.equal(deserialized_data);
         done();
     });
 
@@ -1393,14 +1388,14 @@ describe("BSON", () => {
             //var doc = { b: [new BSONSymbol('test')] };
 
             const doc = { b: ["test"] };
-            const serializedData = bson.encode(doc);
-            const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-            bson.encodeWithBufferAndIndex(doc, serializedData2);
-            assertBuffersEqual(done, serializedData, serializedData2, 0);
+            const serialized_data = BSON.serialize(doc);
+            const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+            BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+            assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-            const deserializedData = bson.decode(serializedData);
-            expect(doc).to.deep.equal(deserializedData);
-            expect(typeof deserializedData.b[0]).to.equal("string");
+            const deserialized_data = BSON.deserialize(serialized_data);
+            expect(doc).to.deep.equal(deserialized_data);
+            expect(typeof deserialized_data.b[0]).to.equal("string");
         }
 
         done();
@@ -1411,14 +1406,14 @@ describe("BSON", () => {
      */
     it("Should handle Deeply nested document", (done) => {
         const doc = { a: { b: { c: { d: 2 } } } };
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const deserializedData = bson.decode(serializedData);
-        expect(doc).to.deep.equal(deserializedData);
+        const deserialized_data = BSON.deserialize(serialized_data);
+        expect(doc).to.deep.equal(deserialized_data);
         done();
     });
 
@@ -1431,7 +1426,7 @@ describe("BSON", () => {
         let oid = new ObjectId();
         let string = "binstring";
         let bin = new Binary();
-        for (let index = 0; index < string.length; index++) {
+        for (var index = 0; index < string.length; index++) {
             bin.put(string.charAt(index));
         }
 
@@ -1455,7 +1450,7 @@ describe("BSON", () => {
         oid = ObjectId.createFromHexString(oid.toHexString());
         string = "binstring";
         bin = new Binary();
-        for (let index = 0; index < string.length; index++) {
+        for (index = 0; index < string.length; index++) {
             bin.put(string.charAt(index));
         }
 
@@ -1475,16 +1470,16 @@ describe("BSON", () => {
             dbref: new DBRef("namespace", oid, "integration_tests_")
         };
 
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        let serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
+        let serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
 
-        expect(serializedData).to.deep.equal(serializedData2);
+        expect(serialized_data).to.deep.equal(serialized_data2);
 
-        serializedData2 = bson.encode(doc2, false, true);
+        serialized_data2 = BSON.serialize(doc2, false, true);
 
-        expect(serializedData).to.deep.equal(serializedData2);
+        expect(serialized_data).to.deep.equal(serialized_data2);
 
         done();
     });
@@ -1505,18 +1500,18 @@ describe("BSON", () => {
             _id: new ObjectId()
         };
 
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        let serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        let serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
         const doc2 = doc;
         doc2._id = ObjectId.createFromHexString(doc2._id.toHexString());
-        serializedData2 = bson.encode(doc2, false, true);
+        serialized_data2 = BSON.serialize(doc2, false, true);
 
-        for (let i = 0; i < serializedData2.length; i++) {
-            require("assert").equal(serializedData2[i], serializedData[i]);
+        for (let i = 0; i < serialized_data2.length; i++) {
+            require("assert").equal(serialized_data2[i], serialized_data[i]);
         }
 
         done();
@@ -1528,6 +1523,8 @@ describe("BSON", () => {
     it("Should correctly massive doc", (done) => {
         const oid1 = new ObjectId();
         const oid2 = new ObjectId();
+
+        const b = BSON;
 
         // JS doc
         const doc = {
@@ -1544,13 +1541,13 @@ describe("BSON", () => {
             _id: ObjectId.createFromHexString(oid2.toHexString())
         };
 
-        const serializedData = bson.encode(doc);
-        let serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        expect(serializedData).to.deep.equal(serializedData2);
+        const serialized_data = b.serialize(doc);
+        let serialized_data2 = Buffer.alloc(b.calculateObjectSize(doc));
+        b.serializeWithBufferAndIndex(doc, serialized_data2);
+        expect(serialized_data).to.deep.equal(serialized_data2);
 
-        serializedData2 = bson.encode(doc2, false, true);
-        expect(serializedData).to.deep.equal(serializedData2);
+        serialized_data2 = b.serialize(doc2, false, true);
+        expect(serialized_data).to.deep.equal(serialized_data2);
         done();
     });
 
@@ -1560,16 +1557,16 @@ describe("BSON", () => {
     it("Should Correctly Serialize/Deserialize regexp object", (done) => {
         const doc = { b: /foobaré/ };
 
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        let serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        let serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        serializedData2 = bson.encode(doc);
+        serialized_data2 = BSON.serialize(doc);
 
-        for (let i = 0; i < serializedData2.length; i++) {
-            require("assert").equal(serializedData2[i], serializedData[i]);
+        for (let i = 0; i < serialized_data2.length; i++) {
+            require("assert").equal(serialized_data2[i], serialized_data[i]);
         }
 
         done();
@@ -1581,13 +1578,13 @@ describe("BSON", () => {
     it("Should Correctly Serialize/Deserialize complicated object", (done) => {
         const doc = { a: { b: { c: [new ObjectId(), new ObjectId()] } }, d: { f: 1332.3323 } };
 
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const doc2 = bson.decode(serializedData);
+        const doc2 = BSON.deserialize(serialized_data);
 
         expect(doc).to.deep.equal(doc2);
         done();
@@ -1607,13 +1604,13 @@ describe("BSON", () => {
             }
         };
 
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const doc2 = bson.decode(serializedData);
+        const doc2 = BSON.deserialize(serialized_data);
 
         expect(doc).to.deep.equal(doc2);
         done();
@@ -1633,13 +1630,13 @@ describe("BSON", () => {
             }
         };
 
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const doc2 = bson.decode(serializedData);
+        const doc2 = BSON.deserialize(serialized_data);
         expect(doc).to.deep.equal(doc2);
         done();
     });
@@ -1652,8 +1649,8 @@ describe("BSON", () => {
             "": "test",
             bbbb: 1
         };
-        const serializedData = bson.encode(doc);
-        const doc2 = bson.decode(serializedData);
+        const serialized_data = BSON.serialize(doc);
+        const doc2 = BSON.deserialize(serialized_data);
         expect(doc2[""]).to.equal("test");
         expect(doc2.bbbb).to.equal(1);
         done();
@@ -1668,13 +1665,13 @@ describe("BSON", () => {
             const doc = { value: doubleValue };
 
             // Serialize
-            const serializedData = bson.encode(doc);
+            const serialized_data = BSON.serialize(doc);
 
-            const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-            bson.encodeWithBufferAndIndex(doc, serializedData2);
-            assertBuffersEqual(done, serializedData, serializedData2, 0);
+            const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+            BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+            assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-            const doc2 = bson.decode(serializedData);
+            const doc2 = BSON.deserialize(serialized_data);
             expect({ value: 100 }).to.deep.equal(doc2);
         }
 
@@ -1695,11 +1692,11 @@ describe("BSON", () => {
             ]
         };
 
-        const serializedData = bson.encode(doc);
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
-        const doc2 = bson.decode(serializedData);
+        const serialized_data = BSON.serialize(doc);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
+        const doc2 = BSON.deserialize(serialized_data);
 
         expect(JSON.stringify(doc)).to.deep.equal(JSON.stringify(doc2));
         done();
@@ -1715,11 +1712,11 @@ describe("BSON", () => {
             maxKey: new MaxKey()
         };
 
-        const serializedData = bson.encode(doc);
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
-        const doc2 = bson.decode(serializedData);
+        const serialized_data = BSON.serialize(doc);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
+        const doc2 = BSON.deserialize(serialized_data);
 
         // Peform equality checks
         expect(JSON.stringify(doc)).to.equal(JSON.stringify(doc2));
@@ -1738,11 +1735,11 @@ describe("BSON", () => {
             value: new Double(34343.2222)
         };
 
-        const serializedData = bson.encode(doc);
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
-        const doc2 = bson.decode(serializedData);
+        const serialized_data = BSON.serialize(doc);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
+        const doc2 = BSON.deserialize(serialized_data);
 
         expect(doc.value.valueOf(), doc2.value).to.be.ok;
         expect(doc.value.value, doc2.value).to.be.ok;
@@ -1782,16 +1779,17 @@ describe("BSON", () => {
      */
     it("Should Correctly throw error on bsonparser errors", (done) => {
         let data = Buffer.alloc(3);
+        const parser = BSON;
 
         expect(() => {
-            bson.decode(data);
+            parser.deserialize(data);
         }).to.throw();
 
         data = Buffer.alloc(5);
         data[0] = 0xff;
         data[1] = 0xff;
         expect(() => {
-            bson.decode(data);
+            parser.deserialize(data);
         }).to.throw();
 
         // Finish up
@@ -1799,15 +1797,16 @@ describe("BSON", () => {
     });
 
     /**
-     * A simple example showing the usage of bson.calculateObjectSize function returning the number of BSON bytes a javascript object needs.
+     * A simple example showing the usage of BSON.calculateObjectSize function returning the number of BSON bytes a javascript object needs.
      *
      * @_class bson
-     * @_function bson.calculateObjectSize
+     * @_function BSON.calculateObjectSize
      * @ignore
      */
     it("Should correctly calculate the size of a given javascript object", (done) => {
         // Create a simple object
         const doc = { a: 1, func() { } };
+        const bson = BSON;
         // Calculate the size of the object without serializing the function
         let size = bson.calculateObjectSize(doc, {
             serializeFunctions: false
@@ -1823,7 +1822,7 @@ describe("BSON", () => {
     });
 
     /**
-     * A simple example showing the usage of bson.calculateObjectSize function returning the number of BSON bytes a javascript object needs.
+     * A simple example showing the usage of BSON.calculateObjectSize function returning the number of BSON bytes a javascript object needs.
      *
      * @_class bson
      * @_function calculateObjectSize
@@ -1832,6 +1831,8 @@ describe("BSON", () => {
     it("Should correctly calculate the size of a given javascript object using instance method", (done) => {
         // Create a simple object
         const doc = { a: 1, func() { } };
+        // Create a BSON parser instance
+        const bson = BSON;
         // Calculate the size of the object without serializing the function
         let size = bson.calculateObjectSize(doc, {
             serializeFunctions: false
@@ -1847,21 +1848,22 @@ describe("BSON", () => {
     });
 
     /**
-     * A simple example showing the usage of bson.encodeWithBufferAndIndex function.
+     * A simple example showing the usage of BSON.serializeWithBufferAndIndex function.
      *
      * @_class bson
-     * @_function bson.encodeWithBufferAndIndex
+     * @_function BSON.serializeWithBufferAndIndex
      * @ignore
      */
-    it("Should correctly encodeWithBufferAndIndex a given javascript object", (done) => {
+    it("Should correctly serializeWithBufferAndIndex a given javascript object", (done) => {
         // Create a simple object
         const doc = { a: 1, func() { } };
+        const bson = BSON;
 
         // Calculate the size of the document, no function serialization
         let size = bson.calculateObjectSize(doc, { serializeFunctions: false });
         let buffer = Buffer.alloc(size);
         // Serialize the object to the buffer, checking keys and not serializing functions
-        let index = bson.encodeWithBufferAndIndex(doc, buffer, {
+        let index = bson.serializeWithBufferAndIndex(doc, buffer, {
             serializeFunctions: false,
             index: 0
         });
@@ -1878,7 +1880,7 @@ describe("BSON", () => {
         // Allocate a buffer
         buffer = Buffer.alloc(size);
         // Serialize the object to the buffer, checking keys and not serializing functions
-        index = bson.encodeWithBufferAndIndex(doc, buffer, {
+        index = bson.serializeWithBufferAndIndex(doc, buffer, {
             serializeFunctions: true,
             index: 0
         });
@@ -1890,15 +1892,17 @@ describe("BSON", () => {
     });
 
     /**
-     * A simple example showing the usage of bson.encodeWithBufferAndIndex function.
+     * A simple example showing the usage of BSON.serializeWithBufferAndIndex function.
      *
      * @_class bson
-     * @_function encodeWithBufferAndIndex
+     * @_function serializeWithBufferAndIndex
      * @ignore
      */
-    it("Should correctly encodeWithBufferAndIndex a given javascript object using a BSON instance", (done) => {
+    it("Should correctly serializeWithBufferAndIndex a given javascript object using a BSON instance", (done) => {
         // Create a simple object
         const doc = { a: 1, func() { } };
+        // Create a BSON parser instance
+        const bson = BSON;
         // Calculate the size of the document, no function serialization
         let size = bson.calculateObjectSize(doc, {
             serializeFunctions: false
@@ -1906,7 +1910,7 @@ describe("BSON", () => {
         // Allocate a buffer
         let buffer = Buffer.alloc(size);
         // Serialize the object to the buffer, checking keys and not serializing functions
-        let index = bson.encodeWithBufferAndIndex(doc, buffer, {
+        let index = bson.serializeWithBufferAndIndex(doc, buffer, {
             serializeFunctions: false
         });
 
@@ -1921,7 +1925,7 @@ describe("BSON", () => {
         // Allocate a buffer
         buffer = Buffer.alloc(size);
         // Serialize the object to the buffer, checking keys and not serializing functions
-        index = bson.encodeWithBufferAndIndex(doc, buffer, {
+        index = bson.serializeWithBufferAndIndex(doc, buffer, {
             serializeFunctions: true
         });
         // Validate the correctness
@@ -1932,17 +1936,19 @@ describe("BSON", () => {
     });
 
     /**
-     * A simple example showing the usage of bson.encode function returning serialized BSON Buffer object.
+     * A simple example showing the usage of BSON.serialize function returning serialized BSON Buffer object.
      *
      * @_class bson
-     * @_function bson.encode
+     * @_function BSON.serialize
      * @ignore
      */
     it("Should correctly serialize a given javascript object", (done) => {
         // Create a simple object
         const doc = { a: 1, func() { } };
+        // Create a BSON parser instance
+        const bson = BSON;
 
-        let buffer = bson.encode(doc, {
+        let buffer = bson.serialize(doc, {
             checkKeys: true,
             serializeFunctions: false
         });
@@ -1950,7 +1956,7 @@ describe("BSON", () => {
         expect(buffer.length).to.equal(12);
 
         // Serialize the object to a buffer, checking keys and serializing functions
-        buffer = bson.encode(doc, {
+        buffer = bson.serialize(doc, {
             checkKeys: true,
             serializeFunctions: true
         });
@@ -1961,7 +1967,7 @@ describe("BSON", () => {
     });
 
     /**
-     * A simple example showing the usage of bson.encode function returning serialized BSON Buffer object.
+     * A simple example showing the usage of BSON.serialize function returning serialized BSON Buffer object.
      *
      * @_class bson
      * @_function serialize
@@ -1970,9 +1976,11 @@ describe("BSON", () => {
     it("Should correctly serialize a given javascript object using a bson instance", (done) => {
         // Create a simple object
         const doc = { a: 1, func() { } };
+        // Create a BSON parser instance
+        const bson = BSON;
 
         // Serialize the object to a buffer, checking keys and not serializing functions
-        let buffer = bson.encode(doc, {
+        let buffer = bson.serialize(doc, {
             checkKeys: true,
             serializeFunctions: false
         });
@@ -1980,7 +1988,7 @@ describe("BSON", () => {
         expect(buffer.length).to.equal(12);
 
         // Serialize the object to a buffer, checking keys and serializing functions
-        buffer = bson.encode(doc, {
+        buffer = bson.serialize(doc, {
             checkKeys: true,
             serializeFunctions: true
         });
@@ -1991,10 +1999,10 @@ describe("BSON", () => {
     });
 
     // /**
-    //  * A simple example showing the usage of bson.decode function returning a deserialized Javascript function.
+    //  * A simple example showing the usage of BSON.deserialize function returning a deserialized Javascript function.
     //  *
     //  * @_class bson
-    //  * @_function bson.decode
+    //  * @_function BSON.deserialize
     //  * @ignore
     //  */
     //  it('Should correctly deserialize a buffer using the BSON class level parser', function(done) {
@@ -2056,10 +2064,10 @@ describe("BSON", () => {
     // }
 
     // /**
-    //  * A simple example showing the usage of bson.decodeStream function returning deserialized Javascript objects.
+    //  * A simple example showing the usage of BSON.deserializeStream function returning deserialized Javascript objects.
     //  *
     //  * @_class bson
-    //  * @_function bson.decodeStream
+    //  * @_function BSON.deserializeStream
     //  * @ignore
     //  */
     // it('Should correctly deserializeStream a buffer object', function(done) {
@@ -2138,17 +2146,18 @@ describe("BSON", () => {
     // }
 
     it("should properly deserialize multiple documents using deserializeStream", () => {
+        const bson = BSON;
         const docs = [{ foo: "bar" }, { foo: "baz" }, { foo: "quux" }];
 
         // Serialize the test data
         const serializedDocs = [];
         for (let i = 0; i < docs.length; i++) {
-            serializedDocs[i] = bson.encode(docs[i]);
+            serializedDocs[i] = bson.serialize(docs[i]);
         }
         const buf = Buffer.concat(serializedDocs);
 
         const parsedDocs = [];
-        bson.decodeStream(buf, 0, docs.length, parsedDocs, 0);
+        bson.deserializeStream(buf, 0, docs.length, parsedDocs, 0);
 
         docs.forEach((doc, i) => expect(doc).to.deep.equal(parsedDocs[i]));
     });
@@ -2236,12 +2245,12 @@ describe("BSON", () => {
     it("Should correctly serialize the BSONRegExp type", (done) => {
         const doc = { regexp: new BSONRegExp("test", "i") };
         let doc1 = { regexp: /test/i };
-        const serializedData = bson.encode(doc);
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data = BSON.serialize(doc);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        doc1 = bson.decode(serializedData);
+        doc1 = BSON.deserialize(serialized_data);
         const regexp = new RegExp("test", "i");
         expect(regexp).to.deep.equal(doc1.regexp);
         done();
@@ -2252,13 +2261,13 @@ describe("BSON", () => {
      */
     it("Should correctly deserialize the BSONRegExp type", (done) => {
         const doc = { regexp: new BSONRegExp("test", "i") };
-        const serializedData = bson.encode(doc);
+        const serialized_data = BSON.serialize(doc);
 
-        const serializedData2 = Buffer.alloc(bson.calculateObjectSize(doc));
-        bson.encodeWithBufferAndIndex(doc, serializedData2);
-        assertBuffersEqual(done, serializedData, serializedData2, 0);
+        const serialized_data2 = Buffer.alloc(BSON.calculateObjectSize(doc));
+        BSON.serializeWithBufferAndIndex(doc, serialized_data2);
+        assertBuffersEqual(done, serialized_data, serialized_data2, 0);
 
-        const doc1 = bson.decode(serializedData, { bsonRegExp: true });
+        const doc1 = BSON.deserialize(serialized_data, { bsonRegExp: true });
         expect(doc1.regexp instanceof BSONRegExp).to.be.ok;
         expect("test").to.equal(doc1.regexp.pattern);
         expect("i").to.equal(doc1.regexp.options);
@@ -2281,8 +2290,34 @@ describe("BSON", () => {
     });
 
     it("should serialize ObjectIds from old bson versions", () => {
-        // create a wrapper simulating the old ObjectID class
-        class ObjectID {
+        // In versions 4.0.0 and 4.0.1, we used _bsontype="ObjectId" which broke
+        // backwards compatibility with mongodb-core and other code. It was reverted
+        // back to "ObjectID" (capital D) in later library versions.
+        // The test below ensures that all three versions of Object ID work OK:
+        // 1. The current version's class
+        // 2. A simulation of the class from library 4.0.0
+        // 3. The class currently in use by mongodb (not tested in browser where mongodb is unavailable)
+
+        // test the old ObjectID class (in mongodb-core 3.1) because MongoDB drivers still return it
+        function getOldBSON() {
+            try {
+                // do a dynamic resolve to avoid exception when running browser tests
+                const file = require.resolve("mongodb-core");
+                const oldModule = require(file).BSON;
+                const funcs = new oldModule.BSON();
+                oldModule.serialize = funcs.serialize;
+                oldModule.deserialize = funcs.deserialize;
+                return oldModule;
+            } catch (e) {
+                return BSON; // if mongo is unavailable, e.g. browser tests, just re-use new BSON
+            }
+        }
+
+        const OldBSON = getOldBSON();
+        const OldObjectID = OldBSON === BSON ? BSON.ObjectId : OldBSON.ObjectID;
+
+        // create a wrapper simulating the old ObjectId class from v4.0.0
+        class ObjectIdv400 {
             constructor() {
                 this.oid = new ObjectId();
             }
@@ -2295,11 +2330,11 @@ describe("BSON", () => {
                 return this.oid.toString();
             }
         }
-        Object.defineProperty(ObjectID.prototype, "_bsontype", { value: "ObjectID" });
+        Object.defineProperty(ObjectIdv400.prototype, "_bsontype", { value: "ObjectId" });
 
         // Array
-        const array = [new ObjectID(), new ObjectId()];
-        const deserializedArrayAsMap = bson.decode(bson.encode(array));
+        const array = [new ObjectIdv400(), new OldObjectID(), new ObjectId()];
+        const deserializedArrayAsMap = BSON.deserialize(BSON.serialize(array));
         const deserializedArray = Object.keys(deserializedArrayAsMap).map(
             (x) => deserializedArrayAsMap[x]
         );
@@ -2307,9 +2342,10 @@ describe("BSON", () => {
 
         // Map
         const map = new Map();
-        map.set("oldBsonType", new ObjectID());
+        map.set("oldBsonType", new ObjectIdv400());
+        map.set("reallyOldBsonType", new OldObjectID());
         map.set("newBsonType", new ObjectId());
-        const deserializedMapAsObject = bson.decode(bson.encode(map), { relaxed: false });
+        const deserializedMapAsObject = BSON.deserialize(BSON.serialize(map), { relaxed: false });
         const deserializedMap = new Map(
             Object.keys(deserializedMapAsObject).map((k) => [k, deserializedMapAsObject[k]])
         );
@@ -2321,10 +2357,25 @@ describe("BSON", () => {
         });
 
         // Object
-        const record = { oldBsonType: new ObjectID(), newBsonType: new ObjectId() };
-        const deserializedObject = bson.decode(bson.encode(record));
-        expect(deserializedObject).to.have.keys(["oldBsonType", "newBsonType"]);
+        const record = {
+            oldBsonType: new ObjectIdv400(),
+            reallyOldBsonType: new OldObjectID(),
+            newBsonType: new ObjectId()
+        };
+        const deserializedObject = BSON.deserialize(BSON.serialize(record));
+        expect(deserializedObject).to.have.keys(["oldBsonType", "reallyOldBsonType", "newBsonType"]);
         expect(record.oldBsonType.toString()).to.equal(deserializedObject.oldBsonType.toString());
         expect(record.newBsonType.toString()).to.equal(deserializedObject.newBsonType.toString());
+    });
+
+    it("should throw if invalid BSON types are input to BSON serializer", () => {
+        const oid = new ObjectId("111111111111111111111111");
+        const badBsonType = Object.assign({}, oid, { _bsontype: "bogus" });
+        const badDoc = { bad: badBsonType };
+        const badArray = [oid, badDoc];
+        const badMap = new Map([["a", badBsonType], ["b", badDoc], ["c", badArray]]);
+        expect(() => BSON.serialize(badDoc)).to.throw();
+        expect(() => BSON.serialize(badArray)).to.throw();
+        expect(() => BSON.serialize(badMap)).to.throw();
     });
 });

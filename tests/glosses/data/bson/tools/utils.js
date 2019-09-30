@@ -1,5 +1,3 @@
-
-
 exports.assertArrayEqual = function (array1, array2) {
     if (array1.length !== array2.length) {
         return false; 
@@ -63,11 +61,7 @@ exports.Utf8 = {
         let string = "";
         let i = 0;
         let c = 0;
-
-            
         let c2 = 0;
-
-            
         let c3 = 0;
 
         while (i < utftext.length) {
@@ -91,7 +85,6 @@ exports.Utf8 = {
 };
 
 exports.assertBuffersEqual = function (done, buffer1, buffer2) {
-    const expect = require("chai").expect;
     if (buffer1.length !== buffer2.length) {
         done("Buffers do not have the same length", buffer1, buffer2);
     }

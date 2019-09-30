@@ -1,4 +1,3 @@
-
 /**
  * A class representation of a BSON Int32 type.
  */

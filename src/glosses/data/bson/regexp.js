@@ -1,5 +1,3 @@
-
-
 function alphabetize(str) {
     return str
         .split("")

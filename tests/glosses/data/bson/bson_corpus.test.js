@@ -1,11 +1,10 @@
 const {
-    data: { bson }
+    is,
+    data: { bson: BSON }
 } = adone;
 
-const {
-    Decimal128,
-    EJSON
-} = bson;
+const Decimal128 = BSON.Decimal128;
+const EJSON = BSON.EJSON;
 
 const deserializeOptions = {
     bsonRegExp: true,
@@ -17,28 +16,39 @@ const serializeOptions = {
     ignoreUndefined: false
 };
 
-const nativeToBson = function (native) {
+function nativeToBson(native) {
     const serializeOptions = {
         ignoreUndefined: false
     };
 
-    return bson.encode(native, serializeOptions);
-};
+    return BSON.serialize(native, serializeOptions);
+}
 
-const bsonToNative = function (bsn) {
+function bsonToNative(bson) {
     const deserializeOptions = {
         bsonRegExp: true,
         promoteLongs: true,
         promoteValues: false
     };
 
-    return bson.decode(bsn, deserializeOptions);
-};
+    return BSON.deserialize(bson, deserializeOptions);
+}
 
-const jsonToNative = (json) => EJSON.parse(json, { relaxed: false });
-const nativeToCEJSON = (native) => EJSON.stringify(native, { relaxed: false });
-const nativeToREJSON = (native) => EJSON.stringify(native, { relaxed: true });
-const normalize = (cEJ) => JSON.stringify(JSON.parse(cEJ));
+function jsonToNative(json) {
+    return EJSON.parse(json, { relaxed: false });
+}
+
+function nativeToCEJSON(native) {
+    return EJSON.stringify(native, { relaxed: false });
+}
+
+function nativeToREJSON(native) {
+    return EJSON.stringify(native, { relaxed: true });
+}
+
+function normalize(cEJ) {
+    return JSON.stringify(JSON.parse(cEJ));
+}
 
 // tests from the corpus that we need to skip, and explanations why
 const skipBSON = {
@@ -121,8 +131,8 @@ describe("BSON Corpus", () => {
                                 convB = Buffer.from(v.converted_bson, "hex");
                             }
 
-                            const roundTripped = bson.encode(
-                                bson.decode(cB, deserializeOptions),
+                            const roundTripped = BSON.serialize(
+                                BSON.deserialize(cB, deserializeOptions),
                                 serializeOptions
                             );
 
@@ -134,7 +144,7 @@ describe("BSON Corpus", () => {
 
                             if (dB) {
                                 expect(cB).to.deep.equal(
-                                    bson.encode(bson.decode(dB, deserializeOptions), serializeOptions)
+                                    BSON.serialize(BSON.deserialize(dB, deserializeOptions), serializeOptions)
                                 );
                             }
                         });
@@ -207,7 +217,7 @@ describe("BSON Corpus", () => {
                     scenario.decodeErrors.forEach((d) => {
                         it(d.description, () => {
                             const B = Buffer.from(d.bson, "hex");
-                            expect(() => bson.decode(B, deserializeOptions)).to.throw();
+                            expect(() => BSON.deserialize(B, deserializeOptions)).to.throw();
                         });
                     });
                 });

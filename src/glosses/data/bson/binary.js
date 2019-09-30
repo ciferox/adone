@@ -3,47 +3,6 @@ const {
 } = adone;
 
 /**
- * Binary default subtype
- * @ignore
- */
-const BSON_BINARY_SUBTYPE_DEFAULT = 0;
-
-
-const isUint8Array = (obj) => Object.prototype.toString.call(obj) === "[object Uint8Array]";
-
-/**
- * @ignore
- */
-const writeStringToArray = function (data) {
-    // Create a buffer
-    const buffer =
-        !is.undefined(Uint8Array)
-            ? new Uint8Array(new ArrayBuffer(data.length))
-            : new Array(data.length);
-
-    // Write the content to the buffer
-    for (let i = 0; i < data.length; i++) {
-        buffer[i] = data.charCodeAt(i);
-    }
-    // Write the string to the buffer
-    return buffer;
-};
-
-/**
- * Convert Array ot Uint8Array to Binary String
- *
- * @ignore
- */
-const convertArraytoUtf8BinaryString = function (byteArray, startIndex, endIndex) {
-    let result = "";
-    for (let i = startIndex; i < endIndex; i++) {
-        result = result + String.fromCharCode(byteArray[i]);
-    }
-
-    return result;
-};
-
-/**
  * A class representation of the BSON Binary type.
  */
 class Binary {
@@ -73,7 +32,7 @@ class Binary {
             throw new TypeError("only String, Buffer, Uint8Array or Array accepted");
         }
 
-        this.subType = is.nil(subType) ? BSON_BINARY_SUBTYPE_DEFAULT : subType;
+        this.sub_type = is.nil(subType) ? BSON_BINARY_SUBTYPE_DEFAULT : subType;
         this.position = 0;
 
         if (!is.nil(buffer) && !(buffer instanceof Number)) {
@@ -106,29 +65,29 @@ class Binary {
      * Updates this binary with byte_value.
      *
      * @method
-     * @param {string} byteValue a single byte we wish to write.
+     * @param {string} byte_value a single byte we wish to write.
      */
-    put(byteValue) {
+    put(byte_value) {
         // If it's a string and a has more than one character throw an error
-        if (!is.nil(byteValue.length) && !is.number(byteValue) && byteValue.length !== 1) {
+        if (!is.nil(byte_value.length) && !is.number(byte_value) && byte_value.length !== 1) {
             throw new TypeError("only accepts single character String, Uint8Array or Array");
         }
-        if ((!is.number(byteValue) && byteValue < 0) || byteValue > 255) {
+        if ((!is.number(byte_value) && byte_value < 0) || byte_value > 255) {
             throw new TypeError("only accepts number in a valid unsigned byte range 0-255");
         }
 
         // Decode the byte value once
-        let decodedByte = null;
-        if (is.string(byteValue)) {
-            decodedByte = byteValue.charCodeAt(0);
-        } else if (!is.nil(byteValue.length)) {
-            decodedByte = byteValue[0];
+        let decoded_byte = null;
+        if (is.string(byte_value)) {
+            decoded_byte = byte_value.charCodeAt(0);
+        } else if (!is.nil(byte_value.length)) {
+            decoded_byte = byte_value[0];
         } else {
-            decodedByte = byteValue;
+            decoded_byte = byte_value;
         }
 
         if (this.buffer.length > this.position) {
-            this.buffer[this.position++] = decodedByte;
+            this.buffer[this.position++] = decoded_byte;
         } else {
             if (!is.undefined(Buffer) && is.buffer(this.buffer)) {
                 // Create additional overflow buffer
@@ -136,7 +95,7 @@ class Binary {
                 // Combine the two buffers together
                 this.buffer.copy(buffer, 0, 0, this.buffer.length);
                 this.buffer = buffer;
-                this.buffer[this.position++] = decodedByte;
+                this.buffer[this.position++] = decoded_byte;
             } else {
                 let buffer = null;
                 // Create a new buffer (typed or normal array)
@@ -154,7 +113,7 @@ class Binary {
                 // Reassign the buffer
                 this.buffer = buffer;
                 // Write the byte
-                this.buffer[this.position++] = decodedByte;
+                this.buffer[this.position++] = decoded_byte;
             }
         }
     }
@@ -329,7 +288,7 @@ class Binary {
             ? this.buffer.toString("base64")
             : Buffer.from(this.buffer).toString("base64");
 
-        const subType = Number(this.subType).toString(16);
+        const subType = Number(this.sub_type).toString(16);
         return {
             $binary: {
                 base64: base64String,
@@ -348,6 +307,47 @@ class Binary {
     }
 }
 
+/**
+ * Binary default subtype
+ * @ignore
+ */
+const BSON_BINARY_SUBTYPE_DEFAULT = 0;
+
+function isUint8Array(obj) {
+    return Object.prototype.toString.call(obj) === "[object Uint8Array]";
+}
+
+/**
+ * @ignore
+ */
+function writeStringToArray(data) {
+    // Create a buffer
+    const buffer =
+        !is.undefined(Uint8Array)
+            ? new Uint8Array(new ArrayBuffer(data.length))
+            : new Array(data.length);
+
+    // Write the content to the buffer
+    for (let i = 0; i < data.length; i++) {
+        buffer[i] = data.charCodeAt(i);
+    }
+    // Write the string to the buffer
+    return buffer;
+}
+
+/**
+ * Convert Array ot Uint8Array to Binary String
+ *
+ * @ignore
+ */
+function convertArraytoUtf8BinaryString(byteArray, startIndex, endIndex) {
+    let result = "";
+    for (let i = startIndex; i < endIndex; i++) {
+        result = result + String.fromCharCode(byteArray[i]);
+    }
+
+    return result;
+}
 
 Binary.BUFFER_SIZE = 256;
 

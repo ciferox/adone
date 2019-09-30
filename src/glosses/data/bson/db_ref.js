@@ -15,7 +15,7 @@ class DBRef {
      * @return {DBRef}
      */
     constructor(collection, oid, db, fields) {
-    // check if namespace has been provided
+        // check if namespace has been provided
         const parts = collection.split(".");
         if (parts.length === 2) {
             db = parts.shift();
@@ -42,7 +42,7 @@ class DBRef {
         );
 
         if (!is.nil(this.db)) {
-            o.$db = this.db; 
+            o.$db = this.db;
         }
         return o;
     }
@@ -74,4 +74,15 @@ class DBRef {
 }
 
 Object.defineProperty(DBRef.prototype, "_bsontype", { value: "DBRef" });
+// the 1.x parser used a "namespace" property, while 4.x uses "collection". To ensure backwards
+// compatibility, let's expose "namespace"
+Object.defineProperty(DBRef.prototype, "namespace", {
+    get() {
+        return this.collection;
+    },
+    set(val) {
+        this.collection = val;
+    },
+    configurable: false
+});
 module.exports = DBRef;

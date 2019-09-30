@@ -1,29 +1,26 @@
 const {
-    data: { bson },
-    is
+    is,
+    data: { bson: BSON }
 } = adone;
 
-const {
-    Int32,
-    Double
-} = bson;
-
-const BinaryParser = require("./binary_parser").BinaryParser;
+const Int32 = BSON.Int32;
+const Double = BSON.Double;
+const { BinaryParser } = require("./binary_parser");
 
 // for tests
-bson.BSON_BINARY_SUBTYPE_DEFAULT = 0;
-bson.BSON_BINARY_SUBTYPE_FUNCTION = 1;
-bson.BSON_BINARY_SUBTYPE_BYTE_ARRAY = 2;
-bson.BSON_BINARY_SUBTYPE_UUID = 3;
-bson.BSON_BINARY_SUBTYPE_MD5 = 4;
-bson.BSON_BINARY_SUBTYPE_USER_DEFINED = 128;
+BSON.BSON_BINARY_SUBTYPE_DEFAULT = 0;
+BSON.BSON_BINARY_SUBTYPE_FUNCTION = 1;
+BSON.BSON_BINARY_SUBTYPE_BYTE_ARRAY = 2;
+BSON.BSON_BINARY_SUBTYPE_UUID = 3;
+BSON.BSON_BINARY_SUBTYPE_MD5 = 4;
+BSON.BSON_BINARY_SUBTYPE_USER_DEFINED = 128;
 
-bson.BSON_BINARY_SUBTYPE_DEFAULT = 0;
-bson.BSON_BINARY_SUBTYPE_FUNCTION = 1;
-bson.BSON_BINARY_SUBTYPE_BYTE_ARRAY = 2;
-bson.BSON_BINARY_SUBTYPE_UUID = 3;
-bson.BSON_BINARY_SUBTYPE_MD5 = 4;
-bson.BSON_BINARY_SUBTYPE_USER_DEFINED = 128;
+BSON.BSON_BINARY_SUBTYPE_DEFAULT = 0;
+BSON.BSON_BINARY_SUBTYPE_FUNCTION = 1;
+BSON.BSON_BINARY_SUBTYPE_BYTE_ARRAY = 2;
+BSON.BSON_BINARY_SUBTYPE_UUID = 3;
+BSON.BSON_BINARY_SUBTYPE_MD5 = 4;
+BSON.BSON_BINARY_SUBTYPE_USER_DEFINED = 128;
 
 describe("promote values", () => {
     /**
@@ -314,14 +311,14 @@ describe("promote values", () => {
             0,
             0
         ];
-        let serializedData = "";
+        let serialized_data = "";
 
         // Convert to chars
         for (let i = 0; i < bytes.length; i++) {
-            serializedData = serializedData + BinaryParser.fromByte(bytes[i]);
+            serialized_data = serialized_data + BinaryParser.fromByte(bytes[i]);
         }
 
-        const object = bson.decode(Buffer.from(serializedData, "binary"), {
+        const object = BSON.deserialize(Buffer.from(serialized_data, "binary"), {
             promoteValues: false
         });
 

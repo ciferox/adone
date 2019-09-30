@@ -1,4 +1,3 @@
-
 /**
  * A class representation of the BSON MaxKey type.
  */
@@ -8,7 +7,7 @@ class MaxKey {
      *
      * @return {MaxKey} A MaxKey instance
      */
-    constructor() {}
+    constructor() { }
 
     /**
      * @ignore

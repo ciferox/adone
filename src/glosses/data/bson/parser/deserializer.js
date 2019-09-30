@@ -1,3 +1,7 @@
+const {
+    is
+} = adone;
+
 const Long = require("../long");
 const Double = require("../double");
 const Timestamp = require("../timestamp");
@@ -10,58 +14,60 @@ const Int32 = require("../int_32");
 const DBRef = require("../db_ref");
 const BSONRegExp = require("../regexp");
 const Binary = require("../binary");
-const validateUtf8 = require("../validate_utf8").validateUtf8;
-
-const {
-    is,
-    data: { bson }
-} = adone;
+const constants = require("../constants");
+const { validateUtf8 } = require("../validate_utf8");
 
 // Internal long versions
-const JS_INT_MAX_LONG = Long.fromNumber(bson.JS_INT_MAX);
-const JS_INT_MIN_LONG = Long.fromNumber(bson.JS_INT_MIN);
+const JS_INT_MAX_LONG = Long.fromNumber(constants.JS_INT_MAX);
+const JS_INT_MIN_LONG = Long.fromNumber(constants.JS_INT_MIN);
 
 const functionCache = {};
 
-/**
- * Ensure eval is isolated.
- *
- * @ignore
- * @api private
- */
-const isolateEvalWithHash = function (functionCache, hash, functionString, object) {
-    // Contains the value we are going to set
-    const value = null;
+function deserialize(buffer, options, isArray) {
+    options = is.nil(options) ? {} : options;
+    const index = options && options.index ? options.index : 0;
+    // Read the document size
+    const size =
+        buffer[index] |
+        (buffer[index + 1] << 8) |
+        (buffer[index + 2] << 16) |
+        (buffer[index + 3] << 24);
 
-    // Check for cache hit, eval if missing and return cached function
-    if (is.nil(functionCache[hash])) {
-        eval(`value = ${functionString}`);
-        functionCache[hash] = value;
+    if (size < 5) {
+        throw new Error(`bson size must be >= 5, is ${size}`);
     }
 
-    // Set the object
-    return functionCache[hash].bind(object);
+    if (options.allowObjectSmallerThanBufferSize && buffer.length < size) {
+        throw new Error(`buffer length ${buffer.length} must be >= bson size ${size}`);
+    }
+
+    if (!options.allowObjectSmallerThanBufferSize && buffer.length !== size) {
+        throw new Error(`buffer length ${buffer.length} must === bson size ${size}`);
+    }
+
+    if (size + index > buffer.length) {
+        throw new Error(
+            `(bson size ${size} + options.index ${index} must be <= buffer length ${Buffer.byteLength(
+                buffer
+            )})`
+        );
+    }
+
+    // Illegal end value
+    if (buffer[index + size - 1] !== 0) {
+        throw new Error("One object, sized correctly, with a spot for an EOO, but the EOO isn't 0x00");
+    }
+
+    // Start deserializtion
+    return deserializeObject(buffer, index, options, isArray);
 }
 
-/**
- * Ensure eval is isolated.
- *
- * @ignore
- * @api private
- */
-const isolateEval = function (functionString) {
-    // Contains the value we are going to set
-    const value = null;
-    // Eval the function
-    eval(`value = ${functionString}`);
-    return value;
-}
-
-const deserializeObject = function (buffer, index, options, isArray) {
+function deserializeObject(buffer, index, options, isArray) {
     const evalFunctions = is.nil(options.evalFunctions) ? false : options.evalFunctions;
     const cacheFunctions = is.nil(options.cacheFunctions) ? false : options.cacheFunctions;
-    const cacheFunctionsCrc32 = is.nil(options.cacheFunctionsCrc32) ? false : options.cacheFunctionsCrc32;
-    
+    const cacheFunctionsCrc32 =
+        is.nil(options.cacheFunctionsCrc32) ? false : options.cacheFunctionsCrc32;
+
     if (!cacheFunctionsCrc32) {
         var crc32 = null;
     }
@@ -127,7 +133,7 @@ const deserializeObject = function (buffer, index, options, isArray) {
 
         index = i + 1;
 
-        if (elementType === bson.BSON_DATA_STRING) {
+        if (elementType === constants.BSON_DATA_STRING) {
             const stringSize =
                 buffer[index++] |
                 (buffer[index++] << 8) |
@@ -149,28 +155,28 @@ const deserializeObject = function (buffer, index, options, isArray) {
 
             object[name] = s;
             index = index + stringSize;
-        } else if (elementType === bson.BSON_DATA_OID) {
+        } else if (elementType === constants.BSON_DATA_OID) {
             const oid = Buffer.alloc(12);
             buffer.copy(oid, 0, index, index + 12);
             object[name] = new ObjectId(oid);
             index = index + 12;
-        } else if (elementType === bson.BSON_DATA_INT && promoteValues === false) {
+        } else if (elementType === constants.BSON_DATA_INT && promoteValues === false) {
             object[name] = new Int32(
                 buffer[index++] | (buffer[index++] << 8) | (buffer[index++] << 16) | (buffer[index++] << 24)
             );
-        } else if (elementType === bson.BSON_DATA_INT) {
+        } else if (elementType === constants.BSON_DATA_INT) {
             object[name] =
                 buffer[index++] |
                 (buffer[index++] << 8) |
                 (buffer[index++] << 16) |
                 (buffer[index++] << 24);
-        } else if (elementType === bson.BSON_DATA_NUMBER && promoteValues === false) {
+        } else if (elementType === constants.BSON_DATA_NUMBER && promoteValues === false) {
             object[name] = new Double(buffer.readDoubleLE(index));
             index = index + 8;
-        } else if (elementType === bson.BSON_DATA_NUMBER) {
+        } else if (elementType === constants.BSON_DATA_NUMBER) {
             object[name] = buffer.readDoubleLE(index);
             index = index + 8;
-        } else if (elementType === bson.BSON_DATA_DATE) {
+        } else if (elementType === constants.BSON_DATA_DATE) {
             const lowBits =
                 buffer[index++] |
                 (buffer[index++] << 8) |
@@ -182,12 +188,12 @@ const deserializeObject = function (buffer, index, options, isArray) {
                 (buffer[index++] << 16) |
                 (buffer[index++] << 24);
             object[name] = new Date(new Long(lowBits, highBits).toNumber());
-        } else if (elementType === bson.BSON_DATA_BOOLEAN) {
+        } else if (elementType === constants.BSON_DATA_BOOLEAN) {
             if (buffer[index] !== 0 && buffer[index] !== 1) {
                 throw new Error("illegal boolean type value");
             }
             object[name] = buffer[index++] === 1;
-        } else if (elementType === bson.BSON_DATA_OBJECT) {
+        } else if (elementType === constants.BSON_DATA_OBJECT) {
             const _index = index;
             const objectSize =
                 buffer[index] |
@@ -206,7 +212,7 @@ const deserializeObject = function (buffer, index, options, isArray) {
             }
 
             index = index + objectSize;
-        } else if (elementType === bson.BSON_DATA_ARRAY) {
+        } else if (elementType === constants.BSON_DATA_ARRAY) {
             const _index = index;
             const objectSize =
                 buffer[index] |
@@ -236,11 +242,11 @@ const deserializeObject = function (buffer, index, options, isArray) {
             if (index !== stopIndex) {
                 throw new Error("corrupted array bson");
             }
-        } else if (elementType === bson.BSON_DATA_UNDEFINED) {
+        } else if (elementType === constants.BSON_DATA_UNDEFINED) {
             object[name] = undefined;
-        } else if (elementType === bson.BSON_DATA_NULL) {
+        } else if (elementType === constants.BSON_DATA_NULL) {
             object[name] = null;
-        } else if (elementType === bson.BSON_DATA_LONG) {
+        } else if (elementType === constants.BSON_DATA_LONG) {
             // Unpack the low and high bits
             const lowBits =
                 buffer[index++] |
@@ -262,7 +268,7 @@ const deserializeObject = function (buffer, index, options, isArray) {
             } else {
                 object[name] = long;
             }
-        } else if (elementType === bson.BSON_DATA_DECIMAL128) {
+        } else if (elementType === constants.BSON_DATA_DECIMAL128) {
             // Buffer to contain the decimal bytes
             const bytes = Buffer.alloc(16);
             // Copy the next 16 bytes into the bytes buffer
@@ -273,7 +279,7 @@ const deserializeObject = function (buffer, index, options, isArray) {
             const decimal128 = new Decimal128(bytes);
             // If we have an alternative mapper use that
             object[name] = decimal128.toObject ? decimal128.toObject() : decimal128;
-        } else if (elementType === bson.BSON_DATA_BINARY) {
+        } else if (elementType === constants.BSON_DATA_BINARY) {
             let binarySize =
                 buffer[index++] |
                 (buffer[index++] << 8) |
@@ -354,7 +360,7 @@ const deserializeObject = function (buffer, index, options, isArray) {
 
             // Update the index
             index = index + binarySize;
-        } else if (elementType === bson.BSON_DATA_REGEXP && bsonRegExp === false) {
+        } else if (elementType === constants.BSON_DATA_REGEXP && bsonRegExp === false) {
             // Get the start search index
             i = index;
             // Locate the end of the c string
@@ -403,7 +409,7 @@ const deserializeObject = function (buffer, index, options, isArray) {
             }
 
             object[name] = new RegExp(source, optionsArray.join(""));
-        } else if (elementType === bson.BSON_DATA_REGEXP && bsonRegExp === true) {
+        } else if (elementType === constants.BSON_DATA_REGEXP && bsonRegExp === true) {
             // Get the start search index
             i = index;
             // Locate the end of the c string
@@ -434,7 +440,7 @@ const deserializeObject = function (buffer, index, options, isArray) {
 
             // Set the object
             object[name] = new BSONRegExp(source, regExpOptions);
-        } else if (elementType === bson.BSON_DATA_SYMBOL) {
+        } else if (elementType === constants.BSON_DATA_SYMBOL) {
             const stringSize =
                 buffer[index++] |
                 (buffer[index++] << 8) |
@@ -450,7 +456,7 @@ const deserializeObject = function (buffer, index, options, isArray) {
             // symbol is deprecated - upgrade to string.
             object[name] = buffer.toString("utf8", index, index + stringSize - 1);
             index = index + stringSize;
-        } else if (elementType === bson.BSON_DATA_TIMESTAMP) {
+        } else if (elementType === constants.BSON_DATA_TIMESTAMP) {
             const lowBits =
                 buffer[index++] |
                 (buffer[index++] << 8) |
@@ -463,11 +469,11 @@ const deserializeObject = function (buffer, index, options, isArray) {
                 (buffer[index++] << 24);
 
             object[name] = new Timestamp(lowBits, highBits);
-        } else if (elementType === bson.BSON_DATA_MIN_KEY) {
+        } else if (elementType === constants.BSON_DATA_MIN_KEY) {
             object[name] = new MinKey();
-        } else if (elementType === bson.BSON_DATA_MAX_KEY) {
+        } else if (elementType === constants.BSON_DATA_MAX_KEY) {
             object[name] = new MaxKey();
-        } else if (elementType === bson.BSON_DATA_CODE) {
+        } else if (elementType === constants.BSON_DATA_CODE) {
             const stringSize =
                 buffer[index++] |
                 (buffer[index++] << 8) |
@@ -498,7 +504,7 @@ const deserializeObject = function (buffer, index, options, isArray) {
 
             // Update parse index position
             index = index + stringSize;
-        } else if (elementType === bson.BSON_DATA_CODE_W_SCOPE) {
+        } else if (elementType === constants.BSON_DATA_CODE_W_SCOPE) {
             const totalSize =
                 buffer[index++] |
                 (buffer[index++] << 8) |
@@ -567,7 +573,7 @@ const deserializeObject = function (buffer, index, options, isArray) {
             } else {
                 object[name] = new Code(functionString, scopeObject);
             }
-        } else if (elementType === bson.BSON_DATA_DBPOINTER) {
+        } else if (elementType === constants.BSON_DATA_DBPOINTER) {
             // Get the code string size
             const stringSize =
                 buffer[index++] |
@@ -602,7 +608,11 @@ const deserializeObject = function (buffer, index, options, isArray) {
             object[name] = new DBRef(namespace, oid);
         } else {
             throw new Error(
-                `Detected unknown BSON type ${elementType.toString(16)} for fieldname "${name}", are you using the latest BSON parser?`
+                `Detected unknown BSON type ${
+                elementType.toString(16)
+                } for fieldname "${
+                name
+                }", are you using the latest BSON parser?`
             );
         }
     }
@@ -638,45 +648,40 @@ const deserializeObject = function (buffer, index, options, isArray) {
     }
 
     return object;
-};
+}
 
-const deserialize = function (buffer, options, isArray) {
-    options = is.nil(options) ? {} : options;
-    const index = options && options.index ? options.index : 0;
-    // Read the document size
-    const size =
-        buffer[index] |
-        (buffer[index + 1] << 8) |
-        (buffer[index + 2] << 16) |
-        (buffer[index + 3] << 24);
+/**
+ * Ensure eval is isolated.
+ *
+ * @ignore
+ * @api private
+ */
+function isolateEvalWithHash(functionCache, hash, functionString, object) {
+    // Contains the value we are going to set
+    const value = null;
 
-    if (size < 5) {
-        throw new Error(`bson size must be >= 5, is ${size}`);
+    // Check for cache hit, eval if missing and return cached function
+    if (is.nil(functionCache[hash])) {
+        eval(`value = ${functionString}`);
+        functionCache[hash] = value;
     }
 
-    if (options.allowObjectSmallerThanBufferSize && buffer.length < size) {
-        throw new Error(`buffer length ${buffer.length} must be >= bson size ${size}`);
-    }
+    // Set the object
+    return functionCache[hash].bind(object);
+}
 
-    if (!options.allowObjectSmallerThanBufferSize && buffer.length !== size) {
-        throw new Error(`buffer length ${buffer.length} must === bson size ${size}`);
-    }
-
-    if (size + index > buffer.length) {
-        throw new Error(
-            `(bson size ${size} + options.index ${index} must be <= buffer length ${Buffer.byteLength(
-                buffer
-            )})`
-        );
-    }
-
-    // Illegal end value
-    if (buffer[index + size - 1] !== 0) {
-        throw new Error("One object, sized correctly, with a spot for an EOO, but the EOO isn't 0x00");
-    }
-
-    // Start deserializtion
-    return deserializeObject(buffer, index, options, isArray);
-};
+/**
+ * Ensure eval is isolated.
+ *
+ * @ignore
+ * @api private
+ */
+function isolateEval(functionString) {
+    // Contains the value we are going to set
+    const value = null;
+    // Eval the function
+    eval(`value = ${functionString}`);
+    return value;
+}
 
 module.exports = deserialize;

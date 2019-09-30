@@ -1,5 +1,5 @@
 const {
-    data: { bson }
+    data: { bson: BSON }
 } = adone;
 
 describe("serializeWithBuffer", () => {
@@ -10,19 +10,19 @@ describe("serializeWithBuffer", () => {
     // Create a buffer
         const b = Buffer.alloc(256);
         // Serialize from index 0
-        let r = bson.encodeWithBufferAndIndex({ a: 1 }, b);
+        let r = BSON.serializeWithBufferAndIndex({ a: 1 }, b);
         expect(11).to.equal(r);
 
         // Serialize from index r+1
-        r = bson.encodeWithBufferAndIndex({ a: 1 }, b, {
+        r = BSON.serializeWithBufferAndIndex({ a: 1 }, b, {
             index: r + 1
         });
         expect(23).to.equal(r);
 
         // Deserialize the buffers
-        let doc = bson.decode(b.slice(0, 12));
+        let doc = BSON.deserialize(b.slice(0, 12));
         expect({ a: 1 }).to.deep.equal(doc);
-        doc = bson.decode(b.slice(12, 24));
+        doc = BSON.deserialize(b.slice(12, 24));
         expect({ a: 1 }).to.deep.equal(doc);
         done();
     });
@@ -49,14 +49,14 @@ describe("serializeWithBuffer", () => {
         let idx = 0;
         data.forEach((item) => {
             idx =
-        bson.encodeWithBufferAndIndex(item, bf, {
+        BSON.serializeWithBufferAndIndex(item, bf, {
             index: idx
         }) + 1;
         });
 
-        expect(bson.decode(bf.slice(0, 23))).to.deep.equal(data[0]);
-        expect(bson.decode(bf.slice(23, 46))).to.deep.equal(data[1]);
-        expect(bson.decode(bf.slice(46, 69))).to.deep.equal(data[2]);
+        expect(BSON.deserialize(bf.slice(0, 23))).to.deep.equal(data[0]);
+        expect(BSON.deserialize(bf.slice(23, 46))).to.deep.equal(data[1]);
+        expect(BSON.deserialize(bf.slice(46, 69))).to.deep.equal(data[2]);
         done();
     });
 });

@@ -1,16 +1,16 @@
-const fixtures = require("./fixtures.json");
-
 const {
     is,
-    data: { basex }
+    data: { baseX }
 } = adone;
 
-const bases = Object.keys(fixtures.alphabets).reduce((bases, alphabetName) => {
-    bases[alphabetName] = basex(fixtures.alphabets[alphabetName]);
-    return bases;
-}, {});
+describe("data", "baseX", () => {
+    const fixtures = require("./fixtures.json");
 
-describe("data", "basex/base58", () => {
+    const bases = Object.keys(fixtures.alphabets).reduce((bases, alphabetName) => {
+        bases[alphabetName] = baseX(fixtures.alphabets[alphabetName]);
+        return bases;
+    }, {});
+
     fixtures.valid.forEach((f) => {
         it(`can encode ${f.alphabet}: ${f.hex}`, () => {
             const base = bases[f.alphabet];
@@ -35,16 +35,24 @@ describe("data", "basex/base58", () => {
 
             assert.throws(() => {
                 if (!base) {
-                    base = basex(f.alphabet);
+                    base = baseX(f.alphabet);
                 }
 
                 base.decode(f.string);
-            }, new RegExp(f.error));
+            }, new RegExp(f.exception));
         });
     });
 
     it("decode should return Buffer", () => {
-        assert.isTrue(is.buffer(bases.base2.decode("")));
-        assert.isTrue(is.buffer(bases.base2.decode("01")));
+        assert.ok(is.buffer(bases.base2.decode("")));
+        assert.ok(is.buffer(bases.base2.decode("01")));
+    });
+
+    it("encode throws on string", () => {
+        const base = bases.base58;
+
+        assert.throws(() => {
+            base.encode("a");
+        }, new RegExp("^Expected Buffer$"));
     });
 });

@@ -1,8 +1,8 @@
 const {
-    data: { bson }
+    data: { bson: BSON }
 } = adone;
 
-const ObjectId = bson.ObjectId;
+const ObjectId = BSON.ObjectId;
 
 describe("toBSON", () => {
     /**
@@ -21,14 +21,14 @@ describe("toBSON", () => {
         };
 
         // Serialize the data
-        let serializedData = bson.encode(doc, false, true);
-        let deserializedDoc = bson.decode(serializedData);
-        expect({ b: 1 }).to.deep.equal(deserializedDoc);
+        let serialized_data = BSON.serialize(doc, false, true);
+        let deserialized_doc = BSON.deserialize(serialized_data);
+        expect({ b: 1 }).to.deep.equal(deserialized_doc);
 
         // Serialize the data
-        serializedData = bson.encode(doc, false, true);
-        deserializedDoc = bson.decode(serializedData);
-        expect({ b: 1 }).to.deep.equal(deserializedDoc);
+        serialized_data = BSON.serialize(doc, false, true);
+        deserialized_doc = BSON.deserialize(serialized_data);
+        expect({ b: 1 }).to.deep.equal(deserialized_doc);
         done();
     });
 
@@ -51,13 +51,13 @@ describe("toBSON", () => {
         };
 
         // Serialize the data
-        let serializedData = bson.encode(doc, false, true);
-        let deserializedDoc = bson.decode(serializedData);
-        expect({ e: 1 }).to.deep.equal(deserializedDoc.b);
+        let serialized_data = BSON.serialize(doc, false, true);
+        let deserialized_doc = BSON.deserialize(serialized_data);
+        expect({ e: 1 }).to.deep.equal(deserialized_doc.b);
 
-        serializedData = bson.encode(doc, false, true);
-        deserializedDoc = bson.decode(serializedData);
-        expect({ e: 1 }).to.deep.equal(deserializedDoc.b);
+        serialized_data = BSON.serialize(doc, false, true);
+        deserialized_doc = BSON.deserialize(serialized_data);
+        expect({ e: 1 }).to.deep.equal(deserialized_doc.b);
         done();
     });
 
@@ -80,14 +80,14 @@ describe("toBSON", () => {
         };
 
         // Serialize the data
-        let serializedData = bson.encode(doc, false, true);
-        let deserializedDoc = bson.decode(serializedData);
-        expect("hello").to.deep.equal(deserializedDoc.b);
+        let serialized_data = BSON.serialize(doc, false, true);
+        let deserialized_doc = BSON.deserialize(serialized_data);
+        expect("hello").to.deep.equal(deserialized_doc.b);
 
         // Serialize the data
-        serializedData = bson.encode(doc, false, true);
-        deserializedDoc = bson.decode(serializedData);
-        expect("hello").to.deep.equal(deserializedDoc.b);
+        serialized_data = BSON.serialize(doc, false, true);
+        deserialized_doc = BSON.deserialize(serialized_data);
+        expect("hello").to.deep.equal(deserialized_doc.b);
         done();
     });
 
@@ -111,17 +111,17 @@ describe("toBSON", () => {
 
         let test1 = false;
         let test2 = false;
-        let serializedData;
+
         try {
-            serializedData = bson.encode(doc, false, true);
-            bson.decode(serializedData);
+            var serialized_data = BSON.serialize(doc, false, true);
+            BSON.deserialize(serialized_data);
         } catch (err) {
             test1 = true;
         }
 
         try {
-            serializedData = bson.encode(doc, false, true);
-            bson.decode(serializedData);
+            serialized_data = BSON.serialize(doc, false, true);
+            BSON.deserialize(serialized_data);
         } catch (err) {
             test2 = true;
         }

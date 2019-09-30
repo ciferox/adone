@@ -33,32 +33,14 @@
 
 function readIEEE754(buffer, offset, endian, mLen, nBytes) {
     let e;
-
-    
     let m;
-
-    
     const bBE = endian === "big";
-
-    
     const eLen = nBytes * 8 - mLen - 1;
-
-    
     const eMax = (1 << eLen) - 1;
-
-    
     const eBias = eMax >> 1;
-
-    
     let nBits = -7;
-
-    
     let i = bBE ? 0 : nBytes - 1;
-
-    
     const d = bBE ? 1 : -1;
-
-    
     let s = buffer[offset + i];
 
     i += d;
@@ -66,9 +48,7 @@ function readIEEE754(buffer, offset, endian, mLen, nBytes) {
     e = s & ((1 << -nBits) - 1);
     s >>= -nBits;
     nBits += eLen;
-    for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8) {
-
-    }
+    for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8) { }
 
     m = e & ((1 << -nBits) - 1);
     e >>= -nBits;
@@ -88,35 +68,15 @@ function readIEEE754(buffer, offset, endian, mLen, nBytes) {
 
 function writeIEEE754(buffer, value, offset, endian, mLen, nBytes) {
     let e;
-
-    
     let m;
-
-    
     let c;
-
-    
     const bBE = endian === "big";
-
-    
     let eLen = nBytes * 8 - mLen - 1;
-
-    
     const eMax = (1 << eLen) - 1;
-
-    
     const eBias = eMax >> 1;
-
-    
     const rt = mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0;
-
-    
     let i = bBE ? nBytes - 1 : 0;
-
-    
     const d = bBE ? -1 : 1;
-
-    
     const s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0;
 
     value = Math.abs(value);
@@ -153,7 +113,7 @@ function writeIEEE754(buffer, value, offset, endian, mLen, nBytes) {
     }
 
     if (isNaN(value)) {
-        m = 0;
+        m = 0; 
     }
 
     while (mLen >= 8) {
@@ -166,7 +126,7 @@ function writeIEEE754(buffer, value, offset, endian, mLen, nBytes) {
     e = (e << mLen) | m;
 
     if (isNaN(value)) {
-        e += 8;
+        e += 8; 
     }
 
     eLen += mLen;
