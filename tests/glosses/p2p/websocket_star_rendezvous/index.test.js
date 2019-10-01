@@ -1,10 +1,10 @@
 const {
     multiformat: { multiaddr },
-    p2p: { rendezvous }
+    p2p: { rendezvous },
+    util: { uuid }
 } = adone;
 
 const io = require("socket.io-client");
-const uuid = require("uuid");
 
 describe("p2p", () => {
     describe("rendezvous", () => {
@@ -162,7 +162,7 @@ describe("p2p", () => {
         });
 
         it("c1 dial c4", (done) => {
-            const dialId = uuid();
+            const dialId = uuid.v4();
             c4.once("ss-incomming", (dialId, dialFrom, cb) => {
                 expect(dialId).to.eql(dialId);
                 expect(dialFrom).to.eql(c1mh.toString());
@@ -175,7 +175,7 @@ describe("p2p", () => {
         });
 
         it("c1 dial c2 fail (does not exist() anymore)", (done) => {
-            const dialId = uuid();
+            const dialId = uuid.v4();
             c1.emit("ss-dial", c1mh.toString(), c2mh.toString(), dialId, (err) => {
                 expect(err).to.exist();
                 done();

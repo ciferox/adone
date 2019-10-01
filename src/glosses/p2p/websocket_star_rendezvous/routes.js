@@ -2,9 +2,12 @@
 
 // Needed because JSON.stringify(Error) returns "{}"
 
+const {
+    util: { uuid }
+} = adone;
+
 const SocketIO = require("socket.io");
 const util = require("./utils");
-const uuid = require("uuid");
 const client = require("prom-client");
 
 const {
@@ -129,7 +132,7 @@ module.exports = (config, http) => {
                     return cb(err);
                 }
 
-                const nonce = uuid() + uuid();
+                const nonce = uuid.v4() + uuid.v4();
                 socket.once("disconnect", () => {
                     delete nonces[socket.id];
                 });

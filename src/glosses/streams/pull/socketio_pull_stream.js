@@ -1,13 +1,13 @@
 // socket.io-pull-stream
 const Queue = require("data-queue");
-const uuid = require("uuid");
 const sioname = (type, name) => `socket.io-pull-stream.${type}${name ? `.${name}` : ""}`;
 const debug = require("debug");
 const _log = debug("socket.io-pull-stream");
 
 const {
     is,
-    stream: { pull }
+    stream: { pull },
+    util: { uuid }
 } = adone;
 
 const doCodec = function (codec, data) {
@@ -158,7 +158,7 @@ module.exports = function SIOPullStream(sio, opt) {
     sio.sioplog = sio.id ? _log.bind(_log, `[${sio.id}]`) : _log;
     sio.createSink = (id, _) => {
         if (!id) {
-            id = uuid();
+            id = uuid.v4();
         }
         const sink = SIOSink(sio, id, opt || _);
         sink.id = id;

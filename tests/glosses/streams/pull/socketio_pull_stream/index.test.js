@@ -1,11 +1,11 @@
 const {
     multiformat: { multistream },
     p2p: { Connection },
-    stream: { pull }
+    stream: { pull },
+    util: { uuid }
 } = adone;
 
 const clients = require("./util").default();
-const uuid = require("uuid");
 
 describe("stream", "pull", "socketioPullStream", () => {
     describe("data", () => {
@@ -16,7 +16,7 @@ describe("stream", "pull", "socketioPullStream", () => {
                 }
                 const [c1, c2] = res;
 
-                const id = uuid();
+                const id = uuid.v4();
 
                 const sink = c1.createSink(id);
 
@@ -50,7 +50,7 @@ describe("stream", "pull", "socketioPullStream", () => {
                 }
                 const [c1, c2] = res;
 
-                const id = uuid();
+                const id = uuid.v4();
                 const id1 = `${id}.1`;
                 const id2 = `${id}.2`;
 
@@ -118,7 +118,7 @@ describe("stream", "pull", "socketioPullStream", () => {
                 }
                 const [c] = res;
                 pull(
-                    c.createSource(uuid()),
+                    c.createSource(uuid.v4()),
                     pull.collect(cb)
                 );
                 c.disconnect();

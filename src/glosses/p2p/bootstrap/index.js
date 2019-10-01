@@ -1,24 +1,26 @@
-const debug = require("debug");
-
 const {
-    async: { nextTick },
-    event: { Emitter },
     multiformat: { multiaddr, mafmt },
     p2p: { PeerId, PeerInfo }
 } = adone;
 
+const EventEmitter = require("events").EventEmitter;
+const debug = require("debug");
+
 const log = debug("libp2p:bootstrap");
 log.error = debug("libp2p:bootstrap:error");
 
-const isIPFS = function (addr) {
-    try {
-        return mafmt.IPFS.matches(addr);
-    } catch (e) {
-        return false;
-    }
-};
-
-class Bootstrap extends Emitter {
+/**
+ * Emits 'peer' events on a regular interval for each peer in the provided list.
+ */
+class Bootstrap extends EventEmitter {
+    /**
+     * Constructs a new Bootstrap.
+     *
+     * @param {Object} options
+     * @param {Array<string>} options.list - the list of peer addresses in multi-address format
+     * @param {number} options.interval - the interval between emitting addresses (in milli-seconds)
+     *
+     */
     constructor(options) {
         super();
         this._list = options.list;
@@ -26,22 +28,25 @@ class Bootstrap extends Emitter {
         this._timer = null;
     }
 
-    start(callback) {
+    /**
+     * Start emitting events.
+     */
+    start() {
         if (this._timer) {
-            return nextTick(() => callback());
+            return;
         }
 
         this._timer = setInterval(() => this._discoverBootstrapPeers(), this._interval);
 
-        nextTick(() => {
-            callback();
-            this._discoverBootstrapPeers();
-        });
+        this._discoverBootstrapPeers();
     }
 
+    /**
+     * Emit each address in the list as a PeerInfo.
+     */
     _discoverBootstrapPeers() {
-        this._list.forEach((candidate) => {
-            if (!isIPFS(candidate)) {
+        this._list.forEach(async (candidate) => {
+            if (!mafmt.IPFS.matches(candidate)) {
                 return log.error("Invalid multiaddr");
             }
 
@@ -49,19 +54,20 @@ class Bootstrap extends Emitter {
 
             const peerId = PeerId.createFromB58String(ma.getPeerId());
 
-            PeerInfo.create(peerId, (err, peerInfo) => {
-                if (err) {
-                    return log.error("Invalid bootstrap peer id", err);
-                }
+            try {
+                const peerInfo = await PeerInfo.create(peerId);
                 peerInfo.multiaddrs.add(ma);
                 this.emit("peer", peerInfo);
-            });
+            } catch (err) {
+                log.error("Invalid bootstrap peer id", err);
+            }
         });
     }
 
-    stop(callback) {
-        nextTick(callback);
-
+    /**
+     * Stop emitting events.
+     */
+    stop() {
         if (this._timer) {
             clearInterval(this._timer);
             this._timer = null;
