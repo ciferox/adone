@@ -101,6 +101,12 @@ export function set_attributes(node: Element & ElementCSSInlineStyle, attributes
 	}
 }
 
+export function set_svg_attributes(node: Element & ElementCSSInlineStyle, attributes: { [x: string]: string }) {
+	for (const key in attributes) {
+		attr(node, key, attributes[key]);
+	}
+}
+
 export function set_custom_element_data(node, prop, value) {
 	if (prop in node) {
 		node[prop] = value;
@@ -156,12 +162,16 @@ export function claim_text(nodes, data) {
 	for (let i = 0; i < nodes.length; i += 1) {
 		const node = nodes[i];
 		if (node.nodeType === 3) {
-			node.data = data;
+			node.data = '' + data;
 			return nodes.splice(i, 1)[0];
 		}
 	}
 
 	return text(data);
+}
+
+export function claim_space(nodes) {
+	return claim_text(nodes, ' ');
 }
 
 export function set_data(text, data) {

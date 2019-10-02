@@ -151,7 +151,8 @@ export default class ElementWrapper extends Wrapper {
 					if (!(owner as InlineComponentWrapper).slots.has(name)) {
 						const child_block = block.child({
 							comment: create_debugging_comment(node, this.renderer.component),
-							name: this.renderer.component.get_unique_name(`create_${sanitize(name)}_slot`)
+							name: this.renderer.component.get_unique_name(`create_${sanitize(name)}_slot`),
+							type: 'slot'
 						});
 
 						const lets = this.node.lets;
@@ -468,15 +469,25 @@ export default class ElementWrapper extends Wrapper {
 			// TODO dry this out — similar code for event handlers and component bindings
 			if (has_local_function) {
 				// need to create a block-local function that calls an instance-level function
-				block.builders.init.add_block(deindent`
-					function ${handler}() {
-						${animation_frame && deindent`
-						@_cancelAnimationFrame(${animation_frame});
-						if (!${this.var}.paused) ${animation_frame} = @raf(${handler});`}
-						${needs_lock && `${lock} = true;`}
-						ctx.${handler}.call(${this.var}${contextual_dependencies.size > 0 ? ', ctx' : ''});
-					}
-				`);
+				if (animation_frame) {
+					block.builders.init.add_block(deindent`
+						function ${handler}() {
+							@_cancelAnimationFrame(${animation_frame});
+							if (!${this.var}.paused) {
+								${animation_frame} = @raf(${handler});
+								${needs_lock && `${lock} = true;`}
+							}
+							ctx.${handler}.call(${this.var}${contextual_dependencies.size > 0 ? ', ctx' : ''});
+						}
+					`);
+				} else {
+					block.builders.init.add_block(deindent`
+						function ${handler}() {
+							${needs_lock && `${lock} = true;`}
+							ctx.${handler}.call(${this.var}${contextual_dependencies.size > 0 ? ', ctx' : ''});
+						}
+					`);
+				}
 
 				callee = handler;
 			} else {
@@ -555,8 +566,9 @@ export default class ElementWrapper extends Wrapper {
 	add_attributes(block: Block) {
 		// Get all the class dependencies first
 		this.attributes.forEach((attribute) => {
-			if (attribute.node.name === 'class' && attribute.node.is_dynamic) {
-				this.class_dependencies.push(...attribute.node.dependencies);
+			if (attribute.node.name === 'class') {
+				const dependencies = attribute.node.get_dependencies();
+				this.class_dependencies.push(...dependencies);
 			}
 		});
 
@@ -610,12 +622,14 @@ export default class ElementWrapper extends Wrapper {
 			}
 		`);
 
+		const fn = this.node.namespace === namespaces.svg ? `set_svg_attributes` : `set_attributes`;
+
 		block.builders.hydrate.add_line(
-			`@set_attributes(${this.var}, ${data});`
+			`@${fn}(${this.var}, ${data});`
 		);
 
 		block.builders.update.add_block(deindent`
-			@set_attributes(${this.var}, @get_spread_update(${levels}, [
+			@${fn}(${this.var}, @get_spread_update(${levels}, [
 				${updates.join(',\n')}
 			]));
 		`);

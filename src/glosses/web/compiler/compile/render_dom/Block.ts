@@ -2,15 +2,16 @@ import CodeBuilder from '../utils/CodeBuilder';
 import deindent from '../utils/deindent';
 import Renderer from './Renderer';
 import Wrapper from './wrappers/shared/Wrapper';
-import { escape } from '../utils/stringify';
+import { stringify, escape } from '../utils/stringify';
 
 export interface BlockOptions {
 	parent?: Block;
 	name: string;
+	type: string;
 	renderer?: Renderer;
 	comment?: string;
 	key?: string;
-	bindings?: Map<string, { object: string; property: string; snippet: string }>;
+	bindings?: Map<string, { object: string; property: string; snippet: string; store: string; tail: string }>;
 	dependencies?: Set<string>;
 }
 
@@ -18,6 +19,7 @@ export default class Block {
 	parent?: Block;
 	renderer: Renderer;
 	name: string;
+	type: string;
 	comment?: string;
 
 	wrappers: Wrapper[];
@@ -27,7 +29,7 @@ export default class Block {
 
 	dependencies: Set<string>;
 
-	bindings: Map<string, { object: string; property: string; snippet: string }>;
+	bindings: Map<string, { object: string; property: string; snippet: string; store: string; tail: string }>;
 
 	builders: {
 		init: CodeBuilder;
@@ -65,6 +67,7 @@ export default class Block {
 		this.parent = options.parent;
 		this.renderer = options.renderer;
 		this.name = options.name;
+		this.type = options.type;
 		this.comment = options.comment;
 
 		this.wrappers = [];
@@ -370,11 +373,20 @@ export default class Block {
 
 			${!this.builders.init.is_empty() && this.builders.init}
 
-			return {
-				${properties}
-			};
-		`.replace(/(#+)(\w*)/g, (_match: string, sigil: string, name: string) => {
-			return sigil === '#' ? this.alias(name) : sigil.slice(1) + name;
+			${dev
+				? deindent`
+					const block = {
+						${properties}
+					};
+					@dispatch_dev("SvelteRegisterBlock", { block, id: ${this.name || 'create_fragment'}.name, type: "${this.type}", source: ${stringify(this.comment || '', { only_escape_at_symbol: true })}, ctx });
+					return block;`
+				: deindent`
+					return {
+						${properties}
+					};`
+			}
+		`.replace(/([^{])(#+)(\w*)/g, (_match: string, pre: string, sigil: string, name: string) => {
+			return pre + (sigil === '#' ? this.alias(name) : sigil.slice(1) + name);
 		});
 		/* eslint-enable @typescript-eslint/indent,indent */
 	}

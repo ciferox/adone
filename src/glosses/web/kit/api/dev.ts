@@ -27,7 +27,7 @@ type Opts = {
 	live?: boolean,
 	hot?: boolean,
 	'devtools-port'?: number,
-	bundler?: 'rollup',
+	bundler?: 'rollup' | 'webpack',
 	port?: number,
 	ext: string
 };
@@ -37,7 +37,7 @@ export function dev(opts: Opts) {
 }
 
 class Watcher extends EventEmitter {
-	bundler: 'rollup';
+	bundler: 'rollup' | 'webpack';
 	dirs: {
 		cwd: string;
 		src: string;
@@ -253,7 +253,11 @@ class Watcher extends EventEmitter {
 									process: this.proc
 								});
 
-								if (this.live) {
+								if (this.hot && this.bundler === 'webpack') {
+									this.dev_server.send({
+										status: 'completed'
+									});
+								} else if (this.live) {
 									this.dev_server.send({
 										action: 'reload'
 									});
@@ -502,9 +506,7 @@ function watch_dir(
 
 		watch = new CheapWatch({ dir, filter, debounce: 50 });
 
-		watch.on('+', ({ isNew }: { isNew: boolean }) => {
-			if (isNew) callback();
-		});
+		watch.on('+', callback);
 
 		watch.on('-', callback);
 
