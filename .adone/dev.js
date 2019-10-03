@@ -1076,6 +1076,8 @@ export default {
                             units: {
                                 csstree: {
                                     description: "A tool set for working with CSS",
+                                    original: "https://github.com/csstree/csstree",
+                                    review: false,
                                     src: "src/glosses/web/extra/csstree/**/*.js",
                                     dst: "lib/glosses/web/extra/csstree",
                                     task: "transpile",
@@ -1086,6 +1088,38 @@ export default {
                                             task: "copy"
                                         }
                                     }
+                                },
+                                postcss: {
+                                    description: "Transforming styles with JS plugins",
+                                    original: "https://github.com/postcss/postcss",
+                                    review: false,
+                                    src: "src/glosses/web/extra/postcss/**/*.js",
+                                    dst: "lib/glosses/web/extra/postcss",
+                                    task: "transpile"
+                                },
+                                postcssImport: {
+                                    description: "PostCSS plugin to inline @import rules content",
+                                    original: "https://github.com/postcss/postcss-import",
+                                    review: false,
+                                    src: "src/glosses/web/extra/postcss_import/**/*.js",
+                                    dst: "lib/glosses/web/extra/postcss_import",
+                                    task: "transpile"
+                                },
+                                postcssUrl: {
+                                    description: " PostCSS plugin to rebase url(), inline or copy asset",
+                                    original: "https://github.com/postcss/postcss-url",
+                                    review: false,
+                                    src: "src/glosses/web/extra/postcss_url/**/*.js",
+                                    dst: "lib/glosses/web/extra/postcss_url",
+                                    task: "transpile"
+                                },
+                                preprocess: {
+                                    description: "A Svelte preprocessor with baked in support for common used preprocessors",
+                                    original: "https://github.com/kaisermann/svelte-preprocess",
+                                    review: false,
+                                    src: "src/glosses/web/extra/preprocess/**/*.js",
+                                    dst: "lib/glosses/web/extra/preprocess",
+                                    task: "transpile"
                                 }
                             }
                         }

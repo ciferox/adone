@@ -3,8 +3,8 @@ module.exports = {
         default: 'StyleSheet',
         stylesheet: 'StyleSheet',
         atrule: 'Atrule',
-        atruleExpression: function(options) {
-            return this.AtruleExpression(options.atrule ? String(options.atrule) : null);
+        atrulePrelude: function(options) {
+            return this.AtrulePrelude(options.atrule ? String(options.atrule) : null);
         },
         mediaQueryList: 'MediaQueryList',
         mediaQuery: 'MediaQuery',
@@ -12,13 +12,11 @@ module.exports = {
         selectorList: 'SelectorList',
         selector: 'Selector',
         block: function() {
-            return this.Block(this.Declaration);
+            return this.Block(true);
         },
         declarationList: 'DeclarationList',
         declaration: 'Declaration',
-        value: function(options) {
-            return this.Value(options.property ? String(options.property) : null);
-        }
+        value: 'Value'
     },
     scope: require('../scope'),
     atrule: require('../atrule'),

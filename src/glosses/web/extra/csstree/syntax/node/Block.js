@@ -1,31 +1,52 @@
-var List = require('../../utils/list');
 var TYPE = require('../../tokenizer').TYPE;
+var rawMode = require('./Raw').mode;
 
 var WHITESPACE = TYPE.WhiteSpace;
 var COMMENT = TYPE.Comment;
 var SEMICOLON = TYPE.Semicolon;
-var ATRULE = TYPE.Atrule;
+var ATKEYWORD = TYPE.AtKeyword;
 var LEFTCURLYBRACKET = TYPE.LeftCurlyBracket;
 var RIGHTCURLYBRACKET = TYPE.RightCurlyBracket;
 
 function consumeRaw(startToken) {
-    return this.Raw(startToken, 0, SEMICOLON, true, true);
+    return this.Raw(startToken, null, true);
+}
+function consumeRule() {
+    return this.parseWithFallback(this.Rule, consumeRaw);
+}
+function consumeRawDeclaration(startToken) {
+    return this.Raw(startToken, rawMode.semicolonIncluded, true);
+}
+function consumeDeclaration() {
+    if (this.scanner.tokenType === SEMICOLON) {
+        return consumeRawDeclaration.call(this, this.scanner.tokenIndex);
+    }
+
+    var node = this.parseWithFallback(this.Declaration, consumeRawDeclaration);
+
+    if (this.scanner.tokenType === SEMICOLON) {
+        this.scanner.next();
+    }
+
+    return node;
 }
 
 module.exports = {
     name: 'Block',
     structure: {
-        children: [['Atrule', 'Rule', 'Declaration']]
+        children: [[
+            'Atrule',
+            'Rule',
+            'Declaration'
+        ]]
     },
-    parse: function(defaultConsumer) {
-        if (!defaultConsumer) {
-            defaultConsumer = this.Declaration;
-        }
+    parse: function(isDeclaration) {
+        var consumer = isDeclaration ? consumeDeclaration : consumeRule;
 
         var start = this.scanner.tokenStart;
-        var children = new List();
+        var children = this.createList();
 
-        this.scanner.eat(LEFTCURLYBRACKET);
+        this.eat(LEFTCURLYBRACKET);
 
         scan:
         while (!this.scanner.eof) {
@@ -35,21 +56,20 @@ module.exports = {
 
                 case WHITESPACE:
                 case COMMENT:
-                case SEMICOLON:
                     this.scanner.next();
                     break;
 
-                case ATRULE:
-                    children.appendData(this.tolerantParse(this.Atrule, consumeRaw));
+                case ATKEYWORD:
+                    children.push(this.parseWithFallback(this.Atrule, consumeRaw));
                     break;
 
                 default:
-                    children.appendData(this.tolerantParse(defaultConsumer, consumeRaw));
+                    children.push(consumer.call(this));
             }
         }
 
-        if (!this.tolerant || !this.scanner.eof) {
-            this.scanner.eat(RIGHTCURLYBRACKET);
+        if (!this.scanner.eof) {
+            this.eat(RIGHTCURLYBRACKET);
         }
 
         return {
@@ -58,10 +78,14 @@ module.exports = {
             children: children
         };
     },
-    generate: function(processChunk, node) {
-        processChunk('{');
-        this.each(processChunk, node);
-        processChunk('}');
+    generate: function(node) {
+        this.chunk('{');
+        this.children(node, function(prev) {
+            if (prev.type === 'Declaration') {
+                this.chunk(';');
+            }
+        });
+        this.chunk('}');
     },
     walkContext: 'block'
 };

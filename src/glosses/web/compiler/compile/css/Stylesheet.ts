@@ -57,7 +57,7 @@ class Rule {
 	constructor(node: Node, stylesheet, parent?: Atrule) {
 		this.node = node;
 		this.parent = parent;
-		this.selectors = node.selector.children.map((node: Node) => new Selector(node, stylesheet));
+		this.selectors = node.selector ? node.selector.children.map((node: Node) => new Selector(node, stylesheet)) : [];
 		this.declarations = node.block.children.map((node: Node) => new Declaration(node));
 	}
 

@@ -1,8 +1,8 @@
 module.exports = {
     parse: {
-        expression: null,
+        prelude: null,
         block: function() {
-            return this.Block(this.Declaration);
+            return this.Block(true);
         }
     }
 };

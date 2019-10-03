@@ -26,7 +26,7 @@ module.exports = ({ handler, upgrader }, options) => {
         trackConn(server, maConn);
 
         if (handler) { 
-            handler(conn); 
+            handler(conn);
         }
         listener.emit("connection", conn);
     });
@@ -67,7 +67,7 @@ module.exports = ({ handler, upgrader }, options) => {
                     return reject(err);
 
                 }
-                log("Listening on %s %s", port, host);
+                log("Listening on %s", server.address());
                 resolve();
             });
         });

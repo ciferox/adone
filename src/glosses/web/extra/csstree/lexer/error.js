@@ -1,53 +1,78 @@
-'use strict';
+var createCustomError = require('../utils/createCustomError');
+var generateGrammar = require('./grammar/generate');
 
-var translateGrammar = require('./grammar/translate');
+function fromMatchResult(matchResult) {
+    var tokens = matchResult.tokens;
+    var longestMatch = matchResult.longestMatch;
+    var node = longestMatch < tokens.length ? tokens[longestMatch].node : null;
+    var mismatchOffset = -1;
+    var entries = 0;
+    var css = '';
+
+    for (var i = 0; i < tokens.length; i++) {
+        if (i === longestMatch) {
+            mismatchOffset = css.length;
+        }
+
+        if (node !== null && tokens[i].node === node) {
+            if (i <= longestMatch) {
+                entries++;
+            } else {
+                entries = 0;
+            }
+        }
+
+        css += tokens[i].value;
+    }
+
+    return {
+        node: node,
+        css: css,
+        mismatchOffset: mismatchOffset === -1 ? css.length : mismatchOffset,
+        last: node === null || entries > 1
+    };
+}
 
 function getLocation(node, point) {
     var loc = node && node.loc && node.loc[point];
 
-    return loc
-        ? { offset: loc.offset,
+    if (loc) {
+        return {
+            offset: loc.offset,
             line: loc.line,
-            column: loc.column }
-        : null;
+            column: loc.column
+        };
+    }
+
+    return null;
 }
 
 var SyntaxReferenceError = function(type, referenceName) {
-    // some VMs prevent setting line/column otherwise (iOS Safari 10 even throw an exception)
-    var error = Object.create(SyntaxError.prototype);
+    var error = createCustomError(
+        'SyntaxReferenceError',
+        type + (referenceName ? ' `' + referenceName + '`' : '')
+    );
 
-    error.name = 'SyntaxReferenceError';
     error.reference = referenceName;
-    error.message = type + ' `' + referenceName + '`';
-    error.stack = (new Error().stack || '').replace(/^.+\n/, error.name + ': ' + error.message + '\n');
 
     return error;
 };
 
-var MatchError = function(message, lexer, syntax, value, badNode) {
-    // some VMs prevent setting line/column otherwise (iOS Safari 10 even throw an exception)
-    var error = Object.create(SyntaxError.prototype);
-    var errorOffset = -1;
-    var start = getLocation(badNode, 'start');
+var MatchError = function(message, syntax, node, matchResult) {
+    var error = createCustomError('SyntaxMatchError', message);
+    var details = fromMatchResult(matchResult);
+    var mismatchOffset = details.mismatchOffset || 0;
+    var badNode = details.node || node;
     var end = getLocation(badNode, 'end');
-    var css = lexer.syntax.translateMarkup(value, function(node, buffer) {
-        if (node === badNode) {
-            errorOffset = buffer.length;
-        }
-    });
+    var start = details.last ? end : getLocation(badNode, 'start');
+    var css = details.css;
 
-    if (errorOffset === -1) {
-        errorOffset = css.length;
-    }
-
-    error.name = 'SyntaxMatchError';
     error.rawMessage = message;
-    error.stack = (new Error().stack || '').replace(/^.+\n/, error.name + ': ' + message + '\n');
-    error.syntax = syntax ? translateGrammar(syntax) : '<generic>';
+    error.syntax = syntax ? generateGrammar(syntax) : '<generic>';
     error.css = css;
-    error.mismatchOffset = errorOffset;
+    error.mismatchOffset = mismatchOffset;
     error.loc = {
-        source: badNode && badNode.loc && badNode.loc.source || '<unknown>',
+        source: (badNode && badNode.loc && badNode.loc.source) || '<unknown>',
         start: start,
         end: end
     };

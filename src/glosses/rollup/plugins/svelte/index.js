@@ -1,10 +1,9 @@
-/* eslint-disable func-style */
+const relative = require("require-relative");
+const { createFilter } = require("../../pluginutils");
+
 const {
-    is,
-    fs,
-    path,
-    rollup: { pluginutils: { createFilter } },
     sourcemap: { codec: { encode, decode } },
+    std: { path, fs },
     web: { compiler: { compile, preprocess } }
 } = adone;
 
@@ -44,7 +43,7 @@ function tryRequire(id) {
 
 function tryResolve(pkg, importer) {
     try {
-        return adone.module.resolve(pkg, { basedir: importer });
+        return relative.resolve(pkg, importer);
     } catch (err) {
         if (err.code === "MODULE_NOT_FOUND") {
             return null;
@@ -139,7 +138,7 @@ module.exports = function svelte(options = {}) {
     });
 
     fixed_options.format = "esm";
-    fixed_options.sveltePath = options.sveltePath || "@adone/foundation";
+    fixed_options.sveltePath = options.sveltePath || "svelte";
 
     // handle CSS extraction
     if ("css" in options) {
@@ -227,18 +226,14 @@ module.exports = function svelte(options = {}) {
             const dependencies = [];
             let preprocessPromise;
             if (options.preprocess) {
-                const preprocessOptions = {};
-                for (const key in options.preprocess) {
-                    preprocessOptions[key] = (...args) => {
-                        return Promise.resolve(options.preprocess[key](...args)).then((resp) => {
-                            if (resp && resp.dependencies) {
-                                dependencies.push(...resp.dependencies);
-                            }
-                            return resp;
-                        });
-                    };
-                }
-                preprocessPromise = preprocess(code, Object.assign(preprocessOptions, { filename: id })).then((code) => code.toString());
+                preprocessPromise = preprocess(code, options.preprocess, {
+                    filename: id
+                }).then((processed) => {
+                    if (processed.dependencies) {
+                        dependencies.push(...processed.dependencies);
+                    }
+                    return processed.toString();
+                });
             } else {
                 preprocessPromise = Promise.resolve(code);
             }
@@ -257,6 +252,7 @@ module.exports = function svelte(options = {}) {
                 );
 
                 warnings = compiled.warnings || compiled.stats.warnings;
+
                 warnings.forEach((warning) => {
                     if ((options.css || !options.emitCss) && warning.code === "css-unused-selector") {
                         return;

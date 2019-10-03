@@ -1,35 +1,54 @@
 var TYPE = require('../../tokenizer').TYPE;
+var rawMode = require('./Raw').mode;
 
 var LEFTCURLYBRACKET = TYPE.LeftCurlyBracket;
 
 function consumeRaw(startToken) {
-    return this.Raw(startToken, LEFTCURLYBRACKET, 0, false, true);
+    return this.Raw(startToken, rawMode.leftCurlyBracket, true);
+}
+
+function consumePrelude() {
+    var prelude = this.SelectorList();
+
+    if (prelude.type !== 'Raw' &&
+        this.scanner.eof === false &&
+        this.scanner.tokenType !== LEFTCURLYBRACKET) {
+        this.error();
+    }
+
+    return prelude;
 }
 
 module.exports = {
     name: 'Rule',
     structure: {
-        selector: ['SelectorList', 'Raw'],
+        prelude: ['SelectorList', 'Raw'],
         block: ['Block']
     },
     parse: function() {
-        var startToken = this.scanner.currentToken;
+        var startToken = this.scanner.tokenIndex;
         var startOffset = this.scanner.tokenStart;
-        var selector = this.parseSelector
-            ? this.tolerantParse(this.SelectorList, consumeRaw)
-            : consumeRaw.call(this, startToken);
-        var block = this.Block(this.Declaration);
+        var prelude;
+        var block;
+
+        if (this.parseRulePrelude) {
+            prelude = this.parseWithFallback(consumePrelude, consumeRaw);
+        } else {
+            prelude = consumeRaw.call(this, startToken);
+        }
+
+        block = this.Block(true);
 
         return {
             type: 'Rule',
             loc: this.getLocation(startOffset, this.scanner.tokenStart),
-            selector: selector,
+            prelude: prelude,
             block: block
         };
     },
-    generate: function(processChunk, node) {
-        this.generate(processChunk, node.selector);
-        this.generate(processChunk, node.block);
+    generate: function(node) {
+        this.node(node.prelude);
+        this.node(node.block);
     },
     walkContext: 'rule'
 };

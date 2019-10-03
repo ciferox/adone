@@ -1,4 +1,5 @@
-var List = require('../utils/list');
+var List = require('../common/List');
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 function isValidNumber(value) {
     // Number.isInteger(value) && value >= 0
@@ -22,25 +23,36 @@ function isValidLocation(loc) {
 function createNodeStructureChecker(type, fields) {
     return function checkNode(node, warn) {
         if (!node || node.constructor !== Object) {
-            return warn('Type of node should be an object');
+            return warn(node, 'Type of node should be an Object');
         }
 
         for (var key in node) {
+            var valid = true;
+
+            if (hasOwnProperty.call(node, key) === false) {
+                continue;
+            }
+
             if (key === 'type') {
                 if (node.type !== type) {
-                    warn('Wrong node type `' + node.type + '` but expected `' + type + '`');
+                    warn(node, 'Wrong node type `' + node.type + '`, expected `' + type + '`');
                 }
             } else if (key === 'loc') {
                 if (node.loc === null) {
                     continue;
                 } else if (node.loc && node.loc.constructor === Object) {
-                    if (typeof node.loc.source === 'string' &&
-                        isValidLocation(node.loc.start) &&
-                        isValidLocation(node.loc.end)) {
+                    if (typeof node.loc.source !== 'string') {
+                        key += '.source';
+                    } else if (!isValidLocation(node.loc.start)) {
+                        key += '.start';
+                    } else if (!isValidLocation(node.loc.end)) {
+                        key += '.end';
+                    } else {
                         continue;
                     }
                 }
-                warn('Wrong value for `' + type + '.' + key + '` field');
+
+                valid = false;
             } else if (fields.hasOwnProperty(key)) {
                 for (var i = 0, valid = false; !valid && i < fields[key].length; i++) {
                     var fieldType = fields[key][i];
@@ -66,17 +78,19 @@ function createNodeStructureChecker(type, fields) {
                             }
                     }
                 }
-                if (!valid) {
-                    warn('Wrong value for `' + type + '.' + key + '` field');
-                }
             } else {
-                warn('Unknown field `' + key + '` for ' + type);
+                warn(node, 'Unknown field `' + key + '` for ' + type + ' node type');
+            }
+
+            if (!valid) {
+                warn(node, 'Bad value for `' + type + '.' + key + '`');
             }
         }
 
         for (var key in fields) {
-            if (hasOwnProperty.call(node, key) === false) {
-                warn('Field `' + type + '.' + key + '` is missed');
+            if (hasOwnProperty.call(fields, key) &&
+                hasOwnProperty.call(node, key) === false) {
+                warn(node, 'Field `' + type + '.' + key + '` is missed');
             }
         }
     };
@@ -93,6 +107,10 @@ function processStructure(name, nodeType) {
     };
 
     for (var key in structure) {
+        if (hasOwnProperty.call(structure, key) === false) {
+            continue;
+        }
+
         var docsTypes = [];
         var fieldTypes = fields[key] = Array.isArray(structure[key])
             ? structure[key].slice()
@@ -109,7 +127,7 @@ function processStructure(name, nodeType) {
             } else if (Array.isArray(fieldType)) {
                 docsTypes.push('List'); // TODO: use type enum
             } else {
-                throw new Error('Wrong value in `' + name + '` structure definition');
+                throw new Error('Wrong value `' + fieldType + '` in `' + name + '.' + key + '` structure definition');
             }
         }
 
@@ -128,12 +146,14 @@ module.exports = {
 
         if (config.node) {
             for (var name in config.node) {
-                var nodeType = config.node[name];
+                if (hasOwnProperty.call(config.node, name)) {
+                    var nodeType = config.node[name];
 
-                if (nodeType.structure) {
-                    structure[name] = processStructure(name, nodeType);
-                } else {
-                    throw new Error('Missed `structure` field in `' + name + '` node type definition');
+                    if (nodeType.structure) {
+                        structure[name] = processStructure(name, nodeType);
+                    } else {
+                        throw new Error('Missed `structure` field in `' + name + '` node type definition');
+                    }
                 }
             }
         }

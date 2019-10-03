@@ -1,6 +1,7 @@
 var TYPE = require('../../tokenizer').TYPE;
-var IDENTIFIER = TYPE.Identifier;
-var FULLSTOP = TYPE.FullStop;
+
+var IDENT = TYPE.Ident;
+var FULLSTOP = 0x002E; // U+002E FULL STOP (.)
 
 // '.' ident
 module.exports = {
@@ -9,16 +10,20 @@ module.exports = {
         name: String
     },
     parse: function() {
-        this.scanner.eat(FULLSTOP);
+        if (!this.scanner.isDelim(FULLSTOP)) {
+            this.error('Full stop is expected');
+        }
+
+        this.scanner.next();
 
         return {
             type: 'ClassSelector',
             loc: this.getLocation(this.scanner.tokenStart - 1, this.scanner.tokenEnd),
-            name: this.scanner.consume(IDENTIFIER)
+            name: this.consume(IDENT)
         };
     },
-    generate: function(processChunk, node) {
-        processChunk('.');
-        processChunk(node.name);
+    generate: function(node) {
+        this.chunk('.');
+        this.chunk(node.name);
     }
 };

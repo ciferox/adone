@@ -1,5 +1,3 @@
-'use strict';
-
 var SourceMapGenerator = require('source-map').SourceMapGenerator;
 var trackNodes = {
     Atrule: true,
@@ -7,26 +5,16 @@ var trackNodes = {
     Declaration: true
 };
 
-module.exports = function generateSourceMap(generator, ast) {
-    function updateGeneratedPos(buffer) {
-        for (; bufferPos < buffer.length; bufferPos++) {
-            if (buffer.charCodeAt(bufferPos) === 10) { // \n
-                generated.line++;
-                generated.column = 0;
-            } else {
-                generated.column++;
-            }
-        }
-    }
-
+module.exports = function generateSourceMap(handlers) {
     var map = new SourceMapGenerator();
-    var bufferPos = 0;
+    var line = 1;
+    var column = 0;
     var generated = {
         line: 1,
         column: 0
     };
     var original = {
-        line: 0,
+        line: 0, // should be zero to add first mapping
         column: 0
     };
     var sourceMappingActive = false;
@@ -38,53 +26,70 @@ module.exports = function generateSourceMap(generator, ast) {
         generated: activatedGenerated
     };
 
-    var css = generator(ast, function(node, buffer) {
-        if (!node.loc ||
-            !node.loc.start ||
-            !trackNodes.hasOwnProperty(node.type)) {
-            return;
-        }
+    var handlersNode = handlers.node;
+    handlers.node = function(node) {
+        if (node.loc && node.loc.start && trackNodes.hasOwnProperty(node.type)) {
+            var nodeLine = node.loc.start.line;
+            var nodeColumn = node.loc.start.column - 1;
 
-        var line = node.loc.start.line;
-        var column = node.loc.start.column - 1;
+            if (original.line !== nodeLine ||
+                original.column !== nodeColumn) {
+                original.line = nodeLine;
+                original.column = nodeColumn;
 
-        if (original.line !== line ||
-            original.column !== column) {
-            original.line = line;
-            original.column = column;
+                generated.line = line;
+                generated.column = column;
 
-            updateGeneratedPos(buffer);
-
-            if (sourceMappingActive) {
-                sourceMappingActive = false;
-                if (generated.line !== activatedGenerated.line ||
-                    generated.column !== activatedGenerated.column) {
-                    map.addMapping(activatedMapping);
+                if (sourceMappingActive) {
+                    sourceMappingActive = false;
+                    if (generated.line !== activatedGenerated.line ||
+                        generated.column !== activatedGenerated.column) {
+                        map.addMapping(activatedMapping);
+                    }
                 }
+
+                sourceMappingActive = true;
+                map.addMapping({
+                    source: node.loc.source,
+                    original: original,
+                    generated: generated
+                });
             }
-
-            sourceMappingActive = true;
-            map.addMapping({
-                source: node.loc.source,
-                original: original,
-                generated: generated
-            });
         }
 
-    }, function(node, buffer) {
+        handlersNode.call(this, node);
+
         if (sourceMappingActive && trackNodes.hasOwnProperty(node.type)) {
-            updateGeneratedPos(buffer);
-            activatedGenerated.line = generated.line;
-            activatedGenerated.column = generated.column;
+            activatedGenerated.line = line;
+            activatedGenerated.column = column;
         }
-    });
-
-    if (sourceMappingActive) {
-        map.addMapping(activatedMapping);
-    }
-
-    return {
-        css: css,
-        map: map
     };
+
+    var handlersChunk = handlers.chunk;
+    handlers.chunk = function(chunk) {
+        for (var i = 0; i < chunk.length; i++) {
+            if (chunk.charCodeAt(i) === 10) { // \n
+                line++;
+                column = 0;
+            } else {
+                column++;
+            }
+        }
+
+        handlersChunk(chunk);
+    };
+
+    var handlersResult = handlers.result;
+    handlers.result = function() {
+        if (sourceMappingActive) {
+            map.addMapping(activatedMapping);
+        }
+
+        return {
+            css: handlersResult(),
+            map: map
+        };
+    };
+
+    return handlers;
 };

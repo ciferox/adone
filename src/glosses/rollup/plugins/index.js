@@ -3,6 +3,7 @@ adone.lazify({
     cleanup: "./cleanup",
     commonjs: "./commonjs",
     json: "./json",
+    postcss: "./postcss",
     replace: "./replace",
     resolve: "./resolve",
     string: "./string",

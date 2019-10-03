@@ -6,9 +6,7 @@ export default function isReference (node: Node, parent: Node): boolean {
 	}
 
 	if (node.type === 'Identifier') {
-		if (!parent) {
-			return true;
-		}
+		if (!parent) return true;
 
 		switch (parent.type) {
 			// disregard `bar` in `foo.bar`
@@ -20,8 +18,10 @@ export default function isReference (node: Node, parent: Node): boolean {
 			// disregard the `bar` in `{ bar: foo }`, but keep it in `{ [bar]: foo }`
 			case 'Property': return parent.computed || node === parent.value;
 
-			// disregard the `bar` in `export { foo as bar }`
-			case 'ExportSpecifier': return node === parent.local;
+			// disregard the `bar` in `export { foo as bar }` or
+			// the foo in `import { foo as bar }`
+			case 'ExportSpecifier':
+			case 'ImportSpecifier': return node === parent.local;
 
 			// disregard the `foo` in `foo: while (...) { ... break foo; ... continue foo;}`
 			case 'LabeledStatement':

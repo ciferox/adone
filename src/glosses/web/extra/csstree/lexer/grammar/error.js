@@ -1,17 +1,14 @@
-'use strict';
+var createCustomError = require('../../utils/createCustomError');
 
-var SyntaxParseError = function(message, syntaxStr, offset) {
-    // some VMs prevent setting line/column otherwise (iOS Safari 10 even throw an exception)
-    var error = Object.create(SyntaxError.prototype);
+var SyntaxParseError = function(message, input, offset) {
+    var error = createCustomError('SyntaxParseError', message);
 
-    error.name = 'SyntaxParseError';
-    error.rawMessage = message;
-    error.stack = (new Error().stack || '').replace(/^.+\n/, error.name + ': ' + message + '\n');
-    error.syntax = syntaxStr;
+    error.input = input;
     error.offset = offset;
+    error.rawMessage = message;
     error.message = error.rawMessage + '\n' +
-        '  ' + error.syntax + '\n' +
-        '--' + new Array((error.offset || error.syntax.length) + 1).join('-') + '^';
+        '  ' + error.input + '\n' +
+        '--' + new Array((error.offset || error.input.length) + 1).join('-') + '^';
 
     return error;
 };

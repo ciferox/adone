@@ -1,14 +1,12 @@
-var List = require('../../utils/list');
-
 module.exports = {
     parse: {
-        expression: function() {
-            return new List().appendData(
+        prelude: function() {
+            return this.createSingleNodeList(
                 this.MediaQueryList()
             );
         },
         block: function() {
-            return this.Block(this.Rule);
+            return this.Block(false);
         }
     }
 };

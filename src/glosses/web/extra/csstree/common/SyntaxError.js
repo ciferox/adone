@@ -1,5 +1,4 @@
-'use strict';
-
+var createCustomError = require('../utils/createCustomError');
 var MAX_LINE_LENGTH = 100;
 var OFFSET_CORRECTION = 60;
 var TAB_REPLACEMENT = '    ';
@@ -17,7 +16,7 @@ function sourceFragment(error, extraLines) {
         }).join('\n');
     }
 
-    var lines = error.source.split(/\n|\r\n?|\f/);
+    var lines = error.source.split(/\r\n?|\n|\f/);
     var line = error.line;
     var column = error.column;
     var startLine = Math.max(1, line - extraLines) - 1;
@@ -25,7 +24,7 @@ function sourceFragment(error, extraLines) {
     var maxNumLength = Math.max(4, String(endLine).length) + 1;
     var cutLeft = 0;
 
-    // correct column according to replaced tab before column
+    // column correction according to replaced tab before column
     column += (TAB_REPLACEMENT.length - 1) * (lines[line - 1].substr(0, column - 1).match(/\t/g) || []).length;
 
     if (column > MAX_LINE_LENGTH) {
@@ -47,16 +46,12 @@ function sourceFragment(error, extraLines) {
         processLines(startLine, line),
         new Array(column + maxNumLength + 2).join('-') + '^',
         processLines(line, endLine)
-    ].join('\n');
+    ].filter(Boolean).join('\n');
 }
 
-var CssSyntaxError = function(message, source, offset, line, column) {
-    // some VMs prevent setting line/column otherwise (iOS Safari 10 even throw an exception)
-    var error = Object.create(SyntaxError.prototype);
+var SyntaxError = function(message, source, offset, line, column) {
+    var error = createCustomError('SyntaxError', message);
 
-    error.name = 'CssSyntaxError';
-    error.message = message;
-    error.stack = (new Error().stack || '').replace(/^.+\n/, error.name + ': ' + error.message + '\n');
     error.source = source;
     error.offset = offset;
     error.line = line;
@@ -84,4 +79,4 @@ var CssSyntaxError = function(message, source, offset, line, column) {
     return error;
 };
 
-module.exports = CssSyntaxError;
+module.exports = SyntaxError;
