@@ -57,7 +57,7 @@ class Rule {
 	constructor(node: Node, stylesheet, parent?: Atrule) {
 		this.node = node;
 		this.parent = parent;
-		this.selectors = node.selector ? node.selector.children.map((node: Node) => new Selector(node, stylesheet)) : [];
+		this.selectors = node.selector.children.map((node: Node) => new Selector(node, stylesheet));
 		this.declarations = node.block.children.map((node: Node) => new Declaration(node));
 	}
 
@@ -159,7 +159,7 @@ class Declaration {
 
 class Atrule {
 	node: Node;
-	children: Array<Atrule|Rule>;
+	children: Array<Atrule | Rule>;
 	declarations: Declaration[];
 
 	constructor(node: Node) {
@@ -288,7 +288,7 @@ export default class Stylesheet {
 	has_styles: boolean;
 	id: string;
 
-	children: Array<Rule|Atrule> = [];
+	children: Array<Rule | Atrule> = [];
 	keyframes: Map<string, string> = new Map();
 
 	nodes_with_css_class: Set<Node> = new Set();
@@ -399,7 +399,7 @@ export default class Stylesheet {
 		});
 
 		if (should_transform_selectors) {
-			this.children.forEach((child: (Atrule|Rule)) => {
+			this.children.forEach((child: (Atrule | Rule)) => {
 				child.transform(code, this.id, this.keyframes);
 			});
 		}

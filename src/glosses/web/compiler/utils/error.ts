@@ -1,5 +1,8 @@
-import { locate } from 'locate-character';
 import get_code_frame from './get_code_frame';
+
+const {
+	text: { locateCharacter: { locate } }
+} = adone;
 
 class CompileError extends Error {
 	code: string;

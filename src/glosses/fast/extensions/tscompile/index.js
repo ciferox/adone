@@ -4,8 +4,6 @@ const {
     util
 } = adone;
 
-const { helper } = adone.getPrivate(adone.fast);
-
 const filterDiagnostics = (diagnostics, ignore) => diagnostics.filter((x) => !ignore.includes(x.code));
 const INSPECT_CUSTOM = adone.std.util.inspect.custom || "inspect";
 
@@ -62,7 +60,10 @@ const readConfig = (ts, fileExists, readFile, options) => {
         config.include = [];
     }
     // Override default configuration options `ts-node` requires.
-    config.compilerOptions = Object.assign({}, config.compilerOptions, TS_COMPILER_OPTIONS);
+    config.compilerOptions = {
+        ...config.compilerOptions,
+        ...TS_COMPILER_OPTIONS
+    };
     config = ts.parseJsonConfigFileContent(config, ts.sys, basePath, undefined, configFileName);
 
     // Delete options that *should not* be passed through.
@@ -136,11 +137,6 @@ export default function tscompilePlugin() {
                     [];
                 if (diagnosticList.length) {
                     reportTSError(configDiagnosticList);
-                }
-                const map = result.sourceMapText;
-
-                if (file.sourceMap && map) {
-                    helper.applySourceMap(file, map);
                 }
 
                 file.contents = Buffer.from(result.outputText);

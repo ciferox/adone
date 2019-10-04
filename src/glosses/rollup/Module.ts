@@ -1,6 +1,5 @@
 // import * as acorn from 'acorn';
 import * as ESTree from 'estree';
-import { locate } from 'locate-character';
 import extractAssignedNames from './pluginutils/extractAssignedNames';
 import ClassDeclaration from './ast/nodes/ClassDeclaration';
 import ExportAllDeclaration from './ast/nodes/ExportAllDeclaration';
@@ -53,7 +52,7 @@ import { markModuleAndImpureDependenciesAsExecuted } from './utils/traverseStati
 import { MISSING_EXPORT_SHIM_VARIABLE } from './utils/variableNames';
 
 const {
-	text: { MagicString }
+	text: { MagicString, locateCharacter: { locate } }
 } = adone;
 
 export interface CommentDescription {
@@ -808,8 +807,8 @@ export default class Module {
 			const name = isDefault
 				? 'default'
 				: isNamespace
-				? '*'
-				: (specifier as ImportSpecifier).imported.name;
+					? '*'
+					: (specifier as ImportSpecifier).imported.name;
 			this.importDescriptions[localName] = { source, start: specifier.start, name, module: null };
 		}
 	}

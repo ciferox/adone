@@ -1,7 +1,9 @@
+/* eslint-disable func-style */
 const relative = require("require-relative");
 const { createFilter } = require("../../pluginutils");
 
 const {
+    is,
     sourcemap: { codec: { encode, decode } },
     std: { path, fs },
     web: { compiler: { compile, preprocess } }
@@ -127,18 +129,18 @@ module.exports = function svelte(options = {}) {
 
     const extensions = options.extensions || [".html", ".svelte"];
 
-    const fixed_options = {};
+    const fixedOptions = {};
 
     Object.keys(options).forEach((key) => {
         // add all options except include, exclude, extensions, and shared
         if (pluginOptions[key]) {
             return;
         }
-        fixed_options[key] = options[key];
+        fixedOptions[key] = options[key];
     });
 
-    fixed_options.format = "esm";
-    fixed_options.sveltePath = options.sveltePath || "svelte";
+    fixedOptions.format = "esm";
+    fixedOptions.sveltePath = options.sveltePath || "svelte";
 
     // handle CSS extraction
     if ("css" in options) {
@@ -154,7 +156,7 @@ module.exports = function svelte(options = {}) {
     const cssLookup = new Map();
 
     if (css || options.emitCss) {
-        fixed_options.css = false;
+        fixedOptions.css = false;
     }
 
     return {
@@ -241,11 +243,11 @@ module.exports = function svelte(options = {}) {
             return preprocessPromise.then((code) => {
                 let warnings = [];
 
-                const base_options = {};
+                const baseOptions = {};
 
                 const compiled = compile(
                     code,
-                    Object.assign(base_options, fixed_options, {
+                    Object.assign(baseOptions, fixedOptions, {
                         name: capitalize(sanitize(id)),
                         filename: id
                     })
@@ -269,8 +271,8 @@ module.exports = function svelte(options = {}) {
                     const fname = id.replace(extension, ".css");
 
                     if (options.emitCss) {
-                        const source_map_comment = `/*# sourceMappingURL=${compiled.css.map.toUrl()} */`;
-                        compiled.css.code += `\n${source_map_comment}`;
+                        const sourceMapComment = `/*# sourceMappingURL=${compiled.css.map.toUrl()} */`;
+                        compiled.css.code += `\n${sourceMapComment}`;
 
                         compiled.js.code += `\nimport ${JSON.stringify(fname)};\n`;
                     }

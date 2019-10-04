@@ -1,11 +1,6 @@
-export { default as compile } from './compile/index';
-export { default as parse } from './parse/index';
-export { default as preprocess } from './preprocess/index';
-
-const {
-	acorn: { estreeWalker: { walk } },
-} = adone;
-
-export { walk };
-
-export const VERSION = '__VERSION__';
+adone.lazify({
+	compile: "./compile",
+	parse: "./parse",
+	preprocess: "./preprocess",
+	walk: () => adone.acorn.estreeWalker.walk
+}, exports, require);

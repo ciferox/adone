@@ -951,7 +951,17 @@ export default {
                     description: "Text utilites",
                     task: "transpile",
                     src: "src/glosses/text/**/*.js",
-                    dst: "lib/glosses/text"
+                    dst: "lib/glosses/text",
+                    units: {
+                        locateCharacter: {
+                            description: "Get the line and column number of a particular character in a string",
+                            original: "https://github.com/Rich-Harris/locate-character",
+                            review: false,
+                            task: "tsc",
+                            src: "src/glosses/text/locate_character.ts",
+                            dst: "lib/glosses/text"
+                        }
+                    }
                 },
                 typeof: {
                     description: "Advanced typeof",

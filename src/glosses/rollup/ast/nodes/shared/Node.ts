@@ -1,5 +1,3 @@
-import { locate } from 'locate-character';
-import MagicString from 'magic-string';
 import { AstContext, CommentDescription } from '../../../Module';
 import { NodeRenderOptions, RenderOptions } from '../../../utils/renderHelpers';
 import CallOptions from '../../CallOptions';
@@ -14,6 +12,10 @@ import LocalVariable from '../../variables/LocalVariable';
 import Variable from '../../variables/Variable';
 import SpreadElement from '../SpreadElement';
 import { ExpressionEntity } from './Expression';
+
+const {
+	text: { MagicString, locateCharacter: { locate } }
+} = adone;
 
 export interface GenericEsTreeNode {
 	type: string;
@@ -78,9 +80,9 @@ export interface Node extends Entity {
 	shouldBeIncluded(): boolean;
 }
 
-export interface StatementNode extends Node {}
+export interface StatementNode extends Node { }
 
-export interface ExpressionNode extends ExpressionEntity, Node {}
+export interface ExpressionNode extends ExpressionEntity, Node { }
 
 const NEW_EXECUTION_PATH = ExecutionPathOptions.create();
 
@@ -138,7 +140,7 @@ export class NodeBase implements ExpressionNode {
 		return [];
 	}
 
-	deoptimizePath(_path: ObjectPath) {}
+	deoptimizePath(_path: ObjectPath) { }
 
 	getLiteralValueAtPath(
 		_path: ObjectPath,
@@ -213,7 +215,7 @@ export class NodeBase implements ExpressionNode {
 	/**
 	 * Override to perform special initialisation steps after the scope is initialised
 	 */
-	initialise() {}
+	initialise() { }
 
 	insertSemicolon(code: MagicString) {
 		if (code.original[this.end - 1] !== ';') {
@@ -244,7 +246,7 @@ export class NodeBase implements ExpressionNode {
 						child === null
 							? null
 							: new (this.context.nodeConstructors[child.type] ||
-									this.context.nodeConstructors.UnknownNode)(child, this, this.scope)
+								this.context.nodeConstructors.UnknownNode)(child, this, this.scope)
 					);
 				}
 			} else {

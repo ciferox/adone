@@ -34,7 +34,6 @@
     "fixturify": "^1.2.0",
     "immutable": "^4.0.0-rc.12",
     "iterable-ndjson": "^1.1.0",
-    "locate-character": "^2.0.5",
     "mapleTree": "^0.5.1",
     "mkfiletree": "^2.0.0",
     "muxrpc": "^6.4.2",
@@ -76,6 +75,7 @@
     "get-iterator": "^1.0.2",
     "hi-base32": "^0.5.0",
     "html-minifier": "^4.0.0",
+    "http-link-header": "^1.0.2",
     "https-proxy-agent": "^2.2.2",
     "import-cwd": "^3.0.0",
     "ip-address": "^6.1.0",
@@ -87,8 +87,10 @@
     "merge-options": "^1.0.1",
     "mime": "^2.4.4",
     "multicast-dns": "^7.2.0",
+    "node-fetch": "^2.6.0",
     "p-queue": "^6.1.1",
     "pem-jwk": "^2.0.0",
+    "port-authority": "^1.0.5",
     "postcss-load-config": "^2.1.0",
     "postcss-value-parser": "^4.0.2",
     "prom-client": "^11.5.3",
@@ -116,6 +118,7 @@
     "tweetnacl": "^1.0.1",
     "unique-by": "^1.0.0",
     "uri-js": "^4.2.2",
-    "ws": "^7.1.2"
+    "ws": "^7.1.2",
+    "yootils": "^0.0.16"
   }
 }

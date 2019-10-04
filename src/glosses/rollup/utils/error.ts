@@ -1,8 +1,11 @@
-import { locate } from 'locate-character';
 import Module from '../Module';
 import { RollupError, RollupWarning } from '../rollup/types';
 import getCodeFrame from './getCodeFrame';
 import relativeId from './relativeId';
+
+const {
+	text: { locateCharacter: { locate } }
+} = adone;
 
 export function error(base: Error | RollupError, props?: RollupError): never {
 	if (!(base instanceof Error)) base = Object.assign(new Error(base.message), base);

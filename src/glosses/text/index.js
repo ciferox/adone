@@ -314,6 +314,7 @@ adone.lazify({
     table: "./table",
     Fuzzy: "./fuzzy",
     charcode: "./charcodes",
+    locateCharacter: "./locate_character",
     longestCommonPrefix: "./longest_common_prefix",
     sliceAnsi: "./slice_ansi",
     wrapAnsi: "./wrap_ansi",

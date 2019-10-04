@@ -167,6 +167,17 @@ describe("text", "MagicString", () => {
             assert.notStrictEqual(source.sourcemapLocations, clone.sourcemapLocations);
             assert.deepEqual(source.sourcemapLocations, clone.sourcemapLocations);
         });
+
+        it("should clone intro and outro", () => {
+            const source = new MagicString("defghi");
+
+            source.prepend("abc");
+            source.append("jkl");
+
+            const clone = source.clone();
+
+            assert.equal(source.toString(), clone.toString());
+        });
     });
 
     describe("generateMap", () => {
@@ -184,10 +195,10 @@ describe("text", "MagicString", () => {
             assert.equal(map.file, "output.md");
             assert.deepEqual(map.sources, ["input.md"]);
             assert.deepEqual(map.sourcesContent, ["abcdefghijkl"]);
-            assert.equal(map.mappings, "AAAA,CAAC,CAAC,CAAC,AAAM,CAAC,CAAC");
+            assert.equal(map.mappings, "AAAA,CAAC,CAAC,CAAO,CAAC,CAAC");
 
-            assert.equal(map.toString(), '{"version":3,"file":"output.md","sources":["input.md"],"sourcesContent":["abcdefghijkl"],"names":[],"mappings":"AAAA,CAAC,CAAC,CAAC,AAAM,CAAC,CAAC"}');
-            assert.equal(map.toUrl(), "data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoib3V0cHV0Lm1kIiwic291cmNlcyI6WyJpbnB1dC5tZCJdLCJzb3VyY2VzQ29udGVudCI6WyJhYmNkZWZnaGlqa2wiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUEsQ0FBQyxDQUFDLENBQUMsQUFBTSxDQUFDLENBQUMifQ==");
+            assert.equal(map.toString(), '{"version":3,"file":"output.md","sources":["input.md"],"sourcesContent":["abcdefghijkl"],"names":[],"mappings":"AAAA,CAAC,CAAC,CAAO,CAAC,CAAC"}');
+            assert.equal(map.toUrl(), "data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoib3V0cHV0Lm1kIiwic291cmNlcyI6WyJpbnB1dC5tZCJdLCJzb3VyY2VzQ29udGVudCI6WyJhYmNkZWZnaGlqa2wiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUEsQ0FBQyxDQUFDLENBQU8sQ0FBQyxDQUFDIn0=");
 
             const smc = new SourceMapConsumer(map);
             let loc;
@@ -203,6 +214,18 @@ describe("text", "MagicString", () => {
             loc = smc.originalPositionFor({ line: 1, column: 4 });
             assert.equal(loc.line, 1);
             assert.equal(loc.column, 10);
+        });
+
+        it("should generate a correct sourcemap for prepend content when hires = false", () => {
+            const s = new MagicString("x\nq");
+
+            s.prepend("y\n");
+
+            const map = s.generateMap({
+                includeContent: true
+            });
+
+            assert.equal(map.mappings, ";AAAA;AACA");
         });
 
         it("should generate a correct sourcemap for indented content", () => {
@@ -243,8 +266,8 @@ describe("text", "MagicString", () => {
             assert.deepEqual(map.sources, ["input.md"]);
             assert.deepEqual(map.sourcesContent, ["abcdefghijkl"]);
 
-            assert.equal(map.toString(), '{"version":3,"file":"output.md","sources":["input.md"],"sourcesContent":["abcdefghijkl"],"names":[],"mappings":"AAAA,GAAG,GAAG,AAAG,CAAC"}');
-            assert.equal(map.toUrl(), "data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoib3V0cHV0Lm1kIiwic291cmNlcyI6WyJpbnB1dC5tZCJdLCJzb3VyY2VzQ29udGVudCI6WyJhYmNkZWZnaGlqa2wiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUEsR0FBRyxHQUFHLEFBQUcsQ0FBQyJ9");
+            assert.equal(map.toString(), '{"version":3,"file":"output.md","sources":["input.md"],"sourcesContent":["abcdefghijkl"],"names":[],"mappings":"AAAA,GAAG,GAAM,CAAC"}');
+            assert.equal(map.toUrl(), "data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoib3V0cHV0Lm1kIiwic291cmNlcyI6WyJpbnB1dC5tZCJdLCJzb3VyY2VzQ29udGVudCI6WyJhYmNkZWZnaGlqa2wiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUEsR0FBRyxHQUFNLENBQUMifQ==");
 
             const smc = new SourceMapConsumer(map);
             let loc;
