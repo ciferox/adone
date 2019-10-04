@@ -114,6 +114,7 @@
     "string-hash": "^1.1.3",
     "strip-indent": "^3.0.0",
     "style-inject": "^0.3.0",
+    "svelte": "^3.12.1",
     "tslib": "^1.10.0",
     "tweetnacl": "^1.0.1",
     "unique-by": "^1.0.0",
