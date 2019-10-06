@@ -1,12 +1,12 @@
 adone.lazify({
-    CID: "./cid",
-    mafmt: "./mafmt",
-    multiaddr: "./multiaddr",
-    multiaddrToUri: "./multiaddr_to_uri",
-    multibase: "./multibase",
-    multicodec: "./multicodec",
-    multihash: "./multihash",
-    multihashing: "./multihashing",
-    multihashingAsync: "./multihashing_async",
-    multistream: "./multistream_select"
-}, adone.asNamespace(exports), require);
+    CID: "cids",
+    mafmt: "mafmt",
+    multiaddr: "multiaddr",
+    multiaddrToUri: "multiaddr-to-uri",
+    multibase: "multibase",
+    multicodec: "multicodec",
+    multihash: "multihashes",
+    multihashing: "multihashing",
+    multihashingAsync: "multihashing-async",
+    multistream: "multistream-select"
+}, adone.asNamespace(exports));

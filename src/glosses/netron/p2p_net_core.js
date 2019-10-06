@@ -4,7 +4,7 @@ const {
     error,
     is,
     netron: { RemotePeer },
-    p2p: { PeerId, PeerInfo, Node, KadDHT, transport: { TCP, WS }, MulticastDNS, Bootstrap, secio, muxer: { spdy, mplex, pullMplex } },
+    p2p: { PeerId, PeerInfo, GossipSub, Node, KadDHT, transport: { TCP, WS }, MulticastDNS, Bootstrap, secio, muxer: { spdy, mplex, pullMplex } },
     util
 } = adone;
 
@@ -53,7 +53,8 @@ class DefaultNode extends Node {
                     MulticastDNS,
                     Bootstrap
                 ],
-                dht: KadDHT
+                dht: KadDHT,
+                pubsub: GossipSub
             },
             config: {
                 peerDiscovery: {
@@ -78,12 +79,17 @@ class DefaultNode extends Node {
                 dht: {
                     kBucketSize: 20,
                     randomWalk: {
-                        enabled: true
+                        enabled: true, // Allows to disable discovery (enabled by default)
+                        interval: 300e3,
+                        timeout: 10e3
                     },
                     enabled: true
                 },
-                EXPERIMENTAL: {
-                    pubsub: false
+                pubsub: {
+                    enabled: true,
+                    emitSelf: true, // whether the node should emit to self on publish, in the event of the topic being subscribed
+                    signMessages: true, // if messages should be signed
+                    strictSigning: true // if message signing should be required
                 }
             }
         };

@@ -681,7 +681,7 @@ export default {
                 multiformats: {
                     description: "Self-describing values for Future-proofing",
                     task: "transpile",
-                    src: "src/glosses/multiformats/**/*.js",
+                    src: "src/glosses/multiformats/index.js",
                     dst: "lib/glosses/multiformats"
                 },
                 net: {
@@ -751,19 +751,11 @@ export default {
                     dst: "lib/glosses/omnitron"
                 },
                 p2p: {
-                    description: "Multipurpose P2P implementation (forked from libp2p)",
+                    description: "Multipurpose P2P implementation (forked from libp2p",
                     task: "transpile",
-                    src: "src/glosses/p2p/**/*.js",
+                    src: "src/glosses/p2p/index.js",
                     dst: "lib/glosses/p2p",
-                    predecessor: "https://github.com/libp2p",
-                    units: {
-                        utils_ts: {
-                            description: "Some utils implemented using TypeScript",
-                            src: "src/glosses/p2p/utils/**/*.ts",
-                            dst: "lib/glosses/p2p/utils",
-                            task: "tsc"
-                        }
-                    }
+                    repository: "https://github.com/libp2p"
                 },
                 path: {
                     description: "Replacement of native path",
@@ -792,8 +784,9 @@ export default {
                 punycode: {
                     description: "Implementation of punycode",
                     task: "transpile",
-                    src: "src/glosses/punycode/**/*.js",
-                    dst: "lib/glosses/punycode"
+                    src: "src/glosses/punycode/index.js",
+                    dst: "lib/glosses/punycode",
+                    repository: "https://github.com/bestiejs/punycode.js"
                 },
                 puppeteer: {
                     description: "High-level API to control Chrome or Chromium over the DevTools Protocol",
