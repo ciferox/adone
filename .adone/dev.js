@@ -760,7 +760,7 @@ export default {
                 path: {
                     description: "Replacement of native path",
                     task: "transpile",
-                    src: "src/glosses/path/**/*.js",
+                    src: "src/glosses/path/index.js",
                     dst: "lib/glosses/path"
                 },
                 pretty: {
