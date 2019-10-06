@@ -91,8 +91,7 @@ export default {
             description: "ADONE common",
             src: [
                 "src/index.js",
-                "src/common.js",
-                "src/reflect.js"
+                "src/common.js"
             ],
             dst: "lib",
             task: "transpile"
@@ -170,6 +169,12 @@ export default {
                     src: "src/glosses/async/index.js",
                     dst: "lib/glosses/async",
                     repository: "https://github.com/caolan/async"
+                },
+                babel: {
+                    description: "Compiler for writing next generation JavaScript",
+                    src: "src/glosses/babel/index.js",
+                    dst: "lib/glosses/babel",
+                    task: "transpile"
                 },
                 buffer: {
                     description: "Buffer implementations and utilites",
@@ -956,7 +961,7 @@ export default {
                 uri: {
                     description: "URI manipulation",
                     task: "transpile",
-                    src: "src/glosses/uri/**/*.js",
+                    src: "src/glosses/uri/index.js",
                     dst: "lib/glosses/uri"
                 },
                 util: {
@@ -984,27 +989,7 @@ export default {
                     description: "Data validation",
                     src: "src/glosses/validation/index.js",
                     dst: "lib/glosses/validation",
-                    task: "transpile",
-                    units: {
-                        ajv: {
-                            description: "The fastest JSON Schema Validator",
-                            task: "transpile",
-                            src: "src/glosses/validation/ajv/**/*.js",
-                            dst: "lib/glosses/validation/ajv",
-                            units: {
-                                dot: {
-                                    task: "adoneDotCompiler",
-                                    src: "src/glosses/validation/ajv/dot/*.jst",
-                                    dst: "lib/glosses/validation/ajv/dotjs"
-                                },
-                                refs: {
-                                    task: "copy",
-                                    src: "src/glosses/validation/ajv/refs/*.json",
-                                    dst: "lib/glosses/validation/ajv/refs"
-                                }
-                            }
-                        }
-                    }
+                    task: "transpile"
                 },
                 vault: {
                     description: "Vault implementation on top of leveldb",

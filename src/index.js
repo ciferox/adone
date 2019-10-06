@@ -1,5 +1,5 @@
 // Be here until it appears in the official implementation
-require("./reflect");
+require("reflect-metadata");
 
 const common = require("./common");
 const { lazify } = common;
@@ -106,6 +106,7 @@ lazify({
     app: "./glosses/app",
     archive: "./glosses/archives",
     assertion: "./glosses/assertion",
+    babel: "./glosses/babel",
     buffer: "./glosses/buffer",
     cli: "./glosses/cli",
     collection: "./glosses/collections",

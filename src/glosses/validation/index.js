@@ -1,3 +1,3 @@
 adone.lazify({
-  ajv: "./ajv"
+    ajv: "ajv"
 }, adone.asNamespace(exports), require);
