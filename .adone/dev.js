@@ -176,13 +176,9 @@ export default {
                 async: {
                     description: "Async utilities for node and the browser",
                     task: "copy",
-                    src: [
-                        "src/glosses/async/**/*.js",
-                        "!src/glosses/async/**/LICENSE",
-                        "!src/glosses/async/**/README.md"
-                    ],
+                    src: "src/glosses/async/index.js",
                     dst: "lib/glosses/async",
-                    original: "https://github.com/caolan/async"
+                    repository: "https://github.com/caolan/async"
                 },
                 buffer: {
                     description: "Buffer implementations and utilites",
@@ -617,17 +613,10 @@ export default {
                 },
                 ipfs: {
                     description: "IPFS",
-                    task: "transpile",
-                    src: "src/glosses/ipfs/**/*.js",
+                    task: "copy",
+                    src: "src/glosses/ipfs/index.js",
                     dst: "lib/glosses/ipfs",
-                    units: {
-                        jsonAssets: {
-                            description: "JSON assets",
-                            src: "src/glosses/ipfs/**/*.json",
-                            dst: "lib/glosses/ipfs",
-                            task: "copy"
-                        }
-                    }
+                    repository: "https://github.com/ipfs/js-ipfs"
                 },
                 is: {
                     description: "Implementation of common predicates",
@@ -665,13 +654,9 @@ export default {
                 lodash: {
                     description: "A modern JavaScript utility library delivering modularity, performance & extras",
                     task: "copy",
-                    src: [
-                        "src/glosses/lodash/**/*.js",
-                        "!src/glosses/lodash/**/LICENSE",
-                        "!src/glosses/lodash/**/README.md"
-                    ],
+                    src: "src/glosses/lodash/index.js",
                     dst: "lib/glosses/lodash",
-                    original: "https://github.com/lodash/lodash"
+                    repository: "https://github.com/lodash/lodash"
                 },
                 logger: {
                     description: "Application logger",
