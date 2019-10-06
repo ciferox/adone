@@ -76,6 +76,25 @@ const cutNamespace = (parts) => {
     return namespaceParts.join(".");
 };
 
+const inspectObj = ({ obj, options, showValue } = {}) => {
+    let result;
+    const type = adone.typeOf(obj);
+
+    switch (type) {
+        case "function":
+        case "class":
+            result = showValue
+                ? adone.js.highlight(obj.toString())
+                : adone.inspect(obj, options);
+            break;
+        default:
+            result = showValue
+                ? obj
+                : adone.inspect(obj, options);
+    }
+    return result;
+};
+
 export default ({ globals } = {}) => class InspectionCommand extends Subsystem {
     @mainCommand({
         arguments: [
@@ -83,7 +102,7 @@ export default ({ globals } = {}) => class InspectionCommand extends Subsystem {
                 name: "name",
                 type: String,
                 default: "",
-                help: "Name of class/object/function/namespace"
+                help: "Name of class/object/function/namespace/module (for modules use `module://` prefix)"
             }
         ],
         options: [
@@ -140,7 +159,7 @@ export default ({ globals } = {}) => class InspectionCommand extends Subsystem {
     })
     async inspect(args, opts) {
         try {
-            const inspectOptions = {
+            const options = {
                 style: opts.get("style"),
                 depth: opts.get("depth"),
                 noType: opts.has("noType"),
@@ -154,56 +173,75 @@ export default ({ globals } = {}) => class InspectionCommand extends Subsystem {
                 funcDetails: opts.has("funcDetails")
             };
 
-            const name = args.get("name").split(".").filter(adone.identity).join(".");
+            let name = args.get("name");
+            let isModule = false;
+            if (name.startsWith("module://")) {
+                isModule = true;
+                name = name.slice("module://".length);
+            }
+            name = name.split(".").filter(adone.identity).join(".");
 
             if (name.length === 0) {
-                console.log("Global namespaces:");
-                console.log(pretty.json(globals));
+                if (isModule) {
+                    console.log("Specify module name from `node_modules`");
+                } else {
+                    console.log("Global namespaces:");
+                    console.log(pretty.json(globals));
+                }
                 return 0;
             }
 
+            const showValue = opts.has("value");
             let parts = stringToPath(name);
+            let result;
+            let ns;
 
-            // Reduce 'adone' + 'global' chain...
-            while (parts.length > 1) {
-                if (globals.includes(parts[0]) && globals.includes(parts[1])) {
+            if (isModule) {
+                const moduleName = parts.shift();
+                ns = adone.module.requireRelative(moduleName, process.cwd());
+            } else {
+                // Reduce 'adone' + 'global' chain...
+                while (parts.length > 1) {
+                    if (globals.includes(parts[0]) && globals.includes(parts[1])) {
+                        parts.shift();
+                    } else {
+                        break;
+                    }
+                }
+
+                if (!globals.includes(parts[0])) {
+                    throw new error.UnknownException(`Unknown namespace: ${parts[0]}`);
+                }
+
+                let namespace;
+                if (parts[0] === "global") {
+                    namespace = "global";
                     parts.shift();
+                } else if (parts[0] in global) {
+                    namespace = cutNamespace(parts);
+                }
+
+                if ((showValue || options.asObject) && parts.length === 0) {
+                    const tmp = stringToPath(namespace);
+                    parts = [tmp.pop()];
+                    namespace = tmp.join(".");
+                }
+
+                if (namespace === "global") {
+                    ns = global;
+                } else if (!namespace.includes(".")) {
+                    ns = global[namespace];
                 } else {
-                    break;
+                    ns = get(global, namespace);
                 }
             }
 
-            if (!globals.includes(parts[0])) {
-                throw new error.UnknownException(`Unknown namespace: ${parts[0]}`);
-            }
-
-            let namespace;
-            if (parts[0] === "global") {
-                namespace = "global";
-                parts.shift();
-            } else if (parts[0] in global) {
-                namespace = cutNamespace(parts);
-            }
-
-            const showValue = opts.has("value");
-            if ((showValue || inspectOptions.asObject) && parts.length === 0) {
-                const tmp = stringToPath(namespace);
-                parts = [tmp.pop()];
-                namespace = tmp.join(".");
-            }
-
-            let ns;
-            if (namespace === "global") {
-                ns = global;
-            } else if (!namespace.includes(".")) {
-                ns = global[namespace];
-            } else {
-                ns = get(global, namespace);
-            }
-
-            let result;
             if (parts.length === 0) {
-                result = adone.inspect(ns, inspectOptions);
+                result = inspectObj({
+                    obj: ns,
+                    showValue,
+                    options
+                });
             } else {
                 let obj = ns;
                 for (const part of parts) {
@@ -213,21 +251,14 @@ export default ({ globals } = {}) => class InspectionCommand extends Subsystem {
                     }
                     obj = obj[part];
                 }
-                const type = adone.typeOf(obj);
 
-                switch (type) {
-                    case "function":
-                    case "class":
-                        result = showValue
-                            ? adone.js.highlight(obj.toString())
-                            : adone.inspect(get(ns, parts), inspectOptions);
-                        break;
-                    default:
-                        result = showValue
-                            ? obj
-                            : adone.inspect(get(ns, parts), inspectOptions);
-                }
+                result = inspectObj({
+                    obj,
+                    showValue,
+                    options
+                });
             }
+
             console.log(result);
 
             return 0;

@@ -156,15 +156,6 @@ export default class ADONEApp extends app.Application {
         ]
     })
     async run(args, opts, { rest } = {}) {
-        const {
-            web: { compiler }
-        } = adone;
-
-        const result = compiler.compile("<p>Hello</p>");
-        console.log(result);
-
-        return 0;
-
         const cwd = path.normalize(process.cwd());
         const code = opts.get("eval");
 

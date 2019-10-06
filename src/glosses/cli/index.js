@@ -3151,9 +3151,9 @@ const terminal = new Terminal();
 adone.lazify({
     Progress: "./progress",
     esc: "./esc",
-    Chalk: "./chalk",
-    chalk: () => __.Chalk(),
-    chalkify: "./chalkify",
+    Chalk: () => __.chalk.Instance,
+    chalk: "chalk",
+    chalkify: "chalk-pipe",
     gradient: "./gradient",
     ui: "./ui",
     Enquirer: "./enquirer"

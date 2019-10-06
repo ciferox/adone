@@ -2,6 +2,7 @@ adone.lazify({
     getParentPath: "./get_parent_path",
     Module: "./module",
     require: "./require",
+    requireRelative: "require-relative",
     requireAddon: "./require_addon",
     resolve: "./resolve",
     transform: "./transforms"
