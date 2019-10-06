@@ -1,4 +1,4 @@
 adone.lazify({
     env: "./env",
-    info: "./info"
+    info: "systeminformation"
 }, adone.asNamespace(exports), require);
