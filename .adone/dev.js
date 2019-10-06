@@ -114,18 +114,9 @@ export default {
                 acorn: {
                     description: "A small, fast, JavaScript-based JavaScript parser ",
                     task: "transpile",
-                    src: "src/glosses/acorn/**/*.js",
+                    src: "src/glosses/acorn/index.js",
                     dst: "lib/glosses/acorn",
-                    original: "https://github.com/acornjs/acorn",
-                    units: {
-                        isReference: {
-                            description: "Utility for determining whether an AST node is a reference",
-                            src: "src/glosses/acorn/is_reference.ts",
-                            dst: "lib/glosses/acorn",
-                            task: "tsc",
-                            original: "https://github.com/Rich-Harris/is-reference"
-                        }
-                    }
+                    repository: "https://github.com/acornjs/acorn"
                 },
                 app: {
                     description: "Application framework",
