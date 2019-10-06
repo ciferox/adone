@@ -314,12 +314,12 @@ adone.lazify({
     table: "./table",
     Fuzzy: "./fuzzy",
     charcode: "./charcodes",
-    locateCharacter: "./locate_character",
+    locateCharacter: "locate-character",
     longestCommonPrefix: "./longest_common_prefix",
     sliceAnsi: "./slice_ansi",
     wrapAnsi: "./wrap_ansi",
     truncate: "./truncate",
     toCamelCase: "./to_camel_case",
     sprintf: "./sprintf",
-    MagicString: "./magic_string"
+    MagicString: "magic-string"
 }, adone.asNamespace(exports), require);
