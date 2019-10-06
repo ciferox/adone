@@ -1,14 +1,17 @@
+import dateTime from 'date-time';
+import fs from 'fs';
 import onExit from 'signal-exit';
 import {
 	InputOption,
 	RollupBuild,
 	RollupError,
+	RollupWatcher,
 	RollupWatchOptions,
 	WarningHandler,
 	WatcherOptions
-} from '../rollup/types';
-import mergeOptions, { GenericConfigObject } from '../utils/mergeOptions';
-import relativeId from '../utils/relativeId';
+} from './rollup/types';
+import mergeOptions, { GenericConfigObject } from './rollup/utils/mergeOptions';
+import relativeId from './rollup/utils/relativeId';
 import { handleError, stderr } from './logging';
 import batchWarnings from './batchWarnings';
 import loadConfigFile from './loadConfigFile';
@@ -17,7 +20,7 @@ import { printTimings } from './timings';
 
 const {
 	cli: { chalk },
-	fs,
+	pretty,
 	rollup
 } = adone;
 
@@ -28,11 +31,6 @@ interface WatchEvent {
 	input?: InputOption;
 	output?: string[];
 	result?: RollupBuild;
-}
-
-interface Watcher {
-	close: () => void;
-	on: (event: string, fn: (event: WatchEvent) => void) => void;
 }
 
 export default function watch(
@@ -49,8 +47,8 @@ export default function watch(
 	);
 
 	const resetScreen = getResetScreen(isTTY && clearScreen);
-	let watcher: Watcher;
-	let configWatcher: Watcher;
+	let watcher: RollupWatcher;
+	let configWatcher: RollupWatcher;
 
 	function processConfigs(configs: GenericConfigObject[]): RollupWatchOptions[] {
 		return configs.map(options => {
@@ -78,7 +76,7 @@ export default function watch(
 	}
 
 	function start(configs: RollupWatchOptions[]) {
-		watcher = rollup.watch(configs);
+		watcher = rollup.watch(configs as any);
 
 		watcher.on('event', (event: WatchEvent) => {
 			switch (event.code) {
@@ -105,8 +103,8 @@ export default function watch(
 							input = Array.isArray(input)
 								? input.join(', ')
 								: Object.keys(input as Record<string, string>)
-										.map(key => (input as Record<string, string>)[key])
-										.join(', ');
+									.map(key => (input as Record<string, string>)[key])
+									.join(', ');
 						}
 						stderr(
 							chalk.cyan(
@@ -125,7 +123,7 @@ export default function watch(
 							chalk.green(
 								`created ${chalk.bold(
 									(event.output as string[]).map(relativeId).join(', ')
-								)} in ${chalk.bold(adone.pretty.ms(event.duration as number))}`
+								)} in ${chalk.bold(pretty.ms(event.duration as number))}`
 							)
 						);
 					if (event.result && event.result.getTimings) {
@@ -135,7 +133,7 @@ export default function watch(
 
 				case 'END':
 					if (!silent && isTTY) {
-						stderr(`\n[${adone.pretty.time()}] waiting for changes...`);
+						stderr(`\n[${dateTime()}] waiting for changes...`);
 					}
 			}
 		});
@@ -191,7 +189,7 @@ export default function watch(
 			restarting = true;
 
 			loadConfigFile(configFile, command)
-				.then((_configs: RollupWatchOptions[]) => {
+				.then(() => {
 					restarting = false;
 
 					if (aborted) {

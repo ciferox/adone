@@ -1,13 +1,13 @@
-import { RollupBuild, RollupOutput } from '../rollup/types';
-import { GenericConfigObject } from '../utils/mergeOptions';
-import relativeId from '../utils/relativeId';
+import { RollupBuild, RollupOutput } from './rollup/types';
+import { GenericConfigObject } from './rollup/utils/mergeOptions';
+import relativeId from './rollup/utils/relativeId';
 import { handleError, stderr } from './logging';
 import batchWarnings from './batchWarnings';
 
 const {
-	cli: { chalk }, 
-	path,
-	rollup: { rollup }
+	cli: { chalk },
+	rollup,
+	std: { path }
 } = adone;
 
 interface NodeModuleWithCompile extends NodeModule {
@@ -21,7 +21,8 @@ export default function loadConfigFile(
 	const silent = commandOptions.silent || false;
 	const warnings = batchWarnings();
 
-	return rollup({
+	return rollup
+		.rollup({
 			external: (id: string) =>
 				(id[0] !== '.' && !path.isAbsolute(id)) || id.slice(-5, id.length) === '.json',
 			input: configFile,
@@ -65,7 +66,7 @@ export default function loadConfigFile(
 						handleError({
 							code: 'MISSING_CONFIG',
 							message: 'Config file must export an options object, or an array of options objects',
-							url: 'https://rollupjs.org/guide/en#configuration-files'
+							url: 'https://rollupjs.org/guide/en/#configuration-files'
 						});
 					}
 

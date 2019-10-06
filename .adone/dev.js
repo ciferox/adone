@@ -574,7 +574,7 @@ export default {
                 },
                 globals: {
                     description: "Global identifiers from different JavaScript environments",
-                    task: "transpile",
+                    task: "copy",
                     src: "src/glosses/globals/index.js",
                     dst: "lib/glosses/globals"
                 },
@@ -801,9 +801,10 @@ export default {
                 },
                 puppeteer: {
                     description: "High-level API to control Chrome or Chromium over the DevTools Protocol",
-                    task: "transpile",
-                    src: "src/glosses/puppeteer/**/*.js",
-                    dst: "lib/glosses/puppeteer"
+                    task: "copy",
+                    src: "src/glosses/puppeteer/index.js",
+                    dst: "lib/glosses/puppeteer",
+                    repository: "https://github.com/GoogleChrome/puppeteer"
                 },
                 realm: {
                     description: "Realm management",
@@ -831,35 +832,35 @@ export default {
                 },
                 rollup: {
                     description: "Next-generation ES module bundler",
-                    task: "tsc",
-                    src: [
-                        "src/glosses/rollup/**/*.ts",
-                        "!src/glosses/rollup/**/*.d.ts"
-                    ],
+                    task: "transpile",
+                    src: "src/glosses/rollup/index.js",
                     dst: "lib/glosses/rollup",
-                    compilerOptions: {
-                        allowSyntheticDefaultImports: true,
-                        noEmitOnError: true,
-                        noUnusedLocals: true,
-                        noUnusedParameters: true,
-                        strictPropertyInitialization: false,
-                        strictFunctionTypes: false,
-                        strict: true
-                    },
-                    original: "https://github.com/rollup/rollup",
+                    repository: "https://github.com/rollup/rollup",
                     units: {
-                        plugins: {
-                            description: "Plugins",
-                            task: "transpile",
-                            src: "src/glosses/rollup/plugins/**/*.js",
-                            dst: "lib/glosses/rollup/plugins"
+                        run: {
+                            description: "CLI part or rollup",
+                            task: "tsc",
+                            src: [
+                                "src/glosses/rollup/run/**/*.ts",
+                                "!src/glosses/rollup/run/**/*.d.ts"
+                            ],
+                            dst: "lib/glosses/rollup/run",
+                            compilerOptions: {
+                                allowSyntheticDefaultImports: true,
+                                noEmitOnError: true,
+                                noUnusedLocals: true,
+                                noUnusedParameters: true,
+                                strictPropertyInitialization: false,
+                                strictFunctionTypes: false,
+                                strict: true
+                            }
                         }
                     }
                 },
                 semver: {
                     description: "Semantic version parser",
-                    task: "transpile",
-                    src: "src/glosses/semver/**/*.js",
+                    task: "copy",
+                    src: "src/glosses/semver/index.js",
                     dst: "lib/glosses/semver"
                 },
                 sourcemap: {
@@ -957,13 +958,9 @@ export default {
                 typescript: {
                     description: "TypeScript compiler",
                     task: "copy",
-                    src: [
-                        "src/glosses/typescript/index.js",
-                        "!src/glosses/typescript/LICENSE.txt",
-                        "!src/glosses/typescript/README.md"
-                    ],
+                    src: "src/glosses/typescript/index.js",
                     dst: "lib/glosses/typescript",
-                    original: "https://github.com/Microsoft/TypeScript"
+                    repository: "https://github.com/Microsoft/TypeScript"
                 },
                 uri: {
                     description: "URI manipulation",

@@ -1,5 +1,5 @@
-import { RollupError } from '../rollup/types';  
-import relativeId from '../utils/relativeId';
+import { RollupError } from './rollup/types';
+import relativeId from './rollup/utils/relativeId';
 
 const {
 	cli: { chalk }
@@ -13,7 +13,7 @@ export function handleError(err: RollupError, recover = false) {
 	if (err.name) description = `${err.name}: ${description}`;
 	const message =
 		((err as { plugin?: string }).plugin
-			? `(${(err as { plugin?: string }).plugin} plugin) ${description}`
+			? `(plugin ${(err as { plugin?: string }).plugin}) ${description}`
 			: description) || err;
 
 	stderr(chalk.bold.red(`[!] ${chalk.bold(message.toString())}`));

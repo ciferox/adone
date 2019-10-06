@@ -1,7 +1,8 @@
-import { SerializedTimings } from '../rollup/types';
+import { SerializedTimings } from './rollup/types';
 
 const {
-	cli: { chalk }
+	cli: { chalk },
+	pretty
 } = adone;
 
 export function printTimings(timings: SerializedTimings) {
@@ -9,7 +10,7 @@ export function printTimings(timings: SerializedTimings) {
 		const color =
 			label[0] === '#' ? (label[1] !== '#' ? chalk.underline : chalk.bold) : (text: string) => text;
 		const [time, memory, total] = timings[label];
-		const row = `${label}: ${time.toFixed(0)}ms, ${adone.pretty.size(memory)} / ${adone.pretty.size(total)}`;
+		const row = `${label}: ${time.toFixed(0)}ms, ${pretty.size(memory)} / ${pretty.size(total)}`;
 		console.info(color(row));
 	});
 }

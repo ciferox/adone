@@ -1,5 +1,5 @@
-import { InputOptions, OutputOptions, RollupBuild, SourceMap } from '../../src/rollup/types';
-import relativeId from '../utils/relativeId';
+import { InputOptions, OutputOptions, RollupBuild, SourceMap } from './rollup/types';
+import relativeId from './rollup/utils/relativeId';
 import { handleError, stderr } from './logging';
 import SOURCEMAPPING_URL from './sourceMappingUrl';
 import { BatchWarnings } from './batchWarnings';

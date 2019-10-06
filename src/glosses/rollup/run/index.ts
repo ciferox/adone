@@ -1,38 +1,13 @@
-import { WarningHandler } from '../rollup/types';
-import mergeOptions, { GenericConfigObject } from '../utils/mergeOptions';
-import { getAliasName } from '../utils/relativeId';
+import { realpathSync } from 'fs';
+import relative from 'require-relative';
+import { WarningHandler } from './rollup/types';
+import mergeOptions, { GenericConfigObject } from './rollup/utils/mergeOptions';
+import { getAliasName } from './rollup/utils/relativeId';
 import { handleError } from './logging';
 import batchWarnings from './batchWarnings';
 import build from './build';
 import loadConfigFile from './loadConfigFile';
 import watch from './watch';
-
-const {
-	fs: { realpathSync }
-} = adone;
-
-const execute = (configFile: string, configs: GenericConfigObject[], options: any) => {
-	if (options.watch) {
-		watch(configFile, configs, options, options.silent);
-	} else {
-		let promise = Promise.resolve();
-		for (const config of configs) {
-			promise = promise.then(() => {
-				const warnings = batchWarnings();
-				const { inputOptions, outputOptions, optionError } = mergeOptions({
-					command: options,
-					config,
-					defaultOnWarnHandler: warnings.add
-				});
-
-				if (optionError)
-					(inputOptions.onwarn as WarningHandler)({ code: 'UNKNOWN_OPTION', message: optionError });
-				return build(inputOptions, outputOptions, warnings, options.silent);
-			});
-		}
-		return promise;
-	}
-};
 
 export default function runRollup(options: any) {
 	let inputSource;
@@ -74,7 +49,7 @@ export default function runRollup(options: any) {
 		});
 	}
 
-	let configFile = options.config === true || options.config.length === "" ? 'rollup.config.js' : options.config;
+	let configFile = options.config === true ? 'rollup.config.js' : options.config;
 
 	const cwd = options.cwd || process.cwd();
 	delete options.cwd;
@@ -99,17 +74,38 @@ export default function runRollup(options: any) {
 			}
 		} else {
 			// find real path of config so it matches what Node provides to callbacks in require.extensions
-			configFile = realpathSync(adone.path.join(cwd, configFile));
+			configFile = realpathSync(configFile);
 		}
 
-		if (options.watch) {
-			process.env.ROLLUP_WATCH = 'true';
-		}
+		if (options.watch) process.env.ROLLUP_WATCH = 'true';
 
-		return loadConfigFile(configFile, options)
+		loadConfigFile(configFile, options)
 			.then(configs => execute(configFile, configs, options))
 			.catch(handleError);
 	} else {
 		return execute(configFile, [{ input: null }] as any, options);
+	}
+}
+
+function execute(configFile: string, configs: GenericConfigObject[], command: any) {
+	if (command.watch) {
+		watch(configFile, configs, command, command.silent);
+	} else {
+		let promise = Promise.resolve();
+		for (const config of configs) {
+			promise = promise.then(() => {
+				const warnings = batchWarnings();
+				const { inputOptions, outputOptions, optionError } = mergeOptions({
+					command,
+					config,
+					defaultOnWarnHandler: warnings.add
+				});
+
+				if (optionError)
+					(inputOptions.onwarn as WarningHandler)({ code: 'UNKNOWN_OPTION', message: optionError });
+				return build(inputOptions, outputOptions, warnings, command.silent);
+			});
+		}
+		return promise;
 	}
 }

@@ -1,1 +1,1 @@
-module.exports = require("lodash");
+module.exports = adone.asNamespace(require("lodash"));

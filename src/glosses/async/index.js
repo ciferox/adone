@@ -1,1 +1,1 @@
-module.exports = require("async");
+module.exports = adone.asnamespace(require("async"));
