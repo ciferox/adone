@@ -24,18 +24,9 @@ const {
 } = adone.getPrivate(vault);
 
 const createDB = (options) => {
-    let backend;
-
-    if (is.string(options.location)) {
-        backend = new level.backend.LevelDB(options.location);
-    } else {
-        backend = new level.backend.Memory();
-    }
-
-    const codecOptions = adone.util.pick(options, ["keyEncoding", "valueEncoding", "encoding"]);
-    const dbOptions = adone.util.omit(options, ["keyEncoding", "valueEncoding", "encoding", "location"]);
-
-    return new level.DB(new level.backend.Encoding(backend, codecOptions), dbOptions);
+    return (is.string(options.location))
+        ? new level.LevelDB(options.location, adone.util.omit(options, ["location"]))
+        : new level.MemoryDB();
 };
 
 /**
@@ -47,9 +38,15 @@ export default class Vault {
      * @param {{ location, ValuableClass } = {}} options
      */
     constructor(options) {
-        this.options = Object.assign({}, options, {
-            valueEncoding: "mpak"
-        });
+        this.options = {
+            ...options,
+            valueEncoding: {
+                encode: adone.data.mpak.encode,
+                decode: adone.data.mpak.decode,
+                buffer: true,
+                type: "mpak"
+            }
+        };
         if (is.class(this.options.ValuableClass)) {
             this.Valuable = this.options.ValuableClass;
             delete this.options.ValuableClass;

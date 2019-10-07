@@ -454,23 +454,15 @@ export default {
                 },
                 databases: {
                     description: "Databases",
-                    src: "src/glosses/databases/**/*.js",
+                    src: "src/glosses/databases/index.js",
                     dst: "lib/glosses/databases",
                     task: "transpile",
                     units: {
                         level: {
-                            description: "Level is a key/value database",
+                            description: "Transparent key/value databases",
                             task: "transpile",
                             src: "src/glosses/databases/level/**/*.js",
-                            dst: "lib/glosses/databases/level",
-                            units: {
-                                native: {
-                                    description: "Leveldb backend",
-                                    task: "cmake",
-                                    src: "src/glosses/databases/level/backends/leveldb/native",
-                                    dst: "lib/glosses/databases/level/backends/leveldb/native"
-                                }
-                            }
+                            dst: "lib/glosses/databases/level"
                         }
                     }
                 },

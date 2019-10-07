@@ -4,8 +4,8 @@ const {
 } = adone;
 assertion.use(assertion.extension.checkmark);
 
-describe("database", "level", "packager", () => {
-    it.skip("Level constructor has access to levelup errors", () => {
+describe("packager", () => {
+    it("Level constructor has access to levelup errors", () => {
         function Down() { }
         assert.ok(packager(Down).errors, ".errors property set on constructor");
     });

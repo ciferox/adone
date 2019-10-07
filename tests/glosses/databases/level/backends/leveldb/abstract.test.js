@@ -1,1 +1,0 @@
-require("../../abstract")(require("./common"));
