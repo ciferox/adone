@@ -460,6 +460,7 @@ export default {
                     units: {
                         level: {
                             description: "Transparent key/value databases",
+                            organization: "https://github.com/Level",
                             task: "transpile",
                             src: "src/glosses/databases/level/**/*.js",
                             dst: "lib/glosses/databases/level"
