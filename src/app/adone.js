@@ -57,6 +57,12 @@ const command = (name) => path.join(__dirname, "..", "commands", name);
             subsystem: command("inspect")
         },
         {
+            name: "omni",
+            group: "common",
+            description: "Omni-application management",
+            subsystem: command("omni")
+        },
+        {
             name: "realm",
             group: "common",
             description: "Realm management",

@@ -75,6 +75,11 @@ export default {
                     dst: "lib/commands/inspect",
                     task: "transpile"
                 },
+                omni: {
+                    src: "src/commands/omni/**/*.js",
+                    dst: "lib/commands/omni",
+                    task: "transpile"
+                },
                 realm: {
                     src: "src/commands/realm/**/*.js",
                     dst: "lib/commands/realm",
@@ -544,9 +549,10 @@ export default {
                     dst: "lib/glosses/geoip"
                 },
                 git: {
-                    description: "Git implementation",
+                    description: "A pure JavaScript implementation of git for node and browsers!",
+                    repository: "https://github.com/isomorphic-git/isomorphic-git",
                     task: "transpile",
-                    src: "src/glosses/git/**/*.js",
+                    src: "src/glosses/git/index.js",
                     dst: "lib/glosses/git"
                 },
                 github: {

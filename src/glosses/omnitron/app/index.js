@@ -5,9 +5,9 @@ const {
     configuration,
     is,
     // std,
-    // fs,
-    netron: { Netron, meta: { Context, Public } },
-    // runtime
+    fs,
+    netron: { Netron },
+    util
 } = adone;
 
 // const {
@@ -26,8 +26,19 @@ export default
 // @Context({
 //     description: "Omnitron"
 // })
-class OmnitronApplication extends app.Application {
+class OmniApplication extends app.Application {
     async configure(options) {
+        if (!is.undefined(process.report)) {
+            Object.assign(process.report, util.pick(this.config.omnitron.report || {}, [
+                "reportOnFatalError",
+                "reportOnSignal",
+                "reportOnUncaughtException",
+                "signal",
+                "filename",
+                "directory"
+            ]));
+        }
+
         if (is.string(options.config)) {
             // Load app configuration from file.
             this.config = await configuration.load(options.config);
@@ -37,20 +48,10 @@ class OmnitronApplication extends app.Application {
             this.config.set("omnitron", {});
         }
 
-        if (!is.undefined(process.report)) {
-            process.report.reportOnFatalError(this.config.omnitron.report.onFatalError || false);
-            process.report.reportOnSignal(this.config.omnitron.report.onSignal || false);
-            process.report.reportOnUncaughtException(this.config.omnitron.report.onUncaughtException || false);
-        }
-
         // The generic communication core of omni-application.
         this.netron = new Netron(this.config.omnitron.netron);
 
         // this._configureLogger();
-
-        // app.configureReport({
-        //     directory: runtime.config.omnitron.LOGS_PATH
-        // });
 
         // await this.addSubsystemsFrom(std.path.join(__dirname, "subsystems"), {
         //     bind: true,
@@ -75,11 +76,11 @@ class OmnitronApplication extends app.Application {
     }
 
     async main() {
-        if (is.function(process.send)) {
-            process.send({
-                pid: process.pid
-            });
-        }
+        // if (is.function(process.send)) {
+        //     process.send({
+        //         pid: process.pid
+        //     });
+        // }
 
         // logger.info(`Omnitron v${adone.package.version} started`);
     }
@@ -97,21 +98,21 @@ class OmnitronApplication extends app.Application {
         // logger.info("Omnitron stopped");
     }
 
-    // async createPidFile() {
-    //     try {
-    //         await fs.writeFile(runtime.config.omnitron.PIDFILE_PATH, process.pid.toString());
-    //     } catch (err) {
-    //         adone.logError(err.message);
-    //     }
-    // }
+    async createPidFile() {
+        try {
+            await fs.writeFile(this.config.omnitron.pidFile, process.pid.toString());
+        } catch (err) {
+            console.error(err.message);
+        }
+    }
 
-    // async deletePidFile() {
-    //     try {
-    //         await fs.rm(runtime.config.omnitron.PIDFILE_PATH);
-    //     } catch (err) {
-    //         adone.logError(err.message);
-    //     }
-    // }
+    async deletePidFile() {
+        try {
+            await fs.rm(this.config.omnitron.pidFile);
+        } catch (err) {
+            console.error(err.message);
+        }
+    }
 
     // // _configureLogger() {
     // //     const {
