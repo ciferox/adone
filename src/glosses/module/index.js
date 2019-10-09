@@ -8,14 +8,14 @@ adone.lazify({
     transform: "./transforms"
 }, adone.asNamespace(exports), require);
 
-export const COMPILER_PLUGINS = [
-    "transform.flowStripTypes",
-    ["transform.decorators", { legacy: true }],
-    ["transform.classProperties", { loose: true }],
-    ["transform.privateMethods", { loose: true }],
-    "transform.doExpressions",
-    "transform.exportDefaultFrom",
-    "transform.partialApplication",
-    "transform.modulesCommonjs",
-    "transform.numericSeparator"
+export const BABEL_PLUGINS = [
+    "@babel/plugin-transform-flow-strip-types",
+    ["@babel/plugin-proposal-decorators", { legacy: true }],
+    ["@babel/plugin-proposal-class-properties", { loose: true }],
+    ["@babel/plugin-proposal-private-methods", { loose: true }],
+    "@babel/plugin-proposal-do-expressions",
+    "@babel/plugin-proposal-export-default-from",
+    "@babel/plugin-proposal-partial-application",
+    "@babel/plugin-transform-modules-commonjs",
+    "@babel/plugin-proposal-numeric-separator"
 ];

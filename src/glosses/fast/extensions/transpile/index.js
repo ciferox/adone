@@ -58,7 +58,7 @@ export default function transpilePlugin() {
                 //     plugins = plugins ? plugins.concat([plugin]) : [plugin];
                 //     delete options.importReplace;
                 // }
-                const result = adone.js.compiler.core.transform(file.contents.toString(), adone.o(options, {
+                const result = adone.js.babel.transform(file.contents.toString(), adone.o(options, {
                     plugins,
                     filename: file.path,
                     filenameRelative: file.relative,

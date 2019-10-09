@@ -615,23 +615,16 @@ export default {
                 },
                 js: {
                     description: "JavaScript language stuff",
+                    repository: [
+                        "https://github.com/babel/babel",
+                        "https://github.com/acornjs/acorn",
+                        "https://github.com/estools/esutils",
+                        "https://github.com/benjamn/recast",
+                        "https://github.com/pugjs/babylon-walk"
+                    ],
                     task: "transpile",
                     src: "src/glosses/js/**/*.js",
-                    dst: "lib/glosses/js",
-                    units: {
-                        compiler: {
-                            description: "Javascript compiler implementation",
-                            task: "transpile",
-                            src: "src/glosses/js/compiler/**/*.js",
-                            dst: "lib/glosses/js/compiler"
-                        },
-                        parser: {
-                            description: "Javascript parser implementation",
-                            task: "transpile",
-                            src: "src/glosses/js/parser/**/*.js",
-                            dst: "lib/glosses/js/parser"
-                        }
-                    }
+                    dst: "lib/glosses/js"
                 },
                 lockfile: {
                     description: "An inter-process and inter-machine lockfile",
@@ -847,16 +840,16 @@ export default {
                 },
                 sourcemap: {
                     description: "Sourcemaps",
+                    repository: [
+                        "https://github.com/mozilla/source-map",
+                        "https://github.com/Rich-Harris/sourcemap-codec",
+                        "https://github.com/evanw/node-source-map-support",
+                        "https://github.com/thlorenz/convert-source-map",
+                        "https://github.com/thlorenz/inline-source-map"
+                    ],
                     task: "transpile",
-                    src: "src/glosses/sourcemap/**/*.js",
-                    dst: "lib/glosses/sourcemap",
-                    units: {
-                        codec: {
-                            task: "tsc",
-                            src: "src/glosses/sourcemap/codec.ts",
-                            dst: "lib/glosses/sourcemap"
-                        }
-                    }
+                    src: "src/glosses/sourcemap/index.js",
+                    dst: "lib/glosses/sourcemap"
                 },
                 streams: {
                     description: "Different streams and stream utilites",

@@ -1,5 +1,0 @@
-{
-  "throws": "Invalid left-hand side in assignment expression (1:0)",
-  "sourceType": "module",
-  "plugins": ["dynamicImport", "importMeta"]
-}

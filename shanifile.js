@@ -21,7 +21,7 @@ export default {
         callGc: true
     },
     transpiler: {
-        plugins: adone.module.COMPILER_PLUGINS,
+        plugins: adone.module.BABEL_PLUGINS,
         compact: false
     },
     mapping: async (p) => {

@@ -1,4 +1,0 @@
-{
-  "sourceType": "module",
-  "throws": "Identifier 'bar' has already been declared (2:13)"
-}

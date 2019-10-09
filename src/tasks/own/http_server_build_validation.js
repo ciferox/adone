@@ -2,7 +2,7 @@ const {
     fs,
     path: aPath,
     realm: { BaseTask },
-    validation: { ajv: { Ajv } }
+    validation: { ajv: Ajv }
 } = adone;
 
 const pack = require('ajv-pack')

@@ -1,4 +1,0 @@
-{
-  "plugins": ["flow"],
-  "throws": "Unexpected keyword 'default' (1:9)"
-}

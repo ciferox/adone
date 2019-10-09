@@ -1,16 +1,14 @@
 adone.lazify({
-    compiler: "./compiler",
-    coverage: "./coverage",
-    esutils: "./esutils",
-    tokTypes: ["./parser", (mod) => mod.tokTypes],
-    parse: ["./parser", (mod) => mod.parse],
-    parseExpression: ["./parser", (mod) => mod.parseExpression],
+    acorn: "./acorn",
+    babel: "./babel",
+    esutils: "esutils",
+    tokTypes: ["@babel/parser", (mod) => mod.tokTypes],
+    parse: ["@babel/parser", (mod) => mod.parse],
+    parseExpression: ["@babel/parser", (mod) => mod.parseExpression],
     parseFunction: "./parse_function",
-    walk: "./walk",
-    tokens: "./tokens",
-    highlight: "./highlight",
-    recast: "./recast",
-    codeshift: "./codeshift"
+    walk: "babylon-walk",
+    highlight: "@babel/highlight",
+    recast: "recast"
 }, adone.asNamespace(exports), require);
 
 export const AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;

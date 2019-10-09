@@ -12,7 +12,7 @@ export default class Module extends NodeModule {
 
     addTransform(fn) {
         if (!is.function(fn)) {
-            throw new error.InvalidArgumentException(`Transform must be a function`);
+            throw new adone.error.InvalidArgumentException("Transform must be a function");
         }
         this.transforms.push(fn);
         return this;

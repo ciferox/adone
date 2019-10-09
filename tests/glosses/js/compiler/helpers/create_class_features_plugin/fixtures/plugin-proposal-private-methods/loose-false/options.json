@@ -1,5 +1,0 @@
-{
-  "plugins": [
-    ["proposal-private-methods", { "loose": false }]
-  ]
-}

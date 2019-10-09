@@ -69,7 +69,7 @@ export default function initInternals(options, file, fileContent) {
 
     const getFileSources = (sources) => {
         // look for source map comment referencing a source map file
-        const mapComment = sourcemap.convert.getMapFileCommentRegex().exec(sources.content);
+        const mapComment = sourcemap.convert.mapFileCommentRegex.exec(sources.content);
 
         let mapFile;
         if (mapComment) {

@@ -233,8 +233,8 @@ export default class ADONEApp extends app.Application {
 
             code = code.trim();
 
-            let result = adone.js.compiler.core.transform(code.trim(), {
-                plugins: adone.module.COMPILER_PLUGINS,
+            let result = adone.js.babel.transform(code.trim(), {
+                plugins: adone.module.BABEL_PLUGINS,
                 parserOpts: {
                     allowAwaitOutsideFunction: true
                 },
@@ -245,7 +245,7 @@ export default class ADONEApp extends app.Application {
 
             if (print) {
                 // TODO: not a perfect solution
-                result = adone.js.compiler.core.transform(fn.toString(), {
+                result = adone.js.babel.transform(fn.toString(), {
                     ast: true,
                     code: false,
                     plugins: ["transform.implicitReturn"],

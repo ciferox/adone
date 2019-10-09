@@ -31,8 +31,8 @@ export class REPL {
             this.ts = this.options.__.ts.register(this.options);
             transform = this.ts.getTransform(this.instance);
         } else {
-            transform = (code, filename) => adone.js.compiler.core.transform(code, {
-                plugins: adone.module.COMPILER_PLUGINS,
+            transform = (code, filename) => adone.js.babel.transform(code, {
+                plugins: adone.module.BABEL_PLUGINS,
                 parserOpts: {
                     allowAwaitOutsideFunction: true
                 },

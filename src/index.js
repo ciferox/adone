@@ -102,11 +102,9 @@ lazify({
     }, null, require, { asNamespace: true })),
 
     // glosses
-    acorn: "./glosses/acorn",
     app: "./glosses/app",
     archive: "./glosses/archives",
     assertion: "./glosses/assertion",
-    babel: "./glosses/babel",
     buffer: "./glosses/buffer",
     cli: "./glosses/cli",
     collection: "./glosses/collections",

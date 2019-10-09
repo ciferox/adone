@@ -1,4 +1,0 @@
-{
-  "plugins": ["placeholders"],
-  "throws": "Unexpected space in placeholder. (1:2)"
-}
