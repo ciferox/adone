@@ -8,7 +8,8 @@ const INTERNAL = Symbol.for("adone.app.Application#internal");
 
 const _bootstrapApp = async (app, {
     useArgs,
-    version
+    version,
+    ...restOptions
 }) => {
     if (is.null(adone.__app__)) {
         adone.__app__ = app;
@@ -79,7 +80,7 @@ const _bootstrapApp = async (app, {
                 }
             }
 
-            await app.configure();
+            await app.configure(restOptions);
 
             if (sysMeta) {
                 if (is.array(sysMeta.commands)) {
@@ -122,14 +123,14 @@ const _bootstrapApp = async (app, {
             }
 
             app._setErrorScope(true);
-            await app.initialize();
+            await app.initialize(restOptions);
 
             await app.emitParallel("before run", command);
             code = await command.execute(rest, match);
         } else {
             app._setErrorScope(true);
-            await app.configure();
-            await app.initialize();
+            await app.configure(restOptions);
+            await app.initialize(restOptions);
             code = await app.run();
         }
 
@@ -150,7 +151,8 @@ const _bootstrapApp = async (app, {
 
 export default async (App, {
     useArgs = false,
-    version
+    version,
+    ...rest
 } = {}) => {
     if (is.null(adone.__app__) && is.class(App)) {
         const app = new App();
@@ -166,7 +168,8 @@ export default async (App, {
 
         return _bootstrapApp(app, {
             useArgs,
-            version
+            version,
+            ...rest
         });
     }
 
@@ -214,6 +217,7 @@ export default async (App, {
 
     return _bootstrapApp(app, {
         useArgs,
-        version
+        version,
+        ...rest
     });
 };

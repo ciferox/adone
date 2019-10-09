@@ -95,7 +95,15 @@ const inspectObj = ({ obj, options, showValue } = {}) => {
     return result;
 };
 
-export default ({ globals } = {}) => class InspectionCommand extends Subsystem {
+const addCommonGlobals = (globals) => {
+    for (const common of ["global", "process", "console"]) {
+        if (!globals.includes(common)) {
+            globals.unshift(common);
+        }
+    }
+};
+
+export default ({ globals: globals_ } = {}) => class InspectionCommand extends Subsystem {
     @mainCommand({
         arguments: [
             {
@@ -173,6 +181,9 @@ export default ({ globals } = {}) => class InspectionCommand extends Subsystem {
                 funcDetails: opts.has("funcDetails")
             };
 
+            const globals = [...globals_];
+            addCommonGlobals(globals);
+
             let name = args.get("name");
             let isModule = false;
             if (name.startsWith("module://")) {
@@ -185,8 +196,8 @@ export default ({ globals } = {}) => class InspectionCommand extends Subsystem {
                 if (isModule) {
                     console.log("Specify module name from `node_modules`");
                 } else {
-                    console.log("Global namespaces:");
-                    console.log(pretty.json(globals));
+                    console.log("Possible objects for inspection:");
+                    console.log(pretty.json([...globals, "module://<module_name>"]));
                 }
                 return 0;
             }

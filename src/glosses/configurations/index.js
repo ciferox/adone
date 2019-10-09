@@ -5,14 +5,14 @@ const lazy = adone.lazify({
     NpmConfig: "./npm"
 }, adone.asNamespace(exports), require);
 
-export const load = async (path, name, options) => {
+export const load = async (path, options) => {
     const config = new lazy.Generic(options);
-    await config.load(path, name, options);
+    await config.load(path, options);
     return config;
 };
 
-export const loadSync = (path, name, options) => {
+export const loadSync = (path, options) => {
     const config = new lazy.Generic(options);
-    config.loadSync(path, name, options);
+    config.loadSync(path, options);
     return config;
 };
