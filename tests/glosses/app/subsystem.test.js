@@ -12,7 +12,7 @@ assertion.use(assertion.extension.checkmark);
 const fixture = (name) => std.path.join(__dirname, "fixtures", name);
 
 
-describe("app", "Subsystem", () => {
+describe("Subsystem", () => {
     class SS extends Subsystem {
         async onConfigure(...args) {
             await promise.delay(1);

@@ -8,14 +8,18 @@ adone.lazify({
     transform: "./transforms"
 }, adone.asNamespace(exports), require);
 
+const {
+    js: { babel: { createConfigItem }}
+} = adone;
+
 export const BABEL_PLUGINS = [
-    "@babel/plugin-transform-flow-strip-types",
-    ["@babel/plugin-proposal-decorators", { legacy: true }],
-    ["@babel/plugin-proposal-class-properties", { loose: true }],
-    ["@babel/plugin-proposal-private-methods", { loose: true }],
-    "@babel/plugin-proposal-do-expressions",
-    "@babel/plugin-proposal-export-default-from",
-    "@babel/plugin-proposal-partial-application",
-    "@babel/plugin-transform-modules-commonjs",
-    "@babel/plugin-proposal-numeric-separator"
+    createConfigItem(require("@babel/plugin-transform-flow-strip-types")),
+    createConfigItem([require("@babel/plugin-proposal-decorators"), { legacy: true }]),
+    createConfigItem([require("@babel/plugin-proposal-class-properties"), { loose: true }]),
+    createConfigItem([require("@babel/plugin-proposal-private-methods"), { loose: true }]),
+    createConfigItem(require("@babel/plugin-proposal-do-expressions")),
+    createConfigItem(require("@babel/plugin-proposal-export-default-from")),
+    createConfigItem(require("@babel/plugin-proposal-partial-application")),
+    createConfigItem(require("@babel/plugin-transform-modules-commonjs")),
+    createConfigItem(require("@babel/plugin-proposal-numeric-separator"))
 ];

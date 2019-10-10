@@ -56,10 +56,10 @@
     "wsurl": "^1.0.0"
   },
   "dependencies": {
-    "@babel/core": "^7.6.2",
+    "@babel/core": "^7.6.4",
     "@babel/helper-module-imports": "^7.0.0",
     "@babel/highlight": "^7.5.0",
-    "@babel/parser": "^7.6.3",
+    "@babel/parser": "^7.6.4",
     "@babel/plugin-proposal-class-properties": "^7.5.5",
     "@babel/plugin-proposal-decorators": "^7.6.0",
     "@babel/plugin-proposal-do-expressions": "^7.6.0",

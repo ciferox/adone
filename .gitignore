@@ -61,6 +61,3 @@ pnpm-lock.yaml
 test-fixtures/
 _fixtures/
 test-resources/
-
-tests/glosses/rollup/**/_actual
-tests/glosses/rollup/**/_actual.js 
