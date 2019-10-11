@@ -152,7 +152,7 @@ const _bootstrapApp = async (app, {
 export default async (App, {
     useArgs = false,
     version,
-    ...rest
+    ...restOptions
 } = {}) => {
     if (is.null(adone.__app__) && is.class(App)) {
         const app = new App();
@@ -169,7 +169,7 @@ export default async (App, {
         return _bootstrapApp(app, {
             useArgs,
             version,
-            ...rest
+            ...restOptions
         });
     }
 
@@ -218,6 +218,6 @@ export default async (App, {
     return _bootstrapApp(app, {
         useArgs,
         version,
-        ...rest
+        ...restOptions
     });
 };

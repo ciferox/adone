@@ -432,13 +432,3 @@ class OmniApplication extends app.Application {
     // //     return this.gates.configureGate(name, options);
     // // }
 }
-
-// if (require.main === module) {
-//     if (!is.function(process.send)) {
-//         console.log(adone.cli.chalk.red("Omnitron cannot be launched directly"));
-//         process.exit(app.EXIT_ERROR);
-//     }
-//     // Declare omnitron environment
-//     runtime.isOmnitron = true;
-//     app.run(OmnitronApplication);
-// }

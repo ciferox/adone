@@ -50,6 +50,24 @@ describe("Application", () => {
         assert.match(err.stderr, /Something bad happend during uninitialization/);
     });
 
+    describe("user-defined application options", () => {
+        for (const t of ["configure", "initialize"]) {
+            it(`user-defined options in ${t}-stage (useArgs=true)`, async () => {
+                const result = await forkProcess(fixture("app_options_configure.js"), [], {
+                    env: {
+                        WITH_ARGS: "yes"
+                    }
+                });
+                assert.equal(result.stdout, "true");
+            });
+    
+            it(`user-defined options in ${t}-stage (useArgs=false)`, async () => {
+                const result = await forkProcess(fixture("app_options_initialize.js"));
+                assert.equal(result.stdout, "true");
+            });
+        }
+    });
+
     describe("Subsystems", () => {
         describe("add", () => {
             it("valid subsystem", async () => {
@@ -437,7 +455,7 @@ describe("Application", () => {
         });
     });
 
-    describe.only("decorators", () => {
+    describe("decorators", () => {
         const {
             app: { subsystem, getSubsystemMeta }
         } = adone;
