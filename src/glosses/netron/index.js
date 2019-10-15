@@ -127,6 +127,6 @@ adone.lazify({
     packet: "./packet",
     task: "./tasks",
     uid: "./uids",
-    IPCNetCore: "./ipc_net_core",
+    ipc: "./ipc",
     P2PNetCore: "./p2p_net_core"
 }, adone.asNamespace(exports), require);

@@ -1,3 +1,4 @@
 adone.lazify({
-    ajv: "ajv"
+    ajv: "ajv",
+    superstruct: "superstruct"
 }, adone.asNamespace(exports), require);

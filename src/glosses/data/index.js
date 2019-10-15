@@ -10,6 +10,6 @@ adone.lazify({
     base58: "./base58",
     varint: "./varint",
     varintSigned: "./varint_signed",
-    protobuf: "./protobuf",
+    protobuf: "protons",
     utf8: "./utf8"
 }, adone.asNamespace(exports), require);

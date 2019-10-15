@@ -28,6 +28,15 @@ export default
 // })
 class OmniApplication extends app.Application {
     async configure(options) {
+        if (is.string(options.config)) {
+            // Load app configuration from file.
+            this.config = await configuration.load(options.config);
+        } else {
+            // Default configuration
+            this.config = new configuration.GenericConfig();
+            this.config.set("omnitron", {});
+        }
+
         if (!is.undefined(process.report)) {
             Object.assign(process.report, util.pick(this.config.omnitron.report || {}, [
                 "reportOnFatalError",
@@ -39,18 +48,6 @@ class OmniApplication extends app.Application {
             ]));
         }
 
-        if (is.string(options.config)) {
-            // Load app configuration from file.
-            this.config = await configuration.load(options.config);
-        } else {
-            // Default configuration
-            this.config = new configuration.GenericConfig();
-            this.config.set("omnitron", {});
-        }
-
-        // The generic communication core of omni-application.
-        this.netron = new Netron(this.config.omnitron.netron);
-
         // this._configureLogger();
 
         // await this.addSubsystemsFrom(std.path.join(__dirname, "subsystems"), {
@@ -59,18 +56,21 @@ class OmniApplication extends app.Application {
         //     group: CORE_GROUP
         // });
 
-        // if (!is.windows) {
-        //     this.exitOnSignal("SIGQUIT", "SIGTERM", "SIGINT");
-        //     process.on("SIGILL", () => {
-        //         if (is.function(global.gc)) {
-        //             global.gc();
-        //             // logger.info("Forced garbage collector");
-        //         }
-        //     });
-        // }
+        if (!is.windows) {
+            this.exitOnSignal("SIGQUIT", "SIGTERM", "SIGINT");
+            // process.on("SIGILL", () => {
+            //     if (is.function(global.gc)) {
+            //         global.gc();
+            //         // logger.info("Forced garbage collector");
+            //     }
+            // });
+        }
     }
 
     async initialize() {
+        // The generic communication core of omni-application.
+        this.netron = new Netron(this.config.omnitron.netron);
+
         await this.initializeSubsystems();
         await this.createPidFile();
     }
