@@ -1,7 +1,10 @@
 /* eslint-disable func-style */
-const PeerId = require("peer-id");
-const PeerInfo = require("peer-info");
-const multiaddr = require("multiaddr");
+
+const {
+    multiformat: { multiaddr },
+    p2p: { PeerId, PeerInfo }
+} = adone;
+
 const errCode = require("err-code");
 
 /**

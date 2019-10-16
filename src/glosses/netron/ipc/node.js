@@ -9,11 +9,12 @@ const promisify = require("promisify-es6");
 const series = require("async/series");
 const nextTick = require("async/nextTick");
 
-const PeerBook = require("peer-book");
-const PeerInfo = require("peer-info");
+const {
+    p2p: { PeerBook, PeerInfo }
+} = adone;
+
 const Switch = require("./switch");
 const Ping = require("./ping");
-const ConnectionManager = require("./connection-manager");
 
 const { emitFirst } = require("./util");
 const { getPeerInfoRemote } = require("./get-peer-info");
@@ -52,8 +53,6 @@ class Libp2p extends EventEmitter {
         // create the switch, and listen for errors
         this._switch = new Switch(this.peerInfo, this.peerBook, this._options.switch);
         this._switch.on("error", (...args) => this.emit("error", ...args));
-
-        this.connectionManager = new ConnectionManager(this, this._options.connectionManager);
 
         // Attach stream multiplexers
         if (this._modules.streamMuxer) {
@@ -203,9 +202,9 @@ class Libp2p extends EventEmitter {
      * @returns {void}
      */
     dialProtocol(peer, protocol, callback) {
-        if (!this.isStarted()) {
-            return callback(notStarted("dial", this.state._state));
-        }
+        // if (!this.isStarted()) {
+        //     return callback(notStarted("dial", this.state._state));
+        // }
 
         if (typeof protocol === "function") {
             callback = protocol;
@@ -320,7 +319,6 @@ class Libp2p extends EventEmitter {
 
         series([
             (cb) => {
-                this.connectionManager.start();
                 this._switch.start(cb);
             },
             (cb) => {
@@ -348,7 +346,6 @@ class Libp2p extends EventEmitter {
     _onStopping() {
         series([
             (cb) => {
-                this.connectionManager.stop();
                 this._switch.stop(cb);
             },
             (cb) => {

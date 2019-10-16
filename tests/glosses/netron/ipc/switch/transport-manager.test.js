@@ -16,7 +16,9 @@ describe("Transport Manager", () => {
         before(function (done) {
             this.timeout(10e3);
             PeerInfo.create((err, info) => {
-                if (err) return done(err);
+                if (err) {
+                    return done(err);
+                }
                 peerInfo = info;
                 done();
             });

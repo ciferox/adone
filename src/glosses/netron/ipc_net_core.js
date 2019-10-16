@@ -3,93 +3,19 @@ const defaultsDeep = require("@nodeutils/defaults-deep");
 const {
     error,
     is,
-    netron: { AbstractNetCore, RemotePeer },
-    p2p: { PeerId, PeerInfo, GossipSub, Node, KadDHT, transport: { TCP, WS }, MulticastDNS, Bootstrap, secio, muxer: { spdy, mplex, pullMplex } }
+    netron: { AbstractNetCore, RemotePeer, ipc: { Node } },
+    p2p: { PeerId, PeerInfo, transport: { TCP }, muxer: { pullMplex } }
 } = adone;
 
 const NETRON_PROTOCOL = adone.netron.NETRON_PROTOCOL;
-const DEFAULT_ADDR = "/ip4/0.0.0.0/tcp/0";
-
-const mapMuxers = function (list) {
-    return list.map((pref) => {
-        if (!is.string(pref)) {
-            return pref;
-        }
-        switch (pref.trim().toLowerCase()) {
-            case "spdy": return spdy;
-            case "mplex": return mplex;
-            case "pullmplex": return pullMplex;
-            default:
-                throw new Error(`${pref} muxer not available`);
-        }
-    });
-};
-
-const getMuxers = function (muxers) {
-    const muxerPrefs = process.env.LIBP2P_MUXER;
-    if (muxerPrefs && !muxers) {
-        return mapMuxers(muxerPrefs.split(","));
-    } else if (muxers) {
-        return mapMuxers(muxers);
-    }
-    return [pullMplex, mplex, spdy];
-
-};
+const DEFAULT_ADDR = "/unix/tmp/netron.sock";
 
 class NetCoreNode extends Node {
     constructor(_options) {
         const defaults = {
             modules: {
-                transport: [
-                    TCP,
-                    WS
-                ],
-                streamMuxer: getMuxers(_options.muxer),
-                connEncryption: [
-                    secio
-                ],
-                peerDiscovery: [
-                    MulticastDNS,
-                    Bootstrap
-                ],
-                dht: KadDHT,
-                pubsub: GossipSub
-            },
-            config: {
-                peerDiscovery: {
-                    autoDial: true,
-                    mdns: {
-                        interval: 10000,
-                        enabled: false
-                    },
-                    bootstrap: {
-                        interval: 10000,
-                        enabled: false,
-                        list: _options.bootstrapList
-                    }
-                },
-                relay: {
-                    enabled: false,
-                    hop: {
-                        enabled: false,
-                        active: false
-                    }
-                },
-                dht: {
-                    kBucketSize: 20,
-                    randomWalk: {
-                        enabled: true, // Allows to disable discovery (enabled by default)
-                        interval: 300e3,
-                        timeout: 10e3
-                    },
-                    enabled: true
-                },
-                pubsub: {
-                    enabled: true,
-                    emitSelf: true, // whether the node should emit to self on publish, in the event of the topic being subscribed
-                    signMessages: true, // if messages should be signed
-                    strictSigning: true // if message signing should be required
-                }
+                transport: [TCP],
+                streamMuxer: [pullMplex]
             }
         };
 
@@ -100,7 +26,7 @@ class NetCoreNode extends Node {
 const STARTED = Symbol();
 const STARTING = Symbol();
 
-export default class P2PNetCore extends AbstractNetCore {
+export default class IPCNetCore extends AbstractNetCore {
     constructor(options) {
         super(options, NetCoreNode);
     }
@@ -175,10 +101,8 @@ export default class P2PNetCore extends AbstractNetCore {
             }
             peerInfo = new PeerInfo(PeerId.createFromB58String(peerIdB58Str));
             peerInfo.multiaddrs.add(ma);
-        } else if (PeerInfo.isPeerInfo(addr)) {
-            peerInfo = addr;
         } else {
-            throw new Error("Incorrect value of `addr`. Should be instance of multiaddr or PeerInfo");
+            peerInfo = addr;
         }
 
         let protocol = null;

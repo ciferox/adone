@@ -58,13 +58,9 @@ describe("configuration", () => {
 
         const expected = {
             peerInfo,
-            connectionManager: {
-                minPeers: 25
-            },
             modules: {
                 transport: [TCP]
-            },
-            config: {}
+            }
         };
 
         expect(validateConfig(options)).to.deep.equal(expected);
@@ -80,13 +76,9 @@ describe("configuration", () => {
 
         const expected = {
             peerInfo,
-            connectionManager: {
-                minPeers: 25
-            },
             modules: {
                 transport: [TCP]
-            },
-            config: {}
+            }
         };
 
         expect(validateConfig(options)).to.deep.equal(expected);

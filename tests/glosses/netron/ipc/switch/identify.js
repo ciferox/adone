@@ -7,7 +7,6 @@ const parallel = require("async/parallel");
 const TCP = require("libp2p-tcp");
 const multiplex = require("libp2p-mplex");
 const pull = require("pull-stream");
-// const secio = require("libp2p-secio");
 const PeerInfo = require("peer-info");
 const PeerBook = require("peer-book");
 const identify = require(adone.getPath("src/glosses/netron/ipc/identify"));
@@ -42,10 +41,6 @@ describe("Identify", () => {
         switchB.transport.add("tcp", new TCP());
         switchC.transport.add("tcp", new TCP());
 
-        // switchA.connection.crypto(secio.tag, secio.encrypt);
-        // switchB.connection.crypto(secio.tag, secio.encrypt);
-        // switchC.connection.crypto(secio.tag, secio.encrypt);
-
         switchA.connection.addStreamMuxer(multiplex);
         switchB.connection.addStreamMuxer(multiplex);
         switchC.connection.addStreamMuxer(multiplex);
@@ -69,7 +64,7 @@ describe("Identify", () => {
         ], done);
     });
 
-    afterEach(function (done) {
+    afterEach((done) => {
         sinon.restore();
         // Hangup everything
         parallel([
@@ -136,7 +131,9 @@ describe("Identify", () => {
     it("should close connection when identify fails", (done) => {
         const stub = sinon.stub(identify, "listener").callsFake((conn) => {
             conn.getObservedAddrs((err, observedAddrs) => {
-                if (err) { return; }
+                if (err) {
+                    return;
+                }
                 observedAddrs = observedAddrs[0];
 
                 // pretend to be another peer
@@ -145,7 +142,7 @@ describe("Identify", () => {
                 const msgSend = identify.message.encode({
                     protocolVersion: "ipfs/0.1.0",
                     agentVersion: "na",
-                    publicKey: publicKey,
+                    publicKey,
                     listenAddrs: switchC._peerInfo.multiaddrs.toArray().map((ma) => ma.buffer),
                     observedAddr: observedAddrs ? observedAddrs.buffer : Buffer.from("")
                 });

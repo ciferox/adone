@@ -1,4 +1,4 @@
-const Connection = require("interface-connection").Connection;
+const { Connection } = adone.p2p;
 const pull = require("pull-stream/pull");
 const empty = require("pull-stream/sources/empty");
 const timeout = require("async/timeout");

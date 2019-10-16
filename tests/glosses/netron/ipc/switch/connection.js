@@ -7,16 +7,9 @@ const sinon = require("sinon");
 const PeerBook = require("peer-book");
 const TCP = require("libp2p-tcp");
 const parallel = require("async/parallel");
-// const secio = require("libp2p-secio");
 const pull = require("pull-stream");
 const multiplex = require("pull-mplex");
 const spdy = require("libp2p-spdy");
-
-// const Protector = require(adone.getPath("src/glosses/netron/p2p/pnet"));
-// const generatePSK = Protector.generate;
-
-const psk = Buffer.alloc(95);
-// generatePSK(psk);
 
 const ConnectionFSM = require(adone.getPath("src/glosses/netron/ipc/switch/connection"));
 const Switch = require(adone.getPath("src/glosses/netron/ipc/switch"));
@@ -35,19 +28,16 @@ describe("ConnectionFSM", () => {
 
             dialerSwitch = new Switch(infos.shift(), new PeerBook());
             dialerSwitch._peerInfo.multiaddrs.add("/ip4/0.0.0.0/tcp/15451");
-            // dialerSwitch.connection.crypto(secio.tag, secio.encrypt);
             dialerSwitch.connection.addStreamMuxer(multiplex);
             dialerSwitch.transport.add("tcp", new TCP());
 
             listenerSwitch = new Switch(infos.shift(), new PeerBook());
             listenerSwitch._peerInfo.multiaddrs.add("/ip4/0.0.0.0/tcp/15452");
-            // listenerSwitch.connection.crypto(secio.tag, secio.encrypt);
             listenerSwitch.connection.addStreamMuxer(multiplex);
             listenerSwitch.transport.add("tcp", new TCP());
 
             spdySwitch = new Switch(infos.shift(), new PeerBook());
             spdySwitch._peerInfo.multiaddrs.add("/ip4/0.0.0.0/tcp/15453");
-            // spdySwitch.connection.crypto(secio.tag, secio.encrypt);
             spdySwitch.connection.addStreamMuxer(spdy);
             spdySwitch.transport.add("tcp", new TCP());
 
@@ -161,30 +151,6 @@ describe("ConnectionFSM", () => {
 
         expect(stub.callCount).to.equal(1);
     });
-
-    // it("should disconnect on encryption failure", (done) => {
-    //     const connection = new ConnectionFSM({
-    //         _switch: dialerSwitch,
-    //         peerInfo: listenerSwitch._peerInfo
-    //     });
-
-    //     const stub = sinon.stub(dialerSwitch.crypto, "encrypt")
-    //         .callsArgWith(3, new Error("fail encrypt"));
-
-    //     connection.once("connected", (conn) => {
-    //         expect(conn).to.exist();
-    //         connection.encrypt();
-    //     });
-    //     connection.once("close", () => {
-    //         stub.restore();
-    //         done();
-    //     });
-    //     connection.once("encrypted", () => {
-    //         throw new Error("should not encrypt");
-    //     });
-
-    //     connection.dial();
-    // });
 
     it("should be able to upgrade an encrypted connection", (done) => {
         const connection = new ConnectionFSM({

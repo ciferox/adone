@@ -128,5 +128,37 @@ adone.lazify({
     task: "./tasks",
     uid: "./uids",
     ipc: "./ipc",
+    AbstractNetCore: "./abstract_net_core",
+    IPCNetCore: "./ipc_net_core",
     P2PNetCore: "./p2p_net_core"
 }, adone.asNamespace(exports), require);
+
+
+// Temporary API
+export const createPeerId = ({ bits } = {}) => {
+    return new Promise((resolve, reject) => {
+        adone.p2p.PeerId.create({ bits }, (err, peerId) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            resolve(peerId);
+        });
+    });
+};
+
+export const createPeerInfo = async ({ peerId, addr, bits } = {}) => {
+    if (!is.peerId(peerId)) {
+        peerId = await createPeerId({ bits });
+    }
+
+    return new Promise((resolve, reject) => {
+        adone.p2p.PeerInfo.create(peerId, (err, peerInfo) => {
+            if (err) {
+                return reject(err);
+            }
+            adone.util.arrify(addr).map((ma) => peerInfo.multiaddrs.add(ma));
+            resolve(peerInfo);
+        });
+    });
+};

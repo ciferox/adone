@@ -1,4 +1,4 @@
-const crypto = require("libp2p-crypto");
+const { crypto } = adone.p2p;
 const constants = require("./constants");
 
 exports = module.exports;

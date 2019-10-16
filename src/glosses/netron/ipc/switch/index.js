@@ -1,5 +1,5 @@
 const FSM = require("fsm-event");
-const EventEmitter = require("events").EventEmitter;
+const { EventEmitter } = require("events");
 const each = require("async/each");
 const eachSeries = require("async/eachSeries");
 const series = require("async/series");
@@ -241,7 +241,9 @@ class Switch extends EventEmitter {
                 each(this.transports, (transport, cb) => {
                     each(transport.listeners, (listener, cb) => {
                         listener.close((err) => {
-                            if (err) log.error(err);
+                            if (err) {
+                                log.error(err);
+                            }
                             cb();
                         });
                     }, cb);

@@ -443,12 +443,6 @@ export default {
                             src: "src/glosses/data/varint_signed.js",
                             dst: "lib/glosses/data"
                         },
-                        protobuf: {
-                            description: "Implementation of Protocol Buffers",
-                            task: "transpile",
-                            src: "src/glosses/data/protobuf/**/*.js",
-                            dst: "lib/glosses/data/protobuf"
-                        },
                         utf8: {
                             description: "UTF8 encoder/decoder",
                             task: "transpile",

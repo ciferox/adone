@@ -1,6 +1,8 @@
-const PeerInfo = require("peer-info");
-const PeerId = require("peer-id");
-const multiaddr = require("multiaddr");
+const {
+    multiformat: { multiaddr },
+    p2p: { PeerInfo, PeerId }
+} = adone;
+
 const pull = require("pull-stream/pull");
 const take = require("pull-stream/throughs/take");
 const collect = require("pull-stream/sinks/collect");

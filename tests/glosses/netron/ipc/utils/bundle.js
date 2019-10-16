@@ -38,8 +38,6 @@ class Node extends adone.netron.ipc.Node {
                     TCP
                 ],
                 streamMuxer: getMuxers(_options.muxer)
-            },
-            config: {
             }
         };
 

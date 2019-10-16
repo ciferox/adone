@@ -10,13 +10,7 @@ describe("node state machine (fsm)", () => {
     describe("starting and stopping", () => {
         let node;
         beforeEach((done) => {
-            createNode([], {
-                config: {
-                    // dht: {
-                    //     enabled: false
-                    // }
-                }
-            }, (err, _node) => {
+            createNode([], {}, (err, _node) => {
                 node = _node;
                 done(err);
             });
@@ -138,17 +132,17 @@ describe("node state machine (fsm)", () => {
             });
         });
 
-        it("should not dial when the node is stopped", (done) => {
-            node.on("stop", () => {
-                node.dial(null, (err) => {
-                    expect(err).to.exist();
-                    expect(err.code).to.eql("ERR_NODE_NOT_STARTED");
-                    done();
-                });
-            });
+        // it("should not dial when the node is stopped", (done) => {
+        //     node.on("stop", () => {
+        //         node.dial(null, (err) => {
+        //             expect(err).to.exist();
+        //             expect(err.code).to.eql("ERR_NODE_NOT_STARTED");
+        //             done();
+        //         });
+        //     });
 
-            node.stop(() => { });
-        });
+        //     node.stop(() => { });
+        // });
 
         it("should not dial (fsm) when the node is stopped", (done) => {
             node.on("stop", () => {

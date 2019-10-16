@@ -14,15 +14,13 @@ describe("Switch", () => {
             };
 
             switchA.transports = {
-                // Circuit: transport,
                 TCP: transport,
                 WebSocketStar: transport
             };
 
             expect(switchA.availableTransports(mockPeerInfo)).to.eql([
                 "TCP",
-                "WebSocketStar",
-                // "Circuit"
+                "WebSocketStar"
             ]);
         });
     });

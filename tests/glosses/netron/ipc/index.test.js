@@ -2,7 +2,7 @@ const {
     netron: { P2PNetCore, createPeerInfo }
 } = adone;
 
-describe("netron", "P2PNetCore", () => {
+describe("netron", "IPCNetCore", () => {
     let peerInfo;
 
     before(async () => {

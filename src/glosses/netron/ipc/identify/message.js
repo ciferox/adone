@@ -1,4 +1,3 @@
-const protons = require("protons");
 const schema = `
 message Identify {
   // protocolVersion determines compatibility between peers
@@ -25,4 +24,4 @@ message Identify {
 }
 `;
 
-module.exports = protons(schema).Identify;
+module.exports = adone.data.protobuf(schema).Identify;

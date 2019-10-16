@@ -84,9 +84,7 @@ export default (ctx) => {
         ])
 
         node = new Node({
-            peerInfo,
-            config: {
-            }
+            peerInfo
         })
 
         node.handle('/echo/1.0.0', (protocol, conn) => pull(conn, conn))

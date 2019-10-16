@@ -30,14 +30,14 @@ describe("OwnPeer", () => {
         }
 
         async createNetCore(netron) {
-            const p2pNC = new P2PNetCore({
+            const netCore = new P2PNetCore({
                 peerInfo: await P2PNetCore.createPeerInfo({
                     addrs: "/ip4/0.0.0.0/tcp/0",
                     peerId: this.otherPeerId
                 })
             });
-            await p2pNC.start(netron);
-            return p2pNC;
+            await netCore.start(netron);
+            return netCore;
         }
 
         async before() {

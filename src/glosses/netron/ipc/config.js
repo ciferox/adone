@@ -2,13 +2,7 @@ const mergeOptions = require("merge-options");
 const { struct, superstruct } = require("superstruct");
 const { optional, list } = struct;
 
-const DefaultConfig = {
-    connectionManager: {
-        minPeers: 25
-    },
-    config: {
-    }
-};
+const DefaultConfig = {};
 
 // Define custom types
 const s = superstruct({
@@ -34,16 +28,11 @@ const modulesSchema = s({
     transport: "transport"
 });
 
-const configSchema = s({
-});
-
 const optionsSchema = s({
     switch: "object?",
-    connectionManager: "object?",
     peerInfo: "object",
     peerBook: "object?",
-    modules: modulesSchema,
-    config: configSchema
+    modules: modulesSchema
 });
 
 module.exports.validate = (opts) => {
