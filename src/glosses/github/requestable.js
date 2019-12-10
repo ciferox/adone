@@ -287,8 +287,19 @@ export default class Requestable {
                 results.push(...thisGroup);
 
                 const nextUrl = getNextPage(response.headers.link);
-                if (nextUrl && !(options && !is.number(options.page))) {
-                    return this._requestAllPages(nextUrl, options, cb, results);
+                if (nextUrl) {
+                    if (!options) {
+                        options = {};
+                    }
+                    options.page = parseInt(
+                        nextUrl.match(/([&\?]page=[0-9]*)/g)
+                            .shift()
+                            .split("=")
+                            .pop()
+                    );
+                    if (!(options && !is.number(options.page))) {
+                        return this._requestAllPages(nextUrl, options, cb, results);
+                    }
                 }
 
                 if (cb) {

@@ -181,6 +181,10 @@ export default class Repository extends Requestable {
     listCommits(options, cb) {
         options = options || {};
 
+        if (is.function(options)) {
+            cb = options;
+            options = {};
+        }
         options.since = this._dateToISO(options.since);
         options.until = this._dateToISO(options.until);
 
@@ -221,6 +225,17 @@ export default class Repository extends Requestable {
      */
     listStatuses(sha, cb) {
         return this._request("GET", `/repos/${this.__fullname}/commits/${sha}/statuses`, null, cb);
+    }
+
+    /**
+     * Get the combined view of commit statuses for a particular sha, branch, or tag
+     * @see https://developer.github.com/v3/repos/statuses/#get-the-combined-status-for-a-specific-ref
+     * @param {string} sha - the sha, branch, or tag to get the combined status for
+     * @param {Requestable.callback} cb - will receive the combined status
+     * @returns {Promise} - the promise for the http request
+     */
+    getCombinedStatus(sha, cb) {
+        return this._request("GET", `/repos/${this.__fullname}/commits/${sha}/status`, null, cb);
     }
 
     /**
@@ -265,7 +280,7 @@ export default class Repository extends Requestable {
                 encoding: "base64"
             };
 
-        // eslint-disable-next-line adone/no-typeof
+            // eslint-disable-next-line adone/no-typeof
         } else if (typeof Blob !== "undefined" && content instanceof Blob) {
             return {
                 content: base64.encode(content),
@@ -723,6 +738,7 @@ export default class Repository extends Requestable {
      * @return {Promise} - the promise for the http request
      */
     writeFile(branch, path, content, message, options, cb) {
+        options = options || {};
         if (is.function(options)) {
             cb = options;
             options = {};

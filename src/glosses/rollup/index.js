@@ -7,7 +7,7 @@ exports = module.exports = adone.asNamespace(require("rollup"));
 lazify({
     pluginutils: "rollup-pluginutils",
     plugin: () => lazify({
-        // babel: "./babel",
+        babel: "rollup-plugin-babel",
         cleanup: "rollup-plugin-cleanup",
         commonjs: "rollup-plugin-commonjs",
         json: "rollup-plugin-json",

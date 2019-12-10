@@ -30,7 +30,7 @@ export default class User extends Requestable {
             return endpoint ?
                 `/users/${this.__user}/${endpoint}` :
                 `/users/${this.__user}`;
-} else { // eslint-disable-line
+        } else { // eslint-disable-line
             switch (endpoint) {
                 case "":
                     return "/user";
@@ -179,7 +179,7 @@ export default class User extends Requestable {
      * @return {Promise} - the promise for the http request
      */
     follow(username, cb) {
-        return this._request("PUT", `/user/following/${this.__user}`, null, cb);
+        return this._request("PUT", `/user/following/${username}`, null, cb);
     }
 
     /**
@@ -190,7 +190,7 @@ export default class User extends Requestable {
      * @return {Promise} - the promise for the http request
      */
     unfollow(username, cb) {
-        return this._request("DELETE", `/user/following/${this.__user}`, null, cb);
+        return this._request("DELETE", `/user/following/${username}`, null, cb);
     }
 
     /**

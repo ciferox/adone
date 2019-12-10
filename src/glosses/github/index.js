@@ -10,7 +10,7 @@ adone.lazify({
     Team: "./team",
     Markdown: "./markdown",
     Project: "./project",
-    GitHubReleaseManager: "./release_manager"
+    GitHubReleaseManager: "./release_manager",
 }, adone.asNamespace(exports), require);
 
 export const apiBase = "https://api.github.com";
