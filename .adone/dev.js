@@ -577,14 +577,7 @@ export default {
                             description: "HTTP server",
                             task: "transpile",
                             src: "src/glosses/http/server/**/*.js",
-                            dst: "lib/glosses/http/server",
-                            units: {
-                                validator: {
-                                    description: "Config validator builder",
-                                    dst: "lib/glosses/http/server/configValidator.js",
-                                    task: "buildValidation"
-                                }
-                            }
+                            dst: "lib/glosses/http/server"
                         },
                         client: {
                             description: "HTTP client",
