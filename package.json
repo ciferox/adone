@@ -15,7 +15,6 @@
   "bin": "./bin/adone",
   "main": "lib",
   "devDependencies": {
-    "ajv-pack": "^0.3.1",
     "async-each": "^1.0.3",
     "babel-eslint": "^10.0.3",
     "buble": "^0.19.8",

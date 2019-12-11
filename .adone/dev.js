@@ -14,7 +14,6 @@ export default {
             "!.adone/dev.js"
         ],
         nodeModules: {
-            "ajv-pack": "latest",
             "@babel/plugin-proposal-class-properties": "latest"
         }
     },
