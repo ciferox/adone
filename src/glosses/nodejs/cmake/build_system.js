@@ -407,7 +407,7 @@ export default class BuildSystem {
         args.splice(0, 1);
         return adone.process.exec(name, args, {
             cwd: this.workDir,
-            stdio: options.silent ? "ignore" : "inherit"
+            // stdio: options.silent ? "ignore" : "inherit"
         });
     }
 

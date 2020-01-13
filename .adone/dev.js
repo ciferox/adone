@@ -206,20 +206,9 @@ export default {
                     units: {
                         brotli: {
                             description: "Brotli compression format",
-                            src: [
-                                "src/glosses/compressors/brotli/**/*.js",
-                                "!src/glosses/compressors/brotli/native/**/*.js"
-
-                            ],
+                            src: "src/glosses/compressors/brotli/**/*.js",
                             dst: "lib/glosses/compressors/brotli",
-                            task: "transpile",
-                            units: {
-                                native: {
-                                    task: "cmake",
-                                    src: "src/glosses/compressors/brotli/native",
-                                    dst: "lib/glosses/compressors/brotli/native"
-                                }
-                            }
+                            task: "transpile"
                         },
                         deflate: {
                             description: "Deflate compressor/decompressor",
@@ -255,104 +244,8 @@ export default {
                         xz: {
                             description: "XZ compressor/decompressor",
                             task: "transpile",
-                            src: "src/glosses/compressors/xz/**/*.js",
-                            dst: "lib/glosses/compressors/xz",
-                            units: {
-                                native: {
-                                    async task(options) {
-                                        const {
-                                            is,
-                                            fs,
-                                            nodejs,
-                                            path,
-                                            process
-                                        } = adone;
-                                        const realm = this.manager;
-                                        const buildPath = nodejs.cmake.getBuildPath(realm, options.src);
-                                        const xzPath = path.join(buildPath, "xz");
-
-                                        if (!(await fs.pathExists(xzPath))) {
-                                            await adone.fast.src(path.join(options.src, "xz.tar.gz"), {
-                                                cwd: realm.cwd
-                                            })
-                                                .extract()
-                                                .dest(buildPath);
-                                        }
-
-                                        try {
-                                            if (is.windows) {
-                                                const libPath = path.join(xzPath, "build", "lib", "liblzma.lib");
-                                                if (!(await fs.pathExists(libPath))) {
-                                                    const vsSetup = await adone.nodejs.findVS2017();
-                                                    const msbuildPath = path.join(vsSetup.path, "MSBuild", "15.0", "Bin", "MSBuild.exe");
-                                                    const { arch } = global.process;
-                                                    const p = (arch === "x64")
-                                                        ? "x64"
-                                                        : (arch === "arm"
-                                                            ? "ARM"
-                                                            : (arch === "arm64" ? "ARM64" : "Win32"));
-                                                    const args = [
-                                                        path.join(xzPath, "windows", "vs2017", "xz_win.sln"),
-                                                        "/clp:Verbosity=minimal",
-                                                        "/nologo",
-                                                        `/p:Configuration=Release;Platform=${p}`,
-                                                        `/m:${adone.std.os.cpus().length}`
-                                                    ];
-
-                                                    await process.spawnAsync(msbuildPath, args, {
-                                                        cwd: xzPath
-                                                    });
-
-                                                    await fs.mkdirp(path.join(xzPath, "build", "lib"));
-                                                    await fs.copyFile(path.join(xzPath, "windows", "vs2017", "Release", "x64", "liblzma", "liblzma.lib"), libPath);
-                                                    await fs.copyEx(path.join(xzPath, "src", "liblzma", "api"), path.join(xzPath, "build", "include"));
-                                                }
-                                            } else {
-                                                if (!(await fs.pathExists(path.join(xzPath, "build", "lib", "liblzma.a")))) {
-                                                    //await process.spawnAsync("sh", ["autogen.sh"], {
-                                                    //    cwd: xzPath
-                                                    //});
-
-                                                    const configureArgs = [
-                                                        "--enable-static",
-                                                        "--disable-shared",
-                                                        "--disable-scripts",
-                                                        "--disable-lzmainfo",
-                                                        "--disable-lzma-links",
-                                                        "--disable-lzmadec",
-                                                        "--disable-xzdec",
-                                                        "--disable-xz",
-                                                        "--disable-rpath",
-                                                        `--prefix=${xzPath}/build`,
-                                                        "CFLAGS=-fPIC"
-                                                    ];
-
-                                                    await process.spawnAsync("sh", ["configure", ...configureArgs], {
-                                                        cwd: xzPath
-                                                    });
-
-                                                    const make = is.freebsd ? "gmake" : "make";
-                                                    await process.spawnAsync(make, {
-                                                        cwd: xzPath
-                                                    });
-
-                                                    await process.spawnAsync(make, ["install"], {
-                                                        cwd: xzPath
-                                                    });
-                                                }
-                                            }
-                                        } catch (err) {
-                                            // console.error(err.stderr);
-                                            throw err;
-                                        }
-
-                                        return this.manager.runAndWait("cmake", options);
-                                    },
-                                    src: "src/glosses/compressors/xz/native",
-                                    dst: "lib/glosses/compressors/xz/native",
-                                    files: "lzma.node"
-                                }
-                            }
+                            src: "src/glosses/compressors/xz.js",
+                            dst: "lib/glosses/compressors"
                         }
                     }
                 },

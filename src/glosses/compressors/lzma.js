@@ -1,23 +1,21 @@
-const {
-    xz
-} = adone.compressor;
+const lzmaNative = require("lzma-native");
 
 const lzma = {
-    ...xz,
-    compress: (buf, options = {}) => {
-        return xz.singleStringCoding(lzma.compressStream(options), buf);
+    ...lzmaNative,
+    compress: (buf, mode, onFinish, onProgress) => {
+        return lzmaNative.LZMA().compress(buf, mode, onFinish, onProgress);
     },
     compressStream: (options = {}) => {
-        return xz.createStream("aloneEncoder", options);
+        return lzmaNative.createStream("aloneEncoder", options);
     },
     compressSync: (/*buf, options = {}*/) => {
         throw new adone.error.NotImplementedException();
     },
-    decompress: (buf, options = {}) => {
-        return xz.singleStringCoding(lzma.decompressStream(options), buf);
+    decompress: (buf, onFinish, onProgress) => {
+        return lzmaNative.LZMA().decompress(buf, onFinish, onProgress);
     },
     decompressStream: (options = {}) => {
-        return xz.createStream("aloneDecoder", options);
+        return lzmaNative.createStream("aloneDecoder", options);
     },
     decompressSync: (/*buf, options = {}*/) => {
         throw new adone.error.NotImplementedException();
