@@ -25,6 +25,8 @@ const getOptionValue = (arg, meta, predicate, def) => predicate(arg)
  * To implement more advanced manager you should inherit this class.
  */
 export default class TaskManager extends adone.event.AsyncEmitter {
+    static DEFAULT_LOAD_POLICY = "throw";
+
     #tasks = new Map();
 
     #tags = new Map();
@@ -47,7 +49,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
      * @param {object} options 
      */
     addTask({ name, task, ...options } = {}) {
-        return this.setTask({ name, task, checkName: true, ...options });
+        return this.setTask({ name, task, ...options });
     }
 
     /**
@@ -57,8 +59,49 @@ export default class TaskManager extends adone.event.AsyncEmitter {
      * @param {class|function} task task class inherited from {adone.task.Task} or function
      * @param {object} options 
      */
-    setTask({ name, task, checkName, ...options } = {}) {
-        name = this.#checkTask(task, name, checkName);
+    setTask({ name, task, loadPolicy, ...options } = {}) {
+        if (is.class(task)) {
+            const taskInstance = new task();
+    
+            if (!is.task(taskInstance)) {
+                throw new error.NotValidException("The task class should be inherited from 'adone.task.Task' class");
+            }
+        } else if (!is.function(task)) {
+            throw new error.NotValidException("Task should be a class or a function");
+        }
+    
+        if (!is.string(name)) {
+            const meta = adone.task.getTaskMeta(task);
+            if (is.string(meta)) {
+                name = meta;
+            } else if (is.object(meta)) {
+                name = meta.name;
+            }
+    
+            if (!name && is.class(task)) {
+                name = task.name;
+            }
+    
+            if (!name) {
+                throw new error.NotValidException(`Invalid name of task: ${name}`);
+            }
+        }
+    
+        const hasTask = this.#tasks.has(name);
+
+        if (loadPolicy === "throw") {
+            if (hasTask) {
+                throw new error.ExistsException(`Task '${name}' already exists`);
+            }
+        } else if (loadPolicy === "ignore") {
+            if (hasTask) {
+                return false;
+            }
+        } else if (loadPolicy === "replace") {
+            // Nothing to do...
+            // But, in this case we need check previous task state and if task is busy we should wait for it completion.
+        }
+    
         const taskInfo = this.#initTaskInfo({
             ...options,
             name,
@@ -86,8 +129,12 @@ export default class TaskManager extends adone.event.AsyncEmitter {
      * Loads tasks from specified location(s).
      * 
      * @param {string|array} path  list of locations from which tasks be loaded
+     * @param {string} options.policy load policy:
+     * - throw (default): throw an exception if a task with the same name is already loaded
+     * - ignore: ignore tasks of the same name
+     * - replace: replace loaded task by newtask with same name
      */
-    async loadTasksFrom(path, { transpile = false, tag, ignore, ignoreExts = [".map"] } = {}) {
+    async loadTasksFrom(path, { transpile = false, tag, ignore, ignoreExts = [".map"], ...taskOptions } = {}) {
         let paths;
         if (is.string(path)) {
             paths = util.arrify(path);
@@ -127,7 +174,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
                 }
 
                 let modExports;
-                
+
                 try {
                     modExports = (transpile)
                         ? adone.require(fullPath)
@@ -153,8 +200,9 @@ export default class TaskManager extends adone.event.AsyncEmitter {
                 for (const task of tasks) {
                     // console.log(fullPath);
                     await this.addTask({
+                        ...taskOptions,
                         task,
-                        tag
+                        tag,
                     });
                 }
             }
@@ -557,43 +605,6 @@ export default class TaskManager extends adone.event.AsyncEmitter {
                 }
             }
         }
-    }
-
-    #checkTask(task, name, checkName = false) {
-        if (checkName) {
-            if (!is.string(name)) {
-                const meta = adone.task.getTaskMeta(task);
-                if (is.string(meta)) {
-                    name = meta;
-                } else if (is.object(meta)) {
-                    name = meta.name;
-                }
-
-                if (!name && is.class(task)) {
-                    name = task.name;
-                }
-
-                if (!name) {
-                    throw new error.NotValidException(`Invalid name of task: ${name}`);
-                }
-            }
-
-            if (this.#tasks.has(name)) {
-                throw new error.ExistsException(`Task '${name}' already exists`);
-            }
-        }
-
-        if (is.class(task)) {
-            const taskInstance = new task();
-
-            if (!is.task(taskInstance)) {
-                throw new error.NotValidException("The task class should be inherited from 'adone.task.Task' class");
-            }
-        } else if (!is.function(task)) {
-            throw new error.NotValidException("Task should be a class or a function");
-        }
-
-        return name;
     }
 
     #getTaskInfo(name) {

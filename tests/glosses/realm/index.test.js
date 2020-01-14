@@ -15,7 +15,7 @@ describe("realm", () => {
         "realmFork",
         "realmMerge",
         "realmInfo",
-        "realmMountExports",
+        "realmMount",
 
         "clean",
         "build",

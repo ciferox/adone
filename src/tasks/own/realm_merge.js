@@ -24,26 +24,26 @@ export default class extends realm.BaseTask {
             message: "merging"
         });
 
-        await adone.fs.mkdirp(this.superRealm.cwd);
+        const optPath = this.superRealm.getPath("opt");
+        await adone.fs.mkdirp(optPath);
 
-        this.optRealmPath = path.join(this.superRealm.cwd, this.subRealm.name);
+        this.optRealmPath = path.join(optPath, this.subRealm.name);
 
         if (symlink) {
             await this.#createSymlink();
-
-            await this.#updateDevConfig();
         } else {
             await this.#copyFiles();
         }
 
+        const mergedSubRealm = await checkRealm(this.optRealmPath);
+        if (mergedSubRealm.hasTask("realmCoMerge"))
+        await mergedSubRealm.runAndWait("realmCoMerge", {
+            superRealm
+        });
+
         this.manager.notify(this, "progress", {
             status: true,
             message: `realm ${style.primary.bold(this.subRealm.name)} successfully merged`
-        });
-
-        await this.manager.runAndWait("realmMountExports", {
-            superRealm,
-            subRealm: await checkRealm(this.optRealmPath)
         });
 
         return this.optRealmPath;
@@ -76,18 +76,18 @@ export default class extends realm.BaseTask {
         });
     }
 
-    async #updateDevConfig() {
-        const devConfig = this.subRealm.devConfig;
-        if (is.null(devConfig)) {
-            const helper = require("./realm_create/helpers");
-            await helper.realmConfig.createDev({
-                cwd: this.subRealm.cwd,
-                superRealm: this.superRealm,
-                mergedAs: this.subRealm.name
-            });
-        } else {
-            devConfig.set("mergedAs", this.subRealm.name);
-            await devConfig.save();
-        }
-    }
+    // async #updateDevConfig() {
+    //     const devConfig = this.subRealm.devConfig;
+    //     if (is.null(devConfig)) {
+    //         const helper = require("./realm_create/helpers");
+    //         await helper.realmConfig.createDev({
+    //             cwd: this.subRealm.cwd,
+    //             superRealm: this.superRealm,
+    //             mergedAs: this.subRealm.name
+    //         });
+    //     } else {
+    //         devConfig.set("mergedAs", this.subRealm.name);
+    //         await devConfig.save();
+    //     }
+    // }
 }

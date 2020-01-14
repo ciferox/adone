@@ -100,12 +100,6 @@ export default {
             dst: "lib",
             task: "transpile"
         },
-        mountPoints: {
-            description: "Realm mount points",
-            src: "src/mount_points/**/*.js",
-            dst: "lib/mount_points",
-            task: "transpile"
-        },
         native: {
             description: "Everything to build Node.js addons",
             src: "src/native/**/*",

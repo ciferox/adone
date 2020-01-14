@@ -21,9 +21,9 @@ export default class extends Subsystem {
     })
     async build(args, opts) {
         try {
-            // cli.updateProgress({
-            //     message: `building ${cli.style.primary(args.has("path") ? args.get("path") : "whole project")}`
-            // });
+            cli.updateProgress({
+                message: `building ${cli.style.primary(args.has("path") ? args.get("path") : "whole project")}`
+            });
 
             const path = this.parent.resolvePath(args, opts);
             const r = await this.parent.connectRealm({
@@ -41,11 +41,11 @@ export default class extends Subsystem {
             });
             return 0;
         } catch (err) {
-            // cli.updateProgress({
-            //     message: err.message,
-            //     status: false,
-            //     clean: true
-            // });
+            cli.updateProgress({
+                message: err.message,
+                status: false,
+                clean: true
+            });
             console.error(adone.pretty.error(err));
             return 1;
         }

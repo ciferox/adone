@@ -10,7 +10,6 @@ export default class extends Subsystem {
             const subRealm = new adone.realm.RealmManager({
                 cwd: process.cwd()
             });
-            await subRealm.connect();
 
             await superRealm.runAndWait("realmMerge", {
                 superRealm,

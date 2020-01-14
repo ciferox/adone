@@ -45,8 +45,11 @@
         ]
     },
     "tasks": {
-        "basePath": "lib/tasks",
-        "altBasePath": "src/tasks",
+        "basePath": [
+            "lib/tasks",
+            "src/tasks"
+        ],
+        "loadPolicy": "ignore",
         "default": false,
         "tags": {
             "pub": "pub",

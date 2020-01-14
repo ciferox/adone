@@ -86,7 +86,7 @@ export default class RealmManager extends task.TaskManager {
                 }
                 return cfg;
             }
-        }, this)
+        }, this);
 
         this.package = require(aPath.join(cwd, "package.json"));
 
@@ -113,36 +113,40 @@ export default class RealmManager extends task.TaskManager {
         this.#connectOptions = options;
 
         try {
+            // Load realm tasks.
             const tasksConfig = this.config.raw.tasks;
-            if (is.object(tasksConfig) && is.string(tasksConfig.basePath)) {
-                let tasksBasePath = this.getPath(tasksConfig.basePath);
+            if (is.object(tasksConfig)) {
+                const basePaths = util.arrify(tasksConfig.basePath).map((p) => aPath.join(this.cwd, p));
+                const loadPolicy = tasksConfig.loadPolicy || adone.task.TaskManager.DEFAULT_LOAD_POLICY;
+                
+                if (is.object(tasksConfig) && basePaths.length > 0) {
+                    const loadTasks = async (basePath, skipLoaded = false) => {
+                        if (is.object(tasksConfig.tags)) {
+                            for (const [tag, path] of Object.entries(tasksConfig.tags)) {
+                                await this.loadTasksFrom(aPath.join(basePath, path), {
+                                    transpile: options.transpile,
+                                    tag,
+                                    loadPolicy
+                                });
+                            }
+                        }
+                    };
 
-                const loadTasks = async (basePath) => {
-                    if (is.object(tasksConfig.tags)) {
-                        for (const [tag, path] of Object.entries(tasksConfig.tags)) {
-                            await this.loadTasksFrom(aPath.join(basePath, path), {
+                
+                    for (const tasksBasePath of basePaths) {
+                        // Load tasks from common base path.
+                        fs.existsSync(tasksBasePath) && await loadTasks(tasksBasePath);
+                        if (tasksConfig.default !== false) {
+                            const ignore = is.object(tasksConfig.tags)
+                                ? [...Object.values(tasksConfig.tags)]
+                                : [];
+                            await this.loadTasksFrom(tasksBasePath, {
                                 transpile: options.transpile,
-                                tag
+                                ignore,
+                                loadPolicy
                             });
                         }
                     }
-                };
-
-                if (fs.existsSync(tasksBasePath)) {
-                    await loadTasks(tasksBasePath);
-                } else if (is.string(tasksConfig.altBasePath)) {
-                    tasksBasePath = this.getPath(tasksConfig.altBasePath);
-                    fs.existsSync(tasksBasePath) && await loadTasks(tasksBasePath);
-                }
-
-                if (tasksConfig.default !== false) {
-                    const ignore = is.object(tasksConfig.tags)
-                        ? [...Object.values(tasksConfig.tags)]
-                        : [];
-                    await this.loadTasksFrom(tasksBasePath, {
-                        transpile: options.transpile,
-                        ignore
-                    });
                 }
             }
 

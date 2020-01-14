@@ -5,6 +5,12 @@ const {
 
 const ALLOWED_TYPES = ["Object", "global", "adone", "undefined", "null"];
 
+/**
+ * Isomorphic task taskes only one argument as Object instead of many arguments.
+ * 
+ * In this case, you don’t need to know the task execution signature, which facilitates the interaction between tasks,
+ * allows you to load parameters from configuration files or other sources and to use the latest features of the ESNext.
+ */
 export default class IsomorphicTask extends task.Task {
     async _run(...args) {
         return this.main(this._validateArgs(args));
