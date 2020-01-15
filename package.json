@@ -129,6 +129,7 @@
     "https-proxy-agent": "^3.0.1",
     "iltorb": "^2.4.4",
     "import-cwd": "^3.0.0",
+    "inherits": "^2.0.4",
     "inline-source-map": "^0.6.2",
     "interface-connection": "^0.3.3",
     "ip-address": "^6.2.0",

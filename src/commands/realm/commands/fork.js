@@ -21,6 +21,16 @@ export default class extends Subsystem {
                 name: ["--tags", "-T"],
                 nargs: "*",
                 description: "Tags of realm artifact ('file', 'dir', 'common', ...)"
+            },
+            {
+                name: ["--filter", "-F"],
+                nargs: "*",
+                help: "Filter(s)"
+            },
+            {
+                name: ["--skip-npm"],
+                help: "Skip installation of npm packages"
+
             }
         ]
     })

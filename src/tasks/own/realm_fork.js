@@ -9,7 +9,7 @@ const {
 
 @adone.task.task("realmFork")
 export default class extends BaseTask {
-    async main({ realm, path, name, tags, filter } = {}) {
+    async main({ realm, path, name, tags, filter, skipNpm } = {}) {
         this.manager.notify(this, "progress", {
             message: "checking"
         });
@@ -45,7 +45,7 @@ export default class extends BaseTask {
         });
 
         const destCwd = aPath.resolve(path, name);
-        if (await fs.exists(destCwd)) {
+        if (await fs.pathExists(destCwd)) {
             throw new error.ExistsException(`Path '${destCwd}' already exists`);
         }
 
@@ -93,13 +93,22 @@ export default class extends BaseTask {
             }
         }
 
+        this.destRealm = new RealmManager({
+            cwd: this.destCwd
+        });
+
+        if (!skipNpm) {
+            this.manager.notify(this, "progress", {
+                message: `installing ${cli.style.accent("npm")} packages`
+            });
+            await this.manager.runAndWait("installModules", {
+                cwd: this.destCwd
+            });
+        }
+
         this.manager.notify(this, "progress", {
             message: `realm ${cli.style.primary(realm.name)} successfully forked into ${cli.style.accent(this.destCwd)}`,
             status: true
-        });
-
-        this.destRealm = new RealmManager({
-            cwd: this.destCwd
         });
 
         return this.destRealm;

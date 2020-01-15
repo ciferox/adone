@@ -50,22 +50,6 @@ export default class extends adone.realm.BaseTask {
             transpile: true
         });
 
-        const nodeModules = targetRealm.devConfig.raw.publish.nodeModules;
-        if (nodeModules) {
-            this.manager.notify(this, "progress", {
-                message: "installing npm modules"
-            });
-            const options = {};
-            if (is.object(nodeModules)) {
-                options.modules = nodeModules;
-            }
-            await targetRealm.runAndWait("installModules", options);
-            this.manager.notify(this, "progress", {
-                message: "npm modules successfully installed",
-                status: true
-            });
-        }
-
         this.manager.notify(this, "progress", {
             message: "building realm"
         });
@@ -75,10 +59,7 @@ export default class extends adone.realm.BaseTask {
             realm: targetRealm,
             tags: publishInfo.artifacts.rel,
             path: tmpPath,
-            filter: [
-                "!**/*.js.map",
-                "!bin/adone.map"
-            ]
+            filter: publishInfo.filter
         });
 
         const filename = adone.path.basename(path);

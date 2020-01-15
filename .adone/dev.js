@@ -9,13 +9,11 @@ export default {
             rel: ["release", "info", "share"]
         },
         filter: [
-            "!bin/adone.map",
+            "!bin/**/*.map",
+            "!lib/**/*.map",
             "!.adone/kri.js",
             "!.adone/dev.js"
-        ],
-        nodeModules: {
-            "@babel/plugin-proposal-class-properties": "latest"
-        }
+        ]
     },
     defaultTask: "copy",
     nonWatchableTasks: [
