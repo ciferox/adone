@@ -72,6 +72,11 @@ export default {
                     dst: "lib/commands/inspect",
                     task: "transpile"
                 },
+                ipfs: {
+                    src: "src/commands/ipfs/**/*.js",
+                    dst: "lib/commands/ipfs",
+                    task: "transpile"
+                },
                 omni: {
                     src: "src/commands/omni/**/*.js",
                     dst: "lib/commands/omni",

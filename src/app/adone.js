@@ -57,6 +57,12 @@ const command = (name) => path.join(__dirname, "..", "commands", name);
             subsystem: command("inspect")
         },
         {
+            name: "ipfs",
+            group: "common",
+            description: "IPFS cli",
+            subsystem: command("ipfs")
+        },
+        {
             name: "omni",
             group: "common",
             description: "Omni-application management",
