@@ -42,34 +42,23 @@ export default class TaskManager extends adone.event.AsyncEmitter {
     }
 
     /**
-     * Adds task to manager.
-     * 
-     * @param {string} name name of task
-     * @param {class|function} task task class inherited from {adone.task.Task} or function
-     * @param {object} options 
-     */
-    addTask({ name, task, ...options } = {}) {
-        return this.setTask({ name, task, ...options });
-    }
-
-    /**
      * Adds or replaces task with specified name.
      * 
      * @param {string} name task name
      * @param {class|function} task task class inherited from {adone.task.Task} or function
      * @param {object} options 
      */
-    setTask({ name, task, loadPolicy, ...options } = {}) {
+    addTask({ name, task, loadPolicy = "throw", ...options } = {}) {
         if (is.class(task)) {
             const taskInstance = new task();
-    
+
             if (!is.task(taskInstance)) {
                 throw new error.NotValidException("The task class should be inherited from 'adone.task.Task' class");
             }
         } else if (!is.function(task)) {
             throw new error.NotValidException("Task should be a class or a function");
         }
-    
+
         if (!is.string(name)) {
             const meta = adone.task.getTaskMeta(task);
             if (is.string(meta)) {
@@ -77,16 +66,16 @@ export default class TaskManager extends adone.event.AsyncEmitter {
             } else if (is.object(meta)) {
                 name = meta.name;
             }
-    
+
             if (!name && is.class(task)) {
                 name = task.name;
             }
-    
+
             if (!name) {
                 throw new error.NotValidException(`Invalid name of task: ${name}`);
             }
         }
-    
+
         const hasTask = this.#tasks.has(name);
 
         if (loadPolicy === "throw") {
@@ -101,7 +90,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
             // Nothing to do...
             // But, in this case we need check previous task state and if task is busy we should wait for it completion.
         }
-    
+
         const taskInfo = this.#initTaskInfo({
             ...options,
             name,
@@ -457,162 +446,162 @@ export default class TaskManager extends adone.event.AsyncEmitter {
     }
 
     async #runNormal(name, ...args) {
-        const taskInfo = this.#getTaskInfo(name);
-        let taskObserver;
+    const taskInfo = this.#getTaskInfo(name);
+    let taskObserver;
 
-        if (taskInfo.singleton) {
-            if (is.undefined(taskInfo.runner)) {
-                taskInfo.runner = await this.#createTaskRunner(taskInfo);
-            }
-            taskObserver = await taskInfo.runner(args);
-        } else {
-            const runTask = await this.#createTaskRunner(taskInfo);
-            if (is.undefined(taskInfo.runners)) {
-                taskInfo.runners = new Set();
-            }
-            taskInfo.runners.add(runTask);
-            taskObserver = await runTask(args);
-
-            const releaseRunner = () => {
-                taskInfo.runners.delete(runTask);
-                if (taskInfo.zombi === true && taskInfo.runners.size === 0) {
-                    this.#uninstallTask(taskInfo);
-                }
-            };
-
-            if (is.promise(taskObserver.result)) {
-                adone.promise.finally(taskObserver.result, releaseRunner).catch(adone.noop);
-            } else {
-                releaseRunner();
-            }
+    if (taskInfo.singleton) {
+        if (is.undefined(taskInfo.runner)) {
+            taskInfo.runner = await this.#createTaskRunner(taskInfo);
         }
+        taskObserver = await taskInfo.runner(args);
+    } else {
+        const runTask = await this.#createTaskRunner(taskInfo);
+        if (is.undefined(taskInfo.runners)) {
+            taskInfo.runners = new Set();
+        }
+        taskInfo.runners.add(runTask);
+        taskObserver = await runTask(args);
 
-        return taskObserver;
+        const releaseRunner = () => {
+            taskInfo.runners.delete(runTask);
+            if (taskInfo.zombi === true && taskInfo.runners.size === 0) {
+                this.#uninstallTask(taskInfo);
+            }
+        };
+
+        if (is.promise(taskObserver.result)) {
+            adone.promise.finally(taskObserver.result, releaseRunner).catch(adone.noop);
+        } else {
+            releaseRunner();
+        }
     }
 
-    async #createTaskRunner(taskInfo) {
-        return async (args) => {
-            const instance = await this.#createTaskInstance(taskInfo);
+    return taskObserver;
+}
 
-            const taskObserver = new adone.task.TaskObserver(instance, taskInfo);
-            taskObserver.state = adone.task.STATE.RUNNING;
-            try {
-                taskObserver.result = taskInfo.throttle(() => instance._run(...args));
-            } catch (err) {
-                if (is.function(taskObserver.task.undo)) {
+async #createTaskRunner(taskInfo) {
+    return async (args) => {
+        const instance = await this.#createTaskInstance(taskInfo);
+
+        const taskObserver = new adone.task.TaskObserver(instance, taskInfo);
+        taskObserver.state = adone.task.STATE.RUNNING;
+        try {
+            taskObserver.result = taskInfo.throttle(() => instance._run(...args));
+        } catch (err) {
+            if (is.function(taskObserver.task.undo)) {
+                await taskObserver.task.undo(err);
+            }
+            taskObserver.result = Promise.reject(err);
+        }
+
+        if (is.promise(taskObserver.result)) {
+            // Wrap promise if task has undo method.
+            if (is.function(taskObserver.task.undo)) {
+                taskObserver.result = taskObserver.result.then(adone.identity, async (err) => {
                     await taskObserver.task.undo(err);
-                }
-                taskObserver.result = Promise.reject(err);
-            }
-
-            if (is.promise(taskObserver.result)) {
-                // Wrap promise if task has undo method.
-                if (is.function(taskObserver.task.undo)) {
-                    taskObserver.result = taskObserver.result.then(adone.identity, async (err) => {
-                        await taskObserver.task.undo(err);
-                        throw err;
-                    });
-                }
-
-                taskObserver.result.then(() => {
-                    taskObserver.state = (taskObserver.state === adone.task.STATE.CANCELLING) ? adone.task.STATE.CANCELLED : adone.task.STATE.COMPLETED;
-                }).catch((err) => {
-                    taskObserver.state = adone.task.STATE.FAILED;
-                    taskObserver.error = err;
+                    throw err;
                 });
-            } else {
-                taskObserver.state = adone.task.STATE.COMPLETED;
             }
-            return taskObserver;
-        };
-    }
 
-    #createTaskInstance(taskInfo) {
-        let instance;
-        if (taskInfo.singleton) {
-            if (is.undefined(taskInfo.instance)) {
-                instance = taskInfo.instance = new taskInfo.Class();
-            } else {
-                return taskInfo.instance;
-            }
-        } else {
-            instance = new taskInfo.Class();
-        }
-
-        instance[MANAGER_SYMBOL] = this;
-        return instance;
-    }
-
-    #initTaskInfo({ task, name, suspendable, cancelable, concurrency, interval, singleton, description, tag } = {}) {
-        if (suspendable && singleton) {
-            throw new error.NotAllowedException("Singleton task cannot be suspendable");
-        }
-
-        if (cancelable && singleton) {
-            throw new error.NotAllowedException("Singleton task cannot be cancelable");
-        }
-
-        let meta = adone.task.getTaskMeta(task);
-        if (is.string(meta) || is.undefined(meta)) {
-            meta = {};
-        }
-
-        const taskInfo = {
-            name,
-            suspendable: getOptionValue(suspendable, meta.suspendable, is.boolean, false),
-            cancelable: getOptionValue(cancelable, meta.cancelable, is.boolean, false),
-            concurrency: getOptionValue(concurrency, meta.concurrency, is.number, Infinity),
-            interval: getOptionValue(interval, meta.interval, is.number, undefined),
-            singleton: getOptionValue(singleton, meta.singleton, is.boolean, false),
-            description: getOptionValue(description, meta.description, is.string, ""),
-            tag: getOptionValue(tag, meta.tag, is.string, undefined)
-        };
-
-        if (concurrency !== Infinity && concurrency > 0) {
-            taskInfo.throttle = util.throttle.create({
-                concurrency,
-                interval
+            taskObserver.result.then(() => {
+                taskObserver.state = (taskObserver.state === adone.task.STATE.CANCELLING) ? adone.task.STATE.CANCELLED : adone.task.STATE.COMPLETED;
+            }).catch((err) => {
+                taskObserver.state = adone.task.STATE.FAILED;
+                taskObserver.error = err;
             });
         } else {
-            taskInfo.throttle = DUMMY_THROTTLE;
+            taskObserver.state = adone.task.STATE.COMPLETED;
         }
+        return taskObserver;
+    };
+}
 
-        return taskInfo;
+#createTaskInstance(taskInfo) {
+    let instance;
+    if (taskInfo.singleton) {
+        if (is.undefined(taskInfo.instance)) {
+            instance = taskInfo.instance = new taskInfo.Class();
+        } else {
+            return taskInfo.instance;
+        }
+    } else {
+        instance = new taskInfo.Class();
     }
 
-    #installTask(taskInfo) {
-        this.#tasks.set(taskInfo.name, taskInfo);
-        const tag = taskInfo.tag;
-        if (is.string(tag)) {
-            const tasks = this.#tags.get(tag);
-            if (is.undefined(tasks)) {
-                this.#tags.set(tag, [taskInfo]);
-            } else {
-                tasks.push(taskInfo);
+    instance[MANAGER_SYMBOL] = this;
+    return instance;
+}
+
+#initTaskInfo({ task, name, suspendable, cancelable, concurrency, interval, singleton, description, tag } = {}) {
+    if (suspendable && singleton) {
+        throw new error.NotAllowedException("Singleton task cannot be suspendable");
+    }
+
+    if (cancelable && singleton) {
+        throw new error.NotAllowedException("Singleton task cannot be cancelable");
+    }
+
+    let meta = adone.task.getTaskMeta(task);
+    if (is.string(meta) || is.undefined(meta)) {
+        meta = {};
+    }
+
+    const taskInfo = {
+        name,
+        suspendable: getOptionValue(suspendable, meta.suspendable, is.boolean, false),
+        cancelable: getOptionValue(cancelable, meta.cancelable, is.boolean, false),
+        concurrency: getOptionValue(concurrency, meta.concurrency, is.number, Infinity),
+        interval: getOptionValue(interval, meta.interval, is.number, undefined),
+        singleton: getOptionValue(singleton, meta.singleton, is.boolean, false),
+        description: getOptionValue(description, meta.description, is.string, ""),
+        tag: getOptionValue(tag, meta.tag, is.string, undefined)
+    };
+
+    if (concurrency !== Infinity && concurrency > 0) {
+        taskInfo.throttle = util.throttle.create({
+            concurrency,
+            interval
+        });
+    } else {
+        taskInfo.throttle = DUMMY_THROTTLE;
+    }
+
+    return taskInfo;
+}
+
+#installTask(taskInfo) {
+    this.#tasks.set(taskInfo.name, taskInfo);
+    const tag = taskInfo.tag;
+    if (is.string(tag)) {
+        const tasks = this.#tags.get(tag);
+        if (is.undefined(tasks)) {
+            this.#tags.set(tag, [taskInfo]);
+        } else {
+            tasks.push(taskInfo);
+        }
+    }
+}
+
+#uninstallTask(taskInfo) {
+    this.#tasks.delete(taskInfo.name);
+    const tag = taskInfo.tag;
+    if (is.string(tag)) {
+        const tasks = this.#tags.get(tag);
+        if (!is.undefined(tasks)) {
+            const index = tasks.findIndex((ti) => taskInfo.name === ti.name);
+            if (index >= 0) {
+                tasks.splice(index, 1);
             }
         }
     }
+}
 
-    #uninstallTask(taskInfo) {
-        this.#tasks.delete(taskInfo.name);
-        const tag = taskInfo.tag;
-        if (is.string(tag)) {
-            const tasks = this.#tags.get(tag);
-            if (!is.undefined(tasks)) {
-                const index = tasks.findIndex((ti) => taskInfo.name === ti.name);
-                if (index >= 0) {
-                    tasks.splice(index, 1);
-                }
-            }
-        }
+#getTaskInfo(name) {
+    const taskInfo = this.#tasks.get(name);
+    if (is.undefined(taskInfo) || taskInfo.zombi === true) {
+        throw new error.NotExistsException(`Task '${name}' not exists`);
     }
 
-    #getTaskInfo(name) {
-        const taskInfo = this.#tasks.get(name);
-        if (is.undefined(taskInfo) || taskInfo.zombi === true) {
-            throw new error.NotExistsException(`Task '${name}' not exists`);
-        }
-
-        return taskInfo;
-    }
+    return taskInfo;
+}
 }

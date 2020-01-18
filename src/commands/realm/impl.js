@@ -60,6 +60,12 @@ const subCommand = (name) => adone.path.join(__dirname, "commands", name);
             subsystem: subCommand("info")
         },
         {
+            name: "global",
+            group: "generic",
+            description: "Create/delete global [sym]links to realm",
+            subsystem: subCommand("global")
+        },
+        {
             name: "merge",
             group: "own",
             description: "Merge realm into ADONE",
