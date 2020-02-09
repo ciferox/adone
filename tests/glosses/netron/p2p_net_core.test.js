@@ -79,7 +79,8 @@ describe("netron", "P2PNetCore", () => {
         assert.isFalse(core.started);
     });
 
-    it("connect with defaults", async (done) => {
+    it("connect with defaults", async function (done) {
+        this.timeout(100000000);
         const sCore = new P2PNetCore({ peerInfo });
         const cCore = new P2PNetCore({
             peerInfo: await createPeerInfo({

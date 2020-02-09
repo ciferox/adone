@@ -42,7 +42,7 @@ class NetCoreNode extends Node {
             modules: {
                 transport: [
                     TCP,
-                    WS
+                    // WS
                 ],
                 streamMuxer: getMuxers(_options.muxer),
                 connEncryption: [
@@ -50,17 +50,34 @@ class NetCoreNode extends Node {
                 ],
                 peerDiscovery: [
                     MulticastDNS,
-                    Bootstrap
+                    // Bootstrap
                 ],
                 dht: KadDHT,
-                pubsub: GossipSub
+                // pubsub: GossipSub
+            },
+            dialer: {
+                maxParallelDials: 150, // 150 total parallel multiaddr dials
+                maxDialsPerPeer: 4, // Allow 4 multiaddrs to be dialed per peer in parallel
+                dialTimeout: 10e3 // 10 second dial timeout per peer dial
+            },
+            connectionManager: {
+                maxConnections: Infinity,
+                minConnections: 0,
+                pollInterval: 2000,
+                defaultPeerValue: 1,
+                // The below values will only be taken into account when Metrics are enabled
+                maxData: Infinity,
+                maxSentData: Infinity,
+                maxReceivedData: Infinity,
+                maxEventLoopDelay: Infinity,
+                movingAverageInterval: 60000
             },
             config: {
                 peerDiscovery: {
                     autoDial: true,
                     mdns: {
                         interval: 10000,
-                        enabled: false
+                        enabled: true
                     },
                     bootstrap: {
                         interval: 10000,
@@ -68,13 +85,13 @@ class NetCoreNode extends Node {
                         list: _options.bootstrapList
                     }
                 },
-                relay: {
-                    enabled: false,
-                    hop: {
-                        enabled: false,
-                        active: false
-                    }
-                },
+                // relay: {
+                //     enabled: false,
+                //     hop: {
+                //         enabled: false,
+                //         active: false
+                //     }
+                // },
                 dht: {
                     kBucketSize: 20,
                     randomWalk: {
@@ -82,14 +99,14 @@ class NetCoreNode extends Node {
                         interval: 300e3,
                         timeout: 10e3
                     },
-                    enabled: true
+                    enabled: false
                 },
-                pubsub: {
-                    enabled: true,
-                    emitSelf: true, // whether the node should emit to self on publish, in the event of the topic being subscribed
-                    signMessages: true, // if messages should be signed
-                    strictSigning: true // if message signing should be required
-                }
+                // pubsub: {
+                //     enabled: false,
+                //     emitSelf: true, // whether the node should emit to self on publish, in the event of the topic being subscribed
+                //     signMessages: true, // if messages should be signed
+                //     strictSigning: true // if message signing should be required
+                // }
             }
         };
 
@@ -103,114 +120,113 @@ const STARTING = Symbol();
 export default class P2PNetCore extends AbstractNetCore {
     constructor(options) {
         super(options, NetCoreNode);
+        this.remotes = new Map();
     }
 
     async start({ addr = DEFAULT_ADDR, netron = null } = {}) {
         if (this[STARTED] || this[STARTING]) {
             return;
         }
+        this[STARTING] = true;
 
         await this._createNode(addr);
 
-        return new Promise((resolve, reject) => {
-            if (is.netron(netron)) {
-                this.netron = netron;
+        if (is.netron(netron)) {
+            this.netron = netron;
 
-                this.node.handle(NETRON_PROTOCOL, async (protocol, conn) => {
-                    const peerInfo = await new Promise((resolve, reject) => {
-                        conn.getPeerInfo((err, info) => {
-                            if (err) {
-                                reject(err);
-                                return;
-                            }
-                            resolve(info);
-                        });
-                    });
-                    const peer = new RemotePeer(peerInfo, this);
-                    await peer._updateConnectionInfo(conn, NETRON_PROTOCOL);
+            this.node.handle(NETRON_PROTOCOL, ({ connection, stream, protocol }) => {
+                const peer = new RemotePeer({
+                    netron
                 });
-            }
-            this.node.start((err) => {
-                this[STARTING] = false;
-                if (err) {
-                    reject(err);
-                    return;
-                }
-                this[STARTED] = true;
-                resolve();
+                this.remotes.set(connection.remoteAddr.toString(), peer);
+                peer._updateConnectionInfo({
+                    peerId: connection.remotePeer.toB58String(),
+                    stream,
+                    protocol
+                });
             });
-        });
+        }
+        await this.node.start();
+        this[STARTING] = false;
+        this[STARTED] = true;
     }
 
-    stop() {
+    async stop() {
         if (!is.null(this.node)) {
             if (this[STARTED]) {
-                return new Promise((resolve, reject) => {
-                    this.node.stop((err) => {
-                        // TODO: need more careful checking before mark as not-STARTED.
-                        this[STARTED] = false;
-                        if (err) {
-                            reject(err);
-                            return;
-                        }
-                        resolve();
-                    });
-                });
+                await this.node.stop();
+                // TODO: need more careful checking before mark as not-STARTED.
+                this[STARTED] = false;
             }
         }
     }
 
-    async connect({ addr, netron = null } = {}) {
+    async connect({ addr, protocols = [], netron = null } = {}) {
         await this._createNode();
 
-        let peerInfo;
-        if (adone.multiformat.multiaddr.isMultiaddr(addr) || is.string(addr)) {
-            let ma = addr;
-            if (is.string(addr)) {
-                ma = new adone.multiformat.multiaddr(addr);
-            }
-            const peerIdB58Str = ma.getPeerId();
-            if (!peerIdB58Str) {
-                throw new Error("Peer multiaddr instance or string must include peerId");
-            }
-            peerInfo = new PeerInfo(PeerId.createFromB58String(peerIdB58Str));
-            peerInfo.multiaddrs.add(ma);
-        } else if (PeerInfo.isPeerInfo(addr)) {
-            peerInfo = addr;
-        } else {
+        if (!adone.multiformat.multiaddr.isMultiaddr(addr) && !is.string(addr) && !PeerInfo.isPeerInfo(addr)) {
             throw new Error("Incorrect value of `addr`. Should be instance of multiaddr or PeerInfo");
         }
 
-        let protocol = null;
-
+        let peer;
         if (is.netron(netron)) {
             this.netron = netron;
-            protocol = NETRON_PROTOCOL;
+            protocols.push(NETRON_PROTOCOL);
 
             try {
-                return this.netron.getPeer(peerInfo);
+                if (adone.multiformat.multiaddr.isMultiaddr(addr) || is.string(addr)) {
+                    const sAddr = addr.toString();
+                    for (const [ma, peer] of this.remotes.entries()) {
+                        if (ma === sAddr) {
+                            return peer;
+                        }
+                    }
+                    throw new adone.error.NotExistsException(`Peer with remote address ${sAddr} not found`);
+                } else {
+                    return netron.getPeer(addr);
+                }
             } catch (err) {
                 // fresh peer...
             }
-        } else if (is.string(netron)) {
-            protocol = netron;
+
+            peer = new RemotePeer({
+                netron
+            });
         }
 
         return new Promise((resolve, reject) => {
-            this.node.dialProtocol(peerInfo, protocol, async (err, conn) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-
-                if (protocol === NETRON_PROTOCOL) {
-                    const peer = new RemotePeer(peerInfo, this);
-                    await peer._updateConnectionInfo(conn, protocol);
-                    resolve(peer);
-                    return;
-                }
-                resolve(conn);
+            let peerInfo;
+            this.node.once("peer:connect", (pi) => {
+                peerInfo = pi;
             });
+
+            this.node.dialProtocol(addr, protocols).then(({ stream, protocol }) => {
+                if (is.netron(netron) && protocol === NETRON_PROTOCOL) {
+                    peer._updateConnectionInfo({
+                        peerId: peerInfo.id.toB58String(),
+                        stream,
+                        protocol
+                    }).then(() => {
+                        peerInfo.multiaddrs.toArray().forEach((ma) => {
+                            this.remotes.set(ma.toString(), peer);
+                        });
+                        resolve(peer);
+                    }, reject);
+                } else {
+                    resolve();
+                }
+            }, reject);
         });
+    }
+
+    disconnect(peer) {
+        // const id = this.info.id.toB58String();
+        // this.netCore.node.on("peer:disconnect", (info) => {
+        //     if (id === info.id) {
+        //         resolve();
+        //     }
+        // });
+
+        return this.node.hangUp(peer);
     }
 }

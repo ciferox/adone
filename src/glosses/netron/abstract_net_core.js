@@ -4,9 +4,6 @@ const {
     netron: { createPeerInfo }
 } = adone;
 
-const STARTED = Symbol();
-const STARTING = Symbol();
-
 export default class AbstractNetCore {
     constructor(options = {}, NetCoreNode) {
         if (!NetCoreNode) {
@@ -16,9 +13,6 @@ export default class AbstractNetCore {
         this.node = null;
         this.netron = null;
         this.NetCoreNode = NetCoreNode;
-
-        this[STARTED] = false;
-        this[STARTING] = false;
     }
 
     setPeerInfo(peerInfo) {
@@ -33,10 +27,6 @@ export default class AbstractNetCore {
         return this.options.peerInfo;
     }
 
-    get started() {
-        return this[STARTED];
-    }
-
     async start() {
         throw new error.NotImplementedException("Method start() is not implemented");
     }
@@ -45,14 +35,18 @@ export default class AbstractNetCore {
         throw new error.NotImplementedException("Method stop() is not implemented");
     }
 
-    // /**
-    //  * Connects to remote p2p node identified by peerInfo and optionally using netron.
-    //  * 
-    //  * @param {PeerInfo} options.peerInfo
-    //  * @param {Netron} options.netron
-    //  */
-    async connect(options) {
+    /**
+     * Connects to remote p2p node identified by peerInfo and optionally using netron.
+     * 
+     * @param {PeerInfo} options.peerInfo
+     * @param {Netron} options.netron
+     */
+    connect(options) {
         throw new error.NotImplementedException("Method connect() is not implemented");
+    }
+
+    disconnect(options) {
+        throw new error.NotImplementedException("Method disconnect() is not implemented");
     }
 
     async _createNode(addr) {
@@ -63,12 +57,12 @@ export default class AbstractNetCore {
                     bits: 512
                 }));
             }
-            this.node = await new this.NetCoreNode(this.options);
+            this.node = new this.NetCoreNode(this.options);
 
             this.node.on("peer:disconnect", async (peerInfo) => {
                 if (is.netron(this.netron)) {
                     try {
-                        this.netron.getPeer(peerInfo)._updateConnectionInfo(null);
+                        this.netron.getPeer(peerInfo)._updateConnectionInfo();
                     } catch (err) {
                         // Peer already disconnected, nothing todo...
                     }

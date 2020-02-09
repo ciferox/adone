@@ -23,16 +23,11 @@ const normalizeError = (err) => {
 
 
 export default class RemotePeer extends AbstractPeer {
-    constructor(peerInfo, netCore) {
-        super(netCore.netron);
+    constructor(options) {
+        super(options);
 
-        this.info = peerInfo;
-        this.id = peerInfo.id.toB58String();
-        this.netCore = netCore;
-        this.conn = null;
-        this._writer = undefined;
-
-        this.protocol = null;
+        this._writer = null;
+        // this.protocol = null;
         this.connectedTime = null;
 
         this._packetUid = new FastUid();
@@ -57,29 +52,8 @@ export default class RemotePeer extends AbstractPeer {
         });
     }
 
-    /**
-     * Disconnects peer.
-     */
-    disconnect() {
-        return new Promise((resolve, reject) => {
-            // const id = this.info.id.toB58String();
-            // this.netCore.node.on("peer:disconnect", (info) => {
-            //     if (id === info.id) {
-            //         resolve();
-            //     }
-            // });
-
-            this.netCore.node.hangUp(this.info, (err) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve();
-            });
-        });
-    }
-
     get connected() {
-        return !is.null(this.conn);
+        return !is.null(this._writer);
     }
 
     get(defId, name, defaultData) {
@@ -216,11 +190,14 @@ export default class RemotePeer extends AbstractPeer {
 
     _write(pkt) {
         return new Promise((resolve, reject) => {
-            if (!is.null(this.conn)) {
+            // if (!is.null(this.connection)) {
+            if (!is.null(this._writer)) {
                 const rawPkt = packet.encode(pkt).toBuffer();
                 HEADER_BUFFER.writeUInt32BE(rawPkt.length, 0);
                 // pull-pushable won't using right order while processing data, so we can only push header+packet as one chunk
                 this._writer.push(Buffer.concat([HEADER_BUFFER, rawPkt]));
+                // this._writer.push(HEADER_BUFFER);
+                // this._writer.push(rawPkt);
                 resolve();
             } else {
                 resolve(); // TODO: is it correct or me be
@@ -300,13 +277,11 @@ export default class RemotePeer extends AbstractPeer {
     /**
      * Updates connection instances
      * 
-     * @param {Connection|null} conn - instance of connection 
      */
-    async _updateConnectionInfo(conn, protocol) {
-        const id = this.id;
+    async _updateConnectionInfo({ peerId, stream, protocol } = {}) {
+        if (!stream) {
+            const id = this.id;
 
-        this.conn = conn;
-        if (is.null(conn)) {
             this._writer.end();
             this._writer = null;
 
@@ -339,6 +314,8 @@ export default class RemotePeer extends AbstractPeer {
             return;
         }
 
+        const id = this.id = peerId;
+
         this._writer = pull.pushable((err) => {
             if (err) {
                 // console.error(adone.pretty.error(err));
@@ -349,57 +326,60 @@ export default class RemotePeer extends AbstractPeer {
         const permBuffer = new adone.buffer.SmartBuffer(0);
         let lpsz = 0;
 
-        const handler = (chunk) => {
-            const buffer = permBuffer;
-            buffer.write(chunk);
-
-            for (; ;) {
-                if (buffer.length <= 4) {
-                    break;
-                }
-                let packetSize = lpsz;
-                if (packetSize === 0) {
-                    lpsz = packetSize = buffer.readUInt32BE();
-                }
-                if (buffer.length < packetSize) {
-                    break;
-                }
-
-                try {
-                    const roffset = buffer.roffset;
-                    const pkt = packet.decode(buffer);
-                    if (packetSize !== (buffer.roffset - roffset)) {
-                        throw new error.NotValidException("Invalid packet");
-                    }
-                    this._processPacket(pkt);
-                } catch (err) {
-                    buffer.reset(true);
-                    // console.error(adone.pretty.error(err));
-                } finally {
-                    lpsz = 0;
-                }
-            }
-        };
-
-        pull(
+        pull.pipe(
             this._writer,
-            conn,
-            pull.drain(handler, (err) => {
-                if (err) {
-                    // console.error(adone.pretty.error(err));
-                }
-            })
+            stream.sink
         );
 
+        pull.pipe(
+            stream.source,
+            async (source) => {
+                // For each chunk of data
+                for await (const bl of source) {
+                    const chunk = bl.slice(); // (.slice converts BufferList to Buffer)
+                    const buffer = permBuffer;
+                    buffer.write(chunk);
+
+                    for (; ;) {
+                        if (buffer.length <= 4) {
+                            break;
+                        }
+                        let packetSize = lpsz;
+                        if (packetSize === 0) {
+                            lpsz = packetSize = buffer.readUInt32BE();
+                        }
+                        if (buffer.length < packetSize) {
+                            break;
+                        }
+
+                        try {
+                            const roffset = buffer.roffset;
+                            const pkt = packet.decode(buffer);
+                            if (packetSize !== (buffer.roffset - roffset)) {
+                                throw new error.NotValidException("Invalid packet");
+                            }
+                            this._processPacket(pkt);
+                        } catch (err) {
+                            buffer.reset(true);
+                            // console.error(adone.pretty.error(err));
+                        } finally {
+                            lpsz = 0;
+                        }
+                    }
+                }
+            }
+        );
 
         this.netron.addPeer(this);
-        this.protocol = protocol;
+        // this.protocol = protocol;
         this.connectedTime = new Date();
+
+        // greet remote...
         await this.runTask(ON_CONNECT_TASKS);
         if (is.object(this.task.netronGetContextDefs.result)) {
             this._updateStrongDefinitions(this.task.netronGetContextDefs.result);
         }
-        
+
         // Subscribe on context events.
         await Promise.all([
             this.subscribe("context:attach", (peer, { id, def }) => {
@@ -412,6 +392,7 @@ export default class RemotePeer extends AbstractPeer {
                 this._defs.delete(defId);
             })
         ]);
+        
         this.netron.emitSpecial("peer:connect", `peer:${id}`, {
             id
         });

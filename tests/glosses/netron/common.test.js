@@ -2,7 +2,7 @@ import { A } from "./contexts";
 
 const {
     is,
-    netron: { P2PNetCore, Netron, RemotePeer, meta: { Reflection }, Definitions, Reference }
+    netron: { createPeerInfo, P2PNetCore, Netron, RemotePeer, meta: { Reflection }, Definitions, Reference }
 } = adone;
 
 describe("common stuff", () => {
@@ -11,7 +11,7 @@ describe("common stuff", () => {
 
     before(async () => {
         netron = new Netron();
-        peerInfo = await P2PNetCore.createPeerInfo({
+        peerInfo = await createPeerInfo({
             addrs: "/ip4/0.0.0.0/tcp/0",
             bits: 512
         });
@@ -32,8 +32,8 @@ describe("common stuff", () => {
             const p2pNC = new P2PNetCore({
                 peerInfo
             });
-            await p2pNC.start(netron);
-            const rPeer = new RemotePeer(peerInfo, p2pNC);
+            await p2pNC.start({ netron });
+            const rPeer = new RemotePeer({ netron });
             assert.isTrue(is.netronPeer(rPeer));
             assert.isTrue(is.netronRemotePeer(rPeer));
         });

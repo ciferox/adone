@@ -136,29 +136,15 @@ adone.lazify({
 
 // Temporary API
 export const createPeerId = ({ bits } = {}) => {
-    return new Promise((resolve, reject) => {
-        adone.p2p.PeerId.create({ bits }, (err, peerId) => {
-            if (err) {
-                reject(err);
-                return;
-            }
-            resolve(peerId);
-        });
-    });
+    return adone.p2p.PeerId.create({ bits });
 };
 
 export const createPeerInfo = async ({ peerId, addr, bits } = {}) => {
     if (!is.peerId(peerId)) {
-        peerId = await createPeerId({ bits });
+        peerId = await adone.p2p.PeerId.create({ bits });
     }
 
-    return new Promise((resolve, reject) => {
-        adone.p2p.PeerInfo.create(peerId, (err, peerInfo) => {
-            if (err) {
-                return reject(err);
-            }
-            adone.util.arrify(addr).map((ma) => peerInfo.multiaddrs.add(ma));
-            resolve(peerInfo);
-        });
-    });
+    const peerInfo = await adone.p2p.PeerInfo.create(peerId);
+    adone.util.arrify(addr).map((ma) => peerInfo.multiaddrs.add(ma));
+    return peerInfo;
 };

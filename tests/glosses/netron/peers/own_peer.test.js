@@ -1,7 +1,8 @@
 import testInterface from "./interface";
 
 const {
-    netron: { P2PNetCore, Netron, AbstractPeer }
+    netron: { createPeerInfo, P2PNetCore, Netron, AbstractPeer },
+    p2p: { PeerId }
 } = adone;
 
 describe("OwnPeer", () => {
@@ -31,32 +32,34 @@ describe("OwnPeer", () => {
 
         async createNetCore(netron) {
             const netCore = new P2PNetCore({
-                peerInfo: await P2PNetCore.createPeerInfo({
-                    addrs: "/ip4/0.0.0.0/tcp/0",
+                peerInfo: await createPeerInfo({
+                    addr: "/ip4/0.0.0.0/tcp/0",
                     peerId: this.otherPeerId
                 })
             });
-            await netCore.start(netron);
+            await netCore.start({ netron });
             return netCore;
         }
 
         async before() {
             await this._reset();
-            this.peerId = await P2PNetCore.createPeerId({ bits: 512 });
-            this.otherPeerId = await P2PNetCore.createPeerId({ bits: 512 });
+            this.peerId = await PeerId.create({ bits: 512 });
+            this.otherPeerId = await PeerId.create({ bits: 512 });
         }
 
         after() {
         }
 
         async beforeEach() {
-            this.peerInfo = await P2PNetCore.createPeerInfo({
-                addrs: "/ip4/0.0.0.0/tcp/0",
+            this.peerInfo = await createPeerInfo({
+                addr: "/ip4/0.0.0.0/tcp/0",
                 peerId: this.peerId
             });
             this.p2pNetCore = new P2PNetCore({ peerInfo: this.peerInfo });
             this.netron = new Netron();
-            await this.p2pNetCore.start(this.netron);
+            await this.p2pNetCore.start({
+                netron: this.netron
+            });
 
             this.peer = this.netron.peer;
             return [this.p2pNetCore, this.netron, this.peer];

@@ -9,7 +9,7 @@ const __ = adone.getPrivate(adone.netron);
 export default class AbstractPeer extends AsyncEmitter {
     #interfaces = new Map();
 
-    constructor(netron) {
+    constructor({ netron } = {}) {
         super();
 
         this.netron = netron;

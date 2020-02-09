@@ -29,7 +29,9 @@ export default class Netron extends adone.event.AsyncEmitter {
             // },
         };
 
-        this.peer = new OwnPeer(this);
+        this.peer = new OwnPeer({
+            netron: this
+        });
         this.peers = new Map();
 
         this.interfaceFactory = new __.InterfaceFactory(this);
@@ -355,6 +357,9 @@ export default class Netron extends adone.event.AsyncEmitter {
         }
         for (; ;) {
             const eventName = events[0];
+            if (is.undefined(eventName)) {
+                break;
+            }
             try {
                 // TODO: deadlock issue
                 await this.emitParallel(eventName, data); // eslint-disable-line

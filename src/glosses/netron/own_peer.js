@@ -5,8 +5,8 @@ const {
 } = adone;
 
 export default class OwnPeer extends AbstractPeer {
-    constructor(netron) {
-        super(netron);
+    constructor(options) {
+        super(options);
         this.id = null;
     }
 
