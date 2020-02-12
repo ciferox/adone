@@ -20,8 +20,7 @@ const __ = lazify({
     createLibp2p: () => __.Node.createLibp2p,
     muxer: () => lazify({
         spdy: "libp2p-spdy",
-        mplex: "libp2p-mplex",
-        pullMplex: "pull-mplex"
+        mplex: "libp2p-mplex"
     }),
     transport: () => lazify({
         TCP: "libp2p-tcp",

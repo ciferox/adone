@@ -4,7 +4,7 @@ const {
     error,
     is,
     netron: { AbstractNetCore, RemotePeer },
-    p2p: { PeerId, PeerInfo, GossipSub, Node, KadDHT, transport: { TCP, WS }, MulticastDNS, Bootstrap, secio, muxer: { spdy, mplex, pullMplex } }
+    p2p: { PeerId, PeerInfo, GossipSub, Node, KadDHT, transport: { TCP, WS }, MulticastDNS, Bootstrap, secio, muxer: { spdy, mplex } }
 } = adone;
 
 const NETRON_PROTOCOL = adone.netron.NETRON_PROTOCOL;
@@ -18,7 +18,6 @@ const mapMuxers = function (list) {
         switch (pref.trim().toLowerCase()) {
             case "spdy": return spdy;
             case "mplex": return mplex;
-            case "pullmplex": return pullMplex;
             default:
                 throw new Error(`${pref} muxer not available`);
         }
@@ -32,7 +31,7 @@ const getMuxers = function (muxers) {
     } else if (muxers) {
         return mapMuxers(muxers);
     }
-    return [pullMplex, mplex, spdy];
+    return [mplex, spdy];
 
 };
 
