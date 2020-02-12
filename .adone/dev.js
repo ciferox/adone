@@ -495,6 +495,12 @@ export default {
                     src: "src/glosses/is/**/*.js",
                     dst: "lib/glosses/is"
                 },
+                iterables: {
+                    description: "Async iterables",
+                    task: "transpile",
+                    src: "src/glosses/iterables/**/*.js",
+                    dst: "lib/glosses/iterables"
+                },
                 js: {
                     description: "JavaScript language stuff",
                     repository: [
@@ -739,12 +745,6 @@ export default {
                     src: "src/glosses/streams/**/*.js",
                     dst: "lib/glosses/streams",
                     units: {
-                        pull: {
-                            description: "Minimal Pipeable Pull-stream",
-                            task: "transpile",
-                            src: "src/glosses/streams/pull/**/*.js",
-                            dst: "lib/glosses/streams/pull"
-                        }
                     }
                 },
                 system: {

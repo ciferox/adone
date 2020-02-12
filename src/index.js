@@ -129,6 +129,7 @@ lazify({
     inspect: "./glosses/inspect",
     ipfs: "./glosses/ipfs",
     is: "./glosses/is",
+    iterable: "./glosses/iterables",
     js: "./glosses/js",
     lockfile: "./glosses/lockfile",
     logger: "./glosses/logger",

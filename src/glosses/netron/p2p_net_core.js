@@ -164,59 +164,46 @@ export default class P2PNetCore extends AbstractNetCore {
     async connect({ addr, protocols = [], netron = null } = {}) {
         await this._createNode();
 
-        if (!adone.multiformat.multiaddr.isMultiaddr(addr) && !is.string(addr) && !PeerInfo.isPeerInfo(addr)) {
+        if (!adone.multiformat.multiaddr.isMultiaddr(addr) && !is.string(addr) && !is.peerInfo(addr)) {
             throw new Error("Incorrect value of `addr`. Should be instance of multiaddr or PeerInfo");
         }
 
-        let peer;
+        let peerId;
+
         if (is.netron(netron)) {
             this.netron = netron;
             protocols.push(NETRON_PROTOCOL);
 
+            if (is.string(addr)) {
+                addr = new adone.multiformat.multiaddr(addr);
+            }
+
+            if (adone.multiformat.multiaddr.isMultiaddr(addr)) {
+                peerId = addr.getPeerId();
+            } else if (is.peerInfo(addr)) {
+                peerId = addr.id.toB58String();
+            }
+
             try {
-                if (adone.multiformat.multiaddr.isMultiaddr(addr) || is.string(addr)) {
-                    const sAddr = addr.toString();
-                    for (const [ma, peer] of this.remotes.entries()) {
-                        if (ma === sAddr) {
-                            return peer;
-                        }
-                    }
-                    throw new adone.error.NotExistsException(`Peer with remote address ${sAddr} not found`);
-                } else {
-                    return netron.getPeer(addr);
-                }
+                return netron.getPeer(peerId);
             } catch (err) {
                 // fresh peer...
             }
-
-            peer = new RemotePeer({
-                netron
-            });
         }
 
-        return new Promise((resolve, reject) => {
-            let peerInfo;
-            this.node.once("peer:connect", (pi) => {
-                peerInfo = pi;
+        const { stream, protocol } = await this.node.dialProtocol(addr, protocols);
+        if (is.netron(netron) && protocol === NETRON_PROTOCOL) {
+            const peer = new RemotePeer({
+                netron
+            });
+            await peer._updateConnectionInfo({
+                peerId,
+                stream,
+                protocol
             });
 
-            this.node.dialProtocol(addr, protocols).then(({ stream, protocol }) => {
-                if (is.netron(netron) && protocol === NETRON_PROTOCOL) {
-                    peer._updateConnectionInfo({
-                        peerId: peerInfo.id.toB58String(),
-                        stream,
-                        protocol
-                    }).then(() => {
-                        peerInfo.multiaddrs.toArray().forEach((ma) => {
-                            this.remotes.set(ma.toString(), peer);
-                        });
-                        resolve(peer);
-                    }, reject);
-                } else {
-                    resolve();
-                }
-            }, reject);
-        });
+            return peer;
+        }
     }
 
     disconnect(peer) {

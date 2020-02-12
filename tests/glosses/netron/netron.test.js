@@ -548,13 +548,13 @@ describe("Netron", () => {
             const addrs = peerInfoS.multiaddrs.toArray();
 
             const remotePeer1 = await p2pNetCoreC.connect({
-                addr: addrs[0],
+                addr: addrs[0].encapsulate(`/p2p/${peerInfoS.id.toB58String()}`),
                 netron: netronC
             });
             assert.isTrue(remotePeer1.connected);
 
             const remotePeer2 = await p2pNetCoreC.connect({
-                addr: addrs[1],
+                addr: addrs[1].encapsulate(`/p2p/${peerInfoS.id.toB58String()}`).toString(),
                 netron: netronC
             });
             assert.isTrue(remotePeer2.connected);

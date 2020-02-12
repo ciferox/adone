@@ -2,7 +2,7 @@ const {
     is,
     collection: { TimeMap },
     netron: { ACTION, AbstractPeer, packet, uid: { FastUid }, Reference },
-    stream: { pull },
+    iterable,
     error
 } = adone;
 
@@ -194,10 +194,7 @@ export default class RemotePeer extends AbstractPeer {
             if (!is.null(this._writer)) {
                 const rawPkt = packet.encode(pkt).toBuffer();
                 HEADER_BUFFER.writeUInt32BE(rawPkt.length, 0);
-                // pull-pushable won't using right order while processing data, so we can only push header+packet as one chunk
                 this._writer.push(Buffer.concat([HEADER_BUFFER, rawPkt]));
-                // this._writer.push(HEADER_BUFFER);
-                // this._writer.push(rawPkt);
                 resolve();
             } else {
                 resolve(); // TODO: is it correct or me be
@@ -316,7 +313,7 @@ export default class RemotePeer extends AbstractPeer {
 
         const id = this.id = peerId;
 
-        this._writer = pull.pushable((err) => {
+        this._writer = iterable.pushable((err) => {
             if (err) {
                 // console.error(adone.pretty.error(err));
             }
@@ -326,12 +323,12 @@ export default class RemotePeer extends AbstractPeer {
         const permBuffer = new adone.buffer.SmartBuffer(0);
         let lpsz = 0;
 
-        pull.pipe(
+        iterable.pipe(
             this._writer,
             stream.sink
         );
 
-        pull.pipe(
+        iterable.pipe(
             stream.source,
             async (source) => {
                 // For each chunk of data
