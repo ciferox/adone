@@ -25,7 +25,6 @@ describe("realm", () => {
         "transpileExe",
         "adoneTranspile",
         "adoneTranspileExe",
-        "adoneDotCompiler",
         "watch",
         "increaseVersion"
     ];

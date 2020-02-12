@@ -164,8 +164,7 @@ lazify({
     uri: "./glosses/uri",
     util: "./glosses/utils",
     validation: "./glosses/validation",
-    vault: "./glosses/vault",
-    web: "./glosses/web"
+    vault: "./glosses/vault"
 }, adone);
 
 // mappings
