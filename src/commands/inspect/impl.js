@@ -211,14 +211,14 @@ export default ({ globals: globals_ } = {}) => class InspectionCommand extends S
                 const moduleName = parts.shift();
                 ns = adone.module.requireRelative(moduleName, process.cwd());
             } else {
-                // Reduce 'adone' + 'global' chain...
-                while (parts.length > 1) {
-                    if (globals.includes(parts[0]) && globals.includes(parts[1])) {
-                        parts.shift();
-                    } else {
-                        break;
-                    }
-                }
+                // // Reduce 'adone' + 'global' chain...
+                // while (parts.length > 1) {
+                //     if (globals.includes(parts[0]) && globals.includes(parts[1])) {
+                //         parts.shift();
+                //     } else {
+                //         break;
+                //     }
+                // }
 
                 if (!globals.includes(parts[0])) {
                     throw new error.UnknownException(`Unknown namespace: ${parts[0]}`);

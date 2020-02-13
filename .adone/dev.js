@@ -495,12 +495,6 @@ export default {
                     src: "src/glosses/is/**/*.js",
                     dst: "lib/glosses/is"
                 },
-                iterables: {
-                    description: "Async iterables",
-                    task: "transpile",
-                    src: "src/glosses/iterables/**/*.js",
-                    dst: "lib/glosses/iterables"
-                },
                 js: {
                     description: "JavaScript language stuff",
                     repository: [

@@ -2,7 +2,7 @@ const {
     is,
     collection: { TimeMap },
     netron: { ACTION, AbstractPeer, packet, uid: { FastUid }, Reference },
-    iterable,
+    stream: { iterable },
     error
 } = adone;
 

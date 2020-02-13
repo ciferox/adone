@@ -1,4 +1,5 @@
 adone.lazify({
+    iterable: "./iterables",
     Readable: "./readable",
     buffer: () => adone.lazify({
         DEFAULT_INITIAL_SIZE: ["./buffer_stream", (mod) => mod.DEFAULT_INITIAL_SIZE],
