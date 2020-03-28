@@ -27,7 +27,7 @@ adone.lazify({
 const PID_SYMBOL = Symbol();
 
 // As part of the process, the omni-application can only be launched once.
-export const run = (OmniApp) => {
+export const run = (OmniApp, options) => {
     if (!adone.is.function(process.send)) {
         console.error("Omni-application cannot be launched directly");
         process.exit(1);
@@ -43,5 +43,5 @@ export const run = (OmniApp) => {
     process.env.ADONE_OMNIAPP = {
         pid: process.pid
     };
-    return adone.app.run(OmniApp);
+    return adone.app.run(OmniApp, options);
 };

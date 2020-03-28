@@ -32,11 +32,11 @@ class OmniApplication extends app.Application {
         } else {
             // Default configuration
             this.config = new configuration.GenericConfig();
-            this.config.set("omnitron", {});
+            this.config.set("app", {});
         }
 
         if (!is.undefined(process.report)) {
-            Object.assign(process.report, util.pick(this.config.omnitron.report || {}, [
+            Object.assign(process.report, util.pick(this.config.app.report || {}, [
                 "reportOnFatalError",
                 "reportOnSignal",
                 "reportOnUncaughtException",
@@ -67,7 +67,7 @@ class OmniApplication extends app.Application {
 
     async initialize() {
         // The generic communication core of omni-application.
-        this.netron = new Netron(this.config.omnitron.netron);
+        this.netron = new Netron(this.config.app.netron);
 
         await this.initializeSubsystems();
         await this.createPidFile();
@@ -98,7 +98,7 @@ class OmniApplication extends app.Application {
 
     async createPidFile() {
         try {
-            await fs.writeFile(this.config.omnitron.pidFile, process.pid.toString());
+            await fs.writeFile(this.config.app.pidFile, process.pid.toString());
         } catch (err) {
             console.error(err.message);
         }
@@ -106,7 +106,7 @@ class OmniApplication extends app.Application {
 
     async deletePidFile() {
         try {
-            await fs.rm(this.config.omnitron.pidFile);
+            await fs.rm(this.config.app.pidFile);
         } catch (err) {
             console.error(err.message);
         }

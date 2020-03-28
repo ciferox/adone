@@ -3156,7 +3156,7 @@ adone.lazify({
     chalkify: "chalk-pipe",
     gradient: "./gradient",
     ui: "./ui",
-    Enquirer: "./enquirer"
+    Enquirer: "enquirer"
 }, __, require);
 
 __.Terminal = Terminal;
