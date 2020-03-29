@@ -79,6 +79,18 @@ const command = (name) => path.join(__dirname, "..", "commands", name);
             group: "common",
             description: "Rollup CLI",
             subsystem: command("rollup")
+        },
+        {
+            name: ["shell", "sh"],
+            group: "common",
+            description: "Portable shell",
+            subsystem: command("shell")
+        },
+        {
+            name: ["system", "sys"],
+            group: "common",
+            description: "System information",
+            subsystem: command("system")
         }
     ]
 })

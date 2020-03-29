@@ -6,9 +6,13 @@ const {
     github
 } = adone;
 
+// library scope:
+// - user: $HOME/.node_modules
+// - node: $PREFIX/lib/node
+
 @adone.task.task("realmGlobal")
 export default class extends adone.realm.BaseTask {
-    async main({ realm, unregister = false, binLinkName, libLinkName, noBin = true, noLib = true } = {}) {
+    async main({ realm, unregister = false, binLinkName, libRelPath = "", libLinkName, libScope = "user", noBin = true, noLib = true } = {}) {
         this.manager.notify(this, "progress", {
             message: "checking"
         });
@@ -43,20 +47,21 @@ export default class extends adone.realm.BaseTask {
                 prefixDir: "bin",
                 linkName: binLinkName ? binLinkName : realm.package.bin
             });
-            
         }
 
         if (!noLib && is.string(packageConf.main)) {
             await this._makeChanges({
                 realm,
                 unregister,
-                realmRelPath: packageConf.main,
-                prefixDir: "lib/node",
+                realmRelPath: libRelPath,
+                prefixDir: libScope === "user"
+                    ? ".node_modules"
+                    : "lib/node",
+                libScope,
                 linkName: libLinkName ? libLinkName : realm.package.name,
                 sureDestExists: true
             });
         }
-
 
         this.manager.notify(this, "progress", {
             message: `realm successfully ${unregister ? "unregistered" : "registered"}`,
@@ -64,13 +69,20 @@ export default class extends adone.realm.BaseTask {
         });
     }
 
-    async _makeChanges({ realm, unregister, realmRelPath, prefixDir, linkName, sureDestExists = false} = {}) {
+    async _makeChanges({ realm, unregister, realmRelPath, prefixDir, linkName, libScope, sureDestExists = false} = {}) {
         const fullPath = realm.getPath(realmRelPath);
         if (!(await fs.pathExists(fullPath))) {
             throw new error.NotExistsException(`Path ${fullPath} not exists`);
         }
 
-        const fullLinkPath = adone.path.join(await adone.nodejs.getPrefixPath(), prefixDir, linkName);
+        let prefixPath;
+        if(libScope === "user") {
+            prefixPath = adone.system.env.home();
+        } else {
+            prefixPath = await adone.nodejs.getPrefixPath()
+        }
+
+        const fullLinkPath = adone.path.join(prefixPath, prefixDir, linkName);
         sureDestExists && await fs.mkdirp(adone.path.dirname(fullLinkPath));
         const linkExists = await fs.pathExists(fullLinkPath);
         if (unregister) {

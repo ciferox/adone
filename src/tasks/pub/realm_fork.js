@@ -7,6 +7,21 @@ const {
     realm: { BaseTask, RealmManager }
 } = adone;
 
+const IGNORED_ARTIFACTS = [
+    ".git",
+    ".gitattributes",
+    ".gitignore",
+    ".npmignore",
+    ".vscode",
+    ".eslintignore",
+    ".eslintrc.js",
+    "jsconfig.json",
+    "node_modules",
+    "package-lock.json",
+    "pnpm-lock.yaml",
+    "yarn.lock"
+];
+
 @adone.task.task("realmFork")
 export default class extends BaseTask {
     async main({ realm, path, name, tags, filter, skipNpm } = {}) {
@@ -59,7 +74,7 @@ export default class extends BaseTask {
             tags = new Set(tags.split(","));
         } else if (!tags || tags.length === 0) {
             tags = new Set();
-            const files = await fs.readdir(realm.cwd);
+            const files = (await fs.readdir(realm.cwd)).filter((file) => !IGNORED_ARTIFACTS.includes(file));
             files.forEach((file) => artifacts.add(file));
         }
 
@@ -70,8 +85,8 @@ export default class extends BaseTask {
 
         // artifacts required for a realm
         artifacts.add(".adone");
-        artifacts.add("package.json");
-
+        artifacts.add("package.json");        
+        
         for (const dir of artifacts.values()) {
             this.manager.notify(this, "progress", {
                 message: `copying ${cli.style.accent(dir)}`

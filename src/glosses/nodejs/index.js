@@ -67,7 +67,7 @@ export const getArchiveName = async ({ version, platform = getCurrentPlatform(),
     version = validateVersion(version);
 
     if (is.undefined(ext)) {
-        ext = (type === "sources" || type === "headers") 
+        ext = (type === "sources" || type === "headers")
             ? ".tar.gz"
             : is.windows
                 ? ".zip"
@@ -116,21 +116,37 @@ export const getReleases = async () => (await adone.http.client.request("https:/
 
 export const getExePath = () => fs.which("node");
 
-export const getPrefixPath = async () => {
+export const getPrefixPath = async ({ global = false } = {}) => {
     try {
+        if (global) {
+            return is.windows
+                ? ""
+                : is.linux
+                    ? "/usr"
+                    : "/usr/local";
+        }
         const exePath = await getExePath();
         return aPath.dirname(aPath.dirname(exePath));
     } catch (err) {
         return is.windows
             ? ""
-            : "/usr/local";
+            : is.linux
+                ? "/usr"
+                : "/usr/local";
     }
 };
 
-export const getCurrentVersion = async () => {
+export const getCurrentVersion = async ({ prefixPath } = {}) => {
     try {
-        const exePath = await getExePath();
-        return adone.process.execStdout(exePath, ["--version"]);
+        let exePath;
+        if (is.string(prefixPath)) {
+            exePath = adone.path.join(prefixPath, "bin", "node");
+        } else {
+            exePath = await getExePath();
+        }
+
+        const { stdout } = await adone.process.exec(exePath, ["--version"]);
+        return stdout;
     } catch (err) {
         return "";
     }
@@ -140,7 +156,7 @@ export const checkVersion = async (ver) => {
     const indexJson = await getReleases();
 
     let version = ver;
-    if (!["latest", "latest-lts"].includes(version)) {
+    if (!["latest", "lts"].includes(version)) {
         version = semver.valid(version);
         if (is.null(version)) {
             throw new error.NotValidException(`Invalid version: ${ver}`);
@@ -151,7 +167,7 @@ export const checkVersion = async (ver) => {
         case "latest":
             version = indexJson[0].version;
             break;
-        case "latest-lts":
+        case "lts":
             version = indexJson.find((item) => item.lts).version;
             break;
         default: {

@@ -91,6 +91,16 @@ export default {
                     src: "src/commands/rollup/**/*.ts",
                     dst: "lib/commands/rollup",
                     task: "tsc"
+                },
+                shell: {
+                    src: "src/commands/shell/**/*.js",
+                    dst: "lib/commands/shell",
+                    task: "transpile"
+                },
+                system: {
+                    src: "src/commands/system/**/*.js",
+                    dst: "lib/commands/system",
+                    task: "transpile"
                 }
             }
         },
@@ -719,6 +729,12 @@ export default {
                     task: "copy",
                     src: "src/glosses/semver/index.js",
                     dst: "lib/glosses/semver"
+                },
+                shell: {
+                    description: "Portable implementation of Unix shell commands",
+                    task: "transpile",
+                    src: "src/glosses/shell/**/*.js",
+                    dst: "lib/glosses/shell"
                 },
                 sourcemap: {
                     description: "Sourcemaps",

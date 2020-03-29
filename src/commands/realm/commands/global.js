@@ -29,6 +29,14 @@ export default class extends Subsystem {
                 holder: "NAME",
                 help: "Name of lib-link"
             },
+            {
+                name: "--lib-scope",
+                type: String,
+                holder: "SCOPE",
+                default: "user",
+                choices: ["user", "node"],
+                help: "Module installation scope"
+            }
         ]
     })
     async main(args, opts) {

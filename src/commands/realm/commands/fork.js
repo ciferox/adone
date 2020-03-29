@@ -14,7 +14,7 @@ export default class extends Subsystem {
             {
                 name: ["--path", "-P"],
                 type: String,
-                required: true,
+                default: adone.path.join(adone.system.env.home(), ".node_modules"),
                 help: "Destination path"
             },
             {
@@ -44,7 +44,7 @@ export default class extends Subsystem {
 
             return 0;
         } catch (err) {
-            // console.log(adone.pretty.error(err));
+            console.log(adone.pretty.error(err));
             return 1;
         }
     }

@@ -1,4 +1,6 @@
-export const symbol = {
+const { is } = adone;
+
+const main = {
     tick: "✔",
     cross: "✖",
     star: "★",
@@ -26,6 +28,7 @@ export const symbol = {
     smiley: "㋡",
     mustache: "෴",
     heart: "♥",
+    nodejs: "⬢",
     arrowUp: "↑",
     arrowDown: "↓",
     arrowLeft: "←",
@@ -36,7 +39,7 @@ export const symbol = {
     checkboxOff: "☐",
     checkboxCircleOn: "ⓧ",
     checkboxCircleOff: "Ⓘ",
-    questionMarkPrefix: (adone.is.linux ? "?" : "?⃝"),
+    questionMarkPrefix: (is.linux ? "?" : "?⃝"),
     oneHalf: "½",
     oneThird: "⅓",
     oneQuarter: "¼",
@@ -54,11 +57,10 @@ export const symbol = {
     fourFifths: "⅘",
     fiveSixths: "⅚",
     fiveEighths: "⅝",
-    sevenEighths: "⅞",
-    minus: "−"
+    sevenEighths: "⅞"
 };
 
-const symbolFallback = {
+const windows = {
     tick: "√",
     cross: "×",
     star: "*",
@@ -85,11 +87,12 @@ const symbolFallback = {
     hamburger: "≡",
     smiley: "☺",
     mustache: "┌─┐",
-    heart: "♥",
-    arrowUp: "↑",
-    arrowDown: "↓",
-    arrowLeft: "←",
-    arrowRight: "→",
+    heart: main.heart,
+    nodejs: "♦",
+    arrowUp: main.arrowUp,
+    arrowDown: main.arrowDown,
+    arrowLeft: main.arrowLeft,
+    arrowRight: main.arrowRight,
     radioOn: "(*)",
     radioOff: "( )",
     checkboxOn: "[×]",
@@ -114,20 +117,21 @@ const symbolFallback = {
     fourFifths: "4/5",
     fiveSixths: "5/6",
     fiveEighths: "5/8",
-    sevenEighths: "7/8",
-    minus: "-"
+    sevenEighths: "7/8"
 };
+
+export const symbol = is.windows ? windows : main;
 
 export const approx = (str) => {
     if (!adone.is.windows) {
         return str;
     }
 
-    Object.keys(symbol).forEach((key) => {
-        if (symbol[key] === symbolFallback[key]) {
+    Object.keys(main).forEach((key) => {
+        if (main[key] === windows[key]) {
             return;
         }
-        str = str.replace(new RegExp(adone.text.escapeStringRegexp(symbol[key]), "g"), symbolFallback[key]);
+        str = str.replace(new RegExp(adone.text.escapeStringRegexp(main[key]), "g"), windows[key]);
     });
 
     return str;

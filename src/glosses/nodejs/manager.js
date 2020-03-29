@@ -8,6 +8,7 @@ const {
 
 const NODEJS_PATHS = [
     ["bin", "node"],
+    ["bin", "nodejs"],
     ["bin", "npm"],
     ["bin", "npx"],
     ["include", "node"],
@@ -24,6 +25,7 @@ export default class NodejsManager {
             release: "releases",
             sources: "sources",
             headers: "headers",
+            active: "active",
             ...cache,
             realm,
             appName: "nodejs"
@@ -190,15 +192,30 @@ export default class NodejsManager {
             : fullDestPath;
     }
 
-    async removeActive() {
+    async removeActive({ global = false } = {}) {
         try {
-            const basePath = await nodejs.getPrefixPath();
+            if (global) {
+                let basePath;
+                if (is.windows) {
 
-            for (const dirs of NODEJS_PATHS) {
-                // eslint-disable-next-line no-await-in-loop
-                await fs.remove(aPath.join(basePath, ...dirs));
+                } else if (is.linux) {
+                    basePath = "/usr";
+                }
+
+                // basePath = await nodejs.getPrefixPath();
+
+                for (const dirs of NODEJS_PATHS) {
+                    // eslint-disable-next-line no-await-in-loop
+                    await fs.remove(aPath.join(basePath, ...dirs));
+                }
+            } else {
+                // basePath = get
             }
         } catch (err) {
+            if (err.code === "EACCES") {
+                throw err;
+            }
+            // console.log(err);
             // Node.js is not installed
         }
     }
