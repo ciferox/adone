@@ -67,6 +67,11 @@ export default {
         commands: {
             description: "ADONE CLI commands",
             units: {
+                github: {
+                    src: "src/commands/github/**/*.js",
+                    dst: "lib/commands/github",
+                    task: "transpile"
+                },
                 inspect: {
                     src: "src/commands/inspect/**/*.js",
                     dst: "lib/commands/inspect",

@@ -51,6 +51,12 @@ const command = (name) => path.join(__dirname, "..", "commands", name);
 @subsystem({
     subsystems: [
         {
+            name: ["github", "gh"],
+            group: "common",
+            description: "GitHub tools",
+            subsystem: command("github")
+        },
+        {
             name: "inspect",
             group: "common",
             description: "Inspect namespace/object",
