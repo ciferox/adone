@@ -7,17 +7,19 @@ import * as aPath from "../path";
 const constants = require("constants");
 const platform = process.env.GRACEFUL_FS_PLATFORM || process.platform;
 
-const queue = [];
-const enqueue = (elem) => {
-    queue.push(elem);
-};
+const gracefulQueue = Symbol.for("graceful-fs.queue");
+const previousSymbol = Symbol.for("graceful-fs.previous");
 
-const retry = () => {
-    const elem = queue.shift();
+function enqueue(elem) {
+    global[gracefulQueue].push(elem);
+}
+
+function retry() {
+    const elem = global[gracefulQueue].shift();
     if (elem) {
         elem[0].apply(null, elem[1]);
     }
-};
+}
 
 const patch = (fs) => {
     // Everything that references the open() function needs to be in here
@@ -193,22 +195,26 @@ const patch = (fs) => {
         return function (target, options, cb) {
             if (isFunction(options)) {
                 cb = options;
-                options = {};
+                options = null;
             }
-            return orig.call(fs, target, options, function (er, stats) {
-                if (!stats) {
-                    return cb.apply(this, arguments);
-                }
-                if (stats.uid < 0) {
-                    stats.uid += 0x100000000;
-                }
-                if (stats.gid < 0) {
-                    stats.gid += 0x100000000;
+
+            function callback(er, stats) {
+                if (stats) {
+                    if (stats.uid < 0) {
+                        stats.uid += 0x100000000;
+                    }
+                    if (stats.gid < 0) {
+                        stats.gid += 0x100000000;
+                    }
                 }
                 if (cb) {
                     cb.apply(this, arguments);
                 }
-            });
+            }
+
+            return options
+                ? orig.call(fs, target, options, callback)
+                : orig.call(fs, target, callback);
         };
     };
     fs.stat = statFix(fs.stat);
@@ -221,8 +227,10 @@ const patch = (fs) => {
         }
         // Older versions of Node erroneously returned signed integers for
         // uid + gid.
-        return function (target) {
-            const stats = orig.call(fs, target);
+        return function (target, options) {
+            const stats = options
+                ? orig.call(fs, target, options)
+                : orig.call(fs, target);
             if (stats.uid < 0) {
                 stats.uid += 0x100000000;
             }
@@ -297,7 +305,7 @@ const patch = (fs) => {
 
     // if read() returns EAGAIN, then just try it again.
     fs.read = (function (fs$read) {
-        return function (fd, buffer, offset, length, position, callback_) {
+        function read(fd, buffer, offset, length, position, callback_) {
             let callback;
             if (callback_ && isFunction(callback_)) {
                 let eagCounter = 0;
@@ -310,7 +318,11 @@ const patch = (fs) => {
                 };
             }
             return fs$read.call(fs, fd, buffer, offset, length, position, callback);
-        };
+        }
+
+        // This ensures `util.promisify` works as it does for native `fs.read`.
+        read.__proto__ = fs$read;
+        return read;
     })(fs.read);
 
     fs.readSync = (function (fs$readSync) {
@@ -493,8 +505,8 @@ const patch = (fs) => {
             });
         };
 
-        const kMinPoolSpace = 128;  
-        
+        const kMinPoolSpace = 128;
+
         let pool;
         // It can happen that we expect to read a large chunk of data, and reserve
         // a large chunk of the pool accordingly, but the read() call only filled
@@ -646,51 +658,141 @@ const patch = (fs) => {
         return WriteStream.apply(Object.create(WriteStream.prototype), arguments);
     }
 
-    fs.ReadStream = ReadStream;
-    fs.WriteStream = WriteStream;
+    Object.defineProperty(fs, "ReadStream", {
+        get() {
+            return ReadStream;
+        },
+        set(val) {
+            ReadStream = val;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(fs, "WriteStream", {
+        get() {
+            return WriteStream;
+        },
+        set(val) {
+            WriteStream = val;
+        },
+        enumerable: true,
+        configurable: true
+    });
+
+    // legacy names
+    Object.defineProperty(fs, "FileReadStream", {
+        get() {
+            return ReadStream;
+        },
+        set(val) {
+            ReadStream = val;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(fs, "FileWriteStream", {
+        get() {
+            return WriteStream;
+        },
+        set(val) {
+            WriteStream = val;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    // fs.ReadStream = ReadStream;
+    // fs.WriteStream = WriteStream;
     fs.createReadStream = function createReadStream(path, options) {
-        return new ReadStream(path, options);
+        return new fs.ReadStream(path, options);
     };
 
     fs.createWriteStream = function createWriteStream(path, options) {
-        return new WriteStream(path, options);
+        return new fs.WriteStream(path, options);
     };
 
     return fs;
 };
 
+// Once time initialization
+if (!global[gracefulQueue]) {
+    // This queue can be shared by multiple loaded instances
+    const queue = [];
+    Object.defineProperty(global, gracefulQueue, {
+        get() {
+            return queue;
+        }
+    });
+
+    // Patch fs.close/closeSync to shared queue version, because we need
+    // to retry() whenever a close happens *anywhere* in the program.
+    // This is essential when multiple graceful-fs instances are
+    // in play at the same time.
+    fs.close = (function (fs$close) {
+        function close(fd, cb) {
+            return fs$close.call(fs, fd, function (err) {
+                // This function uses the graceful-fs shared queue
+                if (!err) {
+                    retry();
+                }
+
+                if (isFunction(cb)) {
+                    cb.apply(this, arguments);
+                }
+            });
+        }
+
+        Object.defineProperty(close, previousSymbol, {
+            value: fs$close
+        });
+        return close;
+    })(fs.close);
+
+    fs.closeSync = (function (fs$closeSync) {
+        function closeSync(fd) {
+            // This function uses the graceful-fs shared queue
+            fs$closeSync.apply(fs, arguments);
+            retry();
+        }
+
+        Object.defineProperty(closeSync, previousSymbol, {
+            value: fs$closeSync
+        });
+        return closeSync;
+    })(fs.closeSync);
+}
+
 const base = patch(clone(fs));
 
-// Always patch fs.close/closeSync, because we want to
-// retry() whenever a close happens *anywhere* in the program.
-// This is essential when multiple graceful-fs instances are
-// in play at the same time.
-base.close = (function (fs$close) {
-    return function (fd, cb) {
-        return fs$close.call(fs, fd, function (err) {
-            if (!err) {
-                retry();
-            }
+// // Always patch fs.close/closeSync, because we want to
+// // retry() whenever a close happens *anywhere* in the program.
+// // This is essential when multiple graceful-fs instances are
+// // in play at the same time.
+// base.close = (function (fs$close) {
+//     return function (fd, cb) {
+//         return fs$close.call(fs, fd, function (err) {
+//             if (!err) {
+//                 retry();
+//             }
 
-            if (isFunction(cb)) {
-                cb.apply(this, arguments);
-            }
-        });
-    };
-})(fs.close);
+//             if (isFunction(cb)) {
+//                 cb.apply(this, arguments);
+//             }
+//         });
+//     };
+// })(fs.close);
 
-base.closeSync = (function (fs$closeSync) {
-    return function (fd) {
-        // Note that graceful-fs also retries when fs.closeSync() fails.
-        // Looks like a bug to me, although it's probably a harmless one.
-        const rval = fs$closeSync.apply(fs, arguments);
-        retry();
-        return rval;
-    };
-})(fs.closeSync);
+// base.closeSync = (function (fs$closeSync) {
+//     return function (fd) {
+//         // Note that graceful-fs also retries when fs.closeSync() fails.
+//         // Looks like a bug to me, although it's probably a harmless one.
+//         const rval = fs$closeSync.apply(fs, arguments);
+//         retry();
+//         return rval;
+//     };
+// })(fs.closeSync);
 
-fs.closeSync = base.closeSync;
-fs.close = base.close;
+// fs.closeSync = base.closeSync;
+// fs.close = base.close;
 
 base.path = aPath;
 base.cwd = process.cwd;

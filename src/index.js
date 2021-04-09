@@ -53,7 +53,7 @@ lazify({
     package: "../package.json",
 
     cwd: () => adone.path.join(__dirname, ".."),
-    getPath: () => (...args) => adone.path.join(adone.cwd, ...args),
+    getPath: () => (p, ...args) => adone.path.join((p && p.startsWith("/")) ? p : adone.path.join(adone.cwd, p), ...args),
     LOGO: () => adone.fs.readFileSync(adone.getPath("share", "media", "adone.txt"), { encoding: "utf8" }),
 
     assert: () => adone.assertion.assert,

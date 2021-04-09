@@ -32,6 +32,7 @@ describe("mkdirp / chmod", () => {
 
     it("chmod-pre", (done) => {
         const mode = o744;
+        console.log(adone.sprintf("%b", (~process.umask() >>> 0) & 0xff));
         fse.mkdirp(TEST_SUBDIR, mode, (err) => {
             assert.ifError(err, "should not error");
             fs.stat(TEST_SUBDIR, (err, stat) => {
@@ -41,7 +42,7 @@ describe("mkdirp / chmod", () => {
                 if (os.platform().indexOf("win") === 0) {
                     assert.strictEqual(stat && stat.mode & o777, o666, "windows shit");
                 } else {
-                    assert.strictEqual(stat && stat.mode & o777, mode, "should be 0744");
+                    assert.strictEqual(stat && stat.mode & o777, mode, "should be o744");
                 }
 
                 done();

@@ -83,7 +83,7 @@ export default class extends BaseTask {
             cwd: realm.cwd,
             base: realm.cwd
         })
-            .archive(type, filename)
+            // .archive(type, filename)
             .dest(path);
 
         this.manager.notify(this, "progress", {

@@ -66,7 +66,9 @@ describe("fs", "base", () => {
             ["lstat"],
             ["utimes", new Date(), new Date()],
             ["readdir"],
-            ["readdir", {}]
+            ["readdir", {}],
+            ["stat", {}],
+            ["lstat", {}]
         ];
 
         const verify = (done) => {
@@ -102,8 +104,19 @@ describe("fs", "base", () => {
     describe("close", () => {
         it("`close` is patched correctly", () => {
 
-            assert.notEqual(adone.fs.base.close, fs$close, "patch close");
-            assert.notEqual(adone.fs.base.closeSync, fs$closeSync, "patch closeSync");
+            // assert.notEqual(adone.fs.base.close, fs$close, "patch close");
+            // assert.notEqual(adone.fs.base.closeSync, fs$closeSync, "patch closeSync");
+            assert.match(fs$close.toString(), /graceful-fs shared queue/, "patch fs.close");
+            assert.match(fs$closeSync.toString(), /graceful-fs shared queue/, "patch fs.closeSync");
+            assert.match(realFs.close.toString(), /graceful-fs shared queue/, "patch gfs.close");
+            assert.match(realFs.closeSync.toString(), /graceful-fs shared queue/, "patch gfs.closeSync");
+
+            const importFresh = require("import-fresh");
+            const newGFS = importFresh(adone.getPath("lib/glosses/fs/base.js")).default;
+            assert.equal(realFs.close, fs$close);
+            assert.equal(realFs.closeSync, fs$closeSync);
+            assert.equal(newGFS.close, fs$close);
+            assert.equal(newGFS.closeSync, fs$closeSync);
         });
     });
 

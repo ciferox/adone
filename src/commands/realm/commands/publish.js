@@ -36,7 +36,7 @@ export default class extends Subsystem {
 
             return 0;
         } catch (err) {
-            console.log(adone.pretty.error(err));
+            console.error(adone.pretty.error(err));
             return 1;
         }
     }

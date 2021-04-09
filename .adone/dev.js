@@ -1,19 +1,23 @@
 export default {
-    publish: {
-        type: "github",
-        apiBase: "https://api.github.com",
-        owner: "ciferox",
-        repo: "adone",
-        artifacts: {
-            dev: ["src", "info", "share"],
-            rel: ["release", "info", "share"]
+    tasks: {
+        fork: {
+            tags: ["src", "info", "share"]
         },
-        filter: [
-            "!bin/**/*.map",
-            "!lib/**/*.map",
-            "!.adone/kri.js",
-            "!.adone/dev.js"
-        ]
+        pack: {
+            tags: ["release", "info", "share"],
+            filter: [
+                "!bin/**/*.map",
+                "!lib/**/*.map",
+                "!.adone/kri.js",
+                "!.adone/dev.js"
+            ]
+        },
+        publish: {
+            type: "github",
+            apiBase: "https://api.github.com",
+            owner: "ciferox",
+            repo: "adone"
+        }
     },
     defaultTask: "copy",
     nonWatchableTasks: [

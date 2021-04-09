@@ -80,6 +80,8 @@ export class FastLocalStream extends adone.fast.Stream {
             file.stat = file.stat || new fs.Stats();
             file.stat.mode = file.stat.mode || (file.isDirectory() ? dirMode : mode);
             if (file.isDirectory()) {
+                // console.log("dir name of destPath", aPath.dirname(destPath));
+                // console.log("dirMode", dirMode);
                 await fs.mkdirp(aPath.dirname(destPath), dirMode);
                 await fs.mkdirp(destPath, file.stat.mode);
                 const fd = await fs.open(destPath, "r");
@@ -93,6 +95,9 @@ export class FastLocalStream extends adone.fast.Stream {
                 await fs.symlink(file.symlink, destPath);
                 // cannot change metadata?
             } else {
+                // console.log("dir name of destPath", aPath.dirname(destPath));
+                // console.log("dirMode", dirMode);
+
                 await fs.mkdirp(aPath.dirname(destPath), dirMode);
                 const fd = await fs.open(destPath, flag, mode);
                 try {

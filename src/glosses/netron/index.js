@@ -133,18 +133,3 @@ adone.lazify({
     P2PNetCore: "./p2p_net_core"
 }, adone.asNamespace(exports), require);
 
-
-// Temporary API
-export const createPeerId = ({ bits } = {}) => {
-    return adone.p2p.PeerId.create({ bits });
-};
-
-export const createPeerInfo = async ({ peerId, addr, bits } = {}) => {
-    if (!is.peerId(peerId)) {
-        peerId = await adone.p2p.PeerId.create({ bits });
-    }
-
-    const peerInfo = await adone.p2p.PeerInfo.create(peerId);
-    adone.util.arrify(addr).map((ma) => peerInfo.multiaddrs.add(ma));
-    return peerInfo;
-};

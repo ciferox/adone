@@ -34,17 +34,16 @@ export default class extends adone.realm.BaseTask {
             message: "forking realm"
         });
 
-        const publishInfo = realm.devConfig.raw.publish;
-        if (!publishInfo) {
-            throw new error.NotExistsException("Publish metadata not found in dev configuration file");
-        }
+        const forkOptions = (is.object(realm.devConfig) && is.plainObject(realm.devConfig.raw.tasks))
+            ? realm.devConfig.raw.tasks.fork
+            : {}
 
         const tmpPath = await fs.tmpName();
         const targetRealm = await this.manager.runAndWait("realmFork", {
+            ...forkOptions,
             name: realm.name,
             path: tmpPath,
-            tags: publishInfo.artifacts.dev,
-            realm: realm.cwd
+            realm
         });
         await targetRealm.connect({
             transpile: true
@@ -55,11 +54,14 @@ export default class extends adone.realm.BaseTask {
         });
         await targetRealm.runAndWait("build");
 
+        const packOptions = (is.object(targetRealm.devConfig) && is.plainObject(targetRealm.devConfig.raw.tasks))
+            ? targetRealm.devConfig.raw.tasks.pack
+            : {}
+
         const path = await this.manager.runAndWait("realmPack", {
+            ...packOptions,
             realm: targetRealm,
-            tags: publishInfo.artifacts.rel,
             path: tmpPath,
-            filter: publishInfo.filter
         });
 
         const filename = adone.path.basename(path);
@@ -67,6 +69,11 @@ export default class extends adone.realm.BaseTask {
             message: `uploading ${cli.style.primary(filename)}`
         });
 
+        
+        if (!(is.object(targetRealm.devConfig) && is.plainObject(targetRealm.devConfig.raw.publish))) {
+            throw new error.NotExistsException("Publish metadata not found in dev configuration file");
+        }
+        const publishInfo = targetRealm.devConfig.raw.tasks.publish;
         if (publishInfo.type === "github") {
             const relManager = new github.GitHubReleaseManager({
                 owner: publishInfo.owner,

@@ -4,26 +4,28 @@ const {
 
 const __ = lazify({
     Bootstrap: "libp2p-bootstrap",
-    Connection: ["interface-connection", "Connection"],
+    Connection: ["libp2p-interfaces/src/connection", "Connection"],
     crypto: "libp2p-crypto",
-    cryptoSecp256k1: "libp2p-crypto-secp256k1",
     FloodSub: "libp2p-floodsub",
     GossipSub: "libp2p-gossipsub",
     KadDHT: "libp2p-kad-dht",
     PeerId: "peer-id",
-    PeerInfo: "peer-info",
-    PeerBook: "peer-book",
     Node: "libp2p",
     MulticastDNS: "libp2p-mdns",
     record: "libp2p-record",
-    secio: "libp2p-secio",
-    createLibp2p: () => __.Node.createLibp2p,
+    createNode: () => __.Node.create,
     muxer: () => lazify({
         spdy: "libp2p-spdy",
         mplex: "libp2p-mplex"
     }),
+    security: () => lazify({
+        SECIO: "libp2p-secio",
+        NOISE: ["libp2p-noise", "NOISE"]
+    }),
     transport: () => lazify({
         TCP: "libp2p-tcp",
-        WS: "libp2p-websockets"
+        WS: "libp2p-websockets",
+        WebRTCDirect: "libp2p-webrtc-direct",
+        WebRTCStar: "libp2p-webrtc-star"
     })
 }, adone.asNamespace(exports), require);

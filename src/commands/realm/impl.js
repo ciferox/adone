@@ -72,6 +72,12 @@ const subCommand = (name) => adone.path.join(__dirname, "commands", name);
             subsystem: subCommand("merge")
         },
         {
+            name: "pack",
+            group: "generic",
+            description: "Pack realm into the archive",
+            subsystem: subCommand("pack")
+        },
+        {
             name: "publish",
             group: "generic",
             description: "Publish realm release",

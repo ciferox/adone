@@ -719,7 +719,7 @@ adone.lazify({
 
     // peer/p2p/net
     peerId: () => adone.p2p.PeerId.isPeerId,
-    peerInfo: () => adone.p2p.PeerInfo.isPeerInfo,
+    // peerInfo: () => adone.p2p.PeerInfo.isPeerInfo,
 
     vaultValuable: () => (obj) => obj instanceof adone.vault.Valuable,
 

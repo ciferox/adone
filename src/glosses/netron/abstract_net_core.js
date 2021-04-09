@@ -1,7 +1,6 @@
 const {
     error,
-    is,
-    netron: { createPeerInfo }
+    is
 } = adone;
 
 export default class AbstractNetCore {
@@ -15,16 +14,16 @@ export default class AbstractNetCore {
         this.NetCoreNode = NetCoreNode;
     }
 
-    setPeerInfo(peerInfo) {
-        if (!this.options.peerInfo) {
-            this.options.peerInfo = peerInfo;
+    setPeerId(peerId) {
+        if (!this.options.peerId) {
+            this.options.peerId = peerId;
         } else {
             throw new error.ExistsException("PeerInfo already setted");
         }
     }
 
-    get peerInfo() {
-        return this.options.peerInfo;
+    get peerId() {
+        return this.options.peerId;
     }
 
     async start() {
@@ -51,13 +50,15 @@ export default class AbstractNetCore {
 
     async _createNode(addr) {
         if (is.null(this.node)) {
-            if (!is.peerInfo(this.options.peerInfo)) {
-                this.setPeerInfo(await createPeerInfo({
-                    addr,
-                    bits: 512
-                }));
+            if (!is.peerId(this.options.peerId)) {
+                this.setPeerId(await adone.p2p.PeerId.create({ bits: 512 }));
             }
-            this.node = new this.NetCoreNode(this.options);
+            this.node = new this.NetCoreNode({
+                addresses: {
+                    listen: addr
+                },
+                ...this.options
+            });
 
             this.node.on("peer:disconnect", async (peerInfo) => {
                 if (is.netron(this.netron)) {

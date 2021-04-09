@@ -1,39 +1,13 @@
 const defaultsDeep = require("@nodeutils/defaults-deep");
 
 const {
-    error,
     is,
     netron: { AbstractNetCore, RemotePeer },
-    p2p: { PeerId, PeerInfo, GossipSub, Node, KadDHT, transport: { TCP, WS }, MulticastDNS, Bootstrap, secio, muxer: { spdy, mplex } }
+    p2p: { Node, KadDHT, transport: { TCP, WS }, MulticastDNS, security: { SECIO }, muxer: { mplex } }
 } = adone;
 
 const NETRON_PROTOCOL = adone.netron.NETRON_PROTOCOL;
 const DEFAULT_ADDR = "/ip4/0.0.0.0/tcp/0";
-
-const mapMuxers = function (list) {
-    return list.map((pref) => {
-        if (!is.string(pref)) {
-            return pref;
-        }
-        switch (pref.trim().toLowerCase()) {
-            case "spdy": return spdy;
-            case "mplex": return mplex;
-            default:
-                throw new Error(`${pref} muxer not available`);
-        }
-    });
-};
-
-const getMuxers = function (muxers) {
-    const muxerPrefs = process.env.LIBP2P_MUXER;
-    if (muxerPrefs && !muxers) {
-        return mapMuxers(muxerPrefs.split(","));
-    } else if (muxers) {
-        return mapMuxers(muxers);
-    }
-    return [mplex, spdy];
-
-};
 
 class NetCoreNode extends Node {
     constructor(_options) {
@@ -41,12 +15,10 @@ class NetCoreNode extends Node {
             modules: {
                 transport: [
                     TCP,
-                    // WS
+                    WS
                 ],
-                streamMuxer: getMuxers(_options.muxer),
-                connEncryption: [
-                    secio
-                ],
+                streamMuxer: [mplex],
+                connEncryption: [SECIO],
                 peerDiscovery: [
                     MulticastDNS,
                     // Bootstrap
